@@ -207,31 +207,26 @@
 	%define vectmp0		%5
 	%define vectmp1		%6
 	%define vectmp2		%7
+	vmovdqa vectmp2, [sym(kShuffleEpi8_DeinterleaveRGB24_i32)]
 	vmovdqa vecLane0, [ptr + (0*COMPV_YASM_XMM_SZ_BYTES)]
 	vmovdqa vecLane1, [ptr + (1*COMPV_YASM_XMM_SZ_BYTES)]
 	vmovdqa vecLane2, [ptr + (2*COMPV_YASM_XMM_SZ_BYTES)]
-	vmovdqa vectmp2, [sym(kShuffleEpi8_DeinterleaveRGB24_i32)]
-	vmovdqa vectmp0, vecLane0
-	vmovdqa vectmp1, vecLane1
 	vpshufb vecLane2, vectmp2
-	vpshufb vectmp0, vectmp2
-	vpshufb vectmp1, vectmp2
-	vmovdqa vecLane0, vecLane2
-	vmovdqa vecLane1, vecLane2
-	vmovdqa vectmp2, vectmp1
-	vpsrldq vecLane0, 6
-	vpslldq vectmp2, 10
-	vpsrldq vecLane1, 11
-	vpalignr vecLane0, vectmp1, 11
-	vpsrldq vectmp1, 6
-	vpalignr vecLane1, vectmp2, 10
-	vpalignr vectmp1, vectmp0, 11
-	vpslldq vectmp0, 5
-	vpalignr vecLane1, vectmp0, 11
-	vpslldq vectmp0, 5
-	vpalignr vecLane0, vectmp0, 10
-	vpslldq vectmp1, 6
-	vpalignr vecLane2, vectmp1, 6
+	vpshufb vectmp0, vecLane0, vectmp2
+	vpshufb vectmp1, vecLane1, vectmp2
+	vpsrldq vecLane0, vecLane2, 6
+	vpslldq vectmp2, vectmp1, 10
+	vpsrldq vecLane1, vecLane2, 11
+	vpalignr vecLane0, vecLane0, vectmp1, 11
+	vpsrldq vectmp1, vectmp1, 6
+	vpalignr vecLane1, vecLane1, vectmp2, 10
+	vpalignr vectmp1, vectmp1, vectmp0, 11
+	vpslldq vectmp0, vectmp0, 5
+	vpalignr vecLane1, vecLane1, vectmp0, 11
+	vpslldq vectmp0, vectmp0, 5
+	vpalignr vecLane0, vecLane0, vectmp0, 10
+	vpslldq vectmp1, vectmp1, 6
+	vpalignr vecLane2, vecLane2, vectmp1, 6
 	%undef ptr
 	%undef vecLane0
 	%undef	vecLane1

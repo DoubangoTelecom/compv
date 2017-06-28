@@ -93,9 +93,6 @@ sym(CompVImageConvRgb24ToHsv_Asm_X64_AVX2):
 	lea width, [width+width*2] ; (width*3)
 	lea stride, [stride+stride*2] ; (stride*3)
 
-	; FIXME(dmi): many opt in COMPV_VLD3_I8_SSSE3_VEX and others
-
-
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	; for (j = 0; j < height; ++j)
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -112,53 +109,37 @@ sym(CompVImageConvRgb24ToHsv_Asm_X64_AVX2):
 			vinsertf128 vec1, vec1, vec4n, 0x1
 			vinsertf128 vec2, vec2, vec5n, 0x1
 
-			vmovdqa vec4, vec0
-			vmovdqa vec6, vec0
-			vpmaxub vec4, vec1
-			vpminub vec6, vec1
-			vpmaxub vec4, vec2 ; vec4 = maxVal = hsv[2].u8
-			vpminub vec6, vec2
-			vmovdqa vec3, vec4
-			vmovdqa vec5, vec4
-			vmovdqa vec8, vec4
-			vpsubusb vec3, vec6 ; vec3 = minus
-			vpcmpeqb vec5, vec0 ; m0 = (maxVal == r)
-			vmovdqa vec6, vec5
-			vmovdqa vec7, vec5
-			vpcmpeqb vec8, vec1
-			vpcmpeqb vec9, vec9 ; vec9 = vecFF
-			vpandn vec6, vec8 ; m1 = (maxVal == g) & ~m0
-			vmovdqa vec8, vec2
-			vpor vec7, vec6
-			vpandn vec7, vec9 ; m2 = ~(m0 | m1)
-			vmovdqa vec9, vec0
-			vpsubb vec9, vec1
-			vpsubb vec1, vec2
-			vpsubb vec8, vec0
-			vpand vec9, vec7
-			vpand vec8, vec6
-			vpand vec5, vec1
-			vmovdqa vec1, vec3
-			vpor vec5, vec8
-			vpunpcklbw vec1, vecZero
-			vpor vec5, vec9 ; vec5 = diff
-			vpunpckhbw vec3, vecZero
-			vmovdqa vec0, vec1
-			vmovdqa vec2, vec3
-			vpunpcklwd vec0, vecZero
-			vpunpckhwd vec1, vecZero
-			vpunpcklwd vec2, vecZero
-			vpunpckhwd vec3, vecZero
-			vmovdqa vec1f, vec4
-			vmovdqa vec3f, vec4
-			vpunpcklbw vec1f, vecZero
-			vpunpckhbw vec3f, vecZero
-			vmovdqa vec0f, vec1f
-			vmovdqa vec2f, vec3f
-			vpunpcklwd vec0f, vecZero
-			vpunpckhwd vec1f, vecZero
-			vpunpcklwd vec2f, vecZero
-			vpunpckhwd vec3f, vecZero
+			vpmaxub vec4, vec0, vec1
+			vpminub vec6, vec0, vec1
+			vpmaxub vec4, vec4, vec2 ; vec4 = maxVal = hsv[2].u8
+			vpminub vec6, vec6, vec2
+			vpsubusb vec3, vec4, vec6 ; vec3 = minus
+			vpcmpeqb vec5, vec4, vec0 ; m0 = (maxVal == r)
+			vpcmpeqb vec8, vec4, vec1
+			vpcmpeqb vec9, vec9, vec9 ; vec9 = vecFF
+			vpandn vec6, vec5, vec8 ; m1 = (maxVal == g) & ~m0
+			vpor vec7, vec5, vec6
+			vpandn vec7, vec7, vec9 ; m2 = ~(m0 | m1)
+			vpsubb vec9, vec0, vec1
+			vpsubb vec1, vec1, vec2
+			vpsubb vec8, vec2, vec0
+			vpand vec9, vec9, vec7
+			vpand vec8, vec8, vec6
+			vpand vec5, vec5, vec1
+			vpor vec5, vec5, vec8
+			vpunpcklbw vec1, vec3, vecZero
+			vpor vec5, vec5, vec9 ; vec5 = diff
+			vpunpckhbw vec3, vec3, vecZero
+			vpunpcklwd vec0, vec1, vecZero
+			vpunpckhwd vec1, vec1, vecZero
+			vpunpcklwd vec2, vec3, vecZero
+			vpunpckhwd vec3, vec3, vecZero
+			vpunpcklbw vec1f, vec4, vecZero
+			vpunpckhbw vec3f, vec4, vecZero
+			vpunpcklwd vec0f, vec1f, vecZero
+			vpunpckhwd vec1f, vec1f, vecZero
+			vpunpcklwd vec2f, vec3f, vecZero
+			vpunpckhwd vec3f, vec3f, vecZero
 			vcvtdq2ps vec0f, vec0f
 			vcvtdq2ps vec1f, vec1f
 			vcvtdq2ps vec2f, vec2f
@@ -167,82 +148,79 @@ sym(CompVImageConvRgb24ToHsv_Asm_X64_AVX2):
 			vrcpps vec9, vec1f
 			vcvtdq2ps vec0, vec0
 			vcvtdq2ps vec1, vec1
-			vpcmpeqd vec0f, vecZero
-			vpcmpeqd vec1f, vecZero
-			vpandn vec0f, vec8
-			vpandn vec1f, vec9
-			vmulps vec0f, vec255f
-			vmulps vec1f, vec255f
+			vpcmpeqd vec0f, vec0f, vecZero
+			vpcmpeqd vec1f, vec1f, vecZero
+			vpandn vec0f, vec0f, vec8
+			vpandn vec1f, vec1f, vec9
+			vmulps vec0f, vec0f, vec255f
+			vmulps vec1f, vec1f, vec255f
 			vrcpps vec8, vec2f
 			vrcpps vec9, vec3f
 			vcvtdq2ps vec2, vec2
 			vcvtdq2ps vec3, vec3
-			vpcmpeqd vec2f, vecZero
-			vpcmpeqd vec3f, vecZero
-			vpandn vec2f, vec8
-			vmulps vec2f, vec255f
-			vpandn vec3f, vec9
-			vmulps vec3f, vec255f
-			vmulps vec0f, vec0
-			vmulps vec1f, vec1
-			vmulps vec2f, vec2
-			vmulps vec3f, vec3
+			vpcmpeqd vec2f, vec2f, vecZero
+			vpcmpeqd vec3f, vec3f, vecZero
+			vpandn vec2f, vec2f, vec8
+			vmulps vec2f, vec2f, vec255f
+			vpandn vec3f, vec3f, vec9
+			vmulps vec3f, vec3f, vec255f
+			vmulps vec0f, vec0f, vec0
+			vmulps vec1f, vec1f, vec1
+			vmulps vec2f, vec2f, vec2
+			vmulps vec3f, vec3f, vec3
 			vcvtps2dq vec0f, vec0f
 			vcvtps2dq vec1f, vec1f
 			vcvtps2dq vec2f, vec2f
 			vcvtps2dq vec3f, vec3f
-			vpackssdw vec0f, vec1f
-			vpackssdw vec2f, vec3f
-			vpackuswb vec0f, vec2f
+			vpackssdw vec0f, vec0f, vec1f
+			vpackssdw vec2f, vec2f, vec3f
+			vpackuswb vec0f, vec0f, vec2f
 			vrcpps vec8, vec0
 			vrcpps vec1f, vec1
 			vrcpps vec2f, vec2
 			vrcpps vec3f, vec3
-			vpcmpeqd vec0, vecZero
-			vpcmpeqd vec1, vecZero			
-			vpcmpeqd vec2, vecZero
-			vpcmpeqd vec3, vecZero
-			vpandn vec0, vec8
-			vpandn vec1, vec1f
-			vpandn vec2, vec2f
-			vpandn vec3, vec3f
+			vpcmpeqd vec0, vec0, vecZero
+			vpcmpeqd vec1, vec1, vecZero			
+			vpcmpeqd vec2, vec2, vecZero
+			vpcmpeqd vec3, vec3, vecZero
+			vpandn vec0, vec0, vec8
 			vmovaps vec8, [sym(k43_f32)]
-			vmulps vec0, vec8
-			vmulps vec1, vec8
-			vmulps vec2, vec8
-			vmulps vec3, vec8
-			vmovdqa vec8, vec5
-			vpunpcklbw vec8, vec8
-			vpunpckhbw vec5, vec5
-			vmovdqa vec1f, vec8
-			vmovdqa vec3f, vec5
-			vpunpcklwd vec8, vec8
-			vpunpckhwd vec1f, vec1f
-			vpunpcklwd vec5, vec5
-			vpunpckhwd vec3f, vec3f
-			vpsrad vec8, 24
-			vpsrad vec1f, 24
-			vpsrad vec5, 24
-			vpsrad vec3f, 24
+			vpandn vec1, vec1, vec1f
+			vpandn vec2, vec2, vec2f
+			vpandn vec3, vec3, vec3f
+			vmulps vec0, vec0, vec8
+			vmulps vec1, vec1, vec8
+			vmulps vec2, vec2, vec8
+			vmulps vec3, vec3, vec8
+			vpunpcklbw vec8, vec5, vec5
+			vpunpckhbw vec5, vec5, vec5
+			vpunpckhwd vec1f, vec8, vec8
+			vpunpcklwd vec8, vec8, vec8
+			vpunpckhwd vec3f, vec5, vec5
+			vpunpcklwd vec5, vec5, vec5
+			vpsrad vec8, vec8, 24
+			vpsrad vec1f, vec1f, 24
+			vpsrad vec5, vec5, 24
+			vpsrad vec3f, vec3f, 24
 			vcvtdq2ps vec8, vec8
 			vcvtdq2ps vec1f, vec1f
 			vcvtdq2ps vec2f, vec5
 			vcvtdq2ps vec3f, vec3f
-			vmulps vec8, vec0
-			vmulps vec1f, vec1
-			vmulps vec2f, vec2
-			vmulps vec3f, vec3
+			vmulps vec8, vec8, vec0
+			vmulps vec1f, vec1f, vec1
+			vmulps vec2f, vec2f, vec2
+			vmulps vec3f, vec3f, vec3
 			vcvtps2dq vec8, vec8
 			vcvtps2dq vec1f, vec1f
 			vcvtps2dq vec2f, vec2f
 			vcvtps2dq vec3f, vec3f
-			vpand vec6, [sym(k85_i8)] ; (85 & m1)
-			vpand vec7, [sym(k171_u8)] ; (171 & m2)
-			vpor vec6, vec7 ; (85 & m1) | (171 & m2)
-			vpackssdw vec8, vec1f
-			vpackssdw vec2f, vec3f
-			vpacksswb vec8, vec2f		
-			vpaddsb vec8, vec6
+			vpand vec6, vec6, [sym(k85_i8)] ; (85 & m1)
+			vpand vec7, vec7, [sym(k171_u8)] ; (171 & m2)
+			vpor vec6, vec6, vec7 ; (85 & m1) | (171 & m2)
+			vpackssdw vec8, vec8, vec1f
+			vpackssdw vec2f, vec2f, vec3f
+			vpacksswb vec8, vec8, vec2f
+			vpaddsb vec8, vec8, vec6
 			
 			vextractf128 vec5n, vec8, 0x1
 			vextractf128 vec6n, vec0f, 0x1
