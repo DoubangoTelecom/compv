@@ -111,15 +111,15 @@ sym(CompVImageConvRgb24ToHsv_Asm_X64_AVX2):
 
 			vpmaxub vec4, vec0, vec1
 			vpminub vec6, vec0, vec1
-			vpmaxub vec4, vec4, vec2 ; vec4 = maxVal = hsv[2].u8
+			vpmaxub vec4, vec4, vec2
 			vpminub vec6, vec6, vec2
-			vpsubusb vec3, vec4, vec6 ; vec3 = minus
-			vpcmpeqb vec5, vec4, vec0 ; m0 = (maxVal == r)
+			vpsubusb vec3, vec4, vec6
+			vpcmpeqb vec5, vec4, vec0
 			vpcmpeqb vec8, vec4, vec1
-			vpcmpeqb vec9, vec9, vec9 ; vec9 = vecFF
-			vpandn vec6, vec5, vec8 ; m1 = (maxVal == g) & ~m0
+			vpcmpeqb vec9, vec9, vec9
+			vpandn vec6, vec5, vec8
 			vpor vec7, vec5, vec6
-			vpandn vec7, vec7, vec9 ; m2 = ~(m0 | m1)
+			vpandn vec7, vec7, vec9
 			vpsubb vec9, vec0, vec1
 			vpsubb vec1, vec1, vec2
 			vpsubb vec8, vec2, vec0
@@ -128,7 +128,7 @@ sym(CompVImageConvRgb24ToHsv_Asm_X64_AVX2):
 			vpand vec5, vec5, vec1
 			vpor vec5, vec5, vec8
 			vpunpcklbw vec1, vec3, vecZero
-			vpor vec5, vec5, vec9 ; vec5 = diff
+			vpor vec5, vec5, vec9
 			vpunpckhbw vec3, vec3, vecZero
 			vpunpcklwd vec0, vec1, vecZero
 			vpunpckhwd vec1, vec1, vecZero
@@ -172,13 +172,13 @@ sym(CompVImageConvRgb24ToHsv_Asm_X64_AVX2):
 			vcvtps2dq vec1f, vec1f
 			vcvtps2dq vec2f, vec2f
 			vcvtps2dq vec3f, vec3f
-			vpackssdw vec0f, vec0f, vec1f
-			vpackssdw vec2f, vec2f, vec3f
-			vpackuswb vec0f, vec0f, vec2f
 			vrcpps vec8, vec0
+			vpackssdw vec0f, vec0f, vec1f
 			vrcpps vec1f, vec1
-			vrcpps vec2f, vec2
+			vpackssdw vec2f, vec2f, vec3f
 			vrcpps vec3f, vec3
+			vpackuswb vec0f, vec0f, vec2f			
+			vrcpps vec2f, vec2
 			vpcmpeqd vec0, vec0, vecZero
 			vpcmpeqd vec1, vec1, vecZero			
 			vpcmpeqd vec2, vec2, vecZero
@@ -214,9 +214,9 @@ sym(CompVImageConvRgb24ToHsv_Asm_X64_AVX2):
 			vcvtps2dq vec1f, vec1f
 			vcvtps2dq vec2f, vec2f
 			vcvtps2dq vec3f, vec3f
-			vpand vec6, vec6, [sym(k85_i8)] ; (85 & m1)
-			vpand vec7, vec7, [sym(k171_u8)] ; (171 & m2)
-			vpor vec6, vec6, vec7 ; (85 & m1) | (171 & m2)
+			vpand vec6, vec6, [sym(k85_i8)]
+			vpand vec7, vec7, [sym(k171_u8)]
+			vpor vec6, vec6, vec7
 			vpackssdw vec8, vec8, vec1f
 			vpackssdw vec2f, vec2f, vec3f
 			vpacksswb vec8, vec8, vec2f

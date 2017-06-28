@@ -462,8 +462,26 @@
     <ClInclude Include="..\include\compv\base\image\compv_image_conv_hsv.h">
       <Filter>include\image</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\compv\base\image\compv_image_conv_to_rgb24.h">
+    <ClInclude Include="..\include\compv\base\image\compv_image_conv_to_rgbx.h">
       <Filter>include\image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\image\intrin\x86\compv_image_conv_hsv_intrin_avx2.h">
+      <Filter>include\image\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\image\intrin\x86\compv_image_conv_hsv_intrin_ssse3.h">
+      <Filter>include\image\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\image\intrin\x86\compv_image_conv_to_rgbx_intrin_avx2.h">
+      <Filter>include\image\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\image\intrin\x86\compv_image_conv_to_rgbx_intrin_sse2.h">
+      <Filter>include\image\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\image\intrin\x86\compv_image_conv_to_rgbx_intrin_ssse3.h">
+      <Filter>include\image\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\image\intrin\arm\compv_image_conv_to_rgbx_intrin_neon.h">
+      <Filter>include\image\intrin\arm</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -770,8 +788,38 @@
     <ClCompile Include="..\image\compv_image_conv_hsv.cxx">
       <Filter>source\image</Filter>
     </ClCompile>
-    <ClCompile Include="..\image\compv_image_conv_to_rgb24.cxx">
+    <ClCompile Include="..\image\compv_image_conv_to_rgbx.cxx">
       <Filter>source\image</Filter>
+    </ClCompile>
+    <ClCompile Include="..\image\intrin\x86\compv_image_conv_grayscale_intrin_ssse3.cxx">
+      <Filter>source\image\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\image\intrin\x86\compv_image_conv_hsv_intrin_avx2.cxx">
+      <Filter>source\image\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\image\intrin\x86\compv_image_conv_hsv_intrin_ssse3.cxx">
+      <Filter>source\image\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\image\intrin\x86\compv_image_conv_rgbfamily_intrin_sse2.cxx">
+      <Filter>source\image\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\image\intrin\x86\compv_image_conv_to_rgbx_intrin_avx2.cxx">
+      <Filter>source\image\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\image\intrin\x86\compv_image_conv_to_rgbx_intrin_sse2.cxx">
+      <Filter>source\image\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\image\intrin\x86\compv_image_conv_to_rgbx_intrin_ssse3.cxx">
+      <Filter>source\image\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\image\intrin\x86\compv_image_scale_bilinear_intrin_avx2.cxx">
+      <Filter>source\image\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\image\intrin\x86\compv_image_scale_bilinear_intrin_sse41.cxx">
+      <Filter>source\image\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\image\intrin\arm\compv_image_conv_to_rgbx_intrin_neon.cxx">
+      <Filter>source\image\intrin\arm</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

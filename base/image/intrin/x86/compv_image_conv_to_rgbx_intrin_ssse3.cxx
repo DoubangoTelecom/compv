@@ -41,8 +41,6 @@ void CompVImageConvYuv420_to_Rgb24_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t
 			vecU = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(&uPtr[l])); // #8 U samples, low mem
 			vecV = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(&vPtr[l])); // #8 V samples, low mem
 
-			/* == Staring this line we're just converting from Y,U,V to R,G,B == */
-
 			/* Convert to I16 */
 			vecYhigh = _mm_unpackhi_epi8(vecYlow, vecZero);
 			vecYlow = _mm_unpacklo_epi8(vecYlow, vecZero);

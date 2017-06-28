@@ -188,7 +188,7 @@ COMPV_ERROR_CODE CompVMem::set(void* dstPtr, compv_scalar_t val, compv_uscalar_t
         }
         break;
     }
-    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation found");
     COMPV_CHECK_EXP_RETURN(val > 0xff, COMPV_ERROR_CODE_E_INVALID_PARAMETER); // memset() supports "byte" only
     memset(dstPtr, static_cast<int>(val), count*sizeOfEltInBytes);
 
@@ -199,7 +199,7 @@ typedef void(*CompVMemZero)(void* dstPtr, compv_uscalar_t size);
 
 static void CompVMemZero_C(void* dstPtr, compv_uscalar_t size)
 {
-    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation found");
     memset(dstPtr, 0, (size_t)size);
 }
 

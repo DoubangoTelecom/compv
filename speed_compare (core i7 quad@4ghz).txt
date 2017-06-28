@@ -18,7 +18,7 @@ Shared Memory: 3810 MB
 !!!
 
 === RGB24 -> Grayscale (1282, 720) (#10k times) ===
-CompV: 449.ms(mt, full optiz), 1152.ms(st, full optiz)
+CompV: 449.ms(full optiz)
 OpenCV: 3086.ms(full optiz)
 Remarque: For openCV we're using CV_RGB2GRAY
 

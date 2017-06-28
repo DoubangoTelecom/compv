@@ -13,6 +13,7 @@
 #include "compv/base/image/intrin/x86/compv_image_conv_to_rgbx_intrin_sse2.h"
 #include "compv/base/image/intrin/x86/compv_image_conv_to_rgbx_intrin_ssse3.h"
 #include "compv/base/image/intrin/x86/compv_image_conv_to_rgbx_intrin_avx2.h"
+#include "compv/base/image/intrin/arm/compv_image_conv_to_rgbx_intrin_neon.h"
 
 #define COMPV_THIS_CLASSNAME	"CompVImageConvToRGBx"
 
@@ -130,6 +131,13 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::yuvPlanar(const CompVMatPtr& imageIn, Com
 			}
 		}
 #elif COMPV_ARCH_ARM
+		if (CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
+			if (imageRGBx->isAlignedNEON(0) && imageIn->isAlignedNEON(0) && imageIn->isAlignedNEON(1) && imageIn->isAlignedNEON(2)) {
+				if (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGB24) {
+					COMPV_EXEC_IFDEF_INTRIN_ARM(planar_to_rgbx = CompVImageConvYuv420_to_Rgb24_Intrin_NEON);
+				}
+			}
+		}
 #endif
 		break;
 	case COMPV_SUBTYPE_PIXELS_YUV422P:

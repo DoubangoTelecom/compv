@@ -80,7 +80,7 @@
     <ClInclude Include="..\include\compv\base\image\compv_image_conv_hsv.h" />
     <ClInclude Include="..\include\compv\base\image\compv_image_conv_rgbfamily.h" />
     <ClInclude Include="..\include\compv\base\image\compv_image_conv_to_grayscale.h" />
-    <ClInclude Include="..\include\compv\base\image\compv_image_conv_to_rgb24.h" />
+    <ClInclude Include="..\include\compv\base\image\compv_image_conv_to_rgbx.h" />
     <ClInclude Include="..\include\compv\base\image\compv_image_conv_to_yuv444p.h" />
     <ClInclude Include="..\include\compv\base\image\compv_image_decoder.h" />
     <ClInclude Include="..\include\compv\base\image\compv_image_scale_bilinear.h" />
@@ -88,11 +88,17 @@
     <ClInclude Include="..\include\compv\base\image\compv_image_utils.h" />
     <ClInclude Include="..\include\compv\base\image\intrin\arm\compv_image_conv_grayscale_intrin_neon.h" />
     <ClInclude Include="..\include\compv\base\image\intrin\arm\compv_image_conv_rgbfamily_intrin_neon.h" />
+    <ClInclude Include="..\include\compv\base\image\intrin\arm\compv_image_conv_to_rgbx_intrin_neon.h" />
     <ClInclude Include="..\include\compv\base\image\intrin\arm\compv_image_scale_bilinear_intrin_neon.h" />
     <ClInclude Include="..\include\compv\base\image\intrin\x86\compv_image_conv_grayscale_intrin_ssse3.h" />
+    <ClInclude Include="..\include\compv\base\image\intrin\x86\compv_image_conv_hsv_intrin_avx2.h" />
+    <ClInclude Include="..\include\compv\base\image\intrin\x86\compv_image_conv_hsv_intrin_ssse3.h" />
     <ClInclude Include="..\include\compv\base\image\intrin\x86\compv_image_conv_rgbfamily_intrin_avx2.h" />
     <ClInclude Include="..\include\compv\base\image\intrin\x86\compv_image_conv_rgbfamily_intrin_sse2.h" />
     <ClInclude Include="..\include\compv\base\image\intrin\x86\compv_image_conv_rgbfamily_intrin_ssse3.h" />
+    <ClInclude Include="..\include\compv\base\image\intrin\x86\compv_image_conv_to_rgbx_intrin_avx2.h" />
+    <ClInclude Include="..\include\compv\base\image\intrin\x86\compv_image_conv_to_rgbx_intrin_sse2.h" />
+    <ClInclude Include="..\include\compv\base\image\intrin\x86\compv_image_conv_to_rgbx_intrin_ssse3.h" />
     <ClInclude Include="..\include\compv\base\image\intrin\x86\compv_image_scale_bilinear_intrin_avx2.h" />
     <ClInclude Include="..\include\compv\base\image\intrin\x86\compv_image_scale_bilinear_intrin_sse41.h" />
     <ClInclude Include="..\include\compv\base\intrin\arm\compv_intrin_neon.h" />
@@ -191,7 +197,7 @@
     <ClCompile Include="..\image\compv_image_conv_hsv.cxx" />
     <ClCompile Include="..\image\compv_image_conv_rgbfamily.cxx" />
     <ClCompile Include="..\image\compv_image_conv_to_grayscale.cxx" />
-    <ClCompile Include="..\image\compv_image_conv_to_rgb24.cxx" />
+    <ClCompile Include="..\image\compv_image_conv_to_rgbx.cxx" />
     <ClCompile Include="..\image\compv_image_conv_to_yuv444p.cxx" />
     <ClCompile Include="..\image\compv_image_decoder.cxx" />
     <ClCompile Include="..\image\compv_image_scale_bilinear.cxx" />
@@ -218,6 +224,7 @@
       <EnableNeonCodegen Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</EnableNeonCodegen>
       <EnableNeonCodegen Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</EnableNeonCodegen>
     </ClCompile>
+    <ClCompile Include="..\image\intrin\arm\compv_image_conv_to_rgbx_intrin_neon.cxx" />
     <ClCompile Include="..\image\intrin\arm\compv_image_scale_bilinear_intrin_neon.cxx">
       <EnableNeonCodegen Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</EnableNeonCodegen>
       <EnableNeonCodegen Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</EnableNeonCodegen>
@@ -228,8 +235,17 @@
       <EnableNeonCodegen Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</EnableNeonCodegen>
       <EnableNeonCodegen Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</EnableNeonCodegen>
     </ClCompile>
+    <ClCompile Include="..\image\intrin\x86\compv_image_conv_grayscale_intrin_ssse3.cxx" />
+    <ClCompile Include="..\image\intrin\x86\compv_image_conv_hsv_intrin_avx2.cxx" />
+    <ClCompile Include="..\image\intrin\x86\compv_image_conv_hsv_intrin_ssse3.cxx" />
     <ClCompile Include="..\image\intrin\x86\compv_image_conv_rgbfamily_intrin_avx2.cxx" />
+    <ClCompile Include="..\image\intrin\x86\compv_image_conv_rgbfamily_intrin_sse2.cxx" />
     <ClCompile Include="..\image\intrin\x86\compv_image_conv_rgbfamily_intrin_ssse3.cxx" />
+    <ClCompile Include="..\image\intrin\x86\compv_image_conv_to_rgbx_intrin_avx2.cxx" />
+    <ClCompile Include="..\image\intrin\x86\compv_image_conv_to_rgbx_intrin_sse2.cxx" />
+    <ClCompile Include="..\image\intrin\x86\compv_image_conv_to_rgbx_intrin_ssse3.cxx" />
+    <ClCompile Include="..\image\intrin\x86\compv_image_scale_bilinear_intrin_avx2.cxx" />
+    <ClCompile Include="..\image\intrin\x86\compv_image_scale_bilinear_intrin_sse41.cxx" />
     <ClCompile Include="..\intrin\arm\compv_patch_intrin_neon.cxx" />
     <ClCompile Include="..\intrin\x86\compv_mem_intrin_avx.cxx" />
     <ClCompile Include="..\intrin\x86\compv_mem_intrin_sse2.cxx" />

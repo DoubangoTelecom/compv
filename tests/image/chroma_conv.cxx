@@ -10,10 +10,10 @@
 #endif
 #define COMPV_TEST_IMAGE_CHROMA_CONV_PATH_TO_FILE(filename)		compv_tests_path_from_file(filename, COMPV_TEST_IMAGE_CHROMA_CONV_IMAGE_FOLDER)
 
-#define COMPV_TEST_IMAGE_CHROMA_CONV_SUBTYPE_SRC				COMPV_SUBTYPE_PIXELS_RGB24
-#define COMPV_TEST_IMAGE_CHROMA_CONV_SUBTYPE_DST				COMPV_SUBTYPE_PIXELS_HSV
+#define COMPV_TEST_IMAGE_CHROMA_CONV_SUBTYPE_SRC				COMPV_SUBTYPE_PIXELS_YUV420P
+#define COMPV_TEST_IMAGE_CHROMA_CONV_SUBTYPE_DST				COMPV_SUBTYPE_PIXELS_RGB24
 
-#define COMPV_loopCount											1
+#define COMPV_loopCount											100
 
 static const struct compv_test_image_chroma_conv_test {
 	COMPV_SUBTYPE srcPixelFormat;
@@ -100,7 +100,7 @@ COMPV_ERROR_CODE chroma_conv()
 	CompVMatPtr srcImage, dstImage;
 	const compv_test_image_chroma_conv_test* test = NULL;
 #if COMPV_TEST_CHECK_MD5
-	std::string xmd5;
+	std::string md5, xmd5;
 #endif
 
 	COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_S_OK, "Just to avoid 'bail not referenced warning'");
@@ -133,9 +133,10 @@ COMPV_ERROR_CODE chroma_conv()
 #endif
 
 #if COMPV_TEST_CHECK_MD5
-	COMPV_DEBUG_INFO_EX(TAG_TEST_IMAGE_CHROMA_CONV, "MD5:%s", compv_tests_md5(dstImage).c_str());
+	md5 = compv_tests_md5(dstImage);
+	COMPV_DEBUG_INFO_EX(TAG_TEST_IMAGE_CHROMA_CONV, "MD5:%s", md5.c_str());
 	xmd5 = (test->dstPixelFormat == COMPV_SUBTYPE_PIXELS_HSV && compv_tests_is_rcp()) ? test->dstMD5_rcp : test->dstMD5;
-	COMPV_CHECK_EXP_BAIL(std::string(xmd5).compare(compv_tests_md5(dstImage)) != 0, (err = COMPV_ERROR_CODE_E_UNITTEST_FAILED), "MD5 mismatch");
+	COMPV_CHECK_EXP_BAIL(xmd5.compare(md5) != 0, (err = COMPV_ERROR_CODE_E_UNITTEST_FAILED), "MD5 mismatch");
 #endif
 
 bail:

@@ -5,7 +5,7 @@
 * WebSite: http://compv.org
 */
 #if !defined(_COMPV_BASE_IMAGE_CONV_TO_RGBX_INTRIN_SSSE3_H_)
-#define _COMPV_BASE_IMAGE_CONV_TO_RGBX_INTRIN_SSE2_H_
+#define _COMPV_BASE_IMAGE_CONV_TO_RGBX_INTRIN_SSSE3_H_
 
 #include "compv/base/compv_config.h"
 #if COMPV_ARCH_X86 && COMPV_INTRINSIC
