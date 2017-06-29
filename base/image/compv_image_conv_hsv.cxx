@@ -165,7 +165,7 @@ static void rgbx_to_hsv_C(const uint8_t* rgbxPtr, uint8_t* hsvPtr, compv_uscalar
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
 
-	static const compv_float32_t kHsvScaleTimes43[256] = {
+	static const compv_float32_t kHsvScaleTimes43[256/*minus*/] = { // (43.f * (1/minus))
 		0.f, 43.f, 21.5f, 14.333334f, 10.75f, 8.60000038f, 7.16666698f, 6.14285755f, 5.375f,
 		4.77777767f, 4.30000019f, 3.909091f, 3.58333349f, 3.30769253f, 3.07142878f, 2.86666679f,
 		2.6875f, 2.52941179f, 2.38888884f, 2.26315784f, 2.1500001f, 2.0476191f, 1.9545455f,
@@ -209,7 +209,7 @@ static void rgbx_to_hsv_C(const uint8_t* rgbxPtr, uint8_t* hsvPtr, compv_uscalar
 		0.173387095f, 0.172690749f,0.172000006f, 0.171314746f, 0.170634925f, 0.169960484f,
 		0.169291332f, 0.168627456f,
 	};
-	static const compv_float32_t kHsvScaleTimes255[256] = {
+	static const compv_float32_t kHsvScaleTimes255[256/*maxVal*/] = { // (255.f * (1/maxVal))
 		0.f, 255.f, 127.5f, 85.f, 63.75f, 51.f, 42.5f, 36.4285736f, 31.875f, 28.333334f, 25.5f,
 		23.181818f, 21.25f, 19.6153851f, 18.2142868f, 17.f, 15.9375f, 15.f, 14.166667f,
 		13.4210529f, 12.75f, 12.1428576f, 11.590909f, 11.086957f, 10.625f, 10.1999998f,

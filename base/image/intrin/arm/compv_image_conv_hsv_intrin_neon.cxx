@@ -56,35 +56,35 @@ void CompVImageConvRgb24ToHsv_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* rgb
 			vec5 = vorrq_u8(vec5, vec8);
 			vec5 = vorrq_u8(vec5, vec9); // vec5 = diff
 
-			// convert minus to epi32 then to float32 (unsigned)
-			vec0 = vmovl_u16(vget_low_u16(vec1));
-			vec1 = vmovl_u16(vget_high_u16(vec1));
-			vec2 = vmovl_u16(vget_low_u16(vec3));
-			vec3 = vmovl_u16(vget_high_u16(vec3));
+			// minus = ToFloat32(ToUInt32(ToUInt16(vec4)))
+			vec0 = vshll_n_u16(vget_low_u16(vec1), 0);
+			vec1 = vshll_n_u16(vget_high_u16(vec1), 0);
+			vec2 = vshll_n_u16(vget_low_u16(vec3), 0);
+			vec3 = vshll_n_u16(vget_high_u16(vec3), 0);
 			vec0 = vcvtq_f32_u32(vec0);
 			vec1 = vcvtq_f32_u32(vec1);
 			vec2 = vcvtq_f32_u32(vec2);
 			vec3 = vcvtq_f32_u32(vec3);
 
-			// convert maxVal to epi32 then to float32 (unsigned)
-			vec1f = vmovl_u8(vget_low_u8(vec4));
-			vec3f = vmovl_u8(vget_high_u8(vec4));
-			vec0f = vmovl_u16(vget_low_u16(vec1f));
-			vec1f = vmovl_u16(vget_high_u16(vec1f));
-			vec2f = vmovl_u16(vget_low_u16(vec3f));
-			vec3f = vmovl_u16(vget_high_u16(vec3f));
+			// maxVal = ToFloat32(ToUInt32(ToUInt16(ToUInt8(vec4))))
+			vec1f = vshll_n_u8(vget_low_u8(vec4), 0);
+			vec3f = vshll_n_u8(vget_high_u8(vec4), 0);
+			vec0f = vshll_n_u16(vget_low_u16(vec1f), 0);
+			vec1f = vshll_n_u16(vget_high_u16(vec1f), 0);
+			vec2f = vshll_n_u16(vget_low_u16(vec3f), 0);
+			vec3f = vshll_n_u16(vget_high_u16(vec3f), 0);
 			vec0f = vcvtq_f32_u32(vec0f);
 			vec1f = vcvtq_f32_u32(vec1f);
 			vec2f = vcvtq_f32_u32(vec2f);
 			vec3f = vcvtq_f32_u32(vec3f);
 
-			// compute scale = maxVal ? (1.f / maxVal) : 0.f
+			// scale = maxVal ? (1.f / maxVal) : 0.f
 			vec0f = vbicq_u32(COMPV_ARM_NEON_RECIPROCAL(vec0f), vceqq_s32(vec0f, vecZero));
 			vec1f = vbicq_u32(COMPV_ARM_NEON_RECIPROCAL(vec1f), vceqq_s32(vec1f, vecZero));
 			vec2f = vbicq_u32(COMPV_ARM_NEON_RECIPROCAL(vec2f), vceqq_s32(vec2f, vecZero));
 			vec3f = vbicq_u32(COMPV_ARM_NEON_RECIPROCAL(vec3f), vceqq_s32(vec3f, vecZero));
 
-			// compute scales255 = (255 * scale)
+			// scales255 = (255 * scale)
 			vec0f = vmulq_f32(vec0f, vec255f);
 			vec1f = vmulq_f32(vec1f, vec255f);
 			vec2f = vmulq_f32(vec2f, vec255f);
@@ -106,10 +106,10 @@ void CompVImageConvRgb24ToHsv_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* rgb
 			// B = ToFloat32(ToInt32(ToInt16(diff * 43)))
 			vec1f = vmull_s8(vget_low_s8(vec5), vec43n);
 			vec3f = vmull_s8(vget_high_s8(vec5), vec43n);
-			vec0f = vmovl_s16(vget_low_s16(vec1f));
-			vec1f = vmovl_s16(vget_high_s16(vec1f));
-			vec2f = vmovl_s16(vget_low_s16(vec3f));
-			vec3f = vmovl_s16(vget_high_s16(vec3f));
+			vec0f = vshll_n_s16(vget_low_s16(vec1f), 0);
+			vec1f = vshll_n_s16(vget_high_s16(vec1f), 0);
+			vec2f = vshll_n_s16(vget_low_s16(vec3f), 0);
+			vec3f = vshll_n_s16(vget_high_s16(vec3f), 0);
 			vec0f = vcvtq_f32_s32(vec0f);
 			vec1f = vcvtq_f32_s32(vec1f);
 			vec2f = vcvtq_f32_s32(vec2f);
