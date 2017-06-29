@@ -252,8 +252,7 @@ static void rgbx_to_hsv_C(const uint8_t* rgbxPtr, uint8_t* hsvPtr, compv_uscalar
 	size_t i, j;
 	const xType* rgbxPtr_ = reinterpret_cast<const xType*>(rgbxPtr);
 	compv_uint8x3_t* hsvPtr_ = reinterpret_cast<compv_uint8x3_t*>(hsvPtr);
-	int minVal, maxVal, minus, r, g, b;
-	int diff;
+	int diff, minVal, maxVal, minus, r, g, b;
 	compv_float32_t s255, s43;
 	for (j = 0; j <height; ++j) {
 		for (i = 0; i < width; ++i) {
@@ -266,13 +265,13 @@ static void rgbx_to_hsv_C(const uint8_t* rgbxPtr, uint8_t* hsvPtr, compv_uscalar
 			maxVal = COMPV_MATH_MAX_INT(g, b);
 			maxVal = COMPV_MATH_MAX_INT(r, maxVal);
 
-			diff = (maxVal == r) ? (g - b) : ((maxVal == g) ? (b - r) : (r - g)); // ASM: CMOV
+			diff = (maxVal == r) ? (g - b) : ((maxVal == g) ? (b - r) : (r - g)); // ASM: CMOV or use branchless code (see below)
 			minus = maxVal - minVal;
 			s43 = diff * kHsvScaleTimes43[minus];
 			s255 = minus * kHsvScaleTimes255[maxVal];
 
 			hsv[0] = COMPV_MATH_ROUNDF_2_NEAREST_INT(s43, uint8_t) +
-				((maxVal == r) ? 0 : ((maxVal == g) ? 85 : 171)); // ASM: CMOV
+				((maxVal == r) ? 0 : ((maxVal == g) ? 85 : 171)); // ASM: CMOV or use branchless code (see below)
 
 			hsv[1] = COMPV_MATH_ROUNDF_2_NEAREST_INT(s255, uint8_t);
 
@@ -287,8 +286,7 @@ static void rgbx_to_hsv_C(const uint8_t* rgbxPtr, uint8_t* hsvPtr, compv_uscalar
 	size_t i, j;
 	const xType* rgbxPtr_ = reinterpret_cast<const xType*>(rgbxPtr);
 	compv_uint8x3_t* hsvPtr_ = reinterpret_cast<compv_uint8x3_t*>(hsvPtr);
-	int minVal, maxVal, minus, r, g, b;
-	int diff, m0, m1, m2;
+	int minVal, maxVal, minus, r, g, b, diff, m0, m1, m2;
 	compv_float32_t s255, s43;
 	for (j = 0; j <height; ++j) {
 		for (i = 0; i < width; ++i) {

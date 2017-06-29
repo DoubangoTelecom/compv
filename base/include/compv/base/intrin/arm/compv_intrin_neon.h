@@ -63,6 +63,17 @@ COMPV_NAMESPACE_BEGIN()
 	})
 #endif
 
+// https://en.wikipedia.org/wiki/Division_algorithm#Newton.E2.80.93Raphson_division
+// Reciprocal using Newton–Raphson which is more accurate than 'COMPV_ARM_NEON_RECIPROCAL'
+#define COMPV_ARM_NEON_RECIPROCAL_NEWTON_RAPHSON(vec) ({ \
+	float32x4_t __ret = vrecpeq_f32(vec); \
+	__ret = vmulq_f32(__ret, vrecpsq_f32(__ret, vec)); \
+	__ret; \
+})
+
+// Reciprocal, less accurate than 'COMPV_ARM_NEON_RECIPROCAL_NEWTON_RAPHSON'
+#define COMPV_ARM_NEON_RECIPROCAL(vec)	vrecpeq_f32(vec)
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_ARM && COMPV_INTRINSIC */

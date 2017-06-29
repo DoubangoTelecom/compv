@@ -23,14 +23,6 @@ static const float32x4_t vec43f = vdupq_n_f32(43.f);
 static const float32x4_t vec255f = vdupq_n_f32(255.f);
 static const float32x4_t vecHalf = vdupq_n_f32(0.5f);
 
-COMPV_INLINE float32x4_t myrecip(float32x4_t in) {
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Try one instruction");
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Try macro");
-	float32x4_t recip = vrecpeq_f32(in);
-	recip = vmulq_f32(recip, vrecpsq_f32(recip, in));
-	return recip;
-}
-
 void CompVImageConvRgb24ToHsv_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* rgb24Ptr, COMPV_ALIGNED(NEON) uint8_t* hsvPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
 {
 	COMPV_DEBUG_INFO_CHECK_NEON();
@@ -39,8 +31,6 @@ void CompVImageConvRgb24ToHsv_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* rgb
 	int32x4_t vec0, vec1, vec2, vec3, vec4, vec5, vec6, vec7, vec8, vec9;
 	float32x4_t vec0f, vec1f, vec2f, vec3f;
 	uint8x16x3_t vecLanes;
-
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Try to replace COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT");
 
 	width += (width << 1); // from samples to bytes (width * 3)
 	stride += (stride << 1); // from samples to bytes (stride * 3)
@@ -89,10 +79,10 @@ void CompVImageConvRgb24ToHsv_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* rgb
 			vec3f = vcvtq_f32_u32(vec3f);
 
 			// compute scale = maxVal ? (1.f / maxVal) : 0.f
-			vec0f = vbicq_u32(myrecip(vec0f), vceqq_s32(vec0f, vecZero));
-			vec1f = vbicq_u32(myrecip(vec1f), vceqq_s32(vec1f, vecZero));
-			vec2f = vbicq_u32(myrecip(vec2f), vceqq_s32(vec2f, vecZero));
-			vec3f = vbicq_u32(myrecip(vec3f), vceqq_s32(vec3f, vecZero));
+			vec0f = vbicq_u32(COMPV_ARM_NEON_RECIPROCAL(vec0f), vceqq_s32(vec0f, vecZero));
+			vec1f = vbicq_u32(COMPV_ARM_NEON_RECIPROCAL(vec1f), vceqq_s32(vec1f, vecZero));
+			vec2f = vbicq_u32(COMPV_ARM_NEON_RECIPROCAL(vec2f), vceqq_s32(vec2f, vecZero));
+			vec3f = vbicq_u32(COMPV_ARM_NEON_RECIPROCAL(vec3f), vceqq_s32(vec3f, vecZero));
 
 			// compute scales255 = (255 * scale)
 			vec0f = vmulq_f32(vec0f, vec255f);
@@ -100,24 +90,24 @@ void CompVImageConvRgb24ToHsv_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* rgb
 			vec2f = vmulq_f32(vec2f, vec255f);
 			vec3f = vmulq_f32(vec3f, vec255f);
 
-			// hsv[1].float = static_cast<uint8_t>(round(scales255 * minus)) - unsigned
+			// hsv[1].float = static_cast<uint8_t>((scales255 * minus)) - unsigned
 			vec0f = vmulq_f32(vec0f, vec0);
 			vec1f = vmulq_f32(vec1f, vec1);
 			vec2f = vmulq_f32(vec2f, vec2);
 			vec3f = vmulq_f32(vec3f, vec3);
-			vec0f = COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT(vec0f);
-			vec1f = COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT(vec1f);
-			vec2f = COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT(vec2f);
-			vec3f = COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT(vec3f);
+			vec0f = vcvtq_u32_f32(vec0f);
+			vec1f = vcvtq_u32_f32(vec1f);
+			vec2f = vcvtq_u32_f32(vec2f);
+			vec3f = vcvtq_u32_f32(vec3f);
 			vec0f = vcombine_u16(vmovn_s32(vec0f), vmovn_s32(vec1f));
 			vec2f = vcombine_u16(vmovn_s32(vec2f), vmovn_s32(vec3f));
 			vec8 = vcombine_u8(vqmovun_s16(vec0f), vqmovun_s16(vec2f)); // vec8 = hsv[1].u8
 
 			// compute scale = minus ? (1.f / minus) : 0.f
-			vec0 = vbicq_u32(myrecip(vec0), vceqq_s32(vec0, vecZero));
-			vec1 = vbicq_u32(myrecip(vec1), vceqq_s32(vec1, vecZero));
-			vec2 = vbicq_u32(myrecip(vec2), vceqq_s32(vec2, vecZero));
-			vec3 = vbicq_u32(myrecip(vec3), vceqq_s32(vec3, vecZero));
+			vec0 = vbicq_u32(COMPV_ARM_NEON_RECIPROCAL(vec0), vceqq_s32(vec0, vecZero));
+			vec1 = vbicq_u32(COMPV_ARM_NEON_RECIPROCAL(vec1), vceqq_s32(vec1, vecZero));
+			vec2 = vbicq_u32(COMPV_ARM_NEON_RECIPROCAL(vec2), vceqq_s32(vec2, vecZero));
+			vec3 = vbicq_u32(COMPV_ARM_NEON_RECIPROCAL(vec3), vceqq_s32(vec3, vecZero));
 
 			// compute scales43 = (43 * scale)
 			vec0 = vmulq_f32(vec0, vec43f);
@@ -142,16 +132,16 @@ void CompVImageConvRgb24ToHsv_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* rgb
 			vec1f = vmulq_f32(vec1f, vec1);
 			vec2f = vmulq_f32(vec2f, vec2);
 			vec3f = vmulq_f32(vec3f, vec3);
-			vec0f = COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT(vec0f);
+			vec0f = COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT(vec0f); //!\\ **MUST NOT*** use vcvtq_s32_f32
 			vec1f = COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT(vec1f);
 			vec2f = COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT(vec2f);
 			vec3f = COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT(vec3f);
 			vec0f = vcombine_s16(vmovn_s32(vec0f), vmovn_s32(vec1f));
 			vec2f = vcombine_s16(vmovn_s32(vec2f), vmovn_s32(vec3f));
-			vec9 = vcombine_u8(vqmovn_s16(vec0f), vqmovn_s16(vec2f)); //!\\ 'vqmovn_s16' instead of 'vqmovun_s16' because the values are signed
-			vec6 = vandq_u8(vec6, vec85); // (85 & m1)
-			vec7 = vandq_u8(vec7, vec171); // (171 & m2)
-			vec6 = vorrq_u8(vec6, vec7); // (85 & m1) | (171 & m2)
+			vec9 = vcombine_s8(vqmovn_s16(vec0f), vqmovn_s16(vec2f)); //!\\ 'vqmovn_s16' instead of 'vqmovun_s16' because the values are signed
+			vec6 = vandq_s8(vec6, vec85); // (85 & m1)
+			vec7 = vandq_s8(vec7, vec171); // (171 & m2)
+			vec6 = vorrq_s8(vec6, vec7); // (85 & m1) | (171 & m2)
 			vec9 = vqaddq_s8(vec9, vec6); // // vec9 = hsv[0].u8
 
 			// Store the result

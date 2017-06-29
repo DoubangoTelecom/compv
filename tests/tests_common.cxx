@@ -119,7 +119,7 @@ bool compv_tests_is_rcp()
 #if COMPV_ARCH_X86
 	return (CompVCpu::isEnabled(kCpuFlagSSSE3) || CompVCpu::isEnabled(kCpuFlagAVX2)) && (CompVCpu::isAsmEnabled() || CompVCpu::isIntrinsicsEnabled());
 #elif COMPV_ARCH_ARM
-	return (0) && (/*CompVCpu::isAsmEnabled() ||*/ CompVCpu::isIntrinsicsEnabled());
+	return (CompVCpu::isEnabled(kCpuFlagARM_NEON)) && (CompVCpu::isAsmEnabled() || CompVCpu::isIntrinsicsEnabled());
 #endif
 	return false;
 }
