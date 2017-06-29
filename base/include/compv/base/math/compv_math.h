@@ -54,7 +54,7 @@ COMPV_NAMESPACE_BEGIN()
 #define COMPV_MATH_ATAN2							std::atan2
 #define COMPV_MATH_ATAN								std::atan
 #define COMPV_MATH_ATAN2F							std::atan2f
-#define COMPV_MATH_ROUNDF_2_NEAREST_INT(f,inttype)			static_cast<inttype>((f) >= 0.0 ? ((f) + 0.5) : ((f) - 0.5)) //!\IMPORTANT: (f) is evaluated several times -> must be an 'immediate' value. Round to nearest.
+#define COMPV_MATH_ROUNDF_2_NEAREST_INT(f,inttype)			static_cast<inttype>(static_cast<int>/*Cast to 'int' then 'inttype' is important when 'inttype' is unsigned: see comment*/((f) >= 0.0 ? ((f) + 0.5) : ((f) - 0.5))) //!\IMPORTANT: (f) is evaluated several times -> must be an 'immediate' value. Round to nearest. Also, when f < 0.f must cast to int then 'inttype', see http://www.embeddeduse.com/2013/08/25/casting-a-negative-float-to-an-unsigned-int/
 #define COMPV_MATH_ROUNDFU_2_NEAREST_INT(f,inttype)			static_cast<inttype>((f) + 0.5) // fast rounding: (f) must be > 0, 0.5 will be rounded to toward the closest even number (SIMD: add 0.5, then cvt with truncation). Round to nearest.
 #define COMPV_MATH_HYPOT_NAIVE(x, y)				COMPV_MATH_SQRT((x)*(x) + (y)*(y))
 

@@ -16,11 +16,10 @@
 COMPV_NAMESPACE_BEGIN()
 
 // width must be >= 16
-// "scales43" and "scales255" are recomputed(faster) instead of trying to access values using indexes (not cache-friendly)
-void CompVImageConvRgba32ToHsv_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgba32Ptr, COMPV_ALIGNED(SSE) uint8_t* hsvPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride
-	, const compv_float32_t(*scales43)[256], const compv_float32_t(*scales255)[256])
+void CompVImageConvRgba32ToHsv_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgba32Ptr, COMPV_ALIGNED(SSE) uint8_t* hsvPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride)
 {
 	COMPV_DEBUG_INFO_CHECK_SSSE3();
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING("No ASM implementation");
 
 	compv_uscalar_t i, j, k, strideRGBA;
 	__m128i vec0, vec1, vec2, vec3, vec4, vec5, vec6, vec7, vec8, vec9;
@@ -155,8 +154,7 @@ void CompVImageConvRgba32ToHsv_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rg
 	}
 }
 
-void CompVImageConvRgb24ToHsv_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgb24Ptr, COMPV_ALIGNED(SSE) uint8_t* hsvPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride
-	, const compv_float32_t(*scales43)[256], const compv_float32_t(*scales255)[256])
+void CompVImageConvRgb24ToHsv_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgb24Ptr, COMPV_ALIGNED(SSE) uint8_t* hsvPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride)
 {
 	COMPV_DEBUG_INFO_CHECK_SSSE3();
 

@@ -17,11 +17,9 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-void CompVImageConvRgba32ToHsv_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t* rgba32Ptr, COMPV_ALIGNED(AVX) uint8_t* hsvPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride
-	, const compv_float32_t(*scales43)[256], const compv_float32_t(*scales255)[256]);
+void CompVImageConvRgba32ToHsv_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t* rgba32Ptr, COMPV_ALIGNED(AVX) uint8_t* hsvPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride);
 
-void CompVImageConvRgb24ToHsv_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t* rgb24Ptr, COMPV_ALIGNED(AVX) uint8_t* hsvPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride
-	, const compv_float32_t(*scales43)[256], const compv_float32_t(*scales255)[256]);
+void CompVImageConvRgb24ToHsv_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t* rgb24Ptr, COMPV_ALIGNED(AVX) uint8_t* hsvPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride);
 
 COMPV_NAMESPACE_END()
 

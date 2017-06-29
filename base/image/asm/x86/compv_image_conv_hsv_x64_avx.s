@@ -33,13 +33,11 @@ section .text
 ; arg(2) -> compv_uscalar_t width
 ; arg(3) -> compv_uscalar_t height
 ; arg(4) -> COMPV_ALIGNED(AVX) compv_uscalar_t stride
-; arg(5) -> const compv_float32_t(*scales43)[256] -> Useless (For C++ code only)
-; arg(6) -> const compv_float32_t(*scales255)[256] -> Useless (For C++ code only)
 sym(CompVImageConvRgb24ToHsv_Asm_X64_AVX2):
 	vzeroupper
 	push rbp
 	mov rbp, rsp
-	COMPV_YASM_SHADOW_ARGS_TO_STACK 7
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 5
 	COMPV_YASM_SAVE_YMM 15
 	;; end prolog ;;
 
