@@ -107,42 +107,34 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvYuv420_to_Rgb24_Asm_NEON32
             vld1.u8 vecUn, [uPtr :64]! @ #8 U samples, low mem
             vld1.u8 vecVn, [vPtr :64]! @ #8 V samples, low mem
 
-            @ Compute Y', U', V': substract and convert to I16 @
             vsubl.u8 vecV, vecVn, vec127n
             vsubl.u8 vecU, vecUn, vec127n
             vsubl.u8 vecYhigh, vecYlowy, vec16n
             vsubl.u8 vecYlow, vecYlowx, vec16n
 
-            @ Compute (37Y') @
-            vmul.s16 vecYhigh, vecYhigh, vec37
-            vmul.s16 vecYlow, vecYlow, vec37
-
-            @ Compute R = (37Y' + 0U' + 51V') >> 5 @
             vmul.s16 vec0, vecV, vec51
+            vmul.s16 vec1, vecU, vec65
+            vmul.s16 vecU, vecU, vec13
+            vmul.s16 vecYlow, vecYlow, vec37
+            vmul.s16 vecYhigh, vecYhigh, vec37
             vmov vecR, vec0
-            vzip.s16 vecR, vec0
+            vzip.s16 vecR, vec0 @ duplicate UV because of 1/2 sampling
+            vmov vecB, vec1
             vadd.s16 vecR, vecYlow, vecR
+            vzip.s16 vecB, vec1 @ duplicate UV because of 1/2 sampling
             vadd.s16 vec0, vecYhigh, vec0
+            vmla.s16 vecU, vecV, vec26
             vqshrun.s16 vecRx, vecR, #5
             vqshrun.s16 vecRy, vec0, #5
-
-            @ B = (37Y' + 65U' + 0V') >> 5 @
-            vmul.s16 vec1, vecU, vec65
-            vmov vecB, vec1
-            vzip.s16 vecB, vec1
             vadd.s16 vecB, vecYlow, vecB
-            vadd.s16 vec1, vecYhigh, vec1
-            vqshrun.s16 vecBx, vecB, #5
-            vqshrun.s16 vecBy, vec1, #5         
-
-            @ Compute G = (37Y' - 13U' - 26V') >> 5 = (37Y' - (13U' + 26V')) >> 5 @
-            vmul.s16 vecU, vecU, vec13
-            vmla.s16 vecU, vecV, vec26
             vmov vecV, vecU
+            vadd.s16 vec1, vecYhigh, vec1
             vzip.s16 vecU, vecV
+            vqshrun.s16 vecBx, vecB, #5
             vsub.s16 vecU, vecYlow, vecU
             vsub.s16 vecV, vecYhigh, vecV
             vqshrun.s16 vecGx, vecU, #5
+            vqshrun.s16 vecBy, vec1, #5
             vqshrun.s16 vecGy, vecV, #5
             
             vst3.u8 {vecRx, vecGx, vecBx}, [rgbPtr :64]!
@@ -156,7 +148,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvYuv420_to_Rgb24_Asm_NEON32
         add rgbPtr, rgbPtr, padRGB
         lsr i, i, #1 @ div i by #2 because UV sampled at 1/2
         neg i, i @ negate i for rollbacking uPtr and vPtr
-        tst j, #1 @ to check whether j is odd
+        tst j, #1 @ check whether j is odd
         movne i, padUV @ set i to padUV to move forward if j is odd
         add uPtr, uPtr, i @ rollback or move forward
         add vPtr, vPtr, i @ rollback or move forward
