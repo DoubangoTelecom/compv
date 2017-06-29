@@ -128,7 +128,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvYuv420_to_Rgb24_Asm_NEON64
             zip1 vecV.8h, vecU.8h, vecU.8h // duplicate UV because of 1/2 sampling
             zip2 vecU.8h, vecU.8h, vecU.8h // duplicate UV because of 1/2 sampling
             add vec1.8h, vecYhigh.8h, vec1.8h
-            
             sqshrun vecB.8b, vecB.8h, #5
             sub vecV.8h, vecYlow.8h, vecV.8h
             sub vecU.8h, vecYhigh.8h, vecU.8h
@@ -147,7 +146,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvYuv420_to_Rgb24_Asm_NEON64
         lsr i, i, #1 // div i by #2 because UV sampled at 1/2
         neg i, i // negate i for rollbacking uPtr and vPtr
         tst j, #1 // check whether j is odd
-        csel i, padUV, i, ne // set i to padUV to move forward if j is odd FIXME(dmi): use cneg i, i, padUV, eq
+        csel i, padUV, i, ne // set i to padUV to move forward if j is odd
         add uPtr, uPtr, i // rollback or move forward
         add vPtr, vPtr, i // rollback or move forward
         add j, j, #1
