@@ -15,11 +15,12 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+static const int8x8_t vec43n = vdup_n_s8(43); // half-vector
+
 static const int32x4_t vecZero = vdupq_n_s32(0);
 static const int8x16_t vec85 = vdupq_n_s8(85);
 static const uint8x16_t vec171 = vdupq_n_u8(171);
 static const uint8x16_t vecFF = vceqq_u8(vec85, vec85);
-static const float32x4_t vec43f = vdupq_n_f32(43.f);
 static const float32x4_t vec255f = vdupq_n_f32(255.f);
 static const float32x4_t vecHalf = vdupq_n_f32(0.5f);
 
@@ -102,21 +103,9 @@ void CompVImageConvRgb24ToHsv_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* rgb
 			vec2f = vcombine_u16(vmovn_s32(vec2f), vmovn_s32(vec3f));
 			vec8 = vcombine_u8(vqmovun_s16(vec0f), vqmovun_s16(vec2f)); // vec8 = hsv[1].u8
 
-			// compute scale = minus ? (1.f / minus) : 0.f
-			vec0 = vbicq_u32(COMPV_ARM_NEON_RECIPROCAL(vec0), vceqq_s32(vec0, vecZero));
-			vec1 = vbicq_u32(COMPV_ARM_NEON_RECIPROCAL(vec1), vceqq_s32(vec1, vecZero));
-			vec2 = vbicq_u32(COMPV_ARM_NEON_RECIPROCAL(vec2), vceqq_s32(vec2, vecZero));
-			vec3 = vbicq_u32(COMPV_ARM_NEON_RECIPROCAL(vec3), vceqq_s32(vec3, vecZero));
-
-			// compute scales43 = (43 * scale)
-			vec0 = vmulq_f32(vec0, vec43f);
-			vec1 = vmulq_f32(vec1, vec43f);
-			vec2 = vmulq_f32(vec2, vec43f);
-			vec3 = vmulq_f32(vec3, vec43f);
-
-			// convert diff to epi32 then to float32 (signed)
-			vec1f = vmovl_s8(vget_low_s8(vec5));
-			vec3f = vmovl_s8(vget_high_s8(vec5));
+			// B = ToFloat32(ToInt32(ToInt16(diff * 43)))
+			vec1f = vmull_s8(vget_low_s8(vec5), vec43n);
+			vec3f = vmull_s8(vget_high_s8(vec5), vec43n);
 			vec0f = vmovl_s16(vget_low_s16(vec1f));
 			vec1f = vmovl_s16(vget_high_s16(vec1f));
 			vec2f = vmovl_s16(vget_low_s16(vec3f));
@@ -126,7 +115,13 @@ void CompVImageConvRgb24ToHsv_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* rgb
 			vec2f = vcvtq_f32_s32(vec2f);
 			vec3f = vcvtq_f32_s32(vec3f);
 
-			// compute static_cast<uint8_t>(round(diff * scales43)) + ((85 & m1) | (171 & m2))
+			// scale = minus ? (1.f / minus) : 0.f
+			vec0 = vbicq_u32(COMPV_ARM_NEON_RECIPROCAL(vec0), vceqq_s32(vec0, vecZero));
+			vec1 = vbicq_u32(COMPV_ARM_NEON_RECIPROCAL(vec1), vceqq_s32(vec1, vecZero));
+			vec2 = vbicq_u32(COMPV_ARM_NEON_RECIPROCAL(vec2), vceqq_s32(vec2, vecZero));
+			vec3 = vbicq_u32(COMPV_ARM_NEON_RECIPROCAL(vec3), vceqq_s32(vec3, vecZero));
+
+			// compute static_cast<uint8_t>(round(B * scale) + ((85 & m1) | (171 & m2))
 			vec0f = vmulq_f32(vec0f, vec0);
 			vec1f = vmulq_f32(vec1f, vec1);
 			vec2f = vmulq_f32(vec2f, vec2);
