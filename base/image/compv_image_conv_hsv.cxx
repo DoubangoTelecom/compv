@@ -13,6 +13,7 @@
 
 #include "compv/base/image/intrin/x86/compv_image_conv_hsv_intrin_ssse3.h"
 #include "compv/base/image/intrin/x86/compv_image_conv_hsv_intrin_avx2.h"
+#include "compv/base/image/intrin/arm/compv_image_conv_hsv_intrin_neon.h"
 
 #define COMPV_THIS_CLASSNAME	"CompVImageConvToHSV"
 
@@ -96,6 +97,9 @@ COMPV_ERROR_CODE CompVImageConvToHSV::rgbxToHsv(const CompVMatPtr& imageRGBx, Co
 			COMPV_EXEC_IFDEF_ASM_X64(rgbx_to_hsv = CompVImageConvRgb24ToHsv_Asm_X64_AVX2);
 		}
 #elif COMPV_ARCH_ARM
+		if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && imageRGBx->isAlignedNEON() && imageHSV->isAlignedNEON()) {
+			COMPV_EXEC_IFDEF_INTRIN_ARM(rgbx_to_hsv = CompVImageConvRgb24ToHsv_Intrin_NEON);
+		}
 #endif
 		break;
 	case COMPV_SUBTYPE_PIXELS_RGBA32:

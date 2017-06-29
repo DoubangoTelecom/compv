@@ -7,7 +7,7 @@
 #include "compv/base/image/intrin/arm/compv_image_conv_to_rgbx_intrin_neon.h"
 
 #if COMPV_ARCH_ARM && COMPV_INTRINSIC
-#include "compv/base/intrin/x86/compv_intrin_sse.h"
+#include "compv/base/intrin/arm/compv_intrin_neon.h"
 #include "compv/base/image/compv_image_conv_common.h"
 #include "compv/base/compv_simd_globals.h"
 #include "compv/base/math/compv_math.h"
@@ -15,8 +15,8 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-static const uint8x8_t vec16 = vdup_n_u8(16); // half-vector
-static const uint8x8_t vec127 = vdup_n_u8(127); // half-vector
+static const uint8x8_t vec16n = vdup_n_u8(16); // half-vector
+static const uint8x8_t vec127n = vdup_n_u8(127); // half-vector
 
 static const int16x8_t vec37 = vdupq_n_s16(37);
 static const int16x8_t vec51 = vdupq_n_s16(51);
@@ -44,10 +44,10 @@ void CompVImageConvYuv420_to_Rgb24_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t
 			vecVn = vld1_u8(&vPtr[l]); // #8 V samples, low mem
 
 			/* Compute Y', U', V': substract and convert to I16 */
-			vecYhigh = vsubl_u8(vget_high_u8(vecYlow), vec16);
-			vecYlow = vsubl_u8(vget_low_u8(vecYlow), vec16);
-			vecU = vsubl_u8(vecUn, vec127);
-			vecV = vsubl_u8(vecVn, vec127);
+			vecYhigh = vsubl_u8(vget_high_u8(vecYlow), vec16n);
+			vecYlow = vsubl_u8(vget_low_u8(vecYlow), vec16n);
+			vecU = vsubl_u8(vecUn, vec127n);
+			vecV = vsubl_u8(vecVn, vec127n);
 
 			/* Compute (37Y'), (51V') and (65U') */
 			vecYlow = vmulq_s16(vecYlow, vec37);
