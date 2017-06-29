@@ -39,8 +39,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVTest_Asm_NEON64
 	COMPV_GAS_FUNCTION_PROLOG
 	COMPV_GAS_SHADOW_ARGS_TO_STACK 11 // When there are less than 8 args (0-7) then, no need to shadow/unshadow args.
 	COMPV_GAS_SAVE_NEON_REGS
-	COMPV_GAS_ALIGN_STACK 16, r9
-	COMPV_GAS_MEMALLOC 128
+	//COMPV_GAS_ALIGN_STACK 16, r9
+	//COMPV_GAS_MEMALLOC 128
 
 	// ldp_arg needed only if threre are less than 8 args (0-7)
     ldp_arg 0, r0, r1
@@ -59,8 +59,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVTest_Asm_NEON64
 	//name7 .req r7
 	// use .unreq to undef
 
-	COMPV_GAS_MEMFREE 128
-	COMPV_GAS_UNALIGN_STACK r9, r10 // *must not* use the same register
+	//COMPV_GAS_MEMFREE 128
+	//COMPV_GAS_UNALIGN_STACK r9, r10 // *must not* use the same register
 	COMPV_GAS_RESTORE_NEON_REGS
 	COMPV_GAS_UNSHADOW_ARGS
 	COMPV_GAS_FUNCTION_EPILOG

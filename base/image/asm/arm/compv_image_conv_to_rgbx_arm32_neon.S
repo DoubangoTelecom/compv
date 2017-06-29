@@ -129,7 +129,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvYuv420_to_Rgb24_Asm_NEON32
             vadd.s16 vecB, vecYlow, vecB
             vmov vecV, vecU
             vadd.s16 vec1, vecYhigh, vec1
-            vzip.s16 vecU, vecV
+            vzip.s16 vecU, vecV @ duplicate UV because of 1/2 sampling
             vqshrun.s16 vecBx, vecB, #5
             vsub.s16 vecU, vecYlow, vecU
             vsub.s16 vecV, vecYhigh, vecV
@@ -139,7 +139,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvYuv420_to_Rgb24_Asm_NEON32
             
             vst3.u8 {vecRx, vecGx, vecBx}, [rgbPtr :64]!
             vst3.u8 {vecRy, vecGy, vecBy}, [rgbPtr :64]!
-            add i, #16
+            add i, i, #16
             cmp i, width
 			blt LoopWidth_CompVImageConvYuv420_to_Rgb24_Asm_NEON32
             @End_of_LoopWidth@
@@ -178,7 +178,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvYuv420_to_Rgb24_Asm_NEON32
     .unreq vecYhighx
     .unreq vecYhighy
     .unreq vecU
-    .unreq vecUnx
+    .unreq vecUn
     .unreq vecV
     .unreq vecVn
     .unreq vec16n
