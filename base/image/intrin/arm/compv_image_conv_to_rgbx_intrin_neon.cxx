@@ -29,7 +29,7 @@ void CompVImageConvYuv420_to_Rgb24_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t
 	COMPV_DEBUG_INFO_CHECK_NEON();
 	
 	compv_uscalar_t i, j, k, l;
-	const compv_uscalar_t strideUV = ((stride + 1) >> 1);
+    const compv_uscalar_t strideUV = (stride >> 1); // no need for "((stride + 1) >> 1)" because stride is even (aligned on #16 bytes)
 	const compv_uscalar_t strideRGB = (stride << 1) + stride;
 	int16x8_t vecYlow, vecYhigh, vecU, vecV, vec0, vec1;
 	uint8x16x3_t vecRGB;
@@ -49,20 +49,20 @@ void CompVImageConvYuv420_to_Rgb24_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t
 			vecU = vsubl_u8(vecUn, vec127n);
 			vecV = vsubl_u8(vecVn, vec127n);
 
-			/* Compute (37Y'), (51V') and (65U') */
+			/* Compute (37Y') */
 			vecYlow = vmulq_s16(vecYlow, vec37);
 			vecYhigh = vmulq_s16(vecYhigh, vec37);
-			vec0 = vmulq_s16(vecV, vec51);
-			vec1 = vmulq_s16(vecU, vec65);
 
-			/* Compute R = (37Y' + 0U' + 51V') >> 5 */
+			/* Compute R = (37Y' + 0U' + 51V') >> 5, Instead of (#2 'vmlaq_s16' + #2 'vzipq_s16') use (#1 'vmulq_s16' + #1 'vzipq_s16' and #2 'vaddq_s16') */
+            vec0 = vmulq_s16(vecV, vec51);
 			vec2 = vzipq_s16(vec0, vec0); // UV sampled 1/2 -> duplicate to have same size as Y
 			vecRGB.val[0] = vcombine_u8(
 				vqshrun_n_s16(vaddq_s16(vecYlow, vec2.val[0]), 5),
 				vqshrun_n_s16(vaddq_s16(vecYhigh, vec2.val[1]), 5)
 			);
 
-			/* B = (37Y' + 65U' + 0V') >> 5 */
+			/* B = (37Y' + 65U' + 0V') >> 5, Instead of (#2 'vmlaq_s16' + #2 'vzipq_s16') use (#1 'vmulq_s16' + #1 'vzipq_s16' and #2 'vaddq_s16') */
+            vec1 = vmulq_s16(vecU, vec65);
 			vec2 = vzipq_s16(vec1, vec1); // UV sampled 1/2 -> duplicate to have same size as Y
 			vecRGB.val[2] = vcombine_u8( //!\\ Notice the indice: #2 (B)
 				vqshrun_n_s16(vaddq_s16(vecYlow, vec2.val[0]), 5),

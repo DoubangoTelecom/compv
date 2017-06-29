@@ -20,7 +20,7 @@ void CompVImageConvYuv420_to_Rgba32_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t
 	COMPV_DEBUG_INFO_CHECK_SSE2();
 
 	compv_uscalar_t i, j, k, l;
-	const compv_uscalar_t strideUV = ((stride + 1) >> 1);
+	const compv_uscalar_t strideUV = (stride >> 1); // no need for "((stride + 1) >> 1)" because stride is even (aligned on #16 bytes)
 	const compv_uscalar_t strideRGBA = (stride << 2);
 	__m128i vecYlow, vecYhigh, vecU, vecV, vecR, vecG, vecB;
 	__m128i vec0, vec1;

@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		152BA37B1F05711F0024C7A9 /* houghkht.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 152BA3791F05711F0024C7A9 /* houghkht.cxx */; };
+		152BA37C1F05711F0024C7A9 /* houghsht.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 152BA37A1F05711F0024C7A9 /* houghsht.cxx */; };
 		156E41B51E7118F900DF9950 /* sobel.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 156E41B41E7118F900DF9950 /* sobel.cxx */; };
 		156E96D01E40EF5900BC5329 /* convlt.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 156E96CF1E40EF5900BC5329 /* convlt.cxx */; };
 		157840911E36CC2E00955396 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 157840901E36CC2E00955396 /* main.m */; };
@@ -99,6 +101,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		152BA3791F05711F0024C7A9 /* houghkht.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = houghkht.cxx; path = ../../houghkht.cxx; sourceTree = "<group>"; };
+		152BA37A1F05711F0024C7A9 /* houghsht.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = houghsht.cxx; path = ../../houghsht.cxx; sourceTree = "<group>"; };
 		156E41B41E7118F900DF9950 /* sobel.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sobel.cxx; path = ../../sobel.cxx; sourceTree = "<group>"; };
 		156E96CF1E40EF5900BC5329 /* convlt.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = convlt.cxx; path = ../../convlt.cxx; sourceTree = "<group>"; };
 		1578408C1E36CC2E00955396 /* image.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = image.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -240,6 +244,8 @@
 		157840D01E36CCDE00955396 /* source */ = {
 			isa = PBXGroup;
 			children = (
+				152BA3791F05711F0024C7A9 /* houghkht.cxx */,
+				152BA37A1F05711F0024C7A9 /* houghsht.cxx */,
 				159A2D4C1E7DAC2F000FEBE5 /* canny.cxx */,
 				156E41B41E7118F900DF9950 /* sobel.cxx */,
 				15AE9FFA1E644FC40030D908 /* patch.cxx */,
@@ -406,7 +412,9 @@
 				157F72781E580751000DE45F /* bruteforce.cxx in Sources */,
 				159A2D4D1E7DAC2F000FEBE5 /* canny.cxx in Sources */,
 				157840C81E36CCD800955396 /* scale.cxx in Sources */,
+				152BA37C1F05711F0024C7A9 /* houghsht.cxx in Sources */,
 				157F72C41E5811E8000DE45F /* tests_common.cxx in Sources */,
+				152BA37B1F05711F0024C7A9 /* houghkht.cxx in Sources */,
 				157F72791E580751000DE45F /* pyramid.cxx in Sources */,
 				157840C61E36CCD800955396 /* feature_fast.cxx in Sources */,
 				157840941E36CC2E00955396 /* AppDelegate.mm in Sources */,

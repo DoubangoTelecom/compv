@@ -25,7 +25,7 @@ void CompVImageConvYuv420_to_Rgba32_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t
 	_mm256_zeroupper();
 
 	compv_uscalar_t i, j, k, l;
-	const compv_uscalar_t strideUV = ((stride + 1) >> 1);
+	const compv_uscalar_t strideUV = (stride >> 1); // no need for "((stride + 1) >> 1)" because stride is even (aligned on #32 bytes)
 	const compv_uscalar_t strideRGBA = (stride << 2);
 	__m256i vecYlow, vecYhigh, vecU, vecV, vecR, vecG, vecB;
 	__m256i vec0, vec1;

@@ -15,6 +15,7 @@
 #include "compv/core/features/hough/intrin/arm/compv_core_feature_houghkht_intrin_neon.h"
 
 #include <algorithm> /* std::reverse */
+#include <float.h> /* DBL_MAX */
 
 #define COMPV_THIS_CLASSNAME	"CompVHoughKht"
 
