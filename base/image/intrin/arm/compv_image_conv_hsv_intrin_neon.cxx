@@ -41,7 +41,8 @@ void CompVImageConvRgb24ToHsv_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* rgb
 
 			vec3 = vminq_u8(vecLanes.val[2], vminq_u8(vecLanes.val[0], vecLanes.val[1])); // vec3 = minVal
 			vec4 = vmaxq_u8(vecLanes.val[2], vmaxq_u8(vecLanes.val[0], vecLanes.val[1])); // vec4 = maxVal = hsv[2].u8
-			vec3 = vqsubq_u8(vec4, vec3); // vec3 = minus
+			vec1 = vsubl_u8(vget_low_u8(vec4), vget_low_u8(vec3)); // vec1 = minus.low
+			vec3 = vsubl_u8(vget_high_u8(vec4), vget_high_u8(vec3)); // vec3 = minus.high
 
 			vec5 = vceqq_u8(vec4, vecLanes.val[0]); // m0 = (maxVal == r)
 			vec6 = vbicq_u8(vceqq_u8(vec4, vecLanes.val[1]), vec5); // vec6 = m1 = (maxVal == g) & ~m0
@@ -55,8 +56,6 @@ void CompVImageConvRgb24ToHsv_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* rgb
 			vec5 = vorrq_u8(vec5, vec9); // vec5 = diff
 
 			// convert minus to epi32 then to float32 (unsigned)
-			vec1 = vmovl_u8(vget_low_u8(vec3));
-			vec3 = vmovl_u8(vget_high_u8(vec3));
 			vec0 = vmovl_u16(vget_low_u16(vec1));
 			vec1 = vmovl_u16(vget_high_u16(vec1));
 			vec2 = vmovl_u16(vget_low_u16(vec3));
