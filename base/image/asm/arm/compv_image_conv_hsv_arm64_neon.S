@@ -86,27 +86,22 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb24ToHsv_Asm_NEON64
             umax vec4.16b, vec0f.16b, vec1f.16b
             umin vec3.16b, vec3.16b, vec2f.16b
             umax vec4.16b, vec4.16b, vec2f.16b
-            usubl vec1.8h, vec4.8b, vec3.8b
-            usubl2 vec3.8h, vec4.16b, vec3.16b
-
             cmeq vec5.16b, vec4.16b, vec0f.16b
+            usubl vec1.8h, vec4.8b, vec3.8b
+            usubl2 vec3.8h, vec4.16b, vec3.16b            
             cmeq vec6.16b, vec4.16b, vec1f.16b
             orr vec8.16b, vec5.16b, vec6.16b
             bic vec6.16b, vec6.16b, vec5.16b
             bic vec7.16b, vecFF.16b, vec8.16b
-
             sub vec9.16b, vec0f.16b, vec1f.16b
             sub vec3f.16b, vec1f.16b, vec2f.16b
             sub vec8.16b, vec2f.16b, vec0f.16b
             and vec9.16b, vec7.16b, vec9.16b
             and vec5.16b, vec5.16b, vec3f.16b
             and vec8.16b, vec6.16b, vec8.16b
-
             orr vec5.16b, vec5.16b, vec8.16b
-            orr vec5.16b, vec5.16b, vec9.16b
-
-            # minus = ToFloat32(ToUInt32(ToUInt16(vec4))) # 
             uxtl vec0.4s, vec1.4h
+            orr vec5.16b, vec5.16b, vec9.16b
             uxtl2 vec1.4s, vec1.8h
             uxtl vec2.4s, vec3.4h
             uxtl2 vec3.4s, vec3.8h
@@ -114,8 +109,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb24ToHsv_Asm_NEON64
             ucvtf vec1.4s, vec1.4s
             ucvtf vec2.4s, vec2.4s
             ucvtf vec3.4s, vec3.4s
-
-            # maxVal = ToFloat32(ToUInt32(ToUInt16(ToUInt8(vec4)))) #
             uxtl vec1f.8h, vec4.8b
             uxtl2 vec3f.8h, vec4.16b
             uxtl vec0f.4s, vec1f.4h
@@ -126,8 +119,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb24ToHsv_Asm_NEON64
             ucvtf vec1f.4s, vec1f.4s
             ucvtf vec2f.4s, vec2f.4s
             ucvtf vec3f.4s, vec3f.4s
-
-            # scale = maxVal ? (1.f / maxVal) : 0.f #
             cmeq v24.4s, vec0f.4s, vecZero.4s
             cmeq v25.4s, vec1f.4s, vecZero.4s
             cmeq v26.4s, vec2f.4s, vecZero.4s
@@ -136,36 +127,40 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb24ToHsv_Asm_NEON64
             frecpe vec1f.4s, vec1f.4s
             frecpe vec2f.4s, vec2f.4s
             frecpe vec3f.4s, vec3f.4s
+            cmeq v28.4s, vec0.4s, vecZero.4s
+            cmeq v29.4s, vec1.4s, vecZero.4s
             bic vec0f.16b, vec0f.16b, v24.16b
             bic vec1f.16b, vec1f.16b, v25.16b
-            bic vec2f.16b, vec2f.16b, v26.16b
-            bic vec3f.16b, vec3f.16b, v27.16b
-
-            # scales255 = (255 * scale) #
             fmul vec0f.4s, vec0f.4s, vec255f.4s
             fmul vec1f.4s, vec1f.4s, vec255f.4s
+            bic vec2f.16b, vec2f.16b, v26.16b
+            bic vec3f.16b, vec3f.16b, v27.16b
             fmul vec2f.4s, vec2f.4s, vec255f.4s
             fmul vec3f.4s, vec3f.4s, vec255f.4s
-
-            # hsv[1].float = static_cast<uint8_t>((scales255 * minus)) - unsigned #
+            cmeq v30.4s, vec2.4s, vecZero.4s
+            cmeq v31.4s, vec3.4s, vecZero.4s
             fmul vec0f.4s, vec0f.4s, vec0.4s
             fmul vec1f.4s, vec1f.4s, vec1.4s
             fmul vec2f.4s, vec2f.4s, vec2.4s
             fmul vec3f.4s, vec3f.4s, vec3.4s
+            frecpe vec0.4s, vec0.4s
+            frecpe vec1.4s, vec1.4s
             fcvtzu vec0f.4s, vec0f.4s
             fcvtzu vec1f.4s, vec1f.4s
             fcvtzu vec2f.4s, vec2f.4s
             fcvtzu vec3f.4s, vec3f.4s
+            frecpe vec2.4s, vec2.4s
+            frecpe vec3.4s, vec3.4s
             xtn vec0f.4h, vec0f.4s
             xtn2 vec0f.8h, vec1f.4s
             xtn vec2f.4h, vec2f.4s
             xtn2 vec2f.8h, vec3f.4s
             sqxtun vec8.8b, vec0f.8h
-            sqxtun2 vec8.16b, vec2f.8h // vec8 = hsv[1].u8
-
-            # B = ToFloat32(ToInt32(ToInt16(diff * 43))) #
             smull vec1f.8h, vec5.8b, vec43n.8b
             smull2 vec3f.8h, vec5.16b, vec43n.16b
+            sqxtun2 vec8.16b, vec2f.8h // vec8 = hsv[1].u8
+            bic vec0.16b, vec0.16b, v28.16b
+            bic vec1.16b, vec1.16b, v29.16b
             sxtl vec0f.4s, vec1f.4h
             sxtl2 vec1f.4s, vec1f.8h
             sxtl vec2f.4s, vec3f.4h
@@ -174,26 +169,14 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb24ToHsv_Asm_NEON64
             scvtf vec1f.4s, vec1f.4s
             scvtf vec2f.4s, vec2f.4s
             scvtf vec3f.4s, vec3f.4s
-
-            # scale = minus ? (1.f / minus) : 0.f #
-            cmeq v28.4s, vec0.4s, vecZero.4s
-            cmeq v29.4s, vec1.4s, vecZero.4s
-            cmeq v30.4s, vec2.4s, vecZero.4s
-            cmeq v31.4s, vec3.4s, vecZero.4s
-            frecpe vec0.4s, vec0.4s
-            frecpe vec1.4s, vec1.4s
-            frecpe vec2.4s, vec2.4s
-            frecpe vec3.4s, vec3.4s
-            bic vec0.16b, vec0.16b, v28.16b
-            bic vec1.16b, vec1.16b, v29.16b
-            bic vec2.16b, vec2.16b, v30.16b
-            bic vec3.16b, vec3.16b, v31.16b
-
-            # compute static_cast<uint8_t>(round(B * scale) + ((85 & m1) | (171 & m2)) #
             fmul vec0f.4s, vec0f.4s, vec0.4s
             fmul vec1f.4s, vec1f.4s, vec1.4s
             fmul vec2f.4s, vec2f.4s, vec2.4s
             fmul vec3f.4s, vec3f.4s, vec3.4s
+            bic vec2.16b, vec2.16b, v30.16b
+            bic vec3.16b, vec3.16b, v31.16b
+            and vec6.16b, vec6.16b, vec85.16b
+            and vec7.16b, vec7.16b, vec171.16b
             fcvtas vec0f.4s, vec0f.4s
             fcvtas vec1f.4s, vec1f.4s
             fcvtas vec2f.4s, vec2f.4s
@@ -203,14 +186,12 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb24ToHsv_Asm_NEON64
             xtn vec2f.4h, vec2f.4s
             xtn2 vec2f.8h, vec3f.4s
             sqxtn vec9.8b, vec0f.8h
-            sqxtn2 vec9.16b, vec2f.8h
-            and vec6.16b, vec6.16b, vec85.16b
-            and vec7.16b, vec7.16b, vec171.16b
             orr vec6.16b, vec6.16b, vec7.16b
-
+            sqxtn2 vec9.16b, vec2f.8h
             sqadd vec9.16b, vec9.16b, vec6.16b
-            st3 {vec9.16b, vec8.16b, vec4.16b}, [hsvPtr], #((16*3)*COMPV_GAS_UINT8_SZ_BYTES)
 
+            st3 {vec9.16b, vec8.16b, vec4.16b}, [hsvPtr], #((16*3)*COMPV_GAS_UINT8_SZ_BYTES)
+            
             add i, i, #48
             cmp i, width
             blt LoopWidth_CompVImageConvRgb24ToHsv_Asm_NEON64

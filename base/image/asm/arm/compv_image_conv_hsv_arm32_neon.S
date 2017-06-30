@@ -129,8 +129,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb24ToHsv_Asm_NEON32
             vand.s8 vec5, vec5, vec3f
             vand.s8 vec8, vec6, vec8
             vorr.s8 vec5, vec5, vec8
-            vorr.s8 vec5, vec5, vec9
             vmovl.u16 vec0, vec1x
+            vorr.s8 vec5, vec5, vec9
             vmovl.u16 vec1, vec1y
             vmovl.u16 vec2, vec3x
             vmovl.u16 vec3, vec3y
@@ -233,8 +233,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb24ToHsv_Asm_NEON32
             vmovn.s32 vec2fx, vec2f
             vmovn.s32 vec2fy, vec3f
             vqmovn.s16 vec9x, vec0f
-            vqmovn.s16 vec9y, vec2f
             vand.s8 vec6, vec6, vec0
+            vqmovn.s16 vec9y, vec2f
             vand.s8 vec7, vec7, vec1
             vorr.s8 vec6, vec6, vec7
             vqadd.s8 vec9, vec9, vec6

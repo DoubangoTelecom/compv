@@ -27,7 +27,6 @@ static const float32x4_t vecHalf = vdupq_n_f32(0.5f);
 void CompVImageConvRgb24ToHsv_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* rgb24Ptr, COMPV_ALIGNED(NEON) uint8_t* hsvPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
 {
 	COMPV_DEBUG_INFO_CHECK_NEON();
-    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Please use ASM code which is faaaster");
     
 	compv_uscalar_t i, j;
 	int32x4_t vec0, vec1, vec2, vec3, vec4, vec5, vec6, vec7, vec8, vec9;
