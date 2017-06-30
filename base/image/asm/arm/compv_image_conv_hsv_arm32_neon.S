@@ -88,7 +88,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb24ToHsv_Asm_NEON32
 	and pad, pad, #-16
 	sub pad, stride, pad
     add pad, pad, pad, LSL #1 @ from samples to bytes (pad * 3)
-    add width, width, widtth, LSL #1 @ from samples to bytes (width * 3)
+    add width, width, width, LSL #1 @ from samples to bytes (width * 3)
 
     ldr val85, =data255f
     vld1.s32 {vec255f}, [val85]
@@ -114,37 +114,26 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb24ToHsv_Asm_NEON32
             vmax.u8 vec4, vec0f, vec1f
             vmin.u8 vec3, vec3, vec2f
             vmax.u8 vec4, vec4, vec2f
+            vceq.u8 vec7, vec7, vec7 @ vec7 = vecFF
             vsubl.u8 vec1, vec4x, vec3x
             vsubl.u8 vec3, vec4y, vec3y
-
             vceq.u8 vec5, vec4, vec0f
             vceq.u8 vec6, vec4, vec1f
-            vceq.u8 vec7, vec7, vec7 @ vec7 = vecFF
             vorr.u8 vec8, vec5, vec6
             vbic.u8 vec6, vec6, vec5
             vbic.u8 vec7, vec7, vec8
-
             vsub.s8 vec9, vec0f, vec1f
             vsub.s8 vec3f, vec1f, vec2f
             vsub.s8 vec8, vec2f, vec0f
             vand.s8 vec9, vec7, vec9
             vand.s8 vec5, vec5, vec3f
             vand.s8 vec8, vec6, vec8
-
             vorr.s8 vec5, vec5, vec8
             vorr.s8 vec5, vec5, vec9
-
-            @ minus = ToFloat32(ToUInt32(ToUInt16(vec4))) @
             vmovl.u16 vec0, vec1x
             vmovl.u16 vec1, vec1y
             vmovl.u16 vec2, vec3x
             vmovl.u16 vec3, vec3y
-            vcvt.f32.u32 vec0, vec0
-            vcvt.f32.u32 vec1, vec1
-            vcvt.f32.u32 vec2, vec2
-            vcvt.f32.u32 vec3, vec3
-
-            @ maxVal = ToFloat32(ToUInt32(ToUInt16(ToUInt8(vec4)))) @
             vmovl.u8 vec1f, vec4x
             vmovl.u8 vec3f, vec4y
             vmovl.u16 vec0f, vec1fx
@@ -155,92 +144,101 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb24ToHsv_Asm_NEON32
             vcvt.f32.u32 vec1f, vec1f
             vcvt.f32.u32 vec2f, vec2f
             vcvt.f32.u32 vec3f, vec3f
-
-            @ scale = maxVal ? (1.f / maxVal) : 0.f @
+            vcvt.f32.u32 vec0, vec0
+            vcvt.f32.u32 vec1, vec1
             vceqq.s32 vec8, vec0f, vecZero
             vrecpeq.f32 vec0f, vec0f
             vceqq.s32 vec9, vec1f, vecZero
             vrecpeq.f32 vec1f, vec1f
+            vcvt.f32.u32 vec2, vec2
             vbicq.u32 vec0f, vec0f, vec8
             vceqq.s32 vec8, vec2f, vecZero
+            vmul.f32 vec0f, vec0f, vec255f
             vrecpeq.f32 vec2f, vec2f
             vbicq.u32 vec1f, vec1f, vec9
             vceqq.s32 vec9, vec3f, vecZero
-            vrecpeq.f32 vec3f, vec3f
-            vbicq.u32 vec2f, vec2f, vec8
-            vbicq.u32 vec3f, vec3f, vec9
-
-            @ scales255 = (255 * scale) @
-            vmul.f32 vec0f, vec0f, vec255f
             vmul.f32 vec1f, vec1f, vec255f
+            vrecpeq.f32 vec3f, vec3f
+            vcvt.f32.u32 vec3, vec3
+            vbicq.u32 vec2f, vec2f, vec8
             vmul.f32 vec2f, vec2f, vec255f
+            vbicq.u32 vec3f, vec3f, vec9
             vmul.f32 vec3f, vec3f, vec255f
-
-            @ hsv[1].float = static_cast<uint8_t>((scales255 * minus)) - unsigned @
             vmul.f32 vec0f, vec0f, vec0
             vmul.f32 vec1f, vec1f, vec1
             vmul.f32 vec2f, vec2f, vec2
             vmul.f32 vec3f, vec3f, vec3
+            vdup.s8 vec9x, val43 @ vec9 = vec43n
             vcvt.u32.f32 vec0f, vec0f
             vcvt.u32.f32 vec1f, vec1f
             vcvt.u32.f32 vec2f, vec2f
             vcvt.u32.f32 vec3f, vec3f
             vmovn.s32 vec0fx, vec0f
             vmovn.s32 vec0fy, vec1f
+            vmull.s8 vec1f, vec5x, vec9x
             vmovn.s32 vec2fx, vec2f
             vmovn.s32 vec2fy, vec3f
+            vmull.s8 vec3f, vec5y, vec9x
             vqmovun.s16 vec8x, vec0f
             vqmovun.s16 vec8y, vec2f @ vec8 = hsv[1].u8
-
-            @ B = ToFloat32(ToInt32(ToInt16(diff * 43))) @
-            vdup.s8 vec9x, val43 @ vec9 = vec43n
-            vmull.s8 vec1f, vec5x, vec9x
-            vmull.s8 vec3f, vec5y, vec9x
-            vmovl.s16 vec0f, vec1fx
-            vmovl.s16 vec1f, vec1fy
-            vmovl.s16 vec2f, vec3fx
-            vmovl.s16 vec3f, vec3fy
-            vcvt.f32.s32 vec0f, vec0f
-            vcvt.f32.s32 vec1f, vec1f
-            vcvt.f32.s32 vec2f, vec2f
-            vcvt.f32.s32 vec3f, vec3f
-
-            @ scale = minus ? (1.f / minus) : 0.f @
             vceqq.s32 vec5, vec0, vecZero
             vrecpeq.f32 vec0, vec0
+            vmovl.s16 vec0f, vec1fx
             vceqq.s32 vec9, vec1, vecZero
+            vcvt.f32.s32 vec0f, vec0f
             vrecpeq.f32 vec1, vec1
+            vmovl.s16 vec1f, vec1fy
             vbicq.u32 vec0, vec0, vec5
             vceqq.s32 vec5, vec2, vecZero
+            vcvt.f32.s32 vec1f, vec1f
             vrecpeq.f32 vec2, vec2
+            vmovl.s16 vec2f, vec3fx
             vbicq.u32 vec1, vec1, vec9
+            vcvt.f32.s32 vec2f, vec2f
             vceqq.s32 vec9, vec3, vecZero
             vrecpeq.f32 vec3, vec3
+            vmovl.s16 vec3f, vec3fy
             vbicq.u32 vec2, vec2, vec5
+            vcvt.f32.s32 vec3f, vec3f
             vbicq.u32 vec3, vec3, vec9
-
-            @ compute static_cast<uint8_t>(round(B * scale) + ((85 & m1) | (171 & m2)) @
             vmul.f32 vec0f, vec0f, vec0
             vmul.f32 vec1f, vec1f, vec1
             vmul.f32 vec2f, vec2f, vec2
             vmul.f32 vec3f, vec3f, vec3
             vdup.s32 vec5, valHalf @ vec5 = vecHalf
-            COMPV_ARM_NEON32_MATH_ROUNDF_2_NEAREST_INT vec0f, vec5, vec0, vec1
-            COMPV_ARM_NEON32_MATH_ROUNDF_2_NEAREST_INT vec1f, vec5, vec2, vec3
-            COMPV_ARM_NEON32_MATH_ROUNDF_2_NEAREST_INT vec2f, vec5, vec0, vec1
-            COMPV_ARM_NEON32_MATH_ROUNDF_2_NEAREST_INT vec3f, vec5, vec2, vec3
+            vshr.u32 vec0, vec0f, #31
+            vshr.u32 vec2, vec1f, #31
+            vcvt.f32.u32 vec0, vec0
+            vcvt.f32.u32 vec2, vec2
+            vadd.f32 vec1, vec0f, vec5
+            vadd.f32 vec3, vec1f, vec5
+            vsubq.f32 vec1, vec1, vec0
+            vshr.u32 vec0, vec2f, #31
+            vsubq.f32 vec3, vec3, vec2
+            vshr.u32 vec2, vec3f, #31
+            vcvtq.s32.f32 vec0f, vec1
+            vcvtq.s32.f32 vec1f, vec3            
+            vcvt.f32.u32 vec0, vec0
+            vcvt.f32.u32 vec2, vec2
+            vadd.f32 vec1, vec2f, vec5
+            vadd.f32 vec3, vec3f, vec5
+            vsubq.f32 vec1, vec1, vec0
+            vsubq.f32 vec3, vec3, vec2
+            vcvtq.s32.f32 vec2f, vec1
+            vcvtq.s32.f32 vec3f, vec3
+            vdup.s8 vec0, val85 @ vec0 = vec85
+            vdup.s8 vec1, val171 @ vec1 = vec171
             vmovn.s32 vec0fx, vec0f
             vmovn.s32 vec0fy, vec1f
             vmovn.s32 vec2fx, vec2f
             vmovn.s32 vec2fy, vec3f
-            vdup.s8 vec0, val85 @ vec0 = vec85
-            vdup.s8 vec1, val171 @ vec1 = vec171
             vqmovn.s16 vec9x, vec0f
             vqmovn.s16 vec9y, vec2f
             vand.s8 vec6, vec6, vec0
             vand.s8 vec7, vec7, vec1
             vorr.s8 vec6, vec6, vec7
             vqadd.s8 vec9, vec9, vec6
+
             vst3.u8 {vec9x, vec8x, vec4x}, [hsvPtr :64]!
             vst3.u8 {vec9y, vec8y, vec4y}, [hsvPtr :64]!
 
