@@ -24,9 +24,11 @@ static const uint8x16_t vecFF = vceqq_u8(vec85, vec85);
 static const float32x4_t vec255f = vdupq_n_f32(255.f);
 static const float32x4_t vecHalf = vdupq_n_f32(0.5f);
 
+// TODO(dmi): Optiz issues. ASM code is by far faster than this (ARM32 Galaxy Tab A6/1 thread/1k loop: 5936.ms vs 10416.ms, ARM64 MediaPad2/1k loop: 3935.ms vs 4617.ms)
 void CompVImageConvRgb24ToHsv_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* rgb24Ptr, COMPV_ALIGNED(NEON) uint8_t* hsvPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
 {
 	COMPV_DEBUG_INFO_CHECK_NEON();
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ARM32 code is almost #2 times faster (Samsung Exynos 3 Quad 3475)");
     
 	compv_uscalar_t i, j;
 	int32x4_t vec0, vec1, vec2, vec3, vec4, vec5, vec6, vec7, vec8, vec9;

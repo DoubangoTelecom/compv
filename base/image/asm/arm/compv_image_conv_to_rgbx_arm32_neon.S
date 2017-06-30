@@ -102,9 +102,9 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvYuv420_to_Rgb24_Asm_NEON32
         mov i, #0
         LoopWidth_CompVImageConvYuv420_to_Rgb24_Asm_NEON32:
             @ Load samples @
-            vld1.u8 vecYlow, [yPtr :128]! @ #16 Y samples
-            vld1.u8 vecUn, [uPtr :64]! @ #8 U samples, low mem
-            vld1.u8 vecVn, [vPtr :64]! @ #8 V samples, low mem
+            vld1.u8 {vecYlow}, [yPtr :128]! @ #16 Y samples
+            vld1.u8 {vecUn}, [uPtr :64]! @ #8 U samples, low mem
+            vld1.u8 {vecVn}, [vPtr :64]! @ #8 V samples, low mem
 
             vsubl.u8 vecV, vecVn, vec127n
             vsubl.u8 vecU, vecUn, vec127n
