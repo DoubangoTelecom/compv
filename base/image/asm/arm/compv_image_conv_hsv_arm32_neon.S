@@ -8,11 +8,9 @@
 #if defined(__arm__) && !defined(__aarch64__)
 .include "compv_common_arm32.S"
 
+.data
 .align 4
 data255f: .word 0x437f0000, 0x437f0000, 0x437f0000, 0x437f0000
-data43: .word 0x0000002b, 0x0000002b, 0x0000002b, 0x0000002b
-
-.data
 
 .text
 
@@ -89,9 +87,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb24ToHsv_Asm_NEON32
     add pad, width, #15
 	and pad, pad, #-16
 	sub pad, stride, pad
-    add pad, pad, LSL #1 @ from samples to bytes (pad * 3)
-    add width, width, LSL #1 @ from samples to bytes (width * 3)
-    add stride, stride, LSL #1 @ from samples to bytes (stride * 3)
+    add pad, pad, pad, LSL #1 @ from samples to bytes (pad * 3)
+    add width, width, widtth, LSL #1 @ from samples to bytes (width * 3)
 
     ldr val85, =data255f
     vld1.s32 {vec255f}, [val85]
@@ -246,12 +243,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb24ToHsv_Asm_NEON32
             vqadd.s8 vec9, vec9, vec6
             vst3.u8 {vec9x, vec8x, vec4x}, [hsvPtr :64]!
             vst3.u8 {vec9y, vec8y, vec4y}, [hsvPtr :64]!
-
-            @vmov vec9, vec0f
-            @vmov vec8, vec0f
-            @vmov vec4, vec0f
-            @vst3.u8 {vec9x, vec8x, vec4x}, [hsvPtr :64]!
-            @vst3.u8 {vec9y, vec8y, vec4y}, [hsvPtr :64]!
 
             add i, i, #48
             cmp i, width

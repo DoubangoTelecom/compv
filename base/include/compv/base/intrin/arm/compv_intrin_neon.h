@@ -72,7 +72,7 @@ COMPV_NAMESPACE_BEGIN()
 })
 
 // Reciprocal, less accurate than 'COMPV_ARM_NEON_RECIPROCAL_NEWTON_RAPHSON'
-#define COMPV_ARM_NEON_RECIPROCAL(vec)	vrecpeq_f32(vec)
+#define COMPV_ARM_NEON_RECIPROCAL(vec)	vrecpeq_f32(vec) /* AArch64 -> frecpe */
 
 COMPV_NAMESPACE_END()
 
