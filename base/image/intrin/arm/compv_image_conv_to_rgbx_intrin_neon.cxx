@@ -28,6 +28,7 @@ static const int16x8_t vec26 = vdupq_n_s16(26);
 void CompVImageConvYuv420_to_Rgb24_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* yPtr, COMPV_ALIGNED(NEON) const uint8_t* uPtr, COMPV_ALIGNED(NEON) const uint8_t* vPtr, COMPV_ALIGNED(NEON) uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
 {
 	COMPV_DEBUG_INFO_CHECK_NEON();
+    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Please use ASM code which is faaaster");
 	
 	compv_uscalar_t i, j, k, l;
     const compv_uscalar_t strideUV = (stride >> 1); // no need for "((stride + 1) >> 1)" because stride is even (aligned on #16 bytes)

@@ -154,7 +154,7 @@ q15y .req d31
 .endm
 
 #########################################################################
-.macro COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT vec, vecHalf, vecTemp0, vecTemp1
+.macro COMPV_ARM_NEON32_MATH_ROUNDF_2_NEAREST_INT vec, vecHalf, vecTemp0, vecTemp1
     vshr.u32 \vecTemp0, \vec, #31
     vcvt.f32.u32 \vecTemp0, \vecTemp0 @ \vecTemp0 = vecSign
     vadd.f32 \vecTemp1, \vec, \vecHalf

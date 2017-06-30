@@ -12,7 +12,6 @@
 
 .text
 
-
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @ arg(0) -> COMPV_ALIGNED(NEON) const uint8_t* yPtr
 @ arg(1) -> COMPV_ALIGNED(NEON) const uint8_t* uPtr

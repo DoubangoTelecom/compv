@@ -27,7 +27,8 @@ static const float32x4_t vecHalf = vdupq_n_f32(0.5f);
 void CompVImageConvRgb24ToHsv_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* rgb24Ptr, COMPV_ALIGNED(NEON) uint8_t* hsvPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
 {
 	COMPV_DEBUG_INFO_CHECK_NEON();
-
+    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Please use ASM code which is faaaster");
+    
 	compv_uscalar_t i, j;
 	int32x4_t vec0, vec1, vec2, vec3, vec4, vec5, vec6, vec7, vec8, vec9;
 	float32x4_t vec0f, vec1f, vec2f, vec3f;
@@ -49,30 +50,30 @@ void CompVImageConvRgb24ToHsv_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* rgb
 			vec6 = vbicq_u8(vceqq_u8(vec4, vecLanes.val[1]), vec5); // vec6 = m1 = (maxVal == g) & ~m0
 			vec7 = vbicq_u8(vecFF, vorrq_u8(vec5, vec6)); // vec7 = m2 = ~(m0 | m1)
 
-			vec9 = vandq_u8(vec7, vsubq_s8(vecLanes.val[0], vecLanes.val[1]));
-			vec5 = vandq_u8(vec5, vsubq_s8(vecLanes.val[1], vecLanes.val[2]));
-			vec8 = vandq_u8(vec6, vsubq_s8(vecLanes.val[2], vecLanes.val[0]));
+			vec9 = vandq_s8(vec7, vsubq_s8(vecLanes.val[0], vecLanes.val[1]));
+			vec5 = vandq_s8(vec5, vsubq_s8(vecLanes.val[1], vecLanes.val[2]));
+			vec8 = vandq_s8(vec6, vsubq_s8(vecLanes.val[2], vecLanes.val[0]));
 			
-			vec5 = vorrq_u8(vec5, vec8);
-			vec5 = vorrq_u8(vec5, vec9); // vec5 = diff
+			vec5 = vorrq_s8(vec5, vec8);
+			vec5 = vorrq_s8(vec5, vec9); // vec5 = diff
 
 			// minus = ToFloat32(ToUInt32(ToUInt16(vec4)))
-			vec0 = vshll_n_u16(vget_low_u16(vec1), 0);
-			vec1 = vshll_n_u16(vget_high_u16(vec1), 0);
-			vec2 = vshll_n_u16(vget_low_u16(vec3), 0);
-			vec3 = vshll_n_u16(vget_high_u16(vec3), 0);
+			vec0 = vmovl_u16(vget_low_u16(vec1));
+			vec1 = vmovl_u16(vget_high_u16(vec1));
+			vec2 = vmovl_u16(vget_low_u16(vec3));
+			vec3 = vmovl_u16(vget_high_u16(vec3));
 			vec0 = vcvtq_f32_u32(vec0);
 			vec1 = vcvtq_f32_u32(vec1);
 			vec2 = vcvtq_f32_u32(vec2);
 			vec3 = vcvtq_f32_u32(vec3);
 
 			// maxVal = ToFloat32(ToUInt32(ToUInt16(ToUInt8(vec4))))
-			vec1f = vshll_n_u8(vget_low_u8(vec4), 0);
-			vec3f = vshll_n_u8(vget_high_u8(vec4), 0);
-			vec0f = vshll_n_u16(vget_low_u16(vec1f), 0);
-			vec1f = vshll_n_u16(vget_high_u16(vec1f), 0);
-			vec2f = vshll_n_u16(vget_low_u16(vec3f), 0);
-			vec3f = vshll_n_u16(vget_high_u16(vec3f), 0);
+			vec1f = vmovl_u8(vget_low_u8(vec4));
+			vec3f = vmovl_u8(vget_high_u8(vec4));
+			vec0f = vmovl_u16(vget_low_u16(vec1f));
+			vec1f = vmovl_u16(vget_high_u16(vec1f));
+			vec2f = vmovl_u16(vget_low_u16(vec3f));
+			vec3f = vmovl_u16(vget_high_u16(vec3f));
 			vec0f = vcvtq_f32_u32(vec0f);
 			vec1f = vcvtq_f32_u32(vec1f);
 			vec2f = vcvtq_f32_u32(vec2f);
@@ -106,10 +107,10 @@ void CompVImageConvRgb24ToHsv_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* rgb
 			// B = ToFloat32(ToInt32(ToInt16(diff * 43)))
 			vec1f = vmull_s8(vget_low_s8(vec5), vec43n);
 			vec3f = vmull_s8(vget_high_s8(vec5), vec43n);
-			vec0f = vshll_n_s16(vget_low_s16(vec1f), 0);
-			vec1f = vshll_n_s16(vget_high_s16(vec1f), 0);
-			vec2f = vshll_n_s16(vget_low_s16(vec3f), 0);
-			vec3f = vshll_n_s16(vget_high_s16(vec3f), 0);
+			vec0f = vmovl_s16(vget_low_s16(vec1f));
+			vec1f = vmovl_s16(vget_high_s16(vec1f));
+			vec2f = vmovl_s16(vget_low_s16(vec3f));
+			vec3f = vmovl_s16(vget_high_s16(vec3f));
 			vec0f = vcvtq_f32_s32(vec0f);
 			vec1f = vcvtq_f32_s32(vec1f);
 			vec2f = vcvtq_f32_s32(vec2f);
