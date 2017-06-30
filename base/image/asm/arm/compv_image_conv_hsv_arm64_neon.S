@@ -9,8 +9,6 @@
 .include "compv_common_arm64.S"
 
 .data
-.align 4
-data255f: .word 0x437f0000, 0x437f0000, 0x437f0000, 0x437f0000
 
 .text
 
@@ -62,11 +60,11 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb24ToHsv_Asm_NEON64
     add pad, pad, pad, LSL #1 // from samples to bytes (pad * 3)
     add width, width, width, LSL #1 // from samples to bytes (width * 3)
 
-    ldr r10, =data255f
+    movz r10w, #0x437f, lsl #16
     mov r11, #85
     mov r12, #171
     mov r13, #43
-    ld1 {vec255f.4s}, [r10]
+    dup vec255f.4s, r10w
     dup vec85.16b, r11w
     dup vec171.16b, r12w
     dup vec43n.16b, r13w
