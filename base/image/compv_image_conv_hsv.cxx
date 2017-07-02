@@ -24,6 +24,7 @@ COMPV_NAMESPACE_BEGIN()
 	COMPV_EXTERNC void CompVImageConvRgb24ToHsv_Asm_X64_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgb24Ptr, COMPV_ALIGNED(SSE) uint8_t* hsvPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
 	COMPV_EXTERNC void CompVImageConvRgba32ToHsv_Asm_X64_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgba32Ptr, COMPV_ALIGNED(SSE) uint8_t* hsvPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
 	COMPV_EXTERNC void CompVImageConvRgb24ToHsv_Asm_X64_AVX2(COMPV_ALIGNED(AVX) const uint8_t* rgb24Ptr, COMPV_ALIGNED(AVX) uint8_t* hsvPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride);
+	COMPV_EXTERNC void CompVImageConvRgba32ToHsv_Asm_X64_AVX2(COMPV_ALIGNED(AVX) const uint8_t* rgba32Ptr, COMPV_ALIGNED(AVX) uint8_t* hsvPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride);
 #	elif COMPV_ARCH_ARM32
     COMPV_EXTERNC void CompVImageConvRgb24ToHsv_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* rgb24Ptr, COMPV_ALIGNED(NEON) uint8_t* hsvPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
 #	elif COMPV_ARCH_ARM64
@@ -104,8 +105,8 @@ COMPV_ERROR_CODE CompVImageConvToHSV::rgbxToHsv(const CompVMatPtr& imageRGBx, Co
 #elif COMPV_ARCH_ARM
 		if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && imageRGBx->isAlignedNEON() && imageHSV->isAlignedNEON()) {
 			COMPV_EXEC_IFDEF_INTRIN_ARM(rgbx_to_hsv = CompVImageConvRgb24ToHsv_Intrin_NEON);
-            COMPV_EXEC_IFDEF_ASM_ARM32(rgbx_to_hsv = CompVImageConvRgb24ToHsv_Asm_NEON32);
-            COMPV_EXEC_IFDEF_ASM_ARM64(rgbx_to_hsv = CompVImageConvRgb24ToHsv_Asm_NEON64);
+			COMPV_EXEC_IFDEF_ASM_ARM32(rgbx_to_hsv = CompVImageConvRgb24ToHsv_Asm_NEON32);
+			COMPV_EXEC_IFDEF_ASM_ARM64(rgbx_to_hsv = CompVImageConvRgb24ToHsv_Asm_NEON64);
 		}
 #endif
 		break;
@@ -115,6 +116,10 @@ COMPV_ERROR_CODE CompVImageConvToHSV::rgbxToHsv(const CompVMatPtr& imageRGBx, Co
 		if (CompVCpu::isEnabled(kCpuFlagSSSE3) && imageRGBx->isAlignedSSE() && imageHSV->isAlignedSSE()) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(rgbx_to_hsv = CompVImageConvRgba32ToHsv_Intrin_SSSE3);
 			COMPV_EXEC_IFDEF_ASM_X64(rgbx_to_hsv = CompVImageConvRgba32ToHsv_Asm_X64_SSSE3);
+		}
+		if (CompVCpu::isEnabled(kCpuFlagAVX2) && imageRGBx->isAlignedAVX() && imageHSV->isAlignedAVX()) {
+			COMPV_EXEC_IFDEF_INTRIN_X86(rgbx_to_hsv = CompVImageConvRgba32ToHsv_Intrin_AVX2);
+			COMPV_EXEC_IFDEF_ASM_X64(rgbx_to_hsv = CompVImageConvRgba32ToHsv_Asm_X64_AVX2);
 		}
 #elif COMPV_ARCH_ARM
 #endif

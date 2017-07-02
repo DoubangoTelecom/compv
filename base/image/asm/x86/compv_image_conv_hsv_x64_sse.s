@@ -10,6 +10,7 @@
 %if COMPV_YASM_ABI_IS_64BIT
 
 %include "compv_image_conv_macros.s"
+%include "compv_vldx_vstx_macros_x86.s"
 
 COMPV_YASM_DEFAULT_REL
 
@@ -124,18 +125,18 @@ section .text
 			movdqa vec8, vec4
 			psubusb vec3, vec6 ; vec3 = minus
 			pcmpeqb vec5, vec0 ; m0 = (maxVal == r)
+			pcmpeqb vec8, vec1
 			movdqa vec6, vec5
 			movdqa vec7, vec5
-			pcmpeqb vec8, vec1
-			pcmpeqb vec9, vec9 ; vec9 = vecFF
 			pandn vec6, vec8 ; m1 = (maxVal == g) & ~m0
-			movdqa vec8, vec2
+			pcmpeqb vec9, vec9 ; vec9 = vecFF
 			por vec7, vec6
+			movdqa vec8, vec2
 			pandn vec7, vec9 ; m2 = ~(m0 | m1)
 			movdqa vec9, vec0
+			psubb vec8, vec0
 			psubb vec9, vec1
 			psubb vec1, vec2
-			psubb vec8, vec0
 			pand vec9, vec7
 			pand vec8, vec6
 			pand vec5, vec1

@@ -10,6 +10,7 @@
 %if COMPV_YASM_ABI_IS_64BIT
 
 %include "compv_image_conv_macros.s"
+%include "compv_vldx_vstx_macros_x86.s"
 
 COMPV_YASM_DEFAULT_REL
 

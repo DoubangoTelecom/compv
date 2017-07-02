@@ -557,6 +557,7 @@
     <YASM Include="asm\x86\compv_patch_x64_avx.s">
       <FileType>Document</FileType>
     </YASM>
+    <None Include="asm\x86\compv_vldx_vstx_macros_x86.s" />
     <None Include="image\asm\arm\compv_image_conv_grayscale_arm32_neon.S" />
     <None Include="image\asm\arm\compv_image_conv_grayscale_arm64_neon.S" />
     <None Include="image\asm\arm\compv_image_conv_rgbfamily_arm32_neon.S" />

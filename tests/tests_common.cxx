@@ -16,7 +16,7 @@
 #define COMPV_enableTestingMode		true
 #define COMPV_enableIntelIpp		false
 #define COMPV_enableIntelTbb		false
-#define COMPV_cpuDisable			kCpuFlagAVX2
+#define COMPV_cpuDisable			kCpuFlagNone
 
 COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-function")
 
@@ -116,8 +116,10 @@ bool compv_tests_is_fma_enabled()
 // Reciprocal
 bool compv_tests_is_rcp()
 {
-#if COMPV_ARCH_X86
+#if COMPV_ARCH_X64
 	return (CompVCpu::isEnabled(kCpuFlagSSSE3) || CompVCpu::isEnabled(kCpuFlagAVX2)) && (CompVCpu::isAsmEnabled() || CompVCpu::isIntrinsicsEnabled());
+#elif COMPV_ARCH_X86
+	return (CompVCpu::isEnabled(kCpuFlagSSSE3) || CompVCpu::isEnabled(kCpuFlagAVX2)) && (0 || CompVCpu::isIntrinsicsEnabled()); // No rcp impl for ASM.X86_32
 #elif COMPV_ARCH_ARM
 	return (CompVCpu::isEnabled(kCpuFlagARM_NEON)) && (CompVCpu::isAsmEnabled() || CompVCpu::isIntrinsicsEnabled());
 #endif

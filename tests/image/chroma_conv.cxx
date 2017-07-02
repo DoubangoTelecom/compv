@@ -10,7 +10,7 @@
 #endif
 #define COMPV_TEST_IMAGE_CHROMA_CONV_PATH_TO_FILE(filename)		compv_tests_path_from_file(filename, COMPV_TEST_IMAGE_CHROMA_CONV_IMAGE_FOLDER)
 
-#define COMPV_TEST_IMAGE_CHROMA_CONV_SUBTYPE_SRC				COMPV_SUBTYPE_PIXELS_RGBA32
+#define COMPV_TEST_IMAGE_CHROMA_CONV_SUBTYPE_SRC				COMPV_SUBTYPE_PIXELS_RGB24
 #define COMPV_TEST_IMAGE_CHROMA_CONV_SUBTYPE_DST				COMPV_SUBTYPE_PIXELS_HSV
 
 #if COMPV_ARCH_ARM
@@ -115,15 +115,12 @@ static size_t COMPV_TEST_IMAGE_CHROMA_CONV_TESTS_COUNT = sizeof(COMPV_TEST_IMAGE
 COMPV_ERROR_CODE chroma_conv()
 {
 #	define COMPV_TEST_WRITE_OUTPUT	COMPV_loopCount == 1 && !COMPV_OS_ANDROID  && !COMPV_OS_IPHONE
-#	define COMPV_TEST_CHECK_MD5		COMPV_loopCount == 1
 	COMPV_DEBUG_INFO_EX(TAG_TEST_IMAGE_CHROMA_CONV, "%s(%s -> %s)", __FUNCTION__, CompVGetSubtypeString(COMPV_TEST_IMAGE_CHROMA_CONV_SUBTYPE_SRC), CompVGetSubtypeString(COMPV_TEST_IMAGE_CHROMA_CONV_SUBTYPE_DST));
 	COMPV_ERROR_CODE err;
 	uint64_t timeStart, timeEnd;
 	CompVMatPtr srcImage, dstImage;
 	const compv_test_image_chroma_conv_test* test = NULL;
-#if COMPV_TEST_CHECK_MD5
 	std::string md5, xmd5;
-#endif
 
 	COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_S_OK, "Just to avoid 'bail not referenced warning'");
 
@@ -154,12 +151,10 @@ COMPV_ERROR_CODE chroma_conv()
 	COMPV_CHECK_CODE_BAIL(err = compv_tests_write_to_file(dstImage, test->dstFilename));
 #endif
 
-#if COMPV_TEST_CHECK_MD5
 	md5 = compv_tests_md5(dstImage);
 	COMPV_DEBUG_INFO_EX(TAG_TEST_IMAGE_CHROMA_CONV, "MD5:%s", md5.c_str());
 	xmd5 = (test->dstPixelFormat == COMPV_SUBTYPE_PIXELS_HSV && compv_tests_is_rcp()) ? test->dstMD5_rcp : test->dstMD5;
 	COMPV_CHECK_EXP_BAIL(xmd5.compare(md5) != 0, (err = COMPV_ERROR_CODE_E_UNITTEST_FAILED), "MD5 mismatch");
-#endif
 
 bail:
 	return err;
