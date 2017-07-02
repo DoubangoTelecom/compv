@@ -13,7 +13,11 @@
 
 COMPV_YASM_DEFAULT_REL
 
+%define rgb24Family		0
+%define rgba32Family	1
+
 global sym(CompVImageConvRgb24ToHsv_Asm_X64_SSSE3)
+global sym(CompVImageConvRgba32ToHsv_Asm_X64_SSSE3)
 
 section .data
 	extern sym(k85_i8)
@@ -24,28 +28,41 @@ section .data
 	extern sym(kShuffleEpi8_InterleaveRGB24_Step0_i32)
 	extern sym(kShuffleEpi8_InterleaveRGB24_Step1_i32)
 	extern sym(kShuffleEpi8_InterleaveRGB24_Step2_i32)
+	extern sym(kShuffleEpi8_DeinterleaveRGBA32_i32)
 
 section .text
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; arg(0) -> COMPV_ALIGNED(SSE) const uint8_t* rgb24Ptr
+; arg(0) -> COMPV_ALIGNED(SSE) const uint8_t* rgbxPtr
 ; arg(1) -> COMPV_ALIGNED(SSE) uint8_t* hsvPtr
 ; arg(2) -> compv_uscalar_t width
 ; arg(3) -> compv_uscalar_t height
 ; arg(4) -> COMPV_ALIGNED(SSE) compv_uscalar_t stride
-sym(CompVImageConvRgb24ToHsv_Asm_X64_SSSE3):
+; %1 -> rgbFamily: rgb24Family or rgba32Family
+%macro CompVImageConvRgbxToHsv_Macro_X64_SSSE3 1
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 5
 	COMPV_YASM_SAVE_XMM 15
+	push r12
 	;; end prolog ;;
 
-	%define rgb24Ptr	rax
+	%define rgbxPtr		rax
 	%define hsvPtr		rdx
 	%define width		r10
 	%define height		r8
 	%define stride		r9
 	%define i			rcx
+	%define k			r11
+	%define strideRGBx	r12
+
+	%if %1 == rgb24Family
+		%define rgbxn		3
+	%elif %1 == rgba32Family
+		%define rgbxn		4
+	%else
+		%error 'Not implemented'
+	%endif
 
 	%define vecZero		xmm0
 	%define vec0		xmm1
@@ -67,28 +84,34 @@ sym(CompVImageConvRgb24ToHsv_Asm_X64_SSSE3):
 	pxor vecZero, vecZero
 	movdqa vec255f, [sym(k255_f32)]
 
-
-	mov rgb24Ptr, arg(0)
+	mov rgbxPtr, arg(0)
 	mov hsvPtr, arg(1)
 	mov width, arg(2)
 	mov height, arg(3)
 	mov stride, arg(4)
 
 	lea width, [width+width*2] ; (width*3)
+	lea strideRGBx, [stride * rgbxn] ; (stride * rgbxn)
 	lea stride, [stride+stride*2] ; (stride*3)
-
 
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	; for (j = 0; j < height; ++j)
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	.LoopHeight:
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-		; for (i = 0; i < width; i += 48)
+		; for (i = 0, k = 0; i < width; i += 48, k += rgbxStep)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		xor i, i
+		xor k, k
 		.LoopWidth:
 			; Load samples ;
-			COMPV_VLD3_U8_SSSE3 rgb24Ptr + i, vec0, vec1, vec2, vec3, vec4, vec5
+			%if %1 == rgb24Family
+				COMPV_VLD3_U8_SSSE3 rgbxPtr + k, vec0, vec1, vec2, vec3, vec4, vec5
+			%elif %1 == rgba32Family
+				COMPV_VLD4_U8_SSSE3 rgbxPtr + k, vec0, vec1, vec2, vec3, vec4, vec5
+			%else
+				%error 'Not implemented'
+			%endif
 
 			movdqa vec4, vec0
 			movdqa vec6, vec0
@@ -226,23 +249,28 @@ sym(CompVImageConvRgb24ToHsv_Asm_X64_SSSE3):
 			
 			add i, 48
 			cmp i, width
+			lea k, [k + 16*rgbxn]
 			
 			;; end-of-LoopWidth ;;
 			jl .LoopWidth
 
 		dec height
-		lea rgb24Ptr, [rgb24Ptr + stride]
+		lea rgbxPtr, [rgbxPtr + strideRGBx]
 		lea hsvPtr, [hsvPtr + stride]
 		;; end-of-LoopHeight ;;
 		jnz .LoopHeight
 
 
-	%undef rgb24Ptr
+	%undef rgbxPtr
 	%undef hsvPtr
 	%undef width
 	%undef height
 	%undef stride
 	%undef i
+	%undef k			
+	%undef strideRGBx
+
+	%undef rgbxn
 
 	%undef vecZero		
 	%undef vec0		
@@ -262,10 +290,20 @@ sym(CompVImageConvRgb24ToHsv_Asm_X64_SSSE3):
 	%undef vec255f		
 
 	;; begin epilog ;;
+	pop r12
 	COMPV_YASM_RESTORE_XMM
 	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp
 	ret
+%endmacro
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(CompVImageConvRgb24ToHsv_Asm_X64_SSSE3):
+	CompVImageConvRgbxToHsv_Macro_X64_SSSE3 rgb24Family
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(CompVImageConvRgba32ToHsv_Asm_X64_SSSE3):
+	CompVImageConvRgbxToHsv_Macro_X64_SSSE3 rgba32Family
 
 %endif ; COMPV_YASM_ABI_IS_64BIT

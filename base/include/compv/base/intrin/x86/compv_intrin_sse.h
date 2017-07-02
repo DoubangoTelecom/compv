@@ -128,8 +128,8 @@ static COMPV_INLINE __m128i _mm_mullo_epi32_SSE2(const __m128i &a, const __m128i
 #define COMPV_VST3_U8_SSSE3 COMPV_VST3_I8_SSSE3
 
 
-// De-Interleave "ptr" into  "vecLane0", "vecLane1" and "vecLane2"
-// e.g. RGBRGBRGB -> [RRRR], [GGGG], [BBBB]
+// De-Interleave "ptr" into  "vecLane0", "vecLane1", "vecLane2" and "vecLane3"
+// e.g. RGBARGBARGBA -> [RRRR], [GGGG], [BBBB], [AAAA]
 //!\\ You should not need to use this function -> FASTER: convert to RGBX then process (more info: see RGB24 -> YUV)
 #define COMPV_VLD4_I8_SSSE3(ptr, vecLane0, vecLane1, vecLane2, vecLane3, vectmp0, vectmp1) { \
 		static const __m128i vecMask = _mm_load_si128(reinterpret_cast<const __m128i*>(kShuffleEpi8_DeinterleaveRGBA32_i32)); \
@@ -152,10 +152,10 @@ static COMPV_INLINE __m128i _mm_mullo_epi32_SSE2(const __m128i &a, const __m128i
 		vecLane0 = _mm_unpacklo_epi32(vecLane2, vecLane3); /* RRRRRRRR GGGGGGGG */ \
 		vecLane2 = _mm_unpackhi_epi32(vecLane2, vecLane3); /* BBBBBBBB AAAAAAAA */ \
 		/* final round */ \
-		vecLane3 = _mm_unpackhi_epi64(vectmp1, vecLane2); /* AAAAAAAA AAAAAAAA (not in order) */ \
-		vecLane2 = _mm_unpacklo_epi64(vectmp1, vecLane2); /* BBBBBBBB BBBBBBBB (not in order) */ \
-		vecLane1 = _mm_unpackhi_epi64(vectmp0, vecLane0); /* GGGGGGGG GGGGGGGG (not in order) */ \
-		vecLane0 = _mm_unpacklo_epi64(vectmp0, vecLane0); /* RRRRRRRR RRRRRRRR (not in order) */ \
+		vecLane1 = _mm_unpackhi_epi64(vecLane0, vectmp0); /* GGGGGGGG GGGGGGGG (not in order) */ \
+		vecLane0 = _mm_unpacklo_epi64(vecLane0, vectmp0); /* RRRRRRRR RRRRRRRR (not in order) */ \
+		vecLane3 = _mm_unpackhi_epi64(vecLane2, vectmp1); /* AAAAAAAA AAAAAAAA (not in order) */ \
+		vecLane2 = _mm_unpacklo_epi64(vecLane2, vectmp1); /* BBBBBBBB BBBBBBBB (not in order) */ \
 		/* re-order */ \
 		vecLane0 = _mm_shuffle_epi8(vecLane0, vecMask); /* RRRRRRRR RRRRRRRR (in order) */ \
 		vecLane1 = _mm_shuffle_epi8(vecLane1, vecMask); /* GGGGGGGG GGGGGGGG (in order) */ \

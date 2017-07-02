@@ -22,6 +22,7 @@ COMPV_NAMESPACE_BEGIN()
 #if COMPV_ASM
 #	if COMPV_ARCH_X64
 	COMPV_EXTERNC void CompVImageConvRgb24ToHsv_Asm_X64_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgb24Ptr, COMPV_ALIGNED(SSE) uint8_t* hsvPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
+	COMPV_EXTERNC void CompVImageConvRgba32ToHsv_Asm_X64_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgba32Ptr, COMPV_ALIGNED(SSE) uint8_t* hsvPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
 	COMPV_EXTERNC void CompVImageConvRgb24ToHsv_Asm_X64_AVX2(COMPV_ALIGNED(AVX) const uint8_t* rgb24Ptr, COMPV_ALIGNED(AVX) uint8_t* hsvPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride);
 #	elif COMPV_ARCH_ARM32
     COMPV_EXTERNC void CompVImageConvRgb24ToHsv_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* rgb24Ptr, COMPV_ALIGNED(NEON) uint8_t* hsvPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
@@ -89,7 +90,7 @@ COMPV_ERROR_CODE CompVImageConvToHSV::rgbxToHsv(const CompVMatPtr& imageRGBx, Co
 
 	switch (imageRGBx->subType()) {
 	case COMPV_SUBTYPE_PIXELS_RGB24:
-	case COMPV_SUBTYPE_PIXELS_HSV: // See above, this is a hack use to overwrite the memory (input == output)
+	case COMPV_SUBTYPE_PIXELS_HSV: // See above, this is a hack used to overwrite the memory (input == output)
 		rgbx_to_hsv = rgbx_to_hsv_C<compv_uint8x3_t>;
 #if COMPV_ARCH_X86
 		if (CompVCpu::isEnabled(kCpuFlagSSSE3) && imageRGBx->isAlignedSSE() && imageHSV->isAlignedSSE()) {
@@ -113,6 +114,7 @@ COMPV_ERROR_CODE CompVImageConvToHSV::rgbxToHsv(const CompVMatPtr& imageRGBx, Co
 #if COMPV_ARCH_X86
 		if (CompVCpu::isEnabled(kCpuFlagSSSE3) && imageRGBx->isAlignedSSE() && imageHSV->isAlignedSSE()) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(rgbx_to_hsv = CompVImageConvRgba32ToHsv_Intrin_SSSE3);
+			COMPV_EXEC_IFDEF_ASM_X64(rgbx_to_hsv = CompVImageConvRgba32ToHsv_Asm_X64_SSSE3);
 		}
 #elif COMPV_ARCH_ARM
 #endif
@@ -286,7 +288,7 @@ static void rgbx_to_hsv_C(const uint8_t* rgbxPtr, uint8_t* hsvPtr, compv_uscalar
 		hsvPtr_ += stride;
 }
 #else
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Branchless code for SIMD implementations (SSE, AVX and ARM NEON)");
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Reference code for SIMD implementations (SSE, AVX and ARM NEON) - Branchless");
 
 	size_t i, j;
 	const xType* rgbxPtr_ = reinterpret_cast<const xType*>(rgbxPtr);

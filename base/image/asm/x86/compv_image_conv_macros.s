@@ -148,6 +148,75 @@
 %endmacro
 %define COMPV_VST3_U8_SSSE3_VEX COMPV_VST3_I8_SSSE3_VEX
 
+;// De-Interleave "ptr" into  "vecLane0", "vecLane1", "vecLane2" and "vecLane3"
+;// e.g. RGBARGBARGBA -> [RRRR], [GGGG], [BBBB], [AAAA]
+; Example: COMPV_VLD4_I8_SSSE3(rax + rcx, xmm0, xmm1, xmm2, xmm3, xmm4, xmm5)
+%macro COMPV_VLD4_I8_SSSE3 7
+	%define ptr			%1
+	%define vecLane0	%2
+	%define	vecLane1	%3
+	%define	vecLane2	%4
+	%define vecLane3	%5
+	%define vectmp0		%6
+	%define vectmp1		%7
+
+	movdqa vecLane0, [ptr + (0*COMPV_YASM_XMM_SZ_BYTES)]
+	movdqa vecLane1, [ptr + (1*COMPV_YASM_XMM_SZ_BYTES)]
+	movdqa vecLane2, [ptr + (2*COMPV_YASM_XMM_SZ_BYTES)]
+	movdqa vecLane3, [ptr + (3*COMPV_YASM_XMM_SZ_BYTES)]
+
+	;; first round ;;
+	movdqa vectmp0, vecLane0
+	movdqa vectmp1, vecLane0
+	punpcklbw vectmp0, vecLane1
+	punpckhbw vectmp1, vecLane1
+	movdqa vecLane0, vectmp0
+	movdqa vecLane1, vectmp0
+	punpcklwd vecLane0, vectmp1
+	punpckhwd vecLane1, vectmp1
+	movdqa vectmp0, vecLane0
+	movdqa vectmp1, vecLane0
+	punpckldq vectmp0, vecLane1
+	punpckhdq vectmp1, vecLane1
+
+	;; second round ;;
+	movdqa vecLane0, vecLane2
+	movdqa vecLane1, vecLane2
+	punpcklbw vecLane0, vecLane3
+	punpckhbw vecLane1, vecLane3
+	movdqa vecLane2, vecLane0
+	movdqa vecLane3, vecLane0
+	punpcklwd vecLane2, vecLane1
+	punpckhwd vecLane3, vecLane1
+	movdqa vecLane0, vecLane2
+	punpckldq vecLane0, vecLane3
+	punpckhdq vecLane2, vecLane3
+
+	;; final round ;;
+	movdqa vecLane1, vecLane0
+	punpckhqdq vecLane1, vectmp0
+	punpcklqdq vecLane0, vectmp0
+	movdqa vecLane3, vecLane2
+	punpckhqdq vecLane3, vectmp1
+	punpcklqdq vecLane2, vectmp1
+
+	;; re-order ;;
+	pshufb vecLane0, [sym(kShuffleEpi8_DeinterleaveRGBA32_i32)]
+	pshufb vecLane1, [sym(kShuffleEpi8_DeinterleaveRGBA32_i32)]
+	pshufb vecLane2, [sym(kShuffleEpi8_DeinterleaveRGBA32_i32)]
+	pshufb vecLane3, [sym(kShuffleEpi8_DeinterleaveRGBA32_i32)]
+
+	%undef ptr
+	%undef vecLane0
+	%undef vecLane1
+	%undef vecLane2
+	%undef vecLane3
+	%undef vectmp0
+	%undef vectmp1
+%endmacro
+
+%define COMPV_VLD4_U8_SSSE3 COMPV_VLD4_I8_SSSE3
+
 ;// De-Interleave "ptr" into  "vecLane0", "vecLane1" and "vecLane2"
 ;// e.g. RGBRGBRGB -> [RRRR], [GGGG], [BBBB]
 ;//!\\ You should not need to use this function -> FASTER: convert to RGBX then process (more info: see RGB24 -> YUV)
