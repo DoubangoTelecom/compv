@@ -166,12 +166,10 @@
 	movdqa vecLane3, [ptr + (3*COMPV_YASM_XMM_SZ_BYTES)]
 
 	;; first round ;;
-	movdqa vectmp0, vecLane0
 	movdqa vectmp1, vecLane0
-	punpcklbw vectmp0, vecLane1
+	punpcklbw vecLane0, vecLane1
 	punpckhbw vectmp1, vecLane1
-	movdqa vecLane0, vectmp0
-	movdqa vecLane1, vectmp0
+	movdqa vecLane1, vecLane0
 	punpcklwd vecLane0, vectmp1
 	punpckhwd vecLane1, vectmp1
 	movdqa vectmp0, vecLane0
