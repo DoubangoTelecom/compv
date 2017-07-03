@@ -110,6 +110,27 @@ void CompVHoughKhtGauss_Eq15_Intrin_NEON(const double rho, const double theta, c
 {
 	COMPV_DEBUG_INFO_CHECK_NEON();
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Not faster");
+#if 0 // div
+	static const float64x1_t one = vdup_n_f64(1.0);
+	static const float64x1_t two = vdup_n_f64(2.0);
+	static const float64x1_t twopi = vdup_n_f64(2.0 * COMPV_MATH_PI);
+	const float64x1_t rho_ = vld1_f64(&rho);
+	const float64x1_t theta_ = vld1_f64(&theta);
+	const float64x1_t sigma_theta_square = vld1_f64(&(*M)[3]);
+	const float64x1_t sigma_rho_square = vld1_f64(&(*M)[0]);
+	const float64x1_t sigma_rho_times_theta = vld1_f64(&(*M)[1]);
+	const float64x1_t sigma_rho_times_sigma_theta = vmul_f64(vsqrt_f64(sigma_rho_square), vsqrt_f64(sigma_theta_square));
+	const float64x1_t sigma_rho_times_sigma_theta_scale = vdiv_f64(one, sigma_rho_times_sigma_theta);
+	const float64x1_t r = vmul_f64(sigma_rho_times_theta, sigma_rho_times_sigma_theta_scale);
+	const float64x1_t one_minus_r_square = vsub_f64(one, vmul_f64(r, r));
+	const float64x1_t x = vdiv_f64(one, vmul_f64(vmul_f64(twopi, sigma_rho_times_sigma_theta), vsqrt_f64(one_minus_r_square)));
+	const float64x1_t y = vdiv_f64(one, vmul_f64(two, one_minus_r_square));
+	const float64x1_t a = vdiv_f64(vmul_f64(rho_, rho_), sigma_rho_square);
+	const float64x1_t b = vmul_f64(vmul_f64(vmul_f64(r, two), vmul_f64(rho_, theta_)), sigma_rho_times_sigma_theta_scale);
+	const float64x1_t c = vdiv_f64(vmul_f64(theta_, theta_), sigma_theta_square);
+	const float64x1_t z = vneg_f64(vadd_f64(vsub_f64(a, b), c));
+	const float64x1_t zy = vmul_f64(z, y);
+#else // reciprocal
 	static const float64x1_t one = vdup_n_f64(1.0);
 	static const float64x1_t two = vdup_n_f64(2.0);
 	static const float64x1_t twopi = vdup_n_f64(2.0 * COMPV_MATH_PI);
@@ -130,6 +151,7 @@ void CompVHoughKhtGauss_Eq15_Intrin_NEON(const double rho, const double theta, c
 	const float64x1_t z = vneg_f64(vadd_f64(vsub_f64(a, b), c));
 	const float64x1_t zy = vmul_f64(z, y);
 	*result1 = vget_lane_f64(x, 0) * __compv_math_exp_fast_small(vget_lane_f64(zy, 0));
+#endif
 }
 #endif /* COMPV_ARCH_ARM64 */
 

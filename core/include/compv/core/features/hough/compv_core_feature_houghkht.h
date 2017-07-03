@@ -57,7 +57,11 @@ struct CompVHoughKhtKernel {
 #define kCompVHoughKhtKernelIndex_2							2
 #define kCompVHoughKhtKernelIndex_SigmaThetaSquare			3
 
-	double M[4]; // Matrix 'M' computed in Algorithm 2 and holding sigma values
+	// Matrix 'M' computed in Algorithm 2 and holding sigma values
+	double sigma_theta_square;
+	double sigma_rho_square;
+	double m2;
+	double sigma_rho_times_theta;
 };
 typedef std::vector<CompVHoughKhtKernel> CompVHoughKhtKernels;
 

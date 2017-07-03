@@ -669,16 +669,13 @@ double CompVHoughKht::clusters_subdivision(CompVHoughKhtClusters& clusters, cons
 static double __gauss_Eq15(const double rho, const double theta, const CompVHoughKhtKernel& kernel)
 {
 	static const double twopi = 2.0 * COMPV_MATH_PI;
-	const double sigma_theta_square = kernel.M[kCompVHoughKhtKernelIndex_SigmaThetaSquare];
-	const double sigma_rho_square = kernel.M[kCompVHoughKhtKernelIndex_SigmaRhoSquare];
-	const double sigma_rho_times_theta = kernel.M[kCompVHoughKhtKernelIndex_SigmaRhoTimesTheta];
-	const double sigma_rho_times_sigma_theta = __compv_math_sqrt_fast2(sigma_rho_square, sigma_theta_square); // sqrt(sigma_rho_square) * sqrt(sigma_theta_square)
+	const double sigma_rho_times_sigma_theta = __compv_math_sqrt_fast2(kernel.sigma_rho_square, kernel.sigma_theta_square); // sqrt(sigma_rho_square) * sqrt(sigma_theta_square)
 	const double sigma_rho_times_sigma_theta_scale = 1.0 / sigma_rho_times_sigma_theta;
-	const double r = (sigma_rho_times_theta * sigma_rho_times_sigma_theta_scale);
+	const double r = (kernel.sigma_rho_times_theta * sigma_rho_times_sigma_theta_scale);
 	const double one_minus_r_square = 1.0 - (r * r);
 	const double x = 1.0 / (twopi * sigma_rho_times_sigma_theta * __compv_math_sqrt_fast(one_minus_r_square));
 	const double y = 1.0 / (2.0 * (one_minus_r_square));
-	const double z = ((rho * rho) / sigma_rho_square) - (((r * 2.0) * rho * theta) * sigma_rho_times_sigma_theta_scale) + ((theta * theta) / sigma_theta_square);
+	const double z = ((rho * rho) / kernel.sigma_rho_square) - (((r * 2.0) * rho * theta) * sigma_rho_times_sigma_theta_scale) + ((theta * theta) / kernel.sigma_theta_square);
 	return x * __compv_math_exp_fast_small(-z * y);
 }
 
@@ -751,16 +748,16 @@ COMPV_ERROR_CODE CompVHoughKht::voting_Algorithm2_Kernels(const CompVHoughKhtClu
 			r0 = 1.0 / r0;
 			r1 = (M_Eq14[0] * r0);
 			r2 = (M_Eq14[2] * r0);
-			kernel->M[kCompVHoughKhtKernelIndex_SigmaRhoSquare] = r1 * M_Eq14[0] + n_scale;
-			kernel->M[kCompVHoughKhtKernelIndex_SigmaRhoTimesTheta] = r1 * M_Eq14[2];
-			kernel->M[kCompVHoughKhtKernelIndex_2] = r2 * M_Eq14[0];
-			kernel->M[kCompVHoughKhtKernelIndex_SigmaThetaSquare] = r2 * M_Eq14[2];
+			kernel->sigma_rho_square = r1 * M_Eq14[0] + n_scale;
+			kernel->sigma_rho_times_theta = r1 * M_Eq14[2];
+			kernel->m2 = r2 * M_Eq14[0];
+			kernel->sigma_theta_square = r2 * M_Eq14[2];
 			// line 22
-			if (kernel->M[kCompVHoughKhtKernelIndex_SigmaThetaSquare] == 0.0) {
-				kernel->M[kCompVHoughKhtKernelIndex_SigmaThetaSquare] = 0.1; // (2^2 * 0.1)
+			if (kernel->sigma_theta_square == 0.0) {
+				kernel->sigma_theta_square = 0.1; // (2^2 * 0.1)
 			}
-			kernel->M[kCompVHoughKhtKernelIndex_SigmaRhoSquare] *= 4.0; // * (2^2)
-			kernel->M[kCompVHoughKhtKernelIndex_SigmaThetaSquare] *= 4.0; // * (2^2)
+			kernel->sigma_rho_square *= 4.0; // * (2^2)
+			kernel->sigma_theta_square *= 4.0; // * (2^2)
 
 			// Kernel's height
 			kernel->h = __gauss_Eq15(0.0, 0.0, *kernel);
@@ -803,7 +800,8 @@ COMPV_ERROR_CODE CompVHoughKht::voting_Algorithm2_Gmin(const CompVHoughKhtKernel
 		double r1, r2, eigenVectors[2 * 2], eigenValues[2 * 2];
 		/* {Find the gmin threshold. Gk function in Eq15} */
 		for (CompVHoughKhtKernels::const_iterator k = kernels.begin(); k < kernels.end(); ++k) {
-			COMPV_CHECK_CODE_RETURN(CompVMathEigen<double>::find2x2(k->M, eigenValues, eigenVectors));
+			const double M[4] = { k->sigma_rho_square , k->sigma_rho_times_theta , k->m2 , k->sigma_theta_square };
+			COMPV_CHECK_CODE_RETURN(CompVMathEigen<double>::find2x2(M, eigenValues, eigenVectors));
 			// Compute Gk (gauss function)
 			r1 = __compv_math_sqrt_fast(eigenValues[3]); // sqrt(smallest eigenvalue -> lambda_w)
 			r2 = __gauss_Eq15(eigenVectors[1] * r1, eigenVectors[3] * r1, *k);
@@ -845,14 +843,11 @@ void CompVHoughKht::vote_Algorithm4(int32_t* countsPtr, const size_t countsStrid
 	const size_t rho_size = m_rho->cols(), theta_size = m_theta->cols();
 	const double inc_rho = m_dRho * inc_rho_index;
 	const double inc_theta = m_dTheta_deg * inc_theta_index;
-	const double sigma_rho_square = kernel.M[kCompVHoughKhtKernelIndex_SigmaRhoSquare];
-	const double sigma_rho_square_scale = 1.0 / sigma_rho_square;
-	const double sigma_theta_square = kernel.M[kCompVHoughKhtKernelIndex_SigmaThetaSquare];
-	const double sigma_theta_square_scale = 1.0 / sigma_theta_square;
-	const double sigma_rho_times_theta = kernel.M[kCompVHoughKhtKernelIndex_SigmaRhoTimesTheta];
-	const double sigma_rho_times_sigma_theta = __compv_math_sqrt_fast2(sigma_rho_square, sigma_theta_square);
+	const double sigma_rho_square_scale = 1.0 / kernel.sigma_rho_square;
+	const double sigma_theta_square_scale = 1.0 / kernel.sigma_theta_square;
+	const double sigma_rho_times_sigma_theta = __compv_math_sqrt_fast2(kernel.sigma_rho_square, kernel.sigma_theta_square);
 	const double sigma_rho_times_sigma_theta_scale = 1.0 / sigma_rho_times_sigma_theta;
-	const double r = (sigma_rho_times_theta * sigma_rho_times_sigma_theta_scale);
+	const double r = (kernel.sigma_rho_times_theta * sigma_rho_times_sigma_theta_scale);
 	const double one_minus_r_square = 1.0 - (r * r);
 	const double r_times_2 = r * 2.0;
 	const double x = 1.0 / (twopi * sigma_rho_times_sigma_theta * __compv_math_sqrt_fast(one_minus_r_square));
