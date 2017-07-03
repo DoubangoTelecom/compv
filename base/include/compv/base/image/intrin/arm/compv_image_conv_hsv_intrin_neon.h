@@ -19,6 +19,8 @@ COMPV_NAMESPACE_BEGIN()
 
 void CompVImageConvRgb24ToHsv_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* rgb24Ptr, COMPV_ALIGNED(NEON) uint8_t* hsvPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
 
+void CompVImageConvRgba32ToHsv_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* rgba32Ptr, COMPV_ALIGNED(NEON) uint8_t* hsvPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_ARM && COMPV_INTRINSIC */

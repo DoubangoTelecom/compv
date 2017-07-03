@@ -14,20 +14,24 @@ data255f: .word 0x437f0000, 0x437f0000, 0x437f0000, 0x437f0000
 
 .text
 
+.equ familyRGB24, 0
+.equ familyRGBA32, 1
+
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-@ arg(0) -> COMPV_ALIGNED(NEON) const uint8_t* rgb24Ptr
+@ arg(0) -> COMPV_ALIGNED(NEON) const uint8_t* rgbxPtr
 @ arg(1) -> COMPV_ALIGNED(NEON) uint8_t* hsvPtr
 @ arg(2) -> compv_uscalar_t width
 @ arg(3) -> compv_uscalar_t height
 @ arg(4) -> COMPV_ALIGNED(NEON) compv_uscalar_t stride
-COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb24ToHsv_Asm_NEON32
-    COMPV_GAS_FUNCTION_PROLOG
+@ family -> familyRGB24 or familyRGBA32
+.macro CompVImageConvRgbxToHsv_Macro_NEON32 family
+	COMPV_GAS_FUNCTION_PROLOG
 	COMPV_GAS_SHADOW_ARGS_TO_STACK 5
 	COMPV_GAS_SAVE_NEON_REGS
 
     @ Load arguments @
 	ldm_args r0-r4
-	rgb24Ptr .req r0
+	rgbxPtr .req r0
 	hsvPtr .req r1
 	width .req r2
 	height .req r3
@@ -37,7 +41,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb24ToHsv_Asm_NEON32
     val85 .req r7
     val171 .req r8
     valHalf .req r9
-    pad .req r10
+    padHsv .req r10
+	padRgbx .req r11
 
     vecZero .req q0
     vec255f .req q1
@@ -84,14 +89,21 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb24ToHsv_Asm_NEON32
     vec3fx .req q15x
     vec3fy .req q15y
 
-    add pad, width, #15
-	and pad, pad, #-16
-	sub pad, stride, pad
-    add pad, pad, pad, LSL #1 @ from samples to bytes (pad * 3)
-    add width, width, width, LSL #1 @ from samples to bytes (width * 3)
+    add padHsv, width, #15
+	and padHsv, padHsv, #-16
+	sub padHsv, stride, padHsv
+	.if \family == familyRGB24
+		add padRgbx, padHsv, padHsv, LSL #1 @ from samples to bytes "padRgbx = (pad * 3)"
+	.elseif \family == familyRGBA32
+		lsl padRgbx, padHsv, #2 @ from samples to bytes "padRgbx = (pad * 4)"
+	.elseif
+		.error not implemented
+	.endif
+    add padHsv, padHsv, padHsv, LSL #1 @ from samples to bytes "padHsv = (pad * 3)"
+    add width, width, width, LSL #1 @ from samples to bytes "width = (width * 3)"
 
-    ldr val85, =data255f
-    vld1.s32 {vec255f}, [val85]
+    ldr i, =data255f
+    vld1.s32 {vec255f}, [i]
     veor.s32 vecZero, vecZero, vecZero
     mov valHalf, #0x3f000000 @ 0.5f
     mov val85, #85
@@ -101,14 +113,21 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb24ToHsv_Asm_NEON32
     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     @ for (j = 0; j < height; ++j)
     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    LoopHeight_CompVImageConvRgb24ToHsv_Asm_NEON32:
+    LoopHeight_CompVImageConvRgbxToHsv_Asm_NEON32\family:
         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         @ for (i = 0; i < width; i += 48) {  // 48 = (16 * 3)
         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         mov i, #0
-        LoopWidth_CompVImageConvRgb24ToHsv_Asm_NEON32:
-            vld3.u8 {vec0fx, vec1fx, vec2fx}, [rgb24Ptr :64]!
-			vld3.u8 {vec0fy, vec1fy, vec2fy}, [rgb24Ptr]!
+        LoopWidth_CompVImageConvRgbxToHsv_Asm_NEON32\family:
+			.if \family == familyRGB24
+				vld3.u8 {vec0fx, vec1fx, vec2fx}, [rgbxPtr :64]!
+				vld3.u8 {vec0fy, vec1fy, vec2fy}, [rgbxPtr :64]!
+			.elseif \family == familyRGBA32
+				vld4.u8 {vec0fx, vec1fx, vec2fx, vec3fx}, [rgbxPtr :64]!
+				vld4.u8 {vec0fy, vec1fy, vec2fy, vec3fy}, [rgbxPtr :64]!
+			.elseif
+				.error not implemented
+			.endif
 
             vmin.u8 vec3, vec0f, vec1f
             vmax.u8 vec4, vec0f, vec1f
@@ -244,18 +263,18 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb24ToHsv_Asm_NEON32
 
             add i, i, #48
             cmp i, width
-            blt LoopWidth_CompVImageConvRgb24ToHsv_Asm_NEON32
+            blt LoopWidth_CompVImageConvRgbxToHsv_Asm_NEON32\family
             @End_of_LoopWidth@
 
-        add rgb24Ptr, rgb24Ptr, pad
-        add hsvPtr, hsvPtr, pad
+        add rgbxPtr, rgbxPtr, padRgbx
+        add hsvPtr, hsvPtr, padHsv
         subs height, height, #1
-		bne LoopHeight_CompVImageConvRgb24ToHsv_Asm_NEON32	
+		bne LoopHeight_CompVImageConvRgbxToHsv_Asm_NEON32\family
 		@End_of_LoopHeight@
 
 
     @ undefs @
-    .unreq rgb24Ptr
+    .unreq rgbxPtr
 	.unreq hsvPtr
 	.unreq width
 	.unreq height
@@ -265,7 +284,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb24ToHsv_Asm_NEON32
     .unreq val85
     .unreq val171
     .unreq valHalf
-    .unreq pad
+    .unreq padHsv
+	.unreq padRgbx
 
     .unreq vecZero
     .unreq vec255f
@@ -316,6 +336,15 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb24ToHsv_Asm_NEON32
 	COMPV_GAS_UNSHADOW_ARGS 5
 	COMPV_GAS_FUNCTION_EPILOG
 	COMPV_GAS_FUNCTION_RETURN
+.endm
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb24ToHsv_Asm_NEON32
+	CompVImageConvRgbxToHsv_Macro_NEON32 familyRGB24
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgba32ToHsv_Asm_NEON32
+	CompVImageConvRgbxToHsv_Macro_NEON32 familyRGBA32
 
 
 #endif /* defined(__arm__) && !defined(__aarch64__) */

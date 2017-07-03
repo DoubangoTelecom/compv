@@ -21,7 +21,7 @@ COMPV_NAMESPACE_BEGIN()
 #define CompVImageConvRgbxToHsv_Intrin_SSSE3(rgbxPtr, rgbxn) { \
 	COMPV_DEBUG_INFO_CHECK_SSSE3(); \
 	compv_uscalar_t i, j, k, strideRGBx; \
-	const compv_uscalar_t rgbxStep = (16 * rgbxn); \
+	const compv_uscalar_t rgbxStep = (rgbxn<<4); /* (16 * rgbxn) */\
 	__m128i vec0, vec1, vec2, vec3, vec4, vec5, vec6, vec7, vec8, vec9; \
 	__m128 vec0f, vec1f, vec2f, vec3f; \
 	static const __m128i vecZero = _mm_setzero_si128(); \

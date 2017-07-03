@@ -141,7 +141,7 @@ COMPV_ERROR_CODE CompVVideoReaderFFmpeg::read(CompVMatPtrPtr frame)
 	pkt.stream_index = m_nStreamIdx;
 	do {
 		av_packet_unref(&pkt);
-		if ((avret = av_read_frame(m_pFmtCtx, &pkt)) < 0) {
+		if ((avret = av_read_frame(m_pFmtCtx, &pkt)) < 0) { // alloc data in 'pkt' -> must be released using 'av_packet_unref'
 			if (avret == AVERROR_EOF) {
 				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "AVERROR_EOF");
 				return COMPV_ERROR_CODE_E_END_OF_FILE;

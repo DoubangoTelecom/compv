@@ -21,7 +21,7 @@
 .text
 
 .equ familyRGB24, 0
-.equ familyRGB32, 1
+.equ familyRGBA32, 1
 .equ familyRGB565, 2
 .equ endiannessBIG, 3
 .equ endiannessLITTLE, 4
@@ -59,7 +59,7 @@
 	padY .req r7
 	.if \family == familyRGB24
 		add r8, padY, padY, LSL #1
-	.elseif \family == familyRGB32
+	.elseif \family == familyRGBA32
 		mov r8, padY, LSL #2
 	.elseif
 		.error Not implemented
@@ -90,7 +90,7 @@
 			.if \family == familyRGB24
 				vld3.u8 {q2y, q3x, q3y}, [rgbPtr :64]!
 				vld3.u8 {q8x, q8y, q9x}, [rgbPtr]!
-			.elseif \family == familyRGB32
+			.elseif \family == familyRGBA32
 				vld4.u8 {q2y, q3x, q3y, q4x}, [rgbPtr :128]!
 				vld4.u8 {q8x, q8y, q9x, q9y}, [rgbPtr :128]!
 			.elseif
@@ -102,7 +102,7 @@
 			vmlal.u8 q7, vecCoeff1, q8y
 			vmlal.u8 q6, vecCoeff2, q3y
 			vmlal.u8 q7, vecCoeff2, q9x
-			.if \family == familyRGB32 && \isAlphaLast == isAlphaLastNO
+			.if \family == familyRGBA32 && \isAlphaLast == isAlphaLastNO
 				vmlal.u8 q6, vecCoeff3, q4x
 				vmlal.u8 q7, vecCoeff3, q9y
 			.endif
@@ -147,11 +147,11 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb24family_to_y_Asm_NEON32
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 COMPV_GAS_FUNCTION_DECLARE CompVImageConvArgb32family_to_y_Asm_NEON32
-    CompVImageConvRgbfamily_to_y_Macro_NEON32 familyRGB32, isAlphaLastNO
+    CompVImageConvRgbfamily_to_y_Macro_NEON32 familyRGBA32, isAlphaLastNO
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgba32family_to_y_Asm_NEON32
-    CompVImageConvRgbfamily_to_y_Macro_NEON32 familyRGB32, isAlphaLastYES
+    CompVImageConvRgbfamily_to_y_Macro_NEON32 familyRGBA32, isAlphaLastYES
 
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -330,7 +330,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb565befamily_to_y_Asm_NEON32
 	padUV .req r9
 	.if \family == familyRGB24
 		add r8, padUV, padUV, LSL #1
-	.elseif \family == familyRGB32
+	.elseif \family == familyRGBA32
 		mov r8, padUV, LSL #2
 	.elseif
 		.error
@@ -341,7 +341,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb565befamily_to_y_Asm_NEON32
 	vmovl.s8 q0, q10x
 	vmovl.s8 q1, q10y
 	vmovl.s8 q2, q11x
-	.if \family == familyRGB32 && \isAlphaLast == isAlphaLastNO
+	.if \family == familyRGBA32 && \isAlphaLast == isAlphaLastNO
 		vmovl.s8 q3, q11y
 	.endif
 	vecCoeffU0 .req q0
@@ -353,7 +353,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb565befamily_to_y_Asm_NEON32
 	vmovl.s8 q4, q10x
 	vmovl.s8 q5, q10y
 	vmovl.s8 q6, q11x
-	.if \family == familyRGB32 && \isAlphaLast == isAlphaLastNO
+	.if \family == familyRGBA32 && \isAlphaLast == isAlphaLastNO
 		vmovl.s8 q7, q11y
 	.endif
 	vecCoeffV0 .req q4
@@ -380,7 +380,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb565befamily_to_y_Asm_NEON32
 			.if \family == familyRGB24
 				vld3.u8 {q8x, q8y, q9x}, [rgbPtr :64]!
 				vld3.u8 {q10x, q10y, q11x}, [rgbPtr]!
-			.elseif \family == familyRGB32
+			.elseif \family == familyRGBA32
 				vld4.u8 {q8x, q8y, q9x, q9y}, [rgbPtr :128]!
 				vld4.u8 {q10x, q10y, q11x, q11y}, [rgbPtr :128]!
 			.elseif
@@ -395,7 +395,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb565befamily_to_y_Asm_NEON32
 			vmovl.u8 vec0, q9x
 			vmla.s16 q13, vecCoeffU2, vec0
 			vmla.s16 q14, vecCoeffV2, vec0
-			.if \family == familyRGB32 && \isAlphaLast == isAlphaLastNO
+			.if \family == familyRGBA32 && \isAlphaLast == isAlphaLastNO
 				vmovl.u8 vec0, q9y
 				vmla.s16 q13, vecCoeffU3, vec0
 				vmla.s16 q14, vecCoeffV3, vec0
@@ -409,7 +409,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb565befamily_to_y_Asm_NEON32
 			vmovl.u8 vec0, q11x
 			vmla.s16 q8, vecCoeffU2, vec0
 			vmla.s16 q9, vecCoeffV2, vec0
-			.if \family == familyRGB32 && \isAlphaLast == isAlphaLastNO
+			.if \family == familyRGBA32 && \isAlphaLast == isAlphaLastNO
 				vmovl.u8 vec0, q11y
 				vmla.s16 q8, vecCoeffU3, vec0
 				vmla.s16 q9, vecCoeffV3, vec0
@@ -473,11 +473,11 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb24family_to_uv_planar_11_Asm_NEON32
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 COMPV_GAS_FUNCTION_DECLARE CompVImageConvArgb32family_to_uv_planar_11_Asm_NEON32 
-	CompVImageConvRgbfamily_to_uv_planar_11_Macro_NEON32 familyRGB32, isAlphaLastNO
+	CompVImageConvRgbfamily_to_uv_planar_11_Macro_NEON32 familyRGBA32, isAlphaLastNO
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgba32family_to_uv_planar_11_Asm_NEON32
-	CompVImageConvRgbfamily_to_uv_planar_11_Macro_NEON32 familyRGB32, isAlphaLastYES
+	CompVImageConvRgbfamily_to_uv_planar_11_Macro_NEON32 familyRGBA32, isAlphaLastYES
 
 
 

@@ -203,9 +203,7 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::yuvPlanar(const CompVMatPtr& imageIn, Com
 			vPtr += vPtrPaddingInBytes;
 			rgbxPtr += rgbxPtrPaddingInBytes;
 		}
-		if (lastHeight > 0) {
-			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, yPtr, uPtr, vPtr, rgbxPtr, lastHeight), taskIds), "Dispatching task failed");
-		}
+		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, yPtr, uPtr, vPtr, rgbxPtr, lastHeight), taskIds), "Dispatching task failed");
 		COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds), "Failed to wait for tasks execution");
 	}
 	else {
@@ -280,9 +278,7 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::yuvSemiPlanar(const CompVMatPtr& imageIn,
 			uvPtr += uvPtrPaddingInBytes;
 			rgbxPtr += rgbxPtrPaddingInBytes;
 		}
-		if (lastHeight > 0) {
-			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, yPtr, uvPtr, rgbxPtr, lastHeight), taskIds), "Dispatching task failed");
-		}
+		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, yPtr, uvPtr, rgbxPtr, lastHeight), taskIds), "Dispatching task failed");
 		COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds), "Failed to wait for tasks execution");
 	}
 	else {
@@ -354,9 +350,7 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::yuvPacked(const CompVMatPtr& imageIn, Com
 			yuvPtr += yuvPtrPaddingInBytes;
 			rgbxPtr += rgbxPtrPaddingInBytes;
 		}
-		if (lastHeight > 0) {
-			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, yuvPtr, rgbxPtr, lastHeight), taskIds), "Dispatching task failed");
-		}
+		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, yuvPtr, rgbxPtr, lastHeight), taskIds), "Dispatching task failed");
 		COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds), "Failed to wait for tasks execution");
 	}
 	else {
