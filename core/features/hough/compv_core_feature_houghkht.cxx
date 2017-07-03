@@ -49,6 +49,31 @@ COMPV_ALWAYS_INLINE double __compv_math_exp_fast_small(double x) {
 #endif
 }
 
+// https://www.beyond3d.com/content/articles/8/
+// https://en.wikipedia.org/wiki/Fast_inverse_square_root
+COMPV_ALWAYS_INLINE double __compv_math_rsqrt_fast(double x) {
+	double xhalf = 0.5 * x;
+	int64_t i = *reinterpret_cast<int64_t*>(&x);
+	i = 0x5fe6eb50c7b537a9 - (i >> 1);
+	x = *reinterpret_cast<double*>(&i);
+	x = x*(1.5 - xhalf*x*x);
+	return x;
+}
+#if COMPV_ARCH_X64 && COMPV_INTRINSIC // X64 always support SSE2
+static const __m128d vec0 = _mm_set_sd(0.);
+#define __compv_math_sqrt_fast(x) _mm_cvtsd_f64(_mm_sqrt_sd(vec0, _mm_set_sd(x)))
+COMPV_ALWAYS_INLINE double __compv_math_sqrt_fast2(const double x, const double y) {
+	const __m128d vecsqrt = _mm_sqrt_pd(_mm_set_pd(x, y));
+	return _mm_cvtsd_f64(_mm_mul_sd(vecsqrt, _mm_shuffle_pd(vecsqrt, vecsqrt, 0x11)));
+}
+#elif defined(__GNUC__)
+#define __compv_math_sqrt_fast(x)		__builtin_sqrt(x)
+#define __compv_math_sqrt_fast2(x, y)	(__builtin_sqrt((x)) * __builtin_sqrt((y)))
+#else
+#define __compv_math_sqrt_fast(x)		std::sqrt(x)
+#define __compv_math_sqrt_fast2(x, y)	(std::sqrt((x)) * std::sqrt((y)))
+#endif
+
 static void CompVHoughKhtPeaks_Section3_4_VotesCount_C(const int32_t *pcount, const size_t pcount_stride, const size_t theta_index, const size_t rho_count, const int32_t nThreshold, CompVHoughKhtVotes& votes);
 
 CompVHoughKht::CompVHoughKht(float rho COMPV_DEFAULT(1.f), float theta COMPV_DEFAULT(1.f), size_t threshold COMPV_DEFAULT(1))
@@ -417,7 +442,7 @@ COMPV_ERROR_CODE CompVHoughKht::initCoords(double dRho, double dTheta, size_t nT
 	if (m_dRho != dRho || m_dTheta_rad != dTheta || m_nWidth != nWidth || m_nHeight != nHeight) {
 		double r0, *ptr0;
 		const double dTheta_deg = COMPV_MATH_RADIAN_TO_DEGREE(m_dTheta_rad);
-		const double r = std::sqrt(static_cast<double>((nWidth * nWidth) + (nHeight * nHeight)));
+		const double r = __compv_math_sqrt_fast(static_cast<double>((nWidth * nWidth) + (nHeight * nHeight)));
 		const size_t maxRhoCount = static_cast<size_t>(((r + 1.0) / dRho));
 		const size_t maxThetaCount = static_cast<size_t>(180.0 / dTheta_deg);
 		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<double>(&m_rho, 1, maxRhoCount));
@@ -591,7 +616,7 @@ double CompVHoughKht::clusters_subdivision(CompVHoughKhtClusters& clusters, cons
 	const CompVHoughKhtPos &end = string[end_index];
 	const int diffx = start.x - end.x;
 	const int diffy = start.y - end.y;
-	const double length = std::sqrt(static_cast<double>((diffx * diffx) + (diffy * diffy)));
+	const double length = __compv_math_sqrt_fast(static_cast<double>((diffx * diffx) + (diffy * diffy)));
 
 	// The significance of a straight line fit to a list of points can be estimated by calculating
 	// 	the ratio of the length of the line segment divided by the maximum deviation of
@@ -646,11 +671,11 @@ static double __gauss_Eq15(const double rho, const double theta, const CompVHoug
 	const double sigma_theta_square = kernel.M[kCompVHoughKhtKernelIndex_SigmaThetaSquare];
 	const double sigma_rho_square = kernel.M[kCompVHoughKhtKernelIndex_SigmaRhoSquare];
 	const double sigma_rho_times_theta = kernel.M[kCompVHoughKhtKernelIndex_SigmaRhoTimesTheta];
-	const double sigma_rho_times_sigma_theta = std::sqrt(sigma_rho_square) * std::sqrt(sigma_theta_square);
+	const double sigma_rho_times_sigma_theta = __compv_math_sqrt_fast2(sigma_rho_square, sigma_theta_square); // sqrt(sigma_rho_square) * sqrt(sigma_theta_square)
 	const double sigma_rho_times_sigma_theta_scale = 1.0 / sigma_rho_times_sigma_theta;
 	const double r = (sigma_rho_times_theta * sigma_rho_times_sigma_theta_scale);
 	const double one_minus_r_square = 1.0 - (r * r);
-	const double x = 1.0 / (2.0 * COMPV_MATH_PI * sigma_rho_times_sigma_theta * std::sqrt(one_minus_r_square));
+	const double x = 1.0 / (2.0 * COMPV_MATH_PI * sigma_rho_times_sigma_theta * __compv_math_sqrt_fast(one_minus_r_square));
 	const double y = 1.0 / (2.0 * (one_minus_r_square));
 	const double z = ((rho * rho) / sigma_rho_square) - (((r * 2.0) * rho * theta) * sigma_rho_times_sigma_theta_scale) + ((theta * theta) / sigma_theta_square);
 	return x * __compv_math_exp_fast_small(-z * y);
@@ -663,7 +688,7 @@ COMPV_ERROR_CODE CompVHoughKht::voting_Algorithm2_Kernels(const CompVHoughKhtClu
 	hmax = 0.0;
 	if (!clusters.empty()) {
 		double mean_cx, mean_cy, cx, cy, cxx, cyy, cxy;
-		double n; // number of pixels in Sk
+		double n_scale; // 1.0 / (number of pixels in Sk) = (1.0 / n)
 		double ux, uy; // eigenvector in V for the biggest eigenvalue
 		double vx, vy; // eigenvector in V for the smaller eigenvalue
 		double sqrt_one_minus_vx2; // sqrt(1 - (vx^2)) - Eq14
@@ -680,13 +705,13 @@ COMPV_ERROR_CODE CompVHoughKht::voting_Algorithm2_Kernels(const CompVHoughKhtClu
 			/* {Alternative reference system definition} */
 			// computing the centroid
 			mean_cx = mean_cy = 0;
-			n = static_cast<double>((cluster->end - cluster->begin));
+			n_scale = 1.0 / static_cast<double>((cluster->end - cluster->begin));
 			for (CompVHoughKhtString::const_iterator p = cluster->begin; p < cluster->end; ++p) {
 				mean_cx += p->cx;
 				mean_cy += p->cy;
 			}
-			mean_cx /= n; // p_hat.x
-			mean_cy /= n; // p_hat.y
+			mean_cx *= n_scale; // p_hat.x
+			mean_cy *= n_scale; // p_hat.y
 
 			/* {Eigen-decomposition} */
 			cxx = cyy = cxy = 0.0;
@@ -713,7 +738,7 @@ COMPV_ERROR_CODE CompVHoughKht::voting_Algorithm2_Kernels(const CompVHoughKhtClu
 
 			/* {substituting Eq5 in Eq10} */
 			// Eq.14
-			sqrt_one_minus_vx2 = std::sqrt(1.0 - (vx * vx));
+			sqrt_one_minus_vx2 = __compv_math_sqrt_fast(1.0 - (vx * vx));
 			M_Eq14[0] = -(ux * mean_cx) - (uy * mean_cy);
 			M_Eq14[2] = (sqrt_one_minus_vx2 == 0.0) ? 0.0 : ((ux / sqrt_one_minus_vx2) * rad_to_deg_scale);
 			// Compute M
@@ -725,7 +750,7 @@ COMPV_ERROR_CODE CompVHoughKht::voting_Algorithm2_Kernels(const CompVHoughKhtClu
 			r0 = 1.0 / r0;
 			r1 = (M_Eq14[0] * r0);
 			r2 = (M_Eq14[2] * r0);
-			kernel->M[kCompVHoughKhtKernelIndex_SigmaRhoSquare] = r1 * M_Eq14[0] + (1.0 / n);
+			kernel->M[kCompVHoughKhtKernelIndex_SigmaRhoSquare] = r1 * M_Eq14[0] + n_scale;
 			kernel->M[kCompVHoughKhtKernelIndex_SigmaRhoTimesTheta] = r1 * M_Eq14[2];
 			kernel->M[kCompVHoughKhtKernelIndex_2] = r2 * M_Eq14[0];
 			kernel->M[kCompVHoughKhtKernelIndex_SigmaThetaSquare] = r2 * M_Eq14[2];
@@ -779,7 +804,7 @@ COMPV_ERROR_CODE CompVHoughKht::voting_Algorithm2_Gmin(const CompVHoughKhtKernel
 		for (CompVHoughKhtKernels::const_iterator k = kernels.begin(); k < kernels.end(); ++k) {
 			COMPV_CHECK_CODE_RETURN(CompVMathEigen<double>::find2x2(k->M, eigenValues, eigenVectors));
 			// Compute Gk (gauss function)
-			r1 = std::sqrt(eigenValues[3]); // sqrt(smallest eigenvalue -> lambda_w)
+			r1 = __compv_math_sqrt_fast(eigenValues[3]); // sqrt(smallest eigenvalue -> lambda_w)
 			r2 = __gauss_Eq15(eigenVectors[1] * r1, eigenVectors[3] * r1, *k);
 			if (r2 < Gmin) {
 				Gmin = r2;
@@ -823,12 +848,12 @@ void CompVHoughKht::vote_Algorithm4(int32_t* countsPtr, const size_t countsStrid
 	const double sigma_theta_square = kernel.M[kCompVHoughKhtKernelIndex_SigmaThetaSquare];
 	const double sigma_theta_square_scale = 1.0 / sigma_theta_square;
 	const double sigma_rho_times_theta = kernel.M[kCompVHoughKhtKernelIndex_SigmaRhoTimesTheta];
-	const double sigma_rho_times_sigma_theta = std::sqrt(sigma_rho_square) * std::sqrt(sigma_theta_square);
+	const double sigma_rho_times_sigma_theta = __compv_math_sqrt_fast2(sigma_rho_square, sigma_theta_square);
 	const double sigma_rho_times_sigma_theta_scale = 1.0 / sigma_rho_times_sigma_theta;
 	const double r = (sigma_rho_times_theta * sigma_rho_times_sigma_theta_scale);
 	const double one_minus_r_square = 1.0 - (r * r);
 	const double r_times_2 = r * 2.0;
-	const double x = 1.0 / (2.0 * COMPV_MATH_PI * sigma_rho_times_sigma_theta * std::sqrt(one_minus_r_square));
+	const double x = 1.0 / (2.0 * COMPV_MATH_PI * sigma_rho_times_sigma_theta * __compv_math_sqrt_fast(one_minus_r_square));
 	const double y = 1.0 / (2.0 * one_minus_r_square);
 
 	double rho, theta;

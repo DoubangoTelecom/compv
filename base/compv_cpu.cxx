@@ -235,10 +235,15 @@ COMPV_ERROR_CODE CompVCpu::init()
 	if (CompVDebugMgr::getLevel() >= COMPV_DEBUG_LEVEL_INFO) {
 		FILE* fcpuinfo = fopen("/proc/cpuinfo", "r");
 		if (fcpuinfo) {
-			char cpuinfo_line[1024];
+			char cpuinfo_line[4096];
 			size_t count;
 			while ((count = fread(cpuinfo_line, 1, sizeof(cpuinfo_line), fcpuinfo)) > 0) {
 				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME "/proc/cpuinfo", "%.*s", static_cast<int>(count), cpuinfo_line);
+#if COMPV_ARCH_ARM32
+				if (strstr(cpuinfo_line, "aarch64")) {
+					COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Using AArch32 binaries on AArch64 machine, you're missing many optimizations. Sad!!");
+				}
+#endif
 			}
 			fclose(fcpuinfo);
 		}

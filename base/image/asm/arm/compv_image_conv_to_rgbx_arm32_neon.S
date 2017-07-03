@@ -84,6 +84,16 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvYuv420_to_Rgb24_Asm_NEON32
     vdup.s16 vec13, i
     vdup.s16 vec26, j
 
+	pld [yPtr, #(CACHE_LINE_SIZE*0)]
+	pld [yPtr, #(CACHE_LINE_SIZE*1)]
+	pld [yPtr, #(CACHE_LINE_SIZE*2)]
+	pld [uPtr, #(CACHE_LINE_SIZE*0)]
+	pld [uPtr, #(CACHE_LINE_SIZE*1)]
+	pld [uPtr, #(CACHE_LINE_SIZE*2)]
+	pld [vPtr, #(CACHE_LINE_SIZE*0)]
+	pld [vPtr, #(CACHE_LINE_SIZE*1)]
+	pld [vPtr, #(CACHE_LINE_SIZE*2)]
+
     add padY, width, #15
 	and padY, padY, #-16
 	sub padY, stride, padY
@@ -102,6 +112,9 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvYuv420_to_Rgb24_Asm_NEON32
         mov i, #0
         LoopWidth_CompVImageConvYuv420_to_Rgb24_Asm_NEON32:
             @ Load samples @
+			pld [yPtr, #(CACHE_LINE_SIZE*3)]
+			pld [uPtr, #(CACHE_LINE_SIZE*3)]
+			pld [vPtr, #(CACHE_LINE_SIZE*3)]
             vld1.u8 {vecYlow}, [yPtr :128]! @ #16 Y samples
             vld1.u8 {vecUn}, [uPtr :64]! @ #8 U samples, low mem
             vld1.u8 {vecVn}, [vPtr :64]! @ #8 V samples, low mem

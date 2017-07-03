@@ -174,7 +174,7 @@ COMPV_ERROR_CODE  CompVMathEigen<T>::find2x2(const T(&A)[4], T(&D)[4], T(&Q)[4],
 	const T trace = A[0] + A[3];
 	const T trace_div2 = trace / static_cast<T>(2.0);
 	const T det = (A[0] * A[3]) - (A[1] * A[2]);
-	const T sqrt_trace_square_div4_minus_det = COMPV_MATH_SQRT(((trace * trace) / static_cast<T>(4.0)) - det);
+	const T sqrt_trace_square_div4_minus_det = std::sqrt(((trace * trace) / static_cast<T>(4.0)) - det);
 	D[1] = D[2] = 0.0;
 	D[0] = trace_div2 + sqrt_trace_square_div4_minus_det;
 	D[3] = trace_div2 - sqrt_trace_square_div4_minus_det;
@@ -196,8 +196,8 @@ COMPV_ERROR_CODE  CompVMathEigen<T>::find2x2(const T(&A)[4], T(&D)[4], T(&Q)[4],
 
 	// Normalisation
 	if (norm) {
-		const T mag02 = static_cast<T>(1) / COMPV_MATH_SQRT(Q[0] * Q[0] + Q[2] * Q[2]);
-		const T mag13 = static_cast<T>(1) / COMPV_MATH_SQRT(Q[1] * Q[1] + Q[3] * Q[3]);
+		const T mag02 = static_cast<T>(1) / std::sqrt(Q[0] * Q[0] + Q[2] * Q[2]);
+		const T mag13 = static_cast<T>(1) / std::sqrt(Q[1] * Q[1] + Q[3] * Q[3]);
 		Q[0] *= mag02, Q[2] *= mag02;
 		Q[1] *= mag13, Q[3] *= mag13;
 	}

@@ -102,6 +102,10 @@ data255f: .word 0x437f0000, 0x437f0000, 0x437f0000, 0x437f0000
     add padHsv, padHsv, padHsv, LSL #1 @ from samples to bytes "padHsv = (pad * 3)"
     add width, width, width, LSL #1 @ from samples to bytes "width = (width * 3)"
 
+	pld [rgbxPtr, #(CACHE_LINE_SIZE*0)]
+	pld [rgbxPtr, #(CACHE_LINE_SIZE*1)]
+	pld [rgbxPtr, #(CACHE_LINE_SIZE*2)]
+
     ldr i, =data255f
     vld1.s32 {vec255f}, [i]
     veor.s32 vecZero, vecZero, vecZero
@@ -119,6 +123,7 @@ data255f: .word 0x437f0000, 0x437f0000, 0x437f0000, 0x437f0000
         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         mov i, #0
         LoopWidth_CompVImageConvRgbxToHsv_Asm_NEON32\family:
+			pld [rgbxPtr, #(CACHE_LINE_SIZE*3)]
 			.if \family == familyRGB24
 				vld3.u8 {vec0fx, vec1fx, vec2fx}, [rgbxPtr :64]!
 				vld3.u8 {vec0fy, vec1fy, vec2fy}, [rgbxPtr :64]!

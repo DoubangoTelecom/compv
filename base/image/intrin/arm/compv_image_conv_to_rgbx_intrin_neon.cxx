@@ -12,6 +12,7 @@
 #include "compv/base/compv_simd_globals.h"
 #include "compv/base/math/compv_math.h"
 #include "compv/base/compv_debug.h"
+#include "compv/base/compv_cpu.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -24,8 +25,12 @@ static const int16x8_t vec65 = vdupq_n_s16(65);
 static const int16x8_t vec13 = vdupq_n_s16(13);
 static const int16x8_t vec26 = vdupq_n_s16(26);
 
-// TODO(dmi): Optiz issues. ASM code is by far faster than this (iPhone5/1 thread/1k loop: 1960.ms vs 3354.ms, on iPad Air2/1 thread/10k loop: 6157.ms vs 7438.ms)
-// TODO(dmi): Optiz issues. ASM code is by far faster than this (Galaxy Tab A6/1 thread/1k loop: 2395.ms vs 3375.ms)
+// TODO(dmi): Optiz issues. ASM code is by far faster:
+// - ARM32 Galaxy Tab A6/1 thread/1k loop: 2037.ms vs 3182.ms
+// - ARM32 MediaPad2/1 thread/1k loop: 1749.ms vs 2606.ms
+// - ARM32 iPhone5/1 thread/1k loop: 1960.ms vs 3354.ms
+// - ARM64 iPad Air2/1 thread/10k loop: 6157.ms vs 7438.ms
+// - ARM64 MediaPad2/1 thread/1k loop: 1590.ms vs 2409.ms
 void CompVImageConvYuv420_to_Rgb24_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* yPtr, COMPV_ALIGNED(NEON) const uint8_t* uPtr, COMPV_ALIGNED(NEON) const uint8_t* vPtr, COMPV_ALIGNED(NEON) uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
 {
 	COMPV_DEBUG_INFO_CHECK_NEON();
@@ -39,9 +44,22 @@ void CompVImageConvYuv420_to_Rgb24_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t
 	uint8x8_t vecUn, vecVn;
 	int16x8x2_t vec2;
 
+	__builtin_prefetch_read(&yPtr[COMPV_CACHE1_LINE_SIZE * 0]);
+	__builtin_prefetch_read(&yPtr[COMPV_CACHE1_LINE_SIZE * 1]);
+	__builtin_prefetch_read(&yPtr[COMPV_CACHE1_LINE_SIZE * 2]);
+	__builtin_prefetch_read(&uPtr[COMPV_CACHE1_LINE_SIZE * 0]);
+	__builtin_prefetch_read(&uPtr[COMPV_CACHE1_LINE_SIZE * 1]);
+	__builtin_prefetch_read(&uPtr[COMPV_CACHE1_LINE_SIZE * 2]);
+	__builtin_prefetch_read(&vPtr[COMPV_CACHE1_LINE_SIZE * 0]);
+	__builtin_prefetch_read(&vPtr[COMPV_CACHE1_LINE_SIZE * 1]);
+	__builtin_prefetch_read(&vPtr[COMPV_CACHE1_LINE_SIZE * 2]);
+
 	for (j = 0; j < height; ++j) {
 		for (i = 0, k = 0, l = 0; i < width; i += 16, k += 48, l += 8) {
 			/* Load samples */
+			__builtin_prefetch_read(&yPtr[i + (COMPV_CACHE1_LINE_SIZE * 3)]);
+			__builtin_prefetch_read(&uPtr[l + (COMPV_CACHE1_LINE_SIZE * 3)]);
+			__builtin_prefetch_read(&vPtr[l + (COMPV_CACHE1_LINE_SIZE * 3)]);
 			vecYlow = vld1q_u8(&yPtr[i]); // #16 Y samples
 			vecUn = vld1_u8(&uPtr[l]); // #8 U samples, low mem
 			vecVn = vld1_u8(&vPtr[l]); // #8 V samples, low mem

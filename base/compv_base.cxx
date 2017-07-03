@@ -206,11 +206,11 @@ COMPV_ERROR_CODE CompVBase::init(int32_t numThreads COMPV_DEFAULT(-1))
 #	endif
 #elif COMPV_ARCH_ARM
 #	if COMPV_ARCH_ARM64
-	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Binary type: Aarch64");
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Binary type: AArch64");
 #	else
-	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Binary type: Aarch32");
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Binary type: AArch32");
 	if (CompVCpu::isSupported(kCpuFlagARM64)) {
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Using Aarch32 binaries on Aarch64 machine, you're missing many optimizations. Sad!!");
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Using AArch32 binaries on AArch64 machine, you're missing many optimizations. Sad!!");
 	}
 #	endif
 #endif

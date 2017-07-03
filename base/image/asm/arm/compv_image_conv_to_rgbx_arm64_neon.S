@@ -62,6 +62,16 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvYuv420_to_Rgb24_Asm_NEON64
     vecG .req v14
     vecB .req v15
 
+	prfm pldl1keep, [yPtr, #(CACHE_LINE_SIZE*0)]
+	prfm pldl1keep, [yPtr, #(CACHE_LINE_SIZE*1)]
+	prfm pldl1keep, [yPtr, #(CACHE_LINE_SIZE*2)]
+	prfm pldl1keep, [uPtr, #(CACHE_LINE_SIZE*0)]
+	prfm pldl1keep, [uPtr, #(CACHE_LINE_SIZE*1)]
+	prfm pldl1keep, [uPtr, #(CACHE_LINE_SIZE*2)]
+	prfm pldl1keep, [vPtr, #(CACHE_LINE_SIZE*0)]
+	prfm pldl1keep, [vPtr, #(CACHE_LINE_SIZE*1)]
+	prfm pldl1keep, [vPtr, #(CACHE_LINE_SIZE*2)]
+
     mov iw, #16
     mov jw, #127
     mov padYw, #37
@@ -95,6 +105,9 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvYuv420_to_Rgb24_Asm_NEON64
         mov i, #0
         LoopWidth_CompVImageConvYuv420_to_Rgb24_Asm_NEON64:
             # Load samples #
+			prfm pldl1keep, [yPtr, #(CACHE_LINE_SIZE*3)]
+			prfm pldl1keep, [uPtr, #(CACHE_LINE_SIZE*3)]
+			prfm pldl1keep, [vPtr, #(CACHE_LINE_SIZE*3)]
             ld1 {vecYlow.16b}, [yPtr], #(16*COMPV_GAS_UINT8_SZ_BYTES) // #16 Y samples
             ld1 {vecUn.8b}, [uPtr], #(8*COMPV_GAS_UINT8_SZ_BYTES) // #8 U samples, low mem
             ld1 {vecVn.8b}, [vPtr], #(8*COMPV_GAS_UINT8_SZ_BYTES) // #8 V samples, low mem

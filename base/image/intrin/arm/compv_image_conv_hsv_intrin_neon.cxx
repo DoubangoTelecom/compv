@@ -26,7 +26,7 @@ static const float32x4_t vecHalf = vdupq_n_f32(0.5f);
 
 #define CompVImageConvRgbxToHsv_Intrin_NEON(rgbxPtr, rgbxn) { \
 	COMPV_DEBUG_INFO_CHECK_NEON(); \
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM.arm32 code is almost #2 times faster (Samsung Exynos 3 Quad 3475)"); \
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM code is almost #2 times faster"); \
 	 \
 	compv_uscalar_t i, j, k, strideRGBx; \
 	const compv_uscalar_t rgbxStep = (rgbxn<<4); /* (16 * rgbxn) */\
@@ -151,7 +151,10 @@ static const float32x4_t vecHalf = vdupq_n_f32(0.5f);
 	} \
 }
 
-// TODO(dmi): Optiz issues. ASM code is by far faster than this (ARM32 Galaxy Tab A6/1 thread/1k loop: 5936.ms vs 10416.ms, ARM64 MediaPad2/1k loop: 3935.ms vs 4617.ms)
+// TODO(dmi): Optiz issues. ASM code is by far faster:
+// - ARM32 Galaxy Tab A6/1 thread/1k loop: 5832.ms vs 10416.ms
+// - ARM32 MediaPad2/1 thread/1k loop: 4680.ms vs 7836.ms
+// - ARM64 MediaPad2/1 thread/1k loop: 3844.ms vs 4504.ms
 void CompVImageConvRgb24ToHsv_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* rgb24Ptr, COMPV_ALIGNED(NEON) uint8_t* hsvPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
 {
 	CompVImageConvRgbxToHsv_Intrin_NEON(rgb24Ptr, 3);

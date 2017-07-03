@@ -71,6 +71,10 @@
     add padHsv, padHsv, padHsv, LSL #1 // from samples to bytes (pad * 3)
     add width, width, width, LSL #1 // from samples to bytes (width * 3)
 
+	prfm pldl1keep, [rgbxPtr, #(CACHE_LINE_SIZE*0)]
+	prfm pldl1keep, [rgbxPtr, #(CACHE_LINE_SIZE*1)]
+	prfm pldl1keep, [rgbxPtr, #(CACHE_LINE_SIZE*2)]
+
     movz r10w, #0x437f, lsl #16
     mov r11, #85
     mov r12, #171
@@ -91,6 +95,7 @@
         ########################################################
         mov i, #0
         LoopWidth_CompVImageConvRgbxToHsv_Asm_NEON64\family:
+			prfm pldl1keep, [rgbxPtr, #(CACHE_LINE_SIZE*3)]
 			.if \family == familyRGB24
 				ld3 {vec0f.16b, vec1f.16b, vec2f.16b}, [rgbxPtr], #((16*3)*COMPV_GAS_UINT8_SZ_BYTES)
 			.elseif \family == familyRGBA32
@@ -206,7 +211,7 @@
             orr vec6.16b, vec6.16b, vec7.16b
             sqxtn2 vec9.16b, vec2f.8h
             sqadd vec9.16b, vec9.16b, vec6.16b
-
+			
             st3 {vec9.16b, vec8.16b, vec4.16b}, [hsvPtr], #((16*3)*COMPV_GAS_UINT8_SZ_BYTES)
             
             add i, i, #((16*3)*COMPV_GAS_UINT8_SZ_BYTES)
