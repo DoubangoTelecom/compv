@@ -59,7 +59,7 @@
 		add r8, padY, padY, LSL #1
 	.elseif \family == familyRGB32
 		lsl r8, padY, #2
-	.elseif
+	.else
 		.error Not implemented
 	.endif
 	padRGB .req r8
@@ -94,7 +94,7 @@
 				ld3 {v2.16b, v3.16b, v4.16b}, [rgbPtr], #16*3
 			.elseif \family == familyRGB32
 				ld4 {v2.16b, v3.16b, v4.16b, v5.16b}, [rgbPtr], #16*4
-			.elseif
+			.else
 				.error not implemented
 			.endif
             
@@ -328,8 +328,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb565befamily_to_y_Asm_NEON64
 		add r8, padUV, padUV, LSL #1
 	.elseif \family == familyRGB32
 		lsl r8, padUV, #2
-	.elseif
-		.error
+	.else
+		.error not implemented
 	.endif
 	padRGB .req r8
 	
@@ -378,7 +378,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb565befamily_to_y_Asm_NEON64
 				ld3 {v8.16b, v9.16b, v10.16b}, [rgbPtr], #3*16
 			.elseif \family == familyRGB32
 				ld4 {v8.16b, v9.16b, v10.16b, v11.16b}, [rgbPtr], #4*16
-			.elseif
+			.else
 				.error not implemented
 			.endif
 

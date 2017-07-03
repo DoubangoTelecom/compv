@@ -96,7 +96,7 @@ data255f: .word 0x437f0000, 0x437f0000, 0x437f0000, 0x437f0000
 		add padRgbx, padHsv, padHsv, LSL #1 @ from samples to bytes "padRgbx = (pad * 3)"
 	.elseif \family == familyRGBA32
 		lsl padRgbx, padHsv, #2 @ from samples to bytes "padRgbx = (pad * 4)"
-	.elseif
+	.else
 		.error not implemented
 	.endif
     add padHsv, padHsv, padHsv, LSL #1 @ from samples to bytes "padHsv = (pad * 3)"

@@ -61,7 +61,7 @@
 		add r8, padY, padY, LSL #1
 	.elseif \family == familyRGBA32
 		mov r8, padY, LSL #2
-	.elseif
+	.else
 		.error Not implemented
 	.endif
 	padRGB .req r8
@@ -93,7 +93,7 @@
 			.elseif \family == familyRGBA32
 				vld4.u8 {q2y, q3x, q3y, q4x}, [rgbPtr :128]!
 				vld4.u8 {q8x, q8y, q9x, q9y}, [rgbPtr :128]!
-			.elseif
+			.else
 				.error not implemented
 			.endif
 			vmull.u8 q6, vecCoeff0, q2y
@@ -332,8 +332,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb565befamily_to_y_Asm_NEON32
 		add r8, padUV, padUV, LSL #1
 	.elseif \family == familyRGBA32
 		mov r8, padUV, LSL #2
-	.elseif
-		.error
+	.else
+		.error Not implemented
 	.endif
 	padRGB .req r8
 	
@@ -383,8 +383,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb565befamily_to_y_Asm_NEON32
 			.elseif \family == familyRGBA32
 				vld4.u8 {q8x, q8y, q9x, q9y}, [rgbPtr :128]!
 				vld4.u8 {q10x, q10y, q11x, q11y}, [rgbPtr :128]!
-			.elseif
-				.error not implemented
+			.else
+				.error Not implemented
 			.endif
 			vmovl.u8 vec0, q8x
 			vmul.i16 q13, vecCoeffU0, vec0
