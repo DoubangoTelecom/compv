@@ -668,6 +668,7 @@ double CompVHoughKht::clusters_subdivision(CompVHoughKhtClusters& clusters, cons
 
 static double __gauss_Eq15(const double rho, const double theta, const CompVHoughKhtKernel& kernel)
 {
+	static const double twopi = 2.0 * COMPV_MATH_PI;
 	const double sigma_theta_square = kernel.M[kCompVHoughKhtKernelIndex_SigmaThetaSquare];
 	const double sigma_rho_square = kernel.M[kCompVHoughKhtKernelIndex_SigmaRhoSquare];
 	const double sigma_rho_times_theta = kernel.M[kCompVHoughKhtKernelIndex_SigmaRhoTimesTheta];
@@ -675,7 +676,7 @@ static double __gauss_Eq15(const double rho, const double theta, const CompVHoug
 	const double sigma_rho_times_sigma_theta_scale = 1.0 / sigma_rho_times_sigma_theta;
 	const double r = (sigma_rho_times_theta * sigma_rho_times_sigma_theta_scale);
 	const double one_minus_r_square = 1.0 - (r * r);
-	const double x = 1.0 / (2.0 * COMPV_MATH_PI * sigma_rho_times_sigma_theta * __compv_math_sqrt_fast(one_minus_r_square));
+	const double x = 1.0 / (twopi * sigma_rho_times_sigma_theta * __compv_math_sqrt_fast(one_minus_r_square));
 	const double y = 1.0 / (2.0 * (one_minus_r_square));
 	const double z = ((rho * rho) / sigma_rho_square) - (((r * 2.0) * rho * theta) * sigma_rho_times_sigma_theta_scale) + ((theta * theta) / sigma_theta_square);
 	return x * __compv_math_exp_fast_small(-z * y);
@@ -840,6 +841,7 @@ COMPV_ERROR_CODE CompVHoughKht::voting_Algorithm2_Count(int32_t* countsPtr, cons
 void CompVHoughKht::vote_Algorithm4(int32_t* countsPtr, const size_t countsStride, size_t rho_start_index, const size_t theta_start_index, const double rho_start, const double theta_start, int inc_rho_index, const int inc_theta_index, const double scale, const CompVHoughKhtKernel& kernel)
 {
 	int32_t* pcount;
+	static const double twopi = 2.0 * COMPV_MATH_PI;
 	const size_t rho_size = m_rho->cols(), theta_size = m_theta->cols();
 	const double inc_rho = m_dRho * inc_rho_index;
 	const double inc_theta = m_dTheta_deg * inc_theta_index;
@@ -853,7 +855,7 @@ void CompVHoughKht::vote_Algorithm4(int32_t* countsPtr, const size_t countsStrid
 	const double r = (sigma_rho_times_theta * sigma_rho_times_sigma_theta_scale);
 	const double one_minus_r_square = 1.0 - (r * r);
 	const double r_times_2 = r * 2.0;
-	const double x = 1.0 / (2.0 * COMPV_MATH_PI * sigma_rho_times_sigma_theta * __compv_math_sqrt_fast(one_minus_r_square));
+	const double x = 1.0 / (twopi * sigma_rho_times_sigma_theta * __compv_math_sqrt_fast(one_minus_r_square));
 	const double y = 1.0 / (2.0 * one_minus_r_square);
 
 	double rho, theta;

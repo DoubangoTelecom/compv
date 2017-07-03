@@ -22,6 +22,10 @@ COMPV_NAMESPACE_BEGIN()
 
 void CompVHoughKhtPeaks_Section3_4_VotesCount_4mpd_Intrin_NEON(const int32_t *pcount, const size_t pcount_stride, const size_t theta_index, const size_t rho_count, const int32_t nThreshold, CompVHoughKhtVotes& votes);
 
+#if COMPV_ARCH_ARM64
+void CompVHoughKhtGauss_Eq15_Intrin_NEON(const double rho, const double theta, const double (*M)[4], double* result1);
+#endif
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_NEON && COMPV_INTRINSIC */
