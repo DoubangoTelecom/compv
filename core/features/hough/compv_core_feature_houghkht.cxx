@@ -41,6 +41,9 @@ COMPV_NAMESPACE_BEGIN()
 	COMPV_EXTERNC void CompVHoughKhtKernelHeight_2mpq_Asm_X64_SSE2(COMPV_ALIGNED(SSE) const double* M_Eq14_r0, COMPV_ALIGNED(SSE) const double* M_Eq14_0, COMPV_ALIGNED(SSE) const double* M_Eq14_2, COMPV_ALIGNED(SSE) const double* n_scale,
 		COMPV_ALIGNED(SSE) double* sigma_rho_square, COMPV_ALIGNED(SSE) double* sigma_rho_times_theta, COMPV_ALIGNED(SSE) double* m2, COMPV_ALIGNED(SSE) double* sigma_theta_square,
 		COMPV_ALIGNED(SSE) double* height, COMPV_ALIGNED(SSE) double* heightMax1, COMPV_ALIGNED(SSE) compv_uscalar_t count);
+	COMPV_EXTERNC void CompVHoughKhtKernelHeight_4mpq_Asm_X64_AVX(COMPV_ALIGNED(AVX) const double* M_Eq14_r0, COMPV_ALIGNED(AVX) const double* M_Eq14_0, COMPV_ALIGNED(AVX) const double* M_Eq14_2, COMPV_ALIGNED(AVX) const double* n_scale,
+		COMPV_ALIGNED(AVX) double* sigma_rho_square, COMPV_ALIGNED(AVX) double* sigma_rho_times_theta, COMPV_ALIGNED(AVX) double* m2, COMPV_ALIGNED(AVX) double* sigma_theta_square,
+		COMPV_ALIGNED(AVX) double* height, COMPV_ALIGNED(AVX) double* heightMax1, COMPV_ALIGNED(AVX) compv_uscalar_t count);
 #	endif /* COMPV_ARCH_X64 */
 #endif /* COMPV_ASM */
 
@@ -765,6 +768,7 @@ COMPV_ERROR_CODE CompVHoughKht::voting_Algorithm2_Kernels(const CompVHoughKhtClu
 		}
 		if (M_Eq15->cols() >= 4 && CompVCpu::isEnabled(kCpuFlagAVX) && M_Eq15->isAlignedAVX()) {
 			COMPV_EXEC_IFDEF_INTRIN_X86((CompVHoughKhtKernelHeight = CompVHoughKhtKernelHeight_4mpq_Intrin_AVX, M_Eq15_minpack = 4));
+			COMPV_EXEC_IFDEF_ASM_X64((CompVHoughKhtKernelHeight = CompVHoughKhtKernelHeight_4mpq_Asm_X64_AVX, M_Eq15_minpack = 4));
 		}
 #elif COMPV_ARCH_ARM
 #endif

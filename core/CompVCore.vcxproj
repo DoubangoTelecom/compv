@@ -398,6 +398,13 @@
     </YASM>
   </ItemGroup>
   <ItemGroup>
+    <YASM Include="features\hough\asm\x86\compv_core_feature_houghkht_x64_avx.s">
+      <FileType>Document</FileType>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)../base/asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)../base/asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)../base/asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)../base/asm/x86;%(IncludePaths)</IncludePaths>
+    </YASM>
     <YASM Include="features\hough\asm\x86\compv_core_feature_houghkht_x64_sse.s">
       <FileType>Document</FileType>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)../base/asm/x86;%(IncludePaths)</IncludePaths>

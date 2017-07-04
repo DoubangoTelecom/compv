@@ -39,7 +39,7 @@ sym(CompVHoughKhtKernelHeight_2mpq_Asm_X64_SSE2):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 11
-	COMPV_YASM_SAVE_XMM 15
+	COMPV_YASM_SAVE_XMM 14
 	push rsi
 	push rdi
 	push rbx
@@ -64,24 +64,22 @@ sym(CompVHoughKhtKernelHeight_2mpq_Asm_X64_SSE2):
 	%define vecOne							xmm1
 	%define vecFour							xmm2
 	%define vecZeroDotOne					xmm3
-	%define vecZero							xmm4
-	%define vecheightMax1					xmm5
-	%define vecM_Eq14_0						xmm6
-	%define vecM_Eq14_2						xmm7
-	%define vecSigma_rho_square				xmm8
-	%define vecSigma_rho_times_sigma_theta	xmm9
-	%define vecSigma_rho_times_theta		xmm10
-	%define vecSigma_theta_square			xmm11
-	%define vecOne_minus_r_square			xmm12
-	%define vecHeight						xmm13
-	%define vecMaskEqZero					xmm14
-	%define vecTmp0							xmm15
+	%define vecheightMax1					xmm4
+	%define vecM_Eq14_0						xmm5
+	%define vecM_Eq14_2						xmm6
+	%define vecSigma_rho_square				xmm7
+	%define vecSigma_rho_times_sigma_theta	xmm8
+	%define vecSigma_rho_times_theta		xmm9
+	%define vecSigma_theta_square			xmm10
+	%define vecOne_minus_r_square			xmm11
+	%define vecHeight						xmm12
+	%define vecMaskEqZero					xmm13
+	%define vecTmp0							xmm14
 
 	movapd vecTwoPi, [twoPi]
 	movapd vecOne, [one]
 	movapd vecFour, [four]
 	movapd vecZeroDotOne, [zeroDotOne]
-	xorpd vecZero, vecZero
 
 	mov M_Eq14_r0, arg(0)				
 	mov M_Eq14_0, arg(1)				
@@ -106,26 +104,28 @@ sym(CompVHoughKhtKernelHeight_2mpq_Asm_X64_SSE2):
 	.LoopCount:
 		movapd vecSigma_theta_square, vecOne
 		divpd vecSigma_theta_square, [M_Eq14_r0 + i]
+		xorpd vecMaskEqZero, vecMaskEqZero
 		movapd vecM_Eq14_0, [M_Eq14_0 + i]
 		movapd vecM_Eq14_2, [M_Eq14_2 + i]
 		movapd vecSigma_rho_times_theta, vecSigma_theta_square
 		mulpd vecSigma_rho_times_theta, vecM_Eq14_0
 		mulpd vecSigma_theta_square, vecM_Eq14_2
 		movapd vecSigma_rho_square, vecSigma_rho_times_theta
-		mulpd vecSigma_rho_square, vecM_Eq14_0
-		addpd vecSigma_rho_square, [n_scale + i]
 		mulpd vecSigma_rho_times_theta, vecM_Eq14_2
+		mulpd vecSigma_rho_square, vecM_Eq14_0
 		mulpd vecM_Eq14_0, vecSigma_theta_square
 		mulpd vecSigma_theta_square, vecM_Eq14_2
-		movapd vecMaskEqZero, vecZero
+		addpd vecSigma_rho_square, [n_scale + i]		
 		cmpneqpd vecMaskEqZero, vecSigma_theta_square
 		andpd vecSigma_theta_square, vecMaskEqZero
+		mulpd vecSigma_rho_square, vecFour
 		andnpd vecMaskEqZero, vecZeroDotOne
 		orpd vecSigma_theta_square, vecMaskEqZero
-		mulpd vecSigma_rho_square, vecFour
 		mulpd vecSigma_theta_square, vecFour
 		sqrtpd vecSigma_rho_times_sigma_theta, vecSigma_rho_square
 		sqrtpd vecTmp0, vecSigma_theta_square
+		movapd [sigma_rho_square + i], vecSigma_rho_square
+		movapd [sigma_theta_square + i], vecSigma_theta_square
 		mulpd vecSigma_rho_times_sigma_theta, vecTmp0
 		movapd vecTmp0, vecSigma_rho_times_theta
 		divpd vecTmp0, vecSigma_rho_times_sigma_theta
@@ -133,21 +133,18 @@ sym(CompVHoughKhtKernelHeight_2mpq_Asm_X64_SSE2):
 		mulpd vecTmp0, vecTmp0
 		subpd vecOne_minus_r_square, vecTmp0
 		sqrtpd vecOne_minus_r_square, vecOne_minus_r_square
-		mulpd vecOne_minus_r_square, vecSigma_rho_times_sigma_theta
-		mulpd vecOne_minus_r_square, vecTwoPi
-		movapd vecHeight, vecOne
-		divpd vecHeight, vecOne_minus_r_square
-
-		movapd [sigma_rho_square + i], vecSigma_rho_square
 		movapd [sigma_rho_times_theta + i], vecSigma_rho_times_theta
 		movapd [m2 + i], vecM_Eq14_0
-		movapd [sigma_theta_square + i], vecSigma_theta_square
-		movapd [height + i], vecHeight
-
-		maxpd vecheightMax1, vecHeight
-		
+		mulpd vecOne_minus_r_square, vecSigma_rho_times_sigma_theta
+		movapd vecHeight, vecOne
+		mulpd vecOne_minus_r_square, vecTwoPi
+		divpd vecHeight, vecOne_minus_r_square
 		add i, (2*COMPV_YASM_FLOAT64_SZ_BYTES)
 		cmp i, count
+		maxpd vecheightMax1, vecHeight
+		movapd [height + i - (2*COMPV_YASM_FLOAT64_SZ_BYTES)], vecHeight
+		
+		
 		;; EndOf_LoopCount ;;
 		jl .LoopCount
 
@@ -155,6 +152,36 @@ sym(CompVHoughKhtKernelHeight_2mpq_Asm_X64_SSE2):
 	shufpd vecTmp0, vecTmp0, 0x11
 	maxsd vecheightMax1, vecTmp0
 	movsd [heightMax1], vecheightMax1
+
+
+	%undef M_Eq14_r0				
+	%undef M_Eq14_0				
+	%undef M_Eq14_2				
+	%undef n_scale					
+	%undef sigma_rho_square		
+	%undef sigma_rho_times_theta	
+	%undef m2						
+	%undef sigma_theta_square		
+	%undef height					
+	%undef heightMax1				
+	%undef count					
+	%undef i						
+
+	%undef vecTwoPi						
+	%undef vecOne							
+	%undef vecFour							
+	%undef vecZeroDotOne									
+	%undef vecheightMax1					
+	%undef vecM_Eq14_0						
+	%undef vecM_Eq14_2						
+	%undef vecSigma_rho_square				
+	%undef vecSigma_rho_times_sigma_theta	
+	%undef vecSigma_rho_times_theta		
+	%undef vecSigma_theta_square			
+	%undef vecOne_minus_r_square			
+	%undef vecHeight						
+	%undef vecMaskEqZero					
+	%undef vecTmp0							
 
 	;; begin epilog ;;
 	pop r13
