@@ -11,6 +11,7 @@
 #include "compv/base/parallel/compv_parallel.h"
 
 #include "compv/core/features/hough/intrin/x86/compv_core_feature_houghkht_intrin_sse2.h"
+#include "compv/core/features/hough/intrin/x86/compv_core_feature_houghkht_intrin_avx.h"
 #include "compv/core/features/hough/intrin/x86/compv_core_feature_houghkht_intrin_avx2.h"
 #include "compv/core/features/hough/intrin/arm/compv_core_feature_houghkht_intrin_neon.h"
 
@@ -752,6 +753,9 @@ COMPV_ERROR_CODE CompVHoughKht::voting_Algorithm2_Kernels(const CompVHoughKhtClu
 #if COMPV_ARCH_X86
 		if (M_Eq15->cols() >= 2 && CompVCpu::isEnabled(kCpuFlagSSE2) && M_Eq15->isAlignedSSE()) {
 			COMPV_EXEC_IFDEF_INTRIN_X86((CompVHoughKhtKernelHeight = CompVHoughKhtKernelHeight_2mpq_Intrin_SSE2, M_Eq15_minpack = 2));
+		}
+		if (M_Eq15->cols() >= 4 && CompVCpu::isEnabled(kCpuFlagAVX) && M_Eq15->isAlignedAVX()) {
+			COMPV_EXEC_IFDEF_INTRIN_X86((CompVHoughKhtKernelHeight = CompVHoughKhtKernelHeight_4mpq_Intrin_AVX, M_Eq15_minpack = 4));
 		}
 #elif COMPV_ARCH_ARM
 #endif
