@@ -16,7 +16,7 @@
 
 #define HOUGH_RHO						(1.0f * 0.5f) // "rho-delta" (half-pixel)
 #define HOUGH_THETA						(kfMathTrigPiOver180 * 0.5f) // "theta-delta" (half-radian)
-#define HOUGH_THRESHOLD					150
+#define HOUGH_THRESHOLD					1 //150
 #define HOUGH_THRESHOLD_FACT			0.0003828					
 #define HOUGH_CLUSTER_MIN_DEVIATION		2.0f
 #define HOUGH_CLUSTER_MIN_SIZE			10
@@ -100,7 +100,7 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 	COMPV_CHECK_CODE_RETURN(m_ptrCanny->process(image, &result.edges));
 
 	// Hough lines
-	COMPV_CHECK_CODE_RETURN(m_ptrHough->setInt(COMPV_HOUGH_SET_INT_THRESHOLD, static_cast<int>(static_cast<double>(image->cols() * image->rows()) * HOUGH_THRESHOLD_FACT) + 1));
+	//COMPV_CHECK_CODE_RETURN(m_ptrHough->setInt(COMPV_HOUGH_SET_INT_THRESHOLD, static_cast<int>(static_cast<double>(image->cols() * image->rows()) * HOUGH_THRESHOLD_FACT) + 1));
 	COMPV_CHECK_CODE_RETURN(m_ptrHough->process(result.edges, result.hough_lines));
 	if (result.hough_lines.size() < m_nPatternLinesTotal) {
 		result.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_POINTS;

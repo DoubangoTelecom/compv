@@ -181,18 +181,24 @@ COMPV_ERROR_CODE  CompVMathEigen<T>::find2x2(const T(&A)[4], T(&D)[4], T(&Q)[4],
 	D[3] = trace_div2 - sqrt_trace_square_div4_minus_det;
 
 	// Eigenvectors
-	if (!CompVMathEigen<T>::isCloseToZero(A[2])) {
+	if (A[2] != 0) {
 		Q[0] = D[0] - A[3], Q[2] = A[2];
 		Q[1] = D[3] - A[3], Q[3] = A[2];
 	}
-	else if (!CompVMathEigen<T>::isCloseToZero(A[1])) {
+	else if (A[1] != 0) {
 		Q[0] = A[1], Q[2] = D[0] - A[0];
 		Q[1] = A[1], Q[3] = D[3] - A[0];
 	}
 	else {
 		norm = false;
-		Q[0] = 1.0, Q[2] = 0.0;
-		Q[1] = 0.0, Q[3] = 1.0;
+		if (A[3] != 0.0) { // *must*, otherwise in KHT 'M_Eq14_r0' could be equal to zero leading to inf. result when used as denominator
+			Q[0] = 0.0, Q[2] = 1.0;
+			Q[1] = 1.0, Q[3] = 0.0;
+		}
+		else {
+			Q[0] = 1.0, Q[2] = 0.0;
+			Q[1] = 0.0, Q[3] = 1.0;
+		}
 	}
 
 	// Normalisation

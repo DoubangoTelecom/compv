@@ -58,6 +58,7 @@
     <ClInclude Include="..\include\compv\core\features\hough\compv_core_feature_houghsht.h" />
     <ClInclude Include="..\include\compv\core\features\hough\intrin\arm\compv_core_feature_houghkht_intrin_neon.h" />
     <ClInclude Include="..\include\compv\core\features\hough\intrin\arm\compv_core_feature_houghsht_intrin_neon.h" />
+    <ClInclude Include="..\include\compv\core\features\hough\intrin\x86\compv_core_feature_houghkht_intrin_avx.h" />
     <ClInclude Include="..\include\compv\core\features\hough\intrin\x86\compv_core_feature_houghkht_intrin_avx2.h" />
     <ClInclude Include="..\include\compv\core\features\hough\intrin\x86\compv_core_feature_houghkht_intrin_sse2.h" />
     <ClInclude Include="..\include\compv\core\features\hough\intrin\x86\compv_core_feature_houghsht_intrin_avx2.h" />
@@ -99,6 +100,7 @@
     <ClCompile Include="..\features\hough\compv_core_feature_houghsht.cxx" />
     <ClCompile Include="..\features\hough\intrin\arm\compv_core_feature_houghkht_intrin_neon.cxx" />
     <ClCompile Include="..\features\hough\intrin\arm\compv_core_feature_houghsht_intrin_neon.cxx" />
+    <ClCompile Include="..\features\hough\intrin\x86\compv_core_feature_houghkht_intrin_avx.cxx" />
     <ClCompile Include="..\features\hough\intrin\x86\compv_core_feature_houghkht_intrin_avx2.cxx" />
     <ClCompile Include="..\features\hough\intrin\x86\compv_core_feature_houghkht_intrin_sse2.cxx" />
     <ClCompile Include="..\features\hough\intrin\x86\compv_core_feature_houghsht_intrin_avx2.cxx" />

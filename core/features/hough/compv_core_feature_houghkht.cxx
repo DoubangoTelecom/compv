@@ -703,7 +703,9 @@ static COMPV_INLINE void CompVHoughKhtKernelHeight_1mpq_C(
 	static const double twopi = 2.0 * COMPV_MATH_PI;
 	double r, r0, r1, r2, sigma_rho_times_sigma_theta, one_minus_r_square;
 	for (compv_uscalar_t i = 0; i < count; ++i) {
-		r0 = 1.0 / M_Eq14_r0[i];
+		// No need to check if is equal to zero or not:
+		// -> see http://www2.ic.uff.br/~laffernandes/projects/kht/ "Clarification - 01/14/2008"
+		r0 = (1.0 / M_Eq14_r0[i]);
 		r1 = (M_Eq14_0[i] * r0);
 		r2 = (M_Eq14_2[i] * r0);
 		sigma_rho_square[i] = r1 * M_Eq14_0[i] + n_scale[i];
@@ -771,6 +773,9 @@ COMPV_ERROR_CODE CompVHoughKht::voting_Algorithm2_Kernels(const CompVHoughKhtClu
 			COMPV_EXEC_IFDEF_ASM_X64((CompVHoughKhtKernelHeight = CompVHoughKhtKernelHeight_4mpq_Asm_X64_AVX, M_Eq15_minpack = 4));
 		}
 #elif COMPV_ARCH_ARM
+		if (M_Eq15->cols() >= 2 && CompVCpu::isEnabled(kCpuFlagARM_NEON) && M_Eq15->isAlignedNEON()) {
+			COMPV_EXEC_IFDEF_INTRIN_ARM64((CompVHoughKhtKernelHeight = CompVHoughKhtKernelHeight_2mpq_Intrin_NEON64, M_Eq15_minpack = 2));
+		}
 #endif
 		// for each group of pixels Sk
 		M_Eq15_index = 0;
@@ -820,6 +825,7 @@ COMPV_ERROR_CODE CompVHoughKht::voting_Algorithm2_Kernels(const CompVHoughKhtClu
 				r1 = (ux * (p->cx - mean_cx)) + (uy * (p->cy - mean_cy));
 				r0 += (r1 * r1);
 			}
+
 			M_Eq14_r0[M_Eq15_index] = r0;
 			M_Eq15_n_scale[M_Eq15_index] = n_scale;
 		} // end-of-for (CompVHoughKhtClusters::const_iterator cluster

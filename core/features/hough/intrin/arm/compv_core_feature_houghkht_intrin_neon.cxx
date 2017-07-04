@@ -92,67 +92,61 @@ void CompVHoughKhtPeaks_Section3_4_VotesCount_4mpd_Intrin_NEON(const int32_t *pc
 	}
 }
 
-// FIXME: remove
-// https://en.wikipedia.org/wiki/Taylor_series#Exponential_function
-COMPV_ALWAYS_INLINE double __compv_math_exp_fast_small(double x) {
-#if 1
-	static const double scale = 1.0 / 1024.0;
-	x = 1.0 + (x * scale);
-	x *= x; x *= x; x *= x; x *= x; x *= x; x *= x; x *= x; x *= x; x *= x; x *= x;
-	return x;
-#else
-	return std::exp(x);
-#endif
+#if COMPV_ARCH_ARM64
+
+void CompVHoughKhtKernelHeight_2mpq_Intrin_NEON64(
+	COMPV_ALIGNED(NEON) const double* M_Eq14_r0, COMPV_ALIGNED(NEON) const double* M_Eq14_0, COMPV_ALIGNED(NEON) const double* M_Eq14_2, COMPV_ALIGNED(NEON) const double* n_scale,
+	COMPV_ALIGNED(NEON) double* sigma_rho_square, COMPV_ALIGNED(NEON) double* sigma_rho_times_theta, COMPV_ALIGNED(NEON) double* m2, COMPV_ALIGNED(NEON) double* sigma_theta_square,
+	COMPV_ALIGNED(NEON) double* height, COMPV_ALIGNED(NEON) double* heightMax1, COMPV_ALIGNED(NEON) compv_uscalar_t count
+)
+{
+	COMPV_DEBUG_INFO_CHECK_SSE2();
+
+	static const float64x2_t vecTwoPi = vdupq_n_f64(6.2831853071795862); // 0x401921fb54442d18
+	static const float64x2_t vecOne = vdupq_n_f64(1.0); // 0x3ff0000000000000
+	static const float64x2_t vecFour = vdupq_n_f64(4.0); // 0x4010000000000000
+	static const float64x2_t vecZeroDotOne = vdupq_n_f64(0.1); // 0x3fb999999999999a
+	static const float64x2_t vecZero = vdupq_n_f64(0.0);
+	float64x2_t vecheightMax1, vecM_Eq14_0, vecM_Eq14_2;
+	float64x2_t vecSigma_rho_square, vecSigma_rho_times_sigma_theta, vecSigma_rho_times_theta, vecSigma_theta_square;
+	float64x2_t vecOne_minus_r_square, vecHeight;
+	float64x2_t vecMaskEqZero;
+
+	vecheightMax1 = vdupq_n_f64(*heightMax1);
+
+	for (compv_uscalar_t i = 0; i < count; i += 2) {
+		vecSigma_theta_square = vdivq_f64(vecOne, vld1q_f64(&M_Eq14_r0[i]));
+		vecM_Eq14_0 = vld1q_f64(&M_Eq14_0[i]);
+		vecM_Eq14_2 = vld1q_f64(&M_Eq14_2[i]);
+		vecSigma_rho_times_theta = vmulq_f64(vecM_Eq14_0, vecSigma_theta_square);
+		vecSigma_theta_square = vmulq_f64(vecM_Eq14_2, vecSigma_theta_square);
+		vecSigma_rho_square = vaddq_f64(vmulq_f64(vecSigma_rho_times_theta, vecM_Eq14_0), vld1q_f64(&n_scale[i])); // FIXME(dmi): fused multiply add
+		vecSigma_rho_times_theta = vmulq_f64(vecSigma_rho_times_theta, vecM_Eq14_2);
+		vecM_Eq14_0 = vmulq_f64(vecM_Eq14_0, vecSigma_theta_square);
+		vecSigma_theta_square = vmulq_f64(vecSigma_theta_square, vecM_Eq14_2);
+		vecMaskEqZero = vceqq_f64(vecSigma_theta_square, vecZero);
+		vecSigma_theta_square = vorrq_u64(vandq_u64(vecZeroDotOne, vecMaskEqZero), vbicq_u64(vecSigma_theta_square, vecMaskEqZero));
+		vecSigma_rho_square = vmulq_f64(vecSigma_rho_square, vecFour);
+		vecSigma_theta_square = vmulq_f64(vecSigma_theta_square, vecFour);
+		vecSigma_rho_times_sigma_theta = vmulq_f64(vsqrtq_f64(vecSigma_rho_square), vsqrtq_f64(vecSigma_theta_square));
+		vecOne_minus_r_square = vdivq_f64(vecSigma_rho_times_theta, vecSigma_rho_times_sigma_theta);
+		vecOne_minus_r_square = vsubq_f64(vecOne, vmulq_f64(vecOne_minus_r_square, vecOne_minus_r_square)); // FIXME(dmi): fused multiply substract
+		vecOne_minus_r_square = vsqrtq_f64(vecOne_minus_r_square);
+		vecOne_minus_r_square = vmulq_f64(vecOne_minus_r_square, vecSigma_rho_times_sigma_theta);
+		vecOne_minus_r_square = vmulq_f64(vecOne_minus_r_square, vecTwoPi);
+		vecHeight = vdivq_f64(vecOne, vecOne_minus_r_square);
+
+		vst1q_f64(&sigma_rho_square[i], vecSigma_rho_square);
+		vst1q_f64(&sigma_rho_times_theta[i], vecSigma_rho_times_theta);
+		vst1q_f64(&m2[i], vecM_Eq14_0);
+		vst1q_f64(&sigma_theta_square[i], vecSigma_theta_square);
+		vst1q_f64(&height[i], vecHeight);
+		vecheightMax1 = vmaxq_f64(vecheightMax1, vecHeight);
+	}
+	const float64x1_t vecheightMax1n = vmax_f64(vget_low_f64(vecheightMax1), vget_high_f64(vecheightMax1));
+	vst1_f64(heightMax1, vecheightMax1n);
 }
 
-#if COMPV_ARCH_ARM64
-void CompVHoughKhtGauss_Eq15_Intrin_NEON(const double rho, const double theta, const double(*M)[4], double* result1)
-{
-	COMPV_DEBUG_INFO_CHECK_NEON();
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Not faster");
-#if 0 // div
-	static const float64x1_t one = vdup_n_f64(1.0);
-	static const float64x1_t two = vdup_n_f64(2.0);
-	static const float64x1_t twopi = vdup_n_f64(2.0 * COMPV_MATH_PI);
-	const float64x1_t rho_ = vld1_f64(&rho);
-	const float64x1_t theta_ = vld1_f64(&theta);
-	const float64x1_t sigma_theta_square = vld1_f64(&(*M)[3]);
-	const float64x1_t sigma_rho_square = vld1_f64(&(*M)[0]);
-	const float64x1_t sigma_rho_times_theta = vld1_f64(&(*M)[1]);
-	const float64x1_t sigma_rho_times_sigma_theta = vmul_f64(vsqrt_f64(sigma_rho_square), vsqrt_f64(sigma_theta_square));
-	const float64x1_t sigma_rho_times_sigma_theta_scale = vdiv_f64(one, sigma_rho_times_sigma_theta);
-	const float64x1_t r = vmul_f64(sigma_rho_times_theta, sigma_rho_times_sigma_theta_scale);
-	const float64x1_t one_minus_r_square = vsub_f64(one, vmul_f64(r, r));
-	const float64x1_t x = vdiv_f64(one, vmul_f64(vmul_f64(twopi, sigma_rho_times_sigma_theta), vsqrt_f64(one_minus_r_square)));
-	const float64x1_t y = vdiv_f64(one, vmul_f64(two, one_minus_r_square));
-	const float64x1_t a = vdiv_f64(vmul_f64(rho_, rho_), sigma_rho_square);
-	const float64x1_t b = vmul_f64(vmul_f64(vmul_f64(r, two), vmul_f64(rho_, theta_)), sigma_rho_times_sigma_theta_scale);
-	const float64x1_t c = vdiv_f64(vmul_f64(theta_, theta_), sigma_theta_square);
-	const float64x1_t z = vneg_f64(vadd_f64(vsub_f64(a, b), c));
-	const float64x1_t zy = vmul_f64(z, y);
-#else // reciprocal
-	static const float64x1_t one = vdup_n_f64(1.0);
-	static const float64x1_t two = vdup_n_f64(2.0);
-	static const float64x1_t twopi = vdup_n_f64(2.0 * COMPV_MATH_PI);
-	const float64x1_t rho_ = vld1_f64(&rho);
-	const float64x1_t theta_ = vld1_f64(&theta);
-	const float64x1_t sigma_theta_square = vld1_f64(&(*M)[3]);
-	const float64x1_t sigma_rho_square = vld1_f64(&(*M)[0]);
-	const float64x1_t sigma_rho_times_theta = vld1_f64(&(*M)[1]);
-	const float64x1_t sigma_rho_times_sigma_theta = vmul_f64(vsqrt_f64(sigma_rho_square), vsqrt_f64(sigma_theta_square));
-	const float64x1_t sigma_rho_times_sigma_theta_scale = vrecpe_f64(sigma_rho_times_sigma_theta);
-	const float64x1_t r = vmul_f64(sigma_rho_times_theta, sigma_rho_times_sigma_theta_scale);
-	const float64x1_t one_minus_r_square = vsub_f64(one, vmul_f64(r, r));
-	const float64x1_t x = vrecpe_f64(vmul_f64(vmul_f64(twopi, sigma_rho_times_sigma_theta), vsqrt_f64(one_minus_r_square)));
-	const float64x1_t y = vrecpe_f64(vmul_f64(two, one_minus_r_square));
-	const float64x1_t a = vmul_f64(vmul_f64(rho_, rho_), vrecpe_f64(sigma_rho_square));
-	const float64x1_t b = vmul_f64(vmul_f64(vmul_f64(r, two), vmul_f64(rho_, theta_)), sigma_rho_times_sigma_theta_scale);
-	const float64x1_t c = vmul_f64(vmul_f64(theta_, theta_), vrecpe_f64(sigma_theta_square));
-	const float64x1_t z = vneg_f64(vadd_f64(vsub_f64(a, b), c));
-	const float64x1_t zy = vmul_f64(z, y);
-	*result1 = vget_lane_f64(x, 0) * __compv_math_exp_fast_small(vget_lane_f64(zy, 0));
-#endif
-}
 #endif /* COMPV_ARCH_ARM64 */
 
 COMPV_NAMESPACE_END()

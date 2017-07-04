@@ -67,7 +67,7 @@ public:
 #if 0
 			COMPV_CHECK_CODE_RETURN(CompVImage::convertGrayscale(image, &imageGray));
 #else
-			size_t file_index = 60; // 47 + (rand() % 20); //47 + (rand() % 20);
+			size_t file_index = 47 + (rand() % 20); // 47 + (rand() % 20); //47 + (rand() % 20);
 			std::string file_path = std::string("C:/Projects/GitHub/data/calib/P10100")+ CompVBase::to_string(file_index) +std::string("s_640x480_gray.yuv");
 			COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 640, 480, 640, file_path.c_str(), &imageGray));
 			CompVThread::sleep(1000);
