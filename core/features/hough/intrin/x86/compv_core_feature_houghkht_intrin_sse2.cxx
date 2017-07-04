@@ -97,6 +97,61 @@ void CompVHoughKhtPeaks_Section3_4_VotesCount_4mpd_Intrin_SSE2(const int32_t *pc
 	}
 }
 
+// up to the caller to set padding bytes to zeros (otherwise max will be invalid)
+// 2mpq -> minpack 2 for qwords (float64) - for count
+void CompVHoughKhtKernelHeight_2mpq_Intrin_SSE2(
+	COMPV_ALIGNED(SSE) const double* M_Eq14_r0, COMPV_ALIGNED(SSE) const double* M_Eq14_0, COMPV_ALIGNED(SSE) const double* M_Eq14_2, COMPV_ALIGNED(SSE) const double* n_scale,
+	COMPV_ALIGNED(SSE) double* sigma_rho_square, COMPV_ALIGNED(SSE) double* sigma_rho_times_theta, COMPV_ALIGNED(SSE) double* m2, COMPV_ALIGNED(SSE) double* sigma_theta_square,
+	COMPV_ALIGNED(SSE) double* height, COMPV_ALIGNED(SSE) double* heightMax1, COMPV_ALIGNED(SSE) compv_uscalar_t count, COMPV_ALIGNED(SSE) compv_uscalar_t stride)
+{
+	COMPV_DEBUG_INFO_CHECK_SSE2();
+
+	static const __m128d vecTwoPi = _mm_set1_pd(2.0 * COMPV_MATH_PI);
+	static const __m128d vecOne = _mm_set1_pd(1.0);
+	static const __m128d vecFour = _mm_set1_pd(4.0);
+	static const __m128d vecZeroDotOne = _mm_set1_pd(0.1);
+	static const __m128d vecZero = _mm_set1_pd(0.0);
+	__m128d vecheightMax1, vecR0, vecM_Eq14_0, vecM_Eq14_2;
+	__m128d vecSigma_rho_square, vecSigma_rho_times_sigma_theta, vecSigma_rho_times_theta, vecSigma_theta_square, vecM2;
+	__m128d vecOne_minus_r_square, vecHeight;
+	__m128d vecMaskEqZero;
+
+	vecheightMax1 = _mm_load_sd(heightMax1);
+
+	for (compv_uscalar_t i = 0; i < count; i += 2) {
+		vecR0 = _mm_load_pd(&M_Eq14_r0[i]);
+		vecR0 = _mm_div_pd(vecOne, vecR0);
+		vecM_Eq14_0 = _mm_load_pd(&M_Eq14_0[i]);
+		vecM_Eq14_2 = _mm_load_pd(&M_Eq14_2[i]);
+		vecSigma_rho_times_theta = _mm_mul_pd(vecM_Eq14_0, vecR0);
+		vecSigma_theta_square = _mm_mul_pd(vecM_Eq14_2, vecR0);
+		vecSigma_rho_square = _mm_add_pd(_mm_mul_pd(vecSigma_rho_times_theta, vecM_Eq14_0), _mm_load_pd(&n_scale[i]));
+		vecSigma_rho_times_theta = _mm_mul_pd(vecSigma_rho_times_theta, vecM_Eq14_2);
+		vecM2 = _mm_mul_pd(vecSigma_theta_square, vecM_Eq14_0);
+		vecSigma_theta_square = _mm_mul_pd(vecSigma_theta_square, vecM_Eq14_2);
+		vecMaskEqZero = _mm_cmpeq_pd(vecSigma_theta_square, vecZero);
+		vecSigma_theta_square = _mm_or_pd(_mm_and_pd(vecMaskEqZero, vecZeroDotOne), _mm_andnot_pd(vecMaskEqZero, vecSigma_theta_square));
+		vecSigma_rho_square = _mm_mul_pd(vecSigma_rho_square, vecFour);
+		vecSigma_theta_square = _mm_mul_pd(vecSigma_theta_square, vecFour);
+		vecSigma_rho_times_sigma_theta = _mm_mul_pd(_mm_sqrt_pd(vecSigma_rho_square), _mm_sqrt_pd(vecSigma_theta_square));
+		vecOne_minus_r_square = _mm_div_pd(vecSigma_rho_times_theta, vecSigma_rho_times_sigma_theta);
+		vecOne_minus_r_square = _mm_sub_pd(vecOne, _mm_mul_pd(vecOne_minus_r_square, vecOne_minus_r_square));
+		vecOne_minus_r_square = _mm_sqrt_pd(vecOne_minus_r_square);
+		vecOne_minus_r_square = _mm_mul_pd(vecOne_minus_r_square, vecSigma_rho_times_sigma_theta);
+		vecOne_minus_r_square = _mm_mul_pd(vecOne_minus_r_square, vecTwoPi);
+		vecHeight = _mm_div_pd(vecOne, vecOne_minus_r_square);
+		
+		_mm_store_pd(&sigma_rho_square[i], vecSigma_rho_square);
+		_mm_store_pd(&sigma_rho_times_theta[i], vecSigma_rho_times_theta);
+		_mm_store_pd(&m2[i], vecM2);
+		_mm_store_pd(&sigma_theta_square[i], vecSigma_theta_square);
+		_mm_store_pd(&height[i], vecHeight);
+		vecheightMax1 = _mm_max_pd(vecheightMax1, vecHeight);
+	}
+	vecheightMax1 = _mm_max_sd(vecheightMax1, _mm_shuffle_pd(vecheightMax1, vecheightMax1, 0x11));
+	_mm_store_sd(heightMax1, vecheightMax1);
+}
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */

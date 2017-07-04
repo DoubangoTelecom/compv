@@ -666,7 +666,7 @@ double CompVHoughKht::clusters_subdivision(CompVHoughKhtClusters& clusters, cons
 	return ratio;
 }
 
-static COMPV_INLINE double __gauss_Eq151(const double rho, const double theta, const CompVHoughKhtKernel& kernel) {
+static COMPV_INLINE double __gauss_Eq15(const double rho, const double theta, const CompVHoughKhtKernel& kernel) {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implemention found");
 	static const double twopi = 2.0 * COMPV_MATH_PI;
 	const double sigma_rho_times_sigma_theta = __compv_math_sqrt_fast2(kernel.sigma_rho_square, kernel.sigma_theta_square); // sqrt(sigma_rho_square) * sqrt(sigma_theta_square)
@@ -679,15 +679,37 @@ static COMPV_INLINE double __gauss_Eq151(const double rho, const double theta, c
 	return x * __compv_math_exp_fast_small(-z * y);
 }
 
-// Same as '__gauss_Eq151' but with 'rho' and 'theta' equal 0.0
-static COMPV_INLINE double __gauss_Eq150(const CompVHoughKhtKernel& kernel) {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implemention found");
+// Computes kernel's height (Gauss Eq15) and hmax
+static COMPV_INLINE void CompVHoughKhtKernelHeight_C(
+	const double* M_Eq14_r0, const double* M_Eq14_0, const double* M_Eq14_2, const double* n_scale,
+	double* sigma_rho_square, double* sigma_rho_times_theta, double* m2, double* sigma_theta_square,
+	double* height, double* heightMax1, compv_uscalar_t count, compv_uscalar_t stride) 
+{
+	if (count > 1) { // otherwise SIMD will be used
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implemention found");
+	}
 	static const double twopi = 2.0 * COMPV_MATH_PI;
-	const double sigma_rho_times_sigma_theta = __compv_math_sqrt_fast2(kernel.sigma_rho_square, kernel.sigma_theta_square); // sqrt(sigma_rho_square) * sqrt(sigma_theta_square)
-	const double r = (kernel.sigma_rho_times_theta / sigma_rho_times_sigma_theta);
-	const double one_minus_r_square = 1.0 - (r * r);
-	const double x = 1.0 / (twopi * sigma_rho_times_sigma_theta * __compv_math_sqrt_fast(one_minus_r_square));
-	return x;
+	double r, r0, r1, r2, sigma_rho_times_sigma_theta, one_minus_r_square;
+	for (compv_uscalar_t i = 0; i < count; ++i) {
+		r0 = 1.0 / M_Eq14_r0[i];
+		r1 = (M_Eq14_0[i] * r0);
+		r2 = (M_Eq14_2[i] * r0);
+		sigma_rho_square[i] = r1 * M_Eq14_0[i] + n_scale[i];
+		sigma_rho_times_theta[i] = r1 * M_Eq14_2[i];
+		m2[i] = r2 * M_Eq14_0[i];
+		sigma_theta_square[i] = r2 * M_Eq14_2[i];
+		// line 22
+		if (sigma_theta_square[i] == 0.0) {
+			sigma_theta_square[i] = 0.1; // (2^2 * 0.1)
+		}
+		sigma_rho_square[i] *= 4.0; // * (2^2)
+		sigma_theta_square[i] *= 4.0; // * (2^2)
+		sigma_rho_times_sigma_theta = __compv_math_sqrt_fast2(sigma_rho_square[i], sigma_theta_square[i]); // sqrt(sigma_rho_square) * sqrt(sigma_theta_square)
+		r = (sigma_rho_times_theta[i] / sigma_rho_times_sigma_theta);
+		one_minus_r_square = 1.0 - (r * r);
+		height[i] = 1.0 / (twopi * sigma_rho_times_sigma_theta * __compv_math_sqrt_fast(one_minus_r_square));
+		*heightMax1 = std::max(*heightMax1, height[i]);
+	}
 }
 
 // Algorithm 2: Computation of the Gaussian kernel parameters
@@ -696,21 +718,46 @@ COMPV_ERROR_CODE CompVHoughKht::voting_Algorithm2_Kernels(const CompVHoughKhtClu
 {
 	hmax = 0.0;
 	if (!clusters.empty()) {
+		void(*CompVHoughKhtKernelHeight)(const double* M_Eq14_r0, const double* M_Eq14_0, const double* M_Eq14_2, const double* n_scale,
+			double* sigma_rho_square, double* sigma_rho_times_theta, double* m2, double* sigma_theta_square,
+			double* height, double* heightMax1, compv_uscalar_t count, compv_uscalar_t stride) = CompVHoughKhtKernelHeight_C;
 		double mean_cx, mean_cy, cx, cy, cxx, cyy, cxy;
 		double n_scale; // 1.0 / (number of pixels in Sk) = (1.0 / n)
 		double ux, uy; // eigenvector in V for the biggest eigenvalue
 		double vx, vy; // eigenvector in V for the smaller eigenvalue
 		double sqrt_one_minus_vx2; // sqrt(1 - (vx^2)) - Eq14
 		double matrix[2 * 2];
-		double eigenVectors[2 * 2], eigenValues[2 * 2], M_Eq14[2 * 2] = {0.0, 1.0, 0.0, 0.0};
-		double r0, r1, r2;
+		double eigenVectors[2 * 2], eigenValues[2 * 2];
+		double r0, r1;
 		static const double rad_to_deg_scale = (180.0 / COMPV_MATH_PI);
+		CompVMatPtr M_Eq15; // Gauss Eq15.0
+		double *M_Eq14_r0, *M_Eq14_0, *M_Eq14_2, *M_Eq15_sigma_rho_square, *M_Eq15_sigma_rho_times_theta, *M_Eq15_sigma_theta_square, *M_Eq15_m2, *M_Eq15_height, *M_Eq15_n_scale;
+		size_t M_Eq15_index;
+		int M_Eq15_minpack = 1;
+
+		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<double>(&M_Eq15, 9, clusters.size()));
+		M_Eq14_r0 = M_Eq15->ptr<double>(0);
+		M_Eq14_0 = M_Eq15->ptr<double>(1);
+		M_Eq14_2 = M_Eq15->ptr<double>(2);
+		M_Eq15_sigma_rho_square = M_Eq15->ptr<double>(3);
+		M_Eq15_sigma_rho_times_theta = M_Eq15->ptr<double>(4);
+		M_Eq15_sigma_theta_square = M_Eq15->ptr<double>(5);
+		M_Eq15_m2 = M_Eq15->ptr<double>(6);
+		M_Eq15_height = M_Eq15->ptr<double>(7);
+		M_Eq15_n_scale = M_Eq15->ptr<double>(8);
 
 		kernels.resize(clusters.size());
 		CompVHoughKhtKernels::iterator kernel = kernels.begin();
 
+#if COMPV_ARCH_X86
+		if (M_Eq15->cols() >= 2 && CompVCpu::isEnabled(kCpuFlagSSE2) && M_Eq15->isAlignedSSE()) {
+			COMPV_EXEC_IFDEF_INTRIN_X86((CompVHoughKhtKernelHeight = CompVHoughKhtKernelHeight_2mpq_Intrin_SSE2, M_Eq15_minpack = 2));
+		}
+#elif COMPV_ARCH_ARM
+#endif
 		// for each group of pixels Sk
-		for (CompVHoughKhtClusters::const_iterator cluster = clusters.begin(); cluster < clusters.end(); ++cluster, ++kernel) {
+		M_Eq15_index = 0;
+		for (CompVHoughKhtClusters::const_iterator cluster = clusters.begin(); cluster < clusters.end(); ++cluster, ++kernel, ++M_Eq15_index) {
 			/* {Alternative reference system definition} */
 			// computing the centroid
 			mean_cx = mean_cy = 0;
@@ -748,41 +795,42 @@ COMPV_ERROR_CODE CompVHoughKht::voting_Algorithm2_Kernels(const CompVHoughKhtClu
 			/* {substituting Eq5 in Eq10} */
 			// Eq.14
 			sqrt_one_minus_vx2 = __compv_math_sqrt_fast(1.0 - (vx * vx));
-			M_Eq14[0] = -(ux * mean_cx) - (uy * mean_cy);
-			M_Eq14[2] = (sqrt_one_minus_vx2 == 0.0) ? 0.0 : ((ux / sqrt_one_minus_vx2) * rad_to_deg_scale);
+			M_Eq14_0[M_Eq15_index] = -(ux * mean_cx) - (uy * mean_cy);
+			M_Eq14_2[M_Eq15_index] = (sqrt_one_minus_vx2 == 0.0) ? 0.0 : ((ux / sqrt_one_minus_vx2) * rad_to_deg_scale);
 			// Compute M
 			r0 = 0.0;
 			for (CompVHoughKhtString::const_iterator p = cluster->begin; p < cluster->end; ++p) {
 				r1 = (ux * (p->cx - mean_cx)) + (uy * (p->cy - mean_cy));
 				r0 += (r1 * r1);
 			}
-			r0 = 1.0 / r0;
-			r1 = (M_Eq14[0] * r0);
-			r2 = (M_Eq14[2] * r0);
-			kernel->sigma_rho_square = r1 * M_Eq14[0] + n_scale;
-			kernel->sigma_rho_times_theta = r1 * M_Eq14[2];
-			kernel->m2 = r2 * M_Eq14[0];
-			kernel->sigma_theta_square = r2 * M_Eq14[2];
-			// line 22
-			if (kernel->sigma_theta_square == 0.0) {
-				kernel->sigma_theta_square = 0.1; // (2^2 * 0.1)
-			}
-			kernel->sigma_rho_square *= 4.0; // * (2^2)
-			kernel->sigma_theta_square *= 4.0; // * (2^2)
-
-			// Kernel's height
-			kernel->h = __gauss_Eq150(*kernel);
+			M_Eq14_r0[M_Eq15_index] = r0;
+			M_Eq15_n_scale[M_Eq15_index] = n_scale;
 		} // end-of-for (CompVHoughKhtClusters::const_iterator cluster
 
-		/* Algorithm 3. Proposed voting process.The Vote() procedure is in Algorithm 4. */
-
-		/* {Discard groups with very short kernels} */
-		hmax = kernels.begin()->h;
-		for (CompVHoughKhtKernels::const_iterator k = (kernels.begin() + 1); k < kernels.end(); ++k) {
-			if (k->h > hmax) {
-				hmax = k->h;
+		// Compute kernel's height and hmax
+		const int cols = static_cast<int>(M_Eq15->cols());
+		const int colsAlignedBackward = (cols & -M_Eq15_minpack);
+		CompVHoughKhtKernelHeight(M_Eq14_r0, M_Eq14_0, M_Eq14_2, M_Eq15_n_scale,
+			M_Eq15_sigma_rho_square, M_Eq15_sigma_rho_times_theta, M_Eq15_m2, M_Eq15_sigma_theta_square,
+			M_Eq15_height, &hmax, static_cast<compv_uscalar_t>(colsAlignedBackward), M_Eq15->stride());
+		if (M_Eq15_minpack > 1) {
+			if (cols != colsAlignedBackward) {
+				CompVHoughKhtKernelHeight_C(&M_Eq14_r0[colsAlignedBackward], &M_Eq14_0[colsAlignedBackward], &M_Eq14_2[colsAlignedBackward], &M_Eq15_n_scale[colsAlignedBackward],
+					&M_Eq15_sigma_rho_square[colsAlignedBackward], &M_Eq15_sigma_rho_times_theta[colsAlignedBackward], &M_Eq15_m2[colsAlignedBackward], &M_Eq15_sigma_theta_square[colsAlignedBackward],
+					&M_Eq15_height[colsAlignedBackward], &hmax, static_cast<compv_uscalar_t>(cols - colsAlignedBackward), M_Eq15->stride());
 			}
 		}
+
+		M_Eq15_index = 0;
+		for (CompVHoughKhtKernels::iterator k = kernels.begin(); k < kernels.end(); ++k, ++M_Eq15_index) {
+			k->sigma_rho_square = M_Eq15_sigma_rho_square[M_Eq15_index];
+			k->sigma_rho_times_theta = M_Eq15_sigma_rho_times_theta[M_Eq15_index];
+			k->m2 = M_Eq15_m2[M_Eq15_index];
+			k->sigma_theta_square = M_Eq15_sigma_theta_square[M_Eq15_index];
+			k->h = M_Eq15_height[M_Eq15_index];
+		}
+
+		/* Algorithm 3. Proposed voting process.The Vote() procedure is in Algorithm 4. */
 	}
 
 	return COMPV_ERROR_CODE_S_OK;
@@ -815,7 +863,7 @@ COMPV_ERROR_CODE CompVHoughKht::voting_Algorithm2_Gmin(const CompVHoughKhtKernel
 			COMPV_CHECK_CODE_RETURN(CompVMathEigen<double>::find2x2(M, eigenValues, eigenVectors));
 			// Compute Gk (gauss function)
 			r1 = __compv_math_sqrt_fast(eigenValues[3]); // sqrt(smallest eigenvalue -> lambda_w)
-			r2 = __gauss_Eq151(eigenVectors[1] * r1, eigenVectors[3] * r1, *k);
+			r2 = __gauss_Eq15(eigenVectors[1] * r1, eigenVectors[3] * r1, *k);
 			if (r2 < Gmin) {
 				Gmin = r2;
 			}
