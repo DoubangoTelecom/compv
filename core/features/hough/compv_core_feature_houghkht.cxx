@@ -666,8 +666,8 @@ double CompVHoughKht::clusters_subdivision(CompVHoughKhtClusters& clusters, cons
 	return ratio;
 }
 
-static double __gauss_Eq15(const double rho, const double theta, const CompVHoughKhtKernel& kernel)
-{
+static COMPV_INLINE double __gauss_Eq151(const double rho, const double theta, const CompVHoughKhtKernel& kernel) {
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implemention found");
 	static const double twopi = 2.0 * COMPV_MATH_PI;
 	const double sigma_rho_times_sigma_theta = __compv_math_sqrt_fast2(kernel.sigma_rho_square, kernel.sigma_theta_square); // sqrt(sigma_rho_square) * sqrt(sigma_theta_square)
 	const double sigma_rho_times_sigma_theta_scale = 1.0 / sigma_rho_times_sigma_theta;
@@ -677,6 +677,17 @@ static double __gauss_Eq15(const double rho, const double theta, const CompVHoug
 	const double y = 1.0 / (2.0 * (one_minus_r_square));
 	const double z = ((rho * rho) / kernel.sigma_rho_square) - (((r * 2.0) * rho * theta) * sigma_rho_times_sigma_theta_scale) + ((theta * theta) / kernel.sigma_theta_square);
 	return x * __compv_math_exp_fast_small(-z * y);
+}
+
+// Same as '__gauss_Eq151' but with 'rho' and 'theta' equal 0.0
+static COMPV_INLINE double __gauss_Eq150(const CompVHoughKhtKernel& kernel) {
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implemention found");
+	static const double twopi = 2.0 * COMPV_MATH_PI;
+	const double sigma_rho_times_sigma_theta = __compv_math_sqrt_fast2(kernel.sigma_rho_square, kernel.sigma_theta_square); // sqrt(sigma_rho_square) * sqrt(sigma_theta_square)
+	const double r = (kernel.sigma_rho_times_theta / sigma_rho_times_sigma_theta);
+	const double one_minus_r_square = 1.0 - (r * r);
+	const double x = 1.0 / (twopi * sigma_rho_times_sigma_theta * __compv_math_sqrt_fast(one_minus_r_square));
+	return x;
 }
 
 // Algorithm 2: Computation of the Gaussian kernel parameters
@@ -760,7 +771,7 @@ COMPV_ERROR_CODE CompVHoughKht::voting_Algorithm2_Kernels(const CompVHoughKhtClu
 			kernel->sigma_theta_square *= 4.0; // * (2^2)
 
 			// Kernel's height
-			kernel->h = __gauss_Eq15(0.0, 0.0, *kernel);
+			kernel->h = __gauss_Eq150(*kernel);
 		} // end-of-for (CompVHoughKhtClusters::const_iterator cluster
 
 		/* Algorithm 3. Proposed voting process.The Vote() procedure is in Algorithm 4. */
@@ -804,7 +815,7 @@ COMPV_ERROR_CODE CompVHoughKht::voting_Algorithm2_Gmin(const CompVHoughKhtKernel
 			COMPV_CHECK_CODE_RETURN(CompVMathEigen<double>::find2x2(M, eigenValues, eigenVectors));
 			// Compute Gk (gauss function)
 			r1 = __compv_math_sqrt_fast(eigenValues[3]); // sqrt(smallest eigenvalue -> lambda_w)
-			r2 = __gauss_Eq15(eigenVectors[1] * r1, eigenVectors[3] * r1, *k);
+			r2 = __gauss_Eq151(eigenVectors[1] * r1, eigenVectors[3] * r1, *k);
 			if (r2 < Gmin) {
 				Gmin = r2;
 			}
