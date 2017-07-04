@@ -25,7 +25,7 @@ void CompVHoughKhtPeaks_Section3_4_VotesCount_4mpd_Intrin_SSE2(const int32_t *pc
 void CompVHoughKhtKernelHeight_2mpq_Intrin_SSE2(
 	COMPV_ALIGNED(SSE) const double* M_Eq14_r0, COMPV_ALIGNED(SSE) const double* M_Eq14_0, COMPV_ALIGNED(SSE) const double* M_Eq14_2, COMPV_ALIGNED(SSE) const double* n_scale,
 	COMPV_ALIGNED(SSE) double* sigma_rho_square, COMPV_ALIGNED(SSE) double* sigma_rho_times_theta, COMPV_ALIGNED(SSE) double* m2, COMPV_ALIGNED(SSE) double* sigma_theta_square,
-	COMPV_ALIGNED(SSE) double* height, COMPV_ALIGNED(SSE) double* heightMax1, COMPV_ALIGNED(SSE) compv_uscalar_t count, COMPV_ALIGNED(SSE) compv_uscalar_t stride
+	COMPV_ALIGNED(SSE) double* height, COMPV_ALIGNED(SSE) double* heightMax1, COMPV_ALIGNED(SSE) compv_uscalar_t count
 );
 
 COMPV_NAMESPACE_END()

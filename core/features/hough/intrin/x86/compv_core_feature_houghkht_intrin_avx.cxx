@@ -20,13 +20,13 @@ COMPV_NAMESPACE_BEGIN()
 void CompVHoughKhtKernelHeight_4mpq_Intrin_AVX(
 	COMPV_ALIGNED(AVX) const double* M_Eq14_r0, COMPV_ALIGNED(AVX) const double* M_Eq14_0, COMPV_ALIGNED(AVX) const double* M_Eq14_2, COMPV_ALIGNED(AVX) const double* n_scale,
 	COMPV_ALIGNED(AVX) double* sigma_rho_square, COMPV_ALIGNED(AVX) double* sigma_rho_times_theta, COMPV_ALIGNED(AVX) double* m2, COMPV_ALIGNED(AVX) double* sigma_theta_square,
-	COMPV_ALIGNED(AVX) double* height, COMPV_ALIGNED(AVX) double* heightMax1, COMPV_ALIGNED(AVX) compv_uscalar_t count, COMPV_ALIGNED(AVX) compv_uscalar_t stride)
+	COMPV_ALIGNED(AVX) double* height, COMPV_ALIGNED(AVX) double* heightMax1, COMPV_ALIGNED(AVX) compv_uscalar_t count)
 {
 	COMPV_DEBUG_INFO_CHECK_AVX();
 
 	_mm256_zeroupper();
 
-	static const __m256d vecTwoPi = _mm256_set1_pd(2.0 * COMPV_MATH_PI);
+	static const __m256d vecTwoPi = _mm256_set1_pd(6.2831853071795862);
 	static const __m256d vecOne = _mm256_set1_pd(1.0);
 	static const __m256d vecFour = _mm256_set1_pd(4.0);
 	static const __m256d vecZeroDotOne = _mm256_set1_pd(0.1);

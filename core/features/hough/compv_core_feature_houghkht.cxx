@@ -30,11 +30,19 @@
 //	- https://en.wikipedia.org/wiki/Hough_transform#Kernel-based_Hough_transform_.28KHT.29
 //	- http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.145.5388&rep=rep1&type=pdf
 
-COMPV_NAMESPACE_BEGIN()
-
 #define COMPV_HOUGHKHT_CLUSTER_MIN_DEVIATION		2.0
 #define COMPV_HOUGHKHT_CLUSTER_MIN_SIZE				10
 #define COMPV_HOUGHKHT_KERNEL_MIN_HEIGTH			0.002
+
+COMPV_NAMESPACE_BEGIN()
+
+#if COMPV_ASM
+#	if COMPV_ARCH_X64
+	COMPV_EXTERNC void CompVHoughKhtKernelHeight_2mpq_Asm_X64_SSE2(COMPV_ALIGNED(SSE) const double* M_Eq14_r0, COMPV_ALIGNED(SSE) const double* M_Eq14_0, COMPV_ALIGNED(SSE) const double* M_Eq14_2, COMPV_ALIGNED(SSE) const double* n_scale,
+		COMPV_ALIGNED(SSE) double* sigma_rho_square, COMPV_ALIGNED(SSE) double* sigma_rho_times_theta, COMPV_ALIGNED(SSE) double* m2, COMPV_ALIGNED(SSE) double* sigma_theta_square,
+		COMPV_ALIGNED(SSE) double* height, COMPV_ALIGNED(SSE) double* heightMax1, COMPV_ALIGNED(SSE) compv_uscalar_t count);
+#	endif /* COMPV_ARCH_X64 */
+#endif /* COMPV_ASM */
 
 // Fast exp function for small numbers
 // HUGE boost on ARM
@@ -681,10 +689,10 @@ static COMPV_INLINE double __gauss_Eq15(const double rho, const double theta, co
 }
 
 // Computes kernel's height (Gauss Eq15) and hmax
-static COMPV_INLINE void CompVHoughKhtKernelHeight_C(
+static COMPV_INLINE void CompVHoughKhtKernelHeight_1mpq_C(
 	const double* M_Eq14_r0, const double* M_Eq14_0, const double* M_Eq14_2, const double* n_scale,
 	double* sigma_rho_square, double* sigma_rho_times_theta, double* m2, double* sigma_theta_square,
-	double* height, double* heightMax1, compv_uscalar_t count, compv_uscalar_t stride) 
+	double* height, double* heightMax1, compv_uscalar_t count) 
 {
 	if (count > 1) { // otherwise SIMD will be used
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implemention found");
@@ -721,7 +729,7 @@ COMPV_ERROR_CODE CompVHoughKht::voting_Algorithm2_Kernels(const CompVHoughKhtClu
 	if (!clusters.empty()) {
 		void(*CompVHoughKhtKernelHeight)(const double* M_Eq14_r0, const double* M_Eq14_0, const double* M_Eq14_2, const double* n_scale,
 			double* sigma_rho_square, double* sigma_rho_times_theta, double* m2, double* sigma_theta_square,
-			double* height, double* heightMax1, compv_uscalar_t count, compv_uscalar_t stride) = CompVHoughKhtKernelHeight_C;
+			double* height, double* heightMax1, compv_uscalar_t count) = CompVHoughKhtKernelHeight_1mpq_C;
 		double mean_cx, mean_cy, cx, cy, cxx, cyy, cxy;
 		double n_scale; // 1.0 / (number of pixels in Sk) = (1.0 / n)
 		double ux, uy; // eigenvector in V for the biggest eigenvalue
@@ -734,7 +742,7 @@ COMPV_ERROR_CODE CompVHoughKht::voting_Algorithm2_Kernels(const CompVHoughKhtClu
 		CompVMatPtr M_Eq15; // Gauss Eq15.0
 		double *M_Eq14_r0, *M_Eq14_0, *M_Eq14_2, *M_Eq15_sigma_rho_square, *M_Eq15_sigma_rho_times_theta, *M_Eq15_sigma_theta_square, *M_Eq15_m2, *M_Eq15_height, *M_Eq15_n_scale;
 		size_t M_Eq15_index;
-		int M_Eq15_minpack = 1;
+		int M_Eq15_minpack = 1; // CompVHoughKhtKernelHeight_1mpq_C
 
 		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<double>(&M_Eq15, 9, clusters.size()));
 		M_Eq14_r0 = M_Eq15->ptr<double>(0);
@@ -753,6 +761,7 @@ COMPV_ERROR_CODE CompVHoughKht::voting_Algorithm2_Kernels(const CompVHoughKhtClu
 #if COMPV_ARCH_X86
 		if (M_Eq15->cols() >= 2 && CompVCpu::isEnabled(kCpuFlagSSE2) && M_Eq15->isAlignedSSE()) {
 			COMPV_EXEC_IFDEF_INTRIN_X86((CompVHoughKhtKernelHeight = CompVHoughKhtKernelHeight_2mpq_Intrin_SSE2, M_Eq15_minpack = 2));
+			COMPV_EXEC_IFDEF_ASM_X64((CompVHoughKhtKernelHeight = CompVHoughKhtKernelHeight_2mpq_Asm_X64_SSE2, M_Eq15_minpack = 2));
 		}
 		if (M_Eq15->cols() >= 4 && CompVCpu::isEnabled(kCpuFlagAVX) && M_Eq15->isAlignedAVX()) {
 			COMPV_EXEC_IFDEF_INTRIN_X86((CompVHoughKhtKernelHeight = CompVHoughKhtKernelHeight_4mpq_Intrin_AVX, M_Eq15_minpack = 4));
@@ -816,12 +825,12 @@ COMPV_ERROR_CODE CompVHoughKht::voting_Algorithm2_Kernels(const CompVHoughKhtClu
 		const int colsAlignedBackward = (cols & -M_Eq15_minpack);
 		CompVHoughKhtKernelHeight(M_Eq14_r0, M_Eq14_0, M_Eq14_2, M_Eq15_n_scale,
 			M_Eq15_sigma_rho_square, M_Eq15_sigma_rho_times_theta, M_Eq15_m2, M_Eq15_sigma_theta_square,
-			M_Eq15_height, &hmax, static_cast<compv_uscalar_t>(colsAlignedBackward), M_Eq15->stride());
+			M_Eq15_height, &hmax, static_cast<compv_uscalar_t>(colsAlignedBackward));
 		if (M_Eq15_minpack > 1) {
 			if (cols != colsAlignedBackward) {
-				CompVHoughKhtKernelHeight_C(&M_Eq14_r0[colsAlignedBackward], &M_Eq14_0[colsAlignedBackward], &M_Eq14_2[colsAlignedBackward], &M_Eq15_n_scale[colsAlignedBackward],
+				CompVHoughKhtKernelHeight_1mpq_C(&M_Eq14_r0[colsAlignedBackward], &M_Eq14_0[colsAlignedBackward], &M_Eq14_2[colsAlignedBackward], &M_Eq15_n_scale[colsAlignedBackward],
 					&M_Eq15_sigma_rho_square[colsAlignedBackward], &M_Eq15_sigma_rho_times_theta[colsAlignedBackward], &M_Eq15_m2[colsAlignedBackward], &M_Eq15_sigma_theta_square[colsAlignedBackward],
-					&M_Eq15_height[colsAlignedBackward], &hmax, static_cast<compv_uscalar_t>(cols - colsAlignedBackward), M_Eq15->stride());
+					&M_Eq15_height[colsAlignedBackward], &hmax, static_cast<compv_uscalar_t>(cols - colsAlignedBackward));
 			}
 		}
 
