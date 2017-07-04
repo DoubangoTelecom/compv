@@ -706,7 +706,7 @@ static COMPV_INLINE void CompVHoughKhtKernelHeight_1mpq_C(
 	static const double twopi = 2.0 * COMPV_MATH_PI;
 	double r, r0, r1, r2, sigma_rho_times_sigma_theta, one_minus_r_square;
 	for (compv_uscalar_t i = 0; i < count; ++i) {
-		// No need to check if is equal to zero or not:
+		// No need to check if 'M_Eq14_r0' is equal to zero or not:
 		// -> see http://www2.ic.uff.br/~laffernandes/projects/kht/ "Clarification - 01/14/2008"
 		r0 = (1.0 / M_Eq14_r0[i]);
 		r1 = (M_Eq14_0[i] * r0);
