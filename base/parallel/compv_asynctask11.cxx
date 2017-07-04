@@ -138,8 +138,8 @@ COMPV_ERROR_CODE CompVAsyncTask11::invoke(std::function<void()> fFunc, uint64_t 
 
 COMPV_ERROR_CODE CompVAsyncTask11::waitAll(uint64_t u_timeout /* = 86400000 -> 1 day */)
 {
-    COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // Deadlock when mt functions are chained
-    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // We check all tokens
+    COMPV_DEBUG_INFO_CODE_FOR_TESTING("Deadlock when mt functions are chained");
+    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("We check all tokens");
     COMPV_CHECK_EXP_RETURN(!m_bStarted, COMPV_ERROR_CODE_E_INVALID_STATE);
     uint64_t u_end = (CompVTime::nowMillis() + u_timeout);
     bool empty;
@@ -163,7 +163,7 @@ COMPV_ERROR_CODE CompVAsyncTask11::waitOne(uint64_t tokenId, uint64_t u_timeout 
     CompVAsyncToken* token = &m_Tokens[tokenId];
     uint64_t u_end = (CompVTime::nowMillis() + u_timeout);
     while (token->bExecute && u_end > CompVTime::nowMillis()) {
-        m_SemExec->decrement();
+		m_SemExec->decrement();
     }
     if (token->bExecute) {
         COMPV_DEBUG_WARN("Async token with id = %" PRIu64 " timedout", tokenId);

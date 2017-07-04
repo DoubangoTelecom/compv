@@ -17,13 +17,13 @@
 #define FILE_NAME_OPENGLBOOK			"opengl_programming_guide_8th_edition_200x258_gray.yuv"
 #define FILE_NAME_GRIOTS				"mandekalou_480x640_gray.yuv"
 
-#define LOOP_COUNT				1
+#define LOOP_COUNT				1000
 #define FILE_NAME				FILE_NAME_EQUIRECTANGULAR
 #define CANNY_THRESHOLD_LOW		0.8f
 #define CANNY_THRESHOLD_HIGH	CANNY_THRESHOLD_LOW*2.f	
 
-#define HOUGHKHT_RHO						1.0f // "rho-delta" (half-pixel)
-#define HOUGHKHT_THETA						1.0f // "theta-delta" (half-degree)
+#define HOUGHKHT_RHO						1.0f // "rho-delta" (full-pixel)
+#define HOUGHKHT_THETA						1.0f // "theta-delta" (full-radian)
 #define HOUGHKHT_THRESHOLD					1 // keep all votes and filter later using MAXLINES
 #define HOUGHKHT_CLUSTER_MIN_DEVIATION		2.0f
 #define HOUGHKHT_CLUSTER_MIN_SIZE			10

@@ -17,8 +17,8 @@ using namespace compv;
 #define CANNY_KERNEL_SIZE	3
 
 #define HOUGH_ID							COMPV_HOUGHKHT_ID
-#define HOUGH_RHO							1.0f // "rho-delta" (half-pixel)
-#define HOUGH_THETA							1.0f // "theta-delta" (half-radian)
+#define HOUGH_RHO							1.0f // "rho-delta" (half-pixel for more accuracy - high cpu usage)
+#define HOUGH_THETA							1.0f // "theta-delta" (half-radian for more accuracy - high cpu usage)
 #define HOUGH_THRESHOLD						150 // minumum number of aligned points to form a line (also used in NMS)
 #define HOUGH_MAXLINES						20 // maximum number of lines to retains (best) - use value <=0 to retain all
 #define HOUGHKHT_THRESHOLD					1 // keep all votes and filter later using MAXLINES
@@ -82,13 +82,13 @@ public:
 #if 1
 			COMPV_CHECK_CODE_RETURN(CompVImage::convertGrayscale(image, &imageGray));
 			COMPV_CHECK_CODE_RETURN(m_ptrCanny->process(imageGray, &edges));
-#elif 1
+#elif 0
 #	if COMPV_OS_ANDROID || TARGET_OS_IPHONE
 			COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 1020, 960, 1020, COMPV_PATH_FROM_NAME("road_binary1020x960_gray.yuv"), &edges));
 #	else
 			COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 1020, 960, 1020, "C:/Projects/GitHub/data/hough/road_binary1020x960_gray.yuv", &edges));
 #	endif
-#elif 0
+#elif 1
 			COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 1280, 738, 1280, "C:/Projects/GitHub/data/adas/vlcsnap-2016-07-13-22h51m40s373_1280x738_gray.yuv", &imageGray));
 			COMPV_CHECK_CODE_RETURN(m_ptrCanny->process(imageGray, &edges));
 #else
@@ -139,7 +139,7 @@ public:
 		listener_->m_DrawingOptions.color[0] = 1.f;
 		listener_->m_DrawingOptions.color[1] = 1.f;
 		listener_->m_DrawingOptions.color[2] = 0.f;
-		listener_->m_DrawingOptions.color[3] = 1.f;
+		listener_->m_DrawingOptions.color[3] = 1.0f;
 		listener_->m_DrawingOptions.lineWidth = 1.5f;
 
 		*listener = listener_;

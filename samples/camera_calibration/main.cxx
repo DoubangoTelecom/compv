@@ -64,7 +64,7 @@ public:
 			CompVMatPtr imageGray;
 			CompVMatPtr raw_lines_points;
 			CompVMatPtr grouped_lines_points;
-#if 0
+#if 1
 			COMPV_CHECK_CODE_RETURN(CompVImage::convertGrayscale(image, &imageGray));
 #else
 			size_t file_index = 47 + (rand() % 20); // 47 + (rand() % 20); //47 + (rand() % 20);

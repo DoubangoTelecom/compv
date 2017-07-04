@@ -13,6 +13,7 @@
 COMPV_YASM_DEFAULT_REL
 
 global sym(CompVHoughKhtKernelHeight_4mpq_Asm_X64_AVX)
+global sym(CompVHoughKhtKernelHeight_4mpq_Asm_X64_FMA3_AVX)
 
 section .data
 align 32
@@ -35,7 +36,8 @@ section .text
 ; arg(8) -> COMPV_ALIGNED(AVX) double* height
 ; arg(9) -> COMPV_ALIGNED(AVX) double* heightMax1
 ; arg(10) -> COMPV_ALIGNED(AVX) compv_uscalar_t count
-sym(CompVHoughKhtKernelHeight_4mpq_Asm_X64_AVX):
+; %1 -> 0: FMA3 supported, 0: FMA3 not supported
+%macro CompVHoughKhtKernelHeight_4mpq_Macro_X64_AVX 1
 	vzeroupper
 	push rbp
 	mov rbp, rsp
@@ -111,11 +113,21 @@ sym(CompVHoughKhtKernelHeight_4mpq_Asm_X64_AVX):
 		vmovapd vecM_Eq14_2, [M_Eq14_2 + i]
 		vmulpd vecSigma_rho_times_theta, vecSigma_theta_square, vecM_Eq14_0
 		vmulpd vecSigma_theta_square, vecSigma_theta_square, vecM_Eq14_2
-		vmulpd vecSigma_rho_square, vecSigma_rho_times_theta, vecM_Eq14_0
+		%if %1 == 0
+			vmulpd vecSigma_rho_square, vecSigma_rho_times_theta, vecM_Eq14_0
+		%else
+			vmovapd vecSigma_rho_square, vecSigma_rho_times_theta
+		%endif
+
 		vmulpd vecSigma_rho_times_theta, vecSigma_rho_times_theta, vecM_Eq14_2
+		%if %1 == 1
+			vfmadd213pd vecSigma_rho_square, vecM_Eq14_0, [n_scale + i]
+		%endif
 		vmulpd vecM_Eq14_0, vecM_Eq14_0, vecSigma_theta_square
 		vmulpd vecSigma_theta_square, vecSigma_theta_square, vecM_Eq14_2
-		vaddpd vecSigma_rho_square, vecSigma_rho_square, [n_scale + i]		
+		%if %1 == 0
+			vaddpd vecSigma_rho_square, vecSigma_rho_square, [n_scale + i]
+		%endif	
 		vcmppd vecMaskEqZero, vecMaskEqZero, vecSigma_theta_square, 0xc
 		vandpd vecSigma_theta_square, vecSigma_theta_square, vecMaskEqZero
 		vmulpd vecSigma_rho_square, vecSigma_rho_square, vecFour
@@ -127,9 +139,14 @@ sym(CompVHoughKhtKernelHeight_4mpq_Asm_X64_AVX):
 		vmovapd [sigma_rho_square + i], vecSigma_rho_square
 		vmovapd [sigma_theta_square + i], vecSigma_theta_square
 		vmulpd vecSigma_rho_times_sigma_theta, vecSigma_rho_times_sigma_theta, vecTmp0
-		vdivpd vecTmp0, vecSigma_rho_times_theta, vecSigma_rho_times_sigma_theta
-		vmulpd vecTmp0, vecTmp0, vecTmp0
-		vsubpd vecOne_minus_r_square, vecOne, vecTmp0
+		%if %1 == 1
+			vdivpd vecOne_minus_r_square, vecSigma_rho_times_theta, vecSigma_rho_times_sigma_theta
+			vfnmadd213pd vecOne_minus_r_square, vecOne_minus_r_square, vecOne
+		%else
+			vdivpd vecTmp0, vecSigma_rho_times_theta, vecSigma_rho_times_sigma_theta
+			vmulpd vecTmp0, vecTmp0, vecTmp0
+			vsubpd vecOne_minus_r_square, vecOne, vecTmp0
+		%endif
 		vsqrtpd vecOne_minus_r_square, vecOne_minus_r_square
 		vmovapd [sigma_rho_times_theta + i], vecSigma_rho_times_theta
 		vmovapd [m2 + i], vecM_Eq14_0
@@ -193,8 +210,13 @@ sym(CompVHoughKhtKernelHeight_4mpq_Asm_X64_AVX):
 	pop rbp
 	vzeroupper
 	ret
+%endmacro
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(CompVHoughKhtKernelHeight_4mpq_Asm_X64_AVX):
+	CompVHoughKhtKernelHeight_4mpq_Macro_X64_AVX 0
 
-	
+sym(CompVHoughKhtKernelHeight_4mpq_Asm_X64_FMA3_AVX)
+	CompVHoughKhtKernelHeight_4mpq_Macro_X64_AVX 1
 
 %endif ; COMPV_YASM_ABI_IS_64BIT

@@ -14,9 +14,9 @@
 #define PATTERN_CORNERS_NUM				(PATTERN_ROW_CORNERS_NUM * PATTERN_COL_CORNERS_NUM) // Total number of corners
 #define PATTERN_GROUP_MAXLINES			5 // Maximum number of lines per group (errors)
 
-#define HOUGH_RHO						(1.0f * 0.5f) // "rho-delta" (half-pixel)
-#define HOUGH_THETA						(kfMathTrigPiOver180 * 0.5f) // "theta-delta" (half-radian)
-#define HOUGH_THRESHOLD					1 //150
+#define HOUGH_RHO						0.5f // "rho-delta" (half-pixel)
+#define HOUGH_THETA						0.5f // "theta-delta" (half-radian)
+#define HOUGH_THRESHOLD					1 // 150
 #define HOUGH_THRESHOLD_FACT			0.0003828					
 #define HOUGH_CLUSTER_MIN_DEVIATION		2.0f
 #define HOUGH_CLUSTER_MIN_SIZE			10
@@ -106,10 +106,24 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 		result.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_POINTS;
 		return COMPV_ERROR_CODE_S_OK;
 	}
+	if (m_ptrHough->id() == COMPV_HOUGHKHT_ID) {
+		compv_float64_t gs;
+		COMPV_CHECK_CODE_RETURN(m_ptrHough->getFloat64(COMPV_HOUGHKHT_GET_FLT64_GS, &gs));
+		const size_t min_strength = static_cast<size_t>(gs * 0.2);
+		auto fncShortLines = std::remove_if(result.hough_lines.begin(), result.hough_lines.end(), [&](const CompVHoughLine& line) {
+			return line.strength < min_strength;
+		});
+		result.hough_lines.erase(fncShortLines, result.hough_lines.end());
+	}
+
+#if 1 // no grouping at all
+	COMPV_CHECK_CODE_RETURN(m_ptrHough->toCartesian(image->cols(), image->rows(), result.hough_lines, result.grouped_lines));
+	return COMPV_ERROR_CODE_S_OK;
+#endif
 
 	// Convert from polar to cartesian coordinates
 	CalibLineVector cartesian;
-	COMPV_CHECK_CODE_RETURN(__linesFromPolarToCartesian(image->cols(), image->rows(), result.hough_lines, cartesian));
+	COMPV_CHECK_CODE_RETURN(__linesFromPolarToCartesian(image->cols(), image->rows(), result.hough_lines, cartesian)); // FIXME(dmi): use "m_ptrHough->toCartesian()"
 
 #if 0
 	result.grouped_lines = result.raw_lines;

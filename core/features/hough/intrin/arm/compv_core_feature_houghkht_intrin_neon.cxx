@@ -100,7 +100,7 @@ void CompVHoughKhtKernelHeight_2mpq_Intrin_NEON64(
 	COMPV_ALIGNED(NEON) double* height, COMPV_ALIGNED(NEON) double* heightMax1, COMPV_ALIGNED(NEON) compv_uscalar_t count
 )
 {
-	COMPV_DEBUG_INFO_CHECK_SSE2();
+	COMPV_DEBUG_INFO_CHECK_NEON();
 
 	static const float64x2_t vecTwoPi = vdupq_n_f64(6.2831853071795862); // 0x401921fb54442d18
 	static const float64x2_t vecOne = vdupq_n_f64(1.0); // 0x3ff0000000000000
@@ -120,7 +120,7 @@ void CompVHoughKhtKernelHeight_2mpq_Intrin_NEON64(
 		vecM_Eq14_2 = vld1q_f64(&M_Eq14_2[i]);
 		vecSigma_rho_times_theta = vmulq_f64(vecM_Eq14_0, vecSigma_theta_square);
 		vecSigma_theta_square = vmulq_f64(vecM_Eq14_2, vecSigma_theta_square);
-		vecSigma_rho_square = vaddq_f64(vmulq_f64(vecSigma_rho_times_theta, vecM_Eq14_0), vld1q_f64(&n_scale[i])); // FIXME(dmi): fused multiply add
+		vecSigma_rho_square = vmlaq_f64(vld1q_f64(&n_scale[i]), vecSigma_rho_times_theta, vecM_Eq14_0); // TODO(dmi): for ASM add fused multiply add - fma
 		vecSigma_rho_times_theta = vmulq_f64(vecSigma_rho_times_theta, vecM_Eq14_2);
 		vecM_Eq14_0 = vmulq_f64(vecM_Eq14_0, vecSigma_theta_square);
 		vecSigma_theta_square = vmulq_f64(vecSigma_theta_square, vecM_Eq14_2);
@@ -130,7 +130,7 @@ void CompVHoughKhtKernelHeight_2mpq_Intrin_NEON64(
 		vecSigma_theta_square = vmulq_f64(vecSigma_theta_square, vecFour);
 		vecSigma_rho_times_sigma_theta = vmulq_f64(vsqrtq_f64(vecSigma_rho_square), vsqrtq_f64(vecSigma_theta_square));
 		vecOne_minus_r_square = vdivq_f64(vecSigma_rho_times_theta, vecSigma_rho_times_sigma_theta);
-		vecOne_minus_r_square = vsubq_f64(vecOne, vmulq_f64(vecOne_minus_r_square, vecOne_minus_r_square)); // FIXME(dmi): fused multiply substract
+		vecOne_minus_r_square = vmlsq_f64(vecOne, vecOne_minus_r_square, vecOne_minus_r_square); // TODO(dmi): for ASM add fused multiply substract - fma
 		vecOne_minus_r_square = vsqrtq_f64(vecOne_minus_r_square);
 		vecOne_minus_r_square = vmulq_f64(vecOne_minus_r_square, vecSigma_rho_times_sigma_theta);
 		vecOne_minus_r_square = vmulq_f64(vecOne_minus_r_square, vecTwoPi);
