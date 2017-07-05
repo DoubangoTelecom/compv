@@ -130,6 +130,7 @@
 		157F900F1E4510E60005A4EA /* compv_math_convlt_intrin_avx2.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 157F900D1E4510E60005A4EA /* compv_math_convlt_intrin_avx2.cxx */; };
 		157F90101E4510E60005A4EA /* compv_math_convlt_intrin_sse2.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 157F900E1E4510E60005A4EA /* compv_math_convlt_intrin_sse2.cxx */; };
 		157F90121E4556240005A4EA /* compv_math_convlt_arm64_neon.S in Sources */ = {isa = PBXBuildFile; fileRef = 157F90111E4556240005A4EA /* compv_math_convlt_arm64_neon.S */; };
+		1582167B1F0CF5B100B72169 /* compv_core_feature_houghkht_arm32.S in Sources */ = {isa = PBXBuildFile; fileRef = 1582167A1F0CF5B100B72169 /* compv_core_feature_houghkht_arm32.S */; };
 		159A2D481E7DAC0C000FEBE5 /* compv_core_feature_canny_dete_intrin_neon.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 159A2D431E7DAC0C000FEBE5 /* compv_core_feature_canny_dete_intrin_neon.cxx */; };
 		159A2D491E7DAC0C000FEBE5 /* compv_core_feature_canny_dete_intrin_avx2.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 159A2D451E7DAC0C000FEBE5 /* compv_core_feature_canny_dete_intrin_avx2.cxx */; };
 		159A2D4A1E7DAC0C000FEBE5 /* compv_core_feature_canny_dete_intrin_sse2.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 159A2D461E7DAC0C000FEBE5 /* compv_core_feature_canny_dete_intrin_sse2.cxx */; };
@@ -229,6 +230,7 @@
 		15AEA0051E644FDB0030D908 /* compv_patch_intrin_neon.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 15AEA0041E644FDB0030D908 /* compv_patch_intrin_neon.cxx */; };
 		15AEA0071E6450690030D908 /* compv_patch_arm32_neon.S in Sources */ = {isa = PBXBuildFile; fileRef = 15AEA0061E6450690030D908 /* compv_patch_arm32_neon.S */; };
 		15AEA0091E64507B0030D908 /* compv_patch_arm64_neon.S in Sources */ = {isa = PBXBuildFile; fileRef = 15AEA0081E64507B0030D908 /* compv_patch_arm64_neon.S */; };
+		15FC519C1F0D15310002D2A4 /* compv_core_feature_houghkht_arm64.S in Sources */ = {isa = PBXBuildFile; fileRef = 15FC519B1F0D15310002D2A4 /* compv_core_feature_houghkht_arm64.S */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -536,6 +538,7 @@
 		157F900D1E4510E60005A4EA /* compv_math_convlt_intrin_avx2.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_math_convlt_intrin_avx2.cxx; sourceTree = "<group>"; };
 		157F900E1E4510E60005A4EA /* compv_math_convlt_intrin_sse2.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_math_convlt_intrin_sse2.cxx; sourceTree = "<group>"; };
 		157F90111E4556240005A4EA /* compv_math_convlt_arm64_neon.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = compv_math_convlt_arm64_neon.S; sourceTree = "<group>"; };
+		1582167A1F0CF5B100B72169 /* compv_core_feature_houghkht_arm32.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = compv_core_feature_houghkht_arm32.S; sourceTree = "<group>"; };
 		159A2D431E7DAC0C000FEBE5 /* compv_core_feature_canny_dete_intrin_neon.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_core_feature_canny_dete_intrin_neon.cxx; sourceTree = "<group>"; };
 		159A2D451E7DAC0C000FEBE5 /* compv_core_feature_canny_dete_intrin_avx2.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_core_feature_canny_dete_intrin_avx2.cxx; sourceTree = "<group>"; };
 		159A2D461E7DAC0C000FEBE5 /* compv_core_feature_canny_dete_intrin_sse2.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_core_feature_canny_dete_intrin_sse2.cxx; sourceTree = "<group>"; };
@@ -720,6 +723,7 @@
 		15AEA0041E644FDB0030D908 /* compv_patch_intrin_neon.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_patch_intrin_neon.cxx; sourceTree = "<group>"; };
 		15AEA0061E6450690030D908 /* compv_patch_arm32_neon.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = compv_patch_arm32_neon.S; sourceTree = "<group>"; };
 		15AEA0081E64507B0030D908 /* compv_patch_arm64_neon.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = compv_patch_arm64_neon.S; sourceTree = "<group>"; };
+		15FC519B1F0D15310002D2A4 /* compv_core_feature_houghkht_arm64.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = compv_core_feature_houghkht_arm64.S; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1219,6 +1223,7 @@
 		152BA3A21F0571D70024C7A9 /* asm */ = {
 			isa = PBXGroup;
 			children = (
+				158216791F0CF59E00B72169 /* arm */,
 			);
 			path = asm;
 			sourceTree = "<group>";
@@ -1491,6 +1496,15 @@
 				15621B7F1E6DA57800DCBBCC /* compv_math_stats_arm64_neon.S */,
 				156E41C91E711A8600DF9950 /* compv_math_utils_arm32_neon.S */,
 				156E41CB1E711A9100DF9950 /* compv_math_utils_arm64_neon.S */,
+			);
+			path = arm;
+			sourceTree = "<group>";
+		};
+		158216791F0CF59E00B72169 /* arm */ = {
+			isa = PBXGroup;
+			children = (
+				1582167A1F0CF5B100B72169 /* compv_core_feature_houghkht_arm32.S */,
+				15FC519B1F0D15310002D2A4 /* compv_core_feature_houghkht_arm64.S */,
 			);
 			path = arm;
 			sourceTree = "<group>";
@@ -2352,7 +2366,9 @@
 				159A2D611E7DB5DB000FEBE5 /* compv_core_feature_canny_dete_arm32_neon.S in Sources */,
 				1525C0401E3633AB00B00689 /* compv_core_feature_fast_dete_intrin_neon.cxx in Sources */,
 				1525C0381E3633AB00B00689 /* compv_core_feature_fast_dete_macros_neon.S in Sources */,
+				15FC519C1F0D15310002D2A4 /* compv_core_feature_houghkht_arm64.S in Sources */,
 				159E158A1E5DA60500D8CE75 /* compv_core_feature_orb_desc_intrin_sse2.cxx in Sources */,
+				1582167B1F0CF5B100B72169 /* compv_core_feature_houghkht_arm32.S in Sources */,
 				159A2D631E7DB5EC000FEBE5 /* compv_core_feature_canny_dete_arm64_neon.S in Sources */,
 				1525C0371E3633AB00B00689 /* compv_core_feature_fast_dete_arm32_neon.S in Sources */,
 				1525C03F1E3633AB00B00689 /* compv_core_feature_fast_dete.cxx in Sources */,

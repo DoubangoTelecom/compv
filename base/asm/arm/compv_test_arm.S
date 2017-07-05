@@ -8,9 +8,9 @@
 #if defined(__arm__) || defined(__aarch64__)
 
 #if defined(__aarch64__)
-.include "compv_common_arm64.S"
+.include "compv_common_arm64.S" //"
 #else
-.include "compv_common_arm32.S"
+.include "compv_common_arm32.S" @"
 #endif
 
 .data

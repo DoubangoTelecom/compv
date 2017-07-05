@@ -22,7 +22,7 @@
 
 # GNU ARM AS directives: https://www.sourceware.org/binutils/docs/as/ARM-Directives.html#ARM-Directives
 
-# VFP instructions: http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0489e/CJAGFGEE.html
+# VFP instructions: http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0489g/Bcfejdgg.html
 
 # AArch64 NEON instruction format: http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.den0024a/ch07s03.html
 
