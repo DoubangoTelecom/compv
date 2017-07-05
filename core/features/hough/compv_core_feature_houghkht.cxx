@@ -569,10 +569,10 @@ COMPV_ERROR_CODE CompVHoughKht::linking_AppendixA(CompVMatPtr& edges, CompVHough
 		if (left_avail && top[-1]) { /* top-left */ \
 			--x_seed, --y_seed; next_seed = &top[-1]; continue; \
 		} \
-		if (*top) { /* top-center */ \
+		else if (*top) { /* top-center */ \
 			--y_seed; next_seed = top; continue; \
 		} \
-		if (right_avail && top[1]) { /* top-right */ \
+		else if (right_avail && top[1]) { /* top-right */ \
 			++x_seed, --y_seed; next_seed = &top[1]; continue; \
 		} \
 	} \
@@ -580,19 +580,19 @@ COMPV_ERROR_CODE CompVHoughKht::linking_AppendixA(CompVMatPtr& edges, CompVHough
 	if (left_avail && next_seed[-1]) { /* center-left */ \
 		--x_seed; --next_seed; continue; \
 	} \
-	if (right_avail && next_seed[1]) { /* center-right */ \
+	else if (right_avail && next_seed[1]) { /* center-right */ \
 		++x_seed; ++next_seed; continue; \
 	} \
 	/* == bottom == */ \
-	if ((y_seed + 1) < edgesHeightInt) { \
+	else if ((y_seed + 1) < edgesHeightInt) { \
 		bottom = next_seed + edgesStride; \
 		if (left_avail && bottom[-1]) { /* bottom-left */ \
 			--x_seed, ++y_seed;	next_seed = &bottom[-1]; continue; \
 		} \
-		if (*bottom) { /* bottom-center */ \
+		else if (*bottom) { /* bottom-center */ \
 			++y_seed; next_seed = bottom; continue; \
 		} \
-		if (right_avail && bottom[1]) { /* bottom-right */ \
+		else if (right_avail && bottom[1]) { /* bottom-right */ \
 			++x_seed, ++y_seed; next_seed = &bottom[1]; continue; \
 		} \
 	} \
@@ -687,17 +687,17 @@ KHT_TYP CompVHoughKht::clusters_subdivision(CompVHoughKhtClusters& clusters, con
 	//		pixels in size to account for limitations on measurement accuracy)
 	
 	size_t max_index = start_index;
-	KHT_TYP deviation;
-	KHT_TYP max_deviation = std::abs(static_cast<KHT_TYP>((((start.x - string[start_index].x) * diffy) - ((start.y - string[start_index].y) * diffx))));
+	int deviation, max_deviation;
+	max_deviation = std::abs((((start.x - string[start_index].x) * diffy) - ((start.y - string[start_index].y) * diffx)));
 	for (size_t i = start_index + 1; i < end_index; ++i) {
 		const CompVHoughKhtPos &current = string[i];
-		deviation = std::abs(static_cast<KHT_TYP>((((start.x - current.x) * diffy) - ((start.y - current.y) * diffx))));
+		deviation = std::abs((((start.x - current.x) * diffy) - ((start.y - current.y) * diffx)));
 		if (deviation > max_deviation) {
 			max_index = i;
 			max_deviation = deviation;
 		}
 	}	
-	const KHT_TYP ratio = length / std::max((max_deviation / length), m_cluster_min_deviation);
+	const KHT_TYP ratio = length / std::max((static_cast<KHT_TYP>(max_deviation) / length), m_cluster_min_deviation);
 
 	// A segment is recursively subdivided at the
 	// point with maximum deviation from a line connecting its endpoints(Figure 7 (b, c)).
@@ -749,7 +749,7 @@ static COMPV_INLINE void CompVHoughKhtKernelHeight_1mpq_C(
 	KHT_TYP* sigma_rho_square, KHT_TYP* sigma_rho_times_theta, KHT_TYP* m2, KHT_TYP* sigma_theta_square,
 	KHT_TYP* height, KHT_TYP* heightMax1, compv_uscalar_t count) 
 {
-	if (count > 1) { // otherwise SIMD will be used
+	if (count > 3) { // otherwise SIMD will be used
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implemention found");
 	}
 	static const KHT_TYP KHT_TYP_ZERO_DOT_ONE = static_cast<KHT_TYP>(0.1);
