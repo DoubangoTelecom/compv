@@ -16,16 +16,16 @@
 .equ vfpv4Disabled, 0
 
 #########################################################################
-# arg(0) -> COMPV_ALIGNED(NEON) const double* M_Eq14_r0
-# arg(1) -> COMPV_ALIGNED(NEON) const double* M_Eq14_0
-# arg(2) -> COMPV_ALIGNED(NEON) const double* M_Eq14_2
-# arg(3) -> COMPV_ALIGNED(NEON) const double* n_scale,
-# arg(4) -> COMPV_ALIGNED(NEON) double* sigma_rho_square
-# arg(5) -> COMPV_ALIGNED(NEON) double* sigma_rho_times_theta
-# arg(6) -> COMPV_ALIGNED(NEON) double* m2
-# arg(7) -> COMPV_ALIGNED(NEON) double* sigma_theta_square
-# arg(8) -> COMPV_ALIGNED(NEON) double* height
-# arg(9) -> COMPV_ALIGNED(NEON) double* heightMax1
+# arg(0) -> COMPV_ALIGNED(NEON) const compv_float64_t* M_Eq14_r0
+# arg(1) -> COMPV_ALIGNED(NEON) const compv_float64_t* M_Eq14_0
+# arg(2) -> COMPV_ALIGNED(NEON) const compv_float64_t* M_Eq14_2
+# arg(3) -> COMPV_ALIGNED(NEON) const compv_float64_t* n_scale,
+# arg(4) -> COMPV_ALIGNED(NEON) compv_float64_t* sigma_rho_square
+# arg(5) -> COMPV_ALIGNED(NEON) compv_float64_t* sigma_rho_times_theta
+# arg(6) -> COMPV_ALIGNED(NEON) compv_float64_t* m2
+# arg(7) -> COMPV_ALIGNED(NEON) compv_float64_t* sigma_theta_square
+# arg(8) -> COMPV_ALIGNED(NEON) compv_float64_t* height
+# arg(9) -> COMPV_ALIGNED(NEON) compv_float64_t* heightMax1
 # arg(10) -> COMPV_ALIGNED(NEON) compv_uscalar_t count
 COMPV_GAS_FUNCTION_DECLARE CompVHoughKhtKernelHeight_4mpq_Asm_NEON64
 	COMPV_GAS_FUNCTION_PROLOG

@@ -24,16 +24,16 @@ zeroDotOne dq 0x3fb999999999999a, 0x3fb999999999999a
 section .text
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; arg(0) -> COMPV_ALIGNED(SSE) const double* M_Eq14_r0
-; arg(1) -> COMPV_ALIGNED(SSE) const double* M_Eq14_0
-; arg(2) -> COMPV_ALIGNED(SSE) const double* M_Eq14_2
-; arg(3) -> COMPV_ALIGNED(SSE) const double* n_scale,
-; arg(4) -> COMPV_ALIGNED(SSE) double* sigma_rho_square
-; arg(5) -> COMPV_ALIGNED(SSE) double* sigma_rho_times_theta
-; arg(6) -> COMPV_ALIGNED(SSE) double* m2
-; arg(7) -> COMPV_ALIGNED(SSE) double* sigma_theta_square
-; arg(8) -> COMPV_ALIGNED(SSE) double* height
-; arg(9) -> COMPV_ALIGNED(SSE) double* heightMax1
+; arg(0) -> COMPV_ALIGNED(SSE) const compv_float64_t* M_Eq14_r0
+; arg(1) -> COMPV_ALIGNED(SSE) const compv_float64_t* M_Eq14_0
+; arg(2) -> COMPV_ALIGNED(SSE) const compv_float64_t* M_Eq14_2
+; arg(3) -> COMPV_ALIGNED(SSE) const compv_float64_t* n_scale,
+; arg(4) -> COMPV_ALIGNED(SSE) compv_float64_t* sigma_rho_square
+; arg(5) -> COMPV_ALIGNED(SSE) compv_float64_t* sigma_rho_times_theta
+; arg(6) -> COMPV_ALIGNED(SSE) compv_float64_t* m2
+; arg(7) -> COMPV_ALIGNED(SSE) compv_float64_t* sigma_theta_square
+; arg(8) -> COMPV_ALIGNED(SSE) compv_float64_t* height
+; arg(9) -> COMPV_ALIGNED(SSE) compv_float64_t* heightMax1
 ; arg(10) -> COMPV_ALIGNED(SSE) compv_uscalar_t count
 sym(CompVHoughKhtKernelHeight_2mpq_Asm_X64_SSE2):
 	push rbp

@@ -100,9 +100,9 @@ void CompVHoughKhtPeaks_Section3_4_VotesCount_4mpd_Intrin_SSE2(const int32_t *pc
 // up to the caller to set padding bytes to zeros (otherwise max will be invalid)
 // 2mpq -> minpack 2 for qwords (float64) - for count
 void CompVHoughKhtKernelHeight_2mpq_Intrin_SSE2(
-	COMPV_ALIGNED(SSE) const double* M_Eq14_r0, COMPV_ALIGNED(SSE) const double* M_Eq14_0, COMPV_ALIGNED(SSE) const double* M_Eq14_2, COMPV_ALIGNED(SSE) const double* n_scale,
-	COMPV_ALIGNED(SSE) double* sigma_rho_square, COMPV_ALIGNED(SSE) double* sigma_rho_times_theta, COMPV_ALIGNED(SSE) double* m2, COMPV_ALIGNED(SSE) double* sigma_theta_square,
-	COMPV_ALIGNED(SSE) double* height, COMPV_ALIGNED(SSE) double* heightMax1, COMPV_ALIGNED(SSE) compv_uscalar_t count)
+	COMPV_ALIGNED(SSE) const compv_float64_t* M_Eq14_r0, COMPV_ALIGNED(SSE) const compv_float64_t* M_Eq14_0, COMPV_ALIGNED(SSE) const compv_float64_t* M_Eq14_2, COMPV_ALIGNED(SSE) const compv_float64_t* n_scale,
+	COMPV_ALIGNED(SSE) compv_float64_t* sigma_rho_square, COMPV_ALIGNED(SSE) compv_float64_t* sigma_rho_times_theta, COMPV_ALIGNED(SSE) compv_float64_t* m2, COMPV_ALIGNED(SSE) compv_float64_t* sigma_theta_square,
+	COMPV_ALIGNED(SSE) compv_float64_t* height, COMPV_ALIGNED(SSE) compv_float64_t* heightMax1, COMPV_ALIGNED(SSE) compv_uscalar_t count)
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
 

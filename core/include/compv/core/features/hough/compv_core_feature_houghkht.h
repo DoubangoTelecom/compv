@@ -19,6 +19,8 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+#define KHT_TYP compv_float64_t // almost no speed gain compared to float32
+
 struct CompVHoughKhtVote {
 	size_t rho_index; size_t theta_index;
 	int32_t count;
@@ -29,7 +31,7 @@ typedef std::vector<CompVHoughKhtVote> CompVHoughKhtVotes;
 
 struct CompVHoughKhtPos {
 	int y; int x;
-	double cy; double cx;
+	KHT_TYP cy; KHT_TYP cx;
 	CompVHoughKhtPos() : y(0), x(0){}
 	CompVHoughKhtPos(int _y, int _x) : y(_y), x(_x) {}
 };
@@ -49,19 +51,19 @@ struct CompVHoughKhtCluster {
 typedef std::vector<CompVHoughKhtCluster> CompVHoughKhtClusters;
 
 struct CompVHoughKhtKernel {
-	double rho; // computed using Eq3
-	double theta; // computed using Eq3
-	double h; // height
+	KHT_TYP rho; // computed using Eq3
+	KHT_TYP theta; // computed using Eq3
+	KHT_TYP h; // height
 #define kCompVHoughKhtKernelIndex_SigmaRhoSquare			0
 #define kCompVHoughKhtKernelIndex_SigmaRhoTimesTheta		1
 #define kCompVHoughKhtKernelIndex_2							2
 #define kCompVHoughKhtKernelIndex_SigmaThetaSquare			3
 
 	// Matrix 'M' computed in Algorithm 2 and holding sigma values
-	double sigma_theta_square;
-	double sigma_rho_square;
-	double m2;
-	double sigma_rho_times_theta;
+	KHT_TYP sigma_theta_square;
+	KHT_TYP sigma_rho_square;
+	KHT_TYP m2;
+	KHT_TYP sigma_rho_times_theta;
 };
 typedef std::vector<CompVHoughKhtKernel> CompVHoughKhtKernels;
 
@@ -81,37 +83,36 @@ public:
 	static COMPV_ERROR_CODE newObj(CompVHoughPtrPtr hough, float rho = 1.f, float theta = 1.f, size_t threshold = 1);
 
 private:
-	COMPV_ERROR_CODE initCoords(double dRho, double dTheta, size_t nThreshold, size_t nWidth = 0, size_t nHeight = 0);
+	COMPV_ERROR_CODE initCoords(KHT_TYP dRho, KHT_TYP dTheta, size_t nThreshold, size_t nWidth = 0, size_t nHeight = 0);
 	COMPV_ERROR_CODE linking_AppendixA(CompVMatPtr& edges, CompVHoughKhtStrings& strings);
 	void linking_link_Algorithm5(uint8_t* edgesPtr, const size_t edgesWidth, const size_t edgesHeight, const size_t edgesStride, CompVHoughKhtPosBoxPtr& tmp_box, CompVHoughKhtStrings& strings, const int x_ref, const int y_ref);
-	uint8_t* linking_next_Algorithm6(uint8_t* edgesPtr, const size_t edgesWidth, const size_t edgesHeight, const size_t edgesStride, int &x_seed, int &y_seed);
 	COMPV_ERROR_CODE clusters_find(CompVHoughKhtClusters& clusters, CompVHoughKhtStrings::const_iterator strings_begin, CompVHoughKhtStrings::const_iterator strings_end);
-	double clusters_subdivision(CompVHoughKhtClusters& clusters, const CompVHoughKhtString& string, const size_t start_index, const size_t end_index);
-	COMPV_ERROR_CODE voting_Algorithm2_Kernels(const CompVHoughKhtClusters& clusters, CompVHoughKhtKernels& kernels, double& hmax);
-	COMPV_ERROR_CODE voting_Algorithm2_DiscardShortKernels(CompVHoughKhtKernels& kernels, const double hmax);
-	COMPV_ERROR_CODE voting_Algorithm2_Gmin(const CompVHoughKhtKernels& kernels, double &Gmin);
-	COMPV_ERROR_CODE voting_Algorithm2_Count(int32_t* countsPtr, const size_t countsStride, CompVHoughKhtKernels::const_iterator kernels_begin, CompVHoughKhtKernels::const_iterator kernels_end, const double Gs);
-	void vote_Algorithm4(int32_t* countsPtr, const size_t countsStride, size_t rho_start_index, const size_t theta_start_index, const double rho_start, const double theta_start, int inc_rho_index, const int inc_theta_index, const double scale, const CompVHoughKhtKernel& kernel);
+	KHT_TYP clusters_subdivision(CompVHoughKhtClusters& clusters, const CompVHoughKhtString& string, const size_t start_index, const size_t end_index);
+	COMPV_ERROR_CODE voting_Algorithm2_Kernels(const CompVHoughKhtClusters& clusters, CompVHoughKhtKernels& kernels, KHT_TYP& hmax);
+	COMPV_ERROR_CODE voting_Algorithm2_DiscardShortKernels(CompVHoughKhtKernels& kernels, const KHT_TYP hmax);
+	COMPV_ERROR_CODE voting_Algorithm2_Gmin(const CompVHoughKhtKernels& kernels, KHT_TYP &Gmin);
+	COMPV_ERROR_CODE voting_Algorithm2_Count(int32_t* countsPtr, const size_t countsStride, CompVHoughKhtKernels::const_iterator kernels_begin, CompVHoughKhtKernels::const_iterator kernels_end, const KHT_TYP Gs);
+	void vote_Algorithm4(int32_t* countsPtr, const size_t countsStride, size_t rho_start_index, const size_t theta_start_index, const KHT_TYP rho_start, const KHT_TYP theta_start, int inc_rho_index, const int inc_theta_index, const KHT_TYP scale, const CompVHoughKhtKernel& kernel);
 	COMPV_ERROR_CODE peaks_Section3_4_VotesCountAndClearVisitedMap(CompVHoughKhtVotes& votes, const size_t theta_index_start, const size_t theta_index_end);
 	COMPV_ERROR_CODE peaks_Section3_4_VotesSort(CompVHoughKhtVotes& votes);
 	COMPV_ERROR_CODE peaks_Section3_4_Lines(CompVHoughLineVector& lines, const CompVHoughKhtVotes& votes);
 
 private:
-	double m_dRho;
-	double m_dTheta_rad;
-	double m_dTheta_deg;
-	double m_cluster_min_deviation;
+	KHT_TYP m_dRho;
+	KHT_TYP m_dTheta_rad;
+	KHT_TYP m_dTheta_deg;
+	KHT_TYP m_cluster_min_deviation;
 	size_t m_cluster_min_size;
-	double m_kernel_min_heigth;
-	double m_dGS;
+	KHT_TYP m_kernel_min_heigth;
+	KHT_TYP m_dGS;
 	size_t m_nThreshold;
 	size_t m_nWidth;
 	size_t m_nHeight;
 	size_t m_nMaxLines;
 	bool m_bOverrideInputEdges;
 	CompVMatPtr m_edges;
-	CompVMatPtr m_rho; // CompVMatPtr<double>
-	CompVMatPtr m_theta; // CompVMatPtr<double>
+	CompVMatPtr m_rho; // CompVMatPtr<KHT_TYP>
+	CompVMatPtr m_theta; // CompVMatPtr<KHT_TYP>
 	CompVMatPtr m_count; // CompVMatPtr<int32_t>
 	CompVMatPtr m_visited; // CompVMatPtr<uint8_t>
 	CompVHoughKhtStrings m_strings;

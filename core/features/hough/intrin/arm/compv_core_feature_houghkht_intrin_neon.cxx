@@ -95,9 +95,9 @@ void CompVHoughKhtPeaks_Section3_4_VotesCount_4mpd_Intrin_NEON(const int32_t *pc
 #if COMPV_ARCH_ARM64
 
 void CompVHoughKhtKernelHeight_2mpq_Intrin_NEON64(
-	COMPV_ALIGNED(NEON) const double* M_Eq14_r0, COMPV_ALIGNED(NEON) const double* M_Eq14_0, COMPV_ALIGNED(NEON) const double* M_Eq14_2, COMPV_ALIGNED(NEON) const double* n_scale,
-	COMPV_ALIGNED(NEON) double* sigma_rho_square, COMPV_ALIGNED(NEON) double* sigma_rho_times_theta, COMPV_ALIGNED(NEON) double* m2, COMPV_ALIGNED(NEON) double* sigma_theta_square,
-	COMPV_ALIGNED(NEON) double* height, COMPV_ALIGNED(NEON) double* heightMax1, COMPV_ALIGNED(NEON) compv_uscalar_t count
+	COMPV_ALIGNED(NEON) const compv_float64_t* M_Eq14_r0, COMPV_ALIGNED(NEON) const compv_float64_t* M_Eq14_0, COMPV_ALIGNED(NEON) const compv_float64_t* M_Eq14_2, COMPV_ALIGNED(NEON) const compv_float64_t* n_scale,
+	COMPV_ALIGNED(NEON) compv_float64_t* sigma_rho_square, COMPV_ALIGNED(NEON) compv_float64_t* sigma_rho_times_theta, COMPV_ALIGNED(NEON) compv_float64_t* m2, COMPV_ALIGNED(NEON) compv_float64_t* sigma_theta_square,
+	COMPV_ALIGNED(NEON) compv_float64_t* height, COMPV_ALIGNED(NEON) compv_float64_t* heightMax1, COMPV_ALIGNED(NEON) compv_uscalar_t count
 )
 {
 	COMPV_DEBUG_INFO_CHECK_NEON();

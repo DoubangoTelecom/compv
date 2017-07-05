@@ -254,6 +254,9 @@
     <ClCompile Include="features\hough\intrin\x86\compv_core_feature_houghkht_intrin_avx.cxx">
       <Filter>Source Files\features\hough\intrin\x86</Filter>
     </ClCompile>
+    <ClCompile Include="features\hough\intrin\arm\compv_core_feature_houghkht_intrin_neon.cxx">
+      <Filter>Source Files\features\hough\intrin\arm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\core\compv_core.h">

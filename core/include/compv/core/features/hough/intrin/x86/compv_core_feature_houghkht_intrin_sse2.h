@@ -23,9 +23,9 @@ COMPV_NAMESPACE_BEGIN()
 void CompVHoughKhtPeaks_Section3_4_VotesCount_4mpd_Intrin_SSE2(const int32_t *pcount, const size_t pcount_stride, const size_t theta_index, const size_t rho_count, const int32_t nThreshold, CompVHoughKhtVotes& votes);
 
 void CompVHoughKhtKernelHeight_2mpq_Intrin_SSE2(
-	COMPV_ALIGNED(SSE) const double* M_Eq14_r0, COMPV_ALIGNED(SSE) const double* M_Eq14_0, COMPV_ALIGNED(SSE) const double* M_Eq14_2, COMPV_ALIGNED(SSE) const double* n_scale,
-	COMPV_ALIGNED(SSE) double* sigma_rho_square, COMPV_ALIGNED(SSE) double* sigma_rho_times_theta, COMPV_ALIGNED(SSE) double* m2, COMPV_ALIGNED(SSE) double* sigma_theta_square,
-	COMPV_ALIGNED(SSE) double* height, COMPV_ALIGNED(SSE) double* heightMax1, COMPV_ALIGNED(SSE) compv_uscalar_t count
+	COMPV_ALIGNED(SSE) const compv_float64_t* M_Eq14_r0, COMPV_ALIGNED(SSE) const compv_float64_t* M_Eq14_0, COMPV_ALIGNED(SSE) const compv_float64_t* M_Eq14_2, COMPV_ALIGNED(SSE) const compv_float64_t* n_scale,
+	COMPV_ALIGNED(SSE) compv_float64_t* sigma_rho_square, COMPV_ALIGNED(SSE) compv_float64_t* sigma_rho_times_theta, COMPV_ALIGNED(SSE) compv_float64_t* m2, COMPV_ALIGNED(SSE) compv_float64_t* sigma_theta_square,
+	COMPV_ALIGNED(SSE) compv_float64_t* height, COMPV_ALIGNED(SSE) compv_float64_t* heightMax1, COMPV_ALIGNED(SSE) compv_uscalar_t count
 );
 
 COMPV_NAMESPACE_END()

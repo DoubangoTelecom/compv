@@ -25,16 +25,16 @@ zeroDotOne dq 0x3fb999999999999a, 0x3fb999999999999a, 0x3fb999999999999a, 0x3fb9
 section .text
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; arg(0) -> COMPV_ALIGNED(AVX) const double* M_Eq14_r0
-; arg(1) -> COMPV_ALIGNED(AVX) const double* M_Eq14_0
-; arg(2) -> COMPV_ALIGNED(AVX) const double* M_Eq14_2
-; arg(3) -> COMPV_ALIGNED(AVX) const double* n_scale,
-; arg(4) -> COMPV_ALIGNED(AVX) double* sigma_rho_square
-; arg(5) -> COMPV_ALIGNED(AVX) double* sigma_rho_times_theta
-; arg(6) -> COMPV_ALIGNED(AVX) double* m2
-; arg(7) -> COMPV_ALIGNED(AVX) double* sigma_theta_square
-; arg(8) -> COMPV_ALIGNED(AVX) double* height
-; arg(9) -> COMPV_ALIGNED(AVX) double* heightMax1
+; arg(0) -> COMPV_ALIGNED(AVX) const compv_float64_t* M_Eq14_r0
+; arg(1) -> COMPV_ALIGNED(AVX) const compv_float64_t* M_Eq14_0
+; arg(2) -> COMPV_ALIGNED(AVX) const compv_float64_t* M_Eq14_2
+; arg(3) -> COMPV_ALIGNED(AVX) const compv_float64_t* n_scale,
+; arg(4) -> COMPV_ALIGNED(AVX) compv_float64_t* sigma_rho_square
+; arg(5) -> COMPV_ALIGNED(AVX) compv_float64_t* sigma_rho_times_theta
+; arg(6) -> COMPV_ALIGNED(AVX) compv_float64_t* m2
+; arg(7) -> COMPV_ALIGNED(AVX) compv_float64_t* sigma_theta_square
+; arg(8) -> COMPV_ALIGNED(AVX) compv_float64_t* height
+; arg(9) -> COMPV_ALIGNED(AVX) compv_float64_t* heightMax1
 ; arg(10) -> COMPV_ALIGNED(AVX) compv_uscalar_t count
 ; %1 -> 0: FMA3 supported, 0: FMA3 not supported
 %macro CompVHoughKhtKernelHeight_4mpq_Macro_X64_AVX 1
