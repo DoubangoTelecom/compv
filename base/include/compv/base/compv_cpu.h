@@ -14,11 +14,20 @@
 COMPV_NAMESPACE_BEGIN()
 
 #if defined(__GNUC__)
-#define __builtin_prefetch_read(ptr) __builtin_prefetch(ptr, 0, 0)
-#define __builtin_prefetch_write(ptr) __builtin_prefetch(ptr, 1, 0)
+#	define __compv_builtin_prefetch_read(ptr) __builtin_prefetch(ptr, 0, 0)
+#	define __compv_builtin_prefetch_write(ptr) __builtin_prefetch(ptr, 1, 0)
+#elif COMPV_ARCH_X86 && COMPV_INTRINSIC
+#	define __compv_builtin_prefetch_read(ptr) _mm_prefetch(reinterpret_cast<char const*>((ptr)), _MM_HINT_T0) // This is old SSE1, available on all x86 since 1999
+#	define __compv_builtin_prefetch_write(ptr) 
 #else
-#define __builtin_prefetch_read(ptr) 
-#define __builtin_prefetch_write(ptr) 
+#	define __compv_builtin_prefetch_read(ptr) 
+#	define __compv_builtin_prefetch_write(ptr) 
+#endif
+
+#if defined(__GNUC__)
+#	define __compv_builtin_assume_aligned(ptr, alignment) __builtin_assume_aligned((ptr), (alignment))
+#else
+#	define __compv_builtin_assume_aligned(ptr, alignment) (ptr)
 #endif
 
 #define COMPV_CPU_FLAG_BIT(b_) (((uint64_t)1) << (b_))

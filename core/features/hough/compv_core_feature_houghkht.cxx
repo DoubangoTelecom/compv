@@ -14,6 +14,7 @@
 #include "compv/core/features/hough/intrin/x86/compv_core_feature_houghkht_intrin_avx.h"
 #include "compv/core/features/hough/intrin/x86/compv_core_feature_houghkht_intrin_avx2.h"
 #include "compv/core/features/hough/intrin/arm/compv_core_feature_houghkht_intrin_neon.h"
+#include "compv/base/intrin/arm/compv_intrin_neon.h"
 
 #include <algorithm> /* std::reverse */
 #include <float.h> /* DBL_MAX */
@@ -540,10 +541,82 @@ COMPV_ERROR_CODE CompVHoughKht::linking_AppendixA(CompVMatPtr& edges, CompVHough
 
 	CompVHoughKhtPosBoxPtr tmp_box; // box used as temporary container
 	COMPV_CHECK_CODE_ASSERT(CompVHoughKhtPosBox::newObj(&tmp_box, 1000));
-#define KHT_LINK_A5(x) \
-	if (edgesPtr[x]) { \
-		linking_link_Algorithm5(&edgesPtr[x], edgesWidth, edgesHeight, edgesStride, tmp_box, strings, x, y_ref); \
+#define KHT_LINK_A5(x) if (edgesPtr[x]) linking_link_Algorithm5(&edgesPtr[x], edgesWidth, edgesHeight, edgesStride, tmp_box, strings, x, y_ref)
+
+#if COMPV_INTRINSIC && COMPV_ARCH_X86 /* To avoid AVX/SSE transition issues (file not built with /AVX flag) do not add support for AVX (anyways, tested and not faster) */
+	if (edges->cols() >= 16 && CompVCpu::isEnabled(kCpuFlagSSE2) && edges->isAlignedSSE()) {
+		const int maxi128 = maxi - 15;
+
+		__compv_builtin_prefetch_read(&edgesPtr[COMPV_CACHE1_LINE_SIZE * 0]);
+		__compv_builtin_prefetch_read(&edgesPtr[COMPV_CACHE1_LINE_SIZE * 1]);
+		__compv_builtin_prefetch_read(&edgesPtr[COMPV_CACHE1_LINE_SIZE * 2]);
+
+		for (y_ref = 1; y_ref < maxj; ++y_ref) {
+			if (_mm_movemask_epi8(_mm_load_si128(reinterpret_cast<const __m128i*>(&edgesPtr[0]))) & 0xfffe) { // 0xfffe to ignore index #0
+				/*KHT_LINK_A5(0);*/ KHT_LINK_A5(1); KHT_LINK_A5(2); KHT_LINK_A5(3);
+				KHT_LINK_A5(4); KHT_LINK_A5(5); KHT_LINK_A5(6); KHT_LINK_A5(7);
+				KHT_LINK_A5(8); KHT_LINK_A5(9); KHT_LINK_A5(10); KHT_LINK_A5(11);
+				KHT_LINK_A5(12); KHT_LINK_A5(13); KHT_LINK_A5(14); KHT_LINK_A5(15);
+			}
+			for (x_ref = 16; x_ref < maxi128; x_ref += 16) {
+				__compv_builtin_prefetch_read(&edgesPtr[x_ref + (COMPV_CACHE1_LINE_SIZE * 3)]);
+				if (_mm_movemask_epi8(_mm_load_si128(reinterpret_cast<const __m128i*>(&edgesPtr[x_ref])))) {
+					KHT_LINK_A5(x_ref + 0); KHT_LINK_A5(x_ref + 1); KHT_LINK_A5(x_ref + 2); KHT_LINK_A5(x_ref + 3);
+					KHT_LINK_A5(x_ref + 4); KHT_LINK_A5(x_ref + 5); KHT_LINK_A5(x_ref + 6); KHT_LINK_A5(x_ref + 7);
+					KHT_LINK_A5(x_ref + 8); KHT_LINK_A5(x_ref + 9); KHT_LINK_A5(x_ref + 10); KHT_LINK_A5(x_ref + 11);
+					KHT_LINK_A5(x_ref + 12); KHT_LINK_A5(x_ref + 13); KHT_LINK_A5(x_ref + 14); KHT_LINK_A5(x_ref + 15);
+				}
+			}
+			__compv_builtin_prefetch_read(&edgesPtr[x_ref + (COMPV_CACHE1_LINE_SIZE * 3)]);
+			for (; x_ref < maxi; ++x_ref) {
+				KHT_LINK_A5(x_ref);
+			}
+			edgesPtr += edges->strideInBytes();
+		}
+		return COMPV_ERROR_CODE_S_OK;
 	}
+#endif /* COMPV_INTRINSIC && COMPV_ARCH_X86 */
+
+#if COMPV_INTRINSIC && COMPV_ARCH_ARM
+	if (edges->cols() >= 16 && CompVCpu::isEnabled(kCpuFlagARM_NEON) && edges->isAlignedNEON()) {
+		const int maxi128 = maxi - 15;
+		uint8x16_t vec;
+		
+		edgesPtr = reinterpret_cast<uint8_t*>(__compv_builtin_assume_aligned(edgesPtr, 16));
+
+		__compv_builtin_prefetch_read(&edgesPtr[COMPV_CACHE1_LINE_SIZE * 0]);
+		__compv_builtin_prefetch_read(&edgesPtr[COMPV_CACHE1_LINE_SIZE * 1]);
+		__compv_builtin_prefetch_read(&edgesPtr[COMPV_CACHE1_LINE_SIZE * 2]);
+
+		for (y_ref = 1; y_ref < maxj; ++y_ref) {
+			vec = vld1q_u8(&edgesPtr[0]); // read starting #0 for aligned
+			if (COMPV_ARM_NEON_NEQ_ZERO(vec)) {
+				/*KHT_LINK_A5(0);*/ KHT_LINK_A5(1); KHT_LINK_A5(2); KHT_LINK_A5(3);
+				KHT_LINK_A5(4); KHT_LINK_A5(5); KHT_LINK_A5(6); KHT_LINK_A5(7);
+				KHT_LINK_A5(8); KHT_LINK_A5(9); KHT_LINK_A5(10); KHT_LINK_A5(11);
+				KHT_LINK_A5(12); KHT_LINK_A5(13); KHT_LINK_A5(14); KHT_LINK_A5(15);
+			}
+			for (x_ref = 16; x_ref < maxi128; x_ref += 16) {
+				__compv_builtin_prefetch_read(&edgesPtr[x_ref + (COMPV_CACHE1_LINE_SIZE * 3)]);
+				vec = vld1q_u8(&edgesPtr[x_ref]);
+				if (COMPV_ARM_NEON_NEQ_ZERO(vec)) {
+					KHT_LINK_A5(x_ref + 0); KHT_LINK_A5(x_ref + 1); KHT_LINK_A5(x_ref + 2); KHT_LINK_A5(x_ref + 3);
+					KHT_LINK_A5(x_ref + 4); KHT_LINK_A5(x_ref + 5); KHT_LINK_A5(x_ref + 6); KHT_LINK_A5(x_ref + 7);
+					KHT_LINK_A5(x_ref + 8); KHT_LINK_A5(x_ref + 9); KHT_LINK_A5(x_ref + 10); KHT_LINK_A5(x_ref + 11);
+					KHT_LINK_A5(x_ref + 12); KHT_LINK_A5(x_ref + 13); KHT_LINK_A5(x_ref + 14); KHT_LINK_A5(x_ref + 15);
+				}
+			}
+			__compv_builtin_prefetch_read(&edgesPtr[x_ref + (COMPV_CACHE1_LINE_SIZE * 3)]);
+			for (; x_ref < maxi; ++x_ref) {
+				KHT_LINK_A5(x_ref);
+			}
+			edgesPtr += edges->strideInBytes();
+		}
+		return COMPV_ERROR_CODE_S_OK;
+	}
+#endif
+
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
 
 	if (maxi64 > 8) {
 		for (y_ref = 1; y_ref < maxj; ++y_ref) {

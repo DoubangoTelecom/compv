@@ -44,22 +44,22 @@ void CompVImageConvYuv420_to_Rgb24_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t
 	uint8x8_t vecUn, vecVn;
 	int16x8x2_t vec2;
 
-	__builtin_prefetch_read(&yPtr[COMPV_CACHE1_LINE_SIZE * 0]);
-	__builtin_prefetch_read(&yPtr[COMPV_CACHE1_LINE_SIZE * 1]);
-	__builtin_prefetch_read(&yPtr[COMPV_CACHE1_LINE_SIZE * 2]);
-	__builtin_prefetch_read(&uPtr[COMPV_CACHE1_LINE_SIZE * 0]);
-	__builtin_prefetch_read(&uPtr[COMPV_CACHE1_LINE_SIZE * 1]);
-	__builtin_prefetch_read(&uPtr[COMPV_CACHE1_LINE_SIZE * 2]);
-	__builtin_prefetch_read(&vPtr[COMPV_CACHE1_LINE_SIZE * 0]);
-	__builtin_prefetch_read(&vPtr[COMPV_CACHE1_LINE_SIZE * 1]);
-	__builtin_prefetch_read(&vPtr[COMPV_CACHE1_LINE_SIZE * 2]);
+	__compv_builtin_prefetch_read(&yPtr[COMPV_CACHE1_LINE_SIZE * 0]);
+	__compv_builtin_prefetch_read(&yPtr[COMPV_CACHE1_LINE_SIZE * 1]);
+	__compv_builtin_prefetch_read(&yPtr[COMPV_CACHE1_LINE_SIZE * 2]);
+	__compv_builtin_prefetch_read(&uPtr[COMPV_CACHE1_LINE_SIZE * 0]);
+	__compv_builtin_prefetch_read(&uPtr[COMPV_CACHE1_LINE_SIZE * 1]);
+	__compv_builtin_prefetch_read(&uPtr[COMPV_CACHE1_LINE_SIZE * 2]);
+	__compv_builtin_prefetch_read(&vPtr[COMPV_CACHE1_LINE_SIZE * 0]);
+	__compv_builtin_prefetch_read(&vPtr[COMPV_CACHE1_LINE_SIZE * 1]);
+	__compv_builtin_prefetch_read(&vPtr[COMPV_CACHE1_LINE_SIZE * 2]);
 
 	for (j = 0; j < height; ++j) {
 		for (i = 0, k = 0, l = 0; i < width; i += 16, k += 48, l += 8) {
 			/* Load samples */
-			__builtin_prefetch_read(&yPtr[i + (COMPV_CACHE1_LINE_SIZE * 3)]);
-			__builtin_prefetch_read(&uPtr[l + (COMPV_CACHE1_LINE_SIZE * 3)]);
-			__builtin_prefetch_read(&vPtr[l + (COMPV_CACHE1_LINE_SIZE * 3)]);
+			__compv_builtin_prefetch_read(&yPtr[i + (COMPV_CACHE1_LINE_SIZE * 3)]);
+			__compv_builtin_prefetch_read(&uPtr[l + (COMPV_CACHE1_LINE_SIZE * 3)]);
+			__compv_builtin_prefetch_read(&vPtr[l + (COMPV_CACHE1_LINE_SIZE * 3)]);
 			vecYlow = vld1q_u8(&yPtr[i]); // #16 Y samples
 			vecUn = vld1_u8(&uPtr[l]); // #8 U samples, low mem
 			vecVn = vld1_u8(&vPtr[l]); // #8 V samples, low mem

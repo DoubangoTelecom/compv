@@ -249,8 +249,8 @@ void CompVMathConvlt1VtHzFixedPoint_8u16u8u_Intrin_NEON(const uint8_t* inPtr, ui
 	for (j = 0; j < height; ++j) {
 		/* Per #16 samples */
 		for (i = 0; i < width - 15; i += 16) {
-			__builtin_prefetch_read(&inPtr[i + COMPV_CACHE1_LINE_SIZE]);
-			__builtin_prefetch_write(&outPtr[i + COMPV_CACHE1_LINE_SIZE]);
+			__compv_builtin_prefetch_read(&inPtr[i + COMPV_CACHE1_LINE_SIZE]);
+			__compv_builtin_prefetch_write(&outPtr[i + COMPV_CACHE1_LINE_SIZE]);
 			vecInPtr = vld1q_u8(&inPtr[i + 0]);
 			coeff = vthzKernPtr[0];
 			vec2 = vmovl_u8(vget_low_u8(vecInPtr));
