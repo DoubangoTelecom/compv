@@ -538,65 +538,67 @@ COMPV_ERROR_CODE CompVHoughKht::linking_AppendixA(CompVMatPtr& edges, CompVHough
 }
 
 // Algorithm 6 - Function Next(). It complements the linking procedure(Algorithm 5).
-COMPV_ALWAYS_INLINE uint8_t* __linking_next_Algorithm6(uint8_t* edgesPtr, const size_t edgesWidth, const size_t edgesHeight, const size_t edgesStride, int &x_seed, int &y_seed)
-{
-	const bool left_avail = x_seed > 0;
-	const bool right_avail = (x_seed + 1) < static_cast<int>(edgesWidth);
-
-	/* == top == */
-	if (y_seed > 0) {
-		uint8_t* top = edgesPtr - edgesStride;
-		if (left_avail && top[-1]) { // top-left
-			--x_seed, --y_seed; return &top[-1];
-		}
-		if (*top) { // top-center
-			--y_seed; return top;
-		}
-		if (right_avail && top[1]) { // top-right
-			++x_seed, --y_seed; return &top[1];
-		}
-	}
-
-	/* == center == */
-	if (left_avail && edgesPtr[-1]) { // center-left
-		--x_seed; return &edgesPtr[-1];
-	}
-	if (right_avail && edgesPtr[1]) { // center-right
-		++x_seed; return &edgesPtr[1];
-	}
-
-	/* == bottom == */
-	if ((y_seed + 1) < static_cast<int>(edgesHeight)) {
-		uint8_t* bottom = edgesPtr + edgesStride;
-		if (left_avail && bottom[-1]) { // bottom-left
-			--x_seed, ++y_seed;	return &bottom[-1];
-		}
-		if (*bottom) { // bottom-center
-			++y_seed; return bottom;
-		}
-		if (right_avail && bottom[1]) { // bottom-right
-			++x_seed, ++y_seed; return &bottom[1];
-		}
-	}
-	return nullptr;
+#define __linking_next_Algorithm6() { \
+	left_avail = x_seed > 0; \
+	right_avail = (x_seed + 1) < edgesWidthInt; \
+	/* == top == */ \
+	if (y_seed > 0) { \
+		top = next_seed - edgesStride; \
+		if (left_avail && top[-1]) { /* top-left */ \
+			--x_seed, --y_seed; next_seed = &top[-1]; continue; \
+		} \
+		if (*top) { /* top-center */ \
+			--y_seed; next_seed = top; continue; \
+		} \
+		if (right_avail && top[1]) { /* top-right */ \
+			++x_seed, --y_seed; next_seed = &top[1]; continue; \
+		} \
+	} \
+	/* == center == */ \
+	if (left_avail && next_seed[-1]) { /* center-left */ \
+		--x_seed; --next_seed; continue; \
+	} \
+	if (right_avail && next_seed[1]) { /* center-right */ \
+		++x_seed; ++next_seed; continue; \
+	} \
+	/* == bottom == */ \
+	if ((y_seed + 1) < static_cast<int>(edgesHeight)) { \
+		bottom = next_seed + edgesStride; \
+		if (left_avail && bottom[-1]) { /* bottom-left */ \
+			--x_seed, ++y_seed;	next_seed = &bottom[-1]; continue; \
+		} \
+		if (*bottom) { /* bottom-center */ \
+			++y_seed; next_seed = bottom; continue; \
+		} \
+		if (right_avail && bottom[1]) { /* bottom-right */ \
+			++x_seed, ++y_seed; next_seed = &bottom[1]; continue; \
+		} \
+	} \
+	next_seed = nullptr; break; \
 }
 
 // Algorithm 5 - Linking of neighboring edge pixels into strings
 void CompVHoughKht::linking_link_Algorithm5(uint8_t* edgesPtr, const size_t edgesWidth, const size_t edgesHeight, const size_t edgesStride, CompVHoughKhtPosBoxPtr& tmp_box, CompVHoughKhtStrings& strings, const int x_ref, const int y_ref)
 {	
 	CompVHoughKhtPos *new_pos;
+	int x_seed, y_seed, edgesWidthInt;
+	uint8_t *next_seed, *top, *bottom;
+	bool left_avail, right_avail;
 
 	tmp_box->reset();
 
+	edgesWidthInt = static_cast<int>(edgesWidth);
+
 	// {Find and add feature pixels to the end of the string}
-	int x_seed = x_ref;
-	int y_seed = y_ref;
-	uint8_t* next_seed = edgesPtr;
+	x_seed = x_ref;
+	y_seed = y_ref;
+	next_seed = edgesPtr;
 	do {
 		tmp_box->new_item(&new_pos);
 		new_pos->x = x_seed, new_pos->y = y_seed;
 		*next_seed = 0x00; // !! edges are modified here (not thread-safe) !!
-	} while((next_seed = __linking_next_Algorithm6(next_seed, edgesWidth, edgesHeight, edgesStride, x_seed, y_seed)));
+		__linking_next_Algorithm6();
+	} while(1);
 
 	const size_t reverse_size = tmp_box->size();
 
@@ -604,14 +606,18 @@ void CompVHoughKht::linking_link_Algorithm5(uint8_t* edgesPtr, const size_t edge
 	x_seed = x_ref;
 	y_seed = y_ref;
 	next_seed = edgesPtr;
-	if ((next_seed = __linking_next_Algorithm6(next_seed, edgesWidth, edgesHeight, edgesStride, x_seed, y_seed))) {
+	do {
+		__linking_next_Algorithm6();
+	} while (0);
+	if (next_seed) {
 		do {
 			tmp_box->new_item(&new_pos);
 			new_pos->x = x_seed, new_pos->y = y_seed;
 			*next_seed = 0x00; // !! edges are modified here (not thread-safe) !!
-		} while ((next_seed = __linking_next_Algorithm6(next_seed, edgesWidth, edgesHeight, edgesStride, x_seed, y_seed)));
+			__linking_next_Algorithm6();
+		} while (1);
 	}
-
+	
 	if (tmp_box->size() >= m_cluster_min_size) {
 		const KHT_TYP edgesWidthDiv2 = static_cast<KHT_TYP>(edgesWidth) * KHT_TYP_HALF;
 		const KHT_TYP edgesHeightDiv2 = static_cast<KHT_TYP>(edgesHeight) * KHT_TYP_HALF;
