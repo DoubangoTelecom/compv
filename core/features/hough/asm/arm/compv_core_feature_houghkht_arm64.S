@@ -6,7 +6,7 @@
 # WebSite: http://compv.org                                             #
 #########################################################################
 #if defined(__aarch64__)
-.include "compv_common_arm64.S" //"
+.include "compv_common_arm64.S" //
 
 .data
 
@@ -116,7 +116,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVHoughKhtKernelHeight_4mpq_Asm_NEON64
 		st1 {vecSigma_theta_square.2d}, [sigma_theta_square], #(2*COMPV_GAS_FLOAT64_SZ_BYTES)
 		fmul vecSigma_rho_times_sigma_theta.2d, vecSigma_rho_times_sigma_theta.2d, vecTmp0.2d
         fdiv vecTmp0.2d, vecSigma_rho_times_theta.2d, vecSigma_rho_times_sigma_theta.2d
-        mov vecOne_minus_r_square.2d, vecOne.2d
+        orr vecOne_minus_r_square.16b, vecOne.16b, vecOne.16b // mov vecOne_minus_r_square.16b, vecOne.16b
         fmls vecOne_minus_r_square.2d, vecTmp0.2d, vecTmp0.2d
         st1 {vecSigma_rho_times_theta.2d}, [sigma_rho_times_theta], #(2*COMPV_GAS_FLOAT64_SZ_BYTES)
 		fsqrt vecOne_minus_r_square.2d, vecOne_minus_r_square.2d

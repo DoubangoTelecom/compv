@@ -145,6 +145,12 @@
     <Filter Include="source\features\hough\intrin\x86">
       <UniqueIdentifier>{6bcd2ca9-b489-436e-891d-5aaa6dcc3c51}</UniqueIdentifier>
     </Filter>
+    <Filter Include="source\features\hough\asm">
+      <UniqueIdentifier>{2c1089bf-cb8f-4c16-9c89-bcb9a047984f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\features\hough\asm\arm">
+      <UniqueIdentifier>{89eb1ce1-29b7-4c58-80c4-4255d2cbd9aa}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\compv\core\compv_core.h">
@@ -395,6 +401,12 @@
     </GAS>
     <GAS Include="..\features\edges\asm\arm\compv_core_feature_canny_dete_arm64_neon.S">
       <Filter>source\features\edges\asm\arm</Filter>
+    </GAS>
+    <GAS Include="..\features\hough\asm\arm\compv_core_feature_houghkht_arm32.S">
+      <Filter>source\features\hough\asm\arm</Filter>
+    </GAS>
+    <GAS Include="..\features\hough\asm\arm\compv_core_feature_houghkht_arm64.S">
+      <Filter>source\features\hough\asm\arm</Filter>
     </GAS>
   </ItemGroup>
 </Project>

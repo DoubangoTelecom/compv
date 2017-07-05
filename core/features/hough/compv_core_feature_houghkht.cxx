@@ -62,7 +62,6 @@ COMPV_NAMESPACE_BEGIN()
 #endif /* COMPV_ASM */
 
 // Fast exp function for small numbers
-// HUGE boost on ARM
 // https://en.wikipedia.org/wiki/Taylor_series#Exponential_function
 COMPV_ALWAYS_INLINE double __compv_math_exp_fast_small(double x) {
 #if 1
@@ -694,7 +693,9 @@ double CompVHoughKht::clusters_subdivision(CompVHoughKhtClusters& clusters, cons
 }
 
 static COMPV_INLINE double __gauss_Eq15(const double rho, const double theta, const CompVHoughKhtKernel& kernel) {
+#if 0 // https://github.com/DoubangoTelecom/compv/issues/137
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implemention found");
+#endif
 	static const double twopi = 2.0 * COMPV_MATH_PI;
 	const double sigma_rho_times_sigma_theta = __compv_math_sqrt_fast2(kernel.sigma_rho_square, kernel.sigma_theta_square); // sqrt(sigma_rho_square) * sqrt(sigma_theta_square)
 	const double sigma_rho_times_sigma_theta_scale = 1.0 / sigma_rho_times_sigma_theta;
@@ -929,8 +930,8 @@ COMPV_ERROR_CODE CompVHoughKht::voting_Algorithm2_Count(int32_t* countsPtr, cons
 		/* {Vote for each selected kernel} */
 		for (CompVHoughKhtKernels::const_iterator k = kernels_begin; k < kernels_end; ++k) {
 			// 3.2. Voting using a Gaussian distribution
-			rho_index = static_cast<size_t>(std::abs((k->rho - rho_max_neg) * rho_scale)) + 1;
-			theta_index = static_cast<size_t>(std::abs(k->theta * theta_scale)) + 1;
+			rho_index = COMPV_MATH_ROUNDFU_2_NEAREST_INT(std::abs((k->rho - rho_max_neg) * rho_scale), size_t) + 1;
+			theta_index = COMPV_MATH_ROUNDFU_2_NEAREST_INT(std::abs(k->theta * theta_scale), size_t) + 1;
 			// The four quadrants
 			vote_Algorithm4(countsPtr, countsStride, rho_index, theta_index, 0.0, 0.0, 1, 1, Gs, *k);
 			vote_Algorithm4(countsPtr, countsStride, rho_index, theta_index - 1, 0.0, -m_dTheta_deg, 1, -1, Gs, *k);

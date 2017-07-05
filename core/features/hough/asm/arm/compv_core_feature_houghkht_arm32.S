@@ -6,10 +6,10 @@
 # WebSite: http://compv.org                                             #
 #########################################################################
 #if defined(__arm__) && !defined(__aarch64__)
-.include "compv_common_arm32.S" @"
+.include "compv_common_arm32.S" @
 
 .data
-.align 16
+.align 4
 twoPi: .quad 0x401921fb54442d18, 0x401921fb54442d18
 one: .quad 0x3ff0000000000000, 0x3ff0000000000000
 four: .quad 0x4010000000000000, 0x4010000000000000

@@ -167,7 +167,9 @@ done:
 template <class T>
 COMPV_ERROR_CODE  CompVMathEigen<T>::find2x2(const T(&A)[4], T(&D)[4], T(&Q)[4], bool sort COMPV_DEFAULT(true), bool norm COMPV_DEFAULT(true))
 {
+#if 0 // https://github.com/DoubangoTelecom/compv/issues/138
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No GPU or SIMD implementation found");
+#endif
 	// https://en.wikipedia.org/wiki/Eigenvalue_algorithm#2.C3.972_matrices
 	// http://www.math.harvard.edu/archive/21b_fall_04/exhibits/2dmatrices/index.html
 

@@ -231,6 +231,38 @@
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)../../base/asm/arm;</IncludePaths>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)../../base/asm/arm;</IncludePaths>
     </GAS>
+    <GAS Include="..\features\hough\asm\arm\compv_core_feature_houghkht_arm32.S">
+      <FileType>Document</FileType>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(ProjectDir)../../base/asm/arm;</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(ProjectDir)../../base/asm/arm;</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(ProjectDir)../../base/asm/arm;</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">$(ProjectDir)../../base/asm/arm;</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">$(ProjectDir)../../base/asm/arm;</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x86'">$(ProjectDir)../../base/asm/arm;</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)../../base/asm/arm;</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)../../base/asm/arm;</IncludePaths>
+      <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">false</ArmNeon>
+      <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">false</ArmNeon>
+      <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ArmNeon>
+      <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ArmNeon>
+      <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">false</ArmNeon>
+      <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Release|x86'">false</ArmNeon>
+      <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ArmNeon>
+      <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ArmNeon>
+      <ArmNeonFma Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ArmNeonFma>
+      <ArmNeonFma Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ArmNeonFma>
+    </GAS>
+    <GAS Include="..\features\hough\asm\arm\compv_core_feature_houghkht_arm64.S">
+      <FileType>Document</FileType>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(ProjectDir)../../base/asm/arm;</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(ProjectDir)../../base/asm/arm;</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(ProjectDir)../../base/asm/arm;</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">$(ProjectDir)../../base/asm/arm;</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">$(ProjectDir)../../base/asm/arm;</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x86'">$(ProjectDir)../../base/asm/arm;</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)../../base/asm/arm;</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)../../base/asm/arm;</IncludePaths>
+    </GAS>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{bf9edb99-ba3a-4083-a6b5-d52067e235a4}</ProjectGuid>
