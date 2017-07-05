@@ -202,7 +202,8 @@ COMPV_ERROR_CODE CompVHoughKht::get(int id, const void** valuePtrPtr, size_t val
 
 COMPV_ERROR_CODE CompVHoughKht::process(const CompVMatPtr& edges, CompVHoughLineVector& lines, const CompVMatPtr& directions COMPV_DEFAULT(NULL)) /*Overrides(CompVHough)*/
 {
-	COMPV_CHECK_EXP_RETURN(!edges || edges->isEmpty() || edges->subType() != COMPV_SUBTYPE_PIXELS_Y, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Edges null or not grayscale");
+	COMPV_CHECK_EXP_RETURN(!edges || edges->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Edges null or empty");
+	COMPV_CHECK_EXP_RETURN(edges->elmtInBytes() != sizeof(uint8_t) || edges->planeCount() != 1, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Edges must be 8U_1D (e.g. grayscale image)");
 
 	lines.clear();
 	m_strings.clear();
@@ -229,7 +230,14 @@ COMPV_ERROR_CODE CompVHoughKht::process(const CompVMatPtr& edges, CompVHoughLine
 			}
 			else {
 				COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("If you're not reusing the edges you should let us know");
+#if 0
+				COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Multiple memcpy");
 				COMPV_CHECK_CODE_RETURN(edges->clone(&m_edges));
+#else
+				COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&m_edges, COMPV_SUBTYPE_PIXELS_Y, edges->cols(), edges->rows(), edges->stride()));
+				COMPV_CHECK_EXP_RETURN(m_edges->dataSizeInBytes() != edges->dataSizeInBytes(), COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
+				COMPV_CHECK_CODE_RETURN(CompVMem::copy(m_edges->ptr<void>(), edges->ptr<const void*>(), edges->dataSizeInBytes()));
+#endif
 			}
 			return COMPV_ERROR_CODE_S_OK;
 		};
@@ -314,7 +322,14 @@ COMPV_ERROR_CODE CompVHoughKht::process(const CompVMatPtr& edges, CompVHoughLine
 		}
 		else {
 			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("If you're not reusing the edges you should let us know");
+#if 0
+			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Multiple memcpy");
 			COMPV_CHECK_CODE_RETURN(edges->clone(&m_edges));
+#else
+			COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&m_edges, COMPV_SUBTYPE_PIXELS_Y, edges->cols(), edges->rows(), edges->stride()));
+			COMPV_CHECK_EXP_RETURN(m_edges->dataSizeInBytes() != edges->dataSizeInBytes(), COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
+			COMPV_CHECK_CODE_RETURN(CompVMem::copy(m_edges->ptr<void>(), edges->ptr<const void*>(), edges->dataSizeInBytes()));
+#endif
 		}
 
 		/* Init coords (sine and cosine tables) */
