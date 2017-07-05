@@ -92,7 +92,7 @@ COMPV_ALWAYS_INLINE compv_float64_t __compv_math_rsqrt_fast(compv_float64_t x) {
 	x = x*(1.5 - xhalf*x*x);
 	return x;
 }
-#if COMPV_ARCH_X64 && COMPV_INTRINSIC && 0 // X64 always support SSE2
+#if COMPV_ARCH_X64 && COMPV_INTRINSIC // X64 always support SSE2
 static const __m128d vec0 = _mm_set_sd(0.);
 #define __compv_math_sqrt_fast(x) _mm_cvtsd_f64(_mm_sqrt_sd(vec0, _mm_set_sd(x)))
 COMPV_ALWAYS_INLINE KHT_TYP __compv_math_sqrt_fast2(const KHT_TYP x, const KHT_TYP y) {
@@ -519,19 +519,41 @@ COMPV_ERROR_CODE CompVHoughKht::linking_AppendixA(CompVMatPtr& edges, CompVHough
 	const size_t edgesHeight = edges->rows();
 	const size_t edgesStride = edges->strideInBytes();
 	const int maxi = static_cast<int>(edges->cols() - 1);
+	const int maxi64 = maxi - 8;
 	const int maxj = static_cast<int>(edges->rows() - 1);
-	int x_ref, y_ref;
+	int x_ref, y_ref; // both 'x_ref' and 'y_ref' start at 1
 
 	CompVHoughKhtPosBoxPtr tmp_box; // box used as temporary container
 	COMPV_CHECK_CODE_ASSERT(CompVHoughKhtPosBox::newObj(&tmp_box, 1000));
+#define KHT_LINK_A5(x) \
+	if (edgesPtr[x]) { \
+		linking_link_Algorithm5(&edgesPtr[x], edgesWidth, edgesHeight, edgesStride, tmp_box, strings, x, y_ref); \
+	}
 
-	for (y_ref = 1; y_ref < maxj; ++y_ref) {
-		for (x_ref = 1; x_ref < maxi; ++x_ref) {
-			if (edgesPtr[x_ref]) {
-				linking_link_Algorithm5(&edgesPtr[x_ref], edgesWidth, edgesHeight, edgesStride, tmp_box, strings, x_ref, y_ref);
+	if (maxi64 > 8) {
+		for (y_ref = 1; y_ref < maxj; ++y_ref) {
+			// Align on #64 Bytes
+			if (*reinterpret_cast<uint64_t*>(&edgesPtr[0]) << 8) { // "<<8" to ignore 'x_ref = 0' 
+				KHT_LINK_A5(1); KHT_LINK_A5(2); KHT_LINK_A5(3); KHT_LINK_A5(4); KHT_LINK_A5(5); KHT_LINK_A5(6); KHT_LINK_A5(7);
+			}
+			for (x_ref = 8; x_ref < maxi64; x_ref += 8) {
+				if (*reinterpret_cast<uint64_t*>(&edgesPtr[x_ref])) {
+					KHT_LINK_A5(x_ref + 0); KHT_LINK_A5(x_ref + 1); KHT_LINK_A5(x_ref + 2); KHT_LINK_A5(x_ref + 3);
+					KHT_LINK_A5(x_ref + 4); KHT_LINK_A5(x_ref + 5); KHT_LINK_A5(x_ref + 6); KHT_LINK_A5(x_ref + 7);
+				}
+			}
+			for (; x_ref < maxi; ++x_ref) {
+				KHT_LINK_A5(x_ref);
+			}
+			edgesPtr += edges->strideInBytes();
+		}
+	}
+	else {
+		for (y_ref = 1; y_ref < maxj; ++y_ref) {
+			for (x_ref = 1; x_ref < maxi; ++x_ref) {
+				KHT_LINK_A5(x_ref);
 			}
 		}
-		edgesPtr += edges->strideInBytes();
 	}
 
 	return COMPV_ERROR_CODE_S_OK;
@@ -562,7 +584,7 @@ COMPV_ERROR_CODE CompVHoughKht::linking_AppendixA(CompVMatPtr& edges, CompVHough
 		++x_seed; ++next_seed; continue; \
 	} \
 	/* == bottom == */ \
-	if ((y_seed + 1) < static_cast<int>(edgesHeight)) { \
+	if ((y_seed + 1) < edgesHeightInt) { \
 		bottom = next_seed + edgesStride; \
 		if (left_avail && bottom[-1]) { /* bottom-left */ \
 			--x_seed, ++y_seed;	next_seed = &bottom[-1]; continue; \
@@ -581,13 +603,13 @@ COMPV_ERROR_CODE CompVHoughKht::linking_AppendixA(CompVMatPtr& edges, CompVHough
 void CompVHoughKht::linking_link_Algorithm5(uint8_t* edgesPtr, const size_t edgesWidth, const size_t edgesHeight, const size_t edgesStride, CompVHoughKhtPosBoxPtr& tmp_box, CompVHoughKhtStrings& strings, const int x_ref, const int y_ref)
 {	
 	CompVHoughKhtPos *new_pos;
-	int x_seed, y_seed, edgesWidthInt;
+	int x_seed, y_seed;
+	const int edgesWidthInt = static_cast<int>(edgesWidth);
+	const int edgesHeightInt = static_cast<int>(edgesHeight);
 	uint8_t *next_seed, *top, *bottom;
 	bool left_avail, right_avail;
 
 	tmp_box->reset();
-
-	edgesWidthInt = static_cast<int>(edgesWidth);
 
 	// {Find and add feature pixels to the end of the string}
 	x_seed = x_ref;
