@@ -48,9 +48,12 @@ COMPV_NAMESPACE_BEGIN()
 		COMPV_ALIGNED(AVX) double* sigma_rho_square, COMPV_ALIGNED(AVX) double* sigma_rho_times_theta, COMPV_ALIGNED(AVX) double* m2, COMPV_ALIGNED(AVX) double* sigma_theta_square,
 		COMPV_ALIGNED(AVX) double* height, COMPV_ALIGNED(AVX) double* heightMax1, COMPV_ALIGNED(AVX) compv_uscalar_t count);
 #   elif COMPV_ARCH_ARM32
-    COMPV_EXTERNC void CompVHoughKhtKernelHeight_4mpq_Asm_VFPV4_NEON32(COMPV_ALIGNED(NEON) const double* M_Eq14_r0, COMPV_ALIGNED(NEON) const double* M_Eq14_0, COMPV_ALIGNED(NEON) const double* M_Eq14_2, COMPV_ALIGNED(NEON) const double* n_scale,
+    COMPV_EXTERNC void CompVHoughKhtKernelHeight_4mpq_Asm_NEON32(COMPV_ALIGNED(NEON) const double* M_Eq14_r0, COMPV_ALIGNED(NEON) const double* M_Eq14_0, COMPV_ALIGNED(NEON) const double* M_Eq14_2, COMPV_ALIGNED(NEON) const double* n_scale,
         COMPV_ALIGNED(NEON) double* sigma_rho_square, COMPV_ALIGNED(NEON) double* sigma_rho_times_theta, COMPV_ALIGNED(AVX) double* m2, COMPV_ALIGNED(NEON) double* sigma_theta_square,
         COMPV_ALIGNED(NEON) double* height, COMPV_ALIGNED(NEON) double* heightMax1, COMPV_ALIGNED(NEON) compv_uscalar_t count);
+    COMPV_EXTERNC void CompVHoughKhtKernelHeight_4mpq_Asm_VFPV4_NEON32(COMPV_ALIGNED(NEON) const double* M_Eq14_r0, COMPV_ALIGNED(NEON) const double* M_Eq14_0, COMPV_ALIGNED(NEON) const double* M_Eq14_2, COMPV_ALIGNED(NEON) const double* n_scale,
+       COMPV_ALIGNED(NEON) double* sigma_rho_square, COMPV_ALIGNED(NEON) double* sigma_rho_times_theta, COMPV_ALIGNED(AVX) double* m2, COMPV_ALIGNED(NEON) double* sigma_theta_square,
+       COMPV_ALIGNED(NEON) double* height, COMPV_ALIGNED(NEON) double* heightMax1, COMPV_ALIGNED(NEON) compv_uscalar_t count);
 #   elif COMPV_ARCH_ARM64
     COMPV_EXTERNC void CompVHoughKhtKernelHeight_4mpq_Asm_NEON64(COMPV_ALIGNED(NEON) const double* M_Eq14_r0, COMPV_ALIGNED(NEON) const double* M_Eq14_0, COMPV_ALIGNED(NEON) const double* M_Eq14_2, COMPV_ALIGNED(NEON) const double* n_scale,
         COMPV_ALIGNED(NEON) double* sigma_rho_square, COMPV_ALIGNED(NEON) double* sigma_rho_times_theta, COMPV_ALIGNED(AVX) double* m2, COMPV_ALIGNED(NEON) double* sigma_theta_square,
@@ -791,6 +794,7 @@ COMPV_ERROR_CODE CompVHoughKht::voting_Algorithm2_Kernels(const CompVHoughKhtClu
 		if (M_Eq15->cols() >= 2 && CompVCpu::isEnabled(kCpuFlagARM_NEON) && M_Eq15->isAlignedNEON()) {
 			COMPV_EXEC_IFDEF_INTRIN_ARM64((CompVHoughKhtKernelHeight = CompVHoughKhtKernelHeight_2mpq_Intrin_NEON64, M_Eq15_minpack = 2));
             COMPV_EXEC_IFDEF_ASM_ARM64((CompVHoughKhtKernelHeight = CompVHoughKhtKernelHeight_4mpq_Asm_NEON64, M_Eq15_minpack = 2));
+            COMPV_EXEC_IFDEF_ASM_ARM32((CompVHoughKhtKernelHeight = CompVHoughKhtKernelHeight_4mpq_Asm_NEON32, M_Eq15_minpack = 1));
             if (CompVCpu::isEnabled(kCpuFlagARM_VFPv4)) {
                 COMPV_EXEC_IFDEF_ASM_ARM32((CompVHoughKhtKernelHeight = CompVHoughKhtKernelHeight_4mpq_Asm_VFPV4_NEON32, M_Eq15_minpack = 1));
             }

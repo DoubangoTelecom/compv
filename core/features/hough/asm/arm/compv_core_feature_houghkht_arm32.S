@@ -32,7 +32,7 @@ zeroDotOne: .quad 0x3fb999999999999a, 0x3fb999999999999a
 @ arg(8) -> COMPV_ALIGNED(NEON) double* height
 @ arg(9) -> COMPV_ALIGNED(NEON) double* heightMax1
 @ arg(10) -> COMPV_ALIGNED(NEON) compv_uscalar_t count
-COMPV_GAS_FUNCTION_DECLARE CompVHoughKhtKernelHeight_4mpq_Asm_VFPV4_NEON32
+.macro CompVHoughKhtKernelHeight_4mpq_Macro_NEON32 vfpv4
 	COMPV_GAS_FUNCTION_PROLOG
 	COMPV_GAS_SHADOW_ARGS_TO_STACK 11
 	COMPV_GAS_SAVE_NEON_REGS
@@ -86,70 +86,60 @@ COMPV_GAS_FUNCTION_DECLARE CompVHoughKhtKernelHeight_4mpq_Asm_VFPV4_NEON32
 	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	@ for (compv_uscalar_t i = 0@ i < count@ i += 1)
 	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-	LoopCount_CompVHoughKhtKernelHeight_4mpq_Asm_NEON32:
+	LoopCount_CompVHoughKhtKernelHeight_4mpq_Asm_NEON32\vfpv4:
         vld1.f64 {vecTmp0}, [M_Eq14_r0 :64]!
 		vdiv.f64 vecSigma_theta_square, vecOne, vecTmp0
 		vld1.f64 {vecM_Eq14_0}, [M_Eq14_0 :64]!
 		vld1.f64 {vecM_Eq14_2}, [M_Eq14_2 :64]!
 		vmul.f64 vecSigma_rho_times_theta, vecSigma_theta_square, vecM_Eq14_0
 		vmul.f64 vecSigma_theta_square, vecSigma_theta_square, vecM_Eq14_2
-        vld1.f64 {vecTmp0}, [n_scale :64]!
-		@%if %1 == 0
+		.if \vfpv4 == vfpv4Disabled
+            vld1.f64 {vecTmp0}, [n_scale :64]!
 			vmul.f64 vecSigma_rho_square, vecSigma_rho_times_theta, vecM_Eq14_0
-		@%else
-		@	vmovapd vecSigma_rho_square, vecSigma_rho_times_theta
-		@%endif
-
+		.else
+            vld1.f64 {vecSigma_rho_square}, [n_scale :64]!
+            vfma.f64 vecSigma_rho_square, vecSigma_rho_times_theta, vecM_Eq14_0
+		.endif
 		vmul.f64 vecSigma_rho_times_theta, vecSigma_rho_times_theta, vecM_Eq14_2
-		@%if %1 == 1
-		@	vfmadd213pd vecSigma_rho_square, vecM_Eq14_0, vecTmp0
-		@%endif
 		vmul.f64 vecM_Eq14_0, vecM_Eq14_0, vecSigma_theta_square
 		vmul.f64 vecSigma_theta_square, vecSigma_theta_square, vecM_Eq14_2
-		@%if %1 == 0
+		.if \vfpv4 == vfpv4Disabled
 			vadd.f64 vecSigma_rho_square, vecSigma_rho_square, vecTmp0
-		@%endif
+		.endif
 		vcmp.f64 vecSigma_theta_square, #0 @ AArch64, use 'vceqq_f64 vecMaskEqZero, vecSigma_theta_square, #0'
         vmrs   APSR_nzcv, fpscr
-        @it     eq
         vmoveq.f64 vecSigma_theta_square, vecZeroDotOne
-
-		@vbic.f64 vecSigma_theta_square, vecSigma_theta_square, vecMaskEqZero
 		vmul.f64 vecSigma_rho_square, vecSigma_rho_square, vecFour
-		@vand.f64 vecMaskEqZero, vecMaskEqZero, vecZeroDotOne
-		@vorr.f64 vecSigma_theta_square, vecSigma_theta_square, vecMaskEqZero
 		vmul.f64 vecSigma_theta_square, vecSigma_theta_square, vecFour
 		vsqrt.f64 vecSigma_rho_times_sigma_theta, vecSigma_rho_square
 		vsqrt.f64 vecTmp0, vecSigma_theta_square
 		vst1.f64 {vecSigma_rho_square}, [sigma_rho_square :64]!
 		vst1.f64 {vecSigma_theta_square}, [sigma_theta_square :64]!
 		vmul.f64 vecSigma_rho_times_sigma_theta, vecSigma_rho_times_sigma_theta, vecTmp0
-		@%if %1 == 1
-		@	vdiv.f64 vecOne_minus_r_square, vecSigma_rho_times_theta, vecSigma_rho_times_sigma_theta
-		@	vfnmadd213pd vecOne_minus_r_square, vecOne_minus_r_square, vecOne
-		@%else
+		.if \vfpv4 == vfpv4Enabled
+            vmov vecOne_minus_r_square, vecOne
+			vdiv.f64 vectmp0, vecSigma_rho_times_theta, vecSigma_rho_times_sigma_theta
+			vfms.f64 vecOne_minus_r_square, vectmp0, vectmp0
+		.else
 			vdiv.f64 vecTmp0, vecSigma_rho_times_theta, vecSigma_rho_times_sigma_theta
 			vmul.f64 vecTmp0, vecTmp0, vecTmp0
 			vsub.f64 vecOne_minus_r_square, vecOne, vecTmp0
-		@%endif
+		.endif
 		vsqrt.f64 vecOne_minus_r_square, vecOne_minus_r_square
 		vst1.f64 {vecSigma_rho_times_theta}, [sigma_rho_times_theta :64]!
 		vst1.f64 {vecM_Eq14_0}, [m2 :64]!
 		vmul.f64 vecOne_minus_r_square, vecOne_minus_r_square, vecSigma_rho_times_sigma_theta
 		vmul.f64 vecOne_minus_r_square, vecOne_minus_r_square, vecTwoPi
 		vdiv.f64 vecHeight, vecOne, vecOne_minus_r_square
-		@vmax.f64 vecheightMax1, vecheightMax1, vecHeight @ AArch64, use this code instead of the next one
         vcmp.f64 vecheightMax1, vecHeight
         vmrs   APSR_nzcv, fpscr
-        @it     mi
         vmovmi.f64 vecheightMax1, vecHeight
         subs count, count, #(1*COMPV_GAS_FLOAT64_SZ_BYTES) @ AArch64, move after the vdiv
 		vst1.f64 {vecHeight}, [height :64]!
 		
 		@@ EndOf_LoopCount @@
-		bne LoopCount_CompVHoughKhtKernelHeight_4mpq_Asm_NEON32
+		bne LoopCount_CompVHoughKhtKernelHeight_4mpq_Asm_NEON32\vfpv4
 	
-	@AArch64, compute max of the two registers
 	vst1.f64 {vecheightMax1}, [heightMax1: 64]
 
 	.unreq M_Eq14_r0				
@@ -186,6 +176,14 @@ COMPV_GAS_FUNCTION_DECLARE CompVHoughKhtKernelHeight_4mpq_Asm_VFPV4_NEON32
 	COMPV_GAS_UNSHADOW_ARGS 11
 	COMPV_GAS_FUNCTION_EPILOG
 	COMPV_GAS_FUNCTION_RETURN
+.endm
 
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+COMPV_GAS_FUNCTION_DECLARE CompVHoughKhtKernelHeight_4mpq_Asm_NEON32
+    CompVHoughKhtKernelHeight_4mpq_Macro_NEON32 vfpv4Enabled
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+COMPV_GAS_FUNCTION_DECLARE CompVHoughKhtKernelHeight_4mpq_Asm_VFPV4_NEON32
+    CompVHoughKhtKernelHeight_4mpq_Macro_NEON32 vfpv4Disabled
 
 #endif /* defined(__arm__) && !defined(__aarch64__) */

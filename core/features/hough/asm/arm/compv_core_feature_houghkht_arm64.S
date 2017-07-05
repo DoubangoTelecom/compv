@@ -99,25 +99,14 @@ COMPV_GAS_FUNCTION_DECLARE CompVHoughKhtKernelHeight_4mpq_Asm_NEON64
 		ld1 {vecM_Eq14_2.2d}, [M_Eq14_2],#(2*COMPV_GAS_FLOAT64_SZ_BYTES)
 		fmul vecSigma_rho_times_theta.2d, vecSigma_theta_square.2d, vecM_Eq14_0.2d
 		fmul vecSigma_theta_square.2d, vecSigma_theta_square.2d, vecM_Eq14_2.2d
-        ld1 {vecTmp0.2d}, [n_scale], #(2*COMPV_GAS_FLOAT64_SZ_BYTES)
-		#%if %1 == 0
-			fmul vecSigma_rho_square.2d, vecSigma_rho_times_theta.2d, vecM_Eq14_0.2d
-		#%else
-		#	vmovapd vecSigma_rho_square.2d, vecSigma_rho_times_theta.2d
-		#%endif
-
+        ld1 {vecSigma_rho_square.2d}, [n_scale], #(2*COMPV_GAS_FLOAT64_SZ_BYTES)
+        fmla vecSigma_rho_square.2d, vecSigma_rho_times_theta.2d, vecM_Eq14_0.2d
 		fmul vecSigma_rho_times_theta.2d, vecSigma_rho_times_theta.2d, vecM_Eq14_2.2d
-		#%if %1 == 1
-		#	vfmadd213pd vecSigma_rho_square, vecM_Eq14_0, vecTmp0
-		#%endif
 		fmul vecM_Eq14_0.2d, vecM_Eq14_0.2d, vecSigma_theta_square.2d
-		fmul vecSigma_theta_square.2d, vecSigma_theta_square.2d, vecM_Eq14_2.2d
-		#%if %1 == 0
-			fadd vecSigma_rho_square.2d, vecSigma_rho_square.2d, vecTmp0.2d
-		#%endif
-		cmeq vecMaskEqZero.2d, vecSigma_theta_square.2d, #0
+        cmeq vecMaskEqZero.2d, vecSigma_theta_square.2d, #0
+        fmul vecSigma_rho_square.2d, vecSigma_rho_square.2d, vecFour.2d
+		fmul vecSigma_theta_square.2d, vecSigma_theta_square.2d, vecM_Eq14_2.2d	
 		bic vecSigma_theta_square.16b, vecSigma_theta_square.16b, vecMaskEqZero.16b
-		fmul vecSigma_rho_square.2d, vecSigma_rho_square.2d, vecFour.2d
 		and vecMaskEqZero.16b, vecMaskEqZero.16b, vecZeroDotOne.16b
 		orr vecSigma_theta_square.16b, vecSigma_theta_square.16b, vecMaskEqZero.16b
 		fmul vecSigma_theta_square.2d, vecSigma_theta_square.2d, vecFour.2d
@@ -126,16 +115,11 @@ COMPV_GAS_FUNCTION_DECLARE CompVHoughKhtKernelHeight_4mpq_Asm_NEON64
 		st1 {vecSigma_rho_square.2d}, [sigma_rho_square], #(2*COMPV_GAS_FLOAT64_SZ_BYTES)
 		st1 {vecSigma_theta_square.2d}, [sigma_theta_square], #(2*COMPV_GAS_FLOAT64_SZ_BYTES)
 		fmul vecSigma_rho_times_sigma_theta.2d, vecSigma_rho_times_sigma_theta.2d, vecTmp0.2d
-		#%if %1 == 1
-		#	fdiv vecOne_minus_r_square, vecSigma_rho_times_theta, vecSigma_rho_times_sigma_theta
-		#	vfnmadd213pd vecOne_minus_r_square, vecOne_minus_r_square, vecOne
-		#%else
-			fdiv vecTmp0.2d, vecSigma_rho_times_theta.2d, vecSigma_rho_times_sigma_theta.2d
-			fmul vecTmp0.2d, vecTmp0.2d, vecTmp0.2d
-			fsub vecOne_minus_r_square.2d, vecOne.2d, vecTmp0.2d
-		#%endif
+        fdiv vecTmp0.2d, vecSigma_rho_times_theta.2d, vecSigma_rho_times_sigma_theta.2d
+        mov vecOne_minus_r_square.2d, vecOne.2d
+        fmls vecOne_minus_r_square.2d, vecTmp0.2d, vecTmp0.2d
+        st1 {vecSigma_rho_times_theta.2d}, [sigma_rho_times_theta], #(2*COMPV_GAS_FLOAT64_SZ_BYTES)
 		fsqrt vecOne_minus_r_square.2d, vecOne_minus_r_square.2d
-		st1 {vecSigma_rho_times_theta.2d}, [sigma_rho_times_theta], #(2*COMPV_GAS_FLOAT64_SZ_BYTES)
 		st1 {vecM_Eq14_0.2d}, [m2], #(2*COMPV_GAS_FLOAT64_SZ_BYTES)
 		fmul vecOne_minus_r_square.2d, vecOne_minus_r_square.2d, vecSigma_rho_times_sigma_theta.2d
 		fmul vecOne_minus_r_square.2d, vecOne_minus_r_square.2d, vecTwoPi.2d
