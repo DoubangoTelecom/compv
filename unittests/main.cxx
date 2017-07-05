@@ -10,10 +10,10 @@ using namespace compv;
 #define UNITTEST_SOBEL							0
 #define UNITTEST_CANNY							0
 #define UNITTEST_HOUGHSHT						0
-#define UNITTEST_HOUGHKHT						0
+#define UNITTEST_HOUGHKHT						1
 
 #define UNITTEST_FEATURE_FAST					0
-#define UNITTEST_CHROMA_CONV					1
+#define UNITTEST_CHROMA_CONV					0
 #define UNITTEST_BRUTEFORCE						0
 
 #define UNITTEST_PATCH_MOMENTS					0
@@ -73,7 +73,7 @@ compv_main()
 							for (size_t f = 0; f < fmax; ++f) {
 								std::string unitest = std::string("asm=") + CompVBase::to_string(UNITTESTS_ASM[a])
 									+ std::string(", intrin=") + CompVBase::to_string(UNITTESTS_INTRIN[b])
-									+ std::string(", disabled cpuflags=") + std::string(CompVCpu::flagsAsString(UNITTESTS_CPUFLAGS[e]))
+									+ std::string(", enabled cpuflags=") + std::string(CompVCpu::flagsAsString(~UNITTESTS_CPUFLAGS[e]))
 									+ std::string(", fixedpoint=") + CompVBase::to_string(UNITTESTS_FIXEDPOINT[c])
 									+ std::string(", maxthreads=") + (UNITTESTS_MAXTHREADS[d] == COMPV_NUM_THREADS_MULTI ? std::string("multi") : (UNITTESTS_MAXTHREADS[d] == COMPV_NUM_THREADS_SINGLE ? std::string("single") : CompVBase::to_string(UNITTESTS_MAXTHREADS[d])))
 									+ std::string(", gpgpu=") + CompVBase::to_string(f == 1);
