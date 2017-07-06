@@ -18,6 +18,7 @@
 
 #include <algorithm> /* std::reverse */
 #include <float.h> /* DBL_MAX */
+#include <iterator> /* std::back_inserter */
 
 #define COMPV_THIS_CLASSNAME	"CompVHoughKht"
 
@@ -731,17 +732,42 @@ void CompVHoughKht::linking_link_Algorithm5(uint8_t* edgesPtr, const size_t edge
 	if (tmp_box->size() >= m_cluster_min_size) {
 		const KHT_TYP edgesWidthDiv2 = static_cast<KHT_TYP>(edgesWidth) * KHT_TYP_HALF;
 		const KHT_TYP edgesHeightDiv2 = static_cast<KHT_TYP>(edgesHeight) * KHT_TYP_HALF;
+#if 1
+		CompVHoughKhtPos *a = tmp_box->begin(), *b = tmp_box->end();
+		if (reverse_size) {
+			std::reverse(a, a + reverse_size);
+		}
+		do {
+			a->cx = (a->x - edgesWidthDiv2);
+			a->cy = (a->y - edgesHeightDiv2);
+		} while (++a < b);
 		CompVHoughKhtString string;
 		string.reserve(tmp_box->size());
 		string.assign(tmp_box->begin(), tmp_box->end());
-		if (reverse_size) {
-			std::reverse(string.begin(), string.begin() + reverse_size);
-		}
-		std::for_each(string.begin(), string.end(), [edgesWidthDiv2, edgesHeightDiv2](CompVHoughKhtPos& pos) {
-			pos.cx = (pos.x - edgesWidthDiv2);
-			pos.cy = (pos.y - edgesHeightDiv2);
-		});
 		strings.push_back(string);
+#else
+		KHT_TYP cx, cy;
+		CompVHoughKhtPos *a = tmp_box->begin(), *b;
+		if (reverse_size > 1) {
+			a = tmp_box->ptr(0), b = tmp_box->ptr(reverse_size - 1);
+			while (a <= b) { // "=" to handle center element when 'reverse_size' is odd
+				x_seed = a->x, y_seed = a->y, cx = (x_seed - edgesWidthDiv2), cy = (y_seed - edgesHeightDiv2);
+				a->x = b->x, a->y = b->y, a->cx = (a->x - edgesWidthDiv2), a->cy = (a->y - edgesHeightDiv2);
+				b->x = x_seed, b->y = y_seed, b->cx = cx, b->cy = cy;
+				++a, --b;
+			}
+			a = tmp_box->ptr(reverse_size - 2);
+		}
+		b = tmp_box->end();
+		while (a < b) {
+			a->cx = (a->x - edgesWidthDiv2), a->cy = (a->y - edgesHeightDiv2);
+			++a;
+		}
+		CompVHoughKhtString string;
+		string.reserve(tmp_box->size());
+		string.assign(tmp_box->begin(), tmp_box->end());
+		strings.push_back(string);
+#endif
 	}
 }
 

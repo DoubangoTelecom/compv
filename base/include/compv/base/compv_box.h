@@ -98,7 +98,7 @@ public:
 		m_nSize = 0;
 		m_nCapacity = 0;
 	}
-	COMPV_INLINE void resize(size_t nNewSize = 0, bool bForce = false) {
+	COMPV_ALWAYS_INLINE void resize(size_t nNewSize = 0, bool bForce = false) {
 		if (bForce) {
 			m_nSize = COMPV_MATH_MIN(nNewSize, m_nCapacity);
 		}
@@ -108,34 +108,34 @@ public:
 	}
 	// Reset all items without freeing the allocated memory
 	// Usefull if you want to re-use the list
-	COMPV_INLINE void reset() {
+	COMPV_ALWAYS_INLINE void reset() {
 		resize(0);
 	}
 
-	COMPV_INLINE size_t size()const {
+	COMPV_ALWAYS_INLINE size_t size()const {
 		return m_nSize;
 	}
-	COMPV_INLINE size_t capacity()const {
+	COMPV_ALWAYS_INLINE size_t capacity()const {
 		return m_nCapacity;
 	}
-	COMPV_INLINE bool empty() {
+	COMPV_ALWAYS_INLINE bool empty() {
 		return (size() == 0);
 	}
 
-	COMPV_INLINE T* begin()const {
+	COMPV_ALWAYS_INLINE T* begin()const {
 		return m_pMem;
 	}
-	COMPV_INLINE T* end()const {
+	COMPV_ALWAYS_INLINE T* end()const {
 		return (m_pMem + m_nSize);
 	}
-	COMPV_INLINE T* operator[](size_t idx) const {
+	COMPV_ALWAYS_INLINE T* operator[](size_t idx) const {
 		return ptr(idx);
 	};
-	COMPV_INLINE T* ptr(size_t idx = 0) const {
+	COMPV_ALWAYS_INLINE T* ptr(size_t idx = 0) const {
 		return idx < m_nSize ? (m_pMem + idx) : NULL;
 	};
 
-	COMPV_INLINE void erase(const T* position) {
+	COMPV_ALWAYS_INLINE void erase(const T* position) {
 		if (m_nSize > 0 && position >= begin() && position < end()) {
 			if (m_nSize > 1) {
 				// move last element to position
