@@ -181,12 +181,12 @@ sym(CompVImageScaleBilinear_Asm_X64_AVX2)
 			vpsrld ymm3, vecX3, 8
 
 			vpcmpeqb vec7, vec7, vec7 ; condition mask
-			vpgatherdd  vecNeighb0, dword ptr [rbx+ymm0], vec7
-			vpcmpeqb vec7, vec7, vec7 ; condition mask
-			vpgatherdd  vec4, dword ptr [rbx+ymm1], vec7
-			vpcmpeqb vec7, vec7, vec7 ; condition mask
-			vpgatherdd  vecNeighb1, dword ptr [rbx+ymm2], vec7
-			vpcmpeqb vec7, vec7, vec7 ; condition mask
+			vmovdqa vec4, vec7
+			vmovdqa vec5, vec7
+			vmovdqa vec6, vec7
+			vpgatherdd  vecNeighb0, dword ptr [rbx+ymm0], vec4
+			vpgatherdd  vec4, dword ptr [rbx+ymm1], vec5
+			vpgatherdd  vecNeighb1, dword ptr [rbx+ymm2], vec6
 			vpgatherdd  vec5, dword ptr [rbx+ymm3], vec7
 
 			vpaddd ymm0, ymm0, [vecStride]
@@ -195,13 +195,14 @@ sym(CompVImageScaleBilinear_Asm_X64_AVX2)
 			vpaddd ymm3, ymm3, [vecStride]
 
 			vpcmpeqb vec7, vec7, vec7 ; condition mask
-			vpgatherdd  vecNeighb2, dword ptr [rbx+ymm0], vec7
-			vpcmpeqb vec7, vec7, vec7 ; condition mask
-			vpgatherdd  vec6, dword ptr [rbx+ymm1], vec7
-			vpcmpeqb vec7, vec7, vec7 ; condition mask
-			vpgatherdd  vecNeighb3, dword ptr [rbx+ymm2], vec7
-			vpcmpeqb ymm0, ymm0, ymm0 ; condition mask
-			vpgatherdd  vec7, dword ptr [rbx+ymm3], ymm0
+			vmovdqa vec6, vec7
+			vpgatherdd  vecNeighb2, dword ptr [rbx+ymm0], vec6
+			vmovdqa ymm0, vec7
+			vpgatherdd  vec6, dword ptr [rbx+ymm1], ymm0
+			vmovdqa ymm1, vec7
+			vpgatherdd  vecNeighb3, dword ptr [rbx+ymm2], ymm1
+			vmovdqa ymm2, vec7
+			vpgatherdd  vec7, dword ptr [rbx+ymm3], ymm2
 
 			vpshufb vecNeighb0, vecNeighb0, [vecDeinterleave16u]
 			vpshufb vec4, vec4, [vecDeinterleave16u]
