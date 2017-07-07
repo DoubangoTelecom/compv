@@ -13,7 +13,7 @@ COMPV_YASM_DEFAULT_REL
 global sym(CompVImageScaleBilinear_Asm_X86_SSE41)
 
 section .data
-	extern sym(kShuffleEpi8_Deinterleave_i32)
+	extern sym(kShuffleEpi8_DeinterleaveL2_i32)
 
 section .text
 
@@ -63,7 +63,7 @@ sym(CompVImageScaleBilinear_Asm_X86_SSE41)
 	%define vecNeighb1              xmm5
 	%define vecNeighb2              xmm6
 	%define vecNeighb3              xmm7
-	%define vecDeinterleave         sym(kShuffleEpi8_Deinterleave_i32)
+	%define vecDeinterleave         sym(kShuffleEpi8_DeinterleaveL2_i32)
 
 	%define arg_inPtr               arg(0)
 	%define arg_inStride            arg(1)

@@ -258,9 +258,21 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::yuvSemiPlanar(const CompVMatPtr& imageIn,
 	switch (inPixelFormat) {
 	case COMPV_SUBTYPE_PIXELS_NV12:
 		fptr_semiplanar_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? nv12_to_rgba32_C : nv12_to_rgb24_C;
+#if COMPV_ARCH_X86
+		if (CompVCpu::isEnabled(kCpuFlagSSSE3) && imageRGBx->isAlignedSSE(0) && imageIn->isAlignedSSE(0) && imageIn->isAlignedSSE(1) && imageIn->isAlignedSSE(2)) {
+			COMPV_EXEC_IFDEF_INTRIN_X86(fptr_semiplanar_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? CompVImageConvNv12_to_Rgba32_Intrin_SSSE3: CompVImageConvNv12_to_Rgb24_Intrin_SSSE3);
+		}
+#elif COMPV_ARCH_ARM
+#endif
 		break;
 	case COMPV_SUBTYPE_PIXELS_NV21:
 		fptr_semiplanar_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? nv21_to_rgba32_C : nv21_to_rgb24_C;
+#if COMPV_ARCH_X86
+		if (CompVCpu::isEnabled(kCpuFlagSSSE3) && imageRGBx->isAlignedSSE(0) && imageIn->isAlignedSSE(0) && imageIn->isAlignedSSE(1) && imageIn->isAlignedSSE(2)) {
+			COMPV_EXEC_IFDEF_INTRIN_X86(fptr_semiplanar_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? CompVImageConvNv21_to_Rgba32_Intrin_SSSE3 : CompVImageConvNv21_to_Rgb24_Intrin_SSSE3);
+		}
+#elif COMPV_ARCH_ARM
+#endif
 		break;
 	default:
 		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "%s -> %s not supported", CompVGetSubtypeString(inPixelFormat), CompVGetSubtypeString(outPixelFormat));

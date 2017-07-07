@@ -54,7 +54,7 @@ void CompVImageScaleBilinear_Intrin_AVX2(
 	static const __m256i vecZero = _mm256_setzero_si256();
 	static const __m256i vec0xff_epi32 = _mm256_srli_epi32(_mm256_cmpeq_epi32(vecZero, vecZero), 24); // 0x000000ff (faster than set1_epi32(0xff))
 	static const __m256i vec0xff_epi16 = _mm256_srli_epi16(_mm256_cmpeq_epi16(vecZero, vecZero), 8); // 0x00ff (faster than set1_epi16(0xff))
-	static const __m256i vecDeinterleave = _mm256_load_si256(reinterpret_cast<const __m256i*>(kShuffleEpi8_Deinterleave_i32));
+	static const __m256i vecDeinterleave = _mm256_load_si256(reinterpret_cast<const __m256i*>(kShuffleEpi8_DeinterleaveL2_i32));
 	const __m256i vecSfxTimes32 = _mm256_set1_epi32(sf_x_ << 5);
 	const __m256i vecSfxTimes8 = _mm256_set1_epi32(sf_x_ << 3);
 	const __m256i vecSFX0 = _mm256_set_epi32(sf_x_ * 7, sf_x_ * 6, sf_x_ * 5, sf_x_ * 4, sf_x_ * 3, sf_x_ * 2, sf_x_ * 1, sf_x_ * 0);

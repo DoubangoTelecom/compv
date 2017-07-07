@@ -49,7 +49,7 @@ void CompVImageScaleBilinear_Intrin_NEON(
 	const uint32x4_t vecSFX3 = vaddq_u32(vecSFX2, vecSfxTimes4);
 	static const uint32x4_t vec0xff_epi32 = vdupq_n_u32(0xff);
 	static const uint16x8_t vec0xff_epi16 = vdupq_n_u16(0xff);
-	static const uint8x16_t vecMask = vld1q_u8(reinterpret_cast<const uint8_t*>(kShuffleEpi8_Deinterleave_i32)); // FIXME: remove
+	static const uint8x16_t vecMask = vld1q_u8(reinterpret_cast<const uint8_t*>(kShuffleEpi8_DeinterleaveL2_i32)); // FIXME: remove
 	uint32_t nearestX0, nearestX1;
 
 	do {

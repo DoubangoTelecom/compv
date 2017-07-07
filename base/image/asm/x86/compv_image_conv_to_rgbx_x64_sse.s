@@ -23,9 +23,9 @@ section .data
 	extern sym(k65_i16)
 	extern sym(k127_i16)
 	extern sym(k13_26_i16)
-	extern sym(kShuffleEpi8_InterleaveRGB24_Step0_i32)
-	extern sym(kShuffleEpi8_InterleaveRGB24_Step1_i32)
-	extern sym(kShuffleEpi8_InterleaveRGB24_Step2_i32)
+	extern sym(kShuffleEpi8_InterleaveL3_Step0_i32)
+	extern sym(kShuffleEpi8_InterleaveL3_Step1_i32)
+	extern sym(kShuffleEpi8_InterleaveL3_Step2_i32)
 
 section .text
 

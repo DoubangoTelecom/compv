@@ -20,59 +20,95 @@ COMPV_NAMESPACE_BEGIN()
 #define rgb24_store_SSSE3(ptr, vecR, vecG, vecB, vecA, vectmp0, vectmp1) COMPV_VST3_U8_SSSE3(ptr, vecR, vecG, vecB, vectmp0, vectmp1)
 #define rgba32_store_SSE2(ptr, vecR, vecG, vecB, vecA, vectmp0, vectmp1) COMPV_VST4_U8_SSE2(ptr, vecR, vecG, vecB, vecA, vectmp0, vectmp1)
 
-#define rgb24_step					48 /* (16 * 3) */
-#define rgba32_step					64 /* (16 * 4) */
+#define rgb24_step						48 /* (16 * 3) */
+#define rgba32_step						64 /* (16 * 4) */
 
-#define rgb24_bytes_per_sample		3
-#define rgba32_bytes_per_sample		4
-
-#define yuv420p_checkAddStrideUV	if (j & 1)
-#define yuv422p_checkAddStrideUV 
-#define yuv444p_checkAddStrideUV
+#define rgb24_bytes_per_sample			3
+#define rgba32_bytes_per_sample			4
 
 #define yuv420p_uv_step					8
 #define yuv422p_uv_step					8
 #define yuv444p_uv_step					16
+#define nv12_uv_step					16
+#define nv21_uv_step					16
 
 #define yuv420p_uv_stride				(stride >> 1) /* no need for "((stride + 1) >> 1)" because stride is even (aligned on #16 bytes) */
 #define yuv422p_uv_stride				(stride >> 1) /* no need for "((stride + 1) >> 1)" because stride is even (aligned on #16 bytes) */
 #define yuv444p_uv_stride				(stride)
+#define nv12_uv_stride					(stride)
+#define nv21_uv_stride					(stride)
 
-#define yuv420p_uv_load					_mm_loadl_epi64
-#define yuv422p_uv_load					_mm_loadl_epi64
-#define yuv444p_uv_load					_mm_load_si128
+#define yuv420p_u_load_SSE2				vecUlo = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(&uPtr[l]))
+#define yuv422p_u_load_SSE2				vecUlo = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(&uPtr[l]))
+#define yuv444p_u_load_SSE2				vecUlo = _mm_load_si128(reinterpret_cast<const __m128i*>(&uPtr[l]))
+#define nv12_u_load_SSSE3				vecUlo = _mm_shuffle_epi8(_mm_load_si128(reinterpret_cast<const __m128i*>(&uvPtr[l])), vecDeinterleaveUV)
+#define nv21_u_load_SSSE3				vecVlo = _mm_shuffle_epi8(_mm_load_si128(reinterpret_cast<const __m128i*>(&uvPtr[l])), vecDeinterleaveUV)
+
+#define yuv420p_v_load					vecVlo = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(&vPtr[l]))
+#define yuv422p_v_load					vecVlo = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(&vPtr[l]))
+#define yuv444p_v_load					vecVlo = _mm_load_si128(reinterpret_cast<const __m128i*>(&vPtr[l]))
+#define nv12_v_load						vecVlo = _mm_unpackhi_epi64(vecUlo, vecUlo)
+#define nv21_v_load						vecUlo = _mm_unpackhi_epi64(vecVlo, vecVlo)
+
+#define yuv420p_uv_inc_check			if (j & 1)
+#define yuv422p_uv_inc_check 
+#define yuv444p_uv_inc_check
+#define nv12_uv_inc_check				if (j & 1)
+#define nv21_uv_inc_check				if (j & 1)
+
+#define yuv420p_uv_inc					(uPtr) += strideUV; (vPtr) += strideUV
+#define yuv422p_uv_inc					(uPtr) += strideUV; (vPtr) += strideUV
+#define yuv444p_uv_inc					(uPtr) += strideUV; (vPtr) += strideUV
+#define nv12_uv_inc						(uvPtr) += strideUV
+#define nv21_uv_inc						(uvPtr) += strideUV
 
 #define yuv420p_u_unpackhi				(void)(vecUhi)
 #define yuv422p_u_unpackhi				(void)(vecUhi)
 #define yuv444p_u_unpackhi				vecUhi = _mm_unpackhi_epi8(vecUlo, vecZero)
+#define nv12_u_unpackhi					(void)(vecUhi)
+#define nv21_u_unpackhi					(void)(vecUhi)
 
 #define yuv420p_v_unpackhi				(void)(vecVhi)
 #define yuv422p_v_unpackhi				(void)(vecVhi)
 #define yuv444p_v_unpackhi				vecVhi = _mm_unpackhi_epi8(vecVlo, vecZero)
+#define nv12_v_unpackhi					(void)(vecVhi)
+#define nv21_v_unpackhi					(void)(vecVhi)
 
 #define yuv420p_u_primehi				(void)(vecUhi)
 #define yuv422p_u_primehi				(void)(vecUhi)
 #define yuv444p_u_primehi				vecUhi = _mm_sub_epi16(vecUhi, vec127)
+#define nv12_u_primehi					(void)(vecUhi)
+#define nv21_u_primehi					(void)(vecUhi)
 
 #define yuv420p_v_primehi				(void)(vecVhi)
 #define yuv422p_v_primehi				(void)(vecVhi)
 #define yuv444p_v_primehi				vecVhi = _mm_sub_epi16(vecVhi, vec127)
+#define nv12_v_primehi					(void)(vecVhi)
+#define nv21_v_primehi					(void)(vecVhi)
 
 #define yuv420p_u_primehi65				(void)(vec1hi)
 #define yuv422p_u_primehi65				(void)(vec1hi)
 #define yuv444p_u_primehi65				vec1hi = _mm_mullo_epi16(vecUhi, vec65)
+#define nv12_u_primehi65				(void)(vec1hi)
+#define nv21_u_primehi65				(void)(vec1hi)
 
 #define yuv420p_v_primehi51				(void)(vec0hi)
 #define yuv422p_v_primehi51				(void)(vec0hi)
 #define yuv444p_v_primehi51				vec0hi = _mm_mullo_epi16(vecVhi, vec51)
+#define nv12_v_primehi51				(void)(vec0hi)
+#define nv21_v_primehi51				(void)(vec0hi)
 
 #define yuv420p_final_vec(vec, p)		vec##p = _mm_unpack##p##_epi16(vec##lo, vec##lo)
 #define yuv422p_final_vec(vec, p)		vec##p = _mm_unpack##p##_epi16(vec##lo, vec##lo)
 #define yuv444p_final_vec(vec, p)		(void)(vec##p)
+#define nv12_final_vec(vec, p)			vec##p = _mm_unpack##p##_epi16(vec##lo, vec##lo)
+#define nv21_final_vec(vec, p)			vec##p = _mm_unpack##p##_epi16(vec##lo, vec##lo)
 
 #define yuv420p_g_high					(void)(vec0hi)
 #define yuv422p_g_high					(void)(vec0hi)
 #define yuv444p_g_high					vec1lo = _mm_madd_epi16(_mm_unpacklo_epi16(vecUhi, vecVhi), vec13_26); vec1hi = _mm_madd_epi16(_mm_unpackhi_epi16(vecUhi, vecVhi), vec13_26); vec0hi = _mm_packs_epi32(vec1lo, vec1hi)
+#define nv12_g_high						(void)(vec0hi)
+#define nv21_g_high						(void)(vec0hi)
 
 #define CompVImageConvPlanar_to_Rgbx_Intrin_SSEx(nameYuv, nameRgbx, ssex) { \
 	compv_uscalar_t i, j, k, l; \
@@ -88,13 +124,14 @@ COMPV_NAMESPACE_BEGIN()
 	static const __m128i vec127 = _mm_load_si128(reinterpret_cast<const __m128i*>(k127_i16)); \
 	static const __m128i vec13_26 = _mm_load_si128(reinterpret_cast<const __m128i*>(k13_26_i16)); /* 13, 26, 13, 26 ... */ \
 	static const __m128i vecA = _mm_cmpeq_epi8(vecZero, vecZero); /* FF FF FF FF... */ \
+	static const __m128i vecDeinterleaveUV = _mm_load_si128(reinterpret_cast<const __m128i*>(kShuffleEpi8_DeinterleaveL2_i32)); \
 	 \
 	for (j = 0; j < height; ++j) { \
 		for (i = 0, k = 0, l = 0; i < width; i += 16, k += nameRgbx##_step, l += nameYuv##_uv_step) { \
 			/* Load samples */ \
 			vecYlo = _mm_load_si128(reinterpret_cast<const __m128i*>(&yPtr[i])); /* #16 Y samples */ \
-			vecUlo = nameYuv##_uv_load(reinterpret_cast<const __m128i*>(&uPtr[l])); /* #8 or #16 U samples, lo mem */ \
-			vecVlo = nameYuv##_uv_load(reinterpret_cast<const __m128i*>(&vPtr[l])); /* #8 or #16 V samples, lo mem */ \
+			nameYuv##_u_load_##ssex; /* #8 or #16 U samples, lo mem */ \
+			nameYuv##_v_load; /* #8 or #16 V samples, lo mem */ \
 			 \
 			/* Convert to I16 */ \
 			vecYhi = _mm_unpackhi_epi8(vecYlo, vecZero); \
@@ -154,9 +191,8 @@ COMPV_NAMESPACE_BEGIN()
 		} /* End_Of for (i = 0; i < width; i += 16) */ \
 		yPtr += stride; \
 		rgbxPtr += strideRGBx; \
-		nameYuv##_checkAddStrideUV { \
-			uPtr += strideUV; \
-			vPtr += strideUV; \
+		nameYuv##_uv_inc_check { \
+			nameYuv##_uv_inc; \
 		} \
 	} /* End_Of for (j = 0; j < height; ++j) */ \
 }
