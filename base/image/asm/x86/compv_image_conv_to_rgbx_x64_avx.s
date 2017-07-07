@@ -14,7 +14,7 @@
 
 COMPV_YASM_DEFAULT_REL
 
-global sym(CompVImageConvYuv420_to_Rgb24_Asm_X64_AVX2)
+global sym(CompVImageConvYuv420p_to_Rgb24_Asm_X64_AVX2)
 
 section .data
 	extern sym(k16_i16)
@@ -37,7 +37,7 @@ section .text
 ; arg(4) -> compv_uscalar_t width
 ; arg(5) -> compv_uscalar_t height
 ; arg(6) -> COMPV_ALIGNED(AVX) compv_uscalar_t stride
-sym(CompVImageConvYuv420_to_Rgb24_Asm_X64_AVX2):
+sym(CompVImageConvYuv420p_to_Rgb24_Asm_X64_AVX2):
 	vzeroupper
 	push rbp
 	mov rbp, rsp

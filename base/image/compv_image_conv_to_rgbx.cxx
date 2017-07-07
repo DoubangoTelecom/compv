@@ -21,12 +21,12 @@ COMPV_NAMESPACE_BEGIN()
 
 #if COMPV_ASM
 #	if COMPV_ARCH_X64
-	COMPV_EXTERNC void CompVImageConvYuv420_to_Rgb24_Asm_X64_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* yPtr, COMPV_ALIGNED(SSE) const uint8_t* uPtr, COMPV_ALIGNED(SSE) const uint8_t* vPtr, COMPV_ALIGNED(SSE) uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
-	COMPV_EXTERNC void CompVImageConvYuv420_to_Rgb24_Asm_X64_AVX2(COMPV_ALIGNED(AVX) const uint8_t* yPtr, COMPV_ALIGNED(AVX) const uint8_t* uPtr, COMPV_ALIGNED(AVX) const uint8_t* vPtr, COMPV_ALIGNED(AVX) uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride);
+COMPV_EXTERNC void CompVImageConvYuv420p_to_Rgb24_Asm_X64_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* yPtr, COMPV_ALIGNED(SSE) const uint8_t* uPtr, COMPV_ALIGNED(SSE) const uint8_t* vPtr, COMPV_ALIGNED(SSE) uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
+COMPV_EXTERNC void CompVImageConvYuv420p_to_Rgb24_Asm_X64_AVX2(COMPV_ALIGNED(AVX) const uint8_t* yPtr, COMPV_ALIGNED(AVX) const uint8_t* uPtr, COMPV_ALIGNED(AVX) const uint8_t* vPtr, COMPV_ALIGNED(AVX) uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride);
 #	elif COMPV_ARCH_ARM32
-	COMPV_EXTERNC void CompVImageConvYuv420_to_Rgb24_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* yPtr, COMPV_ALIGNED(NEON) const uint8_t* uPtr, COMPV_ALIGNED(NEON) const uint8_t* vPtr, COMPV_ALIGNED(NEON) uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
+COMPV_EXTERNC void CompVImageConvYuv420p_to_Rgb24_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* yPtr, COMPV_ALIGNED(NEON) const uint8_t* uPtr, COMPV_ALIGNED(NEON) const uint8_t* vPtr, COMPV_ALIGNED(NEON) uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
 #	elif COMPV_ARCH_ARM64
-    COMPV_EXTERNC void CompVImageConvYuv420_to_Rgb24_Asm_NEON64(COMPV_ALIGNED(NEON) const uint8_t* yPtr, COMPV_ALIGNED(NEON) const uint8_t* uPtr, COMPV_ALIGNED(NEON) const uint8_t* vPtr, COMPV_ALIGNED(NEON) uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
+COMPV_EXTERNC void CompVImageConvYuv420p_to_Rgb24_Asm_NEON64(COMPV_ALIGNED(NEON) const uint8_t* yPtr, COMPV_ALIGNED(NEON) const uint8_t* uPtr, COMPV_ALIGNED(NEON) const uint8_t* vPtr, COMPV_ALIGNED(NEON) uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
 #	endif /* COMPV_ARCH_X64 */
 #endif /* COMPV_ASM */
 
@@ -54,43 +54,43 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::process(const CompVMatPtr& imageIn, COMPV
 	COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&imageOut, rgbxFormat, imageIn->cols(), imageIn->rows(), imageIn->stride()));
 
 	switch (imageIn->subType()) {
-		case COMPV_SUBTYPE_PIXELS_RGBA32:
-		case COMPV_SUBTYPE_PIXELS_RGB24:
-			if (imageIn->subType() == rgbxFormat) {
-				COMPV_CHECK_CODE_RETURN(CompVImage::clone(imageIn, &imageOut));
-				return COMPV_ERROR_CODE_S_OK;
-			}
-			else {
-				COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "%s -> %s not supported", CompVGetSubtypeString(imageIn->subType()), CompVGetSubtypeString(rgbxFormat));
-				return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
-			}
-			break;
-
-		case COMPV_SUBTYPE_PIXELS_YUV420P:
-		case COMPV_SUBTYPE_PIXELS_YUV422P:
-		case COMPV_SUBTYPE_PIXELS_YUV444P:
-			COMPV_CHECK_CODE_RETURN(CompVImageConvToRGBx::yuvPlanar(imageIn, imageOut));
-			break;
-
-		case COMPV_SUBTYPE_PIXELS_NV12:
-		case COMPV_SUBTYPE_PIXELS_NV21:
-			COMPV_CHECK_CODE_RETURN(CompVImageConvToRGBx::yuvSemiPlanar(imageIn, imageOut));
-			break;
-
-		case COMPV_SUBTYPE_PIXELS_YUYV422:
-		case COMPV_SUBTYPE_PIXELS_UYVY422:
-			COMPV_CHECK_CODE_RETURN(CompVImageConvToRGBx::yuvPacked(imageIn, imageOut));
-			break;
-
-		default:
+	case COMPV_SUBTYPE_PIXELS_RGBA32:
+	case COMPV_SUBTYPE_PIXELS_RGB24:
+		if (imageIn->subType() == rgbxFormat) {
+			COMPV_CHECK_CODE_RETURN(CompVImage::clone(imageIn, &imageOut));
+			return COMPV_ERROR_CODE_S_OK;
+		}
+		else {
 			COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "%s -> %s not supported", CompVGetSubtypeString(imageIn->subType()), CompVGetSubtypeString(rgbxFormat));
 			return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
+		}
+		break;
+
+	case COMPV_SUBTYPE_PIXELS_YUV420P:
+	case COMPV_SUBTYPE_PIXELS_YUV422P:
+	case COMPV_SUBTYPE_PIXELS_YUV444P:
+		COMPV_CHECK_CODE_RETURN(CompVImageConvToRGBx::yuvPlanar(imageIn, imageOut));
+		break;
+
+	case COMPV_SUBTYPE_PIXELS_NV12:
+	case COMPV_SUBTYPE_PIXELS_NV21:
+		COMPV_CHECK_CODE_RETURN(CompVImageConvToRGBx::yuvSemiPlanar(imageIn, imageOut));
+		break;
+
+	case COMPV_SUBTYPE_PIXELS_YUYV422:
+	case COMPV_SUBTYPE_PIXELS_UYVY422:
+		COMPV_CHECK_CODE_RETURN(CompVImageConvToRGBx::yuvPacked(imageIn, imageOut));
+		break;
+
+	default:
+		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "%s -> %s not supported", CompVGetSubtypeString(imageIn->subType()), CompVGetSubtypeString(rgbxFormat));
+		return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
 	}
 
 #if 0
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING();
 	const uint8_t *r = imageOut->ptr<const uint8_t>();
-	for (size_t i = 0; i < 100; i+=4) {
+	for (size_t i = 0; i < 100; i += 4) {
 		printf("%u, ", r[i]);
 	}
 #endif
@@ -104,58 +104,89 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::process(const CompVMatPtr& imageIn, COMPV
 COMPV_ERROR_CODE CompVImageConvToRGBx::yuvPlanar(const CompVMatPtr& imageIn, CompVMatPtr& imageRGBx)
 {
 	// Internal function, do not check input parameters (already done)
-	void(*planar_to_rgbx)(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
+	void(*fptr_planar_to_rgbx)(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
 		= nullptr;
 	const COMPV_SUBTYPE inPixelFormat = imageIn->subType();
 	const COMPV_SUBTYPE outPixelFormat = imageRGBx->subType();
 	switch (inPixelFormat) {
 	case COMPV_SUBTYPE_PIXELS_YUV420P:
-		planar_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? yuv420p_to_rgba32_C : yuv420p_to_rgb24_C;
+		fptr_planar_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? yuv420p_to_rgba32_C : yuv420p_to_rgb24_C;
 #if COMPV_ARCH_X86
 		if (imageRGBx->isAlignedSSE(0) && imageIn->isAlignedSSE(0) && imageIn->isAlignedSSE(1) && imageIn->isAlignedSSE(2)) {
 			if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
 				if (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) {
-					COMPV_EXEC_IFDEF_INTRIN_X86(planar_to_rgbx = CompVImageConvYuv420_to_Rgba32_Intrin_SSE2);
+					COMPV_EXEC_IFDEF_INTRIN_X86(fptr_planar_to_rgbx = CompVImageConvYuv420p_to_Rgba32_Intrin_SSE2);
 				}
 			}
 			if (CompVCpu::isEnabled(kCpuFlagSSSE3)) {
 				if (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGB24) {
-					COMPV_EXEC_IFDEF_INTRIN_X86(planar_to_rgbx = CompVImageConvYuv420_to_Rgb24_Intrin_SSSE3);
-					COMPV_EXEC_IFDEF_ASM_X64(planar_to_rgbx = CompVImageConvYuv420_to_Rgb24_Asm_X64_SSSE3);
+					COMPV_EXEC_IFDEF_INTRIN_X86(fptr_planar_to_rgbx = CompVImageConvYuv420p_to_Rgb24_Intrin_SSSE3);
+					COMPV_EXEC_IFDEF_ASM_X64(fptr_planar_to_rgbx = CompVImageConvYuv420p_to_Rgb24_Asm_X64_SSSE3);
 				}
 			}
 		}
 		if (CompVCpu::isEnabled(kCpuFlagAVX2) && imageRGBx->isAlignedAVX(0) && imageIn->isAlignedAVX(0) && imageIn->isAlignedAVX(1) && imageIn->isAlignedAVX(2)) {
 			if (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) {
-				COMPV_EXEC_IFDEF_INTRIN_X86(planar_to_rgbx = CompVImageConvYuv420_to_Rgba32_Intrin_AVX2);
+				COMPV_EXEC_IFDEF_INTRIN_X86(fptr_planar_to_rgbx = CompVImageConvYuv420p_to_Rgba32_Intrin_AVX2);
 			}
 			else if (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGB24) {
-				COMPV_EXEC_IFDEF_INTRIN_X86(planar_to_rgbx = CompVImageConvYuv420_to_Rgb24_Intrin_AVX2);
-				COMPV_EXEC_IFDEF_ASM_X64(planar_to_rgbx = CompVImageConvYuv420_to_Rgb24_Asm_X64_AVX2);
+				COMPV_EXEC_IFDEF_INTRIN_X86(fptr_planar_to_rgbx = CompVImageConvYuv420p_to_Rgb24_Intrin_AVX2);
+				COMPV_EXEC_IFDEF_ASM_X64(fptr_planar_to_rgbx = CompVImageConvYuv420p_to_Rgb24_Asm_X64_AVX2);
 			}
 		}
 #elif COMPV_ARCH_ARM
 		if (CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
 			if (imageRGBx->isAlignedNEON(0) && imageIn->isAlignedNEON(0) && imageIn->isAlignedNEON(1) && imageIn->isAlignedNEON(2)) {
 				if (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGB24) {
-					COMPV_EXEC_IFDEF_INTRIN_ARM(planar_to_rgbx = CompVImageConvYuv420_to_Rgb24_Intrin_NEON);
-                    COMPV_EXEC_IFDEF_ASM_ARM32(planar_to_rgbx = CompVImageConvYuv420_to_Rgb24_Asm_NEON32);
-                    COMPV_EXEC_IFDEF_ASM_ARM64(planar_to_rgbx = CompVImageConvYuv420_to_Rgb24_Asm_NEON64);
+					COMPV_EXEC_IFDEF_INTRIN_ARM(fptr_planar_to_rgbx = CompVImageConvYuv420p_to_Rgb24_Intrin_NEON);
+					COMPV_EXEC_IFDEF_ASM_ARM32(fptr_planar_to_rgbx = CompVImageConvYuv420p_to_Rgb24_Asm_NEON32);
+					COMPV_EXEC_IFDEF_ASM_ARM64(fptr_planar_to_rgbx = CompVImageConvYuv420p_to_Rgb24_Asm_NEON64);
 				}
 			}
 		}
 #endif
 		break;
 	case COMPV_SUBTYPE_PIXELS_YUV422P:
-		planar_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? yuv422p_to_rgba32_C : yuv422p_to_rgb24_C;
+		fptr_planar_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? yuv422p_to_rgba32_C : yuv422p_to_rgb24_C;
+#if COMPV_ARCH_X86
+		if (imageRGBx->isAlignedSSE(0) && imageIn->isAlignedSSE(0) && imageIn->isAlignedSSE(1) && imageIn->isAlignedSSE(2)) {
+			if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
+				if (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) {
+					COMPV_EXEC_IFDEF_INTRIN_X86(fptr_planar_to_rgbx = CompVImageConvYuv422p_to_Rgba32_Intrin_SSE2);
+				}
+			}
+			if (CompVCpu::isEnabled(kCpuFlagSSSE3)) {
+				if (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGB24) {
+					COMPV_EXEC_IFDEF_INTRIN_X86(fptr_planar_to_rgbx = CompVImageConvYuv422p_to_Rgb24_Intrin_SSSE3);
+					//COMPV_EXEC_IFDEF_ASM_X64(fptr_planar_to_rgbx = CompVImageConvYuv422p_to_Rgb24_Asm_X64_SSSE3);
+				}
+			}
+		}
+#elif COMPV_ARCH_ARM
+#endif
 		break;
 	case COMPV_SUBTYPE_PIXELS_YUV444P:
-		planar_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? yuv444p_to_rgba32_C : yuv444p_to_rgb24_C;
+		fptr_planar_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? yuv444p_to_rgba32_C : yuv444p_to_rgb24_C;
+#if COMPV_ARCH_X86
+		if (imageRGBx->isAlignedSSE(0) && imageIn->isAlignedSSE(0) && imageIn->isAlignedSSE(1) && imageIn->isAlignedSSE(2)) {
+			if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
+				if (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) {
+					//COMPV_EXEC_IFDEF_INTRIN_X86(fptr_planar_to_rgbx = CompVImageConvYuv444p_to_Rgba32_Intrin_SSE2);
+				}
+			}
+			if (CompVCpu::isEnabled(kCpuFlagSSSE3)) {
+				if (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGB24) {
+					COMPV_EXEC_IFDEF_INTRIN_X86(fptr_planar_to_rgbx = CompVImageConvYuv444p_to_Rgb24_Intrin_SSSE3);
+				}
+			}
+		}
+#elif COMPV_ARCH_ARM
+#endif
 		break;
 	default:
 		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "%s -> %s not supported", CompVGetSubtypeString(inPixelFormat), CompVGetSubtypeString(outPixelFormat));
 		return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
-	}
+}
 
 	const size_t widthInSamples = imageRGBx->cols();
 	const size_t heightInSamples = imageRGBx->rows();
@@ -182,8 +213,8 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::yuvPlanar(const CompVMatPtr& imageIn, Com
 		CompVAsyncTaskIds taskIds;
 		taskIds.reserve(threadsCount);
 		auto funcPtr = [&](const uint8_t* yPtr_, const uint8_t* uPtr_, const uint8_t* vPtr_, uint8_t* rgbxPtr_, compv_uscalar_t heightInSamples_) -> void {
-			planar_to_rgbx(
-				yPtr_, uPtr_, vPtr_, rgbxPtr_, 
+			fptr_planar_to_rgbx(
+				yPtr_, uPtr_, vPtr_, rgbxPtr_,
 				widthInSamples, heightInSamples_, strideInSamples
 			);
 		};
@@ -195,7 +226,7 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::yuvPlanar(const CompVMatPtr& imageIn, Com
 		uPtrPaddingInBytes = imageIn->strideInBytes(COMPV_PLANE_U) * uPtrHeights;
 		vPtrPaddingInBytes = imageIn->strideInBytes(COMPV_PLANE_U) * vPtrHeights;
 		rgbxPtrPaddingInBytes = imageRGBx->strideInBytes() * heights;
-		
+
 		for (size_t threadIdx = 0; threadIdx < threadsCount - 1; ++threadIdx) {
 			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, yPtr, uPtr, vPtr, rgbxPtr, heights), taskIds), "Dispatching task failed");
 			yPtr += yPtrPaddingInBytes;
@@ -207,7 +238,7 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::yuvPlanar(const CompVMatPtr& imageIn, Com
 		COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds), "Failed to wait for tasks execution");
 	}
 	else {
-		planar_to_rgbx(
+		fptr_planar_to_rgbx(
 			yPtr, uPtr, vPtr, rgbxPtr,
 			widthInSamples, heightInSamples, strideInSamples
 		);
@@ -220,16 +251,16 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::yuvPlanar(const CompVMatPtr& imageIn, Com
 COMPV_ERROR_CODE CompVImageConvToRGBx::yuvSemiPlanar(const CompVMatPtr& imageIn, CompVMatPtr& imageRGBx)
 {
 	// Internal function, do not check input parameters (already done)
-	void(*semiplanar_to_rgbx)(const uint8_t* yPtr, const uint8_t* uvPtr, uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
+	void(*fptr_semiplanar_to_rgbx)(const uint8_t* yPtr, const uint8_t* uvPtr, uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
 		= nullptr;
 	const COMPV_SUBTYPE inPixelFormat = imageIn->subType();
 	const COMPV_SUBTYPE outPixelFormat = imageRGBx->subType();
 	switch (inPixelFormat) {
 	case COMPV_SUBTYPE_PIXELS_NV12:
-		semiplanar_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? nv12_to_rgba32_C : nv12_to_rgb24_C;
+		fptr_semiplanar_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? nv12_to_rgba32_C : nv12_to_rgb24_C;
 		break;
 	case COMPV_SUBTYPE_PIXELS_NV21:
-		semiplanar_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? nv21_to_rgba32_C : nv21_to_rgb24_C;
+		fptr_semiplanar_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? nv21_to_rgba32_C : nv21_to_rgb24_C;
 		break;
 	default:
 		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "%s -> %s not supported", CompVGetSubtypeString(inPixelFormat), CompVGetSubtypeString(outPixelFormat));
@@ -260,7 +291,7 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::yuvSemiPlanar(const CompVMatPtr& imageIn,
 		CompVAsyncTaskIds taskIds;
 		taskIds.reserve(threadsCount);
 		auto funcPtr = [&](const uint8_t* yPtr_, const uint8_t* uvPtr_, uint8_t* rgbxPtr_, compv_uscalar_t heightInSamples_) -> void {
-			semiplanar_to_rgbx(
+			fptr_semiplanar_to_rgbx(
 				yPtr_, uvPtr_, rgbxPtr_,
 				widthInSamples, heightInSamples_, strideInSamples
 			);
@@ -282,7 +313,7 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::yuvSemiPlanar(const CompVMatPtr& imageIn,
 		COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds), "Failed to wait for tasks execution");
 	}
 	else {
-		semiplanar_to_rgbx(
+		fptr_semiplanar_to_rgbx(
 			yPtr, uvPtr, rgbxPtr,
 			widthInSamples, heightInSamples, strideInSamples
 		);
@@ -295,16 +326,16 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::yuvSemiPlanar(const CompVMatPtr& imageIn,
 COMPV_ERROR_CODE CompVImageConvToRGBx::yuvPacked(const CompVMatPtr& imageIn, CompVMatPtr& imageRGBx)
 {
 	// Internal function, do not check input parameters (already done)
-	void(*packed_to_rgbx)(const uint8_t* yuyvPtr, uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
+	void(*fptr_packed_to_rgbx)(const uint8_t* yuyvPtr, uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
 		= nullptr;
 	const COMPV_SUBTYPE inPixelFormat = imageIn->subType();
 	const COMPV_SUBTYPE outPixelFormat = imageRGBx->subType();
 	switch (inPixelFormat) {
 	case COMPV_SUBTYPE_PIXELS_YUYV422:
-		packed_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? yuyv422_to_rgba32_C : yuyv422_to_rgb24_C;
+		fptr_packed_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? yuyv422_to_rgba32_C : yuyv422_to_rgb24_C;
 		break;
 	case COMPV_SUBTYPE_PIXELS_UYVY422:
-		packed_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? uyvy422_to_rgba32_C : uyvy422_to_rgb24_C;
+		fptr_packed_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? uyvy422_to_rgba32_C : uyvy422_to_rgb24_C;
 		break;
 	default:
 		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "%s -> %s not supported", CompVGetSubtypeString(inPixelFormat), CompVGetSubtypeString(outPixelFormat));
@@ -334,7 +365,7 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::yuvPacked(const CompVMatPtr& imageIn, Com
 		CompVAsyncTaskIds taskIds;
 		taskIds.reserve(threadsCount);
 		auto funcPtr = [&](const uint8_t* yuvPtr_, uint8_t* rgbxPtr_, compv_uscalar_t heightInSamples_) -> void {
-			packed_to_rgbx(
+			fptr_packed_to_rgbx(
 				yuvPtr_, rgbxPtr_,
 				widthInSamples, heightInSamples_, strideInSamples
 			);
@@ -354,7 +385,7 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::yuvPacked(const CompVMatPtr& imageIn, Com
 		COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds), "Failed to wait for tasks execution");
 	}
 	else {
-		packed_to_rgbx(
+		fptr_packed_to_rgbx(
 			yuvPtr, rgbxPtr,
 			widthInSamples, heightInSamples, strideInSamples
 		);

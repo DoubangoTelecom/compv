@@ -20,7 +20,7 @@
 # arg(4) -> compv_uscalar_t width
 # arg(5) -> compv_uscalar_t height
 # arg(6) -> COMPV_ALIGNED(NEON) compv_uscalar_t stride
-COMPV_GAS_FUNCTION_DECLARE CompVImageConvYuv420_to_Rgb24_Asm_NEON64
+COMPV_GAS_FUNCTION_DECLARE CompVImageConvYuv420p_to_Rgb24_Asm_NEON64
     COMPV_GAS_FUNCTION_PROLOG
 	COMPV_GAS_SAVE_NEON_REGS
 
@@ -98,12 +98,12 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvYuv420_to_Rgb24_Asm_NEON64
     # for (j = 0; j < height; ++j)
     ########################################
     mov j, #0
-    LoopHeight_CompVImageConvYuv420_to_Rgb24_Asm_NEON64:
+    LoopHeight_CompVImageConvYuv420p_to_Rgb24_Asm_NEON64:
         ###################################################################
         # for (i = 0, k = 0, l = 0; i < width; i += 16, k += 48, l += 8)
         ###################################################################
         mov i, #0
-        LoopWidth_CompVImageConvYuv420_to_Rgb24_Asm_NEON64:
+        LoopWidth_CompVImageConvYuv420p_to_Rgb24_Asm_NEON64:
             # Load samples #
 			prfm pldl1keep, [yPtr, #(CACHE_LINE_SIZE*3)]
 			prfm pldl1keep, [uPtr, #(CACHE_LINE_SIZE*3)]
@@ -145,7 +145,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvYuv420_to_Rgb24_Asm_NEON64
             st3 {vecR.16b, vecG.16b, vecB.16b}, [rgbPtr], #((16*3)*COMPV_GAS_UINT8_SZ_BYTES)
             add i, i, #16
             cmp i, width
-			blt LoopWidth_CompVImageConvYuv420_to_Rgb24_Asm_NEON64
+			blt LoopWidth_CompVImageConvYuv420p_to_Rgb24_Asm_NEON64
             #End_of_LoopWidth#
 
         add yPtr, yPtr, padY
@@ -158,7 +158,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvYuv420_to_Rgb24_Asm_NEON64
         add vPtr, vPtr, i // rollback or move forward
         add j, j, #1
         cmp j, height
-		blt LoopHeight_CompVImageConvYuv420_to_Rgb24_Asm_NEON64	
+		blt LoopHeight_CompVImageConvYuv420p_to_Rgb24_Asm_NEON64	
 		#End_of_LoopHeight#
 
     # undefs #

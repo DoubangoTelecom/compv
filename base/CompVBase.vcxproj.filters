@@ -480,6 +480,9 @@
     <ClInclude Include="include\compv\base\image\intrin\arm\compv_image_conv_to_rgbx_intrin_neon.h">
       <Filter>include\image\intrin\arm</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_conv_to_rgbx_intrin_ssex.h">
+      <Filter>include\image\intrin\x86</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx">
