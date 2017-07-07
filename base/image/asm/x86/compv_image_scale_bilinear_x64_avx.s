@@ -15,6 +15,7 @@ global sym(CompVImageScaleBilinear_Asm_X64_AVX2)
 
 section .data
 	extern sym(kShuffleEpi8_Deinterleave8uL2_i32)
+	extern sym(kShuffleEpi8_Deinterleave16uL2_i32)
 
 section .text
 
@@ -43,7 +44,7 @@ sym(CompVImageScaleBilinear_Asm_X64_AVX2)
 
 	; align stack and alloc memory
 	COMPV_YASM_ALIGN_STACK 32, rax
-	sub rsp, (13*32)
+	sub rsp, (14*32)
 	%define memNeighb0              rsp + 0
 	%define memNeighb1              memNeighb0 + 32
 	%define memNeighb2              memNeighb1 + 32
@@ -57,6 +58,7 @@ sym(CompVImageScaleBilinear_Asm_X64_AVX2)
 	%define vecSFX1                 vecSFX0 + 32
 	%define vecSFX2                 vecSFX1 + 32
 	%define vecSFX3                 vecSFX2 + 32
+	%define vecStride				vecSFX3 + 32
 
 	%define vecNeighb0              ymm4
 	%define vecNeighb1              ymm5
@@ -70,7 +72,8 @@ sym(CompVImageScaleBilinear_Asm_X64_AVX2)
 	%define vec5                    ymm13
 	%define vec6                    ymm14
 	%define vec7                    ymm15
-	%define vecDeinterleave         sym(kShuffleEpi8_Deinterleave8uL2_i32)
+	%define vecDeinterleave8u       sym(kShuffleEpi8_Deinterleave8uL2_i32)
+	%define vecDeinterleave16u		sym(kShuffleEpi8_Deinterleave16uL2_i32)
 
 	%define arg_inPtr               arg(0)
 	%define arg_inStride            arg(1)
@@ -95,6 +98,12 @@ sym(CompVImageScaleBilinear_Asm_X64_AVX2)
 	mov outStride, arg_outStride
 	mov sf_y, arg_sf_y
 	mov inPtr, arg_inPtr
+
+	; compute vecStride
+	mov rax, arg_inStride
+	vmovd xmm0, eax
+	vpbroadcastd ymm0, xmm0
+	vmovdqa [vecStride], ymm0
 
 	; compute vec0xff_epi32 and vec0xff_epi16
 	vpcmpeqw ymm2, ymm2
@@ -170,32 +179,54 @@ sym(CompVImageScaleBilinear_Asm_X64_AVX2)
 			vpsrld ymm1, vecX1, 8
 			vpsrld ymm2, vecX2, 8
 			vpsrld ymm3, vecX3, 8
-			
-			;;; write memNeighbs ;;;
-			_mm_bilinear_set_neighbs_x86_avx2 xmm0, memNeighb0, memNeighb2, 0, 1, rbx ; overrides rdx, rdi, rax and rcx
-			vextractf128 xmm0, ymm0, 1
-			_mm_bilinear_set_neighbs_x86_avx2 xmm0, memNeighb0, memNeighb2, 2, 3, rbx ; overrides rdx, rdi, rax and rcx
-			_mm_bilinear_set_neighbs_x86_avx2 xmm1, memNeighb0, memNeighb2, 4, 5, rbx ; overrides rdx, rdi, rax and rcx
-			vextractf128 xmm1, ymm1, 1
-			_mm_bilinear_set_neighbs_x86_avx2 xmm1, memNeighb0, memNeighb2, 6, 7, rbx ; overrides rdx, rdi, rax and rcx
-			_mm_bilinear_set_neighbs_x86_avx2 xmm2, memNeighb1, memNeighb3, 0, 1, rbx ; overrides rdx, rdi, rax and rcx
-			vextractf128 xmm2, ymm2, 1
-			_mm_bilinear_set_neighbs_x86_avx2 xmm2, memNeighb1, memNeighb3, 2, 3, rbx ; overrides rdx, rdi, rax and rcx
-			_mm_bilinear_set_neighbs_x86_avx2 xmm3, memNeighb1, memNeighb3, 4, 5, rbx ; overrides rdx, rdi, rax and rcx
-			vextractf128 xmm3, ymm3, 1
-			_mm_bilinear_set_neighbs_x86_avx2 xmm3, memNeighb1, memNeighb3, 6, 7, rbx ; overrides rdx, rdi, rax and rcx
 
-			;;; read memNeighbs ;;;
-			vmovdqa vecNeighb0, [memNeighb0]
-			vmovdqa vecNeighb1, [memNeighb1]
-			vmovdqa vecNeighb2, [memNeighb2]
-			vmovdqa vecNeighb3, [memNeighb3]
+			vpcmpeqb vec7, vec7, vec7 ; condition mask
+			vpgatherdd  vecNeighb0, dword ptr [rbx+ymm0], vec7
+			vpcmpeqb vec7, vec7, vec7 ; condition mask
+			vpgatherdd  vec4, dword ptr [rbx+ymm1], vec7
+			vpcmpeqb vec7, vec7, vec7 ; condition mask
+			vpgatherdd  vecNeighb1, dword ptr [rbx+ymm2], vec7
+			vpcmpeqb vec7, vec7, vec7 ; condition mask
+			vpgatherdd  vec5, dword ptr [rbx+ymm3], vec7
+
+			vpaddd ymm0, ymm0, [vecStride]
+			vpaddd ymm1, ymm1, [vecStride]
+			vpaddd ymm2, ymm2, [vecStride]
+			vpaddd ymm3, ymm3, [vecStride]
+
+			vpcmpeqb vec7, vec7, vec7 ; condition mask
+			vpgatherdd  vecNeighb2, dword ptr [rbx+ymm0], vec7
+			vpcmpeqb vec7, vec7, vec7 ; condition mask
+			vpgatherdd  vec6, dword ptr [rbx+ymm1], vec7
+			vpcmpeqb vec7, vec7, vec7 ; condition mask
+			vpgatherdd  vecNeighb3, dword ptr [rbx+ymm2], vec7
+			vpcmpeqb ymm0, ymm0, ymm0 ; condition mask
+			vpgatherdd  vec7, dword ptr [rbx+ymm3], ymm0
+
+			vpshufb vecNeighb0, vecNeighb0, [vecDeinterleave16u]
+			vpshufb vec4, vec4, [vecDeinterleave16u]
+			vpshufb vecNeighb1, vecNeighb1, [vecDeinterleave16u]
+			vpshufb vec5, vec5, [vecDeinterleave16u]
+			vpshufb vecNeighb2, vecNeighb2, [vecDeinterleave16u]
+			vpshufb vec6, vec6, [vecDeinterleave16u]
+			vpshufb vecNeighb3, vecNeighb3, [vecDeinterleave16u]
+			vpshufb vec7, vec7, [vecDeinterleave16u]
+
+			vpunpcklqdq vecNeighb0, vecNeighb0, vec4
+			vpunpcklqdq vecNeighb1, vecNeighb1, vec5
+			vpunpcklqdq vecNeighb2, vecNeighb2, vec6
+			vpunpcklqdq vecNeighb3, vecNeighb3, vec7
+
+			vpermq vecNeighb0, vecNeighb0, 0xD8
+			vpermq vecNeighb1, vecNeighb1, 0xD8
+			vpermq vecNeighb2, vecNeighb2, 0xD8
+			vpermq vecNeighb3, vecNeighb3, 0xD8
 
 			;;; Deinterleave neighbs ;;;
-			vpshufb vecNeighb0, vecNeighb0, [vecDeinterleave] ; 0,0,0,0,1,1,1,1
-			vpshufb vecNeighb1, vecNeighb1, [vecDeinterleave] ; 0,0,0,0,1,1,1,1
-			vpshufb vecNeighb2, vecNeighb2, [vecDeinterleave] ; 2,2,2,2,3,3,3,3
-			vpshufb vecNeighb3, vecNeighb3, [vecDeinterleave] ; 2,2,2,2,3,3,3,3			
+			vpshufb vecNeighb0, vecNeighb0, [vecDeinterleave8u] ; 0,0,0,0,1,1,1,1
+			vpshufb vecNeighb1, vecNeighb1, [vecDeinterleave8u] ; 0,0,0,0,1,1,1,1
+			vpshufb vecNeighb2, vecNeighb2, [vecDeinterleave8u] ; 2,2,2,2,3,3,3,3
+			vpshufb vecNeighb3, vecNeighb3, [vecDeinterleave8u] ; 2,2,2,2,3,3,3,3			
 			vpunpckhqdq ymm0, vecNeighb0, vecNeighb1          ; 1,1,1,1,1,1
 			vpunpckhqdq ymm2, vecNeighb2, vecNeighb3          ; 3,3,3,3,3,3
 			vpunpcklqdq vecNeighb0, vecNeighb0, vecNeighb1    ; 0,0,0,0,0,0
@@ -309,6 +340,7 @@ sym(CompVImageScaleBilinear_Asm_X64_AVX2)
 	%undef vecSFX1
 	%undef vecSFX2
 	%undef vecSFX3
+	%undef vecStride
 
 	%undef vecNeighb0
 	%undef vecNeighb1
@@ -322,7 +354,7 @@ sym(CompVImageScaleBilinear_Asm_X64_AVX2)
 	%undef vec5                    
 	%undef vec6                    
 	%undef vec7                    
-	%undef vecDeinterleave
+	%undef vecDeinterleave8u
 
 	%undef arg_inPtr
 	%undef arg_inStride
@@ -342,7 +374,7 @@ sym(CompVImageScaleBilinear_Asm_X64_AVX2)
 	%undef inPtr
 
 	; free memory and unalign stack
-	add rsp, (13*32)
+	add rsp, (14*32)
 	COMPV_YASM_UNALIGN_STACK
 
 	;; begin epilog ;;
