@@ -206,21 +206,22 @@ sym(CompVImageScaleBilinear_Asm_X64_AVX2)
 
 			vpshufb vecNeighb0, vecNeighb0, [vecDeinterleave16u]
 			vpshufb vec4, vec4, [vecDeinterleave16u]
+			vpunpcklqdq vecNeighb0, vecNeighb0, vec4
+			vpermq vecNeighb0, vecNeighb0, 0xD8
+
 			vpshufb vecNeighb1, vecNeighb1, [vecDeinterleave16u]
 			vpshufb vec5, vec5, [vecDeinterleave16u]
+			vpunpcklqdq vecNeighb1, vecNeighb1, vec5
+			vpermq vecNeighb1, vecNeighb1, 0xD8
+
 			vpshufb vecNeighb2, vecNeighb2, [vecDeinterleave16u]
 			vpshufb vec6, vec6, [vecDeinterleave16u]
+			vpunpcklqdq vecNeighb2, vecNeighb2, vec6
+			vpermq vecNeighb2, vecNeighb2, 0xD8
+
 			vpshufb vecNeighb3, vecNeighb3, [vecDeinterleave16u]
 			vpshufb vec7, vec7, [vecDeinterleave16u]
-
-			vpunpcklqdq vecNeighb0, vecNeighb0, vec4
-			vpunpcklqdq vecNeighb1, vecNeighb1, vec5
-			vpunpcklqdq vecNeighb2, vecNeighb2, vec6
-			vpunpcklqdq vecNeighb3, vecNeighb3, vec7
-
-			vpermq vecNeighb0, vecNeighb0, 0xD8
-			vpermq vecNeighb1, vecNeighb1, 0xD8
-			vpermq vecNeighb2, vecNeighb2, 0xD8
+			vpunpcklqdq vecNeighb3, vecNeighb3, vec7			
 			vpermq vecNeighb3, vecNeighb3, 0xD8
 
 			;;; Deinterleave neighbs ;;;
