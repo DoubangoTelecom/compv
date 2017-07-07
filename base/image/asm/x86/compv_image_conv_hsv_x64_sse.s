@@ -91,6 +91,10 @@ section .text
 	mov height, arg(3)
 	mov stride, arg(4)
 
+	prefetcht0 [rgbxPtr + (COMPV_YASM_CACHE_LINE_SIZE*0)]
+	prefetcht0 [rgbxPtr + (COMPV_YASM_CACHE_LINE_SIZE*1)]
+	prefetcht0 [rgbxPtr + (COMPV_YASM_CACHE_LINE_SIZE*2)]
+
 	lea width, [width+width*2] ; (width*3)
 	lea strideRGBx, [stride * rgbxn] ; (stride * rgbxn)
 	lea stride, [stride+stride*2] ; (stride*3)
@@ -106,6 +110,7 @@ section .text
 		xor k, k
 		.LoopWidth:
 			; Load samples ;
+			prefetcht0 [rgbxPtr + (COMPV_YASM_CACHE_LINE_SIZE*3)]
 			%if %1 == rgb24Family
 				COMPV_VLD3_U8_SSSE3 rgbxPtr + k, vec0, vec1, vec2, vec3, vec4, vec5
 			%elif %1 == rgba32Family

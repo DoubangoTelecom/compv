@@ -89,6 +89,16 @@ sym(CompVImageConvYuv420_to_Rgb24_Asm_X64_SSSE3):
 	mov height, arg(5)
 	mov stride, arg(6)
 
+	prefetcht0 [yPtr + (COMPV_YASM_CACHE_LINE_SIZE*0)]
+	prefetcht0 [yPtr + (COMPV_YASM_CACHE_LINE_SIZE*1)]
+	prefetcht0 [yPtr + (COMPV_YASM_CACHE_LINE_SIZE*2)]
+	prefetcht0 [uPtr + (COMPV_YASM_CACHE_LINE_SIZE*0)]
+	prefetcht0 [uPtr + (COMPV_YASM_CACHE_LINE_SIZE*1)]
+	prefetcht0 [uPtr + (COMPV_YASM_CACHE_LINE_SIZE*2)]
+	prefetcht0 [vPtr + (COMPV_YASM_CACHE_LINE_SIZE*0)]
+	prefetcht0 [vPtr + (COMPV_YASM_CACHE_LINE_SIZE*1)]
+	prefetcht0 [vPtr + (COMPV_YASM_CACHE_LINE_SIZE*2)]
+
 	lea strideUV, [stride + 1]
 	lea strideRGB, [stride + (stride * 2)]
 	shr strideUV, 1
@@ -113,6 +123,9 @@ sym(CompVImageConvYuv420_to_Rgb24_Asm_X64_SSSE3):
 		xor l, l
 		.LoopWidth:
 			; Load samples ;
+			prefetcht0 [yPtr + (COMPV_YASM_CACHE_LINE_SIZE*3)]
+			prefetcht0 [uPtr + (COMPV_YASM_CACHE_LINE_SIZE*3)]
+			prefetcht0 [vPtr + (COMPV_YASM_CACHE_LINE_SIZE*3)]
 			lea k, [i*3] ; ARM NEON add k, i, i SHL #1
 			movdqa vecYlow, [yPtr + i*COMPV_YASM_UINT8_SZ_BYTES]
 			movq vecU, [uPtr + l*COMPV_YASM_UINT8_SZ_BYTES]

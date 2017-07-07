@@ -79,7 +79,7 @@ public:
 			CompVMatPtr imageGray, edges;
 			CompVHoughLineVector lines;
 			CompVMatPtr points;
-#if 0
+#if 1
 			COMPV_CHECK_CODE_RETURN(CompVImage::convertGrayscale(image, &imageGray));
 			COMPV_CHECK_CODE_RETURN(m_ptrCanny->process(imageGray, &edges));
 #elif 1
