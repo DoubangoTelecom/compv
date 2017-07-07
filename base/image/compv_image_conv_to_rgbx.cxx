@@ -171,7 +171,7 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::yuvPlanar(const CompVMatPtr& imageIn, Com
 		if (imageRGBx->isAlignedSSE(0) && imageIn->isAlignedSSE(0) && imageIn->isAlignedSSE(1) && imageIn->isAlignedSSE(2)) {
 			if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
 				if (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) {
-					//COMPV_EXEC_IFDEF_INTRIN_X86(fptr_planar_to_rgbx = CompVImageConvYuv444p_to_Rgba32_Intrin_SSE2);
+					COMPV_EXEC_IFDEF_INTRIN_X86(fptr_planar_to_rgbx = CompVImageConvYuv444p_to_Rgba32_Intrin_SSE2);
 				}
 			}
 			if (CompVCpu::isEnabled(kCpuFlagSSSE3)) {

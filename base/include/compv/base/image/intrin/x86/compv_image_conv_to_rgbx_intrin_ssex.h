@@ -30,20 +30,56 @@ COMPV_NAMESPACE_BEGIN()
 #define yuv422p_checkAddStrideUV 
 #define yuv444p_checkAddStrideUV
 
-#define yuv420p_uv_step				8
-#define yuv422p_uv_step				8
-#define yuv444p_uv_step				16
+#define yuv420p_uv_step					8
+#define yuv422p_uv_step					8
+#define yuv444p_uv_step					16
 
-#define yuv420p_uv_load				_mm_loadl_epi64
-#define yuv422p_uv_load				_mm_loadl_epi64
-#define yuv444p_uv_load				_mm_load_si128
+#define yuv420p_uv_stride				(stride >> 1) /* no need for "((stride + 1) >> 1)" because stride is even (aligned on #16 bytes) */
+#define yuv422p_uv_stride				(stride >> 1) /* no need for "((stride + 1) >> 1)" because stride is even (aligned on #16 bytes) */
+#define yuv444p_uv_stride				(stride)
+
+#define yuv420p_uv_load					_mm_loadl_epi64
+#define yuv422p_uv_load					_mm_loadl_epi64
+#define yuv444p_uv_load					_mm_load_si128
+
+#define yuv420p_u_unpackhi				(void)(vecUhi)
+#define yuv422p_u_unpackhi				(void)(vecUhi)
+#define yuv444p_u_unpackhi				vecUhi = _mm_unpackhi_epi8(vecUlo, vecZero)
+
+#define yuv420p_v_unpackhi				(void)(vecVhi)
+#define yuv422p_v_unpackhi				(void)(vecVhi)
+#define yuv444p_v_unpackhi				vecVhi = _mm_unpackhi_epi8(vecVlo, vecZero)
+
+#define yuv420p_u_primehi				(void)(vecUhi)
+#define yuv422p_u_primehi				(void)(vecUhi)
+#define yuv444p_u_primehi				vecUhi = _mm_sub_epi16(vecUhi, vec127)
+
+#define yuv420p_v_primehi				(void)(vecVhi)
+#define yuv422p_v_primehi				(void)(vecVhi)
+#define yuv444p_v_primehi				vecVhi = _mm_sub_epi16(vecVhi, vec127)
+
+#define yuv420p_u_primehi65				(void)(vec1hi)
+#define yuv422p_u_primehi65				(void)(vec1hi)
+#define yuv444p_u_primehi65				vec1hi = _mm_mullo_epi16(vecUhi, vec65)
+
+#define yuv420p_v_primehi51				(void)(vec0hi)
+#define yuv422p_v_primehi51				(void)(vec0hi)
+#define yuv444p_v_primehi51				vec0hi = _mm_mullo_epi16(vecVhi, vec51)
+
+#define yuv420p_final_vec(vec, p)		vec##p = _mm_unpack##p##_epi16(vec##lo, vec##lo)
+#define yuv422p_final_vec(vec, p)		vec##p = _mm_unpack##p##_epi16(vec##lo, vec##lo)
+#define yuv444p_final_vec(vec, p)		(void)(vec##p)
+
+#define yuv420p_g_high					(void)(vec0hi)
+#define yuv422p_g_high					(void)(vec0hi)
+#define yuv444p_g_high					vec1lo = _mm_madd_epi16(_mm_unpacklo_epi16(vecUhi, vecVhi), vec13_26); vec1hi = _mm_madd_epi16(_mm_unpackhi_epi16(vecUhi, vecVhi), vec13_26); vec0hi = _mm_packs_epi32(vec1lo, vec1hi)
 
 #define CompVImageConvPlanar_to_Rgbx_Intrin_SSEx(nameYuv, nameRgbx, ssex) { \
 	compv_uscalar_t i, j, k, l; \
-	const compv_uscalar_t strideUV = (stride >> 1); /* no need for "((stride + 1) >> 1)" because stride is even (aligned on #16 bytes) */ \
+	const compv_uscalar_t strideUV = nameYuv##_uv_stride;  \
 	const compv_uscalar_t strideRGBx = (stride * nameRgbx##_bytes_per_sample); \
-	__m128i vecYlow, vecYhigh, vecUlow, vecVlow, vecR, vecG, vecB; \
-	__m128i vec0, vec1; \
+	__m128i vecYlo, vecYhi, vecUlo, vecUhi, vecVlo, vecVhi, vecR, vecG, vecB; \
+	__m128i vec0lo, vec0hi, vec1lo, vec1hi; \
 	static const __m128i vecZero = _mm_setzero_si128(); \
 	static const __m128i vec16 = _mm_load_si128(reinterpret_cast<const __m128i*>(k16_i16)); \
 	static const __m128i vec37 = _mm_load_si128(reinterpret_cast<const __m128i*>(k37_i16)); \
@@ -56,51 +92,64 @@ COMPV_NAMESPACE_BEGIN()
 	for (j = 0; j < height; ++j) { \
 		for (i = 0, k = 0, l = 0; i < width; i += 16, k += nameRgbx##_step, l += nameYuv##_uv_step) { \
 			/* Load samples */ \
-			vecYlow = _mm_load_si128(reinterpret_cast<const __m128i*>(&yPtr[i])); /* #16 Y samples */ \
-			vecUlow = nameYuv##_uv_load(reinterpret_cast<const __m128i*>(&uPtr[l])); /* #8 U samples, low mem */ \
-			vecVlow = nameYuv##_uv_load(reinterpret_cast<const __m128i*>(&vPtr[l])); /* #8 V samples, low mem */ \
+			vecYlo = _mm_load_si128(reinterpret_cast<const __m128i*>(&yPtr[i])); /* #16 Y samples */ \
+			vecUlo = nameYuv##_uv_load(reinterpret_cast<const __m128i*>(&uPtr[l])); /* #8 or #16 U samples, lo mem */ \
+			vecVlo = nameYuv##_uv_load(reinterpret_cast<const __m128i*>(&vPtr[l])); /* #8 or #16 V samples, lo mem */ \
 			 \
 			/* Convert to I16 */ \
-			vecYhigh = _mm_unpackhi_epi8(vecYlow, vecZero); \
-			vecYlow = _mm_unpacklo_epi8(vecYlow, vecZero); \
-			vecUlow = _mm_unpacklo_epi8(vecUlow, vecZero); \
-			vecVlow = _mm_unpacklo_epi8(vecVlow, vecZero); \
+			vecYhi = _mm_unpackhi_epi8(vecYlo, vecZero); \
+			vecYlo = _mm_unpacklo_epi8(vecYlo, vecZero); \
+			nameYuv##_u_unpackhi; \
+			vecUlo = _mm_unpacklo_epi8(vecUlo, vecZero); \
+			nameYuv##_v_unpackhi; \
+			vecVlo = _mm_unpacklo_epi8(vecVlo, vecZero); \
 			 \
 			/* Compute Y', U', V' */\
-			vecYlow = _mm_sub_epi16(vecYlow, vec16); \
-			vecYhigh = _mm_sub_epi16(vecYhigh, vec16); \
-			vecUlow = _mm_sub_epi16(vecUlow, vec127); \
-			vecVlow = _mm_sub_epi16(vecVlow, vec127); \
+			vecYlo = _mm_sub_epi16(vecYlo, vec16); \
+			vecYhi = _mm_sub_epi16(vecYhi, vec16); \
+			vecUlo = _mm_sub_epi16(vecUlo, vec127); \
+			nameYuv##_u_primehi; \
+			vecVlo = _mm_sub_epi16(vecVlo, vec127); \
+			nameYuv##_v_primehi; \
 			 \
 			/* Compute (37Y'), (51V') and (65U') */ \
-			vecYlow = _mm_mullo_epi16(vecYlow, vec37); \
-			vecYhigh = _mm_mullo_epi16(vecYhigh, vec37); \
-			vec0 = _mm_mullo_epi16(vecVlow, vec51); \
-			vec1 = _mm_mullo_epi16(vecUlow, vec65); \
+			vecYlo = _mm_mullo_epi16(vecYlo, vec37); \
+			vecYhi = _mm_mullo_epi16(vecYhi, vec37); \
+			vec0lo = _mm_mullo_epi16(vecVlo, vec51); \
+			nameYuv##_v_primehi51; \
+			vec1lo = _mm_mullo_epi16(vecUlo, vec65); \
+			nameYuv##_u_primehi65; \
 			 \
 			/* Compute R = (37Y' + 0U' + 51V') >> 5 */ \
+			nameYuv##_final_vec(vec0, hi); \
+			nameYuv##_final_vec(vec0, lo); \
 			vecR = _mm_packus_epi16(\
-				_mm_srai_epi16(_mm_add_epi16(vecYlow, _mm_unpacklo_epi16(vec0, vec0)), 5), \
-				_mm_srai_epi16(_mm_add_epi16(vecYhigh, _mm_unpackhi_epi16(vec0, vec0)), 5) \
+				_mm_srai_epi16(_mm_add_epi16(vecYlo, vec0lo), 5), \
+				_mm_srai_epi16(_mm_add_epi16(vecYhi, vec0hi), 5) \
 			); \
 			 \
 			/* B = (37Y' + 65U' + 0V') >> 5 */ \
+			nameYuv##_final_vec(vec1, hi); \
+			nameYuv##_final_vec(vec1, lo); \
 			vecB = _mm_packus_epi16(\
-				_mm_srai_epi16(_mm_add_epi16(vecYlow, _mm_unpacklo_epi16(vec1, vec1)), 5), \
-				_mm_srai_epi16(_mm_add_epi16(vecYhigh, _mm_unpackhi_epi16(vec1, vec1)), 5) \
+				_mm_srai_epi16(_mm_add_epi16(vecYlo, vec1lo), 5), \
+				_mm_srai_epi16(_mm_add_epi16(vecYhi, vec1hi), 5) \
 			); \
 			 \
 			/* Compute G = (37Y' - 13U' - 26V') >> 5 = (37Y' - (13U' + 26V')) >> 5 */ \
-			vec0 = _mm_madd_epi16(_mm_unpacklo_epi16(vecUlow, vecVlow), vec13_26); /* (13U' + 26V').low - I32 */ \
-			vec1 = _mm_madd_epi16(_mm_unpackhi_epi16(vecUlow, vecVlow), vec13_26); /* (13U' + 26V').high - I32 */ \
-			vec0 = _mm_packs_epi32(vec0, vec1); \
+			vec0lo = _mm_madd_epi16(_mm_unpacklo_epi16(vecUlo, vecVlo), vec13_26); /* (13U' + 26V').lo - I32 */ \
+			vec0hi = _mm_madd_epi16(_mm_unpackhi_epi16(vecUlo, vecVlo), vec13_26); /* (13U' + 26V').hi - I32 */ \
+			vec0lo = _mm_packs_epi32(vec0lo, vec0hi); \
+			nameYuv##_g_high; \
+			nameYuv##_final_vec(vec0, hi); \
+			nameYuv##_final_vec(vec0, lo); \
 			vecG = _mm_packus_epi16(\
-				_mm_srai_epi16(_mm_sub_epi16(vecYlow, _mm_unpacklo_epi16(vec0, vec0)), 5), \
-				_mm_srai_epi16(_mm_sub_epi16(vecYhigh, _mm_unpackhi_epi16(vec0, vec0)), 5) \
+				_mm_srai_epi16(_mm_sub_epi16(vecYlo, vec0lo), 5), \
+				_mm_srai_epi16(_mm_sub_epi16(vecYhi, vec0hi), 5) \
 			); \
 			 \
 			/* Store result */ \
-			nameRgbx##_store_##ssex##(&rgbxPtr[k], vecR, vecG, vecB, vecA, vec0, vec1); \
+			nameRgbx##_store_##ssex##(&rgbxPtr[k], vecR, vecG, vecB, vecA, vec0lo, vec1lo); \
 			 \
 		} /* End_Of for (i = 0; i < width; i += 16) */ \
 		yPtr += stride; \
