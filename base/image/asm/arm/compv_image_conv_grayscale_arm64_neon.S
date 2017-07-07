@@ -14,11 +14,9 @@
 #   define sym(funcname) funcname
 #endif
 
-//.data
-//kShuffleEpi8_Yuyv422ToYuv_i32: .word 0x6040200, 0xe0c0a08, 0xd090501, 0xf0b0703
-//kShuffleEpi8_Uyvy422ToYuv_i32: .word 0x7050301, 0xf0d0b09, 0x4080c, 0x2060a0e
+.data
 
-//.extern sym(kShuffleEpi8_Yuyv422ToYuv_i32), sym(kShuffleEpi8_Uyvy422ToYuv_i32)
+.extern
 
 .text
 

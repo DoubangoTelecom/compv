@@ -223,8 +223,8 @@ COMPV_BASE_API COMPV_ALIGN_DEFAULT() int32_t kShuffleEpi8_Yuyv422ToYuv_i32[] = {
 
 // Packed uyvy422 -> planar Y(8 samples), U(4 samples), V(4 samples)
 COMPV_BASE_API COMPV_ALIGN_DEFAULT() int32_t kShuffleEpi8_Uyvy422ToYuv_i32[] { // To be used with _mm_shuffle_epi8
-	COMPV_MM_SHUFFLE_EPI8(7, 5, 3, 1), COMPV_MM_SHUFFLE_EPI8(15, 13, 11, 9), COMPV_MM_SHUFFLE_EPI8(0, 4, 8, 12), COMPV_MM_SHUFFLE_EPI8(2, 6, 10, 14), // 128bits SSE register
-	COMPV_MM_SHUFFLE_EPI8(7, 5, 3, 1), COMPV_MM_SHUFFLE_EPI8(15, 13, 11, 9), COMPV_MM_SHUFFLE_EPI8(0, 4, 8, 12), COMPV_MM_SHUFFLE_EPI8(2, 6, 10, 14), // 256bits AVX register
+	COMPV_MM_SHUFFLE_EPI8(7, 5, 3, 1), COMPV_MM_SHUFFLE_EPI8(15, 13, 11, 9), COMPV_MM_SHUFFLE_EPI8(12, 8, 4, 0), COMPV_MM_SHUFFLE_EPI8(14, 10, 6, 2), // 128bits SSE register
+	COMPV_MM_SHUFFLE_EPI8(7, 5, 3, 1), COMPV_MM_SHUFFLE_EPI8(15, 13, 11, 9), COMPV_MM_SHUFFLE_EPI8(12, 8, 4, 0), COMPV_MM_SHUFFLE_EPI8(14, 10, 6, 2), // 256bits AVX register
 };
 
 // Masks used to extract R5, G6 and B5 bytes from packed 16 bytes

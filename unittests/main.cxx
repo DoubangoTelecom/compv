@@ -10,10 +10,10 @@ using namespace compv;
 #define UNITTEST_SOBEL							0
 #define UNITTEST_CANNY							0
 #define UNITTEST_HOUGHSHT						0
-#define UNITTEST_HOUGHKHT						1
+#define UNITTEST_HOUGHKHT						0
 
 #define UNITTEST_FEATURE_FAST					0
-#define UNITTEST_CHROMA_CONV					0
+#define UNITTEST_CHROMA_CONV					1
 #define UNITTEST_BRUTEFORCE						0
 
 #define UNITTEST_PATCH_MOMENTS					0
@@ -29,29 +29,33 @@ using namespace compv;
 #define UNITTEST_MATH_CALIB_HOMOGRAPHY			0
 #define UNITTEST_MATH_DISTANCE_HAMMING			0
 
-#define disableSSE() (kCpuFlagSSE | kCpuFlagSSE2 | kCpuFlagSSE3 | kCpuFlagSSSE3 | kCpuFlagSSE41 | kCpuFlagSSE42 | kCpuFlagSSE4a)
-#define disableAVX() (kCpuFlagAVX | kCpuFlagAVX2)
+#define enableSSE2()	~(kCpuFlagSSE | kCpuFlagSSE2)
+#define enableSSSE3()	~(kCpuFlagSSE3 | kCpuFlagSSSE3)
+#define enableSSE4()	~(kCpuFlagSSE41 | kCpuFlagSSE42 | kCpuFlagSSE4a)
+#define enableAVX()		~(kCpuFlagAVX | kCpuFlagAVX2)
 #if COMPV_ARCH_X86
-#define disableFMA() (kCpuFlagFMA3 | kCpuFlagFMA4)
+#define disableFMA()	(kCpuFlagFMA3 | kCpuFlagFMA4)
 #else
-#define disableFMA() (kCpuFlagARM_NEON_FMA)
+#define disableFMA()	(kCpuFlagARM_NEON_FMA)
 #endif
-#define disableNEON() (kCpuFlagARM_NEON)
-#define disableALL() kCpuFlagAll
-#define disableNONE() kCpuFlagNone
-#define enableALL() disableNONE()
+#define disableNEON()	(kCpuFlagARM_NEON)
+#define disableALL()	kCpuFlagAll
+#define disableNONE()	kCpuFlagNone
+#define enableALL()		~kCpuFlagAll
 
 
 static const bool UNITTESTS_ASM[] = { true, false };
 static const bool UNITTESTS_INTRIN[] = { true, false };
 static const bool UNITTESTS_FIXEDPOINT[] = { true, false };
 static const int32_t UNITTESTS_MAXTHREADS[] = { COMPV_NUM_THREADS_MULTI, COMPV_NUM_THREADS_SINGLE };
-static const uint64_t UNITTESTS_CPUFLAGS[] = {
+static const uint64_t UNITTESTS_CPUFLAGS_DISABLED[] = {
 	disableALL(), // cpp only
 	enableALL(), // neon, avx, sse, fma (normal case)
 #if COMPV_ARCH_X86
-	disableSSE(), // avx+fma
-	disableAVX(), // sse+fma
+	enableSSE2(), // SSE, SSE2
+	enableSSSE3(), // SSE3, SSSE3
+	enableSSE4(), // SSE4.1, SSE4.2, SSE4.a
+	enableAVX(), // AVX, AVX2
 #endif
 	disableFMA(), // all without fma
 };
@@ -69,11 +73,11 @@ compv_main()
 			for (size_t b = 0; b < sizeof(UNITTESTS_INTRIN) / sizeof(UNITTESTS_INTRIN[0]); ++b) {
 				for (size_t c = 0; c < sizeof(UNITTESTS_FIXEDPOINT) / sizeof(UNITTESTS_FIXEDPOINT[0]); ++c) {
 					for (size_t d = 0; d < sizeof(UNITTESTS_MAXTHREADS) / sizeof(UNITTESTS_MAXTHREADS[0]); ++d) {
-						for (size_t e = 0; e < sizeof(UNITTESTS_CPUFLAGS) / sizeof(UNITTESTS_CPUFLAGS[0]); ++e) {
+						for (size_t e = 0; e < sizeof(UNITTESTS_CPUFLAGS_DISABLED) / sizeof(UNITTESTS_CPUFLAGS_DISABLED[0]); ++e) {
 							for (size_t f = 0; f < fmax; ++f) {
 								std::string unitest = std::string("asm=") + CompVBase::to_string(UNITTESTS_ASM[a])
 									+ std::string(", intrin=") + CompVBase::to_string(UNITTESTS_INTRIN[b])
-									+ std::string(", enabled cpuflags=") + std::string(CompVCpu::flagsAsString(~UNITTESTS_CPUFLAGS[e]))
+									+ std::string(", enabled cpuflags=") + std::string(CompVCpu::flagsAsString(~UNITTESTS_CPUFLAGS_DISABLED[e]))
 									+ std::string(", fixedpoint=") + CompVBase::to_string(UNITTESTS_FIXEDPOINT[c])
 									+ std::string(", maxthreads=") + (UNITTESTS_MAXTHREADS[d] == COMPV_NUM_THREADS_MULTI ? std::string("multi") : (UNITTESTS_MAXTHREADS[d] == COMPV_NUM_THREADS_SINGLE ? std::string("single") : CompVBase::to_string(UNITTESTS_MAXTHREADS[d])))
 									+ std::string(", gpgpu=") + CompVBase::to_string(f == 1);
@@ -81,7 +85,7 @@ compv_main()
 								COMPV_CHECK_CODE_BAIL(err = CompVCpu::setMathFixedPointEnabled(UNITTESTS_FIXEDPOINT[c]));
 								COMPV_CHECK_CODE_BAIL(err = CompVCpu::setAsmEnabled(UNITTESTS_ASM[a]));
 								COMPV_CHECK_CODE_BAIL(err = CompVCpu::setIntrinsicsEnabled(UNITTESTS_INTRIN[b]));
-								COMPV_CHECK_CODE_BAIL(err = CompVCpu::flagsDisable(UNITTESTS_CPUFLAGS[e]));
+								COMPV_CHECK_CODE_BAIL(err = CompVCpu::flagsDisable(UNITTESTS_CPUFLAGS_DISABLED[e]));
 								COMPV_CHECK_CODE_BAIL(err = CompVParallel::multiThreadingSetMaxThreads(UNITTESTS_MAXTHREADS[d]));
 								COMPV_CHECK_CODE_BAIL(err = CompVGpu::setEnabled(f == 1));
 #if UNITTEST_SCALE || !defined(COMPV_TEST_LOCAL)

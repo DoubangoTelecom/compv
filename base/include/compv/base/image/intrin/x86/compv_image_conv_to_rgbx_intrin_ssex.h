@@ -110,7 +110,7 @@ COMPV_NAMESPACE_BEGIN()
 #define nv12_g_high						(void)(vec0hi)
 #define nv21_g_high						(void)(vec0hi)
 
-#define CompVImageConvPlanar_to_Rgbx_Intrin_SSEx(nameYuv, nameRgbx, ssex) { \
+#define CompVImageConvYuvPlanar_to_Rgbx_Intrin_SSEx(nameYuv, nameRgbx, ssex) { \
 	compv_uscalar_t i, j, k, l; \
 	const compv_uscalar_t strideUV = nameYuv##_uv_stride;  \
 	const compv_uscalar_t strideRGBx = (stride * nameRgbx##_bytes_per_sample); \
@@ -197,6 +197,79 @@ COMPV_NAMESPACE_BEGIN()
 	} /* End_Of for (j = 0; j < height; ++j) */ \
 }
 
+#define yuyv422_mask	kShuffleEpi8_Yuyv422ToYuv_i32
+#define uyvy422_mask	kShuffleEpi8_Uyvy422ToYuv_i32
+
+#define CompVImageConvYuvPacked_to_Rgbx_Intrin_SSEx(nameYuv, nameRgbx, ssex) { \
+	static const __m128i vecMask = _mm_load_si128(reinterpret_cast<const __m128i*>(nameYuv##_mask)); \
+	__m128i vecYlo, vecYhi, vecU, vecV, vecR, vecG, vecB; \
+	__m128i vec0, vec1; \
+	static const __m128i vecZero = _mm_setzero_si128(); \
+	static const __m128i vec16 = _mm_load_si128(reinterpret_cast<const __m128i*>(k16_i16)); \
+	static const __m128i vec37 = _mm_load_si128(reinterpret_cast<const __m128i*>(k37_i16)); \
+	static const __m128i vec51 = _mm_load_si128(reinterpret_cast<const __m128i*>(k51_i16)); \
+	static const __m128i vec65 = _mm_load_si128(reinterpret_cast<const __m128i*>(k65_i16)); \
+	static const __m128i vec127 = _mm_load_si128(reinterpret_cast<const __m128i*>(k127_i16)); \
+	static const __m128i vec13_26 = _mm_load_si128(reinterpret_cast<const __m128i*>(k13_26_i16)); /* 13, 26, 13, 26 ... */ \
+	static const __m128i vecA = _mm_cmpeq_epi8(vecZero, vecZero); /* FF FF FF FF... */ \
+	compv_uscalar_t i, j, k; \
+	const compv_uscalar_t strideRGBx = (stride * nameRgbx##_bytes_per_sample); \
+	stride <<= 1; \
+	width <<= 1; \
+	for (j = 0; j < height; ++j) { \
+		for (i = 0, k = 0; i < width; i += 32, k += nameRgbx##_step) { \
+			vec0 = _mm_shuffle_epi8(_mm_load_si128(reinterpret_cast<const __m128i*>(&yuvPtr[i + 0])), vecMask); \
+			vec1 = _mm_shuffle_epi8(_mm_load_si128(reinterpret_cast<const __m128i*>(&yuvPtr[i + 16])), vecMask); \
+			vecYlo = _mm_unpacklo_epi64(vec0, vec1); \
+			vecU = _mm_unpackhi_epi32(vec0, vec1); \
+			vecV = _mm_unpackhi_epi32(_mm_srli_epi64(vec0, 32), _mm_srli_epi64(vec1, 32)); \
+			 \
+			/* Convert to I16 */ \
+			vecYhi = _mm_unpackhi_epi8(vecYlo, vecZero); \
+			vecYlo = _mm_unpacklo_epi8(vecYlo, vecZero); \
+			vecU = _mm_unpacklo_epi8(vecU, vecZero); \
+			vecV = _mm_unpacklo_epi8(vecV, vecZero); \
+			 \
+			/* Compute Y', U', V' */ \
+			vecYlo = _mm_sub_epi16(vecYlo, vec16); \
+			vecYhi = _mm_sub_epi16(vecYhi, vec16); \
+			vecU = _mm_sub_epi16(vecU, vec127); \
+			vecV = _mm_sub_epi16(vecV, vec127); \
+			 \
+			/* Compute (37Y'), (51V') and (65U') */ \
+			vecYlo = _mm_mullo_epi16(vecYlo, vec37); \
+			vecYhi = _mm_mullo_epi16(vecYhi, vec37); \
+			vec0 = _mm_mullo_epi16(vecV, vec51); \
+			vec1 = _mm_mullo_epi16(vecU, vec65); \
+			 \
+			/* Compute R = (37Y' + 0U' + 51V') >> 5 */ \
+			vecR = _mm_packus_epi16( \
+				_mm_srai_epi16(_mm_add_epi16(vecYlo, _mm_unpacklo_epi16(vec0, vec0)), 5), \
+				_mm_srai_epi16(_mm_add_epi16(vecYhi, _mm_unpackhi_epi16(vec0, vec0)), 5) \
+			); \
+			 \
+			/* B = (37Y' + 65U' + 0V') >> 5 */ \
+			vecB = _mm_packus_epi16( \
+				_mm_srai_epi16(_mm_add_epi16(vecYlo, _mm_unpacklo_epi16(vec1, vec1)), 5), \
+				_mm_srai_epi16(_mm_add_epi16(vecYhi, _mm_unpackhi_epi16(vec1, vec1)), 5) \
+			); \
+			 \
+			/* Compute G = (37Y' - 13U' - 26V') >> 5 = (37Y' - (13U' + 26V')) >> 5 */ \
+			vec0 = _mm_madd_epi16(_mm_unpacklo_epi16(vecU, vecV), vec13_26); /* (13U' + 26V').low - I32 */ \
+			vec1 = _mm_madd_epi16(_mm_unpackhi_epi16(vecU, vecV), vec13_26); /* (13U' + 26V').high - I32 */ \
+			vec0 = _mm_packs_epi32(vec0, vec1); \
+			vecG = _mm_packus_epi16( \
+				_mm_srai_epi16(_mm_sub_epi16(vecYlo, _mm_unpacklo_epi16(vec0, vec0)), 5), \
+				_mm_srai_epi16(_mm_sub_epi16(vecYhi, _mm_unpackhi_epi16(vec0, vec0)), 5) \
+			); \
+			 \
+			/* Store result */ \
+			nameRgbx##_store_##ssex##(&rgbxPtr[k], vecR, vecG, vecB, vecA, vec0, vec1); \
+		} \
+		rgbxPtr += strideRGBx; \
+		yuvPtr += stride; \
+	} \
+}
 
 COMPV_NAMESPACE_END()
 
