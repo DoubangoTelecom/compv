@@ -25,11 +25,11 @@ section .data
 	extern sym(k171_u8)
 	extern sym(k43_f32)
 	extern sym(k255_f32)
-	extern sym(kShuffleEpi8_DeinterleaveL3_i32)
-	extern sym(kShuffleEpi8_InterleaveL3_Step0_i32)
-	extern sym(kShuffleEpi8_InterleaveL3_Step1_i32)
-	extern sym(kShuffleEpi8_InterleaveL3_Step2_i32)
-	extern sym(kShuffleEpi8_DeinterleaveL4_i32)
+	extern sym(kShuffleEpi8_Deinterleave8uL3_i32)
+	extern sym(kShuffleEpi8_Interleave8uL3_Step0_i32)
+	extern sym(kShuffleEpi8_Interleave8uL3_Step1_i32)
+	extern sym(kShuffleEpi8_Interleave8uL3_Step2_i32)
+	extern sym(kShuffleEpi8_Deinterleave8uL4_i32)
 
 section .text
 

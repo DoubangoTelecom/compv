@@ -66,7 +66,7 @@ void CompVImageScaleBilinear_Intrin_SSE41(
 	static const __m128i vecZero = _mm_setzero_si128();
 	static const __m128i vec0xff_epi32 = _mm_srli_epi32(_mm_cmpeq_epi32(vecZero, vecZero), 24); // 0x000000ff (faster than set1_epi32(0xff))
 	static const __m128i vec0xff_epi16 = _mm_srli_epi16(_mm_cmpeq_epi16(vecZero, vecZero), 8); // 0x00ff (faster than set1_epi16(0xff))
-	static const __m128i vecDeinterleave = _mm_load_si128(reinterpret_cast<const __m128i*>(kShuffleEpi8_DeinterleaveL2_i32));
+	static const __m128i vecDeinterleave = _mm_load_si128(reinterpret_cast<const __m128i*>(kShuffleEpi8_Deinterleave8uL2_i32));
 	const __m128i vecSfxTimes16 = _mm_set1_epi32(sf_x_ << 4);
 	const __m128i vecSfxTimes4 = _mm_set1_epi32(sf_x_ << 2);
 	const __m128i vecSFX0 = _mm_set_epi32(sf_x_ * 3, sf_x_ * 2, sf_x_ * 1, sf_x_ * 0);

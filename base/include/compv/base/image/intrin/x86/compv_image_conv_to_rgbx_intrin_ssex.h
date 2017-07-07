@@ -124,7 +124,7 @@ COMPV_NAMESPACE_BEGIN()
 	static const __m128i vec127 = _mm_load_si128(reinterpret_cast<const __m128i*>(k127_i16)); \
 	static const __m128i vec13_26 = _mm_load_si128(reinterpret_cast<const __m128i*>(k13_26_i16)); /* 13, 26, 13, 26 ... */ \
 	static const __m128i vecA = _mm_cmpeq_epi8(vecZero, vecZero); /* FF FF FF FF... */ \
-	static const __m128i vecDeinterleaveUV = _mm_load_si128(reinterpret_cast<const __m128i*>(kShuffleEpi8_DeinterleaveL2_i32)); \
+	static const __m128i vecDeinterleaveUV = _mm_load_si128(reinterpret_cast<const __m128i*>(kShuffleEpi8_Deinterleave8uL2_i32)); \
 	 \
 	for (j = 0; j < height; ++j) { \
 		for (i = 0, k = 0, l = 0; i < width; i += 16, k += nameRgbx##_step, l += nameYuv##_uv_step) { \

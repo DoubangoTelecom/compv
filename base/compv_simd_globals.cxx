@@ -218,27 +218,31 @@ COMPV_BASE_API COMPV_ALIGN_DEFAULT() int32_t kShuffleEpi8_Popcnt_i32[] = { // To
 	COMPV_MM_SHUFFLE_EPI8(2, 1, 1, 0), COMPV_MM_SHUFFLE_EPI8(3, 2, 2, 1), COMPV_MM_SHUFFLE_EPI8(3, 2, 2, 1), COMPV_MM_SHUFFLE_EPI8(4, 3, 3, 2), // 256bits AVX register
 };
 
-COMPV_BASE_API COMPV_ALIGN_DEFAULT() int32_t kShuffleEpi8_DeinterleaveL2_i32[] = { // To be used with _mm_shuffle_epi8, use vld2.u8/vst2.u8 for ARM NEON
+COMPV_BASE_API COMPV_ALIGN_DEFAULT() int32_t kShuffleEpi8_Deinterleave8uL2_i32[] = { // To be used with _mm_shuffle_epi8, use vld2.u8/vst2.u8 for ARM NEON
 	COMPV_MM_SHUFFLE_EPI8(6, 4, 2, 0), COMPV_MM_SHUFFLE_EPI8(14, 12, 10, 8), COMPV_MM_SHUFFLE_EPI8(7, 5, 3, 1), COMPV_MM_SHUFFLE_EPI8(15, 13, 11, 9), // 128bits SSE register
 	COMPV_MM_SHUFFLE_EPI8(6, 4, 2, 0), COMPV_MM_SHUFFLE_EPI8(14, 12, 10, 8), COMPV_MM_SHUFFLE_EPI8(7, 5, 3, 1), COMPV_MM_SHUFFLE_EPI8(15, 13, 11, 9), // 256bits AVX register
 };
-COMPV_BASE_API COMPV_ALIGN_DEFAULT() int32_t kShuffleEpi8_DeinterleaveL3_i32[] = { // To be used with _mm_shuffle_epi8, use vld3.u8/vst3.u8 for ARM NEON
+COMPV_BASE_API COMPV_ALIGN_DEFAULT() int32_t kShuffleEpi8_Deinterleave16uL2_i32[] = { // To be used with _mm_shuffle_epi8, use vld2.u16/vst2.u16 for ARM NEON
+	COMPV_MM_SHUFFLE_EPI8(5, 4, 1, 0), COMPV_MM_SHUFFLE_EPI8(13, 12, 9, 8), COMPV_MM_SHUFFLE_EPI8(7, 6, 3, 2), COMPV_MM_SHUFFLE_EPI8(15, 14, 11, 10), // 128bits SSE register
+	COMPV_MM_SHUFFLE_EPI8(5, 4, 1, 0), COMPV_MM_SHUFFLE_EPI8(13, 12, 9, 8), COMPV_MM_SHUFFLE_EPI8(7, 6, 3, 2), COMPV_MM_SHUFFLE_EPI8(15, 14, 11, 10), // 256bits AVX register
+};
+COMPV_BASE_API COMPV_ALIGN_DEFAULT() int32_t kShuffleEpi8_Deinterleave8uL3_i32[] = { // To be used with _mm_shuffle_epi8, use vld3.u8/vst3.u8 for ARM NEON
 	COMPV_MM_SHUFFLE_EPI8(9, 6, 3, 0), COMPV_MM_SHUFFLE_EPI8(4, 1, 15, 12), COMPV_MM_SHUFFLE_EPI8(2, 13, 10, 7), COMPV_MM_SHUFFLE_EPI8(14, 11, 8, 5), // 128bits SSE register
 	COMPV_MM_SHUFFLE_EPI8(9, 6, 3, 0), COMPV_MM_SHUFFLE_EPI8(4, 1, 15, 12), COMPV_MM_SHUFFLE_EPI8(2, 13, 10, 7), COMPV_MM_SHUFFLE_EPI8(14, 11, 8, 5), // 256bits AVX register
 };
-COMPV_BASE_API COMPV_ALIGN_DEFAULT() int32_t kShuffleEpi8_InterleaveL3_Step0_i32[] = { // To be used with _mm_shuffle_epi8, use vld3.u8/vst3.u8 for ARM NEON
+COMPV_BASE_API COMPV_ALIGN_DEFAULT() int32_t kShuffleEpi8_Interleave8uL3_Step0_i32[] = { // To be used with _mm_shuffle_epi8, use vld3.u8/vst3.u8 for ARM NEON
 	COMPV_MM_SHUFFLE_EPI8(2, 11, 1, 0), COMPV_MM_SHUFFLE_EPI8(5, 4, 12, 3), COMPV_MM_SHUFFLE_EPI8(14, 7, 6, 13), COMPV_MM_SHUFFLE_EPI8(10, 15, 9, 8), // 128bits SSE register
 	COMPV_MM_SHUFFLE_EPI8(2, 11, 1, 0), COMPV_MM_SHUFFLE_EPI8(5, 4, 12, 3), COMPV_MM_SHUFFLE_EPI8(14, 7, 6, 13), COMPV_MM_SHUFFLE_EPI8(10, 15, 9, 8), // 256bits AVX register
 };
-COMPV_BASE_API COMPV_ALIGN_DEFAULT() int32_t kShuffleEpi8_InterleaveL3_Step1_i32[] = { // To be used with _mm_shuffle_epi8, use vld3.u8/vst3.u8 for ARM NEON
+COMPV_BASE_API COMPV_ALIGN_DEFAULT() int32_t kShuffleEpi8_Interleave8uL3_Step1_i32[] = { // To be used with _mm_shuffle_epi8, use vld3.u8/vst3.u8 for ARM NEON
 	COMPV_MM_SHUFFLE_EPI8(2, 1, 11, 0), COMPV_MM_SHUFFLE_EPI8(13, 4, 3, 12), COMPV_MM_SHUFFLE_EPI8(7, 14, 6, 5), COMPV_MM_SHUFFLE_EPI8(10, 9, 15, 8), // 128bits SSE register
 	COMPV_MM_SHUFFLE_EPI8(2, 1, 11, 0), COMPV_MM_SHUFFLE_EPI8(13, 4, 3, 12), COMPV_MM_SHUFFLE_EPI8(7, 14, 6, 5), COMPV_MM_SHUFFLE_EPI8(10, 9, 15, 8), // 256bits AVX register
 };
-COMPV_BASE_API COMPV_ALIGN_DEFAULT() int32_t kShuffleEpi8_InterleaveL3_Step2_i32[] = { // To be used with _mm_shuffle_epi8, use vld3.u8/vst3.u8 for ARM NEON
+COMPV_BASE_API COMPV_ALIGN_DEFAULT() int32_t kShuffleEpi8_Interleave8uL3_Step2_i32[] = { // To be used with _mm_shuffle_epi8, use vld3.u8/vst3.u8 for ARM NEON
 	COMPV_MM_SHUFFLE_EPI8(11, 1, 0, 10), COMPV_MM_SHUFFLE_EPI8(4, 12, 3, 2), COMPV_MM_SHUFFLE_EPI8(7, 6, 13, 5), COMPV_MM_SHUFFLE_EPI8(15, 9, 8, 14), // 128bits SSE register
 	COMPV_MM_SHUFFLE_EPI8(11, 1, 0, 10), COMPV_MM_SHUFFLE_EPI8(4, 12, 3, 2), COMPV_MM_SHUFFLE_EPI8(7, 6, 13, 5), COMPV_MM_SHUFFLE_EPI8(15, 9, 8, 14), // 256bits AVX register
 };
-COMPV_BASE_API COMPV_ALIGN_DEFAULT() int32_t kShuffleEpi8_DeinterleaveL4_i32[] = { // To be used with _mm_shuffle_epi8, use vld4.u8/vst4.u8 for ARM NEON
+COMPV_BASE_API COMPV_ALIGN_DEFAULT() int32_t kShuffleEpi8_Deinterleave8uL4_i32[] = { // To be used with _mm_shuffle_epi8, use vld4.u8/vst4.u8 for ARM NEON
 	COMPV_MM_SHUFFLE_EPI8(14, 10, 12, 8), COMPV_MM_SHUFFLE_EPI8(15, 11, 13, 9), COMPV_MM_SHUFFLE_EPI8(6, 2, 4, 0), COMPV_MM_SHUFFLE_EPI8(7, 3, 5, 1), // 128bits SSE register
 	COMPV_MM_SHUFFLE_EPI8(14, 10, 12, 8), COMPV_MM_SHUFFLE_EPI8(15, 11, 13, 9), COMPV_MM_SHUFFLE_EPI8(6, 2, 4, 0), COMPV_MM_SHUFFLE_EPI8(7, 3, 5, 1), // 256bits AVX register
 };

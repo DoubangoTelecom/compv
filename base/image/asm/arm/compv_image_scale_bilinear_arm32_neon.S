@@ -276,7 +276,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 			ldrh t4, [inPtr_, t2]
 			ldrh t5, [inPtr_, t3]
 			orr t4, t5, LSL #16
-			@ldr t0, =kShuffleEpi8_DeinterleaveL2_i32
+			@ldr t0, =kShuffleEpi8_Deinterleave8uL2_i32
 			add t1, sp, #vecy1
 			add t2, sp, #vecSfxTimes16
 			mov t3, #0xff

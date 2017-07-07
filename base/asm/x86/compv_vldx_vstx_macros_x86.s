@@ -29,18 +29,18 @@
 	movdqa vecLane1, vectmp2
 	palignr vecLane1, vectmp1, 11
 	palignr vecLane0, vectmp0, 5
-	movdqa vectmp0, [sym(kShuffleEpi8_InterleaveL3_Step0_i32)]
+	movdqa vectmp0, [sym(kShuffleEpi8_Interleave8uL3_Step0_i32)]
 	psrldq vecLane2, 5
 	pslldq vecLane1, 5
 	movdqa vectmp1, vecLane2
 	palignr vectmp1, vecLane1, 5
 	pshufb vecLane0, vectmp0
-	movdqa vectmp0, [sym(kShuffleEpi8_InterleaveL3_Step1_i32)]
+	movdqa vectmp0, [sym(kShuffleEpi8_Interleave8uL3_Step1_i32)]
 	psrldq vecLane2, 5
 	palignr vecLane2, vectmp2, 6
 	movdqa vecLane1, vectmp1
 	pshufb vecLane1, vectmp0
-	pshufb vecLane2, [sym(kShuffleEpi8_InterleaveL3_Step2_i32)]		
+	pshufb vecLane2, [sym(kShuffleEpi8_Interleave8uL3_Step2_i32)]		
 	movdqa [ptr + (0*COMPV_YASM_XMM_SZ_BYTES)], vecLane0
 	movdqa [ptr + (1*COMPV_YASM_XMM_SZ_BYTES)], vecLane1
 	movdqa [ptr + (2*COMPV_YASM_XMM_SZ_BYTES)], vecLane2
@@ -73,15 +73,15 @@
 	vpslldq vectmp0, vectmp1, 5
 	vpalignr vecLane1, vectmp2, vectmp1, 11
 	vpalignr vecLane0, vecLane2, vectmp0, 5
-	vmovdqa vectmp0, [sym(kShuffleEpi8_InterleaveL3_Step0_i32)]
+	vmovdqa vectmp0, [sym(kShuffleEpi8_Interleave8uL3_Step0_i32)]
 	vpsrldq vecLane2, vecLane2, 5
 	vpslldq vecLane1, vecLane1, 5
 	vpalignr vectmp1, vecLane2, vecLane1, 5
 	vpshufb vecLane0, vecLane0, vectmp0
-	vmovdqa vectmp0, [sym(kShuffleEpi8_InterleaveL3_Step1_i32)]
+	vmovdqa vectmp0, [sym(kShuffleEpi8_Interleave8uL3_Step1_i32)]
 	vpsrldq vecLane2, vecLane2, 5
 	vpalignr vecLane2, vecLane2, vectmp2, 6
-	vmovdqa vectmp2, [sym(kShuffleEpi8_InterleaveL3_Step2_i32)]	
+	vmovdqa vectmp2, [sym(kShuffleEpi8_Interleave8uL3_Step2_i32)]	
 	vpshufb vecLane1, vectmp1, vectmp0
 	vpshufb vecLane2, vecLane2, vectmp2
 	vmovdqa [ptr + (0*COMPV_YASM_XMM_SZ_BYTES)], vecLane0
@@ -134,7 +134,7 @@
 	movdqa vecLane1, vecLane0
 	punpcklqdq vecLane0, vectmp0
 	punpckhqdq vecLane1, vectmp0
-	vmovdqa vectmp0, [sym(kShuffleEpi8_DeinterleaveL4_i32)]
+	vmovdqa vectmp0, [sym(kShuffleEpi8_Deinterleave8uL4_i32)]
 	movdqa vecLane3, vecLane2
 	punpcklqdq vecLane2, vectmp1
 	punpckhqdq vecLane3, vectmp1
@@ -183,7 +183,7 @@
     vpunpckhdq vecLane2, vecLane2, vecLane3
     vpunpckhqdq vecLane1, vecLane0, vectmp0
     vpunpcklqdq vecLane0, vecLane0, vectmp0
-	vmovdqa vectmp0, [sym(kShuffleEpi8_DeinterleaveL4_i32)]
+	vmovdqa vectmp0, [sym(kShuffleEpi8_Deinterleave8uL4_i32)]
     vpunpckhqdq vecLane3, vecLane2, vectmp1
     vpunpcklqdq vecLane2, vecLane2, vectmp1
     vpshufb vecLane0, vectmp0
@@ -216,7 +216,7 @@
 	movdqa vecLane0, [ptr + (0*COMPV_YASM_XMM_SZ_BYTES)]
 	movdqa vecLane1, [ptr + (1*COMPV_YASM_XMM_SZ_BYTES)]
 	movdqa vecLane2, [ptr + (2*COMPV_YASM_XMM_SZ_BYTES)]
-	movdqa vectmp2, [sym(kShuffleEpi8_DeinterleaveL3_i32)]
+	movdqa vectmp2, [sym(kShuffleEpi8_Deinterleave8uL3_i32)]
 	movdqa vectmp0, vecLane0
 	movdqa vectmp1, vecLane1
 	pshufb vecLane2, vectmp2
@@ -260,7 +260,7 @@
 	%define vectmp0		%5
 	%define vectmp1		%6
 	%define vectmp2		%7
-	vmovdqa vectmp2, [sym(kShuffleEpi8_DeinterleaveL3_i32)]
+	vmovdqa vectmp2, [sym(kShuffleEpi8_Deinterleave8uL3_i32)]
 	vmovdqa vecLane0, [ptr + (0*COMPV_YASM_XMM_SZ_BYTES)]
 	vmovdqa vecLane1, [ptr + (1*COMPV_YASM_XMM_SZ_BYTES)]
 	vmovdqa vecLane2, [ptr + (2*COMPV_YASM_XMM_SZ_BYTES)]

@@ -12,20 +12,6 @@
 #include "compv/base/math/compv_math.h"
 #include "compv/base/compv_debug.h"
 
-#define _mm_bilinear_extract_then_insert_x86_avx2(vecNeareastX, neareastIndex0, neareastIndex1, memNeighbA, memNeighbB, neighbIndex) \
-			/* Extract indices(neareastIndex0, neareastIndex1) */ \
-			nearestX0 = _mm_extract_epi32(vecNeareastX, neareastIndex0); \
-			nearestX1 = _mm_extract_epi32(vecNeareastX, neareastIndex1); \
-			/* Insert in memNeighbA(neighbIndex) */ \
-			memNeighbA[neighbIndex] = *reinterpret_cast<const uint16_t*>(&inPtr_[nearestX0]) | (*reinterpret_cast<const uint16_t*>(&inPtr_[nearestX1]) << 16); /* vecNeighbA  -> 0,1,0,1,0,1,0,1,0,1,0,1 */ \
-			/* Insert in memNeighbB(neighbIndex) */ \
-			memNeighbB[neighbIndex] = *reinterpret_cast<const uint16_t*>(&inPtr_[nearestX0 + inStride]) | (*reinterpret_cast<const uint16_t*>(&inPtr_[nearestX1 + inStride]) << 16); /* vecNeighbB -> 2,3,2,3,2,3,2,3 */
-
-#define _mm_bilinear_set_neighbs_x86_avx2(vecNeareastX, memNeighbA, memNeighbB, neighbIndex0, neighbIndex1) \
-			_mm_bilinear_extract_then_insert_x86_avx2(vecNeareastX, 0, 1, memNeighbA, memNeighbB, neighbIndex0); \
-			_mm_bilinear_extract_then_insert_x86_avx2(vecNeareastX, 2, 3, memNeighbA, memNeighbB, neighbIndex1)
-
-
 COMPV_NAMESPACE_BEGIN()
 
 #if defined(__INTEL_COMPILER)
@@ -37,31 +23,25 @@ void CompVImageScaleBilinear_Intrin_AVX2(
 	compv_uscalar_t sf_x, compv_uscalar_t sf_y)
 {
 	COMPV_DEBUG_INFO_CHECK_AVX2();
+
 	_mm256_zeroupper();
-#if !defined(__AVX2__)
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("AVX <-> SSE transition issues. This code use SSE ops which must be vex encoded. You must build this file with AVX enabled or use ASM version");
-#endif
 
 	compv_uscalar_t i, nearestY;
 	const uint8_t* inPtr_;
 	int sf_x_ = static_cast<int>(sf_x);
 	__m256i vecX0, vecX1, vecX2, vecX3, vecNeighb0, vecNeighb1, vecNeighb2, vecNeighb3, vec0, vec1, vec2, vec3, vec4, vec5, vec6, vec7, vecy0, vecy1;
-	__m128i xmm0; // AVX<->SSE transition issues if code not build with /AVX2 options. Should use ASM code to avoid the risk
-	COMPV_ALIGN_AVX2() uint32_t memNeighb0[8];
-	COMPV_ALIGN_AVX2() uint32_t memNeighb1[8];
-	COMPV_ALIGN_AVX2() uint32_t memNeighb2[8];
-	COMPV_ALIGN_AVX2() uint32_t memNeighb3[8];
 	static const __m256i vecZero = _mm256_setzero_si256();
 	static const __m256i vec0xff_epi32 = _mm256_srli_epi32(_mm256_cmpeq_epi32(vecZero, vecZero), 24); // 0x000000ff (faster than set1_epi32(0xff))
 	static const __m256i vec0xff_epi16 = _mm256_srli_epi16(_mm256_cmpeq_epi16(vecZero, vecZero), 8); // 0x00ff (faster than set1_epi16(0xff))
-	static const __m256i vecDeinterleave = _mm256_load_si256(reinterpret_cast<const __m256i*>(kShuffleEpi8_DeinterleaveL2_i32));
+	static const __m256i vecDeinterleave8u = _mm256_load_si256(reinterpret_cast<const __m256i*>(kShuffleEpi8_Deinterleave8uL2_i32));
+	static const __m256i vecDeinterleave16u = _mm256_load_si256(reinterpret_cast<const __m256i*>(kShuffleEpi8_Deinterleave16uL2_i32));
+	const __m256i vecStride = _mm256_set1_epi32(static_cast<int>(inStride));
 	const __m256i vecSfxTimes32 = _mm256_set1_epi32(sf_x_ << 5);
 	const __m256i vecSfxTimes8 = _mm256_set1_epi32(sf_x_ << 3);
 	const __m256i vecSFX0 = _mm256_set_epi32(sf_x_ * 7, sf_x_ * 6, sf_x_ * 5, sf_x_ * 4, sf_x_ * 3, sf_x_ * 2, sf_x_ * 1, sf_x_ * 0);
 	const __m256i vecSFX1 = _mm256_add_epi32(vecSFX0, vecSfxTimes8);
 	const __m256i vecSFX2 = _mm256_add_epi32(vecSFX1, vecSfxTimes8);
 	const __m256i vecSFX3 = _mm256_add_epi32(vecSFX2, vecSfxTimes8);
-	int nearestX0, nearestX1;
 
 	do {
 		nearestY = (outYStart >> 8); // nearest y-point
@@ -81,35 +61,30 @@ void CompVImageScaleBilinear_Intrin_AVX2(
 			vec2 = _mm256_srli_epi32(vecX2, 8);
 			vec3 = _mm256_srli_epi32(vecX3, 8);
 
-			// write memNeighbs
-			xmm0 = _mm256_extractf128_si256(vec0, 0);
-			_mm_bilinear_set_neighbs_x86_avx2(xmm0, memNeighb0, memNeighb2, 0, 1);
-			xmm0 = _mm256_extractf128_si256(vec0, 1);
-			_mm_bilinear_set_neighbs_x86_avx2(xmm0, memNeighb0, memNeighb2, 2, 3);
-			xmm0 = _mm256_extractf128_si256(vec1, 0);
-			_mm_bilinear_set_neighbs_x86_avx2(xmm0, memNeighb0, memNeighb2, 4, 5);
-			xmm0 = _mm256_extractf128_si256(vec1, 1);
-			_mm_bilinear_set_neighbs_x86_avx2(xmm0, memNeighb0, memNeighb2, 6, 7);
-			xmm0 = _mm256_extractf128_si256(vec2, 0);
-			_mm_bilinear_set_neighbs_x86_avx2(xmm0, memNeighb1, memNeighb3, 0, 1);
-			xmm0 = _mm256_extractf128_si256(vec2, 1);
-			_mm_bilinear_set_neighbs_x86_avx2(xmm0, memNeighb1, memNeighb3, 2, 3);
-			xmm0 = _mm256_extractf128_si256(vec3, 0);
-			_mm_bilinear_set_neighbs_x86_avx2(xmm0, memNeighb1, memNeighb3, 4, 5);
-			xmm0 = _mm256_extractf128_si256(vec3, 1);
-			_mm_bilinear_set_neighbs_x86_avx2(xmm0, memNeighb1, memNeighb3, 6, 7);
+			vecNeighb0 = _mm256_shuffle_epi8(_mm256_i32gather_epi32(reinterpret_cast<int const *>(inPtr_), vec0, 1), vecDeinterleave16u);
+			vec5 = _mm256_shuffle_epi8(_mm256_i32gather_epi32(reinterpret_cast<int const *>(inPtr_), vec1, 1), vecDeinterleave16u);
+			vecNeighb1 = _mm256_shuffle_epi8(_mm256_i32gather_epi32(reinterpret_cast<int const *>(inPtr_), vec2, 1), vecDeinterleave16u);
+			vec7 = _mm256_shuffle_epi8(_mm256_i32gather_epi32(reinterpret_cast<int const *>(inPtr_), vec3, 1), vecDeinterleave16u);
+			vecNeighb0 = _mm256_permute4x64_epi64(_mm256_unpacklo_epi64(vecNeighb0, vec5), 0xD8);
+			vecNeighb1 = _mm256_permute4x64_epi64(_mm256_unpacklo_epi64(vecNeighb1, vec7), 0xD8);
 
-			// read memNeighbs
-			vecNeighb0 = _mm256_load_si256(reinterpret_cast<const __m256i*>(memNeighb0));
-			vecNeighb1 = _mm256_load_si256(reinterpret_cast<const __m256i*>(memNeighb1));
-			vecNeighb2 = _mm256_load_si256(reinterpret_cast<const __m256i*>(memNeighb2));
-			vecNeighb3 = _mm256_load_si256(reinterpret_cast<const __m256i*>(memNeighb3));
+			vec0 = _mm256_add_epi32(vec0, vecStride);
+			vec1 = _mm256_add_epi32(vec1, vecStride);
+			vec2 = _mm256_add_epi32(vec2, vecStride);
+			vec3 = _mm256_add_epi32(vec3, vecStride);
+
+			vecNeighb2 = _mm256_shuffle_epi8(_mm256_i32gather_epi32(reinterpret_cast<int const *>(inPtr_), vec0, 1), vecDeinterleave16u);
+			vec5 = _mm256_shuffle_epi8(_mm256_i32gather_epi32(reinterpret_cast<int const *>(inPtr_), vec1, 1), vecDeinterleave16u);
+			vecNeighb3 = _mm256_shuffle_epi8(_mm256_i32gather_epi32(reinterpret_cast<int const *>(inPtr_), vec2, 1), vecDeinterleave16u);
+			vec7 = _mm256_shuffle_epi8(_mm256_i32gather_epi32(reinterpret_cast<int const *>(inPtr_), vec3, 1), vecDeinterleave16u);
+			vecNeighb2 = _mm256_permute4x64_epi64(_mm256_unpacklo_epi64(vecNeighb2, vec5), 0xD8);
+			vecNeighb3 = _mm256_permute4x64_epi64(_mm256_unpacklo_epi64(vecNeighb3, vec7), 0xD8);
 			
 			// Deinterleave neighbs
-			vec0 = _mm256_shuffle_epi8(vecNeighb0, vecDeinterleave); // 0,0,0,0,1,1,1,1
-			vec1 = _mm256_shuffle_epi8(vecNeighb1, vecDeinterleave); // 0,0,0,0,1,1,1,1
-			vec2 = _mm256_shuffle_epi8(vecNeighb2, vecDeinterleave); // 2,2,2,2,3,3,3,3
-			vec3 = _mm256_shuffle_epi8(vecNeighb3, vecDeinterleave); // 2,2,2,2,3,3,3,3
+			vec0 = _mm256_shuffle_epi8(vecNeighb0, vecDeinterleave8u); // 0,0,0,0,1,1,1,1
+			vec1 = _mm256_shuffle_epi8(vecNeighb1, vecDeinterleave8u); // 0,0,0,0,1,1,1,1
+			vec2 = _mm256_shuffle_epi8(vecNeighb2, vecDeinterleave8u); // 2,2,2,2,3,3,3,3
+			vec3 = _mm256_shuffle_epi8(vecNeighb3, vecDeinterleave8u); // 2,2,2,2,3,3,3,3
 			vecNeighb0 = _mm256_unpacklo_epi64(vec0, vec1); // 0,0,0,0,0,0
 			vecNeighb1 = _mm256_unpackhi_epi64(vec0, vec1); // 1,1,1,1,1,1
 			vecNeighb2 = _mm256_unpacklo_epi64(vec2, vec3); // 2,2,2,2,2,2
@@ -169,6 +144,7 @@ void CompVImageScaleBilinear_Intrin_AVX2(
 		outPtr += outStride;
 		outYStart += sf_y;
 	} while (outYStart < outYEnd);
+
 	_mm256_zeroupper();
 }
 
