@@ -197,12 +197,11 @@ sym(CompVImageScaleBilinear_Asm_X64_AVX2)
 			vpcmpeqb vec7, vec7, vec7 ; condition mask
 			vmovdqa vec6, vec7
 			vpgatherdd  vecNeighb2, dword ptr [rbx+ymm0], vec6
-			vmovdqa ymm0, vec7
-			vpgatherdd  vec6, dword ptr [rbx+ymm1], ymm0
-			vmovdqa ymm1, vec7
-			vpgatherdd  vecNeighb3, dword ptr [rbx+ymm2], ymm1
-			vmovdqa ymm2, vec7
-			vpgatherdd  vec7, dword ptr [rbx+ymm3], ymm2
+			vpgatherdd  vec6, dword ptr [rbx+ymm1], vec7
+			vpcmpeqb ymm0, ymm0, ymm0
+			vpgatherdd  vecNeighb3, dword ptr [rbx+ymm2], ymm0
+			vpcmpeqb ymm1, ymm1, ymm1
+			vpgatherdd  vec7, dword ptr [rbx+ymm3], ymm1
 
 			vpshufb vecNeighb0, vecNeighb0, [vecDeinterleave16u]
 			vpshufb vec4, vec4, [vecDeinterleave16u]
