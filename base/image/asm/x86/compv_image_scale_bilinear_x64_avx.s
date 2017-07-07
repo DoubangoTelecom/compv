@@ -174,30 +174,27 @@ sym(CompVImageScaleBilinear_Asm_X64_AVX2)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		xor rsi, rsi ; rsi = i = 0x0
 		.LoopWidth:
-			;;; nearest x-point ;;;
+			vpcmpeqb vec7, vec7, vec7 ; condition mask
+			vmovdqa vec6, vec7
+			vmovdqa vecNeighb2, vec7
+			vmovdqa vecNeighb3, vec7
 			vpsrld ymm0, vecX0, 8
 			vpsrld ymm1, vecX1, 8
+			vpgatherdd  vecNeighb0, dword ptr [rbx+ymm0], vec7
+			vpgatherdd  vec4, dword ptr [rbx+ymm1], vec6
 			vpsrld ymm2, vecX2, 8
 			vpsrld ymm3, vecX3, 8
-
-			vpcmpeqb vec7, vec7, vec7 ; condition mask
-			vmovdqa vec4, vec7
-			vmovdqa vec5, vec7
-			vmovdqa vec6, vec7
-			vpgatherdd  vecNeighb0, dword ptr [rbx+ymm0], vec4
-			vpgatherdd  vec4, dword ptr [rbx+ymm1], vec5
-			vpgatherdd  vecNeighb1, dword ptr [rbx+ymm2], vec6
-			vpgatherdd  vec5, dword ptr [rbx+ymm3], vec7
+			vpgatherdd  vecNeighb1, dword ptr [rbx+ymm2], vecNeighb2
+			vpgatherdd  vec5, dword ptr [rbx+ymm3], vecNeighb3
 
 			vpaddd ymm0, ymm0, [vecStride]
 			vpaddd ymm1, ymm1, [vecStride]
+			vpcmpeqb vec6, vec6, vec6 ; condition mask
+			vmovdqa vec7, vec6
 			vpaddd ymm2, ymm2, [vecStride]
-			vpaddd ymm3, ymm3, [vecStride]
-
-			vpcmpeqb vec7, vec7, vec7 ; condition mask
-			vmovdqa vec6, vec7
 			vpgatherdd  vecNeighb2, dword ptr [rbx+ymm0], vec6
 			vpgatherdd  vec6, dword ptr [rbx+ymm1], vec7
+			vpaddd ymm3, ymm3, [vecStride]
 			vpcmpeqb ymm0, ymm0, ymm0
 			vpgatherdd  vecNeighb3, dword ptr [rbx+ymm2], ymm0
 			vpcmpeqb ymm1, ymm1, ymm1

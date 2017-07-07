@@ -4,7 +4,7 @@ using namespace compv;
 
 #define TAG_UNITTESTS "UnitTests"
 
-#define UNITTEST_SCALE							0
+#define UNITTEST_SCALE							1
 #define UNITTEST_PYRAMID						0
 #define UNITTEST_CONVOLUTION					0
 #define UNITTEST_SOBEL							0
@@ -13,7 +13,7 @@ using namespace compv;
 #define UNITTEST_HOUGHKHT						0
 
 #define UNITTEST_FEATURE_FAST					0
-#define UNITTEST_CHROMA_CONV					1
+#define UNITTEST_CHROMA_CONV					0
 #define UNITTEST_BRUTEFORCE						0
 
 #define UNITTEST_PATCH_MOMENTS					0

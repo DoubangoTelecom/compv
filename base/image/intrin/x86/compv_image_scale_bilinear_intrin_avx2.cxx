@@ -62,11 +62,11 @@ void CompVImageScaleBilinear_Intrin_AVX2(
 			vec3 = _mm256_srli_epi32(vecX3, 8);
 
 			vecNeighb0 = _mm256_shuffle_epi8(_mm256_i32gather_epi32(reinterpret_cast<int const *>(inPtr_), vec0, 1), vecDeinterleave16u);
-			vec5 = _mm256_shuffle_epi8(_mm256_i32gather_epi32(reinterpret_cast<int const *>(inPtr_), vec1, 1), vecDeinterleave16u);
+			vec4 = _mm256_shuffle_epi8(_mm256_i32gather_epi32(reinterpret_cast<int const *>(inPtr_), vec1, 1), vecDeinterleave16u);
 			vecNeighb1 = _mm256_shuffle_epi8(_mm256_i32gather_epi32(reinterpret_cast<int const *>(inPtr_), vec2, 1), vecDeinterleave16u);
-			vec7 = _mm256_shuffle_epi8(_mm256_i32gather_epi32(reinterpret_cast<int const *>(inPtr_), vec3, 1), vecDeinterleave16u);
-			vecNeighb0 = _mm256_permute4x64_epi64(_mm256_unpacklo_epi64(vecNeighb0, vec5), 0xD8);
-			vecNeighb1 = _mm256_permute4x64_epi64(_mm256_unpacklo_epi64(vecNeighb1, vec7), 0xD8);
+			vec5 = _mm256_shuffle_epi8(_mm256_i32gather_epi32(reinterpret_cast<int const *>(inPtr_), vec3, 1), vecDeinterleave16u);
+			vecNeighb0 = _mm256_permute4x64_epi64(_mm256_unpacklo_epi64(vecNeighb0, vec4), 0xD8);
+			vecNeighb1 = _mm256_permute4x64_epi64(_mm256_unpacklo_epi64(vecNeighb1, vec5), 0xD8);
 
 			vec0 = _mm256_add_epi32(vec0, vecStride);
 			vec1 = _mm256_add_epi32(vec1, vecStride);
@@ -74,11 +74,11 @@ void CompVImageScaleBilinear_Intrin_AVX2(
 			vec3 = _mm256_add_epi32(vec3, vecStride);
 
 			vecNeighb2 = _mm256_shuffle_epi8(_mm256_i32gather_epi32(reinterpret_cast<int const *>(inPtr_), vec0, 1), vecDeinterleave16u);
-			vec5 = _mm256_shuffle_epi8(_mm256_i32gather_epi32(reinterpret_cast<int const *>(inPtr_), vec1, 1), vecDeinterleave16u);
+			vec4 = _mm256_shuffle_epi8(_mm256_i32gather_epi32(reinterpret_cast<int const *>(inPtr_), vec1, 1), vecDeinterleave16u);
 			vecNeighb3 = _mm256_shuffle_epi8(_mm256_i32gather_epi32(reinterpret_cast<int const *>(inPtr_), vec2, 1), vecDeinterleave16u);
-			vec7 = _mm256_shuffle_epi8(_mm256_i32gather_epi32(reinterpret_cast<int const *>(inPtr_), vec3, 1), vecDeinterleave16u);
-			vecNeighb2 = _mm256_permute4x64_epi64(_mm256_unpacklo_epi64(vecNeighb2, vec5), 0xD8);
-			vecNeighb3 = _mm256_permute4x64_epi64(_mm256_unpacklo_epi64(vecNeighb3, vec7), 0xD8);
+			vec5 = _mm256_shuffle_epi8(_mm256_i32gather_epi32(reinterpret_cast<int const *>(inPtr_), vec3, 1), vecDeinterleave16u);
+			vecNeighb2 = _mm256_permute4x64_epi64(_mm256_unpacklo_epi64(vecNeighb2, vec4), 0xD8);
+			vecNeighb3 = _mm256_permute4x64_epi64(_mm256_unpacklo_epi64(vecNeighb3, vec5), 0xD8);
 			
 			// Deinterleave neighbs
 			vec0 = _mm256_shuffle_epi8(vecNeighb0, vecDeinterleave8u); // 0,0,0,0,1,1,1,1

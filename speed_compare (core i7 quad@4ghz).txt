@@ -37,7 +37,6 @@ CompV: 3045.ms
 OpenCV: 32920.ms(full optiz)
 Remarque: For OpenCV you need to convert to BGR then HSV (#2 steps: COLOR_YUV2BGR_I420 then CV_BGR2HSV)
 
-
 === FAST9_16, Nonmax=true, threshold=20, maxfeatures=-1 (1282, 720) (#10k times) ===
 CompV: 3358.ms(mt,avx2), 4730.ms(mt,sse2), 8447(st,avx2), 11261.ms(st,sse2)
 OpenCV: 10270.ms(full optiz)
@@ -77,3 +76,5 @@ The test images contains many edges and this is why it's unusually slow. Canny o
 CompV(SHT): 11222.ms(full optiz)
 CompV(KHT): 2178.ms(full optiz)
 OpenCV: 25219.ms(full optiz)
+Remarque: Test done with dense image (many non-zero pixels). In normal use case our KHT implementation should work at ~800fps while OpenCV works at ~40fps
+
