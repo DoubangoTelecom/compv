@@ -14,6 +14,7 @@ global sym(CompVMathUtilsMax_16u_Asm_X86_SSE41)
 global sym(CompVMathUtilsSum_8u32u_Asm_X86_SSE2)
 global sym(CompVMathUtilsSumAbs_16s16u_Asm_X86_SSSE3)
 global sym(CompVMathUtilsSum2_32s32s_Asm_X86_SSE2)
+global sym(CompVMathUtilsSum2_32s32s_256x1_Asm_X86_SSE2)
 global sym(CompVMathUtilsScaleAndClipPixel8_16u32f_Asm_X86_SSE2)
 
 section .data
@@ -557,6 +558,64 @@ sym(CompVMathUtilsSum2_32s32s_Asm_X86_SSE2):
 	pop rbx
 	pop rdi
 	pop rsi
+	COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	ret
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> COMPV_ALIGNED(SSE) const int32_t* a
+; arg(1) -> COMPV_ALIGNED(SSE) const int32_t* b
+; arg(2) -> COMPV_ALIGNED(SSE) int32_t* s
+; arg(3) -> compv_uscalar_t width
+; arg(4) -> compv_uscalar_t height
+; arg(5) -> COMPV_ALIGNED(SSE) compv_uscalar_t stride
+sym(CompVMathUtilsSum2_32s32s_256x1_Asm_X86_SSE2):
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 6
+	COMPV_YASM_SAVE_XMM 7
+	;; end prolog ;;
+
+	mov rax, arg(0) ; rsi = a
+	mov rcx, arg(1) ; rdi = b
+	mov rdx, arg(2) ; rbx = s
+
+	%assign i 0
+	%rep 8
+		movdqa xmm0, [rax + (0+i)*COMPV_YASM_XMM_SZ_BYTES]
+		movdqa xmm1, [rax + (1+i)*COMPV_YASM_XMM_SZ_BYTES]
+		movdqa xmm2, [rax + (2+i)*COMPV_YASM_XMM_SZ_BYTES]
+		movdqa xmm3, [rax + (3+i)*COMPV_YASM_XMM_SZ_BYTES]
+		movdqa xmm4, [rax + (4+i)*COMPV_YASM_XMM_SZ_BYTES]
+		movdqa xmm5, [rax + (5+i)*COMPV_YASM_XMM_SZ_BYTES]
+		movdqa xmm6, [rax + (6+i)*COMPV_YASM_XMM_SZ_BYTES]
+		movdqa xmm7, [rax + (7+i)*COMPV_YASM_XMM_SZ_BYTES]
+
+		paddd xmm0, [rcx + (0+i)*COMPV_YASM_XMM_SZ_BYTES]
+		paddd xmm1, [rcx + (1+i)*COMPV_YASM_XMM_SZ_BYTES]
+		paddd xmm2, [rcx + (2+i)*COMPV_YASM_XMM_SZ_BYTES]
+		paddd xmm3, [rcx + (3+i)*COMPV_YASM_XMM_SZ_BYTES]
+		paddd xmm4, [rcx + (4+i)*COMPV_YASM_XMM_SZ_BYTES]
+		paddd xmm5, [rcx + (5+i)*COMPV_YASM_XMM_SZ_BYTES]
+		paddd xmm6, [rcx + (6+i)*COMPV_YASM_XMM_SZ_BYTES]
+		paddd xmm7, [rcx + (7+i)*COMPV_YASM_XMM_SZ_BYTES]
+
+		movdqa [rdx + (0+i)*COMPV_YASM_XMM_SZ_BYTES], xmm0
+		movdqa [rdx + (1+i)*COMPV_YASM_XMM_SZ_BYTES], xmm1
+		movdqa [rdx + (2+i)*COMPV_YASM_XMM_SZ_BYTES], xmm2
+		movdqa [rdx + (3+i)*COMPV_YASM_XMM_SZ_BYTES], xmm3
+		movdqa [rdx + (4+i)*COMPV_YASM_XMM_SZ_BYTES], xmm4
+		movdqa [rdx + (5+i)*COMPV_YASM_XMM_SZ_BYTES], xmm5
+		movdqa [rdx + (6+i)*COMPV_YASM_XMM_SZ_BYTES], xmm6
+		movdqa [rdx + (7+i)*COMPV_YASM_XMM_SZ_BYTES], xmm7
+
+		%assign i i+8
+	%endrep
+
+	;; begin epilog ;;
+	COMPV_YASM_RESTORE_XMM
 	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp

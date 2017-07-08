@@ -126,6 +126,13 @@ void CompVMathUtilsSum_8u32u_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* data,
 	*sum1 = static_cast<uint32_t>(_mm_cvtsi128_si32(vecSuml));
 }
 
+#define __CompVMathUtilsSum2_16x1_32s32s_Intrin_SSE2(i) \
+	_mm_store_si128(reinterpret_cast<__m128i*>(&s[i]), _mm_add_epi32(_mm_load_si128(reinterpret_cast<const __m128i*>(&a[i])), _mm_load_si128(reinterpret_cast<const __m128i*>(&b[i])))); \
+	_mm_store_si128(reinterpret_cast<__m128i*>(&s[i + 4]), _mm_add_epi32(_mm_load_si128(reinterpret_cast<const __m128i*>(&a[i + 4])), _mm_load_si128(reinterpret_cast<const __m128i*>(&b[i + 4])))); \
+	_mm_store_si128(reinterpret_cast<__m128i*>(&s[i + 8]), _mm_add_epi32(_mm_load_si128(reinterpret_cast<const __m128i*>(&a[i + 8])), _mm_load_si128(reinterpret_cast<const __m128i*>(&b[i + 8])))); \
+	_mm_store_si128(reinterpret_cast<__m128i*>(&s[i + 12]), _mm_add_epi32(_mm_load_si128(reinterpret_cast<const __m128i*>(&a[i + 12])), _mm_load_si128(reinterpret_cast<const __m128i*>(&b[i + 12]))))
+
+
 void CompVMathUtilsSum2_32s32s_Intrin_SSE2(COMPV_ALIGNED(SSE) const int32_t* a, COMPV_ALIGNED(SSE) const int32_t* b, COMPV_ALIGNED(SSE) int32_t* s, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride)
 {
     COMPV_DEBUG_INFO_CHECK_SSE2();
@@ -135,10 +142,7 @@ void CompVMathUtilsSum2_32s32s_Intrin_SSE2(COMPV_ALIGNED(SSE) const int32_t* a, 
 
     for (j = 0; j < height; ++j) {
         for (i = 0; i < width_ - 15; i += 16) {
-            _mm_store_si128(reinterpret_cast<__m128i*>(&s[i]), _mm_add_epi32(_mm_load_si128(reinterpret_cast<const __m128i*>(&a[i])), _mm_load_si128(reinterpret_cast<const __m128i*>(&b[i]))));
-            _mm_store_si128(reinterpret_cast<__m128i*>(&s[i + 4]), _mm_add_epi32(_mm_load_si128(reinterpret_cast<const __m128i*>(&a[i + 4])), _mm_load_si128(reinterpret_cast<const __m128i*>(&b[i + 4]))));
-            _mm_store_si128(reinterpret_cast<__m128i*>(&s[i + 8]), _mm_add_epi32(_mm_load_si128(reinterpret_cast<const __m128i*>(&a[i + 8])), _mm_load_si128(reinterpret_cast<const __m128i*>(&b[i + 8]))));
-            _mm_store_si128(reinterpret_cast<__m128i*>(&s[i + 12]), _mm_add_epi32(_mm_load_si128(reinterpret_cast<const __m128i*>(&a[i + 12])), _mm_load_si128(reinterpret_cast<const __m128i*>(&b[i + 12]))));
+			__CompVMathUtilsSum2_16x1_32s32s_Intrin_SSE2(i);
         }
         for (; i < width_; i += 4) {
             _mm_store_si128(reinterpret_cast<__m128i*>(&s[i]), _mm_add_epi32(_mm_load_si128(reinterpret_cast<const __m128i*>(&a[i])), _mm_load_si128(reinterpret_cast<const __m128i*>(&b[i]))));
@@ -147,6 +151,15 @@ void CompVMathUtilsSum2_32s32s_Intrin_SSE2(COMPV_ALIGNED(SSE) const int32_t* a, 
         b += stride;
         s += stride;
     }
+}
+
+// width = 256, height = 1: common size (histogram 8u)
+void CompVMathUtilsSum2_32s32s_256x1_Intrin_SSE2(COMPV_ALIGNED(SSE) const int32_t* a, COMPV_ALIGNED(SSE) const int32_t* b, COMPV_ALIGNED(SSE) int32_t* s, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride)
+{
+	__CompVMathUtilsSum2_16x1_32s32s_Intrin_SSE2(0); __CompVMathUtilsSum2_16x1_32s32s_Intrin_SSE2(16); __CompVMathUtilsSum2_16x1_32s32s_Intrin_SSE2(32); __CompVMathUtilsSum2_16x1_32s32s_Intrin_SSE2(48);
+	__CompVMathUtilsSum2_16x1_32s32s_Intrin_SSE2(64); __CompVMathUtilsSum2_16x1_32s32s_Intrin_SSE2(80); __CompVMathUtilsSum2_16x1_32s32s_Intrin_SSE2(96); __CompVMathUtilsSum2_16x1_32s32s_Intrin_SSE2(112);
+	__CompVMathUtilsSum2_16x1_32s32s_Intrin_SSE2(128); __CompVMathUtilsSum2_16x1_32s32s_Intrin_SSE2(144); __CompVMathUtilsSum2_16x1_32s32s_Intrin_SSE2(160); __CompVMathUtilsSum2_16x1_32s32s_Intrin_SSE2(176);
+	__CompVMathUtilsSum2_16x1_32s32s_Intrin_SSE2(192); __CompVMathUtilsSum2_16x1_32s32s_Intrin_SSE2(208); __CompVMathUtilsSum2_16x1_32s32s_Intrin_SSE2(224); __CompVMathUtilsSum2_16x1_32s32s_Intrin_SSE2(240);
 }
 
 void CompVMathUtilsScaleAndClipPixel8_16u32f_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint16_t* in, const compv_float32_t* scale1, COMPV_ALIGNED(SSE) uint8_t* out, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride)

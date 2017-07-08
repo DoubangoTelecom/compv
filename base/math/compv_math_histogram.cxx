@@ -5,6 +5,10 @@
 * WebSite: http://compv.org
 */
 #include "compv/base/math/compv_math_histogram.h"
+#include "compv/base/math/compv_math_utils.h"
+#include "compv/base/parallel/compv_parallel.h"
+
+#define COMPV_HISTOGRAM_MIN_SAMPLES_PER_THREAD		(200 * 10)
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -27,25 +31,80 @@ COMPV_ERROR_CODE CompVMathHistogram::process(const CompVMatPtr& data, CompVMatPt
 	return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
 }
 
+static void CompVMathHistogramProcess_8u_C(const uint8_t* dataPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, int32_t* histogramPtr);
+
 // Up to the caller to set 'histogramPtr' values to zeros
 COMPV_ERROR_CODE CompVMathHistogram::process_8u(const uint8_t* dataPtr, size_t width, size_t height, size_t stride, int32_t* histogramPtr)
 {
 	// Private function, no need to check imput parameters
 
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
+	void(*CompVMathHistogramProcess_8u)(const uint8_t* dataPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, int32_t* histogramPtr)
+		= CompVMathHistogramProcess_8u_C;
 
+	// Compute number of threads
+	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
+	const size_t maxThreads = (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
+	const size_t threadsCount = CompVThreadDispatcher::guessNumThreadsDividingAcrossY(width, height, maxThreads, COMPV_HISTOGRAM_MIN_SAMPLES_PER_THREAD);
+
+	if (threadsCount > 1) {
+		size_t threadIdx, padding;
+		std::vector<CompVMatPtr> mt_histograms;
+		const size_t countAny = (height / threadsCount);
+		const size_t countLast = countAny + (height % threadsCount);
+		auto funcPtr = [&](const uint8_t* mt_dataPtr, size_t mt_height, size_t mt_threadIdx) -> COMPV_ERROR_CODE {
+			int32_t* mt_histogramPtr;
+			if (mt_threadIdx == 0) {
+				mt_histogramPtr = histogramPtr;
+			}
+			else {
+				const size_t mt_histogram_index = (mt_threadIdx - 1);
+				COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<int32_t>(&mt_histograms[mt_histogram_index], 1, 256));
+				COMPV_CHECK_CODE_RETURN(mt_histograms[mt_histogram_index]->zero_rows());
+				mt_histogramPtr = mt_histograms[mt_histogram_index]->ptr<int32_t>();
+			}
+			CompVMathHistogramProcess_8u(mt_dataPtr, static_cast<compv_uscalar_t>(width), static_cast<compv_uscalar_t>(mt_height), static_cast<compv_uscalar_t>(stride), mt_histogramPtr);
+			return COMPV_ERROR_CODE_S_OK;
+		};
+		const uint8_t* mt_dataPtr = dataPtr;
+		const size_t paddingPerThread = (countAny * stride);
+		CompVAsyncTaskIds taskIds;
+		mt_histograms.resize(threadsCount - 1);
+		// Invoke
+		for (threadIdx = 0, padding = 0; threadIdx < (threadsCount - 1); ++threadIdx, padding += paddingPerThread) {
+			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, &mt_dataPtr[padding], countAny, threadIdx), taskIds));
+		}
+		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, &mt_dataPtr[padding], countLast, (threadsCount - 1)), taskIds));
+		// Wait and sum the histograms
+		COMPV_CHECK_CODE_RETURN(threadDisp->waitOne(taskIds[0]));
+		for (threadIdx = 1; threadIdx < threadsCount; ++threadIdx) {
+			COMPV_CHECK_CODE_RETURN(threadDisp->waitOne(taskIds[threadIdx]));
+			COMPV_CHECK_CODE_RETURN((CompVMathUtils::sum2<int32_t, int32_t>(mt_histograms[threadIdx - 1]->ptr<const int32_t>(), histogramPtr, histogramPtr, 256, 1, 256))); // stride is useless as height is equal to 1
+		}
+	}
+	else {
+		CompVMathHistogramProcess_8u(dataPtr, static_cast<compv_uscalar_t>(width), static_cast<compv_uscalar_t>(height), static_cast<compv_uscalar_t>(stride), histogramPtr);
+	}
+
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+static void CompVMathHistogramProcess_8u_C(const uint8_t* dataPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, int32_t* histogramPtr)
+{
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
-
-	size_t i, j;
-
+	compv_uscalar_t i, j;
+	const compv_uscalar_t maxWidthStep1 = width > 3 ? (width - 4) : 0;
 	for (j = 0; j < height; ++j) {
-		for (i = 0; i < width; ++i) {
+		for (i = 0; i < maxWidthStep1; i += 4) {
+			++histogramPtr[dataPtr[i + 0]];
+			++histogramPtr[dataPtr[i + 1]];
+			++histogramPtr[dataPtr[i + 2]];
+			++histogramPtr[dataPtr[i + 3]];
+		}
+		for (; i < width; ++i) {
 			++histogramPtr[dataPtr[i]];
 		}
 		dataPtr += stride;
 	}
-
-	return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_NAMESPACE_END()

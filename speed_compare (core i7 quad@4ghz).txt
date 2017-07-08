@@ -38,7 +38,7 @@ OpenCV: 32920.ms(full optiz)
 Remarque: For OpenCV you need to convert to BGR then HSV (#2 steps: COLOR_YUV2BGR_I420 then CV_BGR2HSV)
 
 === Histogram on grayscal 8u image (1282 , 720) (#10k times) ===
-CompV: 4540.ms
+CompV: 1173.ms(full optiz)
 OpenCV: 4114.ms(full optiz)
 
 === FAST9_16, Nonmax=true, threshold=20, maxfeatures=-1 (1282, 720) (#10k times) ===

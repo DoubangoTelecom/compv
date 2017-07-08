@@ -114,8 +114,8 @@ COMPV_ERROR_CODE CompVMathDistance::hamming(const uint8_t* dataPtr, size_t width
 
 	// Compute number of threads
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
-	size_t maxThreads = (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
-	size_t threadsCount = COMPV_MATH_CLIP3(1, maxThreads, (width*height) / minSamplesPerThread);
+	const size_t maxThreads = (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
+	const size_t threadsCount = COMPV_MATH_CLIP3(1, maxThreads, (width*height) / minSamplesPerThread);
 	
 	if (threadsCount > 1) {
 		CompVAsyncTaskIds taskIds;

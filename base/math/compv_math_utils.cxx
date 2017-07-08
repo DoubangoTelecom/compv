@@ -24,6 +24,7 @@ COMPV_NAMESPACE_BEGIN()
 	COMPV_EXTERNC void CompVMathUtilsSumAbs_16s16u_Asm_X86_SSSE3(const COMPV_ALIGNED(SSE) int16_t* a, const COMPV_ALIGNED(SSE) int16_t* b, COMPV_ALIGNED(SSE) uint16_t* r, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
 	COMPV_EXTERNC void CompVMathUtilsSumAbs_16s16u_Asm_X86_AVX2(const COMPV_ALIGNED(AVX) int16_t* a, const COMPV_ALIGNED(AVX) int16_t* b, COMPV_ALIGNED(AVX) uint16_t* r, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride);
 	COMPV_EXTERNC void CompVMathUtilsSum2_32s32s_Asm_X86_SSE2(COMPV_ALIGNED(SSE) const int32_t* a, COMPV_ALIGNED(SSE) const int32_t* b, COMPV_ALIGNED(SSE) int32_t* s, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
+	COMPV_EXTERNC void CompVMathUtilsSum2_32s32s_256x1_Asm_X86_SSE2(COMPV_ALIGNED(SSE) const int32_t* a, COMPV_ALIGNED(SSE) const int32_t* b, COMPV_ALIGNED(SSE) int32_t* s, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
 	COMPV_EXTERNC void CompVMathUtilsScaleAndClipPixel8_16u32f_Asm_X86_SSE2(COMPV_ALIGNED(SSE) const uint16_t* in, const compv_float32_t* scale1, COMPV_ALIGNED(SSE) uint8_t* out, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
 #	endif /* COMPV_ARCH_X86 */
 #	if COMPV_ARCH_X64
@@ -276,13 +277,28 @@ COMPV_ERROR_CODE CompVMathUtils::sum2(const int32_t* a, const int32_t* b, int32_
 {
 	void(*CompVMathUtilsSum2_32s32s)(COMPV_ALIGNED(X) const int32_t* a, COMPV_ALIGNED(X) const int32_t* b, COMPV_ALIGNED(X) int32_t* s, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(X) compv_uscalar_t stride) 
 		= NULL;
+	bool have_fast256x1 = false;
+	const bool need_fast256x1 = (width == 256 && height == 1);
 #if COMPV_ARCH_X86
     if (width >= 4 && CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(a) && COMPV_IS_ALIGNED_SSE(b) && COMPV_IS_ALIGNED_SSE(stride*sizeof(int32_t))) {
         COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathUtilsSum2_32s32s = CompVMathUtilsSum2_32s32s_Intrin_SSE2);
         COMPV_EXEC_IFDEF_ASM_X86(CompVMathUtilsSum2_32s32s = CompVMathUtilsSum2_32s32s_Asm_X86_SSE2);
 		COMPV_EXEC_IFDEF_ASM_X64(CompVMathUtilsSum2_32s32s = CompVMathUtilsSum2_32s32s_Asm_X64_SSE2);
+		if (need_fast256x1) {
+			COMPV_EXEC_IFDEF_INTRIN_X86((CompVMathUtilsSum2_32s32s = CompVMathUtilsSum2_32s32s_256x1_Intrin_SSE2, have_fast256x1 = true));
+			COMPV_EXEC_IFDEF_ASM_X86((CompVMathUtilsSum2_32s32s = CompVMathUtilsSum2_32s32s_256x1_Asm_X86_SSE2, have_fast256x1 = true));
+		}
     }
+#elif COMPV_ARCH_ARM
+	if (width >= 4 && CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(a) && COMPV_IS_ALIGNED_NEON(b) && COMPV_IS_ALIGNED_NEON(stride * sizeof(int32_t))) {
+		if (width == 256 && height == 1) {
+			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation for common size (histogram 8u)");
+		}
+	}
 #endif
+	if (need_fast256x1 && !have_fast256x1) {
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation for common size (histogram 8u)");
+	}
 	if (CompVMathUtilsSum2_32s32s) {
 		CompVMathUtilsSum2_32s32s(a, b, s, static_cast<compv_uscalar_t>(width), static_cast<compv_uscalar_t>(height), static_cast<compv_uscalar_t>(stride));
 		return COMPV_ERROR_CODE_S_OK;
