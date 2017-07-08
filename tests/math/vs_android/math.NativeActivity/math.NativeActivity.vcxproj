@@ -59,6 +59,7 @@
     <ClCompile Include="..\..\calib_homography.cxx" />
     <ClCompile Include="..\..\distance.cxx" />
     <ClCompile Include="..\..\eigen.cxx" />
+    <ClCompile Include="..\..\histogram.cxx" />
     <ClCompile Include="..\..\inverse.cxx" />
     <ClCompile Include="..\..\main.cxx" />
     <ClCompile Include="..\..\matrix_ops.cxx" />

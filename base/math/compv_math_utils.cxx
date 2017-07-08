@@ -291,13 +291,10 @@ COMPV_ERROR_CODE CompVMathUtils::sum2(const int32_t* a, const int32_t* b, int32_
     }
 #elif COMPV_ARCH_ARM
 	if (width >= 4 && CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(a) && COMPV_IS_ALIGNED_NEON(b) && COMPV_IS_ALIGNED_NEON(stride * sizeof(int32_t))) {
-		if (width == 256 && height == 1) {
-			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation for common size (histogram 8u)");
-		}
 	}
 #endif
 	if (need_fast256x1 && !have_fast256x1) {
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation for common size (histogram 8u)");
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation for common size (e.g histogram 8u)");
 	}
 	if (CompVMathUtilsSum2_32s32s) {
 		CompVMathUtilsSum2_32s32s(a, b, s, static_cast<compv_uscalar_t>(width), static_cast<compv_uscalar_t>(height), static_cast<compv_uscalar_t>(stride));

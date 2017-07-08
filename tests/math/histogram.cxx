@@ -23,7 +23,7 @@ COMPV_ERROR_CODE histogram()
 		COMPV_CHECK_CODE_RETURN(CompVMathHistogram::process(image, &histogram));
 	}
 	uint64_t timeEnd = CompVTime::nowMillis();
-	COMPV_DEBUG_INFO_EX(TAG_TEST, "Elapsed time(StatsVariance) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
+	COMPV_DEBUG_INFO_EX(TAG_TEST, "Elapsed time(Histogram) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 
 	COMPV_CHECK_EXP_RETURN(compv_tests_md5(histogram).compare(EXPECTED_MD5) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "MD5 mismatch");
 	return COMPV_ERROR_CODE_S_OK;
