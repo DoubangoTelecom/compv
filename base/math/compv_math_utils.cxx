@@ -307,6 +307,13 @@ COMPV_ERROR_CODE CompVMathUtils::sum2(const int32_t* a, const int32_t* b, int32_
     return COMPV_ERROR_CODE_S_OK;
 }
 
+template <> COMPV_BASE_API
+COMPV_ERROR_CODE CompVMathUtils::sum2(const uint32_t* a, const uint32_t* b, uint32_t* s, size_t width, size_t height, size_t stride)
+{
+	COMPV_CHECK_CODE_RETURN(CompVMathUtils::sum2(reinterpret_cast<const int32_t*>(a), reinterpret_cast<const int32_t*>(b), reinterpret_cast<int32_t*>(s), width, height, stride));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 template <> COMPV_BASE_API 
 COMPV_ERROR_CODE CompVMathUtils::mean(const uint8_t* data, size_t count, uint8_t &mean)
 {

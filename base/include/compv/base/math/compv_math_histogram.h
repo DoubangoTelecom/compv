@@ -19,7 +19,7 @@ public:
 	static COMPV_ERROR_CODE process(const CompVMatPtr& data, CompVMatPtrPtr histogram);
 
 private:
-	static COMPV_ERROR_CODE process_8u(const uint8_t* dataPtr, size_t width, size_t height, size_t stride, int32_t* histogramPtr);
+	static COMPV_ERROR_CODE process_8u32u(const uint8_t* dataPtr, size_t width, size_t height, size_t stride, uint32_t* histogramPtr);
 };
 
 COMPV_NAMESPACE_END()
