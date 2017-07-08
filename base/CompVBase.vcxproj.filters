@@ -483,6 +483,9 @@
     <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_conv_to_rgbx_intrin_ssex.h">
       <Filter>include\image\intrin\x86</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\math\compv_math_histogram.h">
+      <Filter>include\math</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx">
@@ -826,6 +829,9 @@
     </ClCompile>
     <ClCompile Include="image\intrin\arm\compv_image_conv_to_rgbx_intrin_neon.cxx">
       <Filter>source\image\intrin\arm</Filter>
+    </ClCompile>
+    <ClCompile Include="math\compv_math_histogram.cxx">
+      <Filter>source\math</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

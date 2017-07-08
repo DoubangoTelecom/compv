@@ -35,6 +35,7 @@
 #include <compv/base/math/compv_math_distance.h>
 #include <compv/base/math/compv_math_eigen.h>
 #include <compv/base/math/compv_math_gauss.h>
+#include <compv/base/math/compv_math_histogram.h>
 #include <compv/base/math/compv_math_matrix.h>
 #include <compv/base/math/compv_math_transform.h>
 #include <compv/base/math/compv_math_stats.h>

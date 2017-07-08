@@ -84,5 +84,8 @@
     <ClCompile Include="houghsht.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="math_histogram.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

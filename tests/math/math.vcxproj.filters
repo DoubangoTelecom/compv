@@ -54,5 +54,8 @@
     <ClCompile Include="calib_camera.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="histogram.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

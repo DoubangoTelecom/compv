@@ -16,8 +16,9 @@
 #define TEST_TRF_HOMOG_TO_CART				0 // homogeneousToCartesian2D()
 #define TEST_CALIB_HOMOGRAPHY_BUILD_MATRIX	0
 #define TEST_CALIB_HOMOGRAPHY				0
-#define TEST_CALIB_CAMERA					1
+#define TEST_CALIB_CAMERA					0
 #define TEST_DISTANCE_HAMMING				0
+#define TEST_HISTOGRAM						1
 
 
 /* Entry point function */
@@ -93,6 +94,11 @@ compv_main()
 #if TEST_DISTANCE_HAMMING
 		extern COMPV_ERROR_CODE hamming();
 		COMPV_CHECK_CODE_BAIL(err = hamming(), TAG_TEST "Math hamming distance test failed");
+#endif
+
+#if TEST_HISTOGRAM
+		extern COMPV_ERROR_CODE histogram();
+		COMPV_CHECK_CODE_BAIL(err = histogram(), TAG_TEST "Math histogram test failed");
 #endif
 
 	bail:
