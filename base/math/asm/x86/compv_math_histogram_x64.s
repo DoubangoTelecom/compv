@@ -64,9 +64,9 @@ sym(CompVMathHistogramProcess_8u32s_Asm_X64)
 			movzx r10, byte [dataPtr + i + 1]
 			movzx r11, byte [dataPtr + i + 2]
 			movzx r12, byte [dataPtr + i + 3]
-			add i, 4
 			inc dword ptr [histogramPtr + r9*COMPV_YASM_UINT32_SZ_BYTES]
 			inc dword ptr [histogramPtr + r10*COMPV_YASM_UINT32_SZ_BYTES]
+			add i, 4
 			inc dword ptr [histogramPtr + r11*COMPV_YASM_UINT32_SZ_BYTES]
 			inc dword ptr [histogramPtr + r12*COMPV_YASM_UINT32_SZ_BYTES]
 			cmp i, maxWidthStep1

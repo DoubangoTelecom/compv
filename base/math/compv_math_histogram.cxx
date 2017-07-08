@@ -50,9 +50,10 @@ COMPV_ERROR_CODE CompVMathHistogram::process_8u32u(const uint8_t* dataPtr, size_
 
 	if (width > 3) {
 		COMPV_EXEC_IFDEF_ASM_X64(CompVMathHistogramProcess_8u32u = CompVMathHistogramProcess_8u32s_Asm_X64);
-		if (CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(dataPtr) && COMPV_IS_ALIGNED_SSE(stride) && COMPV_IS_ALIGNED_SSE(histogramPtr)) {
-			COMPV_EXEC_IFDEF_ASM_X64(CompVMathHistogramProcess_8u32u = CompVMathHistogramProcess_8u32s_Asm_X64_SSE2);
-		}
+		// Tried using #4 histograms but not faster at all
+		//if (CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(dataPtr) && COMPV_IS_ALIGNED_SSE(stride) && COMPV_IS_ALIGNED_SSE(histogramPtr)) {
+		//	COMPV_EXEC_IFDEF_ASM_X64(CompVMathHistogramProcess_8u32u = CompVMathHistogramProcess_8u32s_Asm_X64_SSE2);
+		//}
 	}
 
 	// Compute number of threads

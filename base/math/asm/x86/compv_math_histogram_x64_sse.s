@@ -19,6 +19,7 @@ section .data
 section .text
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; !!! MUST NOT USE !!!
 ; arg(0) -> COMPV_ALIGNED(SSE) const uint8_t* dataPtr
 ; arg(1) -> compv_uscalar_t width
 ; arg(2) -> compv_uscalar_t height
