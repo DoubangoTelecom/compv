@@ -16,6 +16,8 @@ COMPV_NAMESPACE_BEGIN()
 #	if COMPV_ARCH_X64
 	COMPV_EXTERNC void CompVMathHistogramProcess_8u32s_Asm_X64_SSE2(COMPV_ALIGNED(SSE) const uint8_t* dataPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride, COMPV_ALIGNED(SSE) uint32_t* histogramPtr);
 	COMPV_EXTERNC void CompVMathHistogramProcess_8u32s_Asm_X64(const uint8_t* dataPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, uint32_t* histogramPtr);
+#   elif COMPV_ARCH_ARM32
+    COMPV_EXTERNC void CompVMathHistogramProcess_8u32s_Asm_NEON32(const uint8_t* dataPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, uint32_t* histogramPtr);
 #	endif
 #endif /* COMPV_ASM */
 
@@ -47,13 +49,20 @@ COMPV_ERROR_CODE CompVMathHistogram::process_8u32u(const uint8_t* dataPtr, size_
 
 	void(*CompVMathHistogramProcess_8u32u)(const uint8_t* dataPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, uint32_t* histogramPtr)
 		= CompVMathHistogramProcess_8u32u_C;
-
+    
+#   if COMPV_ARCH_ARM32
+    if (width > 3) {
+        COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathHistogramProcess_8u32u = CompVMathHistogramProcess_8u32s_Asm_NEON32);
+    }
+#   endif /* COMPV_ARCH_ARM32 */
 	if (width > 7) {
 		COMPV_EXEC_IFDEF_ASM_X64(CompVMathHistogramProcess_8u32u = CompVMathHistogramProcess_8u32s_Asm_X64);
-		// Tried using #4 histograms but not faster at all
-		//if (CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(dataPtr) && COMPV_IS_ALIGNED_SSE(stride) && COMPV_IS_ALIGNED_SSE(histogramPtr)) {
-		//	COMPV_EXEC_IFDEF_ASM_X64(CompVMathHistogramProcess_8u32u = CompVMathHistogramProcess_8u32s_Asm_X64_SSE2);
-		//}
+#       if 0
+        COMPV_DEBUG_INFO_CODE_FOR_TESTING("Tried using #4 histograms but not faster at all and code not correct");
+		if (CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(dataPtr) && COMPV_IS_ALIGNED_SSE(stride) && COMPV_IS_ALIGNED_SSE(histogramPtr)) {
+			COMPV_EXEC_IFDEF_ASM_X64(CompVMathHistogramProcess_8u32u = CompVMathHistogramProcess_8u32s_Asm_X64_SSE2);
+		}
+#       endif /* 0 */
 	}
 
 	// Compute number of threads

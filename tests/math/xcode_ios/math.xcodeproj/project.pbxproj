@@ -1,0 +1,531 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		157030351E6726D400F0B895 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 157030341E6726D400F0B895 /* main.m */; };
+		157030381E6726D400F0B895 /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 157030371E6726D400F0B895 /* AppDelegate.mm */; };
+		1570303B1E6726D400F0B895 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 1570303A1E6726D400F0B895 /* ViewController.m */; };
+		1570303E1E6726D400F0B895 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1570303C1E6726D400F0B895 /* Main.storyboard */; };
+		157030401E6726D400F0B895 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1570303F1E6726D400F0B895 /* Assets.xcassets */; };
+		157030431E6726D400F0B895 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 157030411E6726D400F0B895 /* LaunchScreen.storyboard */; };
+		157030861E6728C000F0B895 /* calib_homography.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 1570307B1E6728C000F0B895 /* calib_homography.cxx */; };
+		157030871E6728C000F0B895 /* distance.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 1570307C1E6728C000F0B895 /* distance.cxx */; };
+		157030881E6728C000F0B895 /* eigen.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 1570307D1E6728C000F0B895 /* eigen.cxx */; };
+		157030891E6728C000F0B895 /* inverse.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 1570307E1E6728C000F0B895 /* inverse.cxx */; };
+		1570308B1E6728C000F0B895 /* matrix_ops.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 157030801E6728C000F0B895 /* matrix_ops.cxx */; };
+		1570308C1E6728C000F0B895 /* stats_mse.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 157030811E6728C000F0B895 /* stats_mse.cxx */; };
+		1570308D1E6728C000F0B895 /* stats_normalize.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 157030821E6728C000F0B895 /* stats_normalize.cxx */; };
+		1570308E1E6728C000F0B895 /* stats_variance.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 157030831E6728C000F0B895 /* stats_variance.cxx */; };
+		1570308F1E6728C000F0B895 /* svd.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 157030841E6728C000F0B895 /* svd.cxx */; };
+		157030901E6728C000F0B895 /* transform.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 157030851E6728C000F0B895 /* transform.cxx */; };
+		157030931E6728CF00F0B895 /* tests_common.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 157030911E6728CF00F0B895 /* tests_common.cxx */; };
+		157030B21E67297C00F0B895 /* libCompVBase.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1570309F1E6728DA00F0B895 /* libCompVBase.a */; };
+		157030B31E67297C00F0B895 /* libCompVCamera.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 157030A71E6728DA00F0B895 /* libCompVCamera.a */; };
+		157030B41E67297C00F0B895 /* libCompVCore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 157030A31E6728DA00F0B895 /* libCompVCore.a */; };
+		157030B51E67297C00F0B895 /* libCompVDrawing.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 157030A91E6728DA00F0B895 /* libCompVDrawing.a */; };
+		157030B61E67297C00F0B895 /* libCompVGL.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 157030A51E6728DA00F0B895 /* libCompVGL.a */; };
+		157030B71E67297C00F0B895 /* libCompVGPU.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 157030A11E6728DA00F0B895 /* libCompVGPU.a */; };
+		157AEB941F14EB6E00F68F36 /* calib_camera.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 157AEB821F14EB6E00F68F36 /* calib_camera.cxx */; };
+		157AEB951F14EB6E00F68F36 /* histogram.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 157AEB831F14EB6E00F68F36 /* histogram.cxx */; };
+		157F218F1F14EDA00033E012 /* equirectangular_1282x720_gray.yuv in Resources */ = {isa = PBXBuildFile; fileRef = 157F218E1F14EDA00033E012 /* equirectangular_1282x720_gray.yuv */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		1570309E1E6728DA00F0B895 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 157030941E6728DA00F0B895 /* CompV.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 15A3E7661E35994E00303F7C;
+			remoteInfo = CompVBase;
+		};
+		157030A01E6728DA00F0B895 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 157030941E6728DA00F0B895 /* CompV.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 1525BFEA1E36331800B00689;
+			remoteInfo = CompVGPU;
+		};
+		157030A21E6728DA00F0B895 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 157030941E6728DA00F0B895 /* CompV.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 1525C0091E36339300B00689;
+			remoteInfo = CompVCore;
+		};
+		157030A41E6728DA00F0B895 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 157030941E6728DA00F0B895 /* CompV.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 1525C0481E3633C400B00689;
+			remoteInfo = CompVGL;
+		};
+		157030A61E6728DA00F0B895 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 157030941E6728DA00F0B895 /* CompV.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 1525C09C1E3633FE00B00689;
+			remoteInfo = CompVCamera;
+		};
+		157030A81E6728DA00F0B895 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 157030941E6728DA00F0B895 /* CompV.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 1525C0B91E36344500B00689;
+			remoteInfo = CompVDrawing;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		157030301E6726D400F0B895 /* math.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = math.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		157030341E6726D400F0B895 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		157030361E6726D400F0B895 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		157030371E6726D400F0B895 /* AppDelegate.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = AppDelegate.mm; sourceTree = "<group>"; };
+		157030391E6726D400F0B895 /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
+		1570303A1E6726D400F0B895 /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
+		1570303D1E6726D400F0B895 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		1570303F1E6726D400F0B895 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		157030421E6726D400F0B895 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		157030441E6726D400F0B895 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		1570307B1E6728C000F0B895 /* calib_homography.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = calib_homography.cxx; path = ../../calib_homography.cxx; sourceTree = "<group>"; };
+		1570307C1E6728C000F0B895 /* distance.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = distance.cxx; path = ../../distance.cxx; sourceTree = "<group>"; };
+		1570307D1E6728C000F0B895 /* eigen.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = eigen.cxx; path = ../../eigen.cxx; sourceTree = "<group>"; };
+		1570307E1E6728C000F0B895 /* inverse.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = inverse.cxx; path = ../../inverse.cxx; sourceTree = "<group>"; };
+		157030801E6728C000F0B895 /* matrix_ops.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = matrix_ops.cxx; path = ../../matrix_ops.cxx; sourceTree = "<group>"; };
+		157030811E6728C000F0B895 /* stats_mse.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = stats_mse.cxx; path = ../../stats_mse.cxx; sourceTree = "<group>"; };
+		157030821E6728C000F0B895 /* stats_normalize.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = stats_normalize.cxx; path = ../../stats_normalize.cxx; sourceTree = "<group>"; };
+		157030831E6728C000F0B895 /* stats_variance.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = stats_variance.cxx; path = ../../stats_variance.cxx; sourceTree = "<group>"; };
+		157030841E6728C000F0B895 /* svd.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = svd.cxx; path = ../../svd.cxx; sourceTree = "<group>"; };
+		157030851E6728C000F0B895 /* transform.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = transform.cxx; path = ../../transform.cxx; sourceTree = "<group>"; };
+		157030911E6728CF00F0B895 /* tests_common.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tests_common.cxx; path = ../../../tests_common.cxx; sourceTree = "<group>"; };
+		157030921E6728CF00F0B895 /* tests_common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tests_common.h; path = ../../../tests_common.h; sourceTree = "<group>"; };
+		157030941E6728DA00F0B895 /* CompV.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = CompV.xcodeproj; path = ../../../CompV.xcodeproj; sourceTree = "<group>"; };
+		157AEB821F14EB6E00F68F36 /* calib_camera.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = calib_camera.cxx; path = ../../calib_camera.cxx; sourceTree = "<group>"; };
+		157AEB831F14EB6E00F68F36 /* histogram.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = histogram.cxx; path = ../../histogram.cxx; sourceTree = "<group>"; };
+		157F21841F14ECE50033E012 /* main.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = main.cxx; path = ../../main.cxx; sourceTree = "<group>"; };
+		157F218E1F14EDA00033E012 /* equirectangular_1282x720_gray.yuv */ = {isa = PBXFileReference; lastKnownFileType = file; name = equirectangular_1282x720_gray.yuv; path = ../../../../../data/colorspace/equirectangular_1282x720_gray.yuv; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		1570302D1E6726D400F0B895 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				157030B21E67297C00F0B895 /* libCompVBase.a in Frameworks */,
+				157030B31E67297C00F0B895 /* libCompVCamera.a in Frameworks */,
+				157030B41E67297C00F0B895 /* libCompVCore.a in Frameworks */,
+				157030B51E67297C00F0B895 /* libCompVDrawing.a in Frameworks */,
+				157030B61E67297C00F0B895 /* libCompVGL.a in Frameworks */,
+				157030B71E67297C00F0B895 /* libCompVGPU.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		157030271E6726D400F0B895 = {
+			isa = PBXGroup;
+			children = (
+				157030941E6728DA00F0B895 /* CompV.xcodeproj */,
+				157030321E6726D400F0B895 /* math */,
+				157030311E6726D400F0B895 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		157030311E6726D400F0B895 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				157030301E6726D400F0B895 /* math.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		157030321E6726D400F0B895 /* math */ = {
+			isa = PBXGroup;
+			children = (
+				157F218E1F14EDA00033E012 /* equirectangular_1282x720_gray.yuv */,
+				157030791E67281700F0B895 /* source */,
+				157030361E6726D400F0B895 /* AppDelegate.h */,
+				157030371E6726D400F0B895 /* AppDelegate.mm */,
+				157030391E6726D400F0B895 /* ViewController.h */,
+				1570303A1E6726D400F0B895 /* ViewController.m */,
+				1570303C1E6726D400F0B895 /* Main.storyboard */,
+				1570303F1E6726D400F0B895 /* Assets.xcassets */,
+				157030411E6726D400F0B895 /* LaunchScreen.storyboard */,
+				157030441E6726D400F0B895 /* Info.plist */,
+				157030331E6726D400F0B895 /* Supporting Files */,
+			);
+			path = math;
+			sourceTree = "<group>";
+		};
+		157030331E6726D400F0B895 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				157030341E6726D400F0B895 /* main.m */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		157030791E67281700F0B895 /* source */ = {
+			isa = PBXGroup;
+			children = (
+				157F21841F14ECE50033E012 /* main.cxx */,
+				157030911E6728CF00F0B895 /* tests_common.cxx */,
+				157030921E6728CF00F0B895 /* tests_common.h */,
+				157AEB821F14EB6E00F68F36 /* calib_camera.cxx */,
+				157AEB831F14EB6E00F68F36 /* histogram.cxx */,
+				1570307B1E6728C000F0B895 /* calib_homography.cxx */,
+				1570307C1E6728C000F0B895 /* distance.cxx */,
+				1570307D1E6728C000F0B895 /* eigen.cxx */,
+				1570307E1E6728C000F0B895 /* inverse.cxx */,
+				157030801E6728C000F0B895 /* matrix_ops.cxx */,
+				157030811E6728C000F0B895 /* stats_mse.cxx */,
+				157030821E6728C000F0B895 /* stats_normalize.cxx */,
+				157030831E6728C000F0B895 /* stats_variance.cxx */,
+				157030841E6728C000F0B895 /* svd.cxx */,
+				157030851E6728C000F0B895 /* transform.cxx */,
+			);
+			name = source;
+			sourceTree = "<group>";
+		};
+		157030951E6728DA00F0B895 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				1570309F1E6728DA00F0B895 /* libCompVBase.a */,
+				157030A11E6728DA00F0B895 /* libCompVGPU.a */,
+				157030A31E6728DA00F0B895 /* libCompVCore.a */,
+				157030A51E6728DA00F0B895 /* libCompVGL.a */,
+				157030A71E6728DA00F0B895 /* libCompVCamera.a */,
+				157030A91E6728DA00F0B895 /* libCompVDrawing.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		1570302F1E6726D400F0B895 /* math */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 157030471E6726D400F0B895 /* Build configuration list for PBXNativeTarget "math" */;
+			buildPhases = (
+				1570302C1E6726D400F0B895 /* Sources */,
+				1570302D1E6726D400F0B895 /* Frameworks */,
+				1570302E1E6726D400F0B895 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = math;
+			productName = math;
+			productReference = 157030301E6726D400F0B895 /* math.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		157030281E6726D400F0B895 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0820;
+				ORGANIZATIONNAME = "Doubango Telecom";
+				TargetAttributes = {
+					1570302F1E6726D400F0B895 = {
+						CreatedOnToolsVersion = 8.2.1;
+						DevelopmentTeam = E6F3H8ENQM;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 1570302B1E6726D400F0B895 /* Build configuration list for PBXProject "math" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 157030271E6726D400F0B895;
+			productRefGroup = 157030311E6726D400F0B895 /* Products */;
+			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 157030951E6728DA00F0B895 /* Products */;
+					ProjectRef = 157030941E6728DA00F0B895 /* CompV.xcodeproj */;
+				},
+			);
+			projectRoot = "";
+			targets = (
+				1570302F1E6726D400F0B895 /* math */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		1570309F1E6728DA00F0B895 /* libCompVBase.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libCompVBase.a;
+			remoteRef = 1570309E1E6728DA00F0B895 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		157030A11E6728DA00F0B895 /* libCompVGPU.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libCompVGPU.a;
+			remoteRef = 157030A01E6728DA00F0B895 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		157030A31E6728DA00F0B895 /* libCompVCore.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libCompVCore.a;
+			remoteRef = 157030A21E6728DA00F0B895 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		157030A51E6728DA00F0B895 /* libCompVGL.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libCompVGL.a;
+			remoteRef = 157030A41E6728DA00F0B895 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		157030A71E6728DA00F0B895 /* libCompVCamera.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libCompVCamera.a;
+			remoteRef = 157030A61E6728DA00F0B895 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		157030A91E6728DA00F0B895 /* libCompVDrawing.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libCompVDrawing.a;
+			remoteRef = 157030A81E6728DA00F0B895 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
+
+/* Begin PBXResourcesBuildPhase section */
+		1570302E1E6726D400F0B895 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				157030431E6726D400F0B895 /* LaunchScreen.storyboard in Resources */,
+				157030401E6726D400F0B895 /* Assets.xcassets in Resources */,
+				157F218F1F14EDA00033E012 /* equirectangular_1282x720_gray.yuv in Resources */,
+				1570303E1E6726D400F0B895 /* Main.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		1570302C1E6726D400F0B895 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1570308F1E6728C000F0B895 /* svd.cxx in Sources */,
+				1570303B1E6726D400F0B895 /* ViewController.m in Sources */,
+				157030861E6728C000F0B895 /* calib_homography.cxx in Sources */,
+				157AEB941F14EB6E00F68F36 /* calib_camera.cxx in Sources */,
+				157030881E6728C000F0B895 /* eigen.cxx in Sources */,
+				157030381E6726D400F0B895 /* AppDelegate.mm in Sources */,
+				157030891E6728C000F0B895 /* inverse.cxx in Sources */,
+				1570308B1E6728C000F0B895 /* matrix_ops.cxx in Sources */,
+				157030931E6728CF00F0B895 /* tests_common.cxx in Sources */,
+				157030351E6726D400F0B895 /* main.m in Sources */,
+				1570308D1E6728C000F0B895 /* stats_normalize.cxx in Sources */,
+				1570308C1E6728C000F0B895 /* stats_mse.cxx in Sources */,
+				157AEB951F14EB6E00F68F36 /* histogram.cxx in Sources */,
+				1570308E1E6728C000F0B895 /* stats_variance.cxx in Sources */,
+				157030901E6728C000F0B895 /* transform.cxx in Sources */,
+				157030871E6728C000F0B895 /* distance.cxx in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		1570303C1E6726D400F0B895 /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				1570303D1E6726D400F0B895 /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+		157030411E6726D400F0B895 /* LaunchScreen.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				157030421E6726D400F0B895 /* Base */,
+			);
+			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		157030451E6726D400F0B895 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_BITCODE = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					../../../api/include,
+					../../../base/include,
+					../../../core/include,
+					../../../gpu/include,
+					../../../drawing/include,
+					../../../camera/include,
+					../../../gl/include,
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		157030461E6726D400F0B895 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_BITCODE = NO;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					../../../api/include,
+					../../../base/include,
+					../../../core/include,
+					../../../gpu/include,
+					../../../drawing/include,
+					../../../camera/include,
+					../../../gl/include,
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		157030481E6726D400F0B895 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				DEVELOPMENT_TEAM = E6F3H8ENQM;
+				INFOPLIST_FILE = math/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = org.doubango.math;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		157030491E6726D400F0B895 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				DEVELOPMENT_TEAM = E6F3H8ENQM;
+				INFOPLIST_FILE = math/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = org.doubango.math;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1570302B1E6726D400F0B895 /* Build configuration list for PBXProject "math" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				157030451E6726D400F0B895 /* Debug */,
+				157030461E6726D400F0B895 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		157030471E6726D400F0B895 /* Build configuration list for PBXNativeTarget "math" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				157030481E6726D400F0B895 /* Debug */,
+				157030491E6726D400F0B895 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 157030281E6726D400F0B895 /* Project object */;
+}
