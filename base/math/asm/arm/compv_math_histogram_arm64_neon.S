@@ -86,22 +86,21 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathHistogramProcess_8u32s_Asm_NEON64
             add r22w, r22w, #1
             add dataPtr, dataPtr, #(8*COMPV_GAS_UINT8_SZ_BYTES)
             str r22w, [r13]			
-			bne LoopWidth4_CompVMathHistogramProcess_8u32s_Asm_NEON64
+			cbnz i, LoopWidth4_CompVMathHistogramProcess_8u32s_Asm_NEON64
 			## EndOf_LoopWidth4 ##
 
 		##############################################
 		# for (# i < width# ++i)
 		##############################################
 		ands i, width, #7
-		beq EndOf_LoopWidth1_CompVMathHistogramProcess_8u32s_Asm_NEON64
+		cbz i, EndOf_LoopWidth1_CompVMathHistogramProcess_8u32s_Asm_NEON64
 		LoopWidth1_CompVMathHistogramProcess_8u32s_Asm_NEON64:
 			ldrb r6w, [dataPtr], #COMPV_GAS_UINT8_SZ_BYTES
-            add r6, histogramPtr, r6, LSL #2
-            ldr r10, [r6]
+            ldr r10w, [histogramPtr, r6, LSL #2]
 			subs i, i, #1
-			add r10, r10, #1
-			str r10, [r6]
-			bne LoopWidth1_CompVMathHistogramProcess_8u32s_Asm_NEON64
+			add r10w, r10w, #1
+			str r10w, [histogramPtr, r6, LSL #2]
+			cbnz i, LoopWidth1_CompVMathHistogramProcess_8u32s_Asm_NEON64
 			EndOf_LoopWidth1_CompVMathHistogramProcess_8u32s_Asm_NEON64:
 			## EndOf_LoopWidth1 ##
 
