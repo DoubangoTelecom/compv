@@ -21,6 +21,9 @@ void CompVMathUtilsMax_16u_Intrin_NEON(COMPV_ALIGNED(NEON) const uint16_t* data,
 
 void CompVMathUtilsSum_8u32u_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* data, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, uint32_t *sum1);
 
+void CompVMathUtilsSum2_32s32s_Intrin_NEON(COMPV_ALIGNED(NEON) const int32_t* a, COMPV_ALIGNED(NEON) const int32_t* b, COMPV_ALIGNED(NEON) int32_t* s, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
+void CompVMathUtilsSum2_32s32s_256x1_Intrin_NEON(COMPV_ALIGNED(NEON) const int32_t* a, COMPV_ALIGNED(NEON) const int32_t* b, COMPV_ALIGNED(NEON) int32_t* s, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
+
 void CompVMathUtilsSumAbs_16s16u_Intrin_NEON(const COMPV_ALIGNED(NEON) int16_t* a, const COMPV_ALIGNED(NEON) int16_t* b, COMPV_ALIGNED(NEON) uint16_t* r, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
 
 void CompVMathUtilsScaleAndClipPixel8_16u32f_Intrin_NEON(COMPV_ALIGNED(NEON) const uint16_t* in, const compv_float32_t* scale1, COMPV_ALIGNED(NEON) uint8_t* out, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);

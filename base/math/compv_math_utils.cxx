@@ -291,6 +291,10 @@ COMPV_ERROR_CODE CompVMathUtils::sum2(const int32_t* a, const int32_t* b, int32_
     }
 #elif COMPV_ARCH_ARM
 	if (width >= 4 && CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(a) && COMPV_IS_ALIGNED_NEON(b) && COMPV_IS_ALIGNED_NEON(stride * sizeof(int32_t))) {
+		COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMathUtilsSum2_32s32s = CompVMathUtilsSum2_32s32s_Intrin_NEON);
+		if (need_fast256x1) {
+			COMPV_EXEC_IFDEF_INTRIN_ARM((CompVMathUtilsSum2_32s32s = CompVMathUtilsSum2_32s32s_256x1_Intrin_NEON, have_fast256x1 = true));
+		}
 	}
 #endif
 	if (need_fast256x1 && !have_fast256x1) {

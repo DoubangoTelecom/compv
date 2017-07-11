@@ -111,6 +111,42 @@ void CompVMathUtilsSum_8u32u_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* data
 	*sum1 = vget_lane_u32(vecSumln, 0);
 }
 
+#define __CompVMathUtilsSum2_16x1_32s32s_Intrin_NEON(i) \
+	vst1q_s32(&s[i], vaddq_s32(vld1q_s32(&a[i]), vld1q_s32(&b[i]))); \
+	vst1q_s32(&s[i + 4], vaddq_s32(vld1q_s32(&a[i + 4]), vld1q_s32(&b[i + 4]))); \
+	vst1q_s32(&s[i + 8], vaddq_s32(vld1q_s32(&a[i + 8]), vld1q_s32(&b[i + 8]))); \
+	vst1q_s32(&s[i + 12], vaddq_s32(vld1q_s32(&a[i + 12]), vld1q_s32(&b[i + 12])))
+
+
+void CompVMathUtilsSum2_32s32s_Intrin_NEON(COMPV_ALIGNED(NEON) const int32_t* a, COMPV_ALIGNED(NEON) const int32_t* b, COMPV_ALIGNED(NEON) int32_t* s, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
+{
+	COMPV_DEBUG_INFO_CHECK_NEON();
+	compv_uscalar_t j;
+	compv_scalar_t i;
+	compv_scalar_t width_ = static_cast<compv_scalar_t>(width);
+
+	for (j = 0; j < height; ++j) {
+		for (i = 0; i < width_ - 15; i += 16) {
+			__CompVMathUtilsSum2_16x1_32s32s_Intrin_NEON(i);
+		}
+		for (; i < width_; i += 4) {
+			vst1q_s32(&s[i], vaddq_s32(vld1q_s32(&a[i]), vld1q_s32(&b[i])));
+		}
+		a += stride;
+		b += stride;
+		s += stride;
+	}
+}
+
+// width = 256, height = 1: common size (histogram 8u)
+void CompVMathUtilsSum2_32s32s_256x1_Intrin_NEON(COMPV_ALIGNED(NEON) const int32_t* a, COMPV_ALIGNED(NEON) const int32_t* b, COMPV_ALIGNED(NEON) int32_t* s, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
+{
+	__CompVMathUtilsSum2_16x1_32s32s_Intrin_NEON(0); __CompVMathUtilsSum2_16x1_32s32s_Intrin_NEON(16); __CompVMathUtilsSum2_16x1_32s32s_Intrin_NEON(32); __CompVMathUtilsSum2_16x1_32s32s_Intrin_NEON(48);
+	__CompVMathUtilsSum2_16x1_32s32s_Intrin_NEON(64); __CompVMathUtilsSum2_16x1_32s32s_Intrin_NEON(80); __CompVMathUtilsSum2_16x1_32s32s_Intrin_NEON(96); __CompVMathUtilsSum2_16x1_32s32s_Intrin_NEON(112);
+	__CompVMathUtilsSum2_16x1_32s32s_Intrin_NEON(128); __CompVMathUtilsSum2_16x1_32s32s_Intrin_NEON(144); __CompVMathUtilsSum2_16x1_32s32s_Intrin_NEON(160); __CompVMathUtilsSum2_16x1_32s32s_Intrin_NEON(176);
+	__CompVMathUtilsSum2_16x1_32s32s_Intrin_NEON(192); __CompVMathUtilsSum2_16x1_32s32s_Intrin_NEON(208); __CompVMathUtilsSum2_16x1_32s32s_Intrin_NEON(224); __CompVMathUtilsSum2_16x1_32s32s_Intrin_NEON(240);
+}
+
 // "strideInBytes" must be NEON-aligned
 void CompVMathUtilsSumAbs_16s16u_Intrin_NEON(const COMPV_ALIGNED(NEON) int16_t* a, const COMPV_ALIGNED(NEON) int16_t* b, COMPV_ALIGNED(NEON) uint16_t* r, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
 {
