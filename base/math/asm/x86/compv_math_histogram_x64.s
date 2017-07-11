@@ -81,8 +81,7 @@ sym(CompVMathHistogramProcess_8u32s_Asm_X64)
 		.LoopWidth1:
 			movzx r9, byte [dataPtr + i + 0]
 			inc i
-			lea r9, [histogramPtr + r9*COMPV_YASM_UINT32_SZ_BYTES]
-			inc dword ptr [r9]
+			inc dword ptr [histogramPtr + r9*COMPV_YASM_UINT32_SZ_BYTES]
 			cmp i, width
 			jl .LoopWidth1
 			.EndOf_LoopWidth1:
