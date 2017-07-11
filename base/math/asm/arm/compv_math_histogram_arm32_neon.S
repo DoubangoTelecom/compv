@@ -6,7 +6,7 @@
 # WebSite: http://compv.org                                             #
 #########################################################################
 #if defined(__arm__) && !defined(__aarch64__)
-.include "compv_common_arm32.S" @"
+.include "compv_common_arm32.S" @
 
 .data
 
@@ -48,6 +48,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathHistogramProcess_8u32s_Asm_NEON32
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         and i, width, #-4
 		LoopWidth4_CompVMathHistogramProcess_8u32s_Asm_NEON32:
+#if defined(__APPLE__) // on iOS, this code is faster. On Android (MediaPad2 and Galaxy Tab A6) this code is #2 slooooower
 			ldrb.w r6, [dataPtr, #(0*COMPV_GAS_UINT8_SZ_BYTES)]
 			add.w r6, histogramPtr, r6, LSL #2
             ldr.w r11, [r6]
@@ -70,6 +71,26 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathHistogramProcess_8u32s_Asm_NEON32
             add.w r10, r10, #1
             add dataPtr, dataPtr, #(4*COMPV_GAS_UINT8_SZ_BYTES)
             str.w r10, [r9]
+#else
+			ldrb r6, [dataPtr, #(0*COMPV_GAS_UINT8_SZ_BYTES)]
+			ldrb r7, [dataPtr, #(1*COMPV_GAS_UINT8_SZ_BYTES)]
+			ldrb r8, [dataPtr, #(2*COMPV_GAS_UINT8_SZ_BYTES)]
+			ldrb r9, [dataPtr, #(3*COMPV_GAS_UINT8_SZ_BYTES)]
+            ldr r11, [histogramPtr, r6, LSL #2]
+            add r11, r11, #1
+            str r11, [histogramPtr, r6, LSL #2]
+            ldr r10, [histogramPtr, r7, LSL #2]
+            add r10, r10, #1
+            str r10, [histogramPtr, r7, LSL #2]
+            ldr r11, [histogramPtr, r8, LSL #2]
+			add dataPtr, dataPtr, #(4*COMPV_GAS_UINT8_SZ_BYTES)
+            add r11, r11, #1
+            str r11, [histogramPtr, r8, LSL #2]
+            ldr r10, [histogramPtr, r9, LSL #2]
+            subs i, i, #4
+            add r10, r10, #1
+            str r10, [histogramPtr, r9, LSL #2]
+#endif
 			bne LoopWidth4_CompVMathHistogramProcess_8u32s_Asm_NEON32
 			@@ EndOf_LoopWidth4 @@
 
@@ -79,12 +100,21 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathHistogramProcess_8u32s_Asm_NEON32
 		ands i, width, #3
 		beq EndOf_LoopWidth1_CompVMathHistogramProcess_8u32s_Asm_NEON32
 		LoopWidth1_CompVMathHistogramProcess_8u32s_Asm_NEON32:
+#if defined(__APPLE__) // on iOS, this code is faster. On Android (MediaPad2 and Galaxy Tab A6) this code is #2 slooooower
 			ldrb r6, [dataPtr], #COMPV_GAS_UINT8_SZ_BYTES
             add r6, histogramPtr, r6, LSL #2
             ldr r10, [r6]
 			subs i, i, #1
 			add r10, r10, #1
 			str r10, [r6]
+#else
+			ldrb r6, [dataPtr, #(0*COMPV_GAS_UINT8_SZ_BYTES)]
+			add dataPtr, dataPtr, #(1*COMPV_GAS_UINT8_SZ_BYTES)
+            ldr r10, [histogramPtr, r6, LSL #2]
+			subs i, i, #1
+			add r10, r10, #1
+			str r10, [histogramPtr, r6, LSL #2]
+#endif
 			bne LoopWidth1_CompVMathHistogramProcess_8u32s_Asm_NEON32
 			EndOf_LoopWidth1_CompVMathHistogramProcess_8u32s_Asm_NEON32:
 			@@ EndOf_LoopWidth1 @@

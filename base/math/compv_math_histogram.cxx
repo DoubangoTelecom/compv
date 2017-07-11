@@ -117,13 +117,13 @@ COMPV_ERROR_CODE CompVMathHistogram::process_8u32u(const uint8_t* dataPtr, size_
 
 static void CompVMathHistogramProcess_8u32u_C(const uint8_t* dataPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, uint32_t* histogramPtr)
 {
+	//!\\ TODO(dmi): optiz issue -> on AArch64 MediaPad2 the asm code is almost two times faster.
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
 	compv_uscalar_t i, j;
 	const compv_uscalar_t maxWidthStep1 = width & -4;
 	int a, b, c, d;
 	for (j = 0; j < height; ++j) {
 		for (i = 0; i < maxWidthStep1; i += 4) {
-			// TODO(dmi): for asm code, use #4 different histograms (to hide memory latency) and sum them at the end
 			a = dataPtr[i + 0];
 			b = dataPtr[i + 1];
 			c = dataPtr[i + 2];

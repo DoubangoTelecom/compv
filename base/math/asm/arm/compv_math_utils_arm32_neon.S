@@ -6,7 +6,7 @@
 # WebSite: http://compv.org                                             #
 #########################################################################
 #if defined(__arm__) && !defined(__aarch64__)
-.include "compv_common_arm32.S" @"
+.include "compv_common_arm32.S" @
 
 #if defined(__APPLE__)
 #   define sym(funcname) _##funcname
@@ -295,9 +295,9 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathUtilsSum_8u32u_Asm_NEON32
 
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-@ arg(0) -> COMPV_ALIGNED(NEON) const int32_t* a
-@ arg(1) -> COMPV_ALIGNED(NEON) const int32_t* b
-@ arg(2) -> COMPV_ALIGNED(NEON) int32_t* s
+@ arg(0) -> COMPV_ALIGNED(NEON) const int32_t* aPtr
+@ arg(1) -> COMPV_ALIGNED(NEON) const int32_t* bPtr
+@ arg(2) -> COMPV_ALIGNED(NEON) int32_t* sPtr
 @ arg(3) -> compv_uscalar_t width
 @ arg(4) -> compv_uscalar_t height
 @ arg(5) -> COMPV_ALIGNED(NEON) compv_uscalar_t stride
@@ -310,9 +310,9 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathUtilsSum2_32s32s_Asm_NEON32
     @ Load arguments @
 	ldm_args r0-r5
 
-    a .req r0
-	b .req r1
-	s .req r2
+    aPtr .req r0
+	bPtr .req r1
+	sPtr .req r2
 	width .req r3
 	height .req r4
     stride .req r5
@@ -334,16 +334,16 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathUtilsSum2_32s32s_Asm_NEON32
 		@ for (i = 0; i < width_ - 15; i += 16) 
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 		LoopCols16_CompVMathUtilsSum2_32s32s_Asm_NEON32:
-			vld1.s32 {q0, q1}, [a :128]!
-            vld1.s32 {q2, q3}, [a :128]!
-            vld1.s32 {q4, q5}, [b :128]!
-            vld1.s32 {q6, q7}, [b :128]!
+			vld1.s32 {q0, q1}, [aPtr :128]!
+            vld1.s32 {q2, q3}, [aPtr :128]!
+            vld1.s32 {q4, q5}, [bPtr :128]!
+            vld1.s32 {q6, q7}, [bPtr :128]!
             vadd.s32 q0, q0, q4
             vadd.s32 q1, q1, q5
             vadd.s32 q2, q2, q6
             vadd.s32 q3, q3, q7
-			vst1.s32 {q0, q1}, [s :128]!
-            vst1.s32 {q2, q3}, [s :128]!
+			vst1.s32 {q0, q1}, [sPtr :128]!
+            vst1.s32 {q2, q3}, [sPtr :128]!
             subs i, i, #16
 			bne LoopCols16_CompVMathUtilsSum2_32s32s_Asm_NEON32
 		EndOf_LoopCols16_CompVMathUtilsSum2_32s32s_Asm_NEON32:
@@ -354,23 +354,23 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathUtilsSum2_32s32s_Asm_NEON32
         ands i, width, #15
 		beq EndOf_LoopCols4_CompVMathUtilsSum2_32s32s_Asm_NEON32
 		LoopCols4_CompVMathUtilsSum2_32s32s_Asm_NEON32:
-			vld1.s32 {q0}, [a :128]!
-            vld1.s32 {q4}, [b :128]!
+			vld1.s32 {q0}, [aPtr :128]!
+            vld1.s32 {q4}, [bPtr :128]!
             vadd.s32 q0, q0, q4
-            vst1.s32 {q0}, [s :128]!
+            vst1.s32 {q0}, [sPtr :128]!
             subs i, i, #4	
 			bgt LoopCols4_CompVMathUtilsSum2_32s32s_Asm_NEON32
 		EndOf_LoopCols4_CompVMathUtilsSum2_32s32s_Asm_NEON32:
 		
 		subs height, height, #1
-		add a, a, pad
-		add b, b, pad
-		add s, s, pad
+		add aPtr, aPtr, pad
+		add bPtr, bPtr, pad
+		add sPtr, sPtr, pad
 		bne LoopRows_CompVMathUtilsSum2_32s32s_Asm_NEON32
 
-    .unreq a
-	.unreq b
-	.unreq s
+    .unreq aPtr
+	.unreq bPtr
+	.unreq sPtr
 	.unreq width
 	.unreq height
     .unreq stride
@@ -385,9 +385,9 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathUtilsSum2_32s32s_Asm_NEON32
 
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-@ arg(0) -> COMPV_ALIGNED(NEON) const int32_t* a
-@ arg(1) -> COMPV_ALIGNED(NEON) const int32_t* b
-@ arg(2) -> COMPV_ALIGNED(NEON) int32_t* s
+@ arg(0) -> COMPV_ALIGNED(NEON) const int32_t* aPtr
+@ arg(1) -> COMPV_ALIGNED(NEON) const int32_t* bPtr
+@ arg(2) -> COMPV_ALIGNED(NEON) int32_t* bPtr
 @ arg(3) -> compv_uscalar_t width
 @ arg(4) -> compv_uscalar_t height
 @ arg(5) -> COMPV_ALIGNED(NEON) compv_uscalar_t stride
@@ -400,19 +400,19 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathUtilsSum2_32s32s_256x1_Asm_NEON32
     @ Load arguments @
 	ldm_args r0-r2
 
-    a .req r0
-	b .req r1
-	s .req r2
+    aPtr .req r0
+	bPtr .req r1
+	sPtr .req r2
 
     .rep 8
-        vld1.s32 {q0, q1}, [a :128]!
-        vld1.s32 {q2, q3}, [a :128]!
-        vld1.s32 {q4, q5}, [a :128]!
-        vld1.s32 {q6, q7}, [a :128]!
-        vld1.s32 {q8, q9}, [b :128]!
-        vld1.s32 {q10, q11}, [b :128]!
-        vld1.s32 {q12, q13}, [b :128]!
-        vld1.s32 {q14, q15}, [b :128]!
+        vld1.s32 {q0, q1}, [aPtr :128]!
+        vld1.s32 {q2, q3}, [aPtr :128]!
+        vld1.s32 {q4, q5}, [aPtr :128]!
+        vld1.s32 {q6, q7}, [aPtr :128]!
+        vld1.s32 {q8, q9}, [bPtr :128]!
+        vld1.s32 {q10, q11}, [bPtr :128]!
+        vld1.s32 {q12, q13}, [bPtr :128]!
+        vld1.s32 {q14, q15}, [bPtr :128]!
         vadd.s32 q0, q0, q8
         vadd.s32 q1, q1, q9
         vadd.s32 q2, q2, q10
@@ -421,15 +421,15 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathUtilsSum2_32s32s_256x1_Asm_NEON32
         vadd.s32 q5, q5, q13
         vadd.s32 q6, q6, q14
         vadd.s32 q7, q7, q15
-        vst1.s32 {q0, q1}, [s :128]!
-        vst1.s32 {q2, q3}, [s :128]!
-        vst1.s32 {q4, q5}, [s :128]!
-        vst1.s32 {q6, q7}, [s :128]!
+        vst1.s32 {q0, q1}, [sPtr :128]!
+        vst1.s32 {q2, q3}, [sPtr :128]!
+        vst1.s32 {q4, q5}, [sPtr :128]!
+        vst1.s32 {q6, q7}, [sPtr :128]!
     .endr
 
-    .unreq a
-	.unreq b
-	.unreq s
+    .unreq aPtr
+	.unreq bPtr
+	.unreq sPtr
 
 	@@ begin epilog @@
 	COMPV_GAS_RESTORE_NEON_REGS

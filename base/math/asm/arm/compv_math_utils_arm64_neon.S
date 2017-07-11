@@ -6,7 +6,7 @@
 # WebSite: http://compv.org                                             #
 #########################################################################
 #if defined(__aarch64__)
-.include "compv_common_arm64.S" //"
+.include "compv_common_arm64.S" //
 
 #if defined(__APPLE__)
 #   define sym(funcname) _##funcname
@@ -279,9 +279,9 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathUtilsSum_8u32u_Asm_NEON64
 
 
 ############################################################
-# arg(0) -> COMPV_ALIGNED(NEON) const int32_t* a
-# arg(1) -> COMPV_ALIGNED(NEON) const int32_t* b
-# arg(2) -> COMPV_ALIGNED(NEON) int32_t* s
+# arg(0) -> COMPV_ALIGNED(NEON) const int32_t* aPtr
+# arg(1) -> COMPV_ALIGNED(NEON) const int32_t* bPtr
+# arg(2) -> COMPV_ALIGNED(NEON) int32_t* sPtr
 # arg(3) -> compv_uscalar_t width
 # arg(4) -> compv_uscalar_t height
 # arg(5) -> COMPV_ALIGNED(NEON) compv_uscalar_t stride
@@ -290,9 +290,9 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathUtilsSum2_32s32s_Asm_NEON64
 	COMPV_GAS_SAVE_NEON_REGS
 	## end prolog ##
 
-    a .req r0
-	b .req r1
-	s .req r2
+    aPtr .req r0
+	bPtr .req r1
+	sPtr .req r2
 	width .req r3
 	height .req r4
     stride .req r5
@@ -314,13 +314,13 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathUtilsSum2_32s32s_Asm_NEON64
 		# for (i = 0; i < width_ - 15; i += 16) 
 		##########################################
 		LoopCols16_CompVMathUtilsSum2_32s32s_Asm_NEON64:
-			ld1 {v0.4s, v1.4s, v2.4s, v3.4s}, [a], #(4*COMPV_GAS_V_SZ_BYTES)
-            ld1 {v4.4s, v5.4s, v6.4s, v7.4s}, [b], #(4*COMPV_GAS_V_SZ_BYTES)
+			ld1 {v0.4s, v1.4s, v2.4s, v3.4s}, [aPtr], #(4*COMPV_GAS_V_SZ_BYTES)
+            ld1 {v4.4s, v5.4s, v6.4s, v7.4s}, [bPtr], #(4*COMPV_GAS_V_SZ_BYTES)
             add v0.4s, v0.4s, v4.4s
             add v1.4s, v1.4s, v5.4s
             add v2.4s, v2.4s, v6.4s
             add v3.4s, v3.4s, v7.4s
-			st1 {v0.4s, v1.4s, v2.4s, v3.4s}, [s], #(4*COMPV_GAS_V_SZ_BYTES)
+			st1 {v0.4s, v1.4s, v2.4s, v3.4s}, [sPtr], #(4*COMPV_GAS_V_SZ_BYTES)
             subs i, i, #16
 			bne LoopCols16_CompVMathUtilsSum2_32s32s_Asm_NEON64
 		EndOf_LoopCols16_CompVMathUtilsSum2_32s32s_Asm_NEON64:
@@ -331,23 +331,23 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathUtilsSum2_32s32s_Asm_NEON64
         ands i, width, #15
 		beq EndOf_LoopCols4_CompVMathUtilsSum2_32s32s_Asm_NEON64
 		LoopCols4_CompVMathUtilsSum2_32s32s_Asm_NEON64:
-			ld1 {v0.4s}, [a], #(1*COMPV_GAS_V_SZ_BYTES)
-            ld1 {v4.4s}, [b], #(1*COMPV_GAS_V_SZ_BYTES)
+			ld1 {v0.4s}, [aPtr], #(1*COMPV_GAS_V_SZ_BYTES)
+            ld1 {v4.4s}, [bPtr], #(1*COMPV_GAS_V_SZ_BYTES)
             add v0.4s, v0.4s, v4.4s
-            st1 {v0.4s}, [s], #(1*COMPV_GAS_V_SZ_BYTES)
+            st1 {v0.4s}, [sPtr], #(1*COMPV_GAS_V_SZ_BYTES)
             subs i, i, #4
 			bgt LoopCols4_CompVMathUtilsSum2_32s32s_Asm_NEON64
 		EndOf_LoopCols4_CompVMathUtilsSum2_32s32s_Asm_NEON64:
 		
 		subs height, height, #1
-		add a, a, pad
-		add b, b, pad
-		add s, s, pad
+		add aPtr, aPtr, pad
+		add bPtr, bPtr, pad
+		add sPtr, sPtr, pad
 		bne LoopRows_CompVMathUtilsSum2_32s32s_Asm_NEON64
 
-    .unreq a
-	.unreq b
-	.unreq s
+    .unreq aPtr
+	.unreq bPtr
+	.unreq sPtr
 	.unreq width
 	.unreq height
     .unreq stride
@@ -361,9 +361,9 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathUtilsSum2_32s32s_Asm_NEON64
 
 
 ############################################################
-# arg(0) -> COMPV_ALIGNED(NEON) const int32_t* a
-# arg(1) -> COMPV_ALIGNED(NEON) const int32_t* b
-# arg(2) -> COMPV_ALIGNED(NEON) int32_t* s
+# arg(0) -> COMPV_ALIGNED(NEON) const int32_t* aPtr
+# arg(1) -> COMPV_ALIGNED(NEON) const int32_t* bPtr
+# arg(2) -> COMPV_ALIGNED(NEON) int32_t* sPtr
 # arg(3) -> compv_uscalar_t width
 # arg(4) -> compv_uscalar_t height
 # arg(5) -> COMPV_ALIGNED(NEON) compv_uscalar_t stride
@@ -372,28 +372,28 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathUtilsSum2_32s32s_256x1_Asm_NEON64
 	COMPV_GAS_SAVE_NEON_REGS
 	## end prolog ##
 
-    a .req r0
-	b .req r1
-	s .req r2
+    aPtr .req r0
+	bPtr .req r1
+	sPtr .req r2
 
     .rep 4
 #if defined(__APPLE__) // on iOS, this code is slightly faster
-            ldp q0, q1, [a, #(0*COMPV_GAS_V_SZ_BYTES)]
-            ldp q2, q3, [a, #(2*COMPV_GAS_V_SZ_BYTES)]
-            ldp q4, q5, [a, #(4*COMPV_GAS_V_SZ_BYTES)]
-            ldp q6, q7, [a, #(6*COMPV_GAS_V_SZ_BYTES)]
-            ldp q8, q9, [a, #(8*COMPV_GAS_V_SZ_BYTES)]
-            ldp q10, q11, [a, #(10*COMPV_GAS_V_SZ_BYTES)]
-            ldp q12, q13, [a, #(12*COMPV_GAS_V_SZ_BYTES)]
-            ldp q14, q15, [a, #(14*COMPV_GAS_V_SZ_BYTES)]
-            ldp q16, q17, [b, #(0*COMPV_GAS_V_SZ_BYTES)]
-            ldp q18, q19, [b, #(2*COMPV_GAS_V_SZ_BYTES)]
-            ldp q20, q21, [b, #(4*COMPV_GAS_V_SZ_BYTES)]
-            ldp q22, q23, [b, #(6*COMPV_GAS_V_SZ_BYTES)]
-            ldp q24, q25, [b, #(8*COMPV_GAS_V_SZ_BYTES)]
-            ldp q26, q27, [b, #(10*COMPV_GAS_V_SZ_BYTES)]
-            ldp q28, q29, [b, #(12*COMPV_GAS_V_SZ_BYTES)]
-            ldp q30, q31, [b, #(14*COMPV_GAS_V_SZ_BYTES)]
+            ldp q0, q1, [aPtr, #(0*COMPV_GAS_V_SZ_BYTES)]
+            ldp q2, q3, [aPtr, #(2*COMPV_GAS_V_SZ_BYTES)]
+            ldp q4, q5, [aPtr, #(4*COMPV_GAS_V_SZ_BYTES)]
+            ldp q6, q7, [aPtr, #(6*COMPV_GAS_V_SZ_BYTES)]
+            ldp q8, q9, [aPtr, #(8*COMPV_GAS_V_SZ_BYTES)]
+            ldp q10, q11, [aPtr, #(10*COMPV_GAS_V_SZ_BYTES)]
+            ldp q12, q13, [aPtr, #(12*COMPV_GAS_V_SZ_BYTES)]
+            ldp q14, q15, [aPtr, #(14*COMPV_GAS_V_SZ_BYTES)]
+            ldp q16, q17, [bPtr, #(0*COMPV_GAS_V_SZ_BYTES)]
+            ldp q18, q19, [bPtr, #(2*COMPV_GAS_V_SZ_BYTES)]
+            ldp q20, q21, [bPtr, #(4*COMPV_GAS_V_SZ_BYTES)]
+            ldp q22, q23, [bPtr, #(6*COMPV_GAS_V_SZ_BYTES)]
+            ldp q24, q25, [bPtr, #(8*COMPV_GAS_V_SZ_BYTES)]
+            ldp q26, q27, [bPtr, #(10*COMPV_GAS_V_SZ_BYTES)]
+            ldp q28, q29, [bPtr, #(12*COMPV_GAS_V_SZ_BYTES)]
+            ldp q30, q31, [bPtr, #(14*COMPV_GAS_V_SZ_BYTES)]
             add v0.4s, v0.4s, v16.4s
             add v1.4s, v1.4s, v17.4s
             add v2.4s, v2.4s, v18.4s
@@ -410,26 +410,26 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathUtilsSum2_32s32s_256x1_Asm_NEON64
             add v13.4s, v13.4s, v29.4s
             add v14.4s, v14.4s, v30.4s
             add v15.4s, v15.4s, v31.4s
-            add a, a, #(16*COMPV_GAS_V_SZ_BYTES)
-            add b, b, #(16*COMPV_GAS_V_SZ_BYTES)
-            stp q0, q1, [s, #(0*COMPV_GAS_V_SZ_BYTES)]
-            stp q2, q3, [s, #(2*COMPV_GAS_V_SZ_BYTES)]
-            stp q4, q5, [s, #(4*COMPV_GAS_V_SZ_BYTES)]
-            stp q6, q7, [s, #(6*COMPV_GAS_V_SZ_BYTES)]
-            stp q8, q9, [s, #(8*COMPV_GAS_V_SZ_BYTES)]
-            stp q10, q11, [s, #(10*COMPV_GAS_V_SZ_BYTES)]
-            stp q12, q13, [s, #(12*COMPV_GAS_V_SZ_BYTES)]
-            stp q14, q15, [s, #(14*COMPV_GAS_V_SZ_BYTES)]
-            add s, s, #(16*COMPV_GAS_V_SZ_BYTES)
+            add aPtr, aPtr, #(16*COMPV_GAS_V_SZ_BYTES)
+            add bPtr, bPtr, #(16*COMPV_GAS_V_SZ_BYTES)
+            stp q0, q1, [sPtr, #(0*COMPV_GAS_V_SZ_BYTES)]
+            stp q2, q3, [sPtr, #(2*COMPV_GAS_V_SZ_BYTES)]
+            stp q4, q5, [sPtr, #(4*COMPV_GAS_V_SZ_BYTES)]
+            stp q6, q7, [sPtr, #(6*COMPV_GAS_V_SZ_BYTES)]
+            stp q8, q9, [sPtr, #(8*COMPV_GAS_V_SZ_BYTES)]
+            stp q10, q11, [sPtr, #(10*COMPV_GAS_V_SZ_BYTES)]
+            stp q12, q13, [sPtr, #(12*COMPV_GAS_V_SZ_BYTES)]
+            stp q14, q15, [sPtr, #(14*COMPV_GAS_V_SZ_BYTES)]
+            add sPtr, sPtr, #(16*COMPV_GAS_V_SZ_BYTES)
 #else
-            ld1 {v0.4s, v1.4s, v2.4s, v3.4s}, [a], #(4*COMPV_GAS_V_SZ_BYTES)
-            ld1 {v4.4s, v5.4s, v6.4s, v7.4s}, [a], #(4*COMPV_GAS_V_SZ_BYTES)
-            ld1 {v8.4s, v9.4s, v10.4s, v11.4s}, [a], #(4*COMPV_GAS_V_SZ_BYTES)
-            ld1 {v12.4s, v13.4s, v14.4s, v15.4s}, [a], #(4*COMPV_GAS_V_SZ_BYTES)
-            ld1 {v16.4s, v17.4s, v18.4s, v19.4s}, [b], #(4*COMPV_GAS_V_SZ_BYTES)
-            ld1 {v20.4s, v21.4s, v22.4s, v23.4s}, [b], #(4*COMPV_GAS_V_SZ_BYTES)
-            ld1 {v24.4s, v25.4s, v26.4s, v27.4s}, [b], #(4*COMPV_GAS_V_SZ_BYTES)
-            ld1 {v28.4s, v29.4s, v30.4s, v31.4s}, [b], #(4*COMPV_GAS_V_SZ_BYTES)
+            ld1 {v0.4s-v3.4s}, [aPtr], #(4*COMPV_GAS_V_SZ_BYTES)
+            ld1 {v4.4s-v7.4s}, [aPtr], #(4*COMPV_GAS_V_SZ_BYTES)
+            ld1 {v8.4s-v11.4s}, [aPtr], #(4*COMPV_GAS_V_SZ_BYTES)
+            ld1 {v12.4s-v15.4s}, [aPtr], #(4*COMPV_GAS_V_SZ_BYTES)
+            ld1 {v16.4s-v19.4s}, [bPtr], #(4*COMPV_GAS_V_SZ_BYTES)
+            ld1 {v20.4s-v23.4s}, [bPtr], #(4*COMPV_GAS_V_SZ_BYTES)
+            ld1 {v24.4s-v27.4s}, [bPtr], #(4*COMPV_GAS_V_SZ_BYTES)
+            ld1 {v28.4s-v31.4s}, [bPtr], #(4*COMPV_GAS_V_SZ_BYTES)
             add v0.4s, v0.4s, v16.4s
             add v1.4s, v1.4s, v17.4s
             add v2.4s, v2.4s, v18.4s
@@ -446,16 +446,16 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathUtilsSum2_32s32s_256x1_Asm_NEON64
             add v13.4s, v13.4s, v29.4s
             add v14.4s, v14.4s, v30.4s
             add v15.4s, v15.4s, v31.4s
-            st1 {v0.4s, v1.4s, v2.4s, v3.4s}, [s], #(4*COMPV_GAS_V_SZ_BYTES)
-            st1 {v4.4s, v5.4s, v6.4s, v7.4s}, [s], #(4*COMPV_GAS_V_SZ_BYTES)
-            st1 {v8.4s, v9.4s, v10.4s, v11.4s}, [s], #(4*COMPV_GAS_V_SZ_BYTES)
-            st1 {v12.4s, v13.4s, v14.4s, v15.4s}, [s], #(4*COMPV_GAS_V_SZ_BYTES)
+            st1 {v0.4s-v3.4s}, [sPtr], #(4*COMPV_GAS_V_SZ_BYTES)
+            st1 {v4.4s-v7.4s}, [sPtr], #(4*COMPV_GAS_V_SZ_BYTES)
+            st1 {v8.4s-v11.4s}, [sPtr], #(4*COMPV_GAS_V_SZ_BYTES)
+            st1 {v12.4s-v15.4s}, [sPtr], #(4*COMPV_GAS_V_SZ_BYTES)
 #endif
     .endr
 
-    .unreq a
-	.unreq b
-	.unreq s
+    .unreq aPtr
+	.unreq bPtr
+	.unreq sPtr
 
 	## begin epilog ##
 	COMPV_GAS_RESTORE_NEON_REGS
