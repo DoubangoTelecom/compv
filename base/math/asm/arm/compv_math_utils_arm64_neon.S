@@ -377,34 +377,80 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathUtilsSum2_32s32s_256x1_Asm_NEON64
 	s .req r2
 
     .rep 4
-        ld1 {v0.4s, v1.4s, v2.4s, v3.4s}, [a], #(4*COMPV_GAS_V_SZ_BYTES)
-        ld1 {v4.4s, v5.4s, v6.4s, v7.4s}, [a], #(4*COMPV_GAS_V_SZ_BYTES)
-        ld1 {v8.4s, v9.4s, v10.4s, v11.4s}, [a], #(4*COMPV_GAS_V_SZ_BYTES)
-        ld1 {v12.4s, v13.4s, v14.4s, v15.4s}, [a], #(4*COMPV_GAS_V_SZ_BYTES)
-        ld1 {v16.4s, v17.4s, v18.4s, v19.4s}, [b], #(4*COMPV_GAS_V_SZ_BYTES)
-        ld1 {v20.4s, v21.4s, v22.4s, v23.4s}, [b], #(4*COMPV_GAS_V_SZ_BYTES)
-        ld1 {v24.4s, v25.4s, v26.4s, v27.4s}, [b], #(4*COMPV_GAS_V_SZ_BYTES)
-        ld1 {v28.4s, v29.4s, v30.4s, v31.4s}, [b], #(4*COMPV_GAS_V_SZ_BYTES)
-        add v0.4s, v0.4s, v16.4s
-        add v1.4s, v1.4s, v17.4s
-        add v2.4s, v2.4s, v18.4s
-        add v3.4s, v3.4s, v19.4s
-        add v4.4s, v4.4s, v20.4s
-        add v5.4s, v5.4s, v21.4s
-        add v6.4s, v6.4s, v22.4s
-        add v7.4s, v7.4s, v23.4s
-        add v8.4s, v8.4s, v24.4s
-        add v9.4s, v9.4s, v25.4s
-        add v10.4s, v10.4s, v26.4s
-        add v11.4s, v11.4s, v27.4s
-        add v12.4s, v12.4s, v28.4s
-        add v13.4s, v13.4s, v29.4s
-        add v14.4s, v14.4s, v30.4s
-        add v15.4s, v15.4s, v31.4s
-        st1 {v0.4s, v1.4s, v2.4s, v3.4s}, [s], #(4*COMPV_GAS_V_SZ_BYTES)
-        st1 {v4.4s, v5.4s, v6.4s, v7.4s}, [s], #(4*COMPV_GAS_V_SZ_BYTES)
-        st1 {v8.4s, v9.4s, v10.4s, v11.4s}, [s], #(4*COMPV_GAS_V_SZ_BYTES)
-        st1 {v12.4s, v13.4s, v14.4s, v15.4s}, [s], #(4*COMPV_GAS_V_SZ_BYTES)
+#if defined(__APPLE__) // on iOS, this code is slightly faster
+            ldp q0, q1, [a, #(0*COMPV_GAS_V_SZ_BYTES)]
+            ldp q2, q3, [a, #(2*COMPV_GAS_V_SZ_BYTES)]
+            ldp q4, q5, [a, #(4*COMPV_GAS_V_SZ_BYTES)]
+            ldp q6, q7, [a, #(6*COMPV_GAS_V_SZ_BYTES)]
+            ldp q8, q9, [a, #(8*COMPV_GAS_V_SZ_BYTES)]
+            ldp q10, q11, [a, #(10*COMPV_GAS_V_SZ_BYTES)]
+            ldp q12, q13, [a, #(12*COMPV_GAS_V_SZ_BYTES)]
+            ldp q14, q15, [a, #(14*COMPV_GAS_V_SZ_BYTES)]
+            ldp q16, q17, [b, #(0*COMPV_GAS_V_SZ_BYTES)]
+            ldp q18, q19, [b, #(2*COMPV_GAS_V_SZ_BYTES)]
+            ldp q20, q21, [b, #(4*COMPV_GAS_V_SZ_BYTES)]
+            ldp q22, q23, [b, #(6*COMPV_GAS_V_SZ_BYTES)]
+            ldp q24, q25, [b, #(8*COMPV_GAS_V_SZ_BYTES)]
+            ldp q26, q27, [b, #(10*COMPV_GAS_V_SZ_BYTES)]
+            ldp q28, q29, [b, #(12*COMPV_GAS_V_SZ_BYTES)]
+            ldp q30, q31, [b, #(14*COMPV_GAS_V_SZ_BYTES)]
+            add v0.4s, v0.4s, v16.4s
+            add v1.4s, v1.4s, v17.4s
+            add v2.4s, v2.4s, v18.4s
+            add v3.4s, v3.4s, v19.4s
+            add v4.4s, v4.4s, v20.4s
+            add v5.4s, v5.4s, v21.4s
+            add v6.4s, v6.4s, v22.4s
+            add v7.4s, v7.4s, v23.4s
+            add v8.4s, v8.4s, v24.4s
+            add v9.4s, v9.4s, v25.4s
+            add v10.4s, v10.4s, v26.4s
+            add v11.4s, v11.4s, v27.4s
+            add v12.4s, v12.4s, v28.4s
+            add v13.4s, v13.4s, v29.4s
+            add v14.4s, v14.4s, v30.4s
+            add v15.4s, v15.4s, v31.4s
+            add a, a, #(16*COMPV_GAS_V_SZ_BYTES)
+            add b, b, #(16*COMPV_GAS_V_SZ_BYTES)
+            stp q0, q1, [s, #(0*COMPV_GAS_V_SZ_BYTES)]
+            stp q2, q3, [s, #(2*COMPV_GAS_V_SZ_BYTES)]
+            stp q4, q5, [s, #(4*COMPV_GAS_V_SZ_BYTES)]
+            stp q6, q7, [s, #(6*COMPV_GAS_V_SZ_BYTES)]
+            stp q8, q9, [s, #(8*COMPV_GAS_V_SZ_BYTES)]
+            stp q10, q11, [s, #(10*COMPV_GAS_V_SZ_BYTES)]
+            stp q12, q13, [s, #(12*COMPV_GAS_V_SZ_BYTES)]
+            stp q14, q15, [s, #(14*COMPV_GAS_V_SZ_BYTES)]
+            add s, s, #(16*COMPV_GAS_V_SZ_BYTES)
+#else
+            ld1 {v0.4s, v1.4s, v2.4s, v3.4s}, [a], #(4*COMPV_GAS_V_SZ_BYTES)
+            ld1 {v4.4s, v5.4s, v6.4s, v7.4s}, [a], #(4*COMPV_GAS_V_SZ_BYTES)
+            ld1 {v8.4s, v9.4s, v10.4s, v11.4s}, [a], #(4*COMPV_GAS_V_SZ_BYTES)
+            ld1 {v12.4s, v13.4s, v14.4s, v15.4s}, [a], #(4*COMPV_GAS_V_SZ_BYTES)
+            ld1 {v16.4s, v17.4s, v18.4s, v19.4s}, [b], #(4*COMPV_GAS_V_SZ_BYTES)
+            ld1 {v20.4s, v21.4s, v22.4s, v23.4s}, [b], #(4*COMPV_GAS_V_SZ_BYTES)
+            ld1 {v24.4s, v25.4s, v26.4s, v27.4s}, [b], #(4*COMPV_GAS_V_SZ_BYTES)
+            ld1 {v28.4s, v29.4s, v30.4s, v31.4s}, [b], #(4*COMPV_GAS_V_SZ_BYTES)
+            add v0.4s, v0.4s, v16.4s
+            add v1.4s, v1.4s, v17.4s
+            add v2.4s, v2.4s, v18.4s
+            add v3.4s, v3.4s, v19.4s
+            add v4.4s, v4.4s, v20.4s
+            add v5.4s, v5.4s, v21.4s
+            add v6.4s, v6.4s, v22.4s
+            add v7.4s, v7.4s, v23.4s
+            add v8.4s, v8.4s, v24.4s
+            add v9.4s, v9.4s, v25.4s
+            add v10.4s, v10.4s, v26.4s
+            add v11.4s, v11.4s, v27.4s
+            add v12.4s, v12.4s, v28.4s
+            add v13.4s, v13.4s, v29.4s
+            add v14.4s, v14.4s, v30.4s
+            add v15.4s, v15.4s, v31.4s
+            st1 {v0.4s, v1.4s, v2.4s, v3.4s}, [s], #(4*COMPV_GAS_V_SZ_BYTES)
+            st1 {v4.4s, v5.4s, v6.4s, v7.4s}, [s], #(4*COMPV_GAS_V_SZ_BYTES)
+            st1 {v8.4s, v9.4s, v10.4s, v11.4s}, [s], #(4*COMPV_GAS_V_SZ_BYTES)
+            st1 {v12.4s, v13.4s, v14.4s, v15.4s}, [s], #(4*COMPV_GAS_V_SZ_BYTES)
+#endif
     .endr
 
     .unreq a
