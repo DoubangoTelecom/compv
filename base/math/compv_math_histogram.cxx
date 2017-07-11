@@ -8,7 +8,7 @@
 #include "compv/base/math/compv_math_utils.h"
 #include "compv/base/parallel/compv_parallel.h"
 
-#define COMPV_HISTOGRAM_MIN_SAMPLES_PER_THREAD		(200 * 10)
+#define COMPV_HISTOGRAM_MIN_SAMPLES_PER_THREAD		(256 * 5)
 
 COMPV_NAMESPACE_BEGIN()
 
