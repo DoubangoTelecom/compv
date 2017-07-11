@@ -36,6 +36,9 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathHistogramProcess_8u32s_Asm_NEON32
 
     sub stride, stride, width @ stride now holds padding
 
+    @ !! Important: Pre-indexing 'dataPtr' to read data then, adding #4 at the end 
+    @ !! is faster than Post-incrementing
+
 	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	@ for (j = 0; j < height; ++j)
 	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
