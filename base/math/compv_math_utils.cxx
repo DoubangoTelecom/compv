@@ -34,8 +34,10 @@ COMPV_NAMESPACE_BEGIN()
 #	if COMPV_ARCH_ARM32
 	COMPV_EXTERNC void CompVMathUtilsMax_16u_Asm_NEON32(COMPV_ALIGNED(NEON) const uint16_t* data, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, uint16_t *max);
 	COMPV_EXTERNC void CompVMathUtilsSum_8u32u_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* data, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, uint32_t *sum1);
-	COMPV_EXTERNC void CompVMathUtilsSumAbs_16s16u_Asm_NEON32(const COMPV_ALIGNED(NEON) int16_t* a, const COMPV_ALIGNED(NEON) int16_t* b, COMPV_ALIGNED(NEON) uint16_t* r, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
-	COMPV_EXTERNC void CompVMathUtilsScaleAndClipPixel8_16u32f_Asm_NEON32(COMPV_ALIGNED(NEON) const uint16_t* in, const compv_float32_t* scale1, COMPV_ALIGNED(NEON) uint8_t* out, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
+    COMPV_EXTERNC void CompVMathUtilsSumAbs_16s16u_Asm_NEON32(const COMPV_ALIGNED(NEON) int16_t* a, const COMPV_ALIGNED(NEON) int16_t* b, COMPV_ALIGNED(NEON) uint16_t* r, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
+    COMPV_EXTERNC void CompVMathUtilsSum2_32s32s_Asm_NEON32(COMPV_ALIGNED(NEON) const int32_t* a, COMPV_ALIGNED(NEON) const int32_t* b, COMPV_ALIGNED(NEON) int32_t* s, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
+    COMPV_EXTERNC void CompVMathUtilsSum2_32s32s_256x1_Asm_NEON32(COMPV_ALIGNED(NEON) const int32_t* a, COMPV_ALIGNED(NEON) const int32_t* b, COMPV_ALIGNED(NEON) int32_t* s, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
+    COMPV_EXTERNC void CompVMathUtilsScaleAndClipPixel8_16u32f_Asm_NEON32(COMPV_ALIGNED(NEON) const uint16_t* in, const compv_float32_t* scale1, COMPV_ALIGNED(NEON) uint8_t* out, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
 #   endif /* COMPV_ARCH_ARM32 */
 #	if COMPV_ARCH_ARM64
     COMPV_EXTERNC void CompVMathUtilsMax_16u_Asm_NEON64(COMPV_ALIGNED(NEON) const uint16_t* data, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, uint16_t *max);
@@ -292,8 +294,10 @@ COMPV_ERROR_CODE CompVMathUtils::sum2(const int32_t* a, const int32_t* b, int32_
 #elif COMPV_ARCH_ARM
 	if (width >= 4 && CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(a) && COMPV_IS_ALIGNED_NEON(b) && COMPV_IS_ALIGNED_NEON(stride * sizeof(int32_t))) {
 		COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMathUtilsSum2_32s32s = CompVMathUtilsSum2_32s32s_Intrin_NEON);
+        COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathUtilsSum2_32s32s = CompVMathUtilsSum2_32s32s_Asm_NEON32);
 		if (need_fast256x1) {
 			COMPV_EXEC_IFDEF_INTRIN_ARM((CompVMathUtilsSum2_32s32s = CompVMathUtilsSum2_32s32s_256x1_Intrin_NEON, have_fast256x1 = true));
+            COMPV_EXEC_IFDEF_ASM_ARM32((CompVMathUtilsSum2_32s32s = CompVMathUtilsSum2_32s32s_256x1_Asm_NEON32, have_fast256x1 = true));
 		}
 	}
 #endif

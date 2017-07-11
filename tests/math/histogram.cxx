@@ -10,7 +10,7 @@
 #endif
 #define COMPV_TEST_IMAGE_CHROMA_CONV_PATH_TO_FILE(filename)		compv_tests_path_from_file(filename, COMPV_TEST_IMAGE_CHROMA_CONV_IMAGE_FOLDER)
 
-#define LOOP_COUNT			1000
+#define LOOP_COUNT			1
 #define EXPECTED_MD5		"9cc75b0ec5f1522cfc65b7fadc0aacdb"
 
 COMPV_ERROR_CODE histogram()
