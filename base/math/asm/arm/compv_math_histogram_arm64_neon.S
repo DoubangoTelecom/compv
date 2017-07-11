@@ -46,57 +46,46 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathHistogramProcess_8u32s_Asm_NEON64
 		LoopWidth4_CompVMathHistogramProcess_8u32s_Asm_NEON64:
             ldrb r6w, [dataPtr, #(0*COMPV_GAS_UINT8_SZ_BYTES)]
             ldrb r7w, [dataPtr, #(1*COMPV_GAS_UINT8_SZ_BYTES)]
-            ldrb r8w, [dataPtr, #(2*COMPV_GAS_UINT8_SZ_BYTES)]
-            ldrb r9w, [dataPtr, #(3*COMPV_GAS_UINT8_SZ_BYTES)]
-            ldrb r10w, [dataPtr, #(4*COMPV_GAS_UINT8_SZ_BYTES)]
-            ldrb r11w, [dataPtr, #(5*COMPV_GAS_UINT8_SZ_BYTES)]
-            ldrb r12w, [dataPtr, #(6*COMPV_GAS_UINT8_SZ_BYTES)]
-            ldrb r13w, [dataPtr, #(7*COMPV_GAS_UINT8_SZ_BYTES)]
-
             add r6, histogramPtr, r6, LSL #2
-            add r7, histogramPtr, r7, LSL #2
-            add r8, histogramPtr, r8, LSL #2
-            add r9, histogramPtr, r9, LSL #2
-            add r10, histogramPtr, r10, LSL #2
-            add r11, histogramPtr, r11, LSL #2
-            add r12, histogramPtr, r12, LSL #2
-            add r13, histogramPtr, r13, LSL #2
-
             ldr r14w, [r6]
+            add r7, histogramPtr, r7, LSL #2
             add r14w, r14w, #1
             str r14w, [r6]
-
-            ldr r14w, [r7]
-            add r14w, r14w, #1
-            str r14w, [r7]
-
-            ldr r14w, [r8]
-            add r14w, r14w, #1
-            str r14w, [r8]
-
-            ldr r14w, [r9]
-            add r14w, r14w, #1
-            str r14w, [r9]
-
-            ldr r14w, [r10]
-            add r14w, r14w, #1
-            str r14w, [r10]
-
-            ldr r14w, [r11]
-            add r14w, r14w, #1
-            str r14w, [r11]
-
-            ldr r14w, [r12]
-            add r14w, r14w, #1
-            str r14w, [r12]
-
-            ldr r14w, [r13]
-            add r14w, r14w, #1
-            str r14w, [r13]
-
+            ldrb r8w, [dataPtr, #(2*COMPV_GAS_UINT8_SZ_BYTES)]
+            ldr r15w, [r7]
+            add r8, histogramPtr, r8, LSL #2
+            add r15w, r15w, #1
+            str r15w, [r7]
+            ldr r16w, [r8]
+            ldrb r9w, [dataPtr, #(3*COMPV_GAS_UINT8_SZ_BYTES)]
+            add r16w, r16w, #1
+            add r9, histogramPtr, r9, LSL #2
+            str r16w, [r8]
+            ldr r17w, [r9]
+            ldrb r10w, [dataPtr, #(4*COMPV_GAS_UINT8_SZ_BYTES)]
+            add r17w, r17w, #1
+            add r10, histogramPtr, r10, LSL #2
+            str r17w, [r9]
+            ldrb r11w, [dataPtr, #(5*COMPV_GAS_UINT8_SZ_BYTES)]
+            ldr r19w, [r10]
+            add r11, histogramPtr, r11, LSL #2
+            add r19w, r19w, #1
+            str r19w, [r10]
+            ldr r20w, [r11]
+            ldrb r12w, [dataPtr, #(6*COMPV_GAS_UINT8_SZ_BYTES)]
+            add r20w, r20w, #1
+            add r12, histogramPtr, r12, LSL #2
+            str r20w, [r11]
+            ldr r21w, [r12]
+            ldrb r13w, [dataPtr, #(7*COMPV_GAS_UINT8_SZ_BYTES)]
+            add r21w, r21w, #1
+            add r13, histogramPtr, r13, LSL #2
+            str r21w, [r12]
+            ldr r22w, [r13]
             subs i, i, #8
+            add r22w, r22w, #1
             add dataPtr, dataPtr, #(8*COMPV_GAS_UINT8_SZ_BYTES)
-			
+            str r22w, [r13]			
 			bne LoopWidth4_CompVMathHistogramProcess_8u32s_Asm_NEON64
 			## EndOf_LoopWidth4 ##
 
