@@ -18,6 +18,8 @@ COMPV_NAMESPACE_BEGIN()
 	COMPV_EXTERNC void CompVMathHistogramProcess_8u32s_Asm_X64(const uint8_t* dataPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, uint32_t* histogramPtr);
 #   elif COMPV_ARCH_ARM32
     COMPV_EXTERNC void CompVMathHistogramProcess_8u32s_Asm_NEON32(const uint8_t* dataPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, uint32_t* histogramPtr);
+#   elif COMPV_ARCH_ARM64
+    COMPV_EXTERNC void CompVMathHistogramProcess_8u32s_Asm_NEON64(const uint8_t* dataPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, uint32_t* histogramPtr);
 #	endif
 #endif /* COMPV_ASM */
 
@@ -57,6 +59,7 @@ COMPV_ERROR_CODE CompVMathHistogram::process_8u32u(const uint8_t* dataPtr, size_
 #   endif /* COMPV_ARCH_ARM32 */
 	if (width > 7) {
 		COMPV_EXEC_IFDEF_ASM_X64(CompVMathHistogramProcess_8u32u = CompVMathHistogramProcess_8u32s_Asm_X64);
+        COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathHistogramProcess_8u32u = CompVMathHistogramProcess_8u32s_Asm_NEON64);
 #       if 0
         COMPV_DEBUG_INFO_CODE_FOR_TESTING("Tried using #4 histograms but not faster at all and code not correct");
 		if (CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(dataPtr) && COMPV_IS_ALIGNED_SSE(stride) && COMPV_IS_ALIGNED_SSE(histogramPtr)) {
@@ -108,7 +111,7 @@ COMPV_ERROR_CODE CompVMathHistogram::process_8u32u(const uint8_t* dataPtr, size_
 	else {
 		CompVMathHistogramProcess_8u32u(dataPtr, static_cast<compv_uscalar_t>(width), static_cast<compv_uscalar_t>(height), static_cast<compv_uscalar_t>(stride), histogramPtr);
 	}
-
+    
 	return COMPV_ERROR_CODE_S_OK;
 }
 

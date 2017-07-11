@@ -44,7 +44,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathHistogramProcess_8u32s_Asm_NEON32
 	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	LoopHeight_CompVMathHistogramProcess_8u32s_Asm_NEON32:
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-		@ for (i = 0; i < maxWidthStep1; i += 8)
+		@ for (i = 0; i < maxWidthStep1; i += 4)
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         and i, width, #-4
 		LoopWidth4_CompVMathHistogramProcess_8u32s_Asm_NEON32:
