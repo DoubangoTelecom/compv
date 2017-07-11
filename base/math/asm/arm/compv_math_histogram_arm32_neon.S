@@ -50,21 +50,21 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathHistogramProcess_8u32s_Asm_NEON32
 		LoopWidth4_CompVMathHistogramProcess_8u32s_Asm_NEON32:
 			ldrb.w r6, [dataPtr, #(0*COMPV_GAS_UINT8_SZ_BYTES)]
 			add.w r6, histogramPtr, r6, LSL #2
-            ldr.w r10, [r6]
+            ldr.w r11, [r6]
             ldrb.w r7, [dataPtr, #(1*COMPV_GAS_UINT8_SZ_BYTES)]
-            add.w r10, r10, #1
+            add.w r11, r11, #1
             add.w r7, histogramPtr, r7, LSL #2
-            str.w r10, [r6]
+            str.w r11, [r6]
             ldr.w r10, [r7]
             ldrb.w r8, [dataPtr, #(2*COMPV_GAS_UINT8_SZ_BYTES)]
             add.w r10, r10, #1
             add.w r8, histogramPtr, r8, LSL #2
             str.w r10, [r7]
-            ldr.w r10, [r8]
+            ldr.w r11, [r8]
             ldrb.w r9, [dataPtr, #(3*COMPV_GAS_UINT8_SZ_BYTES)]
-            add.w r10, r10, #1
+            add.w r11, r11, #1
             add.w r9, histogramPtr, r9, LSL #2
-            str.w r10, [r8]
+            str.w r11, [r8]
             ldr.w r10, [r9]
             subs i, i, #4
             add.w r10, r10, #1
