@@ -32,13 +32,16 @@ sym(CompVMathHistogramProcess_8u32s_Asm_X64)
 	push rdi
 	push rbx
 	push r12
+	push r13
+	push r14
+	push r15
 	;; end prolog ;;
 
 	%define dataPtr			rdi
 	%define width			rsi 
 	%define height			rbx
 	%define stride			rax
-	%define	histogramPtr		rdx
+	%define	histogramPtr	rdx
 	%define i				rcx
 	%define maxWidthStep1	r8
 
@@ -49,7 +52,7 @@ sym(CompVMathHistogramProcess_8u32s_Asm_X64)
 	mov histogramPtr, arg(4)
 
 	mov maxWidthStep1, width
-	and maxWidthStep1, -4
+	and maxWidthStep1, -8
 
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	; for (j = 0; j < height; ++j)
@@ -57,18 +60,26 @@ sym(CompVMathHistogramProcess_8u32s_Asm_X64)
 	.LoopHeight:
 		xor i, i
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-		; for (i = 0; i < maxWidthStep1; i += 4)
+		; for (i = 0; i < maxWidthStep1; i += 8)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		.LoopWidth4:
 			movzx r9, byte [dataPtr + i + 0]
 			movzx r10, byte [dataPtr + i + 1]
 			movzx r11, byte [dataPtr + i + 2]
 			movzx r12, byte [dataPtr + i + 3]
+			movzx r13, byte [dataPtr + i + 4]
+			movzx r14, byte [dataPtr + i + 5]
+			movzx r15, byte [dataPtr + i + 6]
 			inc dword ptr [histogramPtr + r9*COMPV_YASM_UINT32_SZ_BYTES]
 			inc dword ptr [histogramPtr + r10*COMPV_YASM_UINT32_SZ_BYTES]
-			add i, 4
+			movzx r9, byte [dataPtr + i + 7]
+			add i, 8
 			inc dword ptr [histogramPtr + r11*COMPV_YASM_UINT32_SZ_BYTES]
 			inc dword ptr [histogramPtr + r12*COMPV_YASM_UINT32_SZ_BYTES]
+			inc dword ptr [histogramPtr + r13*COMPV_YASM_UINT32_SZ_BYTES]
+			inc dword ptr [histogramPtr + r14*COMPV_YASM_UINT32_SZ_BYTES]
+			inc dword ptr [histogramPtr + r15*COMPV_YASM_UINT32_SZ_BYTES]
+			inc dword ptr [histogramPtr + r9*COMPV_YASM_UINT32_SZ_BYTES]
 			cmp i, maxWidthStep1
 			jl .LoopWidth4
 			;; EndOf_LoopWidth4 ;;
@@ -101,6 +112,9 @@ sym(CompVMathHistogramProcess_8u32s_Asm_X64)
 	%undef maxWidthStep1			
 
 	;; begin epilog ;;
+	pop r15
+	pop r14
+	pop r13
 	pop r12
 	pop rbx
 	pop rdi

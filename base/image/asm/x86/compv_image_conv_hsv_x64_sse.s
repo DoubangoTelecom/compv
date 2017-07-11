@@ -110,7 +110,7 @@ section .text
 		xor k, k
 		.LoopWidth:
 			; Load samples ;
-			prefetcht0 [rgbxPtr + (COMPV_YASM_CACHE_LINE_SIZE*3)]
+			prefetcht0 [rgbxPtr + k + (COMPV_YASM_CACHE_LINE_SIZE*3)]
 			%if %1 == rgb24Family
 				COMPV_VLD3_U8_SSSE3 rgbxPtr + k, vec0, vec1, vec2, vec3, vec4, vec5
 			%elif %1 == rgba32Family
