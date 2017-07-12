@@ -77,13 +77,13 @@ COMPV_NAMESPACE_BEGIN()
 #define yuv422p_u_unpacklo				vecUlo = _mm256_cvtepu8_epi16(vecUn)
 #define yuv444p_u_unpacklo				vecUlo = _mm256_unpacklo_epi8(vecUlo, vecZero)
 #define nv12_u_unpacklo					vecUlo = _mm256_unpacklo_epi8(vecUlo, vecZero)
-#define nv21_u_unpacklo					vecUlo = _mm256_cvtepu8_epi16(_mm256_castsi256_si128(vecUlo))
+#define nv21_u_unpacklo					vecUlo = _mm256_unpacklo_epi8(vecUlo, vecZero)
 
 #define yuv420p_v_unpacklo				vecVlo = _mm256_cvtepu8_epi16(vecVn)
 #define yuv422p_v_unpacklo				vecVlo = _mm256_cvtepu8_epi16(vecVn)
 #define yuv444p_v_unpacklo				vecVlo = _mm256_unpacklo_epi8(vecVlo, vecZero)
 #define nv12_v_unpacklo					vecVlo = _mm256_unpacklo_epi8(vecVlo, vecZero)
-#define nv21_v_unpacklo					vecVlo = _mm256_cvtepu8_epi16(_mm256_castsi256_si128(vecVlo))
+#define nv21_v_unpacklo					vecVlo = _mm256_unpacklo_epi8(vecVlo, vecZero)
 
 #define yuv420p_u_unpackhi				(void)(vecUhi)
 #define yuv422p_u_unpackhi				(void)(vecUhi)
@@ -288,6 +288,22 @@ void CompVImageConvNv12_to_Rgba32_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t* 
 void CompVImageConvNv12_to_Rgb24_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t* yPtr, COMPV_ALIGNED(AVX) const uint8_t* uvPtr, COMPV_ALIGNED(AVX) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride)
 {
 	CompVImageConvYuvPlanar_to_Rgbx_Intrin_AVX2(nv12, rgb24);
+}
+
+#if defined(__INTEL_COMPILER)
+#	pragma intel optimization_parameter target_arch=avx2
+#endif
+void CompVImageConvNv21_to_Rgba32_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t* yPtr, COMPV_ALIGNED(AVX) const uint8_t* uvPtr, COMPV_ALIGNED(AVX) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride)
+{
+	CompVImageConvYuvPlanar_to_Rgbx_Intrin_AVX2(nv21, rgba32);
+}
+
+#if defined(__INTEL_COMPILER)
+#	pragma intel optimization_parameter target_arch=avx2
+#endif
+void CompVImageConvNv21_to_Rgb24_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t* yPtr, COMPV_ALIGNED(AVX) const uint8_t* uvPtr, COMPV_ALIGNED(AVX) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride)
+{
+	CompVImageConvYuvPlanar_to_Rgbx_Intrin_AVX2(nv21, rgb24);
 }
 
 COMPV_NAMESPACE_END()
