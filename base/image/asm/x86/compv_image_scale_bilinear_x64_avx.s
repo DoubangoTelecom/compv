@@ -199,22 +199,18 @@ sym(CompVImageScaleBilinear_Asm_X64_AVX2)
 			vpgatherdd  vecNeighb3, dword ptr [rbx+ymm2], ymm0
 			vpcmpeqb ymm1, ymm1, ymm1
 			vpgatherdd  vec7, dword ptr [rbx+ymm3], ymm1
-
 			vpshufb vecNeighb0, vecNeighb0, [vecDeinterleave16u]
 			vpshufb vec4, vec4, [vecDeinterleave16u]
 			vpunpcklqdq vecNeighb0, vecNeighb0, vec4
 			vpermq vecNeighb0, vecNeighb0, 0xD8
-
 			vpshufb vecNeighb1, vecNeighb1, [vecDeinterleave16u]
 			vpshufb vec5, vec5, [vecDeinterleave16u]
 			vpunpcklqdq vecNeighb1, vecNeighb1, vec5
 			vpermq vecNeighb1, vecNeighb1, 0xD8
-
 			vpshufb vecNeighb2, vecNeighb2, [vecDeinterleave16u]
 			vpshufb vec6, vec6, [vecDeinterleave16u]
 			vpunpcklqdq vecNeighb2, vecNeighb2, vec6
 			vpermq vecNeighb2, vecNeighb2, 0xD8
-
 			vpshufb vecNeighb3, vecNeighb3, [vecDeinterleave16u]
 			vpshufb vec7, vec7, [vecDeinterleave16u]
 			vpunpcklqdq vecNeighb3, vecNeighb3, vec7			
@@ -235,45 +231,38 @@ sym(CompVImageScaleBilinear_Asm_X64_AVX2)
 			; starting here ymm2 = vecZero
 			%define vecZero ymm2
 			vpxor vecZero, vecZero
-
-			; compute x0 and x1 (first 8) and convert from epi32 and epi16
+			
 			vpand ymm0, vecX0, [vec0xff_epi32]
 			vpand ymm3, vecX1, [vec0xff_epi32]
-			vpackusdw ymm0, ymm0, ymm3
-			vpermq ymm0, ymm0, 0xD8 ; ymm0 = vec0
-			vpandn ymm1, ymm0, [vec0xff_epi16] ; ymm1 = vec1
-			; compute vec4 = (neighb0 * x1) + (neighb1 * x0) -> 8 epi16
 			vpunpcklbw vec4, vecNeighb0, vecZero
+			vpackusdw ymm0, ymm0, ymm3
 			vpunpcklbw ymm3, vecNeighb1, vecZero
-			vpmullw vec4, vec4, ymm1
+			vpermq ymm0, ymm0, 0xD8 ; ymm0 = vec0
+			vpandn ymm1, ymm0, [vec0xff_epi16] ; ymm1 = vec1			
 			vpmullw ymm3, ymm3, ymm0
+			vpmullw vec4, vec4, ymm1
 			vpaddd vecX0, vecX0, [vecSfxTimes32]
-			; compute vec5 = (neighb2 * x1) + (neighb3 * x0) -> 8 epi16
 			vpunpcklbw vec5, vecNeighb2, vecZero
 			vpaddusw vec4, vec4, ymm3
 			vpunpcklbw ymm3, vecNeighb3, vecZero
 			vpmullw vec5, vec5, ymm1
 			vpmullw ymm3, ymm3, ymm0
+			vpand ymm0, vecX2, [vec0xff_epi32]
 			vpaddd vecX1, vecX1, [vecSfxTimes32]
 			vpaddusw vec5, vec5, ymm3
-
-			; compute x0 and x1 (second 8) and convert from epi32 and epi16
-			vpand ymm0, vecX2, [vec0xff_epi32]
 			vpand ymm3, vecX3, [vec0xff_epi32]
 			vpackusdw ymm0, ymm0, ymm3
-			vpermq ymm0, ymm0, 0xD8 ; ymm0 = vec0
-			vpandn ymm1, ymm0, [vec0xff_epi16] ; ymm1 = vec1
-			; compute vec6 = (neighb0 * x1) + (neighb1 * x0) -> 8 epi16
 			vpunpckhbw vec6, vecNeighb0, vecZero
+			vpermq ymm0, ymm0, 0xD8 ; ymm0 = vec0
 			vpunpckhbw ymm3, vecNeighb1, vecZero
-			vpmullw vec6, vec6, ymm1
+			vpandn ymm1, ymm0, [vec0xff_epi16] ; ymm1 = vec1			
 			vpmullw ymm3, ymm3, ymm0
+			vpmullw vec6, vec6, ymm1
 			vpaddd vecX2, vecX2, [vecSfxTimes32]
-			; compute vec7 = (neighb2 * x1) + (neighb3 * x0) -> #8 epi16
 			vpunpckhbw vec7, vecNeighb2, vecZero
+			vpmullw vec7, vec7, ymm1
 			vpaddusw vec6, vec6, ymm3
 			vpunpckhbw ymm3, vecNeighb3, vecZero
-			vpmullw vec7, vec7, ymm1
 			vpmullw ymm3, ymm3, ymm0
 			vpaddd vecX3, vecX3, [vecSfxTimes32]
 			vpaddusw vec7, vec7, ymm3
@@ -315,7 +304,7 @@ sym(CompVImageScaleBilinear_Asm_X64_AVX2)
 			; end-of-LoopWidth
 
 		;;
-		lea outYStart, [outYStart + sf_y]
+		add outYStart, sf_y
 		cmp outYStart, arg_outYEnd
 		lea outPtr, [outPtr + outStride]
 		jl .DoWhile

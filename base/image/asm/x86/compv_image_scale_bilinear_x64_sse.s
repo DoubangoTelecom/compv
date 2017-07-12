@@ -268,11 +268,11 @@ sym(CompVImageScaleBilinear_Asm_X64_SSE41)
 			paddusw xmm0, xmm2
 			paddusw xmm1, xmm3
 
-			lea rsi, [rsi + 16]
-			cmp rsi, outWidth
+			add rsi, 16
 
 			; Store the result
 			packuswb xmm0, xmm1
+			cmp rsi, outWidth
 			movdqa [outPtr + rsi - 16], xmm0
 			
 			;;
@@ -280,7 +280,7 @@ sym(CompVImageScaleBilinear_Asm_X64_SSE41)
 			; end-of-LoopWidth
 
 		;;
-		lea outYStart, [outYStart + sf_y]
+		add outYStart, sf_y
 		cmp outYStart, arg_outYEnd
 		lea outPtr, [outPtr + outStride]
 		jl .DoWhile
