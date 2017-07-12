@@ -29,7 +29,7 @@ static const int16x8_t vec26 = vdupq_n_s16(26);
 #define rgba32_store(ptr, vecResult)	vst4q_u8((ptr), vecResult)
 
 #define rgb24_declVecResult				uint8x16x3_t vecResult;
-#define rgb32_declVecResult				uint8x16x4_t vecResult; vecResult.val[3] = vceqq_u8(vec37, vec37)
+#define rgba32_declVecResult			uint8x16x4_t vecResult; vecResult.val[3] = vceqq_u8(vec37, vec37)
 
 #define rgb24_step						48 /* (16 * 3) */
 #define rgba32_step						64 /* (16 * 4) */
@@ -51,13 +51,13 @@ static const int16x8_t vec26 = vdupq_n_s16(26);
 
 #define yuv420p_u_load					vecUn = vld1_u8(&uPtr[l])
 #define yuv422p_u_load					vecUn = vld1_u8(&uPtr[l])
-#define yuv444p_u_load					vecUlo = _mm256_load_si256(&uPtr[l]); (void)(vecUn)
+#define yuv444p_u_load					vecUlo = vld1q_u8(&uPtr[l]); (void)(vecUn)
 #define nv12_u_load						vecUlo = _mm256_shuffle_epi8(_mm256_load_si256(&uvPtr[l]), vecDeinterleaveUV); (void)(vecUn)
 #define nv21_u_load						vecVlo = _mm256_shuffle_epi8(_mm256_load_si256(&uvPtr[l]), vecDeinterleaveUV); (void)(vecUn)
 
 #define yuv420p_v_load					vecVn = vld1_u8(&vPtr[l])
 #define yuv422p_v_load					vecVn = vld1_u8(&vPtr[l])
-#define yuv444p_v_load					vecVlo = _mm256_load_si256(&vPtr[l]); (void)(vecVn)
+#define yuv444p_v_load					vecVlo = vld1q_u8(&vPtr[l]); (void)(vecVn)
 #define nv12_v_load						vecVlo = _mm256_unpackhi_epi64(vecUlo, vecUlo); (void)(vecVn)
 #define nv21_v_load						vecUlo = _mm256_unpackhi_epi64(vecVlo, vecVlo); (void)(vecVn)
 
@@ -206,15 +206,42 @@ static const int16x8_t vec26 = vdupq_n_s16(26);
 	} /* End_Of for (j = 0; j < height; ++j) */ \
 }
 
-// TODO(dmi): Optiz issues. ASM code is by far faster:
+// TODO(dmi): Optiz issues. ASM code is by far faster (all cases):
 // - ARM32 Galaxy Tab A6/1 thread/1k loop: 2037.ms vs 3182.ms
 // - ARM32 MediaPad2/1 thread/1k loop: 1749.ms vs 2606.ms
 // - ARM32 iPhone5/1 thread/1k loop: 1960.ms vs 3354.ms
 // - ARM64 iPad Air2/1 thread/10k loop: 6157.ms vs 7438.ms
 // - ARM64 MediaPad2/1 thread/1k loop: 1590.ms vs 2409.ms
+
+
 void CompVImageConvYuv420p_to_Rgb24_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* yPtr, COMPV_ALIGNED(NEON) const uint8_t* uPtr, COMPV_ALIGNED(NEON) const uint8_t* vPtr, COMPV_ALIGNED(NEON) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
 {
 	CompVImageConvYuvPlanar_to_Rgbx_Intrin_NEON(yuv420p, rgb24);
+}
+
+void CompVImageConvYuv420p_to_Rgba32_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* yPtr, COMPV_ALIGNED(NEON) const uint8_t* uPtr, COMPV_ALIGNED(NEON) const uint8_t* vPtr, COMPV_ALIGNED(NEON) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
+{
+	CompVImageConvYuvPlanar_to_Rgbx_Intrin_NEON(yuv420p, rgba32);
+}
+
+void CompVImageConvYuv422p_to_Rgb24_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* yPtr, COMPV_ALIGNED(NEON) const uint8_t* uPtr, COMPV_ALIGNED(NEON) const uint8_t* vPtr, COMPV_ALIGNED(NEON) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
+{
+	CompVImageConvYuvPlanar_to_Rgbx_Intrin_NEON(yuv422p, rgb24);
+}
+
+void CompVImageConvYuv422p_to_Rgba32_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* yPtr, COMPV_ALIGNED(NEON) const uint8_t* uPtr, COMPV_ALIGNED(NEON) const uint8_t* vPtr, COMPV_ALIGNED(NEON) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
+{
+	CompVImageConvYuvPlanar_to_Rgbx_Intrin_NEON(yuv422p, rgba32);
+}
+
+void CompVImageConvYuv444p_to_Rgb24_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* yPtr, COMPV_ALIGNED(NEON) const uint8_t* uPtr, COMPV_ALIGNED(NEON) const uint8_t* vPtr, COMPV_ALIGNED(NEON) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
+{
+	CompVImageConvYuvPlanar_to_Rgbx_Intrin_NEON(yuv444p, rgb24);
+}
+
+void CompVImageConvYuv444p_to_Rgba32_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* yPtr, COMPV_ALIGNED(NEON) const uint8_t* uPtr, COMPV_ALIGNED(NEON) const uint8_t* vPtr, COMPV_ALIGNED(NEON) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
+{
+	CompVImageConvYuvPlanar_to_Rgbx_Intrin_NEON(yuv444p, rgba32);
 }
 
 COMPV_NAMESPACE_END()
