@@ -76,13 +76,13 @@ COMPV_NAMESPACE_BEGIN()
 #define yuv420p_u_unpacklo				vecUlo = _mm256_cvtepu8_epi16(vecUn)
 #define yuv422p_u_unpacklo				vecUlo = _mm256_cvtepu8_epi16(vecUn)
 #define yuv444p_u_unpacklo				vecUlo = _mm256_unpacklo_epi8(vecUlo, vecZero)
-#define nv12_u_unpacklo					vecUlo = _mm256_cvtepu8_epi16(_mm256_castsi256_si128(vecUlo))
+#define nv12_u_unpacklo					vecUlo = _mm256_unpacklo_epi8(vecUlo, vecZero)
 #define nv21_u_unpacklo					vecUlo = _mm256_cvtepu8_epi16(_mm256_castsi256_si128(vecUlo))
 
 #define yuv420p_v_unpacklo				vecVlo = _mm256_cvtepu8_epi16(vecVn)
 #define yuv422p_v_unpacklo				vecVlo = _mm256_cvtepu8_epi16(vecVn)
 #define yuv444p_v_unpacklo				vecVlo = _mm256_unpacklo_epi8(vecVlo, vecZero)
-#define nv12_v_unpacklo					vecVlo = _mm256_cvtepu8_epi16(_mm256_castsi256_si128(vecVlo))
+#define nv12_v_unpacklo					vecVlo = _mm256_unpacklo_epi8(vecVlo, vecZero)
 #define nv21_v_unpacklo					vecVlo = _mm256_cvtepu8_epi16(_mm256_castsi256_si128(vecVlo))
 
 #define yuv420p_u_unpackhi				(void)(vecUhi)
@@ -152,6 +152,7 @@ COMPV_NAMESPACE_BEGIN()
 	static const __m256i vec127 = _mm256_set1_epi16(127); \
 	static const __m256i vec13_26 = _mm256_load_si256(reinterpret_cast<const __m256i*>(k13_26_i16)); /* 13, 26, 13, 26 ...*/ \
 	static const __m256i vecA = _mm256_cmpeq_epi8(vec127, vec127); /* 255, 255, 255, 255 */ \
+	static const __m256i vecDeinterleaveUV = _mm256_load_si256(reinterpret_cast<const __m256i*>(kShuffleEpi8_Deinterleave8uL2_i32)); \
 	 \
 	for (j = 0; j < height; ++j) { \
 		for (i = 0, k = 0, l = 0; i < width; i += 32, k += nameRgbx##_step, l += nameYuv##_uv_step) { \
@@ -271,6 +272,22 @@ void CompVImageConvYuv444p_to_Rgba32_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_
 void CompVImageConvYuv444p_to_Rgb24_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t* yPtr, COMPV_ALIGNED(AVX) const uint8_t* uPtr, COMPV_ALIGNED(AVX) const uint8_t* vPtr, COMPV_ALIGNED(AVX) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride)
 {
 	CompVImageConvYuvPlanar_to_Rgbx_Intrin_AVX2(yuv444p, rgb24);
+}
+
+#if defined(__INTEL_COMPILER)
+#	pragma intel optimization_parameter target_arch=avx2
+#endif
+void CompVImageConvNv12_to_Rgba32_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t* yPtr, COMPV_ALIGNED(AVX) const uint8_t* uvPtr, COMPV_ALIGNED(AVX) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride)
+{
+	CompVImageConvYuvPlanar_to_Rgbx_Intrin_AVX2(nv12, rgba32);
+}
+
+#if defined(__INTEL_COMPILER)
+#	pragma intel optimization_parameter target_arch=avx2
+#endif
+void CompVImageConvNv12_to_Rgb24_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t* yPtr, COMPV_ALIGNED(AVX) const uint8_t* uvPtr, COMPV_ALIGNED(AVX) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride)
+{
+	CompVImageConvYuvPlanar_to_Rgbx_Intrin_AVX2(nv12, rgb24);
 }
 
 COMPV_NAMESPACE_END()
