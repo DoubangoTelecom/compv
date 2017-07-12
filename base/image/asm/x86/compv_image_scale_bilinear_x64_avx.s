@@ -302,11 +302,11 @@ sym(CompVImageScaleBilinear_Asm_X64_AVX2)
 			vpaddusw ymm0, ymm0, ymm2
 			vpaddusw ymm1, ymm1, ymm3
 
-			lea rsi, [rsi + 32]
-			cmp rsi, outWidth
+			add rsi, 32
 
 			; Store the result
 			vpackuswb ymm0, ymm0, ymm1
+			cmp rsi, outWidth
 			vpermq ymm0, ymm0, 0xD8
 			vmovdqa [outPtr + rsi - 32], ymm0
 			
