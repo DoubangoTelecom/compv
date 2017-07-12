@@ -20,11 +20,11 @@ COMPV_NAMESPACE_BEGIN()
 	vecRn = _mm256_castsi256_si128(vecR); \
 	vecGn = _mm256_castsi256_si128(vecG); \
 	vecBn = _mm256_castsi256_si128(vecB); \
-	COMPV_VST3_U8_SSSE3(&ptr[0], vecRn, vecGn, vecBn, vec0n, vec1n); \
+	COMPV_VST3_U8_SSSE3(reinterpret_cast<__m128i*>((ptr)) + 0, vecRn, vecGn, vecBn, vec0n, vec1n); \
 	vecRn = _mm256_extractf128_si256(vecR, 0x1); \
 	vecGn = _mm256_extractf128_si256(vecG, 0x1); \
 	vecBn = _mm256_extractf128_si256(vecB, 0x1); \
-	COMPV_VST3_U8_SSSE3(&ptr[48], vecRn, vecGn, vecBn, vec0n, vec1n); \
+	COMPV_VST3_U8_SSSE3(reinterpret_cast<__m128i*>((ptr)) + 3, vecRn, vecGn, vecBn, vec0n, vec1n); \
 }
 #define rgba32_store(ptr, vecR, vecG, vecB, vecA, vectmp0, vectmp1) { \
 	(void)(vecRn); (void)(vecGn); (void)(vecBn); (void)(vec0n); (void)(vec1n); \
@@ -51,15 +51,15 @@ COMPV_NAMESPACE_BEGIN()
 
 #define yuv420p_u_load					vecUn = _mm_load_si128(reinterpret_cast<const __m128i*>(&uPtr[l]))
 #define yuv422p_u_load					vecUn = _mm_load_si128(reinterpret_cast<const __m128i*>(&uPtr[l]))
-#define yuv444p_u_load					vecUlo = _mm256_load_si256(reinterpret_cast<const __m256i*>(&uPtr[l]))
-#define nv12_u_load						vecUlo = _mm256_shuffle_epi8(_mm256_load_si256(reinterpret_cast<const __m256i*>(&uvPtr[l])), vecDeinterleaveUV)
-#define nv21_u_load						vecVlo = _mm256_shuffle_epi8(_mm256_load_si256(reinterpret_cast<const __m256i*>(&uvPtr[l])), vecDeinterleaveUV)
+#define yuv444p_u_load					vecUlo = _mm256_load_si256(reinterpret_cast<const __m256i*>(&uPtr[l])); (void)(vecUn)
+#define nv12_u_load						vecUlo = _mm256_shuffle_epi8(_mm256_load_si256(reinterpret_cast<const __m256i*>(&uvPtr[l])), vecDeinterleaveUV); (void)(vecUn)
+#define nv21_u_load						vecVlo = _mm256_shuffle_epi8(_mm256_load_si256(reinterpret_cast<const __m256i*>(&uvPtr[l])), vecDeinterleaveUV); (void)(vecUn)
 
 #define yuv420p_v_load					vecVn = _mm_load_si128(reinterpret_cast<const __m128i*>(&vPtr[l]))
 #define yuv422p_v_load					vecVn = _mm_load_si128(reinterpret_cast<const __m128i*>(&vPtr[l]))
-#define yuv444p_v_load					vecVlo = _mm256_load_si256(reinterpret_cast<const __m256i*>(&vPtr[l]))
-#define nv12_v_load						vecVlo = _mm256_unpackhi_epi64(vecUlo, vecUlo)
-#define nv21_v_load						vecUlo = _mm256_unpackhi_epi64(vecVlo, vecVlo)
+#define yuv444p_v_load					vecVlo = _mm256_load_si256(reinterpret_cast<const __m256i*>(&vPtr[l])); (void)(vecVn)
+#define nv12_v_load						vecVlo = _mm256_unpackhi_epi64(vecUlo, vecUlo); (void)(vecVn)
+#define nv21_v_load						vecUlo = _mm256_unpackhi_epi64(vecVlo, vecVlo); (void)(vecVn)
 
 #define yuv420p_uv_inc_check			if (j & 1)
 #define yuv422p_uv_inc_check 
@@ -117,7 +117,7 @@ COMPV_NAMESPACE_BEGIN()
 
 #define yuv420p_v_primehi51				(void)(vec0hi)
 #define yuv422p_v_primehi51				(void)(vec0hi)
-#define yuv444p_v_primehi51				vec0hi = _mm_mullo_epi16(vecVhi, vec51)
+#define yuv444p_v_primehi51				vec0hi = _mm256_mullo_epi16(vecVhi, vec51)
 #define nv12_v_primehi51				(void)(vec0hi)
 #define nv21_v_primehi51				(void)(vec0hi)
 
@@ -238,95 +238,39 @@ void CompVImageConvYuv420p_to_Rgba32_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_
 #endif
 void CompVImageConvYuv420p_to_Rgb24_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t* yPtr, COMPV_ALIGNED(AVX) const uint8_t* uPtr, COMPV_ALIGNED(AVX) const uint8_t* vPtr, COMPV_ALIGNED(AVX) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride)
 {
-	COMPV_DEBUG_INFO_CHECK_AVX2();
-	_mm256_zeroupper();
+	CompVImageConvYuvPlanar_to_Rgbx_Intrin_AVX2(yuv420p, rgb24);
+}
 
-	compv_uscalar_t i, j, k, l;
-	const compv_uscalar_t strideUV = ((stride + 1) >> 1);
-	const compv_uscalar_t strideRGB = stride + (stride << 1);
-	__m256i vecYlo, vecYhi, vecU, vecV, vecR, vecG, vecB;
-	__m256i vec0, vec1;
-	__m128i vecUn, vecVn, vecRn, vecGn, vecBn, vec0n, vec1n;
-	// To avoid AVX transition issues keep the next static variables local
-	static const __m256i vecZero = _mm256_setzero_si256();
-	static const __m256i vec16 = _mm256_set1_epi16(16);
-	static const __m256i vec37 = _mm256_set1_epi16(37);
-	static const __m256i vec51 = _mm256_set1_epi16(51);
-	static const __m256i vec65 = _mm256_set1_epi16(65);
-	static const __m256i vec127 = _mm256_set1_epi16(127);
-	static const __m256i vec13_26 = _mm256_set1_epi32(0x001a000d); // 13, 26, 13, 26 ...
+#if defined(__INTEL_COMPILER)
+#	pragma intel optimization_parameter target_arch=avx2
+#endif
+void CompVImageConvYuv422p_to_Rgba32_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t* yPtr, COMPV_ALIGNED(AVX) const uint8_t* uPtr, COMPV_ALIGNED(AVX) const uint8_t* vPtr, COMPV_ALIGNED(AVX) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride)
+{
+	CompVImageConvYuvPlanar_to_Rgbx_Intrin_AVX2(yuv422p, rgba32);
+}
 
-	// ASM code do not create variables for k and l: k = [(i<<2)] and l = [i>>1]
+#if defined(__INTEL_COMPILER)
+#	pragma intel optimization_parameter target_arch=avx2
+#endif
+void CompVImageConvYuv422p_to_Rgb24_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t* yPtr, COMPV_ALIGNED(AVX) const uint8_t* uPtr, COMPV_ALIGNED(AVX) const uint8_t* vPtr, COMPV_ALIGNED(AVX) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride)
+{
+	CompVImageConvYuvPlanar_to_Rgbx_Intrin_AVX2(yuv422p, rgb24);
+}
 
-	for (j = 0; j < height; ++j) {
-		for (i = 0, k = 0, l = 0; i < width; i += 32, k += 96, l += 16) {
-			/* Load samples */
-			vecYlo = _mm256_load_si256(reinterpret_cast<const __m256i*>(&yPtr[i])); // #16 Y samples
-			vecUn = _mm_load_si128(reinterpret_cast<const __m128i*>(&uPtr[l])); // #8 U samples, low mem
-			vecVn = _mm_load_si128(reinterpret_cast<const __m128i*>(&vPtr[l])); // #8 V samples, low mem
+#if defined(__INTEL_COMPILER)
+#	pragma intel optimization_parameter target_arch=avx2
+#endif
+void CompVImageConvYuv444p_to_Rgba32_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t* yPtr, COMPV_ALIGNED(AVX) const uint8_t* uPtr, COMPV_ALIGNED(AVX) const uint8_t* vPtr, COMPV_ALIGNED(AVX) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride)
+{
+	CompVImageConvYuvPlanar_to_Rgbx_Intrin_AVX2(yuv444p, rgba32);
+}
 
-			/* == Staring this line we're just converting from Y,U,V to R,G,B == */
-
-			/* Convert to I16 */
-			vecYhi = _mm256_unpackhi_epi8(vecYlo, vecZero);
-			vecYlo = _mm256_unpacklo_epi8(vecYlo, vecZero);
-			vecU = _mm256_cvtepu8_epi16(vecUn);
-			vecV = _mm256_cvtepu8_epi16(vecVn);
-
-			/* Compute Y', U', V' */
-			vecYlo = _mm256_sub_epi16(vecYlo, vec16);
-			vecYhi = _mm256_sub_epi16(vecYhi, vec16);
-			vecU = _mm256_sub_epi16(vecU, vec127);
-			vecV = _mm256_sub_epi16(vecV, vec127);
-
-			/* Compute (37Y'), (51V') and (65U') */
-			vecYlo = _mm256_mullo_epi16(vec37, vecYlo);
-			vecYhi = _mm256_mullo_epi16(vec37, vecYhi);
-			vec0 = _mm256_mullo_epi16(vec51, vecV);
-			vec1 = _mm256_mullo_epi16(vec65, vecU);
-
-			/* Compute R = (37Y' + 0U' + 51V') >> 5 */
-			vecR = _mm256_packus_epi16(
-				_mm256_srai_epi16(_mm256_add_epi16(vecYlo, _mm256_unpacklo_epi16(vec0, vec0)), 5),
-				_mm256_srai_epi16(_mm256_add_epi16(vecYhi, _mm256_unpackhi_epi16(vec0, vec0)), 5)
-			);
-
-			/* B = (37Y' + 65U' + 0V') >> 5 */
-			vecB = _mm256_packus_epi16(
-				_mm256_srai_epi16(_mm256_add_epi16(vecYlo, _mm256_unpacklo_epi16(vec1, vec1)), 5),
-				_mm256_srai_epi16(_mm256_add_epi16(vecYhi, _mm256_unpackhi_epi16(vec1, vec1)), 5)
-			);
-
-			/* Compute G = (37Y' - 13U' - 26V') >> 5 = (37Y' - (13U' + 26V')) >> 5 */
-			vec0 = _mm256_madd_epi16(vec13_26, _mm256_unpacklo_epi16(vecU, vecV)); // (13U' + 26V').low - I32
-			vec1 = _mm256_madd_epi16(vec13_26, _mm256_unpackhi_epi16(vecU, vecV)); // (13U' + 26V').high - I32
-			vec0 = _mm256_packs_epi32(vec0, vec1);
-			vecG = _mm256_packus_epi16(
-				_mm256_srai_epi16(_mm256_sub_epi16(vecYlo, _mm256_unpacklo_epi16(vec0, vec0)), 5),
-				_mm256_srai_epi16(_mm256_sub_epi16(vecYhi, _mm256_unpackhi_epi16(vec0, vec0)), 5)
-			);
-
-			/* Store result */
-			//!\\ AVX<->SSE transition issues if code code compiled with /AVX2 flag. 
-			//		Even if this is done, you should not trust the compiler, enable ASM to make sure.
-			vecRn = _mm256_castsi256_si128(vecR);
-			vecGn = _mm256_castsi256_si128(vecG);
-			vecBn = _mm256_castsi256_si128(vecB);
-			COMPV_VST3_U8_SSSE3(&rgbxPtr[k], vecRn, vecGn, vecBn, vec0n, vec1n);
-			vecRn = _mm256_extractf128_si256(vecR, 0x1);
-			vecGn = _mm256_extractf128_si256(vecG, 0x1);
-			vecBn = _mm256_extractf128_si256(vecB, 0x1);
-			COMPV_VST3_U8_SSSE3(&rgbxPtr[k + 48], vecRn, vecGn, vecBn, vec0n, vec1n);
-
-		} // End_Of for (i = 0; i < width; i += 32)
-		yPtr += stride;
-		rgbxPtr += strideRGB;
-		if (j & 1) {
-			uPtr += strideUV;
-			vPtr += strideUV;
-		} // End_Of for (j = 0; j < height; ++j)
-	}
-	_mm256_zeroupper();
+#if defined(__INTEL_COMPILER)
+#	pragma intel optimization_parameter target_arch=avx2
+#endif
+void CompVImageConvYuv444p_to_Rgb24_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t* yPtr, COMPV_ALIGNED(AVX) const uint8_t* uPtr, COMPV_ALIGNED(AVX) const uint8_t* vPtr, COMPV_ALIGNED(AVX) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride)
+{
+	CompVImageConvYuvPlanar_to_Rgbx_Intrin_AVX2(yuv444p, rgb24);
 }
 
 COMPV_NAMESPACE_END()

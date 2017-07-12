@@ -162,6 +162,14 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::yuvPlanar(const CompVMatPtr& imageIn, Com
 				}
 			}
 		}
+		if (CompVCpu::isEnabled(kCpuFlagAVX2) && imageRGBx->isAlignedAVX(0) && imageIn->isAlignedAVX(0) && imageIn->isAlignedAVX(1) && imageIn->isAlignedAVX(2)) {
+			if (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) {
+				COMPV_EXEC_IFDEF_INTRIN_X86(fptr_planar_to_rgbx = CompVImageConvYuv422p_to_Rgba32_Intrin_AVX2);
+			}
+			else if (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGB24) {
+				COMPV_EXEC_IFDEF_INTRIN_X86(fptr_planar_to_rgbx = CompVImageConvYuv422p_to_Rgb24_Intrin_AVX2);
+			}
+		}
 #elif COMPV_ARCH_ARM
 #endif
 		break;
@@ -178,6 +186,14 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::yuvPlanar(const CompVMatPtr& imageIn, Com
 				if (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGB24) {
 					COMPV_EXEC_IFDEF_INTRIN_X86(fptr_planar_to_rgbx = CompVImageConvYuv444p_to_Rgb24_Intrin_SSSE3);
 				}
+			}
+		}
+		if (CompVCpu::isEnabled(kCpuFlagAVX2) && imageRGBx->isAlignedAVX(0) && imageIn->isAlignedAVX(0) && imageIn->isAlignedAVX(1) && imageIn->isAlignedAVX(2)) {
+			if (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) {
+				COMPV_EXEC_IFDEF_INTRIN_X86(fptr_planar_to_rgbx = CompVImageConvYuv444p_to_Rgba32_Intrin_AVX2);
+			}
+			else if (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGB24) {
+				COMPV_EXEC_IFDEF_INTRIN_X86(fptr_planar_to_rgbx = CompVImageConvYuv444p_to_Rgb24_Intrin_AVX2);
 			}
 		}
 #elif COMPV_ARCH_ARM
