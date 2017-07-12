@@ -406,6 +406,22 @@ void CompVImageConvYuyv422_to_Rgb24_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t
 	CompVImageConvYuvPacked_to_Rgbx_Intrin_AVX2(yuyv422, rgb24);
 }
 
+#if defined(__INTEL_COMPILER)
+#	pragma intel optimization_parameter target_arch=avx2
+#endif
+void CompVImageConvUyvy422_to_Rgba32_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t* yuvPtr, COMPV_ALIGNED(AVX) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride)
+{
+	CompVImageConvYuvPacked_to_Rgbx_Intrin_AVX2(uyvy422, rgba32);
+}
+
+#if defined(__INTEL_COMPILER)
+#	pragma intel optimization_parameter target_arch=avx2
+#endif
+void CompVImageConvUyvy422_to_Rgb24_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t* yuvPtr, COMPV_ALIGNED(AVX) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride)
+{
+	CompVImageConvYuvPacked_to_Rgbx_Intrin_AVX2(uyvy422, rgb24);
+}
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */

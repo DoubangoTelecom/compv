@@ -369,6 +369,9 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::yuvPacked(const CompVMatPtr& imageIn, Com
 		if (CompVCpu::isEnabled(kCpuFlagSSSE3) && imageRGBx->isAlignedSSE(0) && imageIn->isAlignedSSE(0)) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(fptr_packed_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? CompVImageConvUyvy422_to_Rgba32_Intrin_SSSE3 : CompVImageConvUyvy422_to_Rgb24_Intrin_SSSE3);
 		}
+		if (CompVCpu::isEnabled(kCpuFlagAVX2) && imageRGBx->isAlignedAVX(0) && imageIn->isAlignedAVX(0)) {
+			COMPV_EXEC_IFDEF_INTRIN_X86(fptr_packed_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? CompVImageConvUyvy422_to_Rgba32_Intrin_AVX2 : CompVImageConvUyvy422_to_Rgb24_Intrin_AVX2);
+		}
 #elif COMPV_ARCH_ARM
 #endif
 		break;
