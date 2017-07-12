@@ -26,6 +26,12 @@ void CompVImageConvYuv422p_to_Rgba32_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8
 void CompVImageConvYuv444p_to_Rgb24_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* yPtr, COMPV_ALIGNED(NEON) const uint8_t* uPtr, COMPV_ALIGNED(NEON) const uint8_t* vPtr, COMPV_ALIGNED(NEON) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
 void CompVImageConvYuv444p_to_Rgba32_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* yPtr, COMPV_ALIGNED(NEON) const uint8_t* uPtr, COMPV_ALIGNED(NEON) const uint8_t* vPtr, COMPV_ALIGNED(NEON) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
 
+void CompVImageConvNv12_to_Rgb24_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* yPtr, COMPV_ALIGNED(NEON) const uint8_t* uvPtr, COMPV_ALIGNED(NEON) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
+void CompVImageConvNv12_to_Rgba32_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* yPtr, COMPV_ALIGNED(NEON) const uint8_t* uvPtr, COMPV_ALIGNED(NEON) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
+
+void CompVImageConvNv21_to_Rgb24_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* yPtr, COMPV_ALIGNED(NEON) const uint8_t* uvPtr, COMPV_ALIGNED(NEON) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
+void CompVImageConvNv21_to_Rgba32_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* yPtr, COMPV_ALIGNED(NEON) const uint8_t* uvPtr, COMPV_ALIGNED(NEON) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_ARM && COMPV_INTRINSIC */

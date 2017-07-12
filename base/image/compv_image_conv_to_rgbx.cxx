@@ -132,13 +132,11 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::yuvPlanar(const CompVMatPtr& imageIn, Com
 			}
 		}
 #elif COMPV_ARCH_ARM
-		if (CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
-			if (imageRGBx->isAlignedNEON(0) && imageIn->isAlignedNEON(0) && imageIn->isAlignedNEON(1) && imageIn->isAlignedNEON(2)) {
-				COMPV_EXEC_IFDEF_INTRIN_ARM(fptr_planar_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? CompVImageConvYuv420p_to_Rgba32_Intrin_NEON : CompVImageConvYuv420p_to_Rgb24_Intrin_NEON);
-				if (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGB24) { // TODO(dmi): remove when all asm implementations are ready
-					COMPV_EXEC_IFDEF_ASM_ARM32(fptr_planar_to_rgbx = CompVImageConvYuv420p_to_Rgb24_Asm_NEON32);
-					COMPV_EXEC_IFDEF_ASM_ARM64(fptr_planar_to_rgbx = CompVImageConvYuv420p_to_Rgb24_Asm_NEON64);
-				}
+		if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && imageRGBx->isAlignedNEON(0) && imageIn->isAlignedNEON(0) && imageIn->isAlignedNEON(1) && imageIn->isAlignedNEON(2)) {
+			COMPV_EXEC_IFDEF_INTRIN_ARM(fptr_planar_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? CompVImageConvYuv420p_to_Rgba32_Intrin_NEON : CompVImageConvYuv420p_to_Rgb24_Intrin_NEON);
+			if (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGB24) { // TODO(dmi): remove when all asm implementations are ready
+				COMPV_EXEC_IFDEF_ASM_ARM32(fptr_planar_to_rgbx = CompVImageConvYuv420p_to_Rgb24_Asm_NEON32);
+				COMPV_EXEC_IFDEF_ASM_ARM64(fptr_planar_to_rgbx = CompVImageConvYuv420p_to_Rgb24_Asm_NEON64);
 			}
 		}
 #endif
@@ -162,10 +160,8 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::yuvPlanar(const CompVMatPtr& imageIn, Com
 			COMPV_EXEC_IFDEF_INTRIN_X86(fptr_planar_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? CompVImageConvYuv422p_to_Rgba32_Intrin_AVX2 : CompVImageConvYuv422p_to_Rgb24_Intrin_AVX2);
 		}
 #elif COMPV_ARCH_ARM
-		if (CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
-			if (imageRGBx->isAlignedNEON(0) && imageIn->isAlignedNEON(0) && imageIn->isAlignedNEON(1) && imageIn->isAlignedNEON(2)) {
-				COMPV_EXEC_IFDEF_INTRIN_ARM(fptr_planar_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? CompVImageConvYuv422p_to_Rgba32_Intrin_NEON : CompVImageConvYuv422p_to_Rgb24_Intrin_NEON);
-			}
+		if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && imageRGBx->isAlignedNEON(0) && imageIn->isAlignedNEON(0) && imageIn->isAlignedNEON(1) && imageIn->isAlignedNEON(2)) {
+			COMPV_EXEC_IFDEF_INTRIN_ARM(fptr_planar_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? CompVImageConvYuv422p_to_Rgba32_Intrin_NEON : CompVImageConvYuv422p_to_Rgb24_Intrin_NEON);
 		}
 #endif
 		break;
@@ -188,10 +184,8 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::yuvPlanar(const CompVMatPtr& imageIn, Com
 			COMPV_EXEC_IFDEF_INTRIN_X86(fptr_planar_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? CompVImageConvYuv444p_to_Rgba32_Intrin_AVX2 : CompVImageConvYuv444p_to_Rgb24_Intrin_AVX2);
 		}
 #elif COMPV_ARCH_ARM
-		if (CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
-			if (imageRGBx->isAlignedNEON(0) && imageIn->isAlignedNEON(0) && imageIn->isAlignedNEON(1) && imageIn->isAlignedNEON(2)) {
-				COMPV_EXEC_IFDEF_INTRIN_ARM(fptr_planar_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? CompVImageConvYuv444p_to_Rgba32_Intrin_NEON : CompVImageConvYuv444p_to_Rgb24_Intrin_NEON);
-			}
+		if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && imageRGBx->isAlignedNEON(0) && imageIn->isAlignedNEON(0) && imageIn->isAlignedNEON(1) && imageIn->isAlignedNEON(2)) {
+			COMPV_EXEC_IFDEF_INTRIN_ARM(fptr_planar_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? CompVImageConvYuv444p_to_Rgba32_Intrin_NEON : CompVImageConvYuv444p_to_Rgb24_Intrin_NEON);
 		}
 #endif
 		break;
@@ -278,6 +272,9 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::yuvSemiPlanar(const CompVMatPtr& imageIn,
 			COMPV_EXEC_IFDEF_INTRIN_X86(fptr_semiplanar_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? CompVImageConvNv12_to_Rgba32_Intrin_AVX2 : CompVImageConvNv12_to_Rgb24_Intrin_AVX2);
 		}
 #elif COMPV_ARCH_ARM
+		if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && imageRGBx->isAlignedNEON(0) && imageIn->isAlignedNEON(0) && imageIn->isAlignedNEON(1)) {
+			COMPV_EXEC_IFDEF_INTRIN_ARM(fptr_semiplanar_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? CompVImageConvNv12_to_Rgba32_Intrin_NEON : CompVImageConvNv12_to_Rgb24_Intrin_NEON);
+		}
 #endif
 		break;
 	case COMPV_SUBTYPE_PIXELS_NV21:
@@ -290,6 +287,9 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::yuvSemiPlanar(const CompVMatPtr& imageIn,
 			COMPV_EXEC_IFDEF_INTRIN_X86(fptr_semiplanar_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? CompVImageConvNv21_to_Rgba32_Intrin_AVX2 : CompVImageConvNv21_to_Rgb24_Intrin_AVX2);
 		}
 #elif COMPV_ARCH_ARM
+		if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && imageRGBx->isAlignedNEON(0) && imageIn->isAlignedNEON(0) && imageIn->isAlignedNEON(1)) {
+			COMPV_EXEC_IFDEF_INTRIN_ARM(fptr_semiplanar_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? CompVImageConvNv21_to_Rgba32_Intrin_NEON : CompVImageConvNv21_to_Rgb24_Intrin_NEON);
+		}
 #endif
 		break;
 	default:

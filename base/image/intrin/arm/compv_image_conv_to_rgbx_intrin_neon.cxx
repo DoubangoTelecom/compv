@@ -49,17 +49,24 @@ static const int16x8_t vec26 = vdupq_n_s16(26);
 #define nv12_uv_stride					(stride)
 #define nv21_uv_stride					(stride)
 
+#define yuv420p_uv_prefetch_read(index)	__compv_builtin_prefetch_read(&uPtr[(index)]); __compv_builtin_prefetch_read(&vPtr[(index)])
+#define yuv422p_uv_prefetch_read(index)	__compv_builtin_prefetch_read(&uPtr[(index)]); __compv_builtin_prefetch_read(&vPtr[(index)])
+#define yuv444p_uv_prefetch_read(index)	__compv_builtin_prefetch_read(&uPtr[(index)]); __compv_builtin_prefetch_read(&vPtr[(index)])
+#define nv12_uv_prefetch_read(index)	__compv_builtin_prefetch_read(&uvPtr[(index)])
+#define nv21_uv_prefetch_read(index)	__compv_builtin_prefetch_read(&uvPtr[(index)])
+
+
 #define yuv420p_u_load					vecUn = vld1_u8(&uPtr[l])
 #define yuv422p_u_load					vecUn = vld1_u8(&uPtr[l])
 #define yuv444p_u_load					vecUlo = vld1q_u8(&uPtr[l]); (void)(vecUn)
-#define nv12_u_load						vecUlo = _mm256_shuffle_epi8(_mm256_load_si256(&uvPtr[l]), vecDeinterleaveUV); (void)(vecUn)
-#define nv21_u_load						vecVlo = _mm256_shuffle_epi8(_mm256_load_si256(&uvPtr[l]), vecDeinterleaveUV); (void)(vecUn)
+#define nv12_u_load						vecUV = vld2_u8(&uvPtr[l]); vecUn = vecUV.val[0]; (void)(vecUn)
+#define nv21_u_load						vecUV = vld2_u8(&uvPtr[l]); vecUn = vecUV.val[1]; (void)(vecUn)
 
 #define yuv420p_v_load					vecVn = vld1_u8(&vPtr[l])
 #define yuv422p_v_load					vecVn = vld1_u8(&vPtr[l])
 #define yuv444p_v_load					vecVlo = vld1q_u8(&vPtr[l]); (void)(vecVn)
-#define nv12_v_load						vecVlo = _mm256_unpackhi_epi64(vecUlo, vecUlo); (void)(vecVn)
-#define nv21_v_load						vecUlo = _mm256_unpackhi_epi64(vecVlo, vecVlo); (void)(vecVn)
+#define nv12_v_load						vecVn = vecUV.val[1]; (void)(vecVn)
+#define nv21_v_load						vecVn = vecUV.val[0]; (void)(vecVn)
 
 #define yuv420p_uv_inc_check			if (j & 1)
 #define yuv422p_uv_inc_check 
@@ -76,14 +83,14 @@ static const int16x8_t vec26 = vdupq_n_s16(26);
 #define yuv420p_u_primelo				vecUlo = vsubl_u8(vecUn, vec127n)
 #define yuv422p_u_primelo				vecUlo = vsubl_u8(vecUn, vec127n)
 #define yuv444p_u_primelo				vecUlo = vsubl_u8(vget_low_u8(vecUlo), vec127n)
-#define nv12_u_primelo					not impl
-#define nv21_u_primelo					not impl
+#define nv12_u_primelo					vecUlo = vsubl_u8(vecUn, vec127n)
+#define nv21_u_primelo					vecUlo = vsubl_u8(vecUn, vec127n)
 
 #define yuv420p_v_primelo				vecVlo = vsubl_u8(vecVn, vec127n)
 #define yuv422p_v_primelo				vecVlo = vsubl_u8(vecVn, vec127n)
 #define yuv444p_v_primelo				vecVlo = vsubl_u8(vget_low_u8(vecVlo), vec127n)
-#define nv12_v_primelo					not impl
-#define nv21_v_primelo					not impl
+#define nv12_v_primelo					vecVlo = vsubl_u8(vecVn, vec127n)
+#define nv21_v_primelo					vecVlo = vsubl_u8(vecVn, vec127n)
 
 #define yuv420p_u_primehi				(void)(vecUhi)
 #define yuv422p_u_primehi				(void)(vecUhi)
@@ -132,24 +139,20 @@ static const int16x8_t vec26 = vdupq_n_s16(26);
 	nameRgbx##_declVecResult; \
 	uint8x8_t vecUn, vecVn; \
 	int16x8x2_t vec2; \
-	(vec0hi); (vec1hi); /* FIXME: remove */ \
+	uint8x8x2_t vecUV; (void)(vecUV); \
 	 \
 	__compv_builtin_prefetch_read(&yPtr[COMPV_CACHE1_LINE_SIZE * 0]); \
 	__compv_builtin_prefetch_read(&yPtr[COMPV_CACHE1_LINE_SIZE * 1]); \
 	__compv_builtin_prefetch_read(&yPtr[COMPV_CACHE1_LINE_SIZE * 2]); \
-	__compv_builtin_prefetch_read(&uPtr[COMPV_CACHE1_LINE_SIZE * 0]); \
-	__compv_builtin_prefetch_read(&uPtr[COMPV_CACHE1_LINE_SIZE * 1]); \
-	__compv_builtin_prefetch_read(&uPtr[COMPV_CACHE1_LINE_SIZE * 2]); \
-	__compv_builtin_prefetch_read(&vPtr[COMPV_CACHE1_LINE_SIZE * 0]); \
-	__compv_builtin_prefetch_read(&vPtr[COMPV_CACHE1_LINE_SIZE * 1]); \
-	__compv_builtin_prefetch_read(&vPtr[COMPV_CACHE1_LINE_SIZE * 2]); \
+	nameYuv##_uv_prefetch_read(COMPV_CACHE1_LINE_SIZE * 0); \
+	nameYuv##_uv_prefetch_read(COMPV_CACHE1_LINE_SIZE * 1); \
+	nameYuv##_uv_prefetch_read(COMPV_CACHE1_LINE_SIZE * 2); \
 	 \
 	for (j = 0; j < height; ++j) { \
 		for (i = 0, k = 0, l = 0; i < width; i += 16, k += nameRgbx##_step, l += nameYuv##_uv_step) { \
 			/* Load samples */ \
 			__compv_builtin_prefetch_read(&yPtr[i + (COMPV_CACHE1_LINE_SIZE * 3)]); \
-			__compv_builtin_prefetch_read(&uPtr[l + (COMPV_CACHE1_LINE_SIZE * 3)]); \
-			__compv_builtin_prefetch_read(&vPtr[l + (COMPV_CACHE1_LINE_SIZE * 3)]); \
+			nameYuv##_uv_prefetch_read(l + (COMPV_CACHE1_LINE_SIZE * 3)); \
 			vecYlo = vld1q_u8(&yPtr[i]); /* #16 Y samples */ \
 			nameYuv##_u_load; /* #8 or #16 U samples, low mem */ \
 			nameYuv##_v_load; /* #8 or #16 V samples, low mem */ \
@@ -242,6 +245,26 @@ void CompVImageConvYuv444p_to_Rgb24_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_
 void CompVImageConvYuv444p_to_Rgba32_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* yPtr, COMPV_ALIGNED(NEON) const uint8_t* uPtr, COMPV_ALIGNED(NEON) const uint8_t* vPtr, COMPV_ALIGNED(NEON) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
 {
 	CompVImageConvYuvPlanar_to_Rgbx_Intrin_NEON(yuv444p, rgba32);
+}
+
+void CompVImageConvNv12_to_Rgb24_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* yPtr, COMPV_ALIGNED(NEON) const uint8_t* uvPtr, COMPV_ALIGNED(NEON) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
+{
+	CompVImageConvYuvPlanar_to_Rgbx_Intrin_NEON(nv12, rgb24);
+}
+
+void CompVImageConvNv12_to_Rgba32_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* yPtr, COMPV_ALIGNED(NEON) const uint8_t* uvPtr, COMPV_ALIGNED(NEON) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
+{
+	CompVImageConvYuvPlanar_to_Rgbx_Intrin_NEON(nv12, rgba32);
+}
+
+void CompVImageConvNv21_to_Rgb24_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* yPtr, COMPV_ALIGNED(NEON) const uint8_t* uvPtr, COMPV_ALIGNED(NEON) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
+{
+	CompVImageConvYuvPlanar_to_Rgbx_Intrin_NEON(nv21, rgb24);
+}
+
+void CompVImageConvNv21_to_Rgba32_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* yPtr, COMPV_ALIGNED(NEON) const uint8_t* uvPtr, COMPV_ALIGNED(NEON) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
+{
+	CompVImageConvYuvPlanar_to_Rgbx_Intrin_NEON(nv21, rgba32);
 }
 
 COMPV_NAMESPACE_END()
