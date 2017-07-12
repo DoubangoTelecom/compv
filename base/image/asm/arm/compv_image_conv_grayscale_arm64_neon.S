@@ -8,12 +8,6 @@
 #if defined(__aarch64__)
 .include "compv_common_arm64.S"
 
-#if defined(__APPLE__)
-#   define sym(funcname) _##funcname
-#else
-#   define sym(funcname) funcname
-#endif
-
 .data
 
 .extern
@@ -59,20 +53,17 @@
 		# for (i = 0; i < width; i += 16)
 		########################################
 		LoopWidth\@:
-			add r9, r9, #16
 			prfm pldl1keep, [yuv422Ptr, #(CACHE_LINE_SIZE*3)]
 			prfm pstl1keep, [outYPtr, #(CACHE_LINE_SIZE*3)]
-			ld1 {v1.16b, v2.16b}, [yuv422Ptr], #32
-			
+			ld2 {v0.16b-v1.16b}, [yuv422Ptr], #(2*COMPV_GAS_V_SZ_BYTES)
+			add r9, r9, #(16*COMPV_GAS_UINT8_SZ_BYTES)
             .if \yuv422Family == yuyv422Family
-                uzp1 v3.16b, v1.16b, v2.16b
+                st1 {v0.16b}, [outYPtr], #(1*COMPV_GAS_V_SZ_BYTES)
             .elseif \yuv422Family == uyvy422Family
-                uzp2 v3.16b, v1.16b, v2.16b
+                st1 {v1.16b}, [outYPtr], #(1*COMPV_GAS_V_SZ_BYTES)
             .elseif
                 .error Not implemented
             .endif
-
-			st1 {v3.16b}, [outYPtr], #16 // vstmia outYPtr!, {q3x, q3y}
 			cmp r9, width
 			blt LoopWidth\@
 			#End_of_LoopWidth#
