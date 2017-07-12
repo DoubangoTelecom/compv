@@ -371,6 +371,9 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::yuvPacked(const CompVMatPtr& imageIn, Com
 			COMPV_EXEC_IFDEF_INTRIN_X86(fptr_packed_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? CompVImageConvYuyv422_to_Rgba32_Intrin_AVX2 : CompVImageConvYuyv422_to_Rgb24_Intrin_AVX2);
 		}
 #elif COMPV_ARCH_ARM
+		if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && imageRGBx->isAlignedNEON(0) && imageIn->isAlignedNEON(0)) {
+			COMPV_EXEC_IFDEF_INTRIN_ARM(fptr_packed_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? CompVImageConvYuyv422_to_Rgba32_Intrin_NEON : CompVImageConvYuyv422_to_Rgb24_Intrin_NEON);
+		}
 #endif
 		break;
 	case COMPV_SUBTYPE_PIXELS_UYVY422:
@@ -383,6 +386,9 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::yuvPacked(const CompVMatPtr& imageIn, Com
 			COMPV_EXEC_IFDEF_INTRIN_X86(fptr_packed_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? CompVImageConvUyvy422_to_Rgba32_Intrin_AVX2 : CompVImageConvUyvy422_to_Rgb24_Intrin_AVX2);
 		}
 #elif COMPV_ARCH_ARM
+		if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && imageRGBx->isAlignedNEON(0) && imageIn->isAlignedNEON(0)) {
+			COMPV_EXEC_IFDEF_INTRIN_ARM(fptr_packed_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? CompVImageConvUyvy422_to_Rgba32_Intrin_NEON : CompVImageConvUyvy422_to_Rgb24_Intrin_NEON);
+		}
 #endif
 		break;
 	default:

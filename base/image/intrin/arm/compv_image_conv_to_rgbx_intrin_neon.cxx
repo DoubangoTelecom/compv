@@ -267,6 +267,106 @@ void CompVImageConvNv21_to_Rgba32_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t*
 	CompVImageConvYuvPlanar_to_Rgbx_Intrin_NEON(nv21, rgba32);
 }
 
+#define yuyv422_yi		0
+#define uyvy422_yi		1
+
+#define yuyv422_uvi		1
+#define uyvy422_uvi		0
+
+#define CompVImageConvYuvPacked_to_Rgbx_Intrin_NEON(nameYuv, nameRgbx) { \
+	COMPV_DEBUG_INFO_CHECK_NEON(); \
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Please use ASM code which is faaaster"); \
+	 \
+	compv_uscalar_t i, j, k; \
+	const compv_uscalar_t strideRGBx = (stride * nameRgbx##_bytes_per_sample); \
+	int16x8_t vecYlow, vecYhigh, vecU, vecV, vec0, vec1; \
+	nameRgbx##_declVecResult; \
+	uint8x8_t vecUn, vecVn; \
+	int16x8x2_t vec2; \
+	uint8x16x2_t vec3; \
+	uint8x8x2_t vec4; \
+	 \
+	stride <<= 1; \
+	width <<= 1; \
+	 \
+	__compv_builtin_prefetch_read(&yuvPtr[COMPV_CACHE1_LINE_SIZE * 0]); \
+	__compv_builtin_prefetch_read(&yuvPtr[COMPV_CACHE1_LINE_SIZE * 1]); \
+	__compv_builtin_prefetch_read(&yuvPtr[COMPV_CACHE1_LINE_SIZE * 2]); \
+	 \
+	for (j = 0; j < height; ++j) { \
+		for (i = 0, k = 0; i < width; i += 32, k += nameRgbx##_step) { \
+			/* Load samples */ \
+			__compv_builtin_prefetch_read(&yuvPtr[i + (COMPV_CACHE1_LINE_SIZE * 3)]); \
+			vec3 = vld2q_u8(&yuvPtr[i]); \
+			vec4 = vuzp_u8(vget_low_u8(vec3.val[nameYuv##_uvi]), vget_high_u8(vec3.val[nameYuv##_uvi])); \
+			vecYlow = vec3.val[nameYuv##_yi]; /* #16 Y samples */ \
+			vecUn = vec4.val[0]; /* #8 U samples, low mem */ \
+			vecVn = vec4.val[1]; /* #8 V samples, low mem */ \
+			 \
+			/* Compute Y', U', V': substract and convert to I16 */ \
+			vecYhigh = vsubl_u8(vget_high_u8(vecYlow), vec16n); \
+			vecYlow = vsubl_u8(vget_low_u8(vecYlow), vec16n); \
+			vecU = vsubl_u8(vecUn, vec127n); \
+			vecV = vsubl_u8(vecVn, vec127n); \
+			 \
+			/* Compute (37Y') */ \
+			vecYlow = vmulq_s16(vecYlow, vec37); \
+			vecYhigh = vmulq_s16(vecYhigh, vec37); \
+			 \
+			/* Compute R = (37Y' + 0U' + 51V') >> 5, Instead of (#2 'vmlaq_s16' + #2 'vzipq_s16') use (#1 'vmulq_s16' + #1 'vzipq_s16' and #2 'vaddq_s16') */ \
+			vec0 = vmulq_s16(vecV, vec51); \
+			vec2 = vzipq_s16(vec0, vec0); /* UV sampled 1/2 -> duplicate to have same size as Y*/ \
+			vecResult.val[0] = vcombine_u8( \
+				vqshrun_n_s16(vaddq_s16(vecYlow, vec2.val[0]), 5), \
+				vqshrun_n_s16(vaddq_s16(vecYhigh, vec2.val[1]), 5) \
+			); \
+			 \
+			/* B = (37Y' + 65U' + 0V') >> 5, Instead of (#2 'vmlaq_s16' + #2 'vzipq_s16') use (#1 'vmulq_s16' + #1 'vzipq_s16' and #2 'vaddq_s16') */ \
+			vec1 = vmulq_s16(vecU, vec65); \
+			vec2 = vzipq_s16(vec1, vec1); /* UV sampled 1/2 -> duplicate to have same size as Y */ \
+			vecResult.val[2] = vcombine_u8( /*/!\\ Notice the indice: #2 (B) */ \
+				vqshrun_n_s16(vaddq_s16(vecYlow, vec2.val[0]), 5), \
+				vqshrun_n_s16(vaddq_s16(vecYhigh, vec2.val[1]), 5) \
+			); \
+			 \
+			/* Compute G = (37Y' - 13U' - 26V') >> 5 = (37Y' - (13U' + 26V')) >> 5 */ \
+			vec0 = vmulq_s16(vecU, vec13); \
+			vec1 = vmlaq_s16(vec0, vecV, vec26); \
+			vec2 = vzipq_s16(vec1, vec1); \
+			vecResult.val[1] = vcombine_u8( \
+				vqshrun_n_s16(vsubq_s16(vecYlow, vec2.val[0]), 5), \
+				vqshrun_n_s16(vsubq_s16(vecYhigh, vec2.val[1]), 5) \
+			); \
+			 \
+			/* Store result */ \
+			nameRgbx##_store(&rgbxPtr[k], vecResult); \
+			 \
+		} /* End_Of for (i = 0; i < width; i += 16) */ \
+		yuvPtr += stride; \
+		rgbxPtr += strideRGBx; \
+	} /* End_Of for (j = 0; j < height; ++j) */ \
+}
+
+void CompVImageConvYuyv422_to_Rgb24_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* yuvPtr, COMPV_ALIGNED(NEON) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
+{
+	CompVImageConvYuvPacked_to_Rgbx_Intrin_NEON(yuyv422, rgb24);
+}
+
+void CompVImageConvYuyv422_to_Rgba32_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* yuvPtr, COMPV_ALIGNED(NEON) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
+{
+	CompVImageConvYuvPacked_to_Rgbx_Intrin_NEON(yuyv422, rgba32);
+}
+
+void CompVImageConvUyvy422_to_Rgb24_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* yuvPtr, COMPV_ALIGNED(NEON) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
+{
+	CompVImageConvYuvPacked_to_Rgbx_Intrin_NEON(uyvy422, rgb24);
+}
+
+void CompVImageConvUyvy422_to_Rgba32_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* yuvPtr, COMPV_ALIGNED(NEON) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
+{
+	CompVImageConvYuvPacked_to_Rgbx_Intrin_NEON(uyvy422, rgba32);
+}
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_ARM && COMPV_INTRINSIC */
