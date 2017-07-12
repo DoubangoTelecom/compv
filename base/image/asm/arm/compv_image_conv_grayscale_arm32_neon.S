@@ -8,12 +8,6 @@
 #if defined(__arm__) && !defined(__aarch64__)
 .include "compv_common_arm32.S"
 
-#if defined(__APPLE__)
-#   define sym(funcname) _##funcname
-#else
-#   define sym(funcname) funcname
-#endif
-
 .data
 
 .extern
@@ -62,21 +56,13 @@
 		@ for (i = 0; i < width; i += 16)
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 		LoopWidth\@:
-			add r9, r9, #16
 			pld [yuv422Ptr, #(CACHE_LINE_SIZE*3)]
-			vld1.u8 {q1x, q1y, q2x, q2y}, [yuv422Ptr :128]!
-
+			vld2.u8 {q0-q1}, [yuv422Ptr :128]!
+			add r9, r9, #16
             .if \yuv422Family == yuyv422Family
-                @ldr r7, =sym(kShuffleEpi8_Yuyv422ToYuv_i32)
-                vuzp.u8 q1x, q1y
-                vuzp.u8 q2x, q2y
-                vswp q1y, q2x
-                vst1.u8 {q1}, [outYPtr :128]! @ vstmia outYPtr!, {q1x, q1y}
+                vst1.u8 {q0}, [outYPtr :128]!
             .elseif \yuv422Family == uyvy422Family
-                vuzp.u8 q1x, q1y
-                vuzp.u8 q2x, q2y
-                vswp q1y, q2x
-                vst1.u8 {q2}, [outYPtr :128]! @ vstmia outYPtr!, {q2x, q2y}
+                vst1.u8 {q1}, [outYPtr :128]!
             .elseif
                 .error Not implemented
             .endif
