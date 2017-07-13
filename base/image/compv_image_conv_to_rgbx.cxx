@@ -87,14 +87,6 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::process(const CompVMatPtr& imageIn, COMPV
 		return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
 	}
 
-#if 0
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING();
-	const uint8_t *r = imageOut->ptr<const uint8_t>();
-	for (size_t i = 0; i < 100; i += 4) {
-		printf("%u, ", r[i]);
-	}
-#endif
-
 	*imageRGBx = imageOut;
 
 	return COMPV_ERROR_CODE_S_OK;
