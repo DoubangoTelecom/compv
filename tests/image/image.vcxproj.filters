@@ -64,8 +64,5 @@
     <ClInclude Include="..\tests_common.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="fast-C-src-2.1\fast.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>

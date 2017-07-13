@@ -71,7 +71,7 @@ void CompVHoughKhtKernelHeight_4mpq_Intrin_AVX(
 
 	// SSE code, requires building the code with /AVX flags otherwise AVX/SSE transition issues
 	__m128d vecMax = _mm_max_pd(_mm256_castpd256_pd128(vecheightMax1), _mm256_extractf128_pd(vecheightMax1, 0x1));
-	vecMax = _mm_max_sd(vecMax, _mm_shuffle_pd(vecMax, vecMax, 0x11));
+	vecMax = _mm_max_sd(vecMax, _mm_shuffle_pd(vecMax, vecMax, 0x1));
 	_mm_store_sd(heightMax1, vecMax);
 
 	_mm256_zeroupper();

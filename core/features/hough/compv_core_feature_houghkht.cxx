@@ -99,7 +99,7 @@ static const __m128d vec0 = _mm_set_sd(0.);
 #define __compv_math_sqrt_fast(x) _mm_cvtsd_f64(_mm_sqrt_sd(vec0, _mm_set_sd(x)))
 COMPV_ALWAYS_INLINE KHT_TYP __compv_math_sqrt_fast2(const KHT_TYP x, const KHT_TYP y) {
 	const __m128d vecsqrt = _mm_sqrt_pd(_mm_set_pd(x, y));
-	return _mm_cvtsd_f64(_mm_mul_sd(vecsqrt, _mm_shuffle_pd(vecsqrt, vecsqrt, 0x11)));
+	return _mm_cvtsd_f64(_mm_mul_sd(vecsqrt, _mm_shuffle_pd(vecsqrt, vecsqrt, 0x1)));
 }
 #elif defined(__GNUC__)
 #define __compv_math_sqrt_fast(x)		__builtin_sqrt(x)

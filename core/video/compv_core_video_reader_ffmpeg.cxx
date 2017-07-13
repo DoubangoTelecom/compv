@@ -20,7 +20,7 @@ COMPV_NAMESPACE_BEGIN()
 #define COMPV_THIS_CLASSNAME	"CompVVideoReaderFFmpeg"
 #define COMPV_FFMPEG_REFCOUNT	1
 
-static int __open_codec_context(int *stream_idx, AVFormatContext *fmt_ctx, enum AVMediaType type, const char* src_filename);
+static int __ffmpeg_open_codec_context(int *stream_idx, AVCodecContext **dec_ctx, AVFormatContext *fmt_ctx, enum AVMediaType type, const char* src_filename);
 static COMPV_ERROR_CODE __pixfmt_to_subtype(const AVPixelFormat pixfmt, COMPV_SUBTYPE& subtype);
 
 //
@@ -82,12 +82,11 @@ COMPV_ERROR_CODE CompVVideoReaderFFmpeg::open(const char* path)
 			return COMPV_ERROR_CODE_E_FFMPEG;
 		}
 		// Retrive the codec context
-		if ((avret = __open_codec_context(&m_nStreamIdx, m_pFmtCtx, AVMEDIA_TYPE_VIDEO, path)) < 0) {
+		if ((avret = __ffmpeg_open_codec_context(&m_nStreamIdx, &m_pDecCtx, m_pFmtCtx, AVMEDIA_TYPE_VIDEO, path)) < 0) {
 			COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "open_codec_context(AVMEDIA_TYPE_VIDEO) returned %d", avret);
 			return COMPV_ERROR_CODE_E_FFMPEG;
 		}
 		m_pStream = m_pFmtCtx->streams[m_nStreamIdx];
-		m_pDecCtx = m_pStream->codec;
 
 		m_bOpened = true;
 		return COMPV_ERROR_CODE_S_OK;
@@ -117,6 +116,31 @@ COMPV_ERROR_CODE CompVVideoReaderFFmpeg::close()
 	m_ePixFmt = AV_PIX_FMT_NONE;
 	m_bOpened = false;
 	return COMPV_ERROR_CODE_S_OK;
+}
+
+// avcodec_decode_video2 is deprecated
+// https://blogs.gentoo.org/lu_zero/2016/03/29/new-avcodec-api/
+static int __ffmpeg_decode(AVCodecContext *avctx, AVFrame *frame, int *got_frame, AVPacket *pkt){
+#if 0
+	return avcodec_decode_video2(avctx, frame, got_frame, pkt);
+#else
+	int ret;
+	*got_frame = 0;
+	if (pkt) {
+		ret = avcodec_send_packet(avctx, pkt);
+		if (ret < 0) {
+			return ret == AVERROR_EOF ? 0 : ret;
+		}
+	}
+	ret = avcodec_receive_frame(avctx, frame);
+	if (ret < 0 && ret != AVERROR(EAGAIN) && ret != AVERROR_EOF) {
+		return ret;
+	}
+	if (ret >= 0) {
+		*got_frame = 1;
+	}
+	return 0;
+#endif
 }
 
 COMPV_ERROR_CODE CompVVideoReaderFFmpeg::read(CompVMatPtrPtr frame)
@@ -152,10 +176,10 @@ COMPV_ERROR_CODE CompVVideoReaderFFmpeg::read(CompVMatPtrPtr frame)
 	} while ((pkt.stream_index != m_nStreamIdx));
 
 	// Decode frame
-	while ((avret = avcodec_decode_video2(m_pDecCtx, m_pFrame, &got_frame, &pkt)) >= 0 && !got_frame);
+	while ((avret = __ffmpeg_decode(m_pDecCtx, m_pFrame, &got_frame, &pkt)) >= 0 && !got_frame);
 	av_packet_unref(&pkt);
 	if (avret < 0) {
-		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "avcodec_decode_video2 returned %d", avret);
+		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "__ffmpeg_decode returned %d", avret);
 		return COMPV_ERROR_CODE_E_FFMPEG;
 	}
 	if (got_frame) {
@@ -196,11 +220,10 @@ COMPV_ERROR_CODE CompVVideoReaderFFmpeg::newObj(CompVVideoReaderFFmpegPtrPtr rea
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-static int __open_codec_context(int *stream_idx, AVFormatContext *fmt_ctx, enum AVMediaType type, const char* src_filename)
+static int __ffmpeg_open_codec_context(int *stream_idx, AVCodecContext **dec_ctx, AVFormatContext *fmt_ctx, enum AVMediaType type, const char* src_filename)
 {
 	int ret;
 	AVStream *st;
-	AVCodecContext *dec_ctx = NULL;
 	AVCodec *dec = NULL;
 	AVDictionary *opts = NULL;
 
@@ -216,18 +239,26 @@ static int __open_codec_context(int *stream_idx, AVFormatContext *fmt_ctx, enum 
 		st = fmt_ctx->streams[*stream_idx];
 
 		/* find decoder for the stream */
-		dec_ctx = st->codec;
-		dec = avcodec_find_decoder(dec_ctx->codec_id);
+		dec = avcodec_find_decoder(st->codecpar->codec_id);
 		if (!dec) {
 			COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Failed to find %s codec",
 				av_get_media_type_string(type));
 			return ret;
 		}
-
+		if (!*dec_ctx) {
+			*dec_ctx = avcodec_alloc_context3(dec);
+		}
+		if (!*dec_ctx) {
+			COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "avcodec_alloc_context3 failed");
+			return AVERROR(ENOMEM);
+		}
+		if ((ret = avcodec_parameters_to_context(*dec_ctx, st->codecpar)) < 0) {
+			COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "avcodec_parameters_from_context returned %d", ret);
+			return ret;
+		}
 		av_dict_set(&opts, "refcounted_frames", COMPV_FFMPEG_REFCOUNT ? "1" : "0", 0);
-		if ((ret = avcodec_open2(dec_ctx, dec, &opts)) < 0) {
-			COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Failed to open %s codec",
-				av_get_media_type_string(type));
+		if ((ret = avcodec_open2(*dec_ctx, dec, &opts)) < 0) {
+			COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Failed to open %s codec", av_get_media_type_string(type));
 			av_dict_free(&opts);
 			return ret;
 		}

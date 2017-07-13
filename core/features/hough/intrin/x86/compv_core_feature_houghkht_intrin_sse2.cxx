@@ -147,7 +147,7 @@ void CompVHoughKhtKernelHeight_2mpq_Intrin_SSE2(
 		_mm_store_pd(&height[i], vecHeight);
 		vecheightMax1 = _mm_max_pd(vecheightMax1, vecHeight);
 	}
-	vecheightMax1 = _mm_max_sd(vecheightMax1, _mm_shuffle_pd(vecheightMax1, vecheightMax1, 0x11));
+	vecheightMax1 = _mm_max_sd(vecheightMax1, _mm_shuffle_pd(vecheightMax1, vecheightMax1, 0x01));
 	_mm_store_sd(heightMax1, vecheightMax1);
 }
 

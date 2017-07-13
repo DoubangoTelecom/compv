@@ -112,7 +112,6 @@
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_convlt_intrin_sse2.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_distance_intrin_avx2.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_distance_intrin_sse42.h" />
-    <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_histogram_intrin_sse2.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_matrix_intrin_avx.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_matrix_intrin_sse2.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_matrix_intrin_sse41.h" />

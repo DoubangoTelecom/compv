@@ -109,6 +109,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>include;../gpu/include;../base/include;$(AMDAPPSDKROOT)/include</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <PrecompiledHeaderFile />
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
