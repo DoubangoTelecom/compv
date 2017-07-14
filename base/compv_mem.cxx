@@ -432,7 +432,7 @@ void* CompVMem::reallocAligned(void* ptr, size_t size, int alignment/*= CompVMem
         CompVMem::specialsLock();
         std::map<uintptr_t, compv_special_mem_t >::iterator it = CompVMem::s_Specials.find((uintptr_t)ptr);
         COMPV_ASSERT(it != CompVMem::s_Specials.end());
-        memcpy(pMem, ptr, COMPV_MATH_MIN(it->second.size, size));
+		CompVMem::copy(pMem, ptr, COMPV_MATH_MIN(it->second.size, size));
         CompVMem::specialsUnLock();
 #	else
         COMPV_DEBUG_ERROR("Data lost");

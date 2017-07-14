@@ -35,19 +35,18 @@ struct CompVHoughKhtPos {
 	CompVHoughKhtPos() : y(0), x(0){}
 	CompVHoughKhtPos(int _y, int _x) : y(_y), x(_x) {}
 };
-typedef std::vector<CompVHoughKhtPos> CompVHoughKhtString;
+struct CompVHoughKhtString {
+	size_t begin;
+	size_t end;
+	CompVHoughKhtString() { begin = end = 0; }
+	CompVHoughKhtString(size_t _begin, size_t _end): begin(_begin), end(_end) {}
+};
 typedef std::vector<CompVHoughKhtString> CompVHoughKhtStrings;
 
 typedef CompVBox<CompVHoughKhtPos> CompVHoughKhtPosBox;
 typedef CompVPtr<CompVHoughKhtPosBox* > CompVHoughKhtPosBoxPtr;
 
-struct CompVHoughKhtCluster {
-	CompVHoughKhtCluster(CompVHoughKhtString::const_iterator _begin, CompVHoughKhtString::const_iterator _end) :
-		begin (_begin), end(_end) { }
-	CompVHoughKhtCluster() { }
-	CompVHoughKhtString::const_iterator begin;
-	CompVHoughKhtString::const_iterator end;
-};
+typedef CompVHoughKhtString CompVHoughKhtCluster;
 typedef std::vector<CompVHoughKhtCluster> CompVHoughKhtClusters;
 
 struct CompVHoughKhtKernel {
@@ -85,7 +84,7 @@ public:
 private:
 	COMPV_ERROR_CODE initCoords(KHT_TYP dRho, KHT_TYP dTheta, size_t nThreshold, size_t nWidth = 0, size_t nHeight = 0);
 	COMPV_ERROR_CODE linking_AppendixA(CompVMatPtr& edges, CompVHoughKhtStrings& strings);
-	void linking_link_Algorithm5(uint8_t* edgesPtr, const size_t edgesWidth, const size_t edgesHeight, const size_t edgesStride, CompVHoughKhtPosBoxPtr& tmp_box, CompVHoughKhtStrings& strings, const int x_ref, const int y_ref);
+	void linking_link_Algorithm5(uint8_t* edgesPtr, const size_t edgesWidth, const size_t edgesHeight, const size_t edgesStride, CompVHoughKhtStrings& strings, const int x_ref, const int y_ref);
 	COMPV_ERROR_CODE clusters_find(CompVHoughKhtClusters& clusters, CompVHoughKhtStrings::const_iterator strings_begin, CompVHoughKhtStrings::const_iterator strings_end);
 	KHT_TYP clusters_subdivision(CompVHoughKhtClusters& clusters, const CompVHoughKhtString& string, const size_t start_index, const size_t end_index);
 	COMPV_ERROR_CODE voting_Algorithm2_Kernels(const CompVHoughKhtClusters& clusters, CompVHoughKhtKernels& kernels, KHT_TYP& hmax);
@@ -115,6 +114,7 @@ private:
 	CompVMatPtr m_theta; // CompVMatPtr<KHT_TYP>
 	CompVMatPtr m_count; // CompVMatPtr<int32_t>
 	CompVMatPtr m_visited; // CompVMatPtr<uint8_t>
+	CompVHoughKhtPosBoxPtr m_stringsBox;
 	CompVHoughKhtStrings m_strings;
 };
 
