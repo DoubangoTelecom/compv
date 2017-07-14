@@ -766,6 +766,7 @@ KHT_TYP CompVHoughKht::clusters_subdivision(CompVHoughKhtClusters& clusters, con
     CompVHoughKhtPoss::const_iterator begin = m_poss.begin() + string.begin;
     CompVHoughKhtPoss::const_iterator start = begin + start_index;
 	CompVHoughKhtPoss::const_iterator end = begin + end_index;
+	CompVHoughKhtPoss::const_iterator current = start + 1;
 	const int diffx = start->x - end->x;
 	const int diffy = start->y - end->y;
 	const KHT_TYP length = __compv_math_sqrt_fast(static_cast<KHT_TYP>((diffx * diffx) + (diffy * diffy)));
@@ -775,11 +776,9 @@ KHT_TYP CompVHoughKht::clusters_subdivision(CompVHoughKhtClusters& clusters, con
 	//	any point from the line(the maximum deviation is always assumed to be at least two
 	//		pixels in size to account for limitations on measurement accuracy)
 	
-	size_t max_index = start_index;
+	size_t max_index = start_index, i = start_index + 1;
 	int deviation, max_deviation = 0;
-	CompVHoughKhtPoss::const_iterator current;
-	for (size_t i = start_index + 1; i < end_index; ++i) {
-		current = begin + i;
+	for (; i < end_index; ++i, ++current) { // No need to include 'start_index' and 'end_index' -> max_deviation is equal to zero at theses indexes
 		deviation = std::abs((((start->x - current->x) * diffy) - ((start->y - current->y) * diffx)));
 		if (deviation > max_deviation) {
 			max_index = i;
