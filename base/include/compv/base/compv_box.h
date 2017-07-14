@@ -17,7 +17,7 @@
 COMPV_NAMESPACE_BEGIN() 
 
 #if !defined(kCompVBoxMemGrowth)
-#	define kCompVBoxMemGrowth		(1 << 20) // 1MB
+#	define kCompVBoxMemGrowth		(1 << 15) // 32KB
 #endif
 #if !defined(kCompVBoxItemMaxSize)
 #	define kCompVBoxItemMaxSize		128 // Box should be used for small object only
@@ -208,7 +208,7 @@ private:
 #if 0 // realloc (sloow)
 		m_pMem = (T*)CompVMem::realloc(m_pMem, newMemSize);
 #else
-		T* pNewMem = (T*)CompVMem::malloc(newMemSize); // some systems don't support realloc_aligned(), so we're copying our data ourself. Also, realloc() is slooow on some systems
+		T* pNewMem = reinterpret_cast<T*>(CompVMem::malloc(newMemSize)); // some systems don't support realloc_aligned(), so we're copying our data ourself. Also, realloc() is slooow on some systems
 		COMPV_CHECK_EXP_RETURN(!pNewMem, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 		// copy items
 		if (m_nSize) {
