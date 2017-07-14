@@ -26,36 +26,36 @@ public:
     virtual ~CompVMat();
 	COMPV_OBJECT_GET_ID(CompVMat);
 
-    COMPV_INLINE COMPV_MAT_TYPE type()const {
+    COMPV_ALWAYS_INLINE COMPV_MAT_TYPE type()const {
         return m_eType;
     }
 
-    COMPV_INLINE COMPV_SUBTYPE subType()const {
+    COMPV_ALWAYS_INLINE COMPV_SUBTYPE subType()const {
         return m_eSubType;
     }
 
-    COMPV_INLINE bool isEmpty()const {
+    COMPV_ALWAYS_INLINE bool isEmpty()const {
         return !ptr() || !rows() || !cols();
     }
 
-	COMPV_INLINE bool isPacked()const {
+	COMPV_ALWAYS_INLINE bool isPacked()const {
 		return m_bPlanePacked;
 	}
 
-	COMPV_INLINE bool isPlanar()const {
+	COMPV_ALWAYS_INLINE bool isPlanar()const {
 		return !m_bPlanePacked;
 	}
 
-    COMPV_INLINE size_t planeCount()const {
+    COMPV_ALWAYS_INLINE size_t planeCount()const {
         return static_cast<size_t>(m_nPlaneCount);
     }
 
-	COMPV_INLINE size_t dataSizeInBytes()const {
+	COMPV_ALWAYS_INLINE size_t dataSizeInBytes()const {
 		return m_nDataSize;
 	}
 
     template<class ptrType = const void>
-    COMPV_INLINE ptrType* ptr(size_t row = 0, size_t col = 0, int planeId = -1)const {
+    COMPV_ALWAYS_INLINE ptrType* ptr(size_t row = 0, size_t col = 0, int planeId = -1)const {
 		const int planeId_ = planeId < 0 ? 0 : planeId;
         if (planeId_ >= 0 && planeId_ < m_nPlaneCount) {
             return (row > m_nPlaneRows[planeId_] || col > m_nPlaneCols[planeId_]) ? NULL : (ptrType*)(static_cast<const uint8_t*>(m_pCompPtr[planeId_]) + (row * m_nPlaneStrideInBytes[planeId_]) + (col * m_nPlaneElmtInBytes[planeId_]));
@@ -64,7 +64,7 @@ public:
         return NULL;
     }
 
-    COMPV_INLINE size_t rows(int planeId = -1)const { // In samples
+    COMPV_ALWAYS_INLINE size_t rows(int planeId = -1)const { // In samples
         if (planeId < 0) {
             return m_nRows;
         }
@@ -75,7 +75,7 @@ public:
         return 0;
     }
 
-    COMPV_INLINE size_t cols(int planeId = -1)const { // In samples
+    COMPV_ALWAYS_INLINE size_t cols(int planeId = -1)const { // In samples
         if (planeId < 0) {
             return m_nCols;
         }
@@ -86,7 +86,7 @@ public:
         return 0;
     }
 
-    COMPV_INLINE size_t elmtInBytes(int planeId = -1) const {
+    COMPV_ALWAYS_INLINE size_t elmtInBytes(int planeId = -1) const {
 		if (planeId < 0) {
 			return m_nElmtInBytes;
 		}
@@ -97,7 +97,7 @@ public:
 		return 0;
     }
 
-    COMPV_INLINE size_t rowInBytes(int planeId = -1)const { // in bytes
+    COMPV_ALWAYS_INLINE size_t rowInBytes(int planeId = -1)const { // in bytes
         if (planeId < 0) {
             return m_nCols * m_nElmtInBytes;
         }
@@ -108,7 +108,7 @@ public:
         return 0;
     }
 
-    COMPV_INLINE size_t strideInBytes(int planeId = -1)const { // in bytes
+    COMPV_ALWAYS_INLINE size_t strideInBytes(int planeId = -1)const { // in bytes
         if (planeId < 0) {
             return m_nStrideInBytes;
         }
@@ -119,7 +119,7 @@ public:
         return 0;
     }
 
-	COMPV_INLINE COMPV_ERROR_CODE strideInElts(size_t &strideInElts, int planeId = 0) {
+	COMPV_ALWAYS_INLINE COMPV_ERROR_CODE strideInElts(size_t &strideInElts, int planeId = 0) {
 		COMPV_CHECK_EXP_RETURN(planeId >= m_nPlaneCount, COMPV_ERROR_CODE_E_OUT_OF_BOUND, "planeId out of bound index");
 		if (!m_bPlaneStrideInEltsIsIntegral[planeId]) {
 			COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_CALL, "Stride in elements not integral value");
@@ -128,7 +128,7 @@ public:
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
-    COMPV_INLINE size_t stride(int planeId = -1)const { // in samples
+    COMPV_ALWAYS_INLINE size_t stride(int planeId = -1)const { // in samples
         if (planeId < 0) {
             return m_nStrideInElts;
         }
@@ -139,7 +139,7 @@ public:
         return 0;
     }
 
-	COMPV_INLINE size_t planeSizeInBytes(int planeId = -1)const { // in bytes
+	COMPV_ALWAYS_INLINE size_t planeSizeInBytes(int planeId = -1)const { // in bytes
 		if (planeId <= 0) {
 			return m_nPlaneSizeInBytes[0];
 		}
@@ -150,30 +150,30 @@ public:
 		return 0;
 	}
 
-	COMPV_INLINE size_t alignment()const {
+	COMPV_ALWAYS_INLINE size_t alignment()const {
 		return m_nAlignV;
 	}
 
-	COMPV_INLINE bool isAligned(int alignv, int planeId = -1)const {
+	COMPV_ALWAYS_INLINE bool isAligned(int alignv, int planeId = -1)const {
 		const void* dataPtr = ptr<const void*>(0, 0, planeId);
 		const size_t dataStrideInBytes = strideInBytes(planeId);
 		return COMPV_IS_ALIGNED(dataPtr, alignv) && COMPV_IS_ALIGNED(dataStrideInBytes, alignv);
 	}
-	COMPV_INLINE bool isAlignedSSE(int planeId = -1)const {
+	COMPV_ALWAYS_INLINE bool isAlignedSSE(int planeId = -1)const {
 		return isAligned(COMPV_ALIGNV_SIMD_SSE, planeId);
 	};
-	COMPV_INLINE bool isAlignedAVX(int planeId = -1)const {
+	COMPV_ALWAYS_INLINE bool isAlignedAVX(int planeId = -1)const {
 		return isAligned(COMPV_ALIGNV_SIMD_AVX, planeId);
 	};
-	COMPV_INLINE bool isAlignedAVX512(int planeId = -1)const {
+	COMPV_ALWAYS_INLINE bool isAlignedAVX512(int planeId = -1)const {
 		return isAligned(COMPV_ALIGNV_SIMD_AVX512, planeId);
 	};
-	COMPV_INLINE bool isAlignedNEON(int planeId = -1)const {
+	COMPV_ALWAYS_INLINE bool isAlignedNEON(int planeId = -1)const {
 		return isAligned(COMPV_ALIGNV_SIMD_NEON, planeId);
 	};
 
 	template <typename RawType>
-	COMPV_INLINE bool isRawTypeMatch() const {
+	COMPV_ALWAYS_INLINE bool isRawTypeMatch() const {
 		if (m_eType == COMPV_MAT_TYPE_RAW) {
 			switch (m_eSubType) {
 			case COMPV_SUBTYPE_RAW_INT8: return std::is_same<RawType, int8_t>::value;
