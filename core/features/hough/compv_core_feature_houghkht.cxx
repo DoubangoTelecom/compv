@@ -158,7 +158,7 @@ COMPV_ERROR_CODE CompVHoughKht::set(int id, const void* valuePtr, size_t valueSi
 	}
 	case COMPV_HOUGH_SET_INT_MAXLINES: {
 		COMPV_CHECK_EXP_RETURN(valueSize != sizeof(int), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-		m_nMaxLines = static_cast<size_t>(reinterpret_cast<const int*>(valuePtr) <= 0 ? INT_MAX : *reinterpret_cast<const int*>(valuePtr));
+		m_nMaxLines = static_cast<size_t>(*reinterpret_cast<const int*>(valuePtr) <= 0 ? INT_MAX : *reinterpret_cast<const int*>(valuePtr));
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	case COMPV_HOUGHKHT_SET_FLT32_CLUSTER_MIN_DEVIATION: {

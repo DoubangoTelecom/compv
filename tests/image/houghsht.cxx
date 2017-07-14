@@ -17,7 +17,7 @@
 #define FILE_NAME_OPENGLBOOK			"opengl_programming_guide_8th_edition_200x258_gray.yuv"
 #define FILE_NAME_GRIOTS				"mandekalou_480x640_gray.yuv"
 
-#define LOOP_COUNT				1
+#define LOOP_COUNT				1000
 #define FILE_NAME				FILE_NAME_GRIOTS
 #define CANNY_THRESHOLD_LOW		0.8f
 #define CANNY_THRESHOLD_HIGH	CANNY_THRESHOLD_LOW*2.f	
