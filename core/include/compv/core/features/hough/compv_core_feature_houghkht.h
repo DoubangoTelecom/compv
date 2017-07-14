@@ -11,7 +11,6 @@
 #include "compv/core/compv_core_common.h"
 #include "compv/base/compv_memz.h"
 #include "compv/base/compv_features.h"
-#include "compv/base/compv_box.h"
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
@@ -35,16 +34,15 @@ struct CompVHoughKhtPos {
 	CompVHoughKhtPos() : y(0), x(0){}
 	CompVHoughKhtPos(int _y, int _x) : y(_y), x(_x) {}
 };
+typedef std::vector<CompVHoughKhtPos> CompVHoughKhtPoss;
+
 struct CompVHoughKhtString {
-	size_t begin;
-	size_t end;
-	CompVHoughKhtString() { begin = end = 0; }
-	CompVHoughKhtString(size_t _begin, size_t _end): begin(_begin), end(_end) {}
+    CompVHoughKhtPoss::const_iterator begin;
+	CompVHoughKhtPoss::const_iterator end;
+	CompVHoughKhtString() { }
+	CompVHoughKhtString(CompVHoughKhtPoss::const_iterator _begin, CompVHoughKhtPoss::const_iterator _end): begin(_begin), end(_end) {}
 };
 typedef std::vector<CompVHoughKhtString> CompVHoughKhtStrings;
-
-typedef CompVBox<CompVHoughKhtPos> CompVHoughKhtPosBox;
-typedef CompVPtr<CompVHoughKhtPosBox* > CompVHoughKhtPosBoxPtr;
 
 typedef CompVHoughKhtString CompVHoughKhtCluster;
 typedef std::vector<CompVHoughKhtCluster> CompVHoughKhtClusters;
@@ -114,7 +112,7 @@ private:
 	CompVMatPtr m_theta; // CompVMatPtr<KHT_TYP>
 	CompVMatPtr m_count; // CompVMatPtr<int32_t>
 	CompVMatPtr m_visited; // CompVMatPtr<uint8_t>
-	CompVHoughKhtPosBoxPtr m_stringsBox;
+	CompVHoughKhtPoss m_poss;
 	CompVHoughKhtStrings m_strings;
 };
 

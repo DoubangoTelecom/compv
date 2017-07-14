@@ -125,7 +125,8 @@ CompVHoughKht::CompVHoughKht(float rho COMPV_DEFAULT(1.f), float theta COMPV_DEF
 	, m_nMaxLines(INT_MAX)
 	, m_bOverrideInputEdges(false)
 {
-
+    m_poss.reserve(1000);
+    m_strings.reserve(1000);
 }
 
 CompVHoughKht:: ~CompVHoughKht()
@@ -206,13 +207,10 @@ COMPV_ERROR_CODE CompVHoughKht::process(const CompVMatPtr& edges, CompVHoughLine
 {
 	COMPV_CHECK_EXP_RETURN(!edges || edges->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Edges null or empty");
 	COMPV_CHECK_EXP_RETURN(edges->elmtInBytes() != sizeof(uint8_t) || edges->planeCount() != 1, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Edges must be 8U_1D (e.g. grayscale image)");
-
-	// Create strings box
-	COMPV_CHECK_CODE_RETURN(CompVHoughKhtPosBox::newObj(&m_stringsBox, 1000));
-
+    
 	lines.clear();
 	m_strings.clear();
-	m_stringsBox->reset();
+	m_poss.clear();
 
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
 	const size_t maxThreads = (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
@@ -692,28 +690,26 @@ COMPV_ERROR_CODE CompVHoughKht::linking_AppendixA(CompVMatPtr& edges, CompVHough
 
 // Algorithm 5 - Linking of neighboring edge pixels into strings
 void CompVHoughKht::linking_link_Algorithm5(uint8_t* edgesPtr, const size_t edgesWidth, const size_t edgesHeight, const size_t edgesStride, CompVHoughKhtStrings& strings, const int x_ref, const int y_ref)
-{	
-	CompVHoughKhtPos *new_pos;
+{
 	int x_seed, y_seed;
 	const int edgesWidthInt = static_cast<int>(edgesWidth);
 	const int edgesHeightInt = static_cast<int>(edgesHeight);
 	uint8_t *next_seed, *top, *bottom;
 	bool left_avail, right_avail;
 
-	const size_t begin_size = m_stringsBox->size();
+	const size_t begin_size = m_poss.size();
 
 	// {Find and add feature pixels to the end of the string}
 	x_seed = x_ref;
 	y_seed = y_ref;
 	next_seed = edgesPtr;
 	do {
-		m_stringsBox->new_item(&new_pos);
-		new_pos->x = x_seed, new_pos->y = y_seed;
+		m_poss.push_back(CompVHoughKhtPos(y_seed, x_seed));
 		*next_seed = 0x00; // !! edges are modified here (not thread-safe) !!
 		__linking_next_Algorithm6();
 	} while(1);
 
-	const size_t reverse_size = m_stringsBox->size();
+	const size_t reverse_size = m_poss.size();
 
 	// {Find and add feature pixels to the begin of the string}
 	x_seed = x_ref;
@@ -724,30 +720,29 @@ void CompVHoughKht::linking_link_Algorithm5(uint8_t* edgesPtr, const size_t edge
 	} while (0);
 	if (next_seed) {
 		do {
-			m_stringsBox->new_item(&new_pos);
-			new_pos->x = x_seed, new_pos->y = y_seed;
+			m_poss.push_back(CompVHoughKhtPos(y_seed, x_seed));
 			*next_seed = 0x00; // !! edges are modified here (not thread-safe) !!
 			__linking_next_Algorithm6();
 		} while (1);
 	}
 
-	const size_t end_size = m_stringsBox->size();
+	const size_t end_size = m_poss.size();
 	
 	if ((end_size - begin_size) >= m_cluster_min_size) {
 		const KHT_TYP edgesWidthDiv2 = static_cast<KHT_TYP>(edgesWidth) * KHT_TYP_HALF;
 		const KHT_TYP edgesHeightDiv2 = static_cast<KHT_TYP>(edgesHeight) * KHT_TYP_HALF;
-		CompVHoughKhtPos *a = m_stringsBox->ptr(begin_size), *b = m_stringsBox->end();
+        CompVHoughKhtPoss::iterator a = m_poss.begin() + begin_size, b = m_poss.end();
 		if (reverse_size > begin_size) {
 			std::reverse(a, a + (reverse_size - begin_size));
 		}
-		do {
-			a->cx = (a->x - edgesWidthDiv2);
-			a->cy = (a->y - edgesHeightDiv2);
-		} while (++a < b);
-		strings.push_back(CompVHoughKhtString(begin_size, end_size));
+        for (CompVHoughKhtPoss::iterator i = a; i < b; ++i) {
+			i->cx = (i->x - edgesWidthDiv2);
+			i->cy = (i->y - edgesHeightDiv2);
+		}
+		strings.push_back(CompVHoughKhtString(a, b));
 	}
 	else {
-		m_stringsBox->resize(begin_size);
+		m_poss.resize(begin_size);
 	}
 }
 
@@ -769,8 +764,8 @@ KHT_TYP CompVHoughKht::clusters_subdivision(CompVHoughKhtClusters& clusters, con
 
 	const size_t num_clusters_without_subs = clusters.size();
 
-	const CompVHoughKhtPos* start = m_stringsBox->ptr(string.begin + start_index);
-	const CompVHoughKhtPos* end = m_stringsBox->ptr(string.begin + end_index);
+    CompVHoughKhtPoss::const_iterator start = string.begin + start_index;
+	CompVHoughKhtPoss::const_iterator end = string.begin + end_index;
 	const int diffx = start->x - end->x;
 	const int diffy = start->y - end->y;
 	const KHT_TYP length = __compv_math_sqrt_fast(static_cast<KHT_TYP>((diffx * diffx) + (diffy * diffy)));
@@ -782,9 +777,9 @@ KHT_TYP CompVHoughKht::clusters_subdivision(CompVHoughKhtClusters& clusters, con
 	
 	size_t max_index = start_index;
 	int deviation, max_deviation = 0;
-	const CompVHoughKhtPos* current;
+	CompVHoughKhtPoss::const_iterator current;
 	for (size_t i = start_index + 1; i < end_index; ++i) {
-		current = m_stringsBox->ptr(string.begin + i);
+		current = string.begin + i;
 		deviation = std::abs((((start->x - current->x) * diffy) - ((start->y - current->y) * diffx)));
 		if (deviation > max_deviation) {
 			max_index = i;
@@ -881,7 +876,7 @@ COMPV_ERROR_CODE CompVHoughKht::voting_Algorithm2_Kernels(const CompVHoughKhtClu
 		void(*CompVHoughKhtKernelHeight)(const KHT_TYP* M_Eq14_r0, const KHT_TYP* M_Eq14_0, const KHT_TYP* M_Eq14_2, const KHT_TYP* n_scale,
 			KHT_TYP* sigma_rho_square, KHT_TYP* sigma_rho_times_theta, KHT_TYP* m2, KHT_TYP* sigma_theta_square,
 			KHT_TYP* height, KHT_TYP* heightMax1, compv_uscalar_t count) = CompVHoughKhtKernelHeight_1mpq_C;
-		const CompVHoughKhtPos *posc, *posb, *pose; // position, current, begin and end
+        CompVHoughKhtPoss::const_iterator posc, posb, pose; // position, current, begin and end
 		size_t n;
 		KHT_TYP mean_cx, mean_cy, cx, cy, cxx, cyy, cxy;
 		KHT_TYP n_scale; // 1.0 / (number of pixels in Sk) = (1.0 / n)
@@ -939,7 +934,7 @@ COMPV_ERROR_CODE CompVHoughKht::voting_Algorithm2_Kernels(const CompVHoughKhtClu
 			// computing the centroid
 			mean_cx = mean_cy = 0;
 			n = (cluster->end - cluster->begin);
-			posb = m_stringsBox->ptr(cluster->begin);
+			posb = cluster->begin;
 			pose = posb + n;
 			n_scale = KHT_TYP_ONE / static_cast<KHT_TYP>(n);
 			for (posc = posb; posc < pose; ++posc) {
