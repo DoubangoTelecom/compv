@@ -23,24 +23,27 @@ COMPV_NAMESPACE_BEGIN()
 struct CompVHoughKhtVote {
 	size_t rho_index; size_t theta_index;
 	int32_t count;
-	CompVHoughKhtVote() : rho_index(0), theta_index(0), count(0) {}
-	CompVHoughKhtVote(size_t _rho_index, size_t _theta_index, int32_t _count) : rho_index(_rho_index), theta_index(_theta_index), count(_count) {}
+	COMPV_ALWAYS_INLINE CompVHoughKhtVote() : rho_index(0), theta_index(0), count(0) {}
+	COMPV_ALWAYS_INLINE CompVHoughKhtVote(size_t _rho_index, size_t _theta_index, int32_t _count) : rho_index(_rho_index), theta_index(_theta_index), count(_count) {}
 };
 typedef std::vector<CompVHoughKhtVote> CompVHoughKhtVotes;
 
 struct CompVHoughKhtPos {
 	int y; int x;
 	KHT_TYP cy; KHT_TYP cx;
-	CompVHoughKhtPos() : y(0), x(0){}
-	CompVHoughKhtPos(int _y, int _x) : y(_y), x(_x) {}
+    COMPV_ALWAYS_INLINE CompVHoughKhtPos() { x = y = 0; cx = cy = 0;}
+	COMPV_ALWAYS_INLINE CompVHoughKhtPos(int _y, int _x, const KHT_TYP edgesHeightDiv2, const KHT_TYP edgesWidthDiv2) : y(_y), x(_x) {
+        cx = (x - edgesWidthDiv2);
+        cy = (y - edgesHeightDiv2);
+    }
 };
 typedef std::vector<CompVHoughKhtPos> CompVHoughKhtPoss;
 
 struct CompVHoughKhtString {
-    CompVHoughKhtPoss::const_iterator begin;
-	CompVHoughKhtPoss::const_iterator end;
-	CompVHoughKhtString() { }
-	CompVHoughKhtString(CompVHoughKhtPoss::const_iterator _begin, CompVHoughKhtPoss::const_iterator _end): begin(_begin), end(_end) {}
+    size_t begin;
+	size_t end;
+	COMPV_ALWAYS_INLINE CompVHoughKhtString() { }
+	COMPV_ALWAYS_INLINE CompVHoughKhtString(size_t _begin, size_t _end): begin(_begin), end(_end) {}
 };
 typedef std::vector<CompVHoughKhtString> CompVHoughKhtStrings;
 

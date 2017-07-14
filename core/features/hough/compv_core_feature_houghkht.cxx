@@ -125,8 +125,8 @@ CompVHoughKht::CompVHoughKht(float rho COMPV_DEFAULT(1.f), float theta COMPV_DEF
 	, m_nMaxLines(INT_MAX)
 	, m_bOverrideInputEdges(false)
 {
-    m_poss.reserve(1000);
-    m_strings.reserve(1000);
+    m_poss.reserve(500);
+    m_strings.reserve(500);
 }
 
 CompVHoughKht:: ~CompVHoughKht()
@@ -696,15 +696,20 @@ void CompVHoughKht::linking_link_Algorithm5(uint8_t* edgesPtr, const size_t edge
 	const int edgesHeightInt = static_cast<int>(edgesHeight);
 	uint8_t *next_seed, *top, *bottom;
 	bool left_avail, right_avail;
+    const KHT_TYP edgesWidthDiv2 = static_cast<KHT_TYP>(edgesWidth) * KHT_TYP_HALF;
+    const KHT_TYP edgesHeightDiv2 = static_cast<KHT_TYP>(edgesHeight) * KHT_TYP_HALF;
 
 	const size_t begin_size = m_poss.size();
+    
+    //!\\ Important: It's faster to compute 'cx' and 'cy' while setting 'x' and 'y'
+    // than doing it later using a for_each loop
 
 	// {Find and add feature pixels to the end of the string}
 	x_seed = x_ref;
 	y_seed = y_ref;
 	next_seed = edgesPtr;
 	do {
-		m_poss.push_back(CompVHoughKhtPos(y_seed, x_seed));
+        m_poss.push_back(CompVHoughKhtPos(y_seed, x_seed, edgesHeightDiv2, edgesWidthDiv2));
 		*next_seed = 0x00; // !! edges are modified here (not thread-safe) !!
 		__linking_next_Algorithm6();
 	} while(1);
@@ -720,7 +725,7 @@ void CompVHoughKht::linking_link_Algorithm5(uint8_t* edgesPtr, const size_t edge
 	} while (0);
 	if (next_seed) {
 		do {
-			m_poss.push_back(CompVHoughKhtPos(y_seed, x_seed));
+            m_poss.push_back(CompVHoughKhtPos(y_seed, x_seed, edgesHeightDiv2, edgesWidthDiv2));
 			*next_seed = 0x00; // !! edges are modified here (not thread-safe) !!
 			__linking_next_Algorithm6();
 		} while (1);
@@ -729,17 +734,11 @@ void CompVHoughKht::linking_link_Algorithm5(uint8_t* edgesPtr, const size_t edge
 	const size_t end_size = m_poss.size();
 	
 	if ((end_size - begin_size) >= m_cluster_min_size) {
-		const KHT_TYP edgesWidthDiv2 = static_cast<KHT_TYP>(edgesWidth) * KHT_TYP_HALF;
-		const KHT_TYP edgesHeightDiv2 = static_cast<KHT_TYP>(edgesHeight) * KHT_TYP_HALF;
-        CompVHoughKhtPoss::iterator a = m_poss.begin() + begin_size, b = m_poss.end();
+        CompVHoughKhtPoss::iterator a = m_poss.begin() + begin_size;
 		if (reverse_size > begin_size) {
 			std::reverse(a, a + (reverse_size - begin_size));
 		}
-        for (CompVHoughKhtPoss::iterator i = a; i < b; ++i) {
-			i->cx = (i->x - edgesWidthDiv2);
-			i->cy = (i->y - edgesHeightDiv2);
-		}
-		strings.push_back(CompVHoughKhtString(a, b));
+		strings.push_back(CompVHoughKhtString(begin_size, end_size));
 	}
 	else {
 		m_poss.resize(begin_size);
@@ -764,8 +763,9 @@ KHT_TYP CompVHoughKht::clusters_subdivision(CompVHoughKhtClusters& clusters, con
 
 	const size_t num_clusters_without_subs = clusters.size();
 
-    CompVHoughKhtPoss::const_iterator start = string.begin + start_index;
-	CompVHoughKhtPoss::const_iterator end = string.begin + end_index;
+    CompVHoughKhtPoss::const_iterator begin = m_poss.begin() + string.begin;
+    CompVHoughKhtPoss::const_iterator start = begin + start_index;
+	CompVHoughKhtPoss::const_iterator end = begin + end_index;
 	const int diffx = start->x - end->x;
 	const int diffy = start->y - end->y;
 	const KHT_TYP length = __compv_math_sqrt_fast(static_cast<KHT_TYP>((diffx * diffx) + (diffy * diffy)));
@@ -779,7 +779,7 @@ KHT_TYP CompVHoughKht::clusters_subdivision(CompVHoughKhtClusters& clusters, con
 	int deviation, max_deviation = 0;
 	CompVHoughKhtPoss::const_iterator current;
 	for (size_t i = start_index + 1; i < end_index; ++i) {
-		current = string.begin + i;
+		current = begin + i;
 		deviation = std::abs((((start->x - current->x) * diffy) - ((start->y - current->y) * diffx)));
 		if (deviation > max_deviation) {
 			max_index = i;
@@ -934,7 +934,7 @@ COMPV_ERROR_CODE CompVHoughKht::voting_Algorithm2_Kernels(const CompVHoughKhtClu
 			// computing the centroid
 			mean_cx = mean_cy = 0;
 			n = (cluster->end - cluster->begin);
-			posb = cluster->begin;
+			posb = m_poss.begin() + cluster->begin;
 			pose = posb + n;
 			n_scale = KHT_TYP_ONE / static_cast<KHT_TYP>(n);
 			for (posc = posb; posc < pose; ++posc) {
