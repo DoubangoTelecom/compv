@@ -43,7 +43,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON64
 	sf_x .req r7
 	sf_y .req r8
 
-	## Declare local vectors ##
+	// Declare local vectors //
     #define vecy0            v0
 	#define vecy1            v1
 	#define vecSfxTimes16    v2
