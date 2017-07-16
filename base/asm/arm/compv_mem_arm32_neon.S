@@ -55,7 +55,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMemCopy_Asm_NEON32
 	beq EndOfLoopCountWORD_CompVMemCopy_Asm_NEON32
     LoopCountWORD_CompVMemCopy_Asm_NEON32:
         ldr r11, [dataSrcPtr :32], #4
-        subs sizeWORD, sizeWORD, #4
+        subs sizeWORD, sizeWORD, #1
 		str r11, [dataDstPtr : 32], #4
         bne LoopCountWORD_CompVMemCopy_Asm_NEON32
 	EndOfLoopCountWORD_CompVMemCopy_Asm_NEON32:
@@ -125,7 +125,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMemZero_Asm_NEON32
 	beq EndOfLoopCountWORD_CompVMemZero_Asm_NEON32
     LoopCountWORD_CompVMemZero_Asm_NEON32:
         str zero, [dataDstPtr :32], #4
-        subs sizeWORD, sizeWORD, #4
+        subs sizeWORD, sizeWORD, #1
         bne LoopCountWORD_CompVMemZero_Asm_NEON32
 	EndOfLoopCountWORD_CompVMemZero_Asm_NEON32:
 
