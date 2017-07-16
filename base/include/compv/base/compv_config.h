@@ -278,6 +278,7 @@
 #endif
 
 #define COMPV_DEFAULT(v)
+#define COMPV_CONDITION(c)
 
 #define COMPV_OVERRIDE_DECL(base_class) override
 #define COMPV_OVERRIDE_IMPL(base_class)

@@ -12,6 +12,7 @@
 #include "compv/base/parallel/compv_mutex.h"
 #include "compv/base/parallel/compv_parallel.h"
 
+#include "compv/base/intrin/arm/compv_mem_intrin_neon.h"
 #include "compv/base/intrin/x86/compv_mem_intrin_sse2.h"
 #include "compv/base/intrin/x86/compv_mem_intrin_avx.h"
 
@@ -49,12 +50,18 @@ COMPV_EXTERNC void MemSetDword_Asm_X86(void* dstPtr, compv_scalar_t val, compv_u
 COMPV_EXTERNC void MemSetDword_Asm_X86_SSE2(void* dstPtr, compv_scalar_t val, compv_uscalar_t count);
 COMPV_EXTERNC void MemSetQword_Asm_X86_SSE2(void* dstPtr, compv_scalar_t val, compv_uscalar_t count);
 COMPV_EXTERNC void MemSetDQword_Asm_X86_SSE2(void* dstPtr, compv_scalar_t val, compv_uscalar_t count);
-#endif
+#endif /* COMPV_ARCH_X86 && COMPV_ASM */
+
 // X64
 #if COMPV_ARCH_X64 && COMPV_ASM
 COMPV_EXTERNC void MemCopyNTA_Asm_Aligned11_X64_SSE2(COMPV_ALIGNED(SSE) void* dstPtr, COMPV_ALIGNED(SSE) const void*srcPtr, compv_uscalar_t size);
 COMPV_EXTERNC void MemCopyNTA_Asm_Aligned11_X64_AVX(COMPV_ALIGNED(SSE) void* dstPtr, COMPV_ALIGNED(SSE) const void*srcPtr, compv_uscalar_t size);
-#endif
+#endif /* COMPV_ARCH_X64 && COMPV_ASM */
+
+// ARM32
+#if COMPV_ARCH_ARM32 && COMPV_ASM
+COMPV_EXTERNC void CompVMemCopy_Asm_NEON32(COMPV_ALIGNED(NEON) void* dstPtr, COMPV_ALIGNED(NEON) const void*srcPtr, compv_uscalar_t size);
+#endif /* COMPV_ARCH_ARM32 && COMPV_ASM */
 
 std::map<uintptr_t, compv_special_mem_t > CompVMem::s_Specials;
 CompVPtr<CompVMutex* > CompVMem::s_SpecialsMutex;
@@ -100,6 +107,11 @@ COMPV_ERROR_CODE CompVMem::copy(void* dstPtr, const void* srcPtr, size_t size)
 {
     COMPV_CHECK_EXP_RETURN(!dstPtr || !srcPtr || !size, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     CompVMemCopy cpy = CompVMemCopy_C;
+
+	if (size > 64 && CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(dstPtr) && COMPV_IS_ALIGNED_NEON(srcPtr)) {
+		COMPV_EXEC_IFDEF_INTRIN_ARM(cpy = CompVMemCopy_Intrin_NEON);
+		COMPV_EXEC_IFDEF_ASM_ARM32(cpy = CompVMemCopy_Asm_NEON32);
+	}
 
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
 	const size_t threadsCount = (threadDisp && !threadDisp->isMotherOfTheCurrentThread())

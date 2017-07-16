@@ -6,7 +6,7 @@
 # WebSite: http://compv.org                                             #
 #########################################################################
 #if defined(__arm__) && !defined(__aarch64__)
-.include "compv_common_arm32.S" @"
+.include "compv_common_arm32.S" @
 
 .data
 .align 4

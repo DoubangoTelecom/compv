@@ -103,6 +103,7 @@
     <ClInclude Include="..\include\compv\base\image\intrin\x86\compv_image_scale_bilinear_intrin_avx2.h" />
     <ClInclude Include="..\include\compv\base\image\intrin\x86\compv_image_scale_bilinear_intrin_sse41.h" />
     <ClInclude Include="..\include\compv\base\intrin\arm\compv_intrin_neon.h" />
+    <ClInclude Include="..\include\compv\base\intrin\arm\compv_mem_intrin_neon.h" />
     <ClInclude Include="..\include\compv\base\intrin\arm\compv_patch_intrin_neon.h" />
     <ClInclude Include="..\include\compv\base\intrin\x86\compv_intrin_avx.h" />
     <ClInclude Include="..\include\compv\base\intrin\x86\compv_intrin_sse.h" />
@@ -249,6 +250,7 @@
     <ClCompile Include="..\image\intrin\x86\compv_image_conv_to_rgbx_intrin_ssse3.cxx" />
     <ClCompile Include="..\image\intrin\x86\compv_image_scale_bilinear_intrin_avx2.cxx" />
     <ClCompile Include="..\image\intrin\x86\compv_image_scale_bilinear_intrin_sse41.cxx" />
+    <ClCompile Include="..\intrin\arm\compv_mem_intrin_neon.cxx" />
     <ClCompile Include="..\intrin\arm\compv_patch_intrin_neon.cxx" />
     <ClCompile Include="..\intrin\x86\compv_mem_intrin_avx.cxx" />
     <ClCompile Include="..\intrin\x86\compv_mem_intrin_sse2.cxx" />
@@ -359,6 +361,19 @@
     </GAS>
     <GAS Include="..\asm\arm\compv_patch_arm64_neon.S">
       <FileType>Document</FileType>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x86'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+    </GAS>
+    <GAS Include="..\asm\arm\compv_mem_arm32_neon.S">
+      <FileType>Document</FileType>
+      <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ArmNeon>
+      <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ArmNeon>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>

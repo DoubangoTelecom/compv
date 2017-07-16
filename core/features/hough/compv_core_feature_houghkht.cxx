@@ -5,6 +5,7 @@
 * WebSite: http://compv.org
 */
 #include "compv/core/features/hough/compv_core_feature_houghkht.h"
+#include "compv/base/time/compv_time.h"
 #include "compv/base/image/compv_image.h"
 #include "compv/base/math/compv_math_utils.h"
 #include "compv/base/math/compv_math_eigen.h"
@@ -332,7 +333,10 @@ COMPV_ERROR_CODE CompVHoughKht::process(const CompVMatPtr& edges, CompVHoughLine
 #else
 			COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&m_edges, COMPV_SUBTYPE_PIXELS_Y, edges->cols(), edges->rows(), edges->stride()));
 			COMPV_CHECK_EXP_RETURN(m_edges->dataSizeInBytes() != edges->dataSizeInBytes(), COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
+			//uint64_t timeStart = CompVTime::nowMillis();
 			COMPV_CHECK_CODE_RETURN(CompVMem::copy(m_edges->ptr<void>(), edges->ptr<const void*>(), edges->dataSizeInBytes()));
+			//uint64_t timeEnd = CompVTime::nowMillis();
+			//COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "HoughKht Copy time = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 #endif
 		}
 
@@ -734,8 +738,8 @@ void CompVHoughKht::linking_link_Algorithm5(uint8_t* edgesPtr, const size_t edge
 	const size_t end_size = m_poss.size();
 	
 	if ((end_size - begin_size) >= m_cluster_min_size) {
-        CompVHoughKhtPoss::iterator a = m_poss.begin() + begin_size;
 		if (reverse_size > begin_size) {
+			CompVHoughKhtPoss::iterator a = m_poss.begin() + begin_size;
 			std::reverse(a, a + (reverse_size - begin_size));
 		}
 		strings.push_back(CompVHoughKhtString(begin_size, end_size));
@@ -1223,7 +1227,6 @@ COMPV_ERROR_CODE CompVHoughKht::peaks_Section3_4_Lines(CompVHoughLineVector& lin
 		}
 		*pvisited = 0xff;
 	}
-
 	return COMPV_ERROR_CODE_S_OK;
 }
 
