@@ -40,7 +40,7 @@ COMPV_NAMESPACE_BEGIN()
 // COMPV_MEM_CPY_SIZE_MIN_SIMD must be > 32 (default alignment)
 #define COMPV_MEM_CPY_SIZE_MIN_SIMD 32*16 // no real gain on small sizes
 
-#define COMPV_MEM_CPY_COUNT_MIN_SAMPLES_PER_THREAD (4096 * 100) // Must be multiple on 4096 (cache friendly)
+#define COMPV_MEM_CPY_COUNT_MIN_SAMPLES_PER_THREAD (4096 * 5) // Should be multiple of 4096 (cache friendly)
 
 // X86
 #if COMPV_ARCH_X86 && COMPV_ASM
@@ -122,8 +122,7 @@ COMPV_ERROR_CODE CompVMem::copy(void* dstPtr, const void* srcPtr, size_t size)
 		: 1;
 	if (threadsCount > 1) {
 		size_t threadIdx, index;
-		const size_t countAny = (size / threadsCount);
-		const size_t countLast = countAny + (size % threadsCount);
+		const size_t countAny = (size / threadsCount) & -COMPV_ALIGNV_SIMD_DEFAULT; // make sure it's SIMD-aligned so that 'mt_dstPtr' and 'mt_srcPtr' remain aligned for each thread
 		auto funcPtr = [&](uint8_t* mt_dstPtr, const uint8_t* mt_srcPtr, size_t mt_size) -> COMPV_ERROR_CODE {
 			cpy(reinterpret_cast<void*>(mt_dstPtr), reinterpret_cast<const void*>(mt_srcPtr), mt_size);
 			return COMPV_ERROR_CODE_S_OK;
@@ -134,8 +133,8 @@ COMPV_ERROR_CODE CompVMem::copy(void* dstPtr, const void* srcPtr, size_t size)
 		for (threadIdx = 0, index = 0; threadIdx < (threadsCount - 1); ++threadIdx, index += countAny) {
 			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, &mt_dstPtr[index], &mt_srcPtr[index], countAny), taskIds));
 		}
-		if (countLast) {
-			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, &mt_dstPtr[index], &mt_srcPtr[index], countLast), taskIds));
+		if (index < size) {
+			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, &mt_dstPtr[index], &mt_srcPtr[index], (size - index)), taskIds));
 		}
 		COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
 	}
