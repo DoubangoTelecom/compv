@@ -35,7 +35,7 @@
 #	define MD5_RCP_UYVY422	"b38781fa9c086b35281399b23a1809cd"
 #endif
 
-#define COMPV_loopCount											1
+#define COMPV_loopCount											1000
 
 static const struct compv_test_image_chroma_conv_test {
 	COMPV_SUBTYPE srcPixelFormat;

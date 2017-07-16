@@ -165,8 +165,8 @@ static COMPV_INLINE __m128i _mm_mullo_epi32_SSE2(const __m128i &a, const __m128i
 
 #define COMPV_VLD4_U8_SSSE3 COMPV_VLD4_I8_SSSE3
 
-// Interleave "vecLane0", "vecLane1", "vecLane3" and "vecLane4" then store into "ptr"
-// !!! "vecLane0", "vecLane1", "vecLane3" and "vecLane4" NOT modified !!!
+// Interleave "vecLane0", "vecLane1", "vecLane2" and "vecLane3" then store into "ptr"
+// !!! "vecLane0", "vecLane1", "vecLane2" and "vecLane3" NOT modified !!!
 // e.g. [RRRR], [GGGG], [BBBB], [AAAA] -> RGBARGBARGBA
 #define COMPV_VST4_I8_SSE2(ptr, vecLane0, vecLane1, vecLane2, vecLane3, vectmp0, vectmp1) { \
 		vectmp0 = _mm_unpacklo_epi8(vecLane0, vecLane1); \

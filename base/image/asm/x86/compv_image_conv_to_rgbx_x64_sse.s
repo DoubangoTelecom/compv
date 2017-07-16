@@ -14,7 +14,25 @@
 
 COMPV_YASM_DEFAULT_REL
 
+%define rgb24Family		0
+%define rgba32Family	1
+
+%define yuv420pFamily	2
+%define yuv422pFamily	3
+%define yuv444pFamily	4
+%define nv12Family		5
+%define nv21Family		6
+%define yuyv422Family	7
+%define uyvy422Family	8
+
 global sym(CompVImageConvYuv420p_to_Rgb24_Asm_X64_SSSE3)
+global sym(CompVImageConvYuv420p_to_Rgba32_Asm_X64_SSE2)
+global sym(CompVImageConvYuv422p_to_Rgb24_Asm_X64_SSSE3)
+global sym(CompVImageConvYuv422p_to_Rgba32_Asm_X64_SSE2)
+global sym(CompVImageConvNv12_to_Rgb24_Asm_X64_SSSE3)
+global sym(CompVImageConvNv12_to_Rgba32_Asm_X64_SSSE3)
+global sym(CompVImageConvNv21_to_Rgb24_Asm_X64_SSSE3)
+global sym(CompVImageConvNv21_to_Rgba32_Asm_X64_SSSE3)
 
 section .data
 	extern sym(k16_i16)
@@ -26,6 +44,7 @@ section .data
 	extern sym(kShuffleEpi8_Interleave8uL3_Step0_i32)
 	extern sym(kShuffleEpi8_Interleave8uL3_Step1_i32)
 	extern sym(kShuffleEpi8_Interleave8uL3_Step2_i32)
+	extern sym(kShuffleEpi8_Deinterleave8uL2_i32)
 
 section .text
 
@@ -37,10 +56,20 @@ section .text
 ; arg(4) -> compv_uscalar_t width
 ; arg(5) -> compv_uscalar_t height
 ; arg(6) -> COMPV_ALIGNED(SSE) compv_uscalar_t stride
-sym(CompVImageConvYuv420p_to_Rgb24_Asm_X64_SSSE3):
+; %1 -> rgbxFamily
+; %2 -> yuvFamily
+%macro CompVImageConvYuvPlanar_to_Rgbx_Macro_X64 2
+	%define rgbxFamily	%1
+	%define yuvFamily	%2
 	push rbp
 	mov rbp, rsp
-	COMPV_YASM_SHADOW_ARGS_TO_STACK 7
+	%if yuvFamily == yuv420pFamily || yuvFamily == yuv422pFamily
+		COMPV_YASM_SHADOW_ARGS_TO_STACK 7
+	%elif yuvFamily == nv12Family || yuvFamily == nv21Family
+		COMPV_YASM_SHADOW_ARGS_TO_STACK 6
+	%else
+		%error 'Not implemented'
+	%endif
 	COMPV_YASM_SAVE_XMM 15
 	push rsi
 	push rdi
@@ -50,14 +79,41 @@ sym(CompVImageConvYuv420p_to_Rgb24_Asm_X64_SSSE3):
 	push r14
 	;; end prolog ;;
 
+	%if rgbxFamily == rgb24Family
+		%define rgbxn 3
+	%elif rgbxFamily == rgba32Family
+		%define rgbxn 4
+	%else
+		%error 'Not implemented'
+	%endif
+
+	%if yuvFamily == yuv420pFamily
+		%define uv_step			8
+		%define uv_inc_check	1
+	%elif yuvFamily == yuv422pFamily
+		%define uv_step			8
+		%define uv_inc_check	0
+	%elif yuvFamily == nv12Family || yuvFamily == nv21Family
+		%define uv_step			16
+		%define uv_inc_check	1
+	%else
+		%error 'Not implemented'
+	%endif
+
 	%define yPtr		rax
-	%define uPtr		rbx
-	%define vPtr		rdx	
+	%if yuvFamily == yuv420pFamily || yuvFamily == yuv422pFamily
+		%define uPtr		rbx
+		%define vPtr		rdx
+	%elif yuvFamily == nv12Family || yuvFamily == nv21Family
+		%define uvPtr		rbx
+	%else
+		%error 'Not implemented'
+	%endif
 	%define rgbPtr		rcx
 	%define width		rsi
 	%define height		rdi
 	%define stride		r8
-	%define strideRGB	r9
+	%define strideRGBx	r9
 	%define strideUV	r10
 	%define i			r11
 	%define k			r12
@@ -82,26 +138,50 @@ sym(CompVImageConvYuv420p_to_Rgb24_Asm_X64_SSSE3):
 	%define vecB		xmm15
 
 	mov yPtr, arg(0)
-	mov uPtr, arg(1)
-	mov vPtr, arg(2)
-	mov rgbPtr, arg(3)
-	mov width, arg(4)
-	mov height, arg(5)
-	mov stride, arg(6)
-
+	%if yuvFamily == yuv420pFamily || yuvFamily == yuv422pFamily
+		mov uPtr, arg(1)
+		mov vPtr, arg(2)
+		mov rgbPtr, arg(3)
+		mov width, arg(4)
+		mov height, arg(5)
+		mov stride, arg(6)
+	%elif yuvFamily == nv12Family || yuvFamily == nv21Family
+		mov uvPtr, arg(1)
+		mov rgbPtr, arg(2)
+		mov width, arg(3)
+		mov height, arg(4)
+		mov stride, arg(5)
+	%else
+		%error 'Not implemented'
+	%endif
+	
 	prefetcht0 [yPtr + (COMPV_YASM_CACHE_LINE_SIZE*0)]
 	prefetcht0 [yPtr + (COMPV_YASM_CACHE_LINE_SIZE*1)]
 	prefetcht0 [yPtr + (COMPV_YASM_CACHE_LINE_SIZE*2)]
-	prefetcht0 [uPtr + (COMPV_YASM_CACHE_LINE_SIZE*0)]
-	prefetcht0 [uPtr + (COMPV_YASM_CACHE_LINE_SIZE*1)]
-	prefetcht0 [uPtr + (COMPV_YASM_CACHE_LINE_SIZE*2)]
-	prefetcht0 [vPtr + (COMPV_YASM_CACHE_LINE_SIZE*0)]
-	prefetcht0 [vPtr + (COMPV_YASM_CACHE_LINE_SIZE*1)]
-	prefetcht0 [vPtr + (COMPV_YASM_CACHE_LINE_SIZE*2)]
+	%if yuvFamily == yuv420pFamily || yuvFamily == yuv422pFamily
+		prefetcht0 [uPtr + (COMPV_YASM_CACHE_LINE_SIZE*0)]
+		prefetcht0 [uPtr + (COMPV_YASM_CACHE_LINE_SIZE*1)]
+		prefetcht0 [uPtr + (COMPV_YASM_CACHE_LINE_SIZE*2)]
+		prefetcht0 [vPtr + (COMPV_YASM_CACHE_LINE_SIZE*0)]
+		prefetcht0 [vPtr + (COMPV_YASM_CACHE_LINE_SIZE*1)]
+		prefetcht0 [vPtr + (COMPV_YASM_CACHE_LINE_SIZE*2)]
+	%elif yuvFamily == nv12Family || yuvFamily == nv21Family
+		prefetcht0 [uvPtr + (COMPV_YASM_CACHE_LINE_SIZE*0)]
+		prefetcht0 [uvPtr + (COMPV_YASM_CACHE_LINE_SIZE*1)]
+		prefetcht0 [uvPtr + (COMPV_YASM_CACHE_LINE_SIZE*2)]
+	%else
+		%error 'Not implemented'
+	%endif
 
-	lea strideUV, [stride + 1]
-	lea strideRGB, [stride + (stride * 2)]
-	shr strideUV, 1
+	lea strideRGBx, [stride * rgbxn]
+	mov strideUV, stride
+	%if yuvFamily == yuv420pFamily || yuvFamily == yuv422pFamily
+		shr strideUV, 1
+	%elif yuvFamily == nv12Family || yuvFamily == nv21Family
+		; strideUV =  stride
+	%else
+		%error 'Not implemented'
+	%endif
 
 	pxor vecZero, vecZero
 	movdqa vec16, [sym(k16_i16)]
@@ -117,56 +197,77 @@ sym(CompVImageConvYuv420p_to_Rgb24_Asm_X64_SSSE3):
 	xor j, j
 	.LoopHeight:
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-		; for (i = 0, k = 0, l = 0; i < width; i += 16, k += 48, l += 8)
+		; for (i = 0, k = 0, l = 0; i < width; i += 16, k += rgbx_step, l += uv_step)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		xor i, i
 		xor l, l
 		.LoopWidth:
 			; Load samples ;
 			prefetcht0 [yPtr + (COMPV_YASM_CACHE_LINE_SIZE*3)]
-			prefetcht0 [uPtr + (COMPV_YASM_CACHE_LINE_SIZE*3)]
-			prefetcht0 [vPtr + (COMPV_YASM_CACHE_LINE_SIZE*3)]
-			lea k, [i*3] ; ARM NEON add k, i, i SHL #1
+			%if yuvFamily == yuv420pFamily || yuvFamily == yuv422pFamily
+				prefetcht0 [uPtr + (COMPV_YASM_CACHE_LINE_SIZE*3)]
+				prefetcht0 [vPtr + (COMPV_YASM_CACHE_LINE_SIZE*3)]
+			%elif yuvFamily == nv12Family || yuvFamily == nv21Family
+				prefetcht0 [uvPtr + (COMPV_YASM_CACHE_LINE_SIZE*3)]
+			%else
+				%error 'Not implemented'
+			%endif
+			lea k, [i*rgbxn]
 			movdqa vecYlow, [yPtr + i*COMPV_YASM_UINT8_SZ_BYTES]
-			movq vecU, [uPtr + l*COMPV_YASM_UINT8_SZ_BYTES]
-			movq vecV, [vPtr + l*COMPV_YASM_UINT8_SZ_BYTES]
+			%if yuvFamily == yuv420pFamily || yuvFamily == yuv422pFamily
+				movq vecU, [uPtr + l*COMPV_YASM_UINT8_SZ_BYTES]
+				movq vecV, [vPtr + l*COMPV_YASM_UINT8_SZ_BYTES]
+			%elif yuvFamily == nv12Family
+				movdqa vecU, [uvPtr + l*COMPV_YASM_UINT8_SZ_BYTES]
+				pshufb vecU, [sym(kShuffleEpi8_Deinterleave8uL2_i32)]
+			%elif yuvFamily == nv21Family
+				movdqa vecV, [uvPtr + l*COMPV_YASM_UINT8_SZ_BYTES]
+				pshufb vecV, [sym(kShuffleEpi8_Deinterleave8uL2_i32)]
+			%else
+				%error 'Not implemented'
+			%endif
+			
 			add i, 16
-			add l, 8
+			add l, uv_step
 			cmp i, width
 
-			; Convert to I16 ;
+			%if yuvFamily == nv12Family
+				movdqa vecV, vecU
+				punpckhqdq vecV, vecV
+			%elif yuvFamily == nv21Family
+				movdqa vecU, vecV
+				punpckhqdq vecU, vecU
+			%endif
+
 			movdqa vecYhigh, vecYlow
 			punpcklbw vecYlow, vecZero
 			punpckhbw vecYhigh, vecZero
 			punpcklbw vecU, vecZero
 			punpcklbw vecV, vecZero
-
-			; Compute Yp, Up, Vp ;
 			psubw vecYlow, vec16
 			psubw vecYhigh, vec16
 			psubw vecU, vec127
 			psubw vecV, vec127
-
-			; Compute (37Yp), (51Vp) and (65Up) ;
 			pmullw vecYlow, vec37
 			movdqa vec0, vecV
 			pmullw vec0, vec51
-			pmullw vecYhigh, vec37
 			movdqa vec1, vecU
-			pmullw vec1, vec65
-
-			; Compute R = (37Yp + 0Up + 51Vp) >> 5 ;
+			pmullw vecYhigh, vec37
 			movdqa vecR, vec0
+			pmullw vec1, vec65
 			punpcklwd vecR, vecR
 			punpckhwd vec0, vec0
 			paddw vecR, vecYlow
 			paddw vec0, vecYhigh
 			psraw vecR, 5
 			psraw vec0, 5
-			packuswb vecR, vec0
-
-			; B = (37Yp + 65Up + 0Vp) >> 5 ;
 			movdqa vecB, vec1
+			packuswb vecR, vec0
+			movdqa vec0, vecU
+			punpcklwd vec0, vecV
+			punpckhwd vecU, vecV
+			pmaddwd vec0, vec13_26
+			pmaddwd vecU, vec13_26
 			punpcklwd vecB, vecB
 			punpckhwd vec1, vec1
 			paddw vecB, vecYlow
@@ -174,13 +275,6 @@ sym(CompVImageConvYuv420p_to_Rgb24_Asm_X64_SSSE3):
 			psraw vecB, 5
 			psraw vec1, 5
 			packuswb vecB, vec1
-
-			; Compute G = (37Y' - 13U' - 26V') >> 5 = (37Y' - (13U' + 26V')) >> 5 ;
-			movdqa vec0, vecU
-			punpcklwd vec0, vecV
-			punpckhwd vecU, vecV
-			pmaddwd vec0, vec13_26
-			pmaddwd vecU, vec13_26
 			packssdw vec0, vecU
 			movdqa vec1, vec0
 			punpcklwd vec0, vec0
@@ -192,34 +286,68 @@ sym(CompVImageConvYuv420p_to_Rgb24_Asm_X64_SSSE3):
 			packuswb vecYlow, vecYhigh ; vecYlow contains vecG
 
 			; Store result ;
-			COMPV_VST3_I8_SSSE3 rgbPtr + k, vecR, vecYlow, vecB, vec0, vec1, vec2
+			%if rgbxFamily == rgb24Family
+				COMPV_VST3_U8_SSSE3 rgbPtr + k, vecR, vecYlow, vecB, vec0, vec1, vec2
+			%elif rgbxFamily == rgba32Family
+				pcmpeqb vec0, vec0 ; vecA
+				COMPV_VST4_U8_SSE2 rgbPtr + k, vecR, vecYlow, vecB, vec0, vec1, vec2
+			%else
+				%error 'Not implemented'
+			%endif
 			
 			;; end-of-LoopWidth ;;
 			jl .LoopWidth
 
-		mov i, j
+		%if uv_inc_check
+			mov i, j
+		%endif
 		inc j
-		and i, 1
+		%if uv_inc_check
+			and i, 1
+		%endif
 		add yPtr, stride
-		neg i
-		add rgbPtr, strideRGB
-		and i, strideUV
+		%if uv_inc_check
+			neg i
+		%endif
+		add rgbPtr, strideRGBx
+		%if uv_inc_check
+			and i, strideUV
+		%endif
 		cmp j, height
-		lea uPtr, [uPtr + i]
-		lea vPtr, [vPtr + i]
+		%if uv_inc_check
+			%if yuvFamily == nv12Family || yuvFamily == nv21Family
+				lea uvPtr, [uvPtr + i]
+			%else
+				lea uPtr, [uPtr + i]
+				lea vPtr, [vPtr + i]
+			%endif
+		%else
+			lea uPtr, [uPtr + strideUV]
+			lea vPtr, [vPtr + strideUV]
+		%endif
 				
 		;; end-of-LoopHeight ;;
 		jl .LoopHeight
 
 
+	%undef rgbxn
+	%undef uv_step
+	%undef uv_inc_check
+
 	%undef yPtr
-	%undef uPtr
-	%undef vPtr
+	%if yuvFamily == yuv420pFamily || yuvFamily == yuv422pFamily
+		%undef uPtr
+		%undef vPtr
+	%elif yuvFamily == nv12Family || yuvFamily == nv21Family
+		%undef uvPtr
+	%else
+		%error 'Not implemented'
+	%endif
 	%undef rgbPtr
 	%undef width
 	%undef height
 	%undef stride
-	%undef strideRGB
+	%undef strideRGBx
 	%undef strideUV
 	%undef i
 	%undef k			
@@ -253,6 +381,41 @@ sym(CompVImageConvYuv420p_to_Rgb24_Asm_X64_SSSE3):
 	mov rsp, rbp
 	pop rbp
 	ret
+	%undef rgbxFamily
+	%undef yuvFamily
+%endmacro
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(CompVImageConvYuv420p_to_Rgb24_Asm_X64_SSSE3):
+	CompVImageConvYuvPlanar_to_Rgbx_Macro_X64 rgb24Family, yuv420pFamily
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(CompVImageConvYuv420p_to_Rgba32_Asm_X64_SSE2):
+	CompVImageConvYuvPlanar_to_Rgbx_Macro_X64 rgba32Family, yuv420pFamily
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(CompVImageConvYuv422p_to_Rgb24_Asm_X64_SSSE3):
+	CompVImageConvYuvPlanar_to_Rgbx_Macro_X64 rgb24Family, yuv422pFamily
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(CompVImageConvYuv422p_to_Rgba32_Asm_X64_SSE2):
+	CompVImageConvYuvPlanar_to_Rgbx_Macro_X64 rgba32Family, yuv422pFamily
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(CompVImageConvNv12_to_Rgb24_Asm_X64_SSSE3):
+	CompVImageConvYuvPlanar_to_Rgbx_Macro_X64 rgb24Family, nv12Family
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(CompVImageConvNv12_to_Rgba32_Asm_X64_SSSE3):
+	CompVImageConvYuvPlanar_to_Rgbx_Macro_X64 rgba32Family, nv12Family
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(CompVImageConvNv21_to_Rgb24_Asm_X64_SSSE3):
+	CompVImageConvYuvPlanar_to_Rgbx_Macro_X64 rgb24Family, nv21Family
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(CompVImageConvNv21_to_Rgba32_Asm_X64_SSSE3):
+	CompVImageConvYuvPlanar_to_Rgbx_Macro_X64 rgba32Family, nv21Family
 
 
 %endif ; COMPV_YASM_ABI_IS_64BIT
