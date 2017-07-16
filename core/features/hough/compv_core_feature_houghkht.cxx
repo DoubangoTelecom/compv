@@ -381,40 +381,31 @@ COMPV_ERROR_CODE CompVHoughKht::process(const CompVMatPtr& edges, CompVHoughLine
 		COMPV_CHECK_CODE_NOP(m_count->zero_all()); // required before calling 'voting_Algorithm2_Count'
 	}
 	
-#if 0 // Doesn't make sense and is slooo
-	threadsCountVotes = CompVThreadDispatcher::guessNumThreadsDividingAcrossY(1, kernels_all.size(), maxThreads, 1); // voting_Algorithm2_Count calls Algorithm4 which is very CPU intensive -> use all available threads
+#if COMPV_OS_WINDOWS // Using "InterlockedExchangeAdd"
+	threadsCountVotes = (sizeof(LONG) == sizeof(int32_t))
+		? CompVThreadDispatcher::guessNumThreadsDividingAcrossY(1, kernels_all.size(), maxThreads, 1) // voting_Algorithm2_Count calls Algorithm4 which is very CPU intensive -> use all available threads
+		: 1;
+#elif defined(__GNUC__) // Using "__sync_fetch_and_add"
+	threadsCountVotes = CompVThreadDispatcher::guessNumThreadsDividingAcrossY(1, kernels_all.size(), maxThreads, 1);
+#else
+	threadsCountVotes = 1;
+#endif
 	if (threadsCountVotes > 1) {
 		countAny = (kernels_all.size() / threadsCountVotes);
 		countLast = countAny + (kernels_all.size() % threadsCountVotes);
-		std::vector<CompVMemZeroInt32Ptr > voting_counts_mt;
-		voting_counts_mt.resize(threadsCountVotes - 1);
 		taskIds.clear();
-		auto funcPtrVotingCount = [&](size_t index, CompVHoughKhtKernels::const_iterator kernels_begin, CompVHoughKhtKernels::const_iterator kernels_end, const KHT_TYP Gs) -> COMPV_ERROR_CODE {
-			if (index) {
-				CompVMemZeroInt32Ptr& counts = voting_counts_mt[index - 1];
-				COMPV_CHECK_CODE_RETURN(CompVMemZeroInt32::newObj(&counts, m_count->rows(), m_count->cols(), m_count->stride()));
-				COMPV_CHECK_CODE_RETURN(voting_Algorithm2_Count(counts->ptr(), counts->stride(), kernels_begin, kernels_end, m_dGS));
-			}
-			else {
-				COMPV_CHECK_CODE_RETURN(voting_Algorithm2_Count(m_count->ptr<int32_t>(), m_count->stride(), kernels_begin, kernels_end, m_dGS));
-			}
+		auto funcPtrVotingCount = [&](CompVHoughKhtKernels::const_iterator kernels_begin, CompVHoughKhtKernels::const_iterator kernels_end, const KHT_TYP Gs) -> COMPV_ERROR_CODE {
+			COMPV_CHECK_CODE_RETURN(voting_Algorithm2_Count(m_count->ptr<int32_t>(), m_count->stride(), kernels_begin, kernels_end, m_dGS));
 			return COMPV_ERROR_CODE_S_OK;
 		};
 		CompVHoughKhtKernels::const_iterator kernels_begin = kernels_all.begin();
 		for (threadIdx = 0; threadIdx < threadsCountVotes - 1; ++threadIdx, kernels_begin += countAny) {
-			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrVotingCount, threadIdx, kernels_begin, (kernels_begin + countAny), m_dGS), taskIds));
+			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrVotingCount, kernels_begin, (kernels_begin + countAny), m_dGS), taskIds));
 		}
-		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrVotingCount, (threadsCountVotes - 1), kernels_begin, (kernels_begin + countLast), m_dGS), taskIds));
-		COMPV_CHECK_CODE_RETURN(threadDisp->waitOne(taskIds[0])); // wait for m_count
-		for (threadIdx = 1; threadIdx < threadsCountVotes; ++threadIdx) {
-			COMPV_CHECK_CODE_RETURN(threadDisp->waitOne(taskIds[threadIdx]));
-			COMPV_CHECK_CODE_RETURN((CompVMathUtils::sum2<int32_t, int32_t>(m_count->ptr<const int32_t>(), voting_counts_mt[threadIdx - 1]->ptr(), m_count->ptr<int32_t>(),
-				m_count->cols(), m_count->rows(), m_count->stride())));
-		}
+		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrVotingCount, kernels_begin, (kernels_begin + countLast), m_dGS), taskIds));
+		COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
 	}
-	else
-#endif
-	{
+	else {
 		COMPV_CHECK_CODE_RETURN(voting_Algorithm2_Count(m_count->ptr<int32_t>(), m_count->stride(), kernels_all.begin(), kernels_all.end(), m_dGS));
 	}
 
@@ -1118,7 +1109,13 @@ void CompVHoughKht::vote_Algorithm4(int32_t* countsPtr, const size_t countsStrid
 			ki = (k * inc_rho);
 			z = ((rho * rho) * sigma_rho_square_scale) - (krho) + w;
 			while (((rho_index <= rho_size) && (votes = COMPV_MATH_ROUNDFU_2_NEAREST_INT(((x * __compv_math_exp_fast_small(-z * y)) * scale), int32_t)) > 0)) {
+#if COMPV_OS_WINDOWS
+				InterlockedExchangeAdd(reinterpret_cast<LONG*>(&pcount[rho_index]), static_cast<LONG>(votes)); // we're alredy testing that "(sizeof(LONG) == sizeof(int32_t))"
+#elif defined(__GNUC__)
+				__sync_fetch_and_add(&pcount[rho_index], votes);
+#else
 				pcount[rho_index] += votes;
+#endif
 				rho_index += inc_rho_index;
 				rho += inc_rho;
 				krho += ki;

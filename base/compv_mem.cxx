@@ -64,6 +64,12 @@ COMPV_EXTERNC void CompVMemCopy_Asm_NEON32(COMPV_ALIGNED(NEON) void* dstPtr, COM
 COMPV_EXTERNC void CompVMemZero_Asm_NEON32(COMPV_ALIGNED(NEON) void* dstPtr, compv_uscalar_t size);
 #endif /* COMPV_ARCH_ARM32 && COMPV_ASM */
 
+// ARM64
+#if COMPV_ARCH_ARM64 && COMPV_ASM
+COMPV_EXTERNC void CompVMemCopy_Asm_NEON64(COMPV_ALIGNED(NEON) void* dstPtr, COMPV_ALIGNED(NEON) const void*srcPtr, compv_uscalar_t size);
+COMPV_EXTERNC void CompVMemZero_Asm_NEON64(COMPV_ALIGNED(NEON) void* dstPtr, compv_uscalar_t size);
+#endif /* COMPV_ARCH_ARM64 && COMPV_ASM */
+
 std::map<uintptr_t, compv_special_mem_t > CompVMem::s_Specials;
 CompVPtr<CompVMutex* > CompVMem::s_SpecialsMutex;
 bool CompVMem::s_bInitialize = false;
@@ -114,6 +120,7 @@ COMPV_ERROR_CODE CompVMem::copy(void* dstPtr, const void* srcPtr, size_t size)
 	if (size >= 64 && CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(dstPtr) && COMPV_IS_ALIGNED_NEON(srcPtr)) {
 		COMPV_EXEC_IFDEF_INTRIN_ARM(cpy = CompVMemCopy_Intrin_NEON);
 		COMPV_EXEC_IFDEF_ASM_ARM32(cpy = CompVMemCopy_Asm_NEON32);
+		COMPV_EXEC_IFDEF_ASM_ARM64(cpy = CompVMemCopy_Asm_NEON64);
 	}
 
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
@@ -243,6 +250,7 @@ COMPV_ERROR_CODE CompVMem::zero(void* dstPtr, size_t size)
 	if (size >= 64 && CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(dstPtr)) {
 		COMPV_EXEC_IFDEF_INTRIN_ARM(setz = CompVMemZero_Intrin_NEON);
 		COMPV_EXEC_IFDEF_ASM_ARM32(setz = CompVMemZero_Asm_NEON32);
+		COMPV_EXEC_IFDEF_ASM_ARM64(setz = CompVMemZero_Asm_NEON64);
 	}
     setz(dstPtr, size);
 #endif

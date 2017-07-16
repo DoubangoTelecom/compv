@@ -78,7 +78,7 @@ The test images contains many edges and this is why it's unusually slow. Canny o
 
 === HoughLines (Canny: Kernel size = 3, tLow=0.80f, tHigh=tLow*2, HoughStd: rho = 1.f, theta = Pi/180, threshold = 100) (1282, 720) (#1k times) ===
 CompV(SHT): 11222.ms(full optiz)
-CompV(KHT): 1486.ms(full optiz)
+CompV(KHT): 1413.ms(full optiz)
 OpenCV: 25219.ms(full optiz)
 Remarque: Test done with dense image (many non-zero pixels). In normal use case our KHT implementation should work at ~800fps while OpenCV works at ~40fps
 
