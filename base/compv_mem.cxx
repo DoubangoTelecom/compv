@@ -61,6 +61,7 @@ COMPV_EXTERNC void MemCopyNTA_Asm_Aligned11_X64_AVX(COMPV_ALIGNED(SSE) void* dst
 // ARM32
 #if COMPV_ARCH_ARM32 && COMPV_ASM
 COMPV_EXTERNC void CompVMemCopy_Asm_NEON32(COMPV_ALIGNED(NEON) void* dstPtr, COMPV_ALIGNED(NEON) const void*srcPtr, compv_uscalar_t size);
+COMPV_EXTERNC void CompVMemZero_Asm_NEON32(COMPV_ALIGNED(NEON) void* dstPtr, compv_uscalar_t size);
 #endif /* COMPV_ARCH_ARM32 && COMPV_ASM */
 
 std::map<uintptr_t, compv_special_mem_t > CompVMem::s_Specials;
@@ -74,7 +75,9 @@ typedef void(*CompVMemCopy)(void* dstPtr, const void*srcPtr, compv_uscalar_t siz
 
 static void CompVMemCopy_C(void* dstPtr, const void*srcPtr, compv_uscalar_t size)
 {
-    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation found. On ARM consider http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.faqs/ka13544.html");
+	if (size >= 64) {
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation found. On ARM consider http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.faqs/ka13544.html");
+	}
     memcpy(dstPtr, srcPtr, static_cast<size_t>(size));
 }
 
@@ -107,8 +110,8 @@ COMPV_ERROR_CODE CompVMem::copy(void* dstPtr, const void* srcPtr, size_t size)
 {
     COMPV_CHECK_EXP_RETURN(!dstPtr || !srcPtr || !size, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     CompVMemCopy cpy = CompVMemCopy_C;
-
-	if (size > 64 && CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(dstPtr) && COMPV_IS_ALIGNED_NEON(srcPtr)) {
+	
+	if (size >= 64 && CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(dstPtr) && COMPV_IS_ALIGNED_NEON(srcPtr)) {
 		COMPV_EXEC_IFDEF_INTRIN_ARM(cpy = CompVMemCopy_Intrin_NEON);
 		COMPV_EXEC_IFDEF_ASM_ARM32(cpy = CompVMemCopy_Asm_NEON32);
 	}
@@ -211,7 +214,9 @@ typedef void(*CompVMemZero)(void* dstPtr, compv_uscalar_t size);
 
 static void CompVMemZero_C(void* dstPtr, compv_uscalar_t size)
 {
-    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation found");
+	if (size >= 64) {
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation found");
+	}
     memset(dstPtr, 0, (size_t)size);
 }
 
@@ -236,6 +241,10 @@ COMPV_ERROR_CODE CompVMem::zero(void* dstPtr, size_t size)
     }
 #else
     CompVMemZero setz = CompVMemZero_C;
+	if (size >= 64 && CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(dstPtr)) {
+		COMPV_EXEC_IFDEF_INTRIN_ARM(setz = CompVMemZero_Intrin_NEON);
+		COMPV_EXEC_IFDEF_ASM_ARM32(setz = CompVMemZero_Asm_NEON32);
+	}
     setz(dstPtr, size);
 #endif
     return COMPV_ERROR_CODE_S_OK;

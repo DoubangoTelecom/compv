@@ -18,7 +18,7 @@
 COMPV_NAMESPACE_BEGIN()
 
 void CompVMemCopy_Intrin_NEON(COMPV_ALIGNED(NEON) void* dataDstPtr, COMPV_ALIGNED(NEON) const void* dataSrcPtr, compv_uscalar_t size);
-void CompVMemZero_Intrin_NEON(COMPV_ALIGNED(NEON) void* dstPtr, COMPV_CONDITION(>64) compv_uscalar_t size);
+void CompVMemZero_Intrin_NEON(COMPV_ALIGNED(NEON) void* dstPtr, compv_uscalar_t size);
 
 COMPV_NAMESPACE_END()
 

@@ -26,15 +26,13 @@ void CompVMemCopy_Intrin_NEON(COMPV_ALIGNED(NEON) void* dataDstPtr, COMPV_ALIGNE
 	__compv_builtin_prefetch_read(&dataSrcPtrAligned[COMPV_CACHE1_LINE_SIZE * 0]);
 	__compv_builtin_prefetch_read(&dataSrcPtrAligned[COMPV_CACHE1_LINE_SIZE * 1]);
 	__compv_builtin_prefetch_read(&dataSrcPtrAligned[COMPV_CACHE1_LINE_SIZE * 2]);
-	__compv_builtin_prefetch_read(&dataSrcPtrAligned[COMPV_CACHE1_LINE_SIZE * 3]);
 	__compv_builtin_prefetch_write(&dataDstPtrAligned[COMPV_CACHE1_LINE_SIZE * 0]);
 	__compv_builtin_prefetch_write(&dataDstPtrAligned[COMPV_CACHE1_LINE_SIZE * 1]);
 	__compv_builtin_prefetch_write(&dataDstPtrAligned[COMPV_CACHE1_LINE_SIZE * 2]);
-	__compv_builtin_prefetch_write(&dataDstPtrAligned[COMPV_CACHE1_LINE_SIZE * 3]);
 
 	for (i = 0; i < sizeNEON; i += 64) {
-		__compv_builtin_prefetch_read(&dataSrcPtrAligned[COMPV_CACHE1_LINE_SIZE * 4]);
-		__compv_builtin_prefetch_write(&dataDstPtrAligned[COMPV_CACHE1_LINE_SIZE * 4]);
+		__compv_builtin_prefetch_read(&dataSrcPtrAligned[COMPV_CACHE1_LINE_SIZE * 3]);
+		__compv_builtin_prefetch_write(&dataDstPtrAligned[COMPV_CACHE1_LINE_SIZE *3]);
 		vec0 = vld1q_u8(&dataSrcPtrAligned[i]);
 		vec1 = vld1q_u8(&dataSrcPtrAligned[i + 16]);
 		vec2 = vld1q_u8(&dataSrcPtrAligned[i + 32]);
@@ -49,10 +47,22 @@ void CompVMemCopy_Intrin_NEON(COMPV_ALIGNED(NEON) void* dataDstPtr, COMPV_ALIGNE
 	}
 }
 
-void CompVMemZero_Intrin_NEON(COMPV_ALIGNED(NEON) void* dstPtr, COMPV_CONDITION(>64) compv_uscalar_t size)
+void CompVMemZero_Intrin_NEON(COMPV_ALIGNED(NEON) void* dstPtr, compv_uscalar_t size)
 {
 	COMPV_DEBUG_INFO_CHECK_NEON();
-    
+	static uint8x16_t vecZero = vdupq_n_u8(0);
+	const compv_uscalar_t sizeNEON = size & -64;
+	compv_uscalar_t i;
+	uint8_t*dstPtrAligned = reinterpret_cast<uint8_t*>(__compv_builtin_assume_aligned(dstPtr, 16));
+	for (i = 0; i < sizeNEON; i += 64) {
+		vst1q_u8(&dstPtrAligned[i], vecZero);
+		vst1q_u8(&dstPtrAligned[i + 16], vecZero);
+		vst1q_u8(&dstPtrAligned[i + 32], vecZero);
+		vst1q_u8(&dstPtrAligned[i + 48], vecZero);
+	}
+	if (size > sizeNEON) {
+		memset(&dstPtrAligned[sizeNEON], 0, (size - sizeNEON));
+	}
 }
 
 COMPV_NAMESPACE_END()

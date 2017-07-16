@@ -33,7 +33,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVMemCopy_Asm_NEON32
 	pld [dataSrcPtr, #(CACHE_LINE_SIZE*0)]
 	pld [dataSrcPtr, #(CACHE_LINE_SIZE*1)]
 	pld [dataSrcPtr, #(CACHE_LINE_SIZE*2)]
-	pld [dataSrcPtr, #(CACHE_LINE_SIZE*3)]
 
     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     @ for (i = 0; i < sizeNEON; i += 64)
@@ -41,11 +40,10 @@ COMPV_GAS_FUNCTION_DECLARE CompVMemCopy_Asm_NEON32
     ands sizeNEON, size, #-64
     beq EndOfLoopCountNEON_CompVMemCopy_Asm_NEON32
     LoopCountNEON_CompVMemCopy_Asm_NEON32:
-        vld1.u8 { q0,q1 }, [dataSrcPtr :128]!
-		vld1.u8 { q2,q3 }, [dataSrcPtr :128]!
-        subs sizeNEON, sizeNEON, #64
-		vst1.u8 { q0,q1 }, [dataDstPtr :128]!
-		vst1.u8 { q2,q3 }, [dataDstPtr :128]!
+		pld [dataSrcPtr, #(CACHE_LINE_SIZE*3)]
+        vldm dataSrcPtr!, { q0-q3 }
+		vstm dataDstPtr!, { q0-q3 }
+		subs sizeNEON, sizeNEON, #64
         bne LoopCountNEON_CompVMemCopy_Asm_NEON32
 	EndOfLoopCountNEON_CompVMemCopy_Asm_NEON32:
 
@@ -56,9 +54,9 @@ COMPV_GAS_FUNCTION_DECLARE CompVMemCopy_Asm_NEON32
 	lsrs sizeWORD, sizeWORD, #2
 	beq EndOfLoopCountWORD_CompVMemCopy_Asm_NEON32
     LoopCountWORD_CompVMemCopy_Asm_NEON32:
-        ldr r11, [dataSrcPtr: 32], #4
+        ldr r11, [dataSrcPtr :32], #4
         subs sizeWORD, sizeWORD, #4
-		str r11, [dataDstPtr], #4
+		str r11, [dataDstPtr : 32], #4
         bne LoopCountWORD_CompVMemCopy_Asm_NEON32
 	EndOfLoopCountWORD_CompVMemCopy_Asm_NEON32:
 
@@ -68,9 +66,9 @@ COMPV_GAS_FUNCTION_DECLARE CompVMemCopy_Asm_NEON32
 	ands sizeBYTE, size, #3
 	beq EndOfLoopCountBYTE_CompVMemCopy_Asm_NEON32
     LoopCountBYTE_CompVMemCopy_Asm_NEON32:
-        ldrb r11, [dataSrcPtr: 32], #1
+        ldrb r11, [dataSrcPtr :8], #1
         subs sizeBYTE, sizeBYTE, #1
-		strb r11, [dataDstPtr], #1
+		strb r11, [dataDstPtr :8], #1
         bne LoopCountBYTE_CompVMemCopy_Asm_NEON32
 	EndOfLoopCountBYTE_CompVMemCopy_Asm_NEON32:
 
@@ -81,6 +79,74 @@ COMPV_GAS_FUNCTION_DECLARE CompVMemCopy_Asm_NEON32
     .unreq sizeNEON
 	.unreq sizeWORD
 	.unreq sizeBYTE
+
+	COMPV_GAS_RESTORE_NEON_REGS
+	COMPV_GAS_FUNCTION_EPILOG
+	COMPV_GAS_FUNCTION_RETURN
+
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@ arg(0) -> COMPV_ALIGNED(NEON) void* dataDstPtr
+@ arg(1) -> compv_uscalar_t size
+COMPV_GAS_FUNCTION_DECLARE CompVMemZero_Asm_NEON32
+	COMPV_GAS_FUNCTION_PROLOG
+	COMPV_GAS_SAVE_NEON_REGS
+
+	@@ Defines @@
+	dataDstPtr .req r0
+	size .req r1
+    sizeNEON .req r2
+	sizeWORD .req r3
+	sizeBYTE .req r4
+	zero .req r5
+
+	mov zero, #0
+	veor.u8 q0, q0, q0
+	veor.u8 q1, q1, q1
+	veor.u8 q2, q2, q2
+	veor.u8 q3, q3, q3
+
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    @ for (i = 0; i < sizeNEON; i += 64)
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    ands sizeNEON, size, #-64
+    beq EndOfLoopCountNEON_CompVMemZero_Asm_NEON32
+    LoopCountNEON_CompVMemZero_Asm_NEON32:
+		vstm dataDstPtr!, { q0-q3 }
+		subs sizeNEON, sizeNEON, #64
+        bne LoopCountNEON_CompVMemZero_Asm_NEON32
+	EndOfLoopCountNEON_CompVMemZero_Asm_NEON32:
+
+	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    @ for (i = 0; i < sizeWORD; i += 4)
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	and sizeWORD, size, #63
+	lsrs sizeWORD, sizeWORD, #2
+	beq EndOfLoopCountWORD_CompVMemZero_Asm_NEON32
+    LoopCountWORD_CompVMemZero_Asm_NEON32:
+        str zero, [dataDstPtr :32], #4
+        subs sizeWORD, sizeWORD, #4
+        bne LoopCountWORD_CompVMemZero_Asm_NEON32
+	EndOfLoopCountWORD_CompVMemZero_Asm_NEON32:
+
+	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    @ for (i = 0; i < sizeBYTE; i += 1)
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	ands sizeBYTE, size, #3
+	beq EndOfLoopCountBYTE_CompVMemZero_Asm_NEON32
+    LoopCountBYTE_CompVMemZero_Asm_NEON32:
+        strb zero, [dataDstPtr :8], #1
+        subs sizeBYTE, sizeBYTE, #1
+        bne LoopCountBYTE_CompVMemZero_Asm_NEON32
+	EndOfLoopCountBYTE_CompVMemZero_Asm_NEON32:
+
+	@@ UnDefines @@
+	.unreq dataDstPtr
+	.unreq size
+    .unreq sizeNEON
+	.unreq sizeWORD
+	.unreq sizeBYTE
+	.unreq zero
 
 	COMPV_GAS_RESTORE_NEON_REGS
 	COMPV_GAS_FUNCTION_EPILOG
