@@ -30,6 +30,10 @@ COMPV_NAMESPACE_BEGIN()
 	COMPV_EXTERNC void CompVImageConvNv12_to_Rgb24_Asm_X64_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* yPtr, COMPV_ALIGNED(SSE) const uint8_t* uvPtr, COMPV_ALIGNED(SSE) uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
 	COMPV_EXTERNC void CompVImageConvNv21_to_Rgba32_Asm_X64_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* yPtr, COMPV_ALIGNED(SSE) const uint8_t* uvPtr, COMPV_ALIGNED(SSE) uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
 	COMPV_EXTERNC void CompVImageConvNv21_to_Rgb24_Asm_X64_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* yPtr, COMPV_ALIGNED(SSE) const uint8_t* uvPtr, COMPV_ALIGNED(SSE) uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
+	COMPV_EXTERNC void CompVImageConvYuyv422_to_Rgb24_Asm_X64_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* yuvPtr, COMPV_ALIGNED(SSE) uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
+	COMPV_EXTERNC void CompVImageConvYuyv422_to_Rgba32_Asm_X64_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* yuvPtr, COMPV_ALIGNED(SSE) uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
+	COMPV_EXTERNC void CompVImageConvUyvy422_to_Rgb24_Asm_X64_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* yuvPtr, COMPV_ALIGNED(SSE) uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
+	COMPV_EXTERNC void CompVImageConvUyvy422_to_Rgba32_Asm_X64_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* yuvPtr, COMPV_ALIGNED(SSE) uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
 #	elif COMPV_ARCH_ARM32
 	COMPV_EXTERNC void CompVImageConvYuv420p_to_Rgb24_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* yPtr, COMPV_ALIGNED(NEON) const uint8_t* uPtr, COMPV_ALIGNED(NEON) const uint8_t* vPtr, COMPV_ALIGNED(NEON) uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
 #	elif COMPV_ARCH_ARM64
@@ -370,6 +374,7 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::yuvPacked(const CompVMatPtr& imageIn, Com
 #if COMPV_ARCH_X86
 		if (CompVCpu::isEnabled(kCpuFlagSSSE3) && imageRGBx->isAlignedSSE(0) && imageIn->isAlignedSSE(0)) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(fptr_packed_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? CompVImageConvYuyv422_to_Rgba32_Intrin_SSSE3 : CompVImageConvYuyv422_to_Rgb24_Intrin_SSSE3);
+			COMPV_EXEC_IFDEF_ASM_X64(fptr_packed_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? CompVImageConvYuyv422_to_Rgba32_Asm_X64_SSSE3 : CompVImageConvYuyv422_to_Rgb24_Asm_X64_SSSE3);
 		}
 		if (CompVCpu::isEnabled(kCpuFlagAVX2) && imageRGBx->isAlignedAVX(0) && imageIn->isAlignedAVX(0)) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(fptr_packed_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? CompVImageConvYuyv422_to_Rgba32_Intrin_AVX2 : CompVImageConvYuyv422_to_Rgb24_Intrin_AVX2);
@@ -385,6 +390,7 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::yuvPacked(const CompVMatPtr& imageIn, Com
 #if COMPV_ARCH_X86
 		if (CompVCpu::isEnabled(kCpuFlagSSSE3) && imageRGBx->isAlignedSSE(0) && imageIn->isAlignedSSE(0)) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(fptr_packed_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? CompVImageConvUyvy422_to_Rgba32_Intrin_SSSE3 : CompVImageConvUyvy422_to_Rgb24_Intrin_SSSE3);
+			COMPV_EXEC_IFDEF_ASM_X64(fptr_packed_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? CompVImageConvUyvy422_to_Rgba32_Asm_X64_SSSE3 : CompVImageConvUyvy422_to_Rgb24_Asm_X64_SSSE3);
 		}
 		if (CompVCpu::isEnabled(kCpuFlagAVX2) && imageRGBx->isAlignedAVX(0) && imageIn->isAlignedAVX(0)) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(fptr_packed_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? CompVImageConvUyvy422_to_Rgba32_Intrin_AVX2 : CompVImageConvUyvy422_to_Rgb24_Intrin_AVX2);
