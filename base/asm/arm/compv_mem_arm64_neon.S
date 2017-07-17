@@ -120,7 +120,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMemZero_Asm_NEON64
     beq EndOfLoopCountNEON_CompVMemZero_Asm_NEON64
     LoopCountNEON_CompVMemZero_Asm_NEON64:
 		st1 { v0.16b-v3.16b }, [dataDstPtr], #(4*COMPV_GAS_V_SZ_BYTES)
-		subs sizeNEON, sizeNEON, #(4*COMPV_GAS_V_SZ_BYTES)
+        subs sizeNEON, sizeNEON, #(4*COMPV_GAS_V_SZ_BYTES)
         bne LoopCountNEON_CompVMemZero_Asm_NEON64
 	EndOfLoopCountNEON_CompVMemZero_Asm_NEON64:
 

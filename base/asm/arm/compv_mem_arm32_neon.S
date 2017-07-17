@@ -54,9 +54,9 @@ COMPV_GAS_FUNCTION_DECLARE CompVMemCopy_Asm_NEON32
 	lsrs sizeWORD, sizeWORD, #2
 	beq EndOfLoopCountWORD_CompVMemCopy_Asm_NEON32
     LoopCountWORD_CompVMemCopy_Asm_NEON32:
-        ldr r11, [dataSrcPtr :32], #4
+        ldr r11, [dataSrcPtr], #4
         subs sizeWORD, sizeWORD, #1
-		str r11, [dataDstPtr : 32], #4
+		str r11, [dataDstPtr], #4
         bne LoopCountWORD_CompVMemCopy_Asm_NEON32
 	EndOfLoopCountWORD_CompVMemCopy_Asm_NEON32:
 
@@ -66,9 +66,9 @@ COMPV_GAS_FUNCTION_DECLARE CompVMemCopy_Asm_NEON32
 	ands sizeBYTE, size, #3
 	beq EndOfLoopCountBYTE_CompVMemCopy_Asm_NEON32
     LoopCountBYTE_CompVMemCopy_Asm_NEON32:
-        ldrb r11, [dataSrcPtr :8], #1
+        ldrb r11, [dataSrcPtr], #1
         subs sizeBYTE, sizeBYTE, #1
-		strb r11, [dataDstPtr :8], #1
+		strb r11, [dataDstPtr], #1
         bne LoopCountBYTE_CompVMemCopy_Asm_NEON32
 	EndOfLoopCountBYTE_CompVMemCopy_Asm_NEON32:
 
@@ -124,7 +124,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMemZero_Asm_NEON32
 	lsrs sizeWORD, sizeWORD, #2
 	beq EndOfLoopCountWORD_CompVMemZero_Asm_NEON32
     LoopCountWORD_CompVMemZero_Asm_NEON32:
-        str zero, [dataDstPtr :32], #4
+        str zero, [dataDstPtr], #4
         subs sizeWORD, sizeWORD, #1
         bne LoopCountWORD_CompVMemZero_Asm_NEON32
 	EndOfLoopCountWORD_CompVMemZero_Asm_NEON32:
@@ -135,7 +135,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMemZero_Asm_NEON32
 	ands sizeBYTE, size, #3
 	beq EndOfLoopCountBYTE_CompVMemZero_Asm_NEON32
     LoopCountBYTE_CompVMemZero_Asm_NEON32:
-        strb zero, [dataDstPtr :8], #1
+        strb zero, [dataDstPtr], #1
         subs sizeBYTE, sizeBYTE, #1
         bne LoopCountBYTE_CompVMemZero_Asm_NEON32
 	EndOfLoopCountBYTE_CompVMemZero_Asm_NEON32:

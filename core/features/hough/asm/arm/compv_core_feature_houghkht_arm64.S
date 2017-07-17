@@ -104,8 +104,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVHoughKhtKernelHeight_4mpq_Asm_NEON64
 		fmul vecSigma_rho_times_theta.2d, vecSigma_rho_times_theta.2d, vecM_Eq14_2.2d
 		fmul vecM_Eq14_0.2d, vecM_Eq14_0.2d, vecSigma_theta_square.2d
         cmeq vecMaskEqZero.2d, vecSigma_theta_square.2d, #0
+		fmul vecSigma_theta_square.2d, vecSigma_theta_square.2d, vecM_Eq14_2.2d
         fmul vecSigma_rho_square.2d, vecSigma_rho_square.2d, vecFour.2d
-		fmul vecSigma_theta_square.2d, vecSigma_theta_square.2d, vecM_Eq14_2.2d	
 		bic vecSigma_theta_square.16b, vecSigma_theta_square.16b, vecMaskEqZero.16b
 		and vecMaskEqZero.16b, vecMaskEqZero.16b, vecZeroDotOne.16b
 		orr vecSigma_theta_square.16b, vecSigma_theta_square.16b, vecMaskEqZero.16b
@@ -113,9 +113,9 @@ COMPV_GAS_FUNCTION_DECLARE CompVHoughKhtKernelHeight_4mpq_Asm_NEON64
 		fsqrt vecSigma_rho_times_sigma_theta.2d, vecSigma_rho_square.2d
 		fsqrt vecTmp0.2d, vecSigma_theta_square.2d
 		st1 {vecSigma_rho_square.2d}, [sigma_rho_square], #(2*COMPV_GAS_FLOAT64_SZ_BYTES)
-		st1 {vecSigma_theta_square.2d}, [sigma_theta_square], #(2*COMPV_GAS_FLOAT64_SZ_BYTES)
 		fmul vecSigma_rho_times_sigma_theta.2d, vecSigma_rho_times_sigma_theta.2d, vecTmp0.2d
         fdiv vecTmp0.2d, vecSigma_rho_times_theta.2d, vecSigma_rho_times_sigma_theta.2d
+        st1 {vecSigma_theta_square.2d}, [sigma_theta_square], #(2*COMPV_GAS_FLOAT64_SZ_BYTES)
         orr vecOne_minus_r_square.16b, vecOne.16b, vecOne.16b // mov vecOne_minus_r_square.16b, vecOne.16b
         fmls vecOne_minus_r_square.2d, vecTmp0.2d, vecTmp0.2d
         st1 {vecSigma_rho_times_theta.2d}, [sigma_rho_times_theta], #(2*COMPV_GAS_FLOAT64_SZ_BYTES)
@@ -124,12 +124,12 @@ COMPV_GAS_FUNCTION_DECLARE CompVHoughKhtKernelHeight_4mpq_Asm_NEON64
 		fmul vecOne_minus_r_square.2d, vecOne_minus_r_square.2d, vecSigma_rho_times_sigma_theta.2d
 		fmul vecOne_minus_r_square.2d, vecOne_minus_r_square.2d, vecTwoPi.2d
 		fdiv vecHeight.2d, vecOne.2d, vecOne_minus_r_square.2d
-        subs count, count, #(2*COMPV_GAS_FLOAT64_SZ_BYTES)
 		fmax vecheightMax1.2d, vecheightMax1.2d, vecHeight.2d
         
 		st1 {vecHeight.2d}, [height], #(2*COMPV_GAS_FLOAT64_SZ_BYTES)
 		
 		## EndOf_LoopCount ##
+        subs count, count, #(2*COMPV_GAS_FLOAT64_SZ_BYTES)
 		bne LoopCount_CompVHoughKhtKernelHeight_4mpq_Asm_NEON64
 	
 	fmaxp vecheightMax1.2d, vecheightMax1.2d, vecheightMax1.2d
