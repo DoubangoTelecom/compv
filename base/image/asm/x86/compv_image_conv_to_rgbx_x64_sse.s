@@ -138,7 +138,7 @@ section .text
 	%define j			r14
 
 	%define vecYlo		xmm0
-	%define vecYhi	xmm1
+	%define vecYhi		xmm1
 	%define vecU		xmm2
 	%define vecV		xmm3
 	%define vecZero		xmm4
