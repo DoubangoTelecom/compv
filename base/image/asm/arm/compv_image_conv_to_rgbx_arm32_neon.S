@@ -25,12 +25,12 @@
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @ arg(0) -> COMPV_ALIGNED(NEON) const uint8_t* yPtr
-@ arg(1) -> COMPV_ALIGNED(NEON) const uint8_t* uPtr
-@ arg(2) -> COMPV_ALIGNED(NEON) const uint8_t* vPtr
-@ arg(3) -> COMPV_ALIGNED(NEON) uint8_t* rgbPtr
-@ arg(4) -> compv_uscalar_t width
-@ arg(5) -> compv_uscalar_t height
-@ arg(6) -> COMPV_ALIGNED(NEON) compv_uscalar_t stride
+@ arg(x) -> COMPV_ALIGNED(NEON) const uint8_t* uPtr
+@ arg(x) -> COMPV_ALIGNED(NEON) const uint8_t* vPtr
+@ arg(x) -> COMPV_ALIGNED(NEON) uint8_t* rgbPtr
+@ arg(x) -> compv_uscalar_t width
+@ arg(x) -> compv_uscalar_t height
+@ arg(x) -> COMPV_ALIGNED(NEON) compv_uscalar_t stride
 .macro CompVImageConvYuv_to_Rgbx_Macro_NEON32 rgbxFamily, yuvFamily
     COMPV_GAS_FUNCTION_PROLOG
     .if \yuvFamily == yuv420pFamily || \yuvFamily == yuv422pFamily
@@ -237,7 +237,7 @@
 			.elseif \yuvFamily == nv12Family || \yuvFamily == nv21Family
 				pld [uvPtr, #(CACHE_LINE_SIZE*3)]
 			.elseif \yuvFamily == yuyv422Family || \yuvFamily == uyvy422Family
-				; yuvPtr = yPtr
+				@ yuvPtr = yPtr
 			.else
 				.error "Not implemented"
 			.endif
