@@ -19,7 +19,7 @@ COMPV_YASM_DEFAULT_REL
 
 %define yuv420pFamily	2
 %define yuv422pFamily	3
-%define yuv444pFamily	4
+%define yuv444pFamily	4 ; there is intrin implementation but no asm (useless for now)
 %define nv12Family		5
 %define nv21Family		6
 %define yuyv422Family	7

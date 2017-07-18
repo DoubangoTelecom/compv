@@ -215,8 +215,6 @@ static const int16x8_t vec26 = vdupq_n_s16(26);
 // - ARM32 iPhone5/1 thread/1k loop: 1960.ms vs 3354.ms
 // - ARM64 iPad Air2/1 thread/10k loop: 6157.ms vs 7438.ms
 // - ARM64 MediaPad2/1 thread/1k loop: 1590.ms vs 2409.ms
-
-
 void CompVImageConvYuv420p_to_Rgb24_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* yPtr, COMPV_ALIGNED(NEON) const uint8_t* uPtr, COMPV_ALIGNED(NEON) const uint8_t* vPtr, COMPV_ALIGNED(NEON) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
 {
 	CompVImageConvYuvPlanar_to_Rgbx_Intrin_NEON(yuv420p, rgb24);
@@ -347,6 +345,8 @@ void CompVImageConvNv21_to_Rgba32_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t*
 	} /* End_Of for (j = 0; j < height; ++j) */ \
 }
 
+// TODO(dmi): Optiz issues. ASM code is by far faster (all cases):
+// - ARM32 iPhone5/1 thread/1k loop: 2624.ms vs 4526.ms
 void CompVImageConvYuyv422_to_Rgb24_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* yuvPtr, COMPV_ALIGNED(NEON) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
 {
 	CompVImageConvYuvPacked_to_Rgbx_Intrin_NEON(yuyv422, rgb24);
