@@ -333,10 +333,7 @@ COMPV_ERROR_CODE CompVHoughKht::process(const CompVMatPtr& edges, CompVHoughLine
 #else
 			COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&m_edges, COMPV_SUBTYPE_PIXELS_Y, edges->cols(), edges->rows(), edges->stride()));
 			COMPV_CHECK_EXP_RETURN(m_edges->dataSizeInBytes() != edges->dataSizeInBytes(), COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
-			//uint64_t timeStart = CompVTime::nowMillis();
 			COMPV_CHECK_CODE_RETURN(CompVMem::copy(m_edges->ptr<void>(), edges->ptr<const void*>(), edges->dataSizeInBytes()));
-			//uint64_t timeEnd = CompVTime::nowMillis();
-			//COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "HoughKht Copy time = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 #endif
 		}
 

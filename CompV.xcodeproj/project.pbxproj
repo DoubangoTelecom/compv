@@ -343,6 +343,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		150845211F1DCC4D007B11BA /* compv_allocators.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_allocators.h; sourceTree = "<group>"; };
 		1525BFEA1E36331800B00689 /* libCompVGPU.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libCompVGPU.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		1525BFF61E36333400B00689 /* compv_gpu_feature_fast_dete.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_gpu_feature_fast_dete.cxx; sourceTree = "<group>"; };
 		1525BFFA1E36333400B00689 /* compv_gpu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_gpu.h; sourceTree = "<group>"; };
@@ -1884,6 +1885,7 @@
 				157F729A1E58079E000DE45F /* compv_bits.h */,
 				157F729B1E58079E000DE45F /* compv_matchers.h */,
 				15A3E7F01E3599D800303F7C /* compv_simd_globals.h */,
+				150845211F1DCC4D007B11BA /* compv_allocators.h */,
 			);
 			path = base;
 			sourceTree = "<group>";

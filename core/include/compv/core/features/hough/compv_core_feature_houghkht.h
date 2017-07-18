@@ -10,6 +10,7 @@
 #include "compv/core/compv_core_config.h"
 #include "compv/core/compv_core_common.h"
 #include "compv/base/compv_memz.h"
+#include "compv/base/compv_allocators.h"
 #include "compv/base/compv_features.h"
 
 #if defined(_COMPV_API_H_)
@@ -23,49 +24,42 @@ COMPV_NAMESPACE_BEGIN()
 struct CompVHoughKhtVote {
 	size_t rho_index; size_t theta_index;
 	int32_t count;
-	COMPV_ALWAYS_INLINE CompVHoughKhtVote() : rho_index(0), theta_index(0), count(0) {}
 	COMPV_ALWAYS_INLINE CompVHoughKhtVote(size_t _rho_index, size_t _theta_index, int32_t _count) : rho_index(_rho_index), theta_index(_theta_index), count(_count) {}
 };
-typedef std::vector<CompVHoughKhtVote> CompVHoughKhtVotes;
+typedef std::vector<CompVHoughKhtVote, CompVAllocatorNoDefaultConstruct<CompVHoughKhtVote> > CompVHoughKhtVotes;
 
 struct CompVHoughKhtPos {
 	int y; int x;
 	KHT_TYP cy; KHT_TYP cx;
-    COMPV_ALWAYS_INLINE CompVHoughKhtPos() { x = y = 0; cx = cy = 0;}
 	COMPV_ALWAYS_INLINE CompVHoughKhtPos(int _y, int _x, const KHT_TYP edgesHeightDiv2, const KHT_TYP edgesWidthDiv2) : y(_y), x(_x) {
         cx = (x - edgesWidthDiv2);
         cy = (y - edgesHeightDiv2);
     }
 };
-typedef std::vector<CompVHoughKhtPos> CompVHoughKhtPoss;
+typedef std::vector<CompVHoughKhtPos, CompVAllocatorNoDefaultConstruct<CompVHoughKhtPos> > CompVHoughKhtPoss;
 
 struct CompVHoughKhtString {
     size_t begin;
 	size_t end;
-	COMPV_ALWAYS_INLINE CompVHoughKhtString() { }
 	COMPV_ALWAYS_INLINE CompVHoughKhtString(size_t _begin, size_t _end): begin(_begin), end(_end) {}
 };
-typedef std::vector<CompVHoughKhtString> CompVHoughKhtStrings;
+typedef std::vector<CompVHoughKhtString, CompVAllocatorNoDefaultConstruct<CompVHoughKhtString> > CompVHoughKhtStrings;
 
 typedef CompVHoughKhtString CompVHoughKhtCluster;
-typedef std::vector<CompVHoughKhtCluster> CompVHoughKhtClusters;
+typedef std::vector<CompVHoughKhtCluster, CompVAllocatorNoDefaultConstruct<CompVHoughKhtCluster> > CompVHoughKhtClusters;
 
 struct CompVHoughKhtKernel {
 	KHT_TYP rho; // computed using Eq3
 	KHT_TYP theta; // computed using Eq3
 	KHT_TYP h; // height
-#define kCompVHoughKhtKernelIndex_SigmaRhoSquare			0
-#define kCompVHoughKhtKernelIndex_SigmaRhoTimesTheta		1
-#define kCompVHoughKhtKernelIndex_2							2
-#define kCompVHoughKhtKernelIndex_SigmaThetaSquare			3
-
+    
 	// Matrix 'M' computed in Algorithm 2 and holding sigma values
 	KHT_TYP sigma_theta_square;
 	KHT_TYP sigma_rho_square;
 	KHT_TYP m2;
 	KHT_TYP sigma_rho_times_theta;
 };
-typedef std::vector<CompVHoughKhtKernel> CompVHoughKhtKernels;
+typedef std::vector<CompVHoughKhtKernel, CompVAllocatorNoDefaultConstruct<CompVHoughKhtKernel> > CompVHoughKhtKernels;
 
 class CompVHoughKht : public CompVHough
 {
