@@ -6,7 +6,7 @@
 # WebSite: http://compv.org                                             #
 #########################################################################
 #if defined(__aarch64__)
-.include "compv_common_arm64.S" //"
+.include "compv_common_arm64.S" //
 
 .data
 
@@ -137,7 +137,7 @@
     mov jw, #26
     dup vec13.8h, iw
     dup vec26.8h, jw
-    cmeq.16b vecA, vecA, vecA
+    cmeq vecA.16b, vecA.16b, vecA.16b
 
     .if \yuvFamily == yuv420pFamily
         add padY, width, #15
@@ -303,8 +303,16 @@
 
     # undefs #
     .unreq yPtr
-	.unreq uPtr
-	.unreq vPtr
+	 .if \yuvFamily == yuv420pFamily || \yuvFamily == yuv422pFamily
+        .unreq uPtr
+		.unreq vPtr
+	.elseif \yuvFamily == nv12Family || \yuvFamily == nv21Family
+        .unreq uvPtr
+	.elseif \yuvFamily == yuyv422Family || \yuvFamily == uyvy422Family
+        // yPtr
+	.else
+		.error "Not implemented"
+	.endif
 	.unreq rgbPtr
 	.unreq width
 	.unreq height

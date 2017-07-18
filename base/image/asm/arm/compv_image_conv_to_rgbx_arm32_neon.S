@@ -6,7 +6,7 @@
 # WebSite: http://compv.org                                             #
 #########################################################################
 #if defined(__arm__) && !defined(__aarch64__)
-.include "compv_common_arm32.S" @"
+.include "compv_common_arm32.S" @
 
 .data
 
@@ -341,8 +341,16 @@
 
     @ undefs @
     .unreq yPtr
-	.unreq uPtr
-	.unreq vPtr
+	 .if \yuvFamily == yuv420pFamily || \yuvFamily == yuv422pFamily
+        .unreq uPtr
+		.unreq vPtr
+	.elseif \yuvFamily == nv12Family || \yuvFamily == nv21Family
+        .unreq uvPtr
+	.elseif \yuvFamily == yuyv422Family || \yuvFamily == uyvy422Family
+        @ yPtr
+	.else
+		.error "Not implemented"
+	.endif
 	.unreq rgbPtr
 	.unreq width
 	.unreq height
