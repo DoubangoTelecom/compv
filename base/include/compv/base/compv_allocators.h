@@ -8,7 +8,6 @@
 #define _COMPV_BASE_ALLOCATORS_H_
 
 #include "compv/base/compv_config.h"
-#include "compv/base/compv_common.h"
 
 COMPV_NAMESPACE_BEGIN()
 

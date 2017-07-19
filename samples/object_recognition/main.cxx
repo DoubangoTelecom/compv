@@ -111,12 +111,17 @@ public:
 				const compv_float64_t* x = m_ptrRectMatched->ptr<compv_float64_t>(0);
 				const compv_float64_t* y = m_ptrRectMatched->ptr<compv_float64_t>(1);
 				const compv_float64_t xoffset = static_cast<compv_float64_t>(m_ptrImageTrain->cols() + COMPV_DRAWING_MATCHES_TRAIN_QUERY_XOFFSET);
-				compv_float32_t x0[4] = { static_cast<compv_float32_t>(x[0] + xoffset), static_cast<compv_float32_t>(x[1] + xoffset), static_cast<compv_float32_t>(x[2] + xoffset), static_cast<compv_float32_t>(x[3] + xoffset) };
-				compv_float32_t y0[4] = { static_cast<compv_float32_t>(y[0]), static_cast<compv_float32_t>(y[1]), static_cast<compv_float32_t>(y[2]), static_cast<compv_float32_t>(y[3]) };
-				compv_float32_t x1[4] = { static_cast<compv_float32_t>(x[1] + xoffset), static_cast<compv_float32_t>(x[2] + xoffset), static_cast<compv_float32_t>(x[3] + xoffset), static_cast<compv_float32_t>(x[0] + xoffset) };
-				compv_float32_t y1[4] = { static_cast<compv_float32_t>(y[1]), static_cast<compv_float32_t>(y[2]), static_cast<compv_float32_t>(y[3]), static_cast<compv_float32_t>(y[0]) };
-				COMPV_CHECK_CODE_BAIL(err = m_ptrMatchingSurfaceLayer->surface()->canvas()->drawLines(x0, y0, x1, y1, 4, &m_DrawingOptionsRectMatched));
-
+				// using drawLines instead of drawRectangles because the rectangle doesn't have square angles (90 degrees)
+				CompVLineFloat32Vector lines(4);
+				CompVLineFloat32& line0 = lines[0];
+				CompVLineFloat32& line1 = lines[1];
+				CompVLineFloat32& line2 = lines[2];
+				CompVLineFloat32& line3 = lines[3];
+				line0.a.x = static_cast<compv_float32_t>(x[0] + xoffset), line0.a.y = static_cast<compv_float32_t>(y[0]), line0.b.x = static_cast<compv_float32_t>(x[1] + xoffset), line0.b.y = static_cast<compv_float32_t>(y[1]);
+				line1.a.x = static_cast<compv_float32_t>(x[1] + xoffset), line1.a.y = static_cast<compv_float32_t>(y[1]), line1.b.x = static_cast<compv_float32_t>(x[2] + xoffset), line1.b.y = static_cast<compv_float32_t>(y[2]);
+				line2.a.x = static_cast<compv_float32_t>(x[2] + xoffset), line2.a.y = static_cast<compv_float32_t>(y[2]), line2.b.x = static_cast<compv_float32_t>(x[3] + xoffset), line2.b.y = static_cast<compv_float32_t>(y[3]);
+				line3.a.x = static_cast<compv_float32_t>(x[3] + xoffset), line3.a.y = static_cast<compv_float32_t>(y[3]), line3.b.x = static_cast<compv_float32_t>(x[0] + xoffset), line3.b.y = static_cast<compv_float32_t>(y[0]);
+				COMPV_CHECK_CODE_BAIL(err = m_ptrMatchingSurfaceLayer->surface()->canvas()->drawLines(lines, &m_DrawingOptionsRectMatched));
 				COMPV_DEBUG_INFO_EX(TAG_SAMPLE, "Object Recognized (%zu)!", num++);
 			}
 

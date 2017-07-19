@@ -8,6 +8,7 @@
 #define _COMPV_BASE_COMMON_H_
 
 #include "compv/base/compv_config.h"
+#include "compv/base/compv_allocators.h"
 
 #include <vector>
 #include <algorithm>
@@ -400,6 +401,10 @@ typedef CompVRect<compv_float32_t> CompVRectFloat32;
 typedef CompVRect<compv_float64_t> CompVRectFloat64;
 typedef CompVRect<int32_t> CompVRectInt32;
 typedef CompVRect<int> CompVRectInt;
+typedef std::vector<CompVRectFloat32, CompVAllocatorNoDefaultConstruct<CompVRectFloat32> > CompVRectFloat32Vector;
+typedef std::vector<CompVRectFloat32, CompVAllocatorNoDefaultConstruct<CompVRectFloat32> > CompVRectFloat32Vector;
+typedef std::vector<CompVRectInt32, CompVAllocatorNoDefaultConstruct<CompVRectInt32> > CompVRectInt32Vector;
+typedef std::vector<CompVRectInt, CompVAllocatorNoDefaultConstruct<CompVRectInt> > CompVRectIntVector;
 
 struct CompVRatio {
 public:
@@ -410,15 +415,9 @@ public:
 
 template <typename T>
 struct CompVPoint {
-	COMPV_INLINE void init(T x_ = 0, T y_ = 0, T z_ = 1) {
-		x = x_, y = y_, z = z_;
-	}
 public:
-	CompVPoint() {
-		init();
-	}
-	CompVPoint(T x_, T y_, T z_ = 1) {
-		init(x_, y_, z_);
+	CompVPoint(T x_ = 0, T y_ = 0, T z_ = 1) {
+		x = x_, y = y_, z = z_;
 	}
 	T x, y, z;
 };
@@ -426,10 +425,10 @@ typedef CompVPoint<compv_float32_t> CompVPointFloat32;
 typedef CompVPoint<compv_float64_t> CompVPointFloat64;
 typedef CompVPoint<int32_t> CompVPointInt32;
 typedef CompVPoint<int> CompVPointInt;
-typedef std::vector<CompVPointFloat32> CompVPointFloat32Vector;
-typedef std::vector<CompVPointFloat64> CompVPointFloat64Vector;
-typedef std::vector<CompVPointInt32> CompVPointInt32Vector;
-typedef std::vector<CompVPointInt> CompVPointIntVector;
+typedef std::vector<CompVPointFloat32, CompVAllocatorNoDefaultConstruct<CompVPointFloat32> > CompVPointFloat32Vector;
+typedef std::vector<CompVPointFloat64, CompVAllocatorNoDefaultConstruct<CompVPointFloat64> > CompVPointFloat64Vector;
+typedef std::vector<CompVPointInt32, CompVAllocatorNoDefaultConstruct<CompVPointInt32> > CompVPointInt32Vector;
+typedef std::vector<CompVPointInt, CompVAllocatorNoDefaultConstruct<CompVPointInt> > CompVPointIntVector;
 
 
 template <typename T>
@@ -440,11 +439,12 @@ typedef CompVLine<compv_float32_t> CompVLineFloat32;
 typedef CompVLine<compv_float64_t> CompVLineFloat64;
 typedef CompVLine<int32_t> CompVLineInt32;
 typedef CompVLine<int> CompVLineInt;
-typedef std::vector<CompVLineFloat32> CompVLineFloat32Vector;
-typedef std::vector<CompVLineFloat64> CompVLineFloat64Vector;
-typedef std::vector<CompVLineInt32> CompVLineInt32Vector;
-typedef std::vector<CompVLineInt> CompVLineIntVector;
+typedef std::vector<CompVLineFloat32, CompVAllocatorNoDefaultConstruct<CompVLineFloat32> > CompVLineFloat32Vector;
+typedef std::vector<CompVLineFloat64, CompVAllocatorNoDefaultConstruct<CompVLineFloat64> > CompVLineFloat64Vector;
+typedef std::vector<CompVLineInt32, CompVAllocatorNoDefaultConstruct<CompVLineInt32> > CompVLineInt32Vector;
+typedef std::vector<CompVLineInt, CompVAllocatorNoDefaultConstruct<CompVLineInt> > CompVLineIntVector;
 
+typedef std::vector<struct CompVInterestPoint, CompVAllocatorNoDefaultConstruct<struct CompVInterestPoint> > CompVInterestPointVector;
 struct CompVInterestPoint {
 	compv_float32_t x; /**< Point.x */
 	compv_float32_t y; /**< Point.y */
@@ -453,18 +453,11 @@ struct CompVInterestPoint {
 	int level; /**< pyramid level (when image is scaled, level0 is the first one) */
 	compv_float32_t size; /**< patch size (e.g. BRIEF patch size-circle diameter-) */
 
-protected:
-	COMPV_INLINE void init(compv_float32_t x_, compv_float32_t y_, compv_float32_t strength_ = -1.f, compv_float32_t orient_ = -1.f, int32_t level_ = 0, compv_float32_t size_ = 0.f) {
+public:
+	CompVInterestPoint(compv_float32_t x_ = 0.f, compv_float32_t y_ = 0.f, compv_float32_t strength_ = -1.f, compv_float32_t orient_ = -1.f, int32_t level_ = 0, compv_float32_t size_ = 0.f) {
 		x = x_, y = y_, strength = strength_, orient = orient_, level = level_, size = size_;
 	}
-public:
-	CompVInterestPoint() {
-		init(0, 0);
-	}
-	CompVInterestPoint(compv_float32_t x_, compv_float32_t y_, compv_float32_t strength_ = -1.f, compv_float32_t orient_ = -1.f, int32_t level_ = 0, compv_float32_t size_ = 0.f) {
-		init(x_, y_, strength_, orient_, level_, size_);
-	}
-	static void selectBest(std::vector<CompVInterestPoint>& interestPoints, size_t max) {
+	static void selectBest(CompVInterestPointVector& interestPoints, size_t max) {
 		if (max > 1) {
 #if 0
 			COMPV_DEBUG_INFO_CODE_FOR_TESTING("Slow and worst matches");
@@ -480,7 +473,7 @@ public:
 #endif
 		}
 	}
-	static void eraseTooCloseToBorder(std::vector<CompVInterestPoint>& interestPoints, size_t img_width, size_t img_height, int border_size) {
+	static void eraseTooCloseToBorder(CompVInterestPointVector& interestPoints, size_t img_width, size_t img_height, int border_size) {
 		float w = static_cast<compv_float32_t>(img_width), h = static_cast<compv_float32_t>(img_height), b = static_cast<compv_float32_t>(border_size);
 		auto new_end = std::remove_if(interestPoints.begin(), interestPoints.end(), [&w, &h, &b](const CompVInterestPoint& p) { 
 			return ((p.x < b || (p.x + b) >= w || (p.y < b) || (p.y + b) >= h));
@@ -488,45 +481,35 @@ public:
 		interestPoints.erase(new_end, interestPoints.end());
 	}
 };
-typedef std::vector<CompVInterestPoint> CompVInterestPointVector;
 
 struct CompVMatIndex {
 	size_t row;
 	size_t col;
 public:
-	CompVMatIndex() : row(0), col(0) {}
-	CompVMatIndex(size_t row_, size_t col_): row(row_), col(col_) {}
+	CompVMatIndex(size_t row_ = 0, size_t col_ = 0): row(row_), col(col_) {}
 };
-typedef std::vector<CompVMatIndex> CompVMatIndexVector;
+typedef std::vector<CompVMatIndex, CompVAllocatorNoDefaultConstruct<CompVMatIndex> > CompVMatIndexVector;
 
 struct CompVDMatch {
 	int queryIdx;
 	int trainIdx;
 	int imageIdx;
 	int distance;
-protected:
-	COMPV_INLINE void init(int queryIdx_, int trainIdx_, int distance_, int imageIdx_ = 0) {
+public:
+	CompVDMatch(int queryIdx_ = 0, int trainIdx_ = 0, int distance_ = 0, int imageIdx_ = 0) {
 		queryIdx = queryIdx_, trainIdx = trainIdx_, distance = distance_, imageIdx = imageIdx_;
 	}
-public:
-	CompVDMatch() {
-		init(0, 0, 0, 0);
-	}
-	CompVDMatch(int queryIdx_, int trainIdx_, int distance_, int imageIdx_ = 0) {
-		init(queryIdx_, trainIdx_, distance_, imageIdx_);
-	}
 };
-typedef std::vector<CompVDMatch> CompVDMatchVector;
+typedef std::vector<CompVDMatch, CompVAllocatorNoDefaultConstruct<CompVInterestPoint> > CompVDMatchVector;
 
 struct CompVHoughLine {
 	compv_float32_t rho;
 	compv_float32_t theta;
 	size_t strength;
 public:
-	CompVHoughLine(compv_float32_t rho_, compv_float32_t theta_, size_t strength_): rho(rho_), theta(theta_), strength(strength_) { }
-	CompVHoughLine(): rho(0), theta(0), strength(0) {}
+	CompVHoughLine(compv_float32_t rho_ = 0.f, compv_float32_t theta_ = 0.f, size_t strength_ = 0): rho(rho_), theta(theta_), strength(strength_) { }
 };
-typedef std::vector<CompVHoughLine> CompVHoughLineVector;
+typedef std::vector<CompVHoughLine, CompVAllocatorNoDefaultConstruct<CompVHoughLine> > CompVHoughLineVector;
 
 struct CompVDrawingOptions {
 	COMPV_DRAWING_COLOR_TYPE colorType;

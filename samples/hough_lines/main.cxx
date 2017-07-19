@@ -77,8 +77,8 @@ public:
 		COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 		if (CompVDrawing::isLoopRunning()) {
 			CompVMatPtr imageGray, edges;
-			CompVHoughLineVector lines;
-			CompVMatPtr points;
+			CompVHoughLineVector linesPolor;
+			CompVLineFloat32Vector linesCartesian;
 #if 1
 			COMPV_CHECK_CODE_RETURN(CompVImage::convertGrayscale(image, &imageGray));
 			COMPV_CHECK_CODE_RETURN(m_ptrCanny->process(imageGray, &edges));
@@ -94,20 +94,12 @@ public:
 #else
 #			error "Not implemented"
 #endif			
-			COMPV_CHECK_CODE_RETURN(m_ptrHough->process(edges, lines));
+			COMPV_CHECK_CODE_RETURN(m_ptrHough->process(edges, linesPolor));
+			COMPV_CHECK_CODE_RETURN(m_ptrHough->toCartesian(edges->cols(), edges->rows(), linesPolor, linesCartesian));
 			
-			if (!lines.empty()) {
-				COMPV_CHECK_CODE_RETURN(buildLines(m_ptrHough, edges->cols(), edges->rows(), lines, points));
-			}
 			COMPV_CHECK_CODE_BAIL(err = m_ptrWindow->beginDraw());
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSingleSurfaceLayer->surface()->drawImage(edges));
-			if (points) {
-				COMPV_CHECK_CODE_BAIL(err = m_ptrSingleSurfaceLayer->surface()->renderer()->canvas()->drawLines(
-					points->ptr<const compv_float32_t>(0), points->ptr<const compv_float32_t>(1),
-					points->ptr<const compv_float32_t>(2), points->ptr<const compv_float32_t>(3),
-					lines.size(), &m_DrawingOptions
-				));
-			}
+			COMPV_CHECK_CODE_BAIL(err = m_ptrSingleSurfaceLayer->surface()->renderer()->canvas()->drawLines(linesCartesian, &m_DrawingOptions));
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSingleSurfaceLayer->blit());
 		bail:
 			COMPV_CHECK_CODE_NOP(err = m_ptrWindow->endDraw()); // Make sure 'endDraw()' will be called regardless the result
@@ -143,26 +135,6 @@ public:
 		listener_->m_DrawingOptions.lineWidth = 1.5f;
 
 		*listener = listener_;
-		return COMPV_ERROR_CODE_S_OK;
-	}
-
-private:
-	static COMPV_ERROR_CODE buildLines(CompVHoughPtr ptrHough, size_t imageWidth, size_t imageHeight, const CompVHoughLineVector& lines, CompVMatPtr& points) {
-		COMPV_CHECK_EXP_RETURN(lines.empty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-		COMPV_CHECK_CODE_RETURN((CompVMat::newObjAligned<compv_float32_t>(&points, 4, lines.size())));
-		CompVLineFloat32Vector cartesian;
-		compv_float32_t *px0 = points->ptr<compv_float32_t>(0);
-		compv_float32_t *py0 = points->ptr<compv_float32_t>(1);
-		compv_float32_t *px1 = points->ptr<compv_float32_t>(2);
-		compv_float32_t *py1 = points->ptr<compv_float32_t>(3);
-		COMPV_CHECK_CODE_RETURN(ptrHough->toCartesian(imageWidth, imageHeight, lines, cartesian));
-		for (size_t i = 0; i < cartesian.size(); i++) {
-			const CompVLineFloat32& cart = cartesian[i];
-			px0[i] = cart.a.x;
-			py0[i] = cart.a.y;
-			px1[i] = cart.b.x;
-			py1[i] = cart.b.y;
-		}
 		return COMPV_ERROR_CODE_S_OK;
 	}
 

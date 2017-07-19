@@ -23,72 +23,65 @@ CompVGLCanvas::~CompVGLCanvas()
 
 }
 
-COMPV_ERROR_CODE CompVGLCanvas::drawText(const void* textPtr, size_t textLengthInBytes, int x, int y, const CompVDrawingOptions* options COMPV_DEFAULT(NULL)) /*Overrides(CompVCanvasInterface)*/
+// Public override
+COMPV_ERROR_CODE CompVGLCanvas::drawTexts(const void** textPtrs, const size_t* textLengthsInBytes, const CompVPointFloat32Vector& positions, const CompVDrawingOptions* options COMPV_DEFAULT(nullptr)) /*Overrides(CompVCanvasInterface)*/
 {
-    COMPV_CHECK_EXP_RETURN(!textPtr || !textLengthInBytes, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	if (positions.empty()) {
+		return COMPV_ERROR_CODE_S_OK;
+	}
+    COMPV_CHECK_EXP_RETURN(!textPtrs || !textLengthsInBytes, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     COMPV_GL_FBO_AUTOBIND(*m_ptrFBO);
 	COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
     unMakeEmpty();
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVGLCanvas::drawLines(const compv_float32_t* x0, const compv_float32_t* y0, const compv_float32_t* x1, const compv_float32_t* y1, size_t count, const CompVDrawingOptions* options COMPV_DEFAULT(NULL)) /*Overrides(CompVCanvasInterface)*/
+// Public override
+COMPV_ERROR_CODE CompVGLCanvas::drawLines(const CompVLineFloat32Vector& lines, const CompVDrawingOptions* options COMPV_DEFAULT(nullptr)) /*Overrides(CompVCanvasInterface)*/
 {   
-	COMPV_CHECK_EXP_RETURN(!x0 || !y0 || !x1 || !y1 || !count, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-
-	if (!m_ptrDrawLines) {
-		COMPV_CHECK_CODE_RETURN(CompVGLDrawLines::newObj(&m_ptrDrawLines));
+	if (lines.empty()) {
+		return COMPV_ERROR_CODE_S_OK;
 	}
-	CompVGLPoint2D* glMemLines_ = NULL, *glMemLine_;
-	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
-	bool randomColors = (!options || options->colorType == COMPV_DRAWING_COLOR_TYPE_RANDOM);
-
-	glMemLines_ = reinterpret_cast<CompVGLPoint2D*>(CompVMem::malloc((count << 1) * sizeof(CompVGLPoint2D)));
-	COMPV_CHECK_EXP_RETURN(!glMemLines_, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY), "Failed to allocation GL points");
-
-	// x0, y0, x1, y1 : (x0, y0) -> (x1, y1)
-	glMemLine_ = glMemLines_;
-	for (size_t i = 0; i < count; i += 1, glMemLine_ += 2) {
-		glMemLine_->position[0] = static_cast<GLfloat>(x0[i]);
-		glMemLine_->position[1] = static_cast<GLfloat>(y0[i]);
-		(glMemLine_ + 1)->position[0] = static_cast<GLfloat>(x1[i]);
-		(glMemLine_ + 1)->position[1] = static_cast<GLfloat>(y1[i]);		
-	}
-
-	// r, g, b
-	glMemLine_ = glMemLines_;
-	if (randomColors) {
-		const GLfloat(*color)[3];
-		for (size_t i = 0; i < count; i += 1, glMemLine_ += 2) {
-			color = &kCompVGLRandomColors[rand() % kCompVGLRandomColorsCount];
-			(glMemLine_ + 1)->color[0] = glMemLine_->color[0] = (*color)[0];
-			(glMemLine_ + 1)->color[1] = glMemLine_->color[1] = (*color)[1];
-			(glMemLine_ + 1)->color[2] = glMemLine_->color[2] = (*color)[2];
-			(glMemLine_ + 1)->color[3] = glMemLine_->color[3] = 1.f; // alpha
-		}
-	}
-	else {
-		for (size_t i = 0; i < count; i += 1, glMemLine_ += 2) {
-			(glMemLine_ + 1)->color[0] = glMemLine_->color[0] = options->color[0];
-			(glMemLine_ + 1)->color[1] = glMemLine_->color[1] = options->color[1];
-			(glMemLine_ + 1)->color[2] = glMemLine_->color[2] = options->color[2];
-			(glMemLine_ + 1)->color[3] = glMemLine_->color[3] = options->color[3];
-		}
-	}
-
-	COMPV_CHECK_CODE_BAIL(err = m_ptrFBO->bind());
-	COMPV_CHECK_CODE_BAIL(err = m_ptrDrawLines->lines(glMemLines_, static_cast<GLsizei>(count << 1), options));
-
-bail:
-	COMPV_CHECK_CODE_NOP(m_ptrFBO->unbind());
-	unMakeEmpty();
-	CompVMem::free(reinterpret_cast<void**>(&glMemLines_));
-	return err;
+	CompVMatPtr glPoints2D;
+	COMPV_CHECK_CODE_RETURN(linesBuild(&glPoints2D, lines));
+	COMPV_CHECK_CODE_RETURN(linesApplyOptions(glPoints2D, options));
+	COMPV_CHECK_CODE_RETURN(drawLines(glPoints2D->ptr<const CompVGLPoint2D>(), glPoints2D->cols(), options));
+	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVGLCanvas::drawInterestPoints(const std::vector<CompVInterestPoint >& interestPoints, const CompVDrawingOptions* options COMPV_DEFAULT(NULL)) /*Overrides(CompVCanvasInterface)*/
+// rectangle with square angles, for arbitrary angles use drawLines
+// Public override
+COMPV_ERROR_CODE CompVGLCanvas::drawRectangles(const CompVRectFloat32Vector& rects, const CompVDrawingOptions* options COMPV_DEFAULT(nullptr)) /*Overrides(CompVCanvas)*/
 {
-	if (interestPoints.empty()) {
+	if (rects.empty()) {
+		return COMPV_ERROR_CODE_S_OK;
+	}
+	const size_t countRects = rects.size();
+	const size_t countLines = (countRects << 4);
+	CompVMatPtr points;
+	COMPV_CHECK_CODE_RETURN((CompVMat::newObj<compv_float32_t>(&points, 4, countLines, 1)));
+	compv_float32_t *px0 = points->ptr<compv_float32_t>(0);
+	compv_float32_t *py0 = points->ptr<compv_float32_t>(1);
+	compv_float32_t *px1 = points->ptr<compv_float32_t>(2);
+	compv_float32_t *py1 = points->ptr<compv_float32_t>(3);
+	for (CompVRectFloat32Vector::const_iterator rect = rects.begin(); rect < rects.end(); ++rect) {
+		px0[0] = rect->left, px0[1] = rect->right, px0[2] = rect->right, px0[3] = rect->left, px0 += 4;
+		py0[0] = rect->top, py0[1] = rect->top, py0[2] = rect->bottom, py0[3] = rect->bottom, py0 += 4;
+		px1[0] = rect->right, px1[1] = rect->right, px1[2] = rect->left, px1[3] = rect->left, px1 += 4;
+		py1[0] = rect->top, py1[1] = rect->bottom, py1[2] = rect->bottom, py1[3] = rect->top, py1 += 4;
+	}
+	COMPV_CHECK_CODE_RETURN(drawLines(
+		points->ptr<const compv_float32_t>(0), points->ptr<const compv_float32_t>(1),
+		points->ptr<const compv_float32_t>(2), points->ptr<const compv_float32_t>(3),
+		countLines, options
+	));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// Public override
+COMPV_ERROR_CODE CompVGLCanvas::drawPoints(const CompVPointFloat32Vector& points, const CompVDrawingOptions* options COMPV_DEFAULT(nullptr)) /*Overrides(CompVCanvas)*/
+{
+	if (points.empty()) {
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	if (!m_ptrDrawPoints) {
@@ -98,11 +91,11 @@ COMPV_ERROR_CODE CompVGLCanvas::drawInterestPoints(const std::vector<CompVIntere
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	const GLfloat(*color)[3];
 
-	glMemPoints_ = reinterpret_cast<CompVGLPoint2D*>(CompVMem::malloc(interestPoints.size() * sizeof(CompVGLPoint2D)));
+	glMemPoints_ = reinterpret_cast<CompVGLPoint2D*>(CompVMem::malloc(points.size() * sizeof(CompVGLPoint2D)));
 	COMPV_CHECK_EXP_RETURN(!glMemPoints_, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY), "Failed to allocation GL points");
 
 	glMemPoint_ = glMemPoints_;
-	for (std::vector<CompVInterestPoint >::const_iterator it = interestPoints.begin(); it != interestPoints.end(); ++it, ++glMemPoint_) {
+	for (CompVPointFloat32Vector::const_iterator it = points.begin(); it != points.end(); ++it, ++glMemPoint_) {
 		// x, y
 		glMemPoint_->position[0] = static_cast<GLfloat>((*it).x);
 		glMemPoint_->position[1] = static_cast<GLfloat>((*it).y);
@@ -115,11 +108,59 @@ COMPV_ERROR_CODE CompVGLCanvas::drawInterestPoints(const std::vector<CompVIntere
 	}
 
 	COMPV_CHECK_CODE_BAIL(err = m_ptrFBO->bind());
-	COMPV_CHECK_CODE_BAIL(err = m_ptrDrawPoints->points(glMemPoints_, static_cast<GLsizei>(interestPoints.size())));
+	COMPV_CHECK_CODE_BAIL(err = m_ptrDrawPoints->points(glMemPoints_, static_cast<GLsizei>(points.size())));
 
 bail:
 	COMPV_CHECK_CODE_NOP(m_ptrFBO->unbind());
 	CompVMem::free(reinterpret_cast<void**>(&glMemPoints_));
+	unMakeEmpty();
+	return err;
+}
+
+// Public override
+COMPV_ERROR_CODE CompVGLCanvas::drawInterestPoints(const CompVInterestPointVector& interestPoints, const CompVDrawingOptions* options COMPV_DEFAULT(nullptr)) /*Overrides(CompVCanvasInterface)*/
+{
+	if (interestPoints.empty()) {
+		return COMPV_ERROR_CODE_S_OK;
+	}
+	// TODO(dmi): we cound for example have the point size depending on the strength, this is why we have 'drawPoints()' and 'drawInterestPoints()' for the future
+	CompVPointFloat32Vector points;
+	points.resize(interestPoints.size());
+	CompVPointFloat32Vector::iterator i = points.begin();
+	std::for_each(interestPoints.begin(), interestPoints.end(), [&i](const CompVInterestPoint &p) {
+		i->x = p.x;
+		i++->y = p.y;
+	});
+	COMPV_CHECK_CODE_RETURN(drawPoints(points, options));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// Internal implementation
+COMPV_ERROR_CODE CompVGLCanvas::drawLines(const compv_float32_t* x0, const compv_float32_t* y0, const compv_float32_t* x1, const compv_float32_t* y1, const size_t count, const CompVDrawingOptions* options COMPV_DEFAULT(nullptr))
+{
+	COMPV_CHECK_EXP_RETURN(!x0 || !y0 || !x1 || !y1 || !count, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+	CompVMatPtr glPoints2D;
+	COMPV_CHECK_CODE_RETURN(linesBuild(&glPoints2D, x0, y0, x1, y1, count));
+	COMPV_CHECK_CODE_RETURN(linesApplyOptions(glPoints2D, options));
+	COMPV_CHECK_CODE_RETURN(drawLines(glPoints2D->ptr<const CompVGLPoint2D>(), glPoints2D->cols(), options));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// Internal implemenation
+COMPV_ERROR_CODE CompVGLCanvas::drawLines(const CompVGLPoint2D* lines, const size_t count, const CompVDrawingOptions* options COMPV_DEFAULT(nullptr))
+{
+	COMPV_CHECK_EXP_RETURN(!lines || !count, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+	if (!m_ptrDrawLines) {
+		COMPV_CHECK_CODE_RETURN(CompVGLDrawLines::newObj(&m_ptrDrawLines));
+	}
+	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
+	COMPV_CHECK_CODE_BAIL(err = m_ptrFBO->bind());
+	COMPV_CHECK_CODE_BAIL(err = m_ptrDrawLines->lines(lines, static_cast<GLsizei>(count), options));
+
+bail:
+	COMPV_CHECK_CODE_NOP(m_ptrFBO->unbind());
 	unMakeEmpty();
 	return err;
 }
@@ -132,6 +173,70 @@ COMPV_ERROR_CODE CompVGLCanvas::close()
 		COMPV_CHECK_CODE_NOP(m_ptrFBO->close());
     }
     return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVGLCanvas::linesBuild(CompVMatPtrPtr glPoints2D, const CompVLineFloat32Vector& lines)
+{
+	COMPV_CHECK_EXP_RETURN(!glPoints2D || lines.empty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+	const size_t count = lines.size();
+	COMPV_CHECK_CODE_RETURN((CompVMat::newObj<CompVGLPoint2D, COMPV_MAT_TYPE_STRUCT>(glPoints2D, 1, (count << 1), 1)));
+	CompVGLPoint2D* glMemLine_ = (*glPoints2D)->ptr<CompVGLPoint2D>();
+	// x0, y0, x1, y1 : (x0, y0) -> (x1, y1)
+	for (CompVLineFloat32Vector::const_iterator i = lines.begin(); i < lines.end(); ++i, glMemLine_ += 2) {
+		glMemLine_->position[0] = static_cast<GLfloat>(i->a.x);
+		glMemLine_->position[1] = static_cast<GLfloat>(i->a.y);
+		(glMemLine_ + 1)->position[0] = static_cast<GLfloat>(i->b.x);
+		(glMemLine_ + 1)->position[1] = static_cast<GLfloat>(i->b.y);
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVGLCanvas::linesBuild(CompVMatPtrPtr glPoints2D, const compv_float32_t* x0, const compv_float32_t* y0, const compv_float32_t* x1, const compv_float32_t* y1, size_t count)
+{
+	COMPV_CHECK_EXP_RETURN(!x0 || !y0 || !x1 || !y1 || !count, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_CODE_RETURN((CompVMat::newObj<CompVGLPoint2D, COMPV_MAT_TYPE_STRUCT>(glPoints2D, 1, (count << 1), 1)));
+	CompVGLPoint2D* glMemLine_ = (*glPoints2D)->ptr<CompVGLPoint2D>();
+	// x0, y0, x1, y1 : (x0, y0) -> (x1, y1)
+	for (size_t i = 0; i < count; ++i, glMemLine_ += 2) {
+		glMemLine_->position[0] = static_cast<GLfloat>(x0[i]);
+		glMemLine_->position[1] = static_cast<GLfloat>(y0[i]);
+		(glMemLine_ + 1)->position[0] = static_cast<GLfloat>(x1[i]);
+		(glMemLine_ + 1)->position[1] = static_cast<GLfloat>(y1[i]);
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVGLCanvas::linesApplyOptions(CompVMatPtr& glPoints2D, const CompVDrawingOptions* options COMPV_DEFAULT(nullptr))
+{
+	COMPV_CHECK_EXP_RETURN(!glPoints2D, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+	bool randomColors = (!options || options->colorType == COMPV_DRAWING_COLOR_TYPE_RANDOM);
+	const size_t count = glPoints2D->cols();
+	COMPV_ASSERT(!(count & 1));
+	CompVGLPoint2D* glMemLines_ = glPoints2D->ptr<CompVGLPoint2D>();
+	CompVGLPoint2D *a = glMemLines_, *b = a + 1;
+	if (randomColors) {
+		const GLfloat(*color)[3];
+		for (size_t i = 0; i < count; i += 2, a+=2, b +=2) {
+			color = &kCompVGLRandomColors[rand() % kCompVGLRandomColorsCount];
+			a->color[0] = b->color[0] = (*color)[0];
+			a->color[1] = b->color[1] = (*color)[1];
+			a->color[2] = b->color[2] = (*color)[2];
+			a->color[3] = b->color[3] = 1.f; // alpha
+		}
+	}
+	else {
+		CompVGLPoint2D* glMemLine_ = glMemLines_;
+		for (size_t i = 0; i < count; i += 2, a += 2, b += 2) {
+			a->color[0] = b->color[0] = options->color[0];
+			a->color[1] = b->color[1] = options->color[1];
+			a->color[2] = b->color[2] = options->color[2];
+			a->color[3] = b->color[3] = options->color[3];
+		}
+	}
+
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVGLCanvas::newObj(CompVGLCanvasPtrPtr canvas, CompVGLFboPtr ptrFBO)

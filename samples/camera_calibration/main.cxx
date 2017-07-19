@@ -62,9 +62,7 @@ public:
 		COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 		if (CompVDrawing::isLoopRunning()) {
 			CompVMatPtr imageGray;
-			CompVMatPtr raw_lines_points;
-			CompVMatPtr grouped_lines_points;
-#if 1
+#if 0
 			COMPV_CHECK_CODE_RETURN(CompVImage::convertGrayscale(image, &imageGray));
 #else
 			size_t file_index = 47 + (rand() % 20); // 47 + (rand() % 20); //47 + (rand() % 20);
@@ -73,19 +71,10 @@ public:
 			CompVThread::sleep(1000);
 #endif
 			COMPV_CHECK_CODE_RETURN(m_ptrCalib->process(imageGray, m_CalibResult));
-
-			if (!m_CalibResult.grouped_lines.empty()) {
-				COMPV_CHECK_CODE_RETURN(buildLines(m_CalibResult.grouped_lines, raw_lines_points));
-			}
+						
 			COMPV_CHECK_CODE_BAIL(err = m_ptrWindow->beginDraw());
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSingleSurfaceLayer->surface()->drawImage(/*imageGray*/m_CalibResult.edges));
-			if (raw_lines_points) {
-				COMPV_CHECK_CODE_BAIL(err = m_ptrSingleSurfaceLayer->surface()->renderer()->canvas()->drawLines(
-					raw_lines_points->ptr<const compv_float32_t>(0), raw_lines_points->ptr<const compv_float32_t>(1),
-					raw_lines_points->ptr<const compv_float32_t>(2), raw_lines_points->ptr<const compv_float32_t>(3),
-					m_CalibResult.grouped_lines.size(), &m_DrawingOptions
-				));
-			}
+			COMPV_CHECK_CODE_BAIL(err = m_ptrSingleSurfaceLayer->surface()->renderer()->canvas()->drawLines(m_CalibResult.grouped_lines, &m_DrawingOptions));
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSingleSurfaceLayer->blit());
 		bail:
 			COMPV_CHECK_CODE_NOP(err = m_ptrWindow->endDraw()); // Make sure 'endDraw()' will be called regardless the result
@@ -111,24 +100,6 @@ public:
 		listener_->m_DrawingOptions.lineWidth = 1.5f;
 
 		*listener = listener_;
-		return COMPV_ERROR_CODE_S_OK;
-	}
-
-private:
-	static COMPV_ERROR_CODE buildLines(const CompVLineFloat32Vector& lines, CompVMatPtr& points) {
-		COMPV_CHECK_EXP_RETURN(lines.empty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-		COMPV_CHECK_CODE_RETURN((CompVMat::newObjAligned<compv_float32_t>(&points, 4, lines.size())));
-		compv_float32_t *px0 = points->ptr<compv_float32_t>(0);
-		compv_float32_t *py0 = points->ptr<compv_float32_t>(1);
-		compv_float32_t *px1 = points->ptr<compv_float32_t>(2);
-		compv_float32_t *py1 = points->ptr<compv_float32_t>(3);
-		for (size_t i = 0; i < lines.size(); i++) {
-			const CompVLineFloat32& line = lines[i];
-			px0[i] = line.a.x;
-			py0[i] = line.a.y;
-			px1[i] = line.b.x;
-			py1[i] = line.b.y;
-		}
 		return COMPV_ERROR_CODE_S_OK;
 	}
 

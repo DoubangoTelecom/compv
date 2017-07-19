@@ -288,7 +288,7 @@ COMPV_ERROR_CODE CompVCornerDeteFAST::process(const CompVMatPtr& image_, CompVIn
 		size_t lastHeight = height - ((threadsCountRange - 1) * heights);
         RangeFAST* pRange;
         CompVAsyncTaskIds taskIds;
-		std::vector<std::vector<CompVInterestPoint> >interestPointsList;
+		std::vector<CompVInterestPointVector >interestPointsList;
 		if (!m_bNonMaximaSupp) {
 			interestPointsList.resize(threadsCountRange);
 		}
@@ -355,7 +355,7 @@ COMPV_ERROR_CODE CompVCornerDeteFAST::process(const CompVMatPtr& image_, CompVIn
 			size_t threadIdx, rowStart;
 			size_t heights = (height / threadsCountNMS);
 			size_t lastHeight = height - ((threadsCountNMS - 1) * heights);
-			std::vector<std::vector<CompVInterestPoint> >interestPointsList;
+			std::vector<CompVInterestPointVector >interestPointsList;
 			RangeFAST* pRange;
 			CompVAsyncTaskIds taskIds;
 			taskIds.reserve(threadsCountNMS);

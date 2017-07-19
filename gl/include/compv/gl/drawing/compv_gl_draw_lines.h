@@ -29,7 +29,7 @@ public:
 	virtual ~CompVGLDrawLines();
 	COMPV_OBJECT_GET_ID(CompVGLDrawLines);
 
-	COMPV_ERROR_CODE lines(const CompVGLPoint2D* lines, GLsizei count, const CompVDrawingOptions* options = NULL);
+	COMPV_ERROR_CODE lines(const CompVGLPoint2D* lines, GLsizei count, const CompVDrawingOptions* options = nullptr);
 
 	static COMPV_ERROR_CODE newObj(CompVGLDrawLinesPtrPtr drawLines);
 

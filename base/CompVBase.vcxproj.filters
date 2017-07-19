@@ -486,6 +486,9 @@
     <ClInclude Include="include\compv\base\math\compv_math_histogram.h">
       <Filter>include\math</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\compv_allocators.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx">

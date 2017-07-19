@@ -492,6 +492,9 @@
     <ClInclude Include="..\include\compv\base\intrin\arm\compv_mem_intrin_neon.h">
       <Filter>include\intrin\arm</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\compv\base\compv_allocators.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_base.cxx">

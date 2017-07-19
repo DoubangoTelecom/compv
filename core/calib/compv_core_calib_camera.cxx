@@ -106,6 +106,11 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 		result.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_POINTS;
 		return COMPV_ERROR_CODE_S_OK;
 	}
+
+	// Convert from polar to cartesian coords
+	COMPV_CHECK_CODE_RETURN(m_ptrHough->toCartesian(image->cols(), image->rows(), result.hough_lines, result.grouped_lines));
+
+#if 0
 	if (m_ptrHough->id() == COMPV_HOUGHKHT_ID) {
 		compv_float64_t gs;
 		COMPV_CHECK_CODE_RETURN(m_ptrHough->getFloat64(COMPV_HOUGHKHT_GET_FLT64_GS, &gs));
@@ -296,7 +301,7 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 #endif
 
 	//result.hough_lines.resize(1);
-
+#endif
 	return COMPV_ERROR_CODE_S_OK;
 }
 
