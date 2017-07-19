@@ -56,25 +56,36 @@ COMPV_ERROR_CODE CompVGLCanvas::drawRectangles(const CompVRectFloat32Vector& rec
 	if (rects.empty()) {
 		return COMPV_ERROR_CODE_S_OK;
 	}
+
 	const size_t countRects = rects.size();
-	const size_t countLines = (countRects << 4);
-	CompVMatPtr points;
-	COMPV_CHECK_CODE_RETURN((CompVMat::newObj<compv_float32_t>(&points, 4, countLines, 1)));
-	compv_float32_t *px0 = points->ptr<compv_float32_t>(0);
-	compv_float32_t *py0 = points->ptr<compv_float32_t>(1);
-	compv_float32_t *px1 = points->ptr<compv_float32_t>(2);
-	compv_float32_t *py1 = points->ptr<compv_float32_t>(3);
-	for (CompVRectFloat32Vector::const_iterator rect = rects.begin(); rect < rects.end(); ++rect) {
-		px0[0] = rect->left, px0[1] = rect->right, px0[2] = rect->right, px0[3] = rect->left, px0 += 4;
-		py0[0] = rect->top, py0[1] = rect->top, py0[2] = rect->bottom, py0[3] = rect->bottom, py0 += 4;
-		px1[0] = rect->right, px1[1] = rect->right, px1[2] = rect->left, px1[3] = rect->left, px1 += 4;
-		py1[0] = rect->top, py1[1] = rect->bottom, py1[2] = rect->bottom, py1[3] = rect->top, py1 += 4;
+	if (countRects == 1) { // drawing a single rectangle is very common
+		const CompVRectFloat32& roi = rects[0];
+		const compv_float32_t x0[4] = { roi.left, roi.right, roi.right, roi.left };
+		const compv_float32_t y0[4] = { roi.top, roi.top, roi.bottom, roi.bottom };
+		const compv_float32_t x1[4] = { roi.right, roi.right, roi.left, roi.left };
+		const compv_float32_t y1[4] = { roi.top, roi.bottom, roi.bottom, roi.top };
+		COMPV_CHECK_CODE_RETURN(drawLines(x0, y0, x1, y1, 4, options));
 	}
-	COMPV_CHECK_CODE_RETURN(drawLines(
-		points->ptr<const compv_float32_t>(0), points->ptr<const compv_float32_t>(1),
-		points->ptr<const compv_float32_t>(2), points->ptr<const compv_float32_t>(3),
-		countLines, options
-	));
+	else {
+		const size_t countLines = (countRects << 2);
+		CompVMatPtr points;
+		COMPV_CHECK_CODE_RETURN((CompVMat::newObj<compv_float32_t>(&points, 4, countLines, 1)));
+		compv_float32_t *px0 = points->ptr<compv_float32_t>(0);
+		compv_float32_t *py0 = points->ptr<compv_float32_t>(1);
+		compv_float32_t *px1 = points->ptr<compv_float32_t>(2);
+		compv_float32_t *py1 = points->ptr<compv_float32_t>(3);
+		for (CompVRectFloat32Vector::const_iterator rect = rects.begin(); rect < rects.end(); ++rect) {
+			px0[0] = rect->left, px0[1] = rect->right, px0[2] = rect->right, px0[3] = rect->left, px0 += 4;
+			py0[0] = rect->top, py0[1] = rect->top, py0[2] = rect->bottom, py0[3] = rect->bottom, py0 += 4;
+			px1[0] = rect->right, px1[1] = rect->right, px1[2] = rect->left, px1[3] = rect->left, px1 += 4;
+			py1[0] = rect->top, py1[1] = rect->bottom, py1[2] = rect->bottom, py1[3] = rect->top, py1 += 4;
+		}
+		COMPV_CHECK_CODE_RETURN(drawLines(
+			points->ptr<const compv_float32_t>(0), points->ptr<const compv_float32_t>(1),
+			points->ptr<const compv_float32_t>(2), points->ptr<const compv_float32_t>(3),
+			countLines, options
+		));
+	}
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -123,7 +134,7 @@ COMPV_ERROR_CODE CompVGLCanvas::drawInterestPoints(const CompVInterestPointVecto
 	if (interestPoints.empty()) {
 		return COMPV_ERROR_CODE_S_OK;
 	}
-	// TODO(dmi): we cound for example have the point size depending on the strength, this is why we have 'drawPoints()' and 'drawInterestPoints()' for the future
+	// TODO(dmi): we could for example have the point size depending on the strength, this is why we have 'drawPoints()' and 'drawInterestPoints()' for the future
 	CompVPointFloat32Vector points;
 	points.resize(interestPoints.size());
 	CompVPointFloat32Vector::iterator i = points.begin();
