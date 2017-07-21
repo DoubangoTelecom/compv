@@ -12,6 +12,7 @@
 #include "compv/base/compv_obj.h"
 #include "compv/base/compv_mat.h"
 #include "compv/base/drawing/compv_canvas.h"
+#include "compv/base/drawing/compv_viewport.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -34,7 +35,7 @@ public:
     }
 
     virtual bool isGLEnabled()const = 0;
-    virtual COMPV_ERROR_CODE drawImage(const CompVMatPtr mat) = 0;
+    virtual COMPV_ERROR_CODE drawImage(const CompVMatPtr& mat, const CompVViewportPtr& viewport = nullptr) = 0;
     virtual CompVCanvasPtr canvas() = 0;
 
 private:

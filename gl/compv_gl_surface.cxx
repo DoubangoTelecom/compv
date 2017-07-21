@@ -82,12 +82,7 @@ CompVCanvasPtr CompVGLSurface::canvas() /*Overrides(CompVSurface)*/
     return NULL;
 }
 
-COMPV_ERROR_CODE CompVGLSurface::drawImage(const CompVMatPtr mat) /*Overrides(CompVSurface)*/
-{
-	return drawImage(mat, NULL);
-}
-
-COMPV_ERROR_CODE CompVGLSurface::drawImage(const CompVMatPtr mat, CompVViewportPtr viewport) // internal function
+COMPV_ERROR_CODE CompVGLSurface::drawImage(const CompVMatPtr& mat, const CompVViewportPtr& viewport COMPV_DEFAULT(nullptr)) /*Overrides(CompVSurface)*/
 {
 	COMPV_CHECK_EXP_RETURN(!mat || mat->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);

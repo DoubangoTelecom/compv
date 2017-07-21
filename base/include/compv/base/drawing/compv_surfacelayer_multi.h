@@ -22,7 +22,7 @@ protected:
 public:
     virtual ~CompVMultiSurfaceLayer();
 
-    virtual COMPV_ERROR_CODE addSurface(CompVSurfacePtrPtr surface, size_t width, size_t height) = 0;
+    virtual COMPV_ERROR_CODE addSurface(CompVSurfacePtrPtr surface, size_t width, size_t height, bool activate = true) = 0;
     virtual COMPV_ERROR_CODE removeSurface(const CompVSurfacePtr surface) = 0;
 
 private:

@@ -14,6 +14,38 @@ using namespace compv;
 
 #define TAG_SAMPLE			"Camera calibration"
 
+/* IWindowSizeChanged */
+class IWindowSizeChanged {
+public:
+	virtual COMPV_ERROR_CODE onWindowSizeChanged(const size_t newWidth, const size_t newHeight) = 0;
+};
+
+/* My window listener */
+COMPV_OBJECT_DECLARE_PTRS(MyWindowListener)
+class CompVMyWindowListener : public CompVWindowListener {
+protected:
+	CompVMyWindowListener(const IWindowSizeChanged* pcIWindowSizeChanged): m_pcIWindowSizeChanged(pcIWindowSizeChanged) { }
+public:
+	virtual ~CompVMyWindowListener() {
+
+	}
+	static COMPV_ERROR_CODE newObj(CompVMyWindowListenerPtrPtr listener, const IWindowSizeChanged* pcIWindowSizeChanged) {
+		COMPV_CHECK_EXP_RETURN(!listener || !pcIWindowSizeChanged, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		*listener = new CompVMyWindowListener(pcIWindowSizeChanged);
+		COMPV_CHECK_EXP_RETURN(!*listener, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+		return COMPV_ERROR_CODE_S_OK;
+	}
+	virtual COMPV_ERROR_CODE onSizeChanged(size_t newWidth, size_t newHeight) override {
+		COMPV_CHECK_CODE_RETURN(const_cast<IWindowSizeChanged*>(m_pcIWindowSizeChanged)->onWindowSizeChanged(newWidth, newHeight));
+		return COMPV_ERROR_CODE_S_OK;
+	};
+	virtual COMPV_ERROR_CODE onStateChanged(COMPV_WINDOW_STATE newState) override {
+		return COMPV_ERROR_CODE_S_OK;
+	};
+private:
+	const IWindowSizeChanged* m_pcIWindowSizeChanged;
+};
+
 /* My runloop listener (optional) */
 COMPV_OBJECT_DECLARE_PTRS(MyRunLoopListener)
 class CompVMyRunLoopListener : public CompVRunLoopListener
@@ -50,11 +82,11 @@ private:
 
 /* My camera listener */
 COMPV_OBJECT_DECLARE_PTRS(MyCameraListener)
-class CompVMyCameraListener : public CompVCameraListener
+class CompVMyCameraListener : public CompVCameraListener, public IWindowSizeChanged
 {
+	friend class CompVMyWindowListener;
 protected:
-	CompVMyCameraListener(CompVWindowPtr ptrWindow, CompVSingleSurfaceLayerPtr ptrSingleSurfaceLayer)
-		: m_ptrWindow(ptrWindow), m_ptrSingleSurfaceLayer(ptrSingleSurfaceLayer) { }
+	CompVMyCameraListener(CompVWindowPtr ptrWindow): m_nImageWidth(0), m_nImageHeight(0), m_ptrWindow(ptrWindow) { }
 public:
 	virtual ~CompVMyCameraListener() { }
 
@@ -62,22 +94,64 @@ public:
 		COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 		if (CompVDrawing::isLoopRunning()) {
 			CompVMatPtr imageGray;
-#if 0
+#if 1
 			COMPV_CHECK_CODE_RETURN(CompVImage::convertGrayscale(image, &imageGray));
 #else
 			size_t file_index = 47 + (rand() % 20); // 47 + (rand() % 20); //47 + (rand() % 20);
 			std::string file_path = std::string("C:/Projects/GitHub/data/calib/P10100")+ CompVBase::to_string(file_index) +std::string("s_640x480_gray.yuv");
 			COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 640, 480, 640, file_path.c_str(), &imageGray));
-			CompVThread::sleep(1000);
 #endif
+			COMPV_DEBUG_INFO_CODE_FOR_TESTING("Remove the sleep function");
+			//CompVThread::sleep(500);
+
+			// Check if image size changed
+			if (m_nImageWidth != imageGray->cols() || m_nImageHeight != imageGray->rows()) {
+				COMPV_CHECK_CODE_RETURN(onImageSizeChanged(imageGray->cols(), imageGray->rows()));
+			}
+
+			// Calibration
 			COMPV_CHECK_CODE_RETURN(m_ptrCalib->process(imageGray, m_CalibResult));
-						
+			
+			// Begin drawing
 			COMPV_CHECK_CODE_BAIL(err = m_ptrWindow->beginDraw());
-			COMPV_CHECK_CODE_BAIL(err = m_ptrSingleSurfaceLayer->surface()->drawImage(/*imageGray*/m_CalibResult.edges));
-			COMPV_CHECK_CODE_BAIL(err = m_ptrSingleSurfaceLayer->surface()->renderer()->canvas()->drawLines(m_CalibResult.grouped_lines, &m_DrawingOptions));
-			COMPV_CHECK_CODE_BAIL(err = m_ptrSingleSurfaceLayer->blit());
+
+			// Original image
+			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceOriginal->activate());
+			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceOriginal->drawImage(image));
+
+			// Edges
+			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceEdges->activate());
+			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceEdges->drawImage(m_CalibResult.edges));
+
+			// Raw Lines
+			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLinesRaw->activate());
+			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLinesRaw->drawImage(m_CalibResult.edges));
+			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLinesRaw->renderer()->canvas()->drawLines(m_CalibResult.grouped_lines, &m_DrawingOptions));
+
+			// Grouped lines
+			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->activate());
+			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->drawImage(m_CalibResult.edges));
+
+			// Grouped and ordered lines
+			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGroupedAndOrdered->activate());
+			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGroupedAndOrdered->drawImage(m_CalibResult.edges));
+
+			// Corners
+			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceCorners->activate());
+			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceCorners->drawImage(m_CalibResult.edges));
+
+			// Swap back buffer <-> front
+			COMPV_CHECK_CODE_BAIL(err = m_ptrMultiSurface->blit());
 		bail:
+			// End drawing
 			COMPV_CHECK_CODE_NOP(err = m_ptrWindow->endDraw()); // Make sure 'endDraw()' will be called regardless the result
+			// Deactivate the surfaces
+			COMPV_CHECK_CODE_NOP(err = m_ptrSurfaceOriginal->deActivate());
+			COMPV_CHECK_CODE_NOP(err = m_ptrSurfaceEdges->deActivate());
+			COMPV_CHECK_CODE_NOP(err = m_ptrSurfaceLinesRaw->deActivate());
+			COMPV_CHECK_CODE_NOP(err = m_ptrSurfaceLineGrouped->deActivate());
+			COMPV_CHECK_CODE_NOP(err = m_ptrSurfaceLineGroupedAndOrdered->deActivate());
+			COMPV_CHECK_CODE_NOP(err = m_ptrSurfaceCorners->deActivate());
 		}
 		return err;
 	}
@@ -87,11 +161,21 @@ public:
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
-	static COMPV_ERROR_CODE newObj(CompVMyCameraListenerPtrPtr listener, CompVWindowPtr ptrWindow, CompVSingleSurfaceLayerPtr ptrSingleSurfaceLayer) {
-		COMPV_CHECK_EXP_RETURN(!listener || !ptrWindow || !ptrSingleSurfaceLayer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-		CompVMyCameraListenerPtr listener_ = new CompVMyCameraListener(ptrWindow, ptrSingleSurfaceLayer);
+	virtual COMPV_ERROR_CODE onWindowSizeChanged(const size_t window_Width, const size_t window_height) override
+	{
+		COMPV_CHECK_CODE_RETURN(onWindowOrImageSizeChanged(window_Width, window_height,
+			m_nImageWidth ? m_nImageWidth : CAMERA_WIDTH, m_nImageHeight ? m_nImageHeight : CAMERA_HEIGHT));
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
+
+	static COMPV_ERROR_CODE newObj(CompVMyCameraListenerPtrPtr listener, CompVWindowPtr ptrWindow) {
+		COMPV_CHECK_EXP_RETURN(!listener || !ptrWindow, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		CompVMyCameraListenerPtr listener_ = new CompVMyCameraListener(ptrWindow);
 		COMPV_CHECK_EXP_RETURN(!listener_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 		COMPV_CHECK_CODE_RETURN(CompVCalibCamera::newObj(&listener_->m_ptrCalib));
+
+		// Drawing options
 		listener_->m_DrawingOptions.colorType = COMPV_DRAWING_COLOR_TYPE_STATIC;
 		listener_->m_DrawingOptions.color[0] = 1.f;
 		listener_->m_DrawingOptions.color[1] = 1.f;
@@ -99,16 +183,84 @@ public:
 		listener_->m_DrawingOptions.color[3] = 1.f;
 		listener_->m_DrawingOptions.lineWidth = 1.5f;
 
+		// Multi-layer surface
+		COMPV_CHECK_CODE_RETURN(listener_->m_ptrWindow->addMultiLayerSurface(&listener_->m_ptrMultiSurface));
+		COMPV_CHECK_CODE_RETURN(listener_->m_ptrMultiSurface->addSurface(&listener_->m_ptrSurfaceOriginal, ptrWindow->width(), ptrWindow->height(), false));
+		COMPV_CHECK_CODE_RETURN(listener_->m_ptrMultiSurface->addSurface(&listener_->m_ptrSurfaceEdges, ptrWindow->width(), ptrWindow->height(), false));
+		COMPV_CHECK_CODE_RETURN(listener_->m_ptrMultiSurface->addSurface(&listener_->m_ptrSurfaceLinesRaw, ptrWindow->width(), ptrWindow->height(), false));
+		COMPV_CHECK_CODE_RETURN(listener_->m_ptrMultiSurface->addSurface(&listener_->m_ptrSurfaceLineGrouped, ptrWindow->width(), ptrWindow->height(), false));
+		COMPV_CHECK_CODE_RETURN(listener_->m_ptrMultiSurface->addSurface(&listener_->m_ptrSurfaceLineGroupedAndOrdered, ptrWindow->width(), ptrWindow->height(), false));
+		COMPV_CHECK_CODE_RETURN(listener_->m_ptrMultiSurface->addSurface(&listener_->m_ptrSurfaceCorners, ptrWindow->width(), ptrWindow->height(), false));
+
+		// Window listener
+		COMPV_CHECK_CODE_RETURN(CompVMyWindowListener::newObj(&listener_->m_ptrWindowListener, *listener_));
+		COMPV_CHECK_CODE_RETURN(listener_->m_ptrWindow->addListener(*listener_->m_ptrWindowListener));
+
 		*listener = listener_;
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
 private:
+	COMPV_ERROR_CODE onImageSizeChanged(const size_t image_Width, const size_t image_height)
+	{
+		COMPV_CHECK_CODE_RETURN(onWindowOrImageSizeChanged(m_ptrWindow->width(), m_ptrWindow->height(), image_Width, image_height));
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
+	COMPV_ERROR_CODE onWindowOrImageSizeChanged(const size_t window_Width, const size_t window_height, const size_t image_Width, const size_t image_height)
+	{
+		COMPV_DEBUG_INFO_EX(TAG_SAMPLE, __FUNCTION__);
+		CompVRectInt src, dst, view;
+
+		const int window_Width_int = static_cast<int>(window_Width);
+		const int window_height_int = static_cast<int>(window_height);
+		const int image_Width_int = static_cast<int>(image_Width);
+		const int image_height_int = static_cast<int>(image_height);
+		const int w_width = (window_Width_int / 3);
+		const int w_height = (window_height_int / 2);
+
+		src.left = src.top = dst.left = dst.top = 0;
+		src.right = (image_Width_int);
+		src.bottom = (image_height_int);
+		dst.right = w_width;
+		dst.bottom = w_height;
+		CompVViewportPtr viewportAspectRatio;
+		COMPV_CHECK_CODE_RETURN(CompVViewport::newObj(&viewportAspectRatio, CompViewportSizeFlags::makeDynamicAspectRatio()));
+		
+		COMPV_CHECK_CODE_RETURN(CompVViewport::viewport(src, dst, viewportAspectRatio, &view));
+
+		const int v_width = (view.right - view.left);
+		const int v_height = (view.bottom - view.top);
+		// First row
+		COMPV_CHECK_CODE_RETURN(m_ptrSurfaceOriginal->viewport()->reset(CompViewportSizeFlags::makeStatic(), view.left, view.top, v_width, v_height));
+		COMPV_CHECK_CODE_RETURN(m_ptrSurfaceEdges->viewport()->reset(CompViewportSizeFlags::makeStatic(), view.left + w_width, view.top, v_width, v_height));
+		COMPV_CHECK_CODE_RETURN(m_ptrSurfaceLinesRaw->viewport()->reset(CompViewportSizeFlags::makeStatic(), view.left + (w_width << 1), view.top, v_width, v_height));
+		// Second row
+		COMPV_CHECK_CODE_RETURN(m_ptrSurfaceLineGrouped->viewport()->reset(CompViewportSizeFlags::makeStatic(), view.left, (view.top + w_height), v_width, v_height));
+		COMPV_CHECK_CODE_RETURN(m_ptrSurfaceLineGroupedAndOrdered->viewport()->reset(CompViewportSizeFlags::makeStatic(), view.left + w_width, (view.top + w_height), v_width, v_height));
+		COMPV_CHECK_CODE_RETURN(m_ptrSurfaceCorners->viewport()->reset(CompViewportSizeFlags::makeStatic(), view.left + (w_width << 1), (view.top + w_height), v_width, v_height));
+
+		m_nImageWidth = image_Width;
+		m_nImageHeight = image_height;
+
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
+private:
+	size_t m_nImageWidth;
+	size_t m_nImageHeight;
 	CompVWindowPtr m_ptrWindow;
-	CompVSingleSurfaceLayerPtr m_ptrSingleSurfaceLayer;
 	CompVCalibCameraPtr m_ptrCalib;
 	CompVCalibCameraResult m_CalibResult;
 	CompVDrawingOptions m_DrawingOptions;
+	CompVMyWindowListenerPtr m_ptrWindowListener;
+	CompVMultiSurfaceLayerPtr m_ptrMultiSurface;
+	CompVSurfacePtr m_ptrSurfaceOriginal;
+	CompVSurfacePtr m_ptrSurfaceEdges;
+	CompVSurfacePtr m_ptrSurfaceLinesRaw;
+	CompVSurfacePtr m_ptrSurfaceLineGrouped;
+	CompVSurfacePtr m_ptrSurfaceLineGroupedAndOrdered;
+	CompVSurfacePtr m_ptrSurfaceCorners;
 };
 
 /* Entry point function */
@@ -116,28 +268,26 @@ compv_main()
 {
 	{
 		COMPV_ERROR_CODE err;
-		CompVWindowPtr window;
 		CompVMyRunLoopListenerPtr runloopListener;
-		CompVSingleSurfaceLayerPtr singleSurfaceLayer;
 		CompVCameraPtr camera;
+		CompVWindowPtr m_ptrWindow;
 		CompVMyCameraListenerPtr cameraListener;
 		CompVCameraDeviceInfoList devices;
 		std::string cameraId = ""; // empty string means default
 
-								   // Change debug level to INFO before starting
+		// Change debug level to INFO before starting
 		CompVDebugMgr::setLevel(COMPV_DEBUG_LEVEL_INFO);
 
 		// Init the modules
 		COMPV_CHECK_CODE_BAIL(err = CompVInit());
 
-		// Create "Hello world!" window and add a surface for drawing
-		COMPV_CHECK_CODE_BAIL(err = CompVWindow::newObj(&window, WINDOW_WIDTH, WINDOW_HEIGHT, TAG_SAMPLE));
-		COMPV_CHECK_CODE_BAIL(err = window->addSingleLayerSurface(&singleSurfaceLayer));
+		// Create window
+		COMPV_CHECK_CODE_BAIL(err = CompVWindow::newObj(&m_ptrWindow, WINDOW_WIDTH, WINDOW_HEIGHT, TAG_SAMPLE));
 
 		// Create my camera and add a listener to it 
 		COMPV_CHECK_CODE_BAIL(err = CompVCamera::newObj(&camera));
 
-		COMPV_CHECK_CODE_BAIL(err = CompVMyCameraListener::newObj(&cameraListener, window, *singleSurfaceLayer));
+		COMPV_CHECK_CODE_BAIL(err = CompVMyCameraListener::newObj(&cameraListener, m_ptrWindow));
 		COMPV_CHECK_CODE_BAIL(err = camera->setListener(*cameraListener));
 		// Get list of devices/cameras and print them to the screen (optional)
 		COMPV_CHECK_CODE_BAIL(err = camera->devices(devices));
@@ -154,8 +304,8 @@ compv_main()
 		COMPV_CHECK_CODE_BAIL(err = camera->setBool(COMPV_CAMERA_CAP_BOOL_AUTOFOCUS, CAMERA_AUTOFOCUS));
 		COMPV_CHECK_CODE_BAIL(err = camera->start(cameraId)); // use no parameter ('star()') to use default camera device
 
-															  // Start ui runloop
-															  // Setting a listener is optional but used here to show how to handle Android onStart, onPause, onResume.... activity states
+		// Start ui runloop
+		// Setting a listener is optional but used here to show how to handle Android onStart, onPause, onResume.... activity states
 		COMPV_CHECK_CODE_BAIL(err = CompVMyRunLoopListener::newObj(&runloopListener, camera, cameraId));
 		COMPV_CHECK_CODE_BAIL(err = CompVDrawing::runLoop(*runloopListener));
 

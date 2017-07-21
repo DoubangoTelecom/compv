@@ -20,31 +20,37 @@ CompVGLMultiSurfaceLayer::~CompVGLMultiSurfaceLayer()
     m_mapSurfaces.clear();
 }
 
-COMPV_OVERRIDE_IMPL0("CompVMultiSurfaceLayer", CompVGLMultiSurfaceLayer::addSurface)(CompVSurfacePtrPtr surface, size_t width, size_t height)
+// Public API
+COMPV_ERROR_CODE CompVGLMultiSurfaceLayer::addSurface(CompVSurfacePtrPtr surface, size_t width, size_t height, bool activate COMPV_DEFAULT(true)) /* Overrides(CompVMultiSurfaceLayer) */
 {
     COMPV_CHECK_EXP_RETURN(!surface || !width || !height, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     CompVGLSurfacePtr surface_;
     COMPV_CHECK_CODE_RETURN(CompVGLSurface::newObj(&surface_, width, height));
+	if (!activate) {
+		COMPV_CHECK_CODE_RETURN(surface_->deActivate());
+	}
     m_mapSurfaces[surface_->id()] = surface_;
     *surface = *surface_;
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_OVERRIDE_IMPL0("CompVMultiSurfaceLayer", CompVGLMultiSurfaceLayer::removeSurface)(const CompVSurfacePtr surface)
+// Public API
+COMPV_ERROR_CODE CompVGLMultiSurfaceLayer::removeSurface(const CompVSurfacePtr surface) /* Overrides(CompVMultiSurfaceLayer) */
 {
     COMPV_CHECK_EXP_RETURN(!surface, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     m_mapSurfaces.erase(surface->id());
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_OVERRIDE_IMPL0("CompSurfaceLayer", CompVGLMultiSurfaceLayer::blit)()
+// Public API
+COMPV_ERROR_CODE CompVGLMultiSurfaceLayer::blit() /* Overrides(CompVMultiSurfaceLayer) */
 {
     COMPV_CHECK_EXP_RETURN(!m_ptrCoverSurfaceGL, COMPV_ERROR_CODE_E_INVALID_STATE);
     COMPV_CHECK_CODE_RETURN(m_ptrCoverSurfaceGL->blitter()->requestFBO(m_ptrCoverSurfaceGL->width(), m_ptrCoverSurfaceGL->height()));
     CompVGLFboPtr fboCover = m_ptrCoverSurfaceGL->blitter()->fbo();
     for (std::map<compv_surface_id_t, CompVGLSurfacePtr>::iterator it = m_mapSurfaces.begin(); it != m_mapSurfaces.end(); ++it) {
         if (it->second->isActive()) {
-            COMPV_CHECK_CODE_RETURN(it->second->blitRenderer(fboCover));
+			COMPV_CHECK_CODE_RETURN(it->second->blitRenderer(fboCover));
         }
     }
     if (m_ptrCoverSurfaceGL->isActive()) {

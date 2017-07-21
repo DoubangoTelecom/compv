@@ -353,12 +353,7 @@ bail:
 	return *m_ptrCanvas;
 }
 
-COMPV_ERROR_CODE CompVGLRenderer::drawImage(const CompVMatPtr mat) /*Overrides(CompVGLRenderer)*/
-{
-	return drawImage(mat, NULL);
-}
-
-COMPV_ERROR_CODE CompVGLRenderer::drawImage(const CompVMatPtr mat, CompVViewportPtr viewport) // internal function
+COMPV_ERROR_CODE CompVGLRenderer::drawImage(const CompVMatPtr& mat, const CompVViewportPtr& viewport COMPV_DEFAULT(nullptr)) /*Overrides(CompVGLRenderer)*/
 {
 	COMPV_CHECK_EXP_RETURN(!mat || mat->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
@@ -385,6 +380,7 @@ COMPV_ERROR_CODE CompVGLRenderer::drawImage(const CompVMatPtr mat, CompVViewport
 	COMPV_CHECK_CODE_RETURN(init(mat));
 
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
+	CompVRectInt viewportRect;
 
 	COMPV_CHECK_CODE_BAIL(err = m_ptrBlitter->bind()); // Bind FBO, VAO and activate the program
 
@@ -411,13 +407,12 @@ COMPV_ERROR_CODE CompVGLRenderer::drawImage(const CompVMatPtr mat, CompVViewport
 	// Set viewport
 	if (viewport) {
 		// Map viewport to screen rectangle
-		CompVRectInt viewportRect;
 		COMPV_CHECK_CODE_BAIL(err = CompVViewport::toRect(viewport, &viewportRect));
-		COMPV_glViewport(static_cast<GLsizei>(viewportRect.left), static_cast<GLsizei>(viewportRect.top), static_cast<GLsizei>(viewportRect.right), static_cast<GLsizei>(viewportRect.bottom));
 	}
 	else {
-		COMPV_glViewport(0, 0, static_cast<GLsizei>(m_ptrBlitter->width()), static_cast<GLsizei>(m_ptrBlitter->height()));
+		viewportRect = CompVRectInt::makeFromWidthHeight(0, 0, static_cast<int>(m_ptrBlitter->width()), static_cast<int>(m_ptrBlitter->height()));
 	}
+	COMPV_glViewport(static_cast<GLsizei>(viewportRect.left), static_cast<GLsizei>(viewportRect.top), static_cast<GLsizei>(viewportRect.right), static_cast<GLsizei>(viewportRect.bottom));
 
 	// Draw elements
 	COMPV_glDrawElements(GL_TRIANGLES, m_ptrBlitter->indicesCount(), GL_UNSIGNED_BYTE, 0);

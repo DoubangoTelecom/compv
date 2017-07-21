@@ -33,10 +33,10 @@ public:
     virtual ~CompVGLMultiSurfaceLayer();
     COMPV_OBJECT_GET_ID(CompVGLMultiSurfaceLayer);
 
-    COMPV_OVERRIDE_DECL0("CompVMultiSurfaceLayer", addSurface)(CompVSurfacePtrPtr surface, size_t width, size_t height) override;
-    COMPV_OVERRIDE_DECL0("CompVMultiSurfaceLayer", removeSurface)(const CompVSurfacePtr surface) override;
+    virtual COMPV_ERROR_CODE addSurface(CompVSurfacePtrPtr surface, size_t width, size_t height, bool activate = true) override /*Overrides(CompVMultiSurfaceLayer)*/;
+	virtual COMPV_ERROR_CODE removeSurface(const CompVSurfacePtr surface) override /*Overrides(CompVMultiSurfaceLayer)*/;
 
-    COMPV_OVERRIDE_DECL0("CompSurfaceLayer", blit)() override;
+	virtual COMPV_ERROR_CODE blit() override /*Overrides(CompVMultiSurfaceLayer)*/;
 
     COMPV_ERROR_CODE updateSize(size_t newWidth, size_t newHeight);
     COMPV_ERROR_CODE close();

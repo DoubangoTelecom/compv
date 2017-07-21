@@ -51,6 +51,7 @@ protected:
     CompVWindowListener(): m_nId(compv_atomic_inc(&CompVWindowListener::s_nWindowListenerId)) { }
 public:
     virtual ~CompVWindowListener() { }
+	COMPV_OBJECT_GET_ID(CompVWindowListener);
     COMPV_INLINE compv_windowlistener_id_t id()const {
         return m_nId;
     }

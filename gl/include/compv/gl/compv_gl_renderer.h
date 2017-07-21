@@ -39,9 +39,8 @@ public:
 		return true;
 	};
 	virtual CompVCanvasPtr canvas() override /*Overrides(CompVGLRenderer)*/;
-    virtual COMPV_ERROR_CODE drawImage(const CompVMatPtr mat) override /*Overrides(CompVGLRenderer)*/;
+    virtual COMPV_ERROR_CODE drawImage(const CompVMatPtr& mat, const CompVViewportPtr& viewport = nullptr) override /*Overrides(CompVGLRenderer)*/;
 
-	COMPV_ERROR_CODE drawImage(const CompVMatPtr mat, CompVViewportPtr viewport); // internal function
 	COMPV_ERROR_CODE close();
 
     static COMPV_ERROR_CODE newObj(CompVGLRendererPtrPtr glRenderer, COMPV_SUBTYPE ePixelFormat);
