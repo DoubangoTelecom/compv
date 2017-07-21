@@ -5,28 +5,37 @@
 * WebSite: http://compv.org
 */
 #include "compv/core/calib/compv_core_calib_camera.h"
+#include "compv/base/compv_allocators.h"
 #include "compv/base/image/compv_image.h"
 #include "compv/base/math/compv_math_utils.h"
 #include "compv/base/math/compv_math_gauss.h"
 
-#define PATTERN_ROW_CORNERS_NUM			10 // Number of corners per row
-#define PATTERN_COL_CORNERS_NUM			8  // Number of corners per column
-#define PATTERN_CORNERS_NUM				(PATTERN_ROW_CORNERS_NUM * PATTERN_COL_CORNERS_NUM) // Total number of corners
-#define PATTERN_GROUP_MAXLINES			5 // Maximum number of lines per group (errors)
+#define PATTERN_ROW_CORNERS_NUM				10 // Number of corners per row
+#define PATTERN_COL_CORNERS_NUM				8  // Number of corners per column
+#define PATTERN_CORNERS_NUM					(PATTERN_ROW_CORNERS_NUM * PATTERN_COL_CORNERS_NUM) // Total number of corners
+#define PATTERN_GROUP_MAXLINES				5 // Maximum number of lines per group (errors)
 
-#define HOUGH_RHO						0.5f // "rho-delta" (half-pixel)
-#define HOUGH_THETA						0.5f // "theta-delta" (half-radian)
-#define HOUGH_THRESHOLD					1 // 150
-#define HOUGH_THRESHOLD_FACT			0.0003828					
-#define HOUGH_CLUSTER_MIN_DEVIATION		2.0f
-#define HOUGH_CLUSTER_MIN_SIZE			10
-#define HOUGH_KERNEL_MIN_HEIGTH			0.002f // must be within [0, 1]
+#define HOUGH_ID							COMPV_HOUGHSHT_ID
+#define HOUGH_RHO							0.5f // "rho-delta" (half-pixel)
+#define HOUGH_THETA							0.5f // "theta-delta" (half-radian)
+#define HOUGH_SHT_THRESHOLD_FACT			0.00016276
+#define HOUGH_SHT_THRESHOLD_MAX				50
+#define HOUGH_KHT_THRESHOLD_FACT			1.0 // GS
+#define HOUGH_SHT_THRESHOLD					50
+#define HOUGH_KHT_THRESHOLD					1 // filter later when GS is known	
+#define HOUGH_KHT_CLUSTER_MIN_DEVIATION		2.0f
+#define HOUGH_KHT_CLUSTER_MIN_SIZE			10
+#define HOUGH_KHT_KERNEL_MIN_HEIGTH			0.002f // must be within [0, 1]
 
-#define CANNY_LOW						2.41f
-#define CANNY_HIGH						CANNY_LOW*2.f
-#define CANNY_KERNEL_SIZE				3
+#define CANNY_LOW							1.83f
+#define CANNY_HIGH							CANNY_LOW*2.f
+#define CANNY_KERNEL_SIZE					3
 
 COMPV_NAMESPACE_BEGIN()
+
+static const float kSmallAngle = COMPV_MATH_DEGREE_TO_RADIAN_FLOAT(30.0); /* PI/6 */
+static const float kTinyAngle = COMPV_MATH_DEGREE_TO_RADIAN_FLOAT(5.0); /* PI/6 */
+static const float kSmallRhoFact = 0.025f; /* small = (rho * fact) */
 
 struct CompVHoughLineGroup {
 	const CompVHoughLine* pivot = nullptr;
@@ -34,20 +43,12 @@ struct CompVHoughLineGroup {
 };
 typedef std::vector<CompVHoughLineGroup> CompVHoughLineGroupVector;
 
-struct CalibLine {
-	CompVLineFloat32 line;
-	compv_float32_t slope;
-	size_t strength;
+struct CalibLineFloat32 {
+	CompVLineFloat32 line_cart;
+	CompVHoughLine line_hough;
 };
-typedef std::vector<CalibLine> CalibLineVector;
+typedef std::vector<CalibLineFloat32, CompVAllocatorNoDefaultConstruct<CalibLineFloat32> > CalibLineFloat32Vector;
 
-struct CalibLineGroup {
-	CalibLine pivot;
-	CalibLineVector lines;
-};
-typedef std::vector<CalibLineGroup> CalibLineGroupVector;
-
-static COMPV_ERROR_CODE __linesFromPolarToCartesian(const size_t sceneWidth, const size_t sceneHeight, const CompVHoughLineVector& polar, CalibLineVector& cartesian);
 
 CompVCalibCamera::CompVCalibCamera()
 	: m_nPatternCornersNumRow(PATTERN_ROW_CORNERS_NUM)
@@ -91,44 +92,138 @@ int get_line_intersection(float p0_x, float p0_y, float p1_x, float p1_y,
 
 COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibCameraResult& result)
 {
-	COMPV_CHECK_EXP_RETURN(!image || image->subType() != COMPV_SUBTYPE_PIXELS_Y, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Input image is null or not in grayscale format");
+	COMPV_CHECK_EXP_RETURN(!image || image->elmtInBytes() != sizeof(uint8_t) || image->planeCount() != 1, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Input image is null or not in grayscale format");
 
 	// Reset the previous result
 	result.reset();
 
-	// Canny edge detection
+	/* Canny edge detection */
 	COMPV_CHECK_CODE_RETURN(m_ptrCanny->process(image, &result.edges));
 
-	// Hough lines
-	//COMPV_CHECK_CODE_RETURN(m_ptrHough->setInt(COMPV_HOUGH_SET_INT_THRESHOLD, static_cast<int>(static_cast<double>(image->cols() * image->rows()) * HOUGH_THRESHOLD_FACT) + 1));
-	COMPV_CHECK_CODE_RETURN(m_ptrHough->process(result.edges, result.hough_lines));
-	if (result.hough_lines.size() < m_nPatternLinesTotal) {
+	/* Hough lines */
+	// For SHT, set the threshold before processing. But for KHT, we need the global scale (GS) which is defined only *after* processing
+	if (m_ptrHough->id() == COMPV_HOUGHSHT_ID) {
+		COMPV_CHECK_CODE_RETURN(m_ptrHough->setInt(COMPV_HOUGH_SET_INT_THRESHOLD, 
+			std::min(HOUGH_SHT_THRESHOLD_MAX, static_cast<int>(static_cast<double>(image->cols() * image->rows()) * HOUGH_SHT_THRESHOLD_FACT) + 1))
+		);
+	}
+	// Process
+	COMPV_CHECK_CODE_RETURN(m_ptrHough->process(result.edges, result.raw_hough_lines));
+
+	/* Remove weak lines using global scale (GS) */
+	if (m_ptrHough->id() == COMPV_HOUGHKHT_ID) {
+		compv_float64_t gs;
+		COMPV_CHECK_CODE_RETURN(m_ptrHough->getFloat64(COMPV_HOUGHKHT_GET_FLT64_GS, &gs));
+		const size_t min_strength = static_cast<size_t>(gs * HOUGH_KHT_THRESHOLD_FACT);
+		auto fncShortLines = std::remove_if(result.raw_hough_lines.begin(), result.raw_hough_lines.end(), [&](const CompVHoughLine& line) {
+			return line.strength < min_strength;
+		});
+		result.raw_hough_lines.erase(fncShortLines, result.raw_hough_lines.end());
+	}
+
+	/* Return if no enough points */
+	if (result.raw_hough_lines.size() < m_nPatternLinesTotal) {
 		result.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_POINTS;
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
-	// Convert from polar to cartesian coords
-	COMPV_CHECK_CODE_RETURN(m_ptrHough->toCartesian(image->cols(), image->rows(), result.hough_lines, result.grouped_lines));
+	/* Line grouping */
+	CompVHoughLineGroupVector groups;
+	const compv_float32_t r = std::sqrt(static_cast<compv_float32_t>((image->cols() * image->cols()) + (image->rows() * image->rows())));
+	compv_float32_t rsmall = kSmallRhoFact * r;
+	compv_float32_t asmall = kSmallAngle;
+	const compv_float32_t rsmallMax = rsmall * 4.1f;
+	bool grouped;
+
+	// Build groups using angles and rho (will be increased)
+	do {
+		groups.clear();
+		const CompVHoughLineVector& raw_hough_lines = result.grouped_hough_lines.empty() ? result.raw_hough_lines : result.grouped_hough_lines;
+		for (CompVHoughLineVector::const_iterator i = raw_hough_lines.begin(); i < raw_hough_lines.end(); ++i) {
+			CompVHoughLineGroup* group = nullptr;
+			for (CompVHoughLineGroupVector::iterator g = groups.begin(); g < groups.end(); ++g) {
+				if (std::abs(g->pivot->theta - i->theta) < asmall && std::abs(g->pivot->rho - i->rho) <= rsmall) {
+					group = &(*g);
+					break;
+				}
+			}
+			if (!group) {
+				CompVHoughLineGroup g;
+				g.pivot = &(*i);
+				groups.push_back(g);
+				group = &groups[groups.size() - 1];
+			}
+			group->lines.push_back(*i);
+		}
+
+		// Return if no enough groups
+		if (groups.size() < m_nPatternLinesTotal) {
+			if (result.grouped_hough_lines.size() >= m_nPatternLinesTotal) {
+				break; // we have enough lines from previous try
+			}
+			result.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_POINTS;
+			return COMPV_ERROR_CODE_S_OK;
+		}
+
+		// Increase rsmall and decrease asmall for next loop
+		rsmall *= 2.f;
+		asmall /= 2.f;
+
+		// Update 'rho' and 'theta' for the groups using strenght
+		result.grouped_hough_lines.clear();
+		result.grouped_hough_lines.reserve(groups.size());
+		grouped = false;
+		for (CompVHoughLineGroupVector::const_iterator g = groups.begin(); g < groups.end(); ++g) {
+			if (g->lines.size() > 1) {
+				size_t strength_sum = 0;
+				for (CompVHoughLineVector::const_iterator i = g->lines.begin(); i < g->lines.end(); ++i) {
+					strength_sum += i->strength;
+				}
+				const compv_float32_t scale = 1.f / static_cast<compv_float32_t>(strength_sum);
+				compv_float32_t rho = 0;
+				compv_float32_t theta = 0;
+				for (CompVHoughLineVector::const_iterator i = g->lines.begin(); i < g->lines.end(); ++i) {
+					rho += (((i->rho) * i->strength) * scale);
+					theta += ((i->theta) * i->strength) * scale;
+				}
+
+				result.grouped_hough_lines.push_back(CompVHoughLine(
+					rho, theta, strength_sum
+				));
+				grouped = true;
+			}
+			else {
+				result.grouped_hough_lines.push_back(*g->lines.begin());
+			}
+		}
+	} while (grouped && (rsmall < rsmallMax));
+
+	// Sort grouped lines
+	std::sort(result.grouped_hough_lines.begin(), result.grouped_hough_lines.end(), [](const CompVHoughLine &line1, const CompVHoughLine &line2) {
+		return (line1.strength > line2.strength);
+	});
+
+	//result.grouped_hough_lines.resize(m_nPatternLinesTotal);
 
 #if 0
 	if (m_ptrHough->id() == COMPV_HOUGHKHT_ID) {
 		compv_float64_t gs;
 		COMPV_CHECK_CODE_RETURN(m_ptrHough->getFloat64(COMPV_HOUGHKHT_GET_FLT64_GS, &gs));
 		const size_t min_strength = static_cast<size_t>(gs * 0.2);
-		auto fncShortLines = std::remove_if(result.hough_lines.begin(), result.hough_lines.end(), [&](const CompVHoughLine& line) {
+		auto fncShortLines = std::remove_if(result.raw_hough_lines.begin(), result.raw_hough_lines.end(), [&](const CompVHoughLine& line) {
 			return line.strength < min_strength;
 		});
-		result.hough_lines.erase(fncShortLines, result.hough_lines.end());
+		result.raw_hough_lines.erase(fncShortLines, result.raw_hough_lines.end());
 	}
 
 #if 1 // no grouping at all
-	COMPV_CHECK_CODE_RETURN(m_ptrHough->toCartesian(image->cols(), image->rows(), result.hough_lines, result.grouped_lines));
+	COMPV_CHECK_CODE_RETURN(m_ptrHough->toCartesian(image->cols(), image->rows(), result.raw_hough_lines, result.grouped_lines));
 	return COMPV_ERROR_CODE_S_OK;
 #endif
 
 	// Convert from polar to cartesian coordinates
 	CalibLineVector cartesian;
-	COMPV_CHECK_CODE_RETURN(__linesFromPolarToCartesian(image->cols(), image->rows(), result.hough_lines, cartesian)); // FIXME(dmi): use "m_ptrHough->toCartesian()"
+	COMPV_CHECK_CODE_RETURN(__linesFromPolarToCartesian(image->cols(), image->rows(), result.raw_hough_lines, cartesian)); // FIXME(dmi): use "m_ptrHough->toCartesian()"
 
 #if 0
 	result.grouped_lines = result.raw_lines;
@@ -300,7 +395,7 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 
 #endif
 
-	//result.hough_lines.resize(1);
+	//result.raw_hough_lines.resize(1);
 #endif
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -312,58 +407,22 @@ COMPV_ERROR_CODE CompVCalibCamera::newObj(CompVCalibCameraPtrPtr calib)
 	COMPV_CHECK_EXP_RETURN(!calib_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 
 	/* Hough transform */
-	COMPV_CHECK_CODE_RETURN(CompVHough::newObj(&calib_->m_ptrHough, COMPV_HOUGHKHT_ID, HOUGH_RHO, HOUGH_THETA, HOUGH_THRESHOLD));
+	COMPV_CHECK_CODE_RETURN(CompVHough::newObj(&calib_->m_ptrHough, HOUGH_ID, 
+		(HOUGH_ID == COMPV_HOUGHKHT_ID) ? HOUGH_RHO : 1.f,
+		HOUGH_THETA, 
+		(HOUGH_ID == COMPV_HOUGHKHT_ID) ? HOUGH_KHT_THRESHOLD : HOUGH_SHT_THRESHOLD
+	));
 	COMPV_CHECK_CODE_RETURN(calib_->m_ptrHough->setInt(COMPV_HOUGH_SET_INT_MAXLINES, static_cast<int>(calib_->m_nPatternLinesTotal * PATTERN_GROUP_MAXLINES)));
-	COMPV_CHECK_CODE_RETURN(calib_->m_ptrHough->setFloat32(COMPV_HOUGHKHT_SET_FLT32_CLUSTER_MIN_DEVIATION, HOUGH_CLUSTER_MIN_DEVIATION));
-	COMPV_CHECK_CODE_RETURN(calib_->m_ptrHough->setInt(COMPV_HOUGHKHT_SET_INT_CLUSTER_MIN_SIZE, HOUGH_CLUSTER_MIN_SIZE));
-	COMPV_CHECK_CODE_RETURN(calib_->m_ptrHough->setFloat32(COMPV_HOUGHKHT_SET_FLT32_KERNEL_MIN_HEIGTH, HOUGH_KERNEL_MIN_HEIGTH));
+	if (HOUGH_ID == COMPV_HOUGHKHT_ID) {
+		COMPV_CHECK_CODE_RETURN(calib_->m_ptrHough->setFloat32(COMPV_HOUGHKHT_SET_FLT32_CLUSTER_MIN_DEVIATION, HOUGH_KHT_CLUSTER_MIN_DEVIATION));
+		COMPV_CHECK_CODE_RETURN(calib_->m_ptrHough->setInt(COMPV_HOUGHKHT_SET_INT_CLUSTER_MIN_SIZE, HOUGH_KHT_CLUSTER_MIN_SIZE));
+		COMPV_CHECK_CODE_RETURN(calib_->m_ptrHough->setFloat32(COMPV_HOUGHKHT_SET_FLT32_KERNEL_MIN_HEIGTH, HOUGH_KHT_KERNEL_MIN_HEIGTH));
+	}
 	
 	/* Canny edge detector */
 	COMPV_CHECK_CODE_RETURN(CompVEdgeDete::newObj(&calib_->m_ptrCanny, COMPV_CANNY_ID, CANNY_LOW, CANNY_HIGH, CANNY_KERNEL_SIZE));
 
 	*calib = *calib_;
-	return COMPV_ERROR_CODE_S_OK;
-}
-
-static COMPV_ERROR_CODE __linesFromPolarToCartesian(const size_t sceneWidth, const size_t sceneHeight, const CompVHoughLineVector& polar, CalibLineVector& cartesian)
-{
-	cartesian.clear();
-#if 1
-	const compv_float32_t widthF = static_cast<compv_float32_t>(sceneWidth);
-	const compv_float32_t heightF = static_cast<compv_float32_t>(sceneHeight);
-	const compv_float32_t half_widthF = widthF * 0.5f;
-	const compv_float32_t half_heightF = heightF * 0.5f;
-	for (CompVHoughLineVector::const_iterator i = polar.begin(); i < polar.end(); ++i) {
-		const compv_float32_t rho = i->rho;
-		const compv_float32_t theta = i->theta;
-		const compv_float32_t a = std::cos(theta), b = 1.f / std::sin(theta);
-		CalibLine cline;
-		cline.line.a.x = 0;
-		cline.line.a.y = ((rho + (half_widthF * a)) * b) + half_heightF;
-		cline.line.b.x = widthF;
-		cline.line.b.y = ((rho - (half_widthF * a)) * b) + half_heightF;
-		// slope: https://en.wikipedia.org/wiki/Slope
-		cline.slope = (cline.line.b.y - cline.line.a.y) / (cline.line.b.x - cline.line.a.x);
-		cartesian.push_back(cline);
-		cline.strength = i->strength;
-	}
-#else
-	const compv_float32_t rhalf = std::sqrt(static_cast<compv_float32_t>((sceneWidth * sceneWidth) + (sceneHeight * sceneHeight))) * 0.5f;
-	const compv_float32_t widthF = static_cast<compv_float32_t>(sceneWidth);
-	for (CompVHoughLineVector::const_iterator i = polar.begin(); i < polar.end(); ++i) {
-		const compv_float32_t rho = i->rho + rhalf;
-		const compv_float32_t theta = i->theta;
-		const compv_float32_t a = std::cos(theta), b = 1.f / std::sin(theta);
-		CalibLine cline;
-		cline.line.a.x = 0;
-		cline.line.a.y = ((rho + (cline.line.a.x * a)) * b);
-		cline.line.b.x = widthF;
-		cline.line.b.y = ((rho - (cline.line.b.x * a)) * b);
-		// slope: https://en.wikipedia.org/wiki/Slope
-		cline.slope = (cline.line.b.y - cline.line.a.y) / (cline.line.b.x - cline.line.a.x);
-		cartesian.push_back(cline);
-	}
-#endif
 	return COMPV_ERROR_CODE_S_OK;
 }
 
