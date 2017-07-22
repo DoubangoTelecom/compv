@@ -464,8 +464,10 @@ COMPV_ERROR_CODE CompVHoughKht::toCartesian(const size_t imageWidth, const size_
 		CompVLineFloat32& cline = cartesian[k++];
 		cline.a.x = 0;
 		cline.a.y = ((rho + (half_widthF * a)) * b) + half_heightF;
+		cline.a.z = 1.f;
 		cline.b.x = widthF;
 		cline.b.y = ((rho - (half_widthF * a)) * b) + half_heightF;
+		cline.b.z = 1.f;
 	}
 	return COMPV_ERROR_CODE_S_OK;
 }

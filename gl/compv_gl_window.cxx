@@ -109,11 +109,6 @@ COMPV_ERROR_CODE CompVGLWindow::beginDraw() /*Overrides(CompVWindow)*/
     COMPV_glClearStencil(0);
     COMPV_glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-    // Clear surfaces
-    //for (std::vector<CompVGLSurfacePtr >::iterator it = m_vecGLSurfaces.begin(); it != m_vecGLSurfaces.end(); ++it) {
-    //	COMPV_CHECK_CODE_BAIL(err = (*it)->beginDraw());
-    //}
-
     m_bDrawing = true;
 bail:
     if (COMPV_ERROR_CODE_IS_NOK(err)) {

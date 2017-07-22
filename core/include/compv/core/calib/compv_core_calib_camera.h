@@ -10,11 +10,17 @@
 #include "compv/core/compv_core_config.h"
 #include "compv/core/compv_core_common.h"
 #include "compv/base/compv_mat.h"
+#include "compv/base/compv_allocators.h"
 #include "compv/base/compv_features.h"
 
 COMPV_NAMESPACE_BEGIN()
 
 COMPV_OBJECT_DECLARE_PTRS(CalibCamera)
+
+struct CompVCabLines {
+	CompVHoughLineVector lines_hough;
+	CompVLineFloat32Vector lines_cartesian;
+};
 
 enum COMPV_CALIB_CAMERA_RESULT_CODE {
 	COMPV_CALIB_CAMERA_RESULT_NONE,
@@ -24,14 +30,16 @@ enum COMPV_CALIB_CAMERA_RESULT_CODE {
 
 struct CompVCalibCameraResult {
 	COMPV_CALIB_CAMERA_RESULT_CODE code;
-	CompVHoughLineVector hough_lines; // polar coords.
-	CompVLineFloat32Vector grouped_lines; // cartesian coords.
+	CompVHoughLineVector raw_hough_lines;
+	CompVHoughLineVector grouped_hough_lines;
+	CompVLineFloat32Vector grouped_cartesian_lines;
 	CompVMatPtr edges;
 public:
 	void reset() {
 		code = COMPV_CALIB_CAMERA_RESULT_NONE;
-		hough_lines.clear();
-		grouped_lines.clear();
+		raw_hough_lines.clear();
+		grouped_hough_lines.clear();
+		grouped_cartesian_lines.clear();
 		edges = nullptr;
 	}
 };
@@ -53,8 +61,9 @@ public:
 	static COMPV_ERROR_CODE newObj(CompVCalibCameraPtrPtr calib);
 
 private:
-	
-	
+	COMPV_ERROR_CODE groupingRound1(CompVCalibCameraResult& result);
+	COMPV_ERROR_CODE groupingRound2(const size_t image_width, const size_t image_height, const CompVCabLines& lines_parallel, CompVLineFloat32Vector& lines_parallel_grouped);
+	COMPV_ERROR_CODE groupingSubdivision(CompVCalibCameraResult& result, CompVCabLines& lines_hz, CompVCabLines& lines_vt);
 
 private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
@@ -62,6 +71,8 @@ private:
 	size_t m_nPatternCornersNumCol;
 	size_t m_nPatternCornersTotal;
 	size_t m_nPatternLinesTotal;
+	size_t m_nPatternLinesHz;
+	size_t m_nPatternLinesVt;
 	CompVEdgeDetePtr m_ptrCanny;
 	CompVHoughPtr m_ptrHough;
 	COMPV_VS_DISABLE_WARNINGS_END()
