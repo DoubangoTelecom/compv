@@ -521,7 +521,7 @@ COMPV_ERROR_CODE CompVCalibCamera::lineBestFit(const CompVLineFloat32Vector& poi
 		t1 += (t2_a * t2_a) + (t2_b * t2_b);
 	}
 
-	const compv_float32_t m = t1 == 0.f ? 0.f : (t0 / t1);
+	const compv_float32_t m = (t1 == 0.f) ? 0.f : (t0 / t1);
 
 	// Step 3: Compute the y-intercept
 	const compv_float32_t intercept = mean_y - (m * mean_x);
@@ -534,6 +534,43 @@ COMPV_ERROR_CODE CompVCalibCamera::lineBestFit(const CompVLineFloat32Vector& poi
 	line.b.z = line_ref.b.z;
 	line.a.y = (m * line.a.x) + intercept;
 	line.b.y = (m * line.b.x) + intercept;
+#elif 0
+	const compv_float32_t scale = 1.f / static_cast<compv_float32_t>(points_cartesian.size() * 2);
+
+	compv_float32_t mean_y = 0.f;
+	for (CompVLineFloat32Vector::const_iterator i = points_cartesian.begin(); i < points_cartesian.end(); ++i) {
+		mean_y += i->a.y + i->b.y;
+	}
+	mean_y *= scale;
+	
+	compv_float32_t t0 = 0.f;
+	for (CompVLineFloat32Vector::const_iterator i = points_cartesian.begin(); i < points_cartesian.end(); ++i) {
+		t0 += ((i->a.y - mean_y)) + ((i->b.y - mean_y));
+	}
+	const compv_float32_t intercept = (t0 * mean_y);
+
+	line = points_cartesian[0];
+	line.a.y += intercept;
+	line.b.y += intercept;
+#elif 1
+	// Implementing "Least Square Method" (https://www.varsitytutors.com/hotmath/hotmath_help/topics/line-of-best-fit)
+	// while ignoring the x-component for the simple reason that they are always constant
+	// when using CompV's KHT and SHT implementations (a.x = 0 and b.x = image_width)
+	const compv_float32_t scale = 1.f / static_cast<compv_float32_t>(points_cartesian.size() * 2);
+
+	compv_float32_t mean_y = 0.f;
+	for (CompVLineFloat32Vector::const_iterator i = points_cartesian.begin(); i < points_cartesian.end(); ++i) {
+		mean_y += i->a.y + i->b.y;
+	}
+	mean_y *= scale;
+
+	compv_float32_t t0 = 0.f;
+	for (CompVLineFloat32Vector::const_iterator i = points_cartesian.begin(); i < points_cartesian.end(); ++i) {
+		t0 += ((i->a.y - mean_y)) + ((i->b.y - mean_y));
+	}
+	line = points_cartesian[0];
+	line.a.y += (line.a.y * t0);
+	line.b.y += (line.b.y * t0);
 #elif 1
 	CompVLineFloat32Vector::const_iterator i;
 	CompVHoughLineVector::const_iterator j;
