@@ -105,17 +105,32 @@ COMPV_ERROR_CODE CompVGLCanvas::drawPoints(const CompVPointFloat32Vector& points
 	glMemPoints_ = reinterpret_cast<CompVGLPoint2D*>(CompVMem::malloc(points.size() * sizeof(CompVGLPoint2D)));
 	COMPV_CHECK_EXP_RETURN(!glMemPoints_, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY), "Failed to allocation GL points");
 
-	glMemPoint_ = glMemPoints_;
-	for (CompVPointFloat32Vector::const_iterator it = points.begin(); it != points.end(); ++it, ++glMemPoint_) {
-		// x, y
-		glMemPoint_->position[0] = static_cast<GLfloat>((*it).x);
-		glMemPoint_->position[1] = static_cast<GLfloat>((*it).y);
-		// r, g, b
-		color = &kCompVGLRandomColors[rand() % kCompVGLRandomColorsCount];
-		glMemPoint_->color[0] = (*color)[0];
-		glMemPoint_->color[1] = (*color)[1];
-		glMemPoint_->color[2] = (*color)[2];
-		glMemPoint_->color[3] = 1.f; // alpha
+	CompVPointFloat32Vector::const_iterator it;
+	bool randomColors = (!options || options->colorType == COMPV_DRAWING_COLOR_TYPE_RANDOM);
+	if (randomColors) {
+		for (it = points.begin(), glMemPoint_ = glMemPoints_; it != points.end(); ++it, ++glMemPoint_) {
+			// x, y
+			glMemPoint_->position[0] = static_cast<GLfloat>((*it).x);
+			glMemPoint_->position[1] = static_cast<GLfloat>((*it).y);
+			// r, g, b
+			color = &kCompVGLRandomColors[rand() % kCompVGLRandomColorsCount];
+			glMemPoint_->color[0] = (*color)[0];
+			glMemPoint_->color[1] = (*color)[1];
+			glMemPoint_->color[2] = (*color)[2];
+			glMemPoint_->color[3] = 1.f; // alpha
+		}
+	}
+	else {
+		for (it = points.begin(), glMemPoint_ = glMemPoints_; it != points.end(); ++it, ++glMemPoint_) {
+			// x, y
+			glMemPoint_->position[0] = static_cast<GLfloat>((*it).x);
+			glMemPoint_->position[1] = static_cast<GLfloat>((*it).y);
+			// r, g, b
+			glMemPoint_->color[0] = options->color[0];
+			glMemPoint_->color[1] = options->color[1];
+			glMemPoint_->color[2] = options->color[2];
+			glMemPoint_->color[3] = options->color[3];
+		}
 	}
 
 	COMPV_CHECK_CODE_BAIL(err = m_ptrFBO->bind());

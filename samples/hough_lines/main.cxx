@@ -93,7 +93,7 @@ public:
 			COMPV_CHECK_CODE_RETURN(m_ptrCanny->process(imageGray, &edges));
 #else
 #			error "Not implemented"
-#endif			
+#endif		
 			COMPV_CHECK_CODE_RETURN(m_ptrHough->process(edges, linesPolor));
 			COMPV_CHECK_CODE_RETURN(m_ptrHough->toCartesian(edges->cols(), edges->rows(), linesPolor, linesCartesian));
 			

@@ -26,20 +26,23 @@ enum COMPV_CALIB_CAMERA_RESULT_CODE {
 	COMPV_CALIB_CAMERA_RESULT_NONE,
 	COMPV_CALIB_CAMERA_RESULT_OK,
 	COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_POINTS,
+	COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_INTERSECTIONS,
 };
 
 struct CompVCalibCameraResult {
 	COMPV_CALIB_CAMERA_RESULT_CODE code;
-	CompVHoughLineVector raw_hough_lines;
-	CompVHoughLineVector grouped_hough_lines;
-	CompVLineFloat32Vector grouped_cartesian_lines;
+	CompVCabLines lines_raw;
+	CompVCabLines lines_grouped;
+	CompVPointFloat32Vector points_intersections;
 	CompVMatPtr edges;
 public:
 	void reset() {
 		code = COMPV_CALIB_CAMERA_RESULT_NONE;
-		raw_hough_lines.clear();
-		grouped_hough_lines.clear();
-		grouped_cartesian_lines.clear();
+		lines_raw.lines_cartesian.clear();
+		lines_raw.lines_hough.clear();
+		lines_grouped.lines_cartesian.clear();
+		lines_grouped.lines_hough.clear();
+		points_intersections.clear();
 		edges = nullptr;
 	}
 };
@@ -61,9 +64,9 @@ public:
 	static COMPV_ERROR_CODE newObj(CompVCalibCameraPtrPtr calib);
 
 private:
-	COMPV_ERROR_CODE groupingRound1(CompVCalibCameraResult& result);
-	COMPV_ERROR_CODE groupingRound2(const size_t image_width, const size_t image_height, const CompVCabLines& lines_parallel, CompVLineFloat32Vector& lines_parallel_grouped);
-	COMPV_ERROR_CODE groupingSubdivision(CompVCalibCameraResult& result, CompVCabLines& lines_hz, CompVCabLines& lines_vt);
+	COMPV_ERROR_CODE subdivision(const size_t image_width, const size_t image_height, const CompVCabLines& lines, CompVCabLines& lines_hz, CompVCabLines& lines_vt);
+	COMPV_ERROR_CODE grouping(const size_t image_width, const size_t image_height, const CompVCabLines& lines_parallel, const compv_float32_t smallRhoFact, CompVLineFloat32Vector& lines_parallel_grouped);
+	COMPV_ERROR_CODE lineBestFit(const CompVLineFloat32Vector& points_cartesian, const CompVHoughLineVector& points_hough, CompVLineFloat32& line);
 
 private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
