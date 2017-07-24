@@ -160,8 +160,6 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 	}
 	if (lines_hz_grouped.size() != m_nPatternLinesHz) {
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "After [hz] grouping we don't have exactly %zu lines but more (%zu). Maybe our grouping function missed some orphans", m_nPatternLinesHz, lines_hz_grouped.size());
-		result.code = COMPV_CALIB_CAMERA_RESULT_TOO_MUCH_LINES;
-		return COMPV_ERROR_CODE_S_OK;
 	}
 	
 	// Vt
@@ -177,9 +175,11 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 	}
 	if (lines_vt_grouped.size() != m_nPatternLinesVt) {
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "After [vt] grouping we don't have exactly %zu lines but more (%zu). Maybe our grouping function missed some orphans", m_nPatternLinesVt, lines_vt_grouped.size());
-		result.code = COMPV_CALIB_CAMERA_RESULT_TOO_MUCH_LINES;
-		return COMPV_ERROR_CODE_S_OK;
 	}
+
+	/* Keep best lines only (already sorted in grouping function) */
+	lines_hz_grouped.resize(m_nPatternLinesHz);
+	lines_vt_grouped.resize(m_nPatternLinesVt);
 
 	/* Push grouped lines */
 	lines_vt_grouped.reserve(lines_hz_grouped.size() + lines_vt_grouped.size());
@@ -328,7 +328,7 @@ COMPV_ERROR_CODE CompVCalibCamera::grouping(const size_t image_width, const size
 				group = &(*g);
 				break;
 			}
-			else if (distance_diff < rmedium) {
+			else /*if (distance_diff < rmedium)*/ {
 				// If the distance isn't small be reasonably close (medium) then, check
 				// if the lines intersect in the image domain
 				compv_float32_t i_x, i_y;
