@@ -9,6 +9,8 @@
 #include "compv/base/math/compv_math_utils.h"
 #include "compv/base/math/compv_math_gauss.h"
 
+#include <iterator> /* std::back_inserter */
+
 #define PATTERN_ROW_CORNERS_NUM				10 // Number of corners per row
 #define PATTERN_COL_CORNERS_NUM				8  // Number of corners per column
 #define PATTERN_CORNERS_NUM					(PATTERN_ROW_CORNERS_NUM * PATTERN_COL_CORNERS_NUM) // Total number of corners
@@ -177,9 +179,36 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "After [vt] grouping we don't have exactly %zu lines but more (%zu). Maybe our grouping function missed some orphans", m_nPatternLinesVt, lines_vt_grouped.size());
 	}
 
-	/* Keep best lines only (already sorted in grouping function) */
+	/* Keep best lines only (already sorted by strength in grouping function) */
 	lines_hz_grouped.resize(m_nPatternLinesHz);
 	lines_vt_grouped.resize(m_nPatternLinesVt);
+
+	/* Sorting the lines */
+	// Sort top-bottom
+	std::sort(lines_hz_grouped.begin(), lines_hz_grouped.end(), [](const CompVLineFloat32 &line1, const CompVLineFloat32 &line2) {
+		return std::tie(line1.a.y, line1.b.y) < std::tie(line2.a.y, line2.b.y); // coorect only because x-components are constant when using CompV's hough implementations
+	});
+	// Sort left-right: sort the intersection with x-axis
+	// The line equation could be defined as 'y = mx + b', with 'm' the slope and 'b' the 'intercept'.
+	// m = (b.y - a.y) / (b.x - a.x), '(b.x - a.x)' being a contant when using CompV's hough lines then we can consider using 
+	// m = (b.y - a.y).
+	// b = y - mx, 'x' being a contant when using CompV's hough lines then we can consider using 
+	// b = y - m.
+	// The intersection with x-axis is defined by "y = 0" -> "0 = mx + b" -> "x = -b/m"
+	std::vector<std::pair<compv_float32_t, CompVLineFloat32> > intersections;
+	intersections.reserve(lines_vt_grouped.size());
+	std::for_each(lines_vt_grouped.begin(), lines_vt_grouped.end(), [&intersections](CompVLineFloat32 &line) {
+		const compv_float32_t slope = (line.b.y - line.a.y);
+		const compv_float32_t intercept = (line.a.y - slope);
+		intersections.push_back(std::make_pair((intercept / slope), line));
+	});
+	std::sort(intersections.begin(), intersections.end(), [](const std::pair<compv_float32_t, const CompVLineFloat32> &pair1, const std::pair<compv_float32_t, const CompVLineFloat32> &pair2) {
+		return pair1.first > pair2.first;
+	});
+	lines_vt_grouped.clear();
+	std::transform(intersections.begin(), intersections.end(), std::back_inserter(lines_vt_grouped), [](const std::pair<compv_float32_t, CompVLineFloat32>& p) { 
+		return p.second; 
+	});
 
 	/* Push grouped lines */
 	lines_vt_grouped.reserve(lines_hz_grouped.size() + lines_vt_grouped.size());
@@ -208,21 +237,9 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 			result.points_intersections.push_back(CompVPointFloat32(intersect_x, intersect_y, intersect_z)); // z is fake and contain distance to origine (to avoid computing distance several times)
 		}
 	}
-	// Sort top-bottom
-	//std::sort(result.points_intersections.begin(), result.points_intersections.end(), [](const CompVPointFloat32 &p1, const CompVPointFloat32 &p2) {
-	//	return std::tie(p1.y, p1.x)
-	//		< std::tie(p2.y, p2.x);
-	//});
-
-	//std::for_each(result.points_intersections.begin(), result.points_intersections.end(), [](CompVPointFloat32 &p) {
-	//	p.z = 1.f;
-	//});
-
 
 	static size_t count = 0;
-	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "\n\n*******COOOOOOOOOOOOOOOOOOOOOOOOOOOOL %zu*******\n\n", ++count);
-
-	result.points_intersections.resize(5);
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "\n\nCOOOOOOL %zu\n\n", ++count);
 
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -269,12 +286,10 @@ COMPV_ERROR_CODE CompVCalibCamera::subdivision(const size_t image_width, const s
 	}
 	for (it_hough = lines.lines_hough.begin(), it_cartesian = lines.lines_cartesian.begin(); it_cartesian < lines.lines_cartesian.end(); ++it_cartesian, ++it_hough) {
 		angle = std::atan2((it_cartesian->b.y - it_cartesian->a.y), (it_cartesian->b.x - it_cartesian->a.x)); // inclinaison angle, within [-pi/2, pi/2]
-																  //COMPV_DEBUG_INFO("angle=%f, %f", COMPV_MATH_RADIAN_TO_DEGREE_FLOAT(st_angle), COMPV_MATH_RADIAN_TO_DEGREE_FLOAT(angle));
 		angle_diff = std::abs(st_angle - angle); // within [0, pi]
 		angle_sin = std::sinf(angle_diff); // within [0, 1]
 		if (angle_sin > 0.5f) {
 			// almost parallel
-			//COMPV_DEBUG_INFO("****angle_diff=%f, angle_sin=%f", COMPV_MATH_RADIAN_TO_DEGREE_FLOAT(angle_diff), angle_sin);
 			p_lines_hz->lines_hough.push_back(*it_hough);
 			p_lines_hz->lines_cartesian.push_back(*it_cartesian);
 		}
