@@ -17,8 +17,8 @@
 #define HOUGH_ID							COMPV_HOUGHSHT_ID
 #define HOUGH_RHO							0.5f // "rho-delta" (half-pixel)
 #define HOUGH_THETA							0.5f // "theta-delta" (half-radian)
-#define HOUGH_SHT_THRESHOLD_FACT			0.00016276
-#define HOUGH_SHT_THRESHOLD_MAX				50
+#define HOUGH_SHT_THRESHOLD_FACT			0.10416667
+#define HOUGH_SHT_THRESHOLD_MAX				120
 #define HOUGH_KHT_THRESHOLD_FACT			1.0 // GS
 #define HOUGH_SHT_THRESHOLD					50
 #define HOUGH_KHT_THRESHOLD					1 // filter later when GS is known	
@@ -109,7 +109,7 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 	// For SHT, set the threshold before processing. But for KHT, we need the global scale (GS) which is defined only *after* processing
 	if (m_ptrHough->id() == COMPV_HOUGHSHT_ID) {
 		COMPV_CHECK_CODE_RETURN(m_ptrHough->setInt(COMPV_HOUGH_SET_INT_THRESHOLD, 
-			std::min(HOUGH_SHT_THRESHOLD_MAX, static_cast<int>(static_cast<double>(image->cols() * image->rows()) * HOUGH_SHT_THRESHOLD_FACT) + 1))
+			std::min(HOUGH_SHT_THRESHOLD_MAX, static_cast<int>(static_cast<double>(std::min(image->cols(), image->rows())) * HOUGH_SHT_THRESHOLD_FACT) + 1))
 		);
 	}
 	// Process
@@ -159,7 +159,9 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 		lines_hz_grouped = lines_hz.lines_cartesian;
 	}
 	if (lines_hz_grouped.size() != m_nPatternLinesHz) {
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "After [hz] grouping we don't have exactly %zu lines but more (%zu). Maybe our gouping function missed some orphans", m_nPatternLinesHz, lines_hz_grouped.size());
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "After [hz] grouping we don't have exactly %zu lines but more (%zu). Maybe our grouping function missed some orphans", m_nPatternLinesHz, lines_hz_grouped.size());
+		result.code = COMPV_CALIB_CAMERA_RESULT_TOO_MUCH_LINES;
+		return COMPV_ERROR_CODE_S_OK;
 	}
 	
 	// Vt
@@ -174,59 +176,25 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 		lines_vt_grouped = lines_vt.lines_cartesian;
 	}
 	if (lines_vt_grouped.size() != m_nPatternLinesVt) {
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "After [vt] grouping we don't have exactly %zu lines but more (%zu). Maybe our gouping function missed some orphans", m_nPatternLinesVt, lines_vt_grouped.size());
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "After [vt] grouping we don't have exactly %zu lines but more (%zu). Maybe our grouping function missed some orphans", m_nPatternLinesVt, lines_vt_grouped.size());
+		result.code = COMPV_CALIB_CAMERA_RESULT_TOO_MUCH_LINES;
+		return COMPV_ERROR_CODE_S_OK;
 	}
-
-	/* Keep best lines only (already sorted in grouping function) */
-	lines_hz_grouped.resize(m_nPatternLinesHz);
-	lines_vt_grouped.resize(m_nPatternLinesVt);
 
 	/* Push grouped lines */
 	lines_vt_grouped.reserve(lines_hz_grouped.size() + lines_vt_grouped.size());
 	result.lines_grouped.lines_cartesian.assign(lines_hz_grouped.begin(), lines_hz_grouped.end());
 	result.lines_grouped.lines_cartesian.insert(result.lines_grouped.lines_cartesian.end(), lines_vt_grouped.begin(), lines_vt_grouped.end());
 
-	/* Reorder the hz and vt lines */
-	std::vector<std::pair<size_t, compv_float32_t> >distances_hz, distances_vt;
-	distances_hz.reserve(lines_hz_grouped.size());
-	distances_vt.reserve(lines_vt_grouped.size());
-	// Compute distance to origine (x0, y0) - https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line#Line_defined_by_two_points
-	compv_float32_t distance, d, c;
-	size_t index = 0;
-	for (CompVLineFloat32Vector::const_iterator i = lines_hz_grouped.begin(); i < lines_hz_grouped.end(); ++i, ++index) {
-		c = (i->b.y - i->a.y);
-		d = (i->b.x - i->a.x);
-		distance = std::abs(((i->b.x * i->a.y) - (i->b.y * i->a.x)) / std::sqrt((c * c) + (d * d)));
-		distances_hz.push_back(std::make_pair(index, distance));
-	}
-	index = 0;
-	for (CompVLineFloat32Vector::const_iterator i = lines_vt_grouped.begin(); i < lines_vt_grouped.end(); ++i, ++index) {
-		c = (i->b.y - i->a.y);
-		d = (i->b.x - i->a.x);
-		distance = std::abs(((i->b.x * i->a.y) - (i->b.y * i->a.x)) / std::sqrt((c * c) + (d * d)));
-		distances_vt.push_back(std::make_pair(index, distance));
-	}
-	std::sort(distances_hz.begin(), distances_hz.end(), [](const std::pair<size_t, compv_float32_t> &line1, const std::pair<size_t, compv_float32_t> &line2) {
-		return (line1.second < line2.second);
-	});
-	std::sort(distances_vt.begin(), distances_vt.end(), [](const std::pair<size_t, compv_float32_t> &line1, const std::pair<size_t, compv_float32_t> &line2) {
-		return (line1.second < line2.second);
-	});
-
-	//distances_hz.resize(1);
-	//distances_vt.resize(1);
-
 	/* Compute intersections */
 	const compv_float32_t image_widthF = static_cast<compv_float32_t>(image_width);
 	const compv_float32_t image_heightF = static_cast<compv_float32_t>(image_height);
 	compv_float32_t intersect_x, intersect_y;
 	static const compv_float32_t intersect_z = 1.f;
-	for (std::vector<std::pair<size_t, compv_float32_t> >::const_iterator i = distances_hz.begin(); i < distances_hz.end(); ++i) {
-		for (std::vector<std::pair<size_t, compv_float32_t> >::const_iterator j = distances_vt.begin(); j < distances_vt.end(); ++j) {
-			const CompVLineFloat32& line_hz = lines_hz_grouped[i->first];
-			const CompVLineFloat32& line_vt = lines_vt_grouped[j->first];
-			int intersect = get_line_intersection(line_hz.a.x, line_hz.a.y, line_hz.b.x, line_hz.b.y,
-				line_vt.a.x, line_vt.a.y, line_vt.b.x, line_vt.b.y, &intersect_x, &intersect_y);
+	for (CompVLineFloat32Vector::const_iterator i = lines_hz_grouped.begin(); i < lines_hz_grouped.end(); ++i) {
+		for (CompVLineFloat32Vector::const_iterator j = lines_vt_grouped.begin(); j < lines_vt_grouped.end(); ++j) {
+			int intersect = get_line_intersection(i->a.x, i->a.y, i->b.x, i->b.y,
+				j->a.x, j->a.y, j->b.x, j->b.y, &intersect_x, &intersect_y);
 			if (!intersect) {
 				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No intersection between the lines. Stop processing");
 				result.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_INTERSECTIONS;
@@ -240,8 +208,21 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 			result.points_intersections.push_back(CompVPointFloat32(intersect_x, intersect_y, intersect_z)); // z is fake and contain distance to origine (to avoid computing distance several times)
 		}
 	}
+	// Sort top-bottom
+	//std::sort(result.points_intersections.begin(), result.points_intersections.end(), [](const CompVPointFloat32 &p1, const CompVPointFloat32 &p2) {
+	//	return std::tie(p1.y, p1.x)
+	//		< std::tie(p2.y, p2.x);
+	//});
 
-	result.points_intersections.resize(1);
+	//std::for_each(result.points_intersections.begin(), result.points_intersections.end(), [](CompVPointFloat32 &p) {
+	//	p.z = 1.f;
+	//});
+
+
+	static size_t count = 0;
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "\n\n*******COOOOOOOOOOOOOOOOOOOOOOOOOOOOL %zu*******\n\n", ++count);
+
+	result.points_intersections.resize(5);
 
 	return COMPV_ERROR_CODE_S_OK;
 }
