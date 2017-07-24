@@ -252,6 +252,12 @@
     <ClInclude Include="..\include\compv\core\features\hough\intrin\x86\compv_core_feature_houghkht_intrin_avx.h">
       <Filter>include\features\hough\intrin\x86</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\compv\core\calib\compv_core_calib_camera.h">
+      <Filter>include\calib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\core\calib\compv_core_calib_utils.h">
+      <Filter>include\calib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_core.cxx">
@@ -346,6 +352,12 @@
     </ClCompile>
     <ClCompile Include="..\features\hough\intrin\x86\compv_core_feature_houghkht_intrin_avx.cxx">
       <Filter>source\features\hough\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\calib\compv_core_calib_camera.cxx">
+      <Filter>source\calib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\calib\compv_core_calib_utils.cxx">
+      <Filter>source\calib</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -9,6 +9,8 @@
 
 #include "compv/base/compv_config.h"
 
+#include <memory> /* std::allocator_traits */
+
 COMPV_NAMESPACE_BEGIN()
 
 template <typename T, typename A=std::allocator<T>>

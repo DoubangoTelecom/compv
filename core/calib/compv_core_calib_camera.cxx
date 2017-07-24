@@ -116,6 +116,11 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 	}
 	// Process
 	COMPV_CHECK_CODE_RETURN(m_ptrHough->process(result.edges, result.lines_raw.lines_hough));
+	//auto fncShortLines = std::remove_if(result.lines_raw.lines_hough.begin(), result.lines_raw.lines_hough.end(), [&](const CompVHoughLine& line) {
+	//	return line.theta != 0;
+	//});
+	//result.lines_raw.lines_hough.erase(fncShortLines, result.lines_raw.lines_hough.end());
+	//COMPV_CHECK_CODE_RETURN(m_ptrHough->toCartesian(image_width, image_height, result.lines_raw.lines_hough, result.lines_raw.lines_cartesian));
 
 	/* Remove weak lines using global scale (GS) */
 	if (m_ptrHough->id() == COMPV_HOUGHKHT_ID) {
@@ -238,8 +243,8 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 		}
 	}
 
-	static size_t count = 0;
-	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "\n\nCOOOOOOL %zu\n\n", ++count);
+	//static size_t count = 0;
+	//COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "\n\nCOOOOOOL %zu\n\n", ++count);
 
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -249,9 +254,6 @@ COMPV_ERROR_CODE CompVCalibCamera::subdivision(const size_t image_width, const s
 {
 	COMPV_CHECK_EXP_RETURN(lines.lines_cartesian.size() < m_nPatternLinesTotal, COMPV_ERROR_CODE_E_INVALID_STATE, "No enought points");
 	COMPV_CHECK_EXP_RETURN(lines.lines_cartesian.size() < lines.lines_hough.size(), COMPV_ERROR_CODE_E_INVALID_STATE, "Must have same number of cartesian and polar lines");
-
-	const compv_float32_t image_widthf = static_cast<compv_float32_t>(image_width);
-	const compv_float32_t image_heightf = static_cast<compv_float32_t>(image_height);
 
 	CompVHoughLineVector::const_iterator it_hough;
 	CompVLineFloat32Vector::const_iterator it_cartesian;
@@ -276,7 +278,7 @@ COMPV_ERROR_CODE CompVCalibCamera::subdivision(const size_t image_width, const s
 	it_hough = lines.lines_hough.begin();
 	compv_float32_t angle, angle_diff, angle_sin;
 	const compv_float32_t st_angle = std::atan2((lines_cartesian_strongest.b.y - lines_cartesian_strongest.a.y), (lines_cartesian_strongest.b.x - lines_cartesian_strongest.a.x)); // inclinaison angle, within [-pi/2, pi/2]
-	if (std::sinf(std::abs(st_angle)) > 0.5f) {
+	if (std::sin(std::abs(st_angle)) > 0.5f) {
 		p_lines_hz = &lines_hz;
 		p_lines_vt = &lines_vt;
 	}
@@ -287,7 +289,7 @@ COMPV_ERROR_CODE CompVCalibCamera::subdivision(const size_t image_width, const s
 	for (it_hough = lines.lines_hough.begin(), it_cartesian = lines.lines_cartesian.begin(); it_cartesian < lines.lines_cartesian.end(); ++it_cartesian, ++it_hough) {
 		angle = std::atan2((it_cartesian->b.y - it_cartesian->a.y), (it_cartesian->b.x - it_cartesian->a.x)); // inclinaison angle, within [-pi/2, pi/2]
 		angle_diff = std::abs(st_angle - angle); // within [0, pi]
-		angle_sin = std::sinf(angle_diff); // within [0, 1]
+		angle_sin = std::sin(angle_diff); // within [0, 1]
 		if (angle_sin > 0.5f) {
 			// almost parallel
 			p_lines_hz->lines_hough.push_back(*it_hough);
@@ -306,8 +308,6 @@ COMPV_ERROR_CODE CompVCalibCamera::subdivision(const size_t image_width, const s
 COMPV_ERROR_CODE CompVCalibCamera::grouping(const size_t image_width, const size_t image_height, const CompVCabLines& lines_parallel, const compv_float32_t smallRhoFact, CompVLineFloat32Vector& lines_parallel_grouped)
 {
 	lines_parallel_grouped.clear();
-
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Converting to cartesian again while already done");
 
 	// Group using distance to the origine point (x0,y0) = (0, 0)
 	// https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line#Line_defined_by_two_points
@@ -343,7 +343,7 @@ COMPV_ERROR_CODE CompVCalibCamera::grouping(const size_t image_width, const size
 				group = &(*g);
 				break;
 			}
-			else /*if (distance_diff < rmedium)*/ {
+			else if (distance_diff < rmedium) {
 				// If the distance isn't small be reasonably close (medium) then, check
 				// if the lines intersect in the image domain
 				compv_float32_t i_x, i_y;
@@ -385,7 +385,6 @@ COMPV_ERROR_CODE CompVCalibCamera::grouping(const size_t image_width, const size
 					max_strength_index = index;
 				}
 			}
-			const compv_float32_t scale = 1.f / static_cast<compv_float32_t>(strength_sum);
 			CompVCabLineFloat32 line_cab_cartesian;
 			CompVLineFloat32& line_cartesian = line_cab_cartesian.line;
 			line_cartesian.a.x = line_cartesian.a.y = line_cartesian.b.x = line_cartesian.b.y = 0.f;

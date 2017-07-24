@@ -253,7 +253,6 @@ COMPV_ERROR_CODE CompVGLCanvas::linesApplyOptions(CompVMatPtr& glPoints2D, const
 		}
 	}
 	else {
-		CompVGLPoint2D* glMemLine_ = glMemLines_;
 		for (size_t i = 0; i < count; i += 2, a += 2, b += 2) {
 			a->color[0] = b->color[0] = options->color[0];
 			a->color[1] = b->color[1] = options->color[1];
