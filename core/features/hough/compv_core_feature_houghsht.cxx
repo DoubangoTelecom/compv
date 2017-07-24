@@ -261,24 +261,39 @@ COMPV_ERROR_CODE CompVHoughSht::toCartesian(const size_t imageWidth, const size_
 {
 	COMPV_CHECK_EXP_RETURN(!imageWidth || !imageHeight, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation could be found");
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Same for KHT, check theta = 0.f");
 	cartesian.clear();
 	if (polar.empty()) {
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	cartesian.resize(polar.size());
 	const compv_float32_t widthF = static_cast<compv_float32_t>(imageWidth);
+	const compv_float32_t heightF = static_cast<compv_float32_t>(imageHeight);
+	const compv_float32_t r = std::sqrt((widthF*widthF) + (heightF*heightF));
+	compv_float32_t a, b, theta, rho;
 	size_t k = 0;
-	for (CompVHoughLineVector::const_iterator i = polar.begin(); i < polar.end(); ++i) {
-		const compv_float32_t rho = i->rho;
-		const compv_float32_t theta = i->theta;
-		const compv_float32_t a = std::cos(theta), b = 1.f / std::sin(theta);
-		CompVLineFloat32& cline = cartesian[k++];
-		cline.a.x = 0;
+	for (CompVHoughLineVector::const_iterator i = polar.begin(); i < polar.end(); ++i, ++k) {
+		CompVLineFloat32& cline = cartesian[k];
+		theta = i->theta;
+		rho = i->rho;
+#if 1
+		a = std::cos(theta), b = (theta == 0.f) ? r : (1.f / std::sin(theta));
+		cline.a.x = 0.f;
 		cline.a.y = ((rho + (cline.a.x * a)) * b);
 		cline.a.z = 1.f;
 		cline.b.x = widthF;
 		cline.b.y = ((rho - (cline.b.x * a)) * b);
 		cline.b.z = 1.f;
+#else
+		a = std::cos(theta), b = std::sin(theta);
+		const compv_float32_t x0 = a * rho, y0 = b * rho;
+		cline.a.x = (x0 - r * b);
+		cline.a.y = (y0 + r * a);
+		cline.a.z = 1.f;
+		cline.b.x = (x0 + r * b);
+		cline.b.y = (y0 - r * a);
+		cline.b.z = 1.f;
+#endif
 	}
 	return COMPV_ERROR_CODE_S_OK;
 }

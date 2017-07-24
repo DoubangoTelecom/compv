@@ -455,12 +455,14 @@ COMPV_ERROR_CODE CompVHoughKht::toCartesian(const size_t imageWidth, const size_
 	size_t k = 0;
 	const compv_float32_t widthF = static_cast<compv_float32_t>(imageWidth);
 	const compv_float32_t heightF = static_cast<compv_float32_t>(imageHeight);
+	const compv_float32_t r = std::sqrt((widthF*widthF) + (heightF*heightF));
 	const compv_float32_t half_widthF = widthF * 0.5f;
 	const compv_float32_t half_heightF = heightF * 0.5f;
+	compv_float32_t a, b, theta, rho;
 	for (CompVHoughLineVector::const_iterator i = polar.begin(); i < polar.end(); ++i) {
-		const compv_float32_t rho = i->rho;
-		const compv_float32_t theta = i->theta;
-		const compv_float32_t a = std::cos(theta), b = 1.f / std::sin(theta);
+		rho = i->rho;
+		theta = i->theta;
+		a = std::cos(theta), b = (theta == 0.f) ? r : (1.f / std::sin(theta));
 		CompVLineFloat32& cline = cartesian[k++];
 		cline.a.x = 0;
 		cline.a.y = ((rho + (half_widthF * a)) * b) + half_heightF;
