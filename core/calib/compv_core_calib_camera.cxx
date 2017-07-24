@@ -186,14 +186,47 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 	result.lines_grouped.lines_cartesian.assign(lines_hz_grouped.begin(), lines_hz_grouped.end());
 	result.lines_grouped.lines_cartesian.insert(result.lines_grouped.lines_cartesian.end(), lines_vt_grouped.begin(), lines_vt_grouped.end());
 
+	/* Reorder the hz and vt lines */
+	std::vector<std::pair<size_t, compv_float32_t> >distances_hz, distances_vt;
+	distances_hz.reserve(lines_hz_grouped.size());
+	distances_vt.reserve(lines_vt_grouped.size());
+	// Compute distance to origine (x0, y0) - https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line#Line_defined_by_two_points
+	compv_float32_t distance, d, c;
+	size_t index = 0;
+	for (CompVLineFloat32Vector::const_iterator i = lines_hz_grouped.begin(); i < lines_hz_grouped.end(); ++i, ++index) {
+		c = (i->b.y - i->a.y);
+		d = (i->b.x - i->a.x);
+		distance = std::abs(((i->b.x * i->a.y) - (i->b.y * i->a.x)) / std::sqrt((c * c) + (d * d)));
+		distances_hz.push_back(std::make_pair(index, distance));
+	}
+	index = 0;
+	for (CompVLineFloat32Vector::const_iterator i = lines_vt_grouped.begin(); i < lines_vt_grouped.end(); ++i, ++index) {
+		c = (i->b.y - i->a.y);
+		d = (i->b.x - i->a.x);
+		distance = std::abs(((i->b.x * i->a.y) - (i->b.y * i->a.x)) / std::sqrt((c * c) + (d * d)));
+		distances_vt.push_back(std::make_pair(index, distance));
+	}
+	std::sort(distances_hz.begin(), distances_hz.end(), [](const std::pair<size_t, compv_float32_t> &line1, const std::pair<size_t, compv_float32_t> &line2) {
+		return (line1.second < line2.second);
+	});
+	std::sort(distances_vt.begin(), distances_vt.end(), [](const std::pair<size_t, compv_float32_t> &line1, const std::pair<size_t, compv_float32_t> &line2) {
+		return (line1.second < line2.second);
+	});
+
+	//distances_hz.resize(1);
+	//distances_vt.resize(1);
+
 	/* Compute intersections */
 	const compv_float32_t image_widthF = static_cast<compv_float32_t>(image_width);
 	const compv_float32_t image_heightF = static_cast<compv_float32_t>(image_height);
 	compv_float32_t intersect_x, intersect_y;
-	for (CompVLineFloat32Vector::const_iterator i = lines_hz_grouped.begin(); i < lines_hz_grouped.end(); ++i) {
-		for (CompVLineFloat32Vector::const_iterator j = lines_vt_grouped.begin(); j < lines_vt_grouped.end(); ++j) {
-			int intersect = get_line_intersection(i->a.x, i->a.y, i->b.x, i->b.y,
-				j->a.x, j->a.y, j->b.x, j->b.y, &intersect_x, &intersect_y);
+	static const compv_float32_t intersect_z = 1.f;
+	for (std::vector<std::pair<size_t, compv_float32_t> >::const_iterator i = distances_hz.begin(); i < distances_hz.end(); ++i) {
+		for (std::vector<std::pair<size_t, compv_float32_t> >::const_iterator j = distances_vt.begin(); j < distances_vt.end(); ++j) {
+			const CompVLineFloat32& line_hz = lines_hz_grouped[i->first];
+			const CompVLineFloat32& line_vt = lines_vt_grouped[j->first];
+			int intersect = get_line_intersection(line_hz.a.x, line_hz.a.y, line_hz.b.x, line_hz.b.y,
+				line_vt.a.x, line_vt.a.y, line_vt.b.x, line_vt.b.y, &intersect_x, &intersect_y);
 			if (!intersect) {
 				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No intersection between the lines. Stop processing");
 				result.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_INTERSECTIONS;
@@ -204,18 +237,11 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 				result.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_INTERSECTIONS;
 				return COMPV_ERROR_CODE_S_OK;
 			}
-			result.points_intersections.push_back(CompVPointFloat32(intersect_x, intersect_y, ((intersect_x * intersect_x) + (intersect_y * intersect_y)))); // z is fake and contain distance to origine (to avoid computing distance several times)
+			result.points_intersections.push_back(CompVPointFloat32(intersect_x, intersect_y, intersect_z)); // z is fake and contain distance to origine (to avoid computing distance several times)
 		}
 	}
-	// Re-order the intersections
-	std::sort(result.points_intersections.begin(), result.points_intersections.end(), [](const CompVPointFloat32 &p1, const CompVPointFloat32 &p2) {
-		return (p1.z < p2.z); // compare distance to origin
-	});
-	std::for_each(result.points_intersections.begin(), result.points_intersections.end(), [](CompVPointFloat32 &p) {
-		p.z = 1.f;
-	});
 
-	result.points_intersections.resize(2);
+	result.points_intersections.resize(1);
 
 	return COMPV_ERROR_CODE_S_OK;
 }
