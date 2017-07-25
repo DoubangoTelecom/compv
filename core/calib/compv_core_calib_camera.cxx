@@ -116,11 +116,6 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 	}
 	// Process
 	COMPV_CHECK_CODE_RETURN(m_ptrHough->process(result.edges, result.lines_raw.lines_hough));
-	//auto fncShortLines = std::remove_if(result.lines_raw.lines_hough.begin(), result.lines_raw.lines_hough.end(), [&](const CompVHoughLine& line) {
-	//	return line.theta != 0;
-	//});
-	//result.lines_raw.lines_hough.erase(fncShortLines, result.lines_raw.lines_hough.end());
-	//COMPV_CHECK_CODE_RETURN(m_ptrHough->toCartesian(image_width, image_height, result.lines_raw.lines_hough, result.lines_raw.lines_cartesian));
 
 	/* Remove weak lines using global scale (GS) */
 	if (m_ptrHough->id() == COMPV_HOUGHKHT_ID) {
@@ -375,66 +370,39 @@ COMPV_ERROR_CODE CompVCalibCamera::grouping(const size_t image_width, const size
 		group->lines.lines_hough.push_back(*it_hough);
 	}
 
-	CompVCabLineFloat32Vector lines_cab;
-	CompVHoughLineVector lines_hough_orphans;
-	CompVLineFloat32Vector lines_cartesian_orphans;
-	lines_cab.reserve(groups.size());
+	CompVCabLineFloat32Vector lines_cab_gouped;
+	lines_cab_gouped.reserve(groups.size());
 	CompVHoughLineVector::const_iterator i;
 	CompVLineFloat32Vector::const_iterator j;
 	for (CompVCabLineGroupVector::const_iterator g = groups.begin(); g < groups.end(); ++g) {
 		if (g->lines.lines_hough.size() > 1) {
-			size_t strength_sum = 0, max_strength_index = 0, index = 0, max_strength = 0;
-			for (i = g->lines.lines_hough.begin(); i < g->lines.lines_hough.end(); ++i, ++index) {
+			size_t strength_sum = 0;
+			for (i = g->lines.lines_hough.begin(); i < g->lines.lines_hough.end(); ++i) {
 				strength_sum += i->strength;
-				if (max_strength < i->strength) {
-					max_strength = i->strength;
-					max_strength_index = index;
-				}
 			}
 			CompVCabLineFloat32 line_cab_cartesian;
-			CompVLineFloat32& line_cartesian = line_cab_cartesian.line;
-			line_cartesian.a.x = line_cartesian.a.y = line_cartesian.b.x = line_cartesian.b.y = 0.f;
-			j = g->lines.lines_cartesian.begin();
-#if 0
-			for (i = g->lines.lines_hough.begin(); i < g->lines.lines_hough.end(); ++i, ++j) {
-				// FIXME(dmi): pre-compute strength_scale = (i->strength) * scale)
-				line_cartesian.a.x += (j->a.x * i->strength * scale);
-				line_cartesian.a.y += (j->a.y * i->strength * scale);
-				line_cartesian.b.x += (j->b.x * i->strength * scale);
-				line_cartesian.b.y += (j->b.y * i->strength * scale);
-			}
-#elif 1
 			COMPV_CHECK_CODE_RETURN(lineBestFit(g->lines.lines_cartesian, g->lines.lines_hough, line_cab_cartesian.line));
-#else
-			COMPV_DEBUG_INFO_CODE_FOR_TESTING("Do something to a and b, maybe avg?");
-			line_cab_cartesian.line = g->lines.lines_cartesian[max_strength_index];
-#endif
 			line_cab_cartesian.strength = strength_sum;
-			lines_cab.push_back(line_cab_cartesian);
+			lines_cab_gouped.push_back(line_cab_cartesian);
 		}
 		else {
-			lines_hough_orphans.push_back(*g->lines.lines_hough.begin());
+			CompVCabLineFloat32 line_cab_cartesian;
+			line_cab_cartesian.line = *g->lines.lines_cartesian.begin();
+			line_cab_cartesian.strength = g->lines.lines_hough.begin()->strength;
+			lines_cab_gouped.push_back(line_cab_cartesian);
 		}
 	}
 
-	// Convert orphans to cartesian and push to cab lines
-	COMPV_CHECK_CODE_RETURN(m_ptrHough->toCartesian(image_width, image_height, lines_hough_orphans, lines_cartesian_orphans));
-	j = lines_cartesian_orphans.begin();
-	for (i = lines_hough_orphans.begin(); i < lines_hough_orphans.end(); ++i, ++j) {
-		CompVCabLineFloat32 line_cab_cartesian;
-		line_cab_cartesian.strength = i->strength;
-		line_cab_cartesian.line = *j;
-		lines_cab.push_back(line_cab_cartesian);
-	}
-
-	// Sort and push
-	std::sort(lines_cab.begin(), lines_cab.end(), [](const CompVCabLineFloat32 &line1, const CompVCabLineFloat32 &line2) {
+	// Sort
+	std::sort(lines_cab_gouped.begin(), lines_cab_gouped.end(), [](const CompVCabLineFloat32 &line1, const CompVCabLineFloat32 &line2) {
 		return (line1.strength > line2.strength);
 	});
-	lines_parallel_grouped.reserve(lines_cab.size());
-	for (CompVCabLineFloat32Vector::const_iterator i = lines_cab.begin(); i < lines_cab.end(); ++i) {
-		lines_parallel_grouped.push_back(i->line);
-	}
+
+	// Push
+	lines_parallel_grouped.reserve(lines_cab_gouped.size());
+	std::transform(lines_cab_gouped.begin(), lines_cab_gouped.end(), std::back_inserter(lines_parallel_grouped), [](const CompVCabLineFloat32& line_cab_cartesian) {
+		return line_cab_cartesian.line;
+	});
 
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -451,14 +419,21 @@ COMPV_ERROR_CODE CompVCalibCamera::lineBestFit(const CompVLineFloat32Vector& poi
 	CompVLineFloat32Vector::const_iterator i;
 	CompVHoughLineVector::const_iterator j;
 	std::vector<compv_float32_t>::const_iterator k;
+#if 0
+	bool have_perfect_vt_lines = false;
+#endif
 
 	// Compute the sum of the strengths and the global scaling factor
 	compv_float32_t sum_strengths = 0.f;
 	for (j = points_hough.begin(); j < points_hough.end(); ++j) {
 		sum_strengths += j->strength;
+#if 0
+		if (j->theta == 0.f) {
+			have_perfect_vt_lines = true;
+		}
+#endif
 	}
-	sum_strengths *= 2.f; // times #2 because we have #2 points (a & b) for each step.
-	const compv_float32_t scale_strengths = (1.f / sum_strengths);
+	const compv_float32_t scale_strengths = (1.f / (sum_strengths * 2.f)); // times #2 because we have #2 points (a & b) for each step.
 
 	// Compute the strengths (for each point)
 	std::vector<compv_float32_t> strengths(points_hough.size());
@@ -470,7 +445,7 @@ COMPV_ERROR_CODE CompVCalibCamera::lineBestFit(const CompVLineFloat32Vector& poi
 	// Compute mean(y)
 	compv_float32_t mean_y = 0.f;
 	compv_float32_t scale_strength;
-	for (i = points_cartesian.begin(), j = points_hough.begin(), k = strengths.begin(); i < points_cartesian.end(); ++i, ++j, ++k) {
+	for (i = points_cartesian.begin(), k = strengths.begin(); i < points_cartesian.end(); ++i, ++k) {
 		mean_y += (i->a.y + i->b.y) * (*k);
 	}
 
@@ -481,10 +456,25 @@ COMPV_ERROR_CODE CompVCalibCamera::lineBestFit(const CompVLineFloat32Vector& poi
 		t0 += (((i->a.y - mean_y)) + ((i->b.y - mean_y))) * (*k);
 	}
 
-	// Set the result
+	// set result
 	line = points_cartesian[0]; // set x, y, z
 	line.a.y += (line.a.y * t0);
 	line.b.y += (line.b.y * t0);
+
+#if 0 // image 50 fails bigly
+	// perfect vt lines have "a.x == b.x == rho" while all other lines have "a.x == 0, b.x == width".
+	// when there is no perfect vt lines then mean_ax == 0 and mean_bx == width
+	if (have_perfect_vt_lines) {
+		compv_float32_t mean_ax = 0.f, mean_bx = 0.f;
+		for (i = points_cartesian.begin(), k = strengths.begin(); i < points_cartesian.end(); ++i, ++k) {
+			mean_ax += i->a.x * (*k);
+			mean_bx += i->b.x * (*k);
+		}
+		// mul mean by 2.f to get ride of the div 2.f in 'scale_strengths'
+		line.a.x = (mean_ax * 2.f);
+		line.b.x = (mean_bx * 2.f);
+	}
+#endif
 	
 	return COMPV_ERROR_CODE_S_OK;
 }
