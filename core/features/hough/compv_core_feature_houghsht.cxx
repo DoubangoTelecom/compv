@@ -272,21 +272,22 @@ COMPV_ERROR_CODE CompVHoughSht::toCartesian(const size_t imageWidth, const size_
 	const compv_float32_t r = std::sqrt((widthF*widthF) + (heightF*heightF));
 	const compv_float32_t rminus = -r;
 	compv_float32_t a, b, theta, rho;
-	size_t k = 0;
-	for (CompVHoughLineVector::const_iterator i = polar.begin(); i < polar.end(); ++i, ++k) {
+	size_t k;
+	CompVHoughLineVector::const_iterator i;
+	for (i = polar.begin(), k = 0; i < polar.end(); ++i, ++k) {
 		CompVLineFloat32& cline = cartesian[k];
 		theta = i->theta;
 		rho = i->rho;
 #if 1
-		if (theta == 0.f) {
+		if (theta == 0.f) { // perfect vt line?
 			cline.a.x = cline.b.x = rho;
 			cline.a.y = r;
 			cline.b.y = rminus;
 		}
 		else {
-			a = std::cos(theta), b = (theta == 0.f) ? r : (1.f / std::sin(theta));
+			a = std::cos(theta), b = (1.f / std::sin(theta));
 			cline.a.x = 0.f;
-			cline.a.y = ((rho + (cline.a.x * a)) * b);
+			cline.a.y = (rho * b); // equal to "((rho + (cline.a.x * a)) * b)"
 			cline.b.x = widthF;
 			cline.b.y = ((rho - (cline.b.x * a)) * b);
 		}

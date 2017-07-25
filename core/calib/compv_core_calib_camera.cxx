@@ -203,9 +203,15 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 	std::vector<std::pair<compv_float32_t, CompVLineFloat32> > intersections;
 	intersections.reserve(lines_vt_grouped.size());
 	std::for_each(lines_vt_grouped.begin(), lines_vt_grouped.end(), [&intersections](CompVLineFloat32 &line) {
-		const compv_float32_t slope = (line.b.y - line.a.y);
-		const compv_float32_t intercept = (line.a.y - slope);
-		intersections.push_back(std::make_pair((intercept / slope), line));
+		if (line.a.x == line.b.x) { // perfect vt line?
+			// For perfect vt lines "a.x == b.x == rho", "a.y == r" and "b.y = -r"
+			intersections.push_back(std::make_pair(line.a.x, line));
+		}
+		else {
+			const compv_float32_t slope = (line.b.y - line.a.y);
+			const compv_float32_t intercept = (line.a.y - slope);
+			intersections.push_back(std::make_pair((intercept / slope), line));
+		}
 	});
 	std::sort(intersections.begin(), intersections.end(), [](const std::pair<compv_float32_t, const CompVLineFloat32> &pair1, const std::pair<compv_float32_t, const CompVLineFloat32> &pair2) {
 		return pair1.first > pair2.first;

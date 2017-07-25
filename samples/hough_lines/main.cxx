@@ -79,7 +79,7 @@ public:
 			CompVMatPtr imageGray, edges;
 			CompVHoughLineVector linesPolor;
 			CompVLineFloat32Vector linesCartesian;
-#if 0
+#if 1
 			COMPV_CHECK_CODE_RETURN(CompVImage::convertGrayscale(image, &imageGray));
 			COMPV_CHECK_CODE_RETURN(m_ptrCanny->process(imageGray, &edges));
 #elif 1
