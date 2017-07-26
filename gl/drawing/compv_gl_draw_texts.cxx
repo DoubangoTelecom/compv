@@ -119,6 +119,9 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 	bFirstTimeOrChanged = (m_fboWidth != fboWidth || m_fboHeight != fboHeight);
 
 	if (!CompVGLInfo::extensions::vertex_array_object() || bFirstTimeOrChanged) {
+
+		COMPV_glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 4 * 4, NULL, GL_DYNAMIC_DRAW);
+
 		// Set position attribute
 		GLuint attribute_coord = COMPV_glGetAttribLocation(program()->name(), "coord");
 		COMPV_glEnableVertexAttribArray(attribute_coord);
@@ -210,7 +213,7 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 		COMPV_DEBUG_INFO_CODE_FOR_TESTING("Call COMPV_glBufferData and COMPV_glDrawArrays once");
 
 		// Submit vertices data
-		COMPV_glBufferData(GL_ARRAY_BUFFER, sizeof(box), box, GL_DYNAMIC_DRAW);
+		COMPV_glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(box), box);
 
 		// Draw points
 		COMPV_glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
