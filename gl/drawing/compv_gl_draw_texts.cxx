@@ -119,13 +119,11 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 	bFirstTimeOrChanged = (m_fboWidth != fboWidth || m_fboHeight != fboHeight);
 
 	if (!CompVGLInfo::extensions::vertex_array_object() || bFirstTimeOrChanged) {
-
+		// Set coords. attribute
 		COMPV_glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 4 * 4, NULL, GL_DYNAMIC_DRAW);
-
-		// Set position attribute
 		GLuint attribute_coord = COMPV_glGetAttribLocation(program()->name(), "coord");
 		COMPV_glEnableVertexAttribArray(attribute_coord);
-		COMPV_glVertexAttribPointer(attribute_coord, 4, GL_FLOAT, GL_FALSE, 0, 0);
+		COMPV_glVertexAttribPointer(attribute_coord, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), 0);
 
 		// Set color attribute
 		GLuint uniform_color = COMPV_glGetUniformLocation(program()->name(), "color");
