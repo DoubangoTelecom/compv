@@ -141,7 +141,7 @@ public:
 				for (size_t index = 0; index < m_CalibResult.points_intersections.size(); ++index) {
 					labels[index] = CompVBase::to_string(index);
 				}
-				COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->renderer()->canvas()->drawTexts(labels, m_CalibResult.points_intersections, nullptr));
+				COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->renderer()->canvas()->drawTexts(labels, m_CalibResult.points_intersections, &m_DrawingOptionsGroupedLines));
 			}
 
 			// Grouped and ordered lines

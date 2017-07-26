@@ -83,10 +83,10 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 	static const std::string fontName = "C:/Windows/Fonts/arial.ttf";
 	static const size_t fontSize = 16;
 
-	static size_t count = 188548;
-	const std::string str = std::string("Mamadou DIOP (Mauritanie): ") + std::to_string(++count);
-	const char *p;
-	const char *text = str.c_str();
+	CompVStringVector::const_iterator it_texts;
+	CompVPointFloat32Vector::const_iterator it_positions;
+	std::string::const_iterator it_string;
+	compv_float32_t x, y;
 
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Change m_face if font or pixel size change");
 
@@ -158,9 +158,6 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Under windows check fonts in 'C:/Windows/Fonts'");
 
-	float x = 0;
-	float y = 0;
-
 	COMPV_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 	
 	// Create texture
@@ -177,49 +174,61 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 
 	// this affects glTexImage2D and glSubTexImage2D
 
-	for (p = text; *p; p++) {
-		if ((ft_err = FT_Load_Char(m_face, *p, FT_LOAD_RENDER))) {
-			COMPV_DEBUG_ERROR("FT_Load_Char(face, %c) failed with error code %d", ft_err, *p);
-			continue;
+	//12pt font
+	float font_size = fontSize;
+	float resolution = 1.f;
+
+	//Resolution means DPI here
+	float pixel_size = fontSize * resolution / 72;
+
+	//Font height and width in pixels
+	int font_height = (int)std::round((m_face->bbox.yMax - m_face->bbox.yMin)*pixel_size / m_face->units_per_EM);
+	int font_width = (int)std::round((m_face->bbox.xMax - m_face->bbox.xMin)*pixel_size / m_face->units_per_EM);
+
+	for (it_texts = texts.begin(), it_positions = positions.begin(); it_texts < texts.end(); ++it_texts, ++it_positions) {
+		x = it_positions->x;
+		y = it_positions->y;
+		for (it_string = it_texts->begin(); it_string < it_texts->end(); ++it_string) {
+			if ((ft_err = FT_Load_Char(m_face, *it_string, FT_LOAD_RENDER))) {
+				COMPV_DEBUG_ERROR("FT_Load_Char(face, %c) failed with error code %d", ft_err, *it_string);
+				continue;
+			}
+
+			COMPV_glTexImage2D(
+				GL_TEXTURE_2D,
+				0,
+				COMPV_GL_FORMAT_Y,
+				g->bitmap.width,
+				g->bitmap.rows,
+				0,
+				COMPV_GL_FORMAT_Y,
+				GL_UNSIGNED_BYTE,
+				g->bitmap.buffer
+			);
+
+			float x2 = x + g->bitmap_left * 1.f;
+			float y2 = y - g->bitmap_top * 1.f;
+			float w = g->bitmap.width * 1.f;
+			float h = g->bitmap.rows * 1.f;
+
+			GLfloat box[4][4] = {
+				{ x2,     y2    , 0.f, 0.f },
+				{ x2 + w, y2    , 1.f, 0.f },
+				{ x2,     y2 + h, 0.f, 1.f },
+				{ x2 + w, y2 + h, 1.f, 1.f },
+			};
+
+			COMPV_DEBUG_INFO_CODE_FOR_TESTING("Call COMPV_glBufferData and COMPV_glDrawArrays once");
+
+			// Submit vertices data
+			COMPV_glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(box), box);
+
+			// Draw points
+			COMPV_glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+			x += (g->advance.x >> 6) * 1.f;
+			y += (g->advance.y >> 6) * 1.f;
 		}
-
-		COMPV_glTexImage2D(
-			GL_TEXTURE_2D,
-			0,
-			COMPV_GL_FORMAT_Y,
-			g->bitmap.width,
-			g->bitmap.rows,
-			0,
-			COMPV_GL_FORMAT_Y,
-			GL_UNSIGNED_BYTE,
-			g->bitmap.buffer
-		);
-
-		float x2 = x + g->bitmap_left * 1.f;
-		float y2 = y - g->bitmap_top * 1.f;
-		float w = g->bitmap.width * 1.f;
-		float h = g->bitmap.rows * 1.f;
-
-		GLfloat box[4][4] = {
-			{ x2,     y2    , 0, 0 },
-			{ x2 + w, y2    , 1, 0 },
-			{ x2,     y2 + h, 0, 1 },
-			{ x2 + w, y2 + h, 1, 1 },
-		};
-
-		COMPV_DEBUG_INFO_CODE_FOR_TESTING("Call COMPV_glBufferData and COMPV_glDrawArrays once");
-
-		// Submit vertices data
-		COMPV_glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(box), box);
-
-		// Draw points
-		COMPV_glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-		x += (g->advance.x >> 6) * 1.f;
-		y += (g->advance.y >> 6) * 1.f;
-
-		COMPV_DEBUG_INFO_CODE_FOR_TESTING("Remove");
-		//CompVGLFreeType::character_remove(*p, style);
 	}
 
 	// Update size

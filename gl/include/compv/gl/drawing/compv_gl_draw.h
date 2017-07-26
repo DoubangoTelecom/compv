@@ -46,6 +46,7 @@ public:
 	
 protected:
 	virtual COMPV_ERROR_CODE setOrtho(float left, float right, float bottom, float top, float zNear, float zFar);
+	virtual COMPV_ERROR_CODE scale(float sx, float sy, float sz = 1.f);
 	virtual COMPV_ERROR_CODE bind() override /*Overrides(CompVBind)*/;
 	virtual COMPV_ERROR_CODE unbind() override /*Overrides(CompVBind)*/;
 
