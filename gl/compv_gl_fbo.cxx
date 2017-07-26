@@ -95,10 +95,10 @@ COMPV_ERROR_CODE CompVGLFbo::init(size_t width, size_t height)
     std::string errString_;
     GLenum fboStatus_;
 
+	COMPV_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     COMPV_glActiveTexture(GL_TEXTURE0);
     COMPV_CHECK_CODE_BAIL(err_ = CompVGLUtils::textureGen(&m_uNameTexture));
     COMPV_glBindTexture(GL_TEXTURE_2D, m_uNameTexture);
-    COMPV_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     COMPV_glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     COMPV_glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     COMPV_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);

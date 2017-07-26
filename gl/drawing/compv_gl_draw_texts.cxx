@@ -51,18 +51,6 @@ static const std::string& kProgramFragmentData =
 
 COMPV_NAMESPACE_BEGIN()
 
-#if HAVE_FREETYPE
-static const char* FT_ErrorMessage(FT_Error err)
-{
-#undef __FTERRORS_H__
-#define FT_ERRORDEF( e, v, s )  case e: return s;
-#define FT_ERROR_START_LIST     switch (err) {
-#define FT_ERROR_END_LIST       }
-#include FT_ERRORS_H
-	return "(Unknown error)";
-}
-#endif /* HAVE_FREETYPE */
-
 CompVGLDrawTexts::CompVGLDrawTexts()
 	: CompVGLDraw(kProgramVertexData, kProgramFragmentData, kVertexDataWithMVP_Yes)
 	, m_fboWidth(0)
@@ -96,11 +84,11 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 		COMPV_DEBUG_INFO_CODE_FOR_TESTING("Use relative path for the the font or read from memory");
 		COMPV_DEBUG_INFO_CODE_FOR_TESTING("Under windows check fonts in 'C:/Windows/Fonts'");
 		if ((ft_err = FT_New_Face(CompVGLFreeType::library(), "C:/Windows/Fonts/arial.ttf", 0, &m_face))) {
-			COMPV_DEBUG_ERROR("FT_New_Face('FreeSans.ttf', 0) failed with error '%s'", FT_ErrorMessage(ft_err));
+			COMPV_DEBUG_ERROR("FT_New_Face('FreeSans.ttf', 0) failed with error '%s'", CompVGLFreeType::errorMessage(ft_err));
 			return COMPV_ERROR_CODE_E_FREETYPE;
 		}
 		if ((ft_err = FT_Set_Pixel_Sizes(m_face, 0, 16))) {
-			COMPV_DEBUG_ERROR("FT_Set_Pixel_Sizes(face, 0, 16) failed with error '%s'", FT_ErrorMessage(ft_err));
+			COMPV_DEBUG_ERROR("FT_Set_Pixel_Sizes(face, 0, 16) failed with error '%s'", CompVGLFreeType::errorMessage(ft_err));
 			return COMPV_ERROR_CODE_E_FREETYPE;
 		}
 	}
