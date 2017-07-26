@@ -36,6 +36,9 @@ COMPV_ERROR_CODE CompVGLDraw::setOrtho(float left, float right, float bottom, fl
 	COMPV_CHECK_CODE_RETURN(m_ptrMVP->projection2D()->setOrtho(left, right, bottom, top, zNear, zFar));
 	if (m_ptrProgram && m_ptrProgram->isBound()) {
 		m_uNamePrgUnifMVP = COMPV_glGetUniformLocation(m_ptrProgram->name(), "MVP");
+		// If "MVP" uniform is unused then, the compiler can remove it: https://stackoverflow.com/questions/23058149/opengl-es-shaders-wrong-uniforms-location
+		// Make sure you're using MVP variable.
+		COMPV_CHECK_EXP_NOP(m_uNamePrgUnifMVP == GL_INVALID_INDEX, COMPV_ERROR_CODE_E_GL, "Invalid uniform location (make sure 'MVP' variable is used in the code)");
 		COMPV_glUniformMatrix4fv(m_uNamePrgUnifMVP, 1, GL_FALSE, m_ptrMVP->matrix()->ptr());
 	}
 	return COMPV_ERROR_CODE_S_OK;
@@ -59,7 +62,7 @@ COMPV_ERROR_CODE CompVGLDraw::bind() /*Overrides(CompVBind)*/
 	else {
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("OpenGL: VAO not suported");
 		COMPV_glBindBuffer(GL_ARRAY_BUFFER, m_uNameVBO);
-		if (m_ptrMVP && m_uNamePrgUnifMVP != kCompVGLNameInvalid) {
+		if (m_ptrMVP && m_uNamePrgUnifMVP != GL_INVALID_INDEX) {
 			COMPV_glUniformMatrix4fv(m_uNamePrgUnifMVP, 1, GL_FALSE, m_ptrMVP->matrix()->ptr());
 		}
 	}

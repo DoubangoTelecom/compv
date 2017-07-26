@@ -13,6 +13,12 @@
 
 #define COMPV_THIS_CLASSNAME	"CompVGLFreeType"
 
+#if defined(HAVE_OPENGLES)
+#	define COMPV_GL_FORMAT_Y	GL_LUMINANCE
+#else
+#	define COMPV_GL_FORMAT_Y	GL_RED
+#endif
+
 COMPV_NAMESPACE_BEGIN()
 
 bool CompVGLFreeType::s_bInitialized = false;
@@ -68,7 +74,7 @@ FT_Library CompVGLFreeType::library()
 	return CompVGLFreeType::s_library;
 }
 
-COMPV_ERROR_CODE CompVGLFreeType::style(const std::string& fontName, size_t fontSize, CompVGLFreeTypeStyle& style)
+COMPV_ERROR_CODE CompVGLFreeType::style(const std::string& fontName, size_t fontSize, CompVGLFreeTypeStyle*& style)
 {
 	COMPV_CHECK_EXP_RETURN(fontName.empty() || !fontSize, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::currentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT, "No OpenGL context");
@@ -78,17 +84,17 @@ COMPV_ERROR_CODE CompVGLFreeType::style(const std::string& fontName, size_t font
 	uintptr_t gl_context = reinterpret_cast<uintptr_t>(CompVGLUtils::currentContext());
 	CompVGLFreeTypeCharacterStyleMap::iterator it = s_characters.find(gl_context);
 	if (it == s_characters.end()) {
-		s_characters[gl_context] = style = CompVGLFreeTypeStyle(fontName, fontSize);
-	}
-	else {
-		style = it->second;
+		s_characters[gl_context] = CompVGLFreeTypeStyle(fontName, fontSize);
 	}
 
+	style = &s_characters[gl_context];
+
 	COMPV_CHECK_CODE_NOP(s_mutex->unlock());
+
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVGLFreeType::character(const GLchar inChar, const CompVGLFreeTypeStyle* style, CompVGLFreeTypeCharacter& outChar)
+COMPV_ERROR_CODE CompVGLFreeType::character_find(const GLchar inChar, const CompVGLFreeTypeStyle* style, CompVGLFreeTypeCharacter& outChar)
 {
 	COMPV_CHECK_EXP_RETURN(!style, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::currentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT, "No OpenGL context");
@@ -98,17 +104,18 @@ COMPV_ERROR_CODE CompVGLFreeType::character(const GLchar inChar, const CompVGLFr
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	FT_Error ft_err;
 
+	CompVGLFreeTypeStyle* style_ = const_cast<CompVGLFreeTypeStyle*>(style);
+
 	// Find character in the builtin map
-	CompVGLFreeTypeCharacterMap::const_iterator it = style->characters.find(inChar);
+	CompVGLFreeTypeCharacterMap::iterator it = style_->characters.find(inChar);
 	if (it != style->characters.end()) {
 		outChar = it->second;
+		goto bail;
 	}
 
 	// At this step, it means we've found the character in the builtin map -> build it
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Adding FreeType character (%c) for the current context %p and style(%s, %zu)", 
 		inChar, CompVGLUtils::currentContext(), style->fontName.c_str(), style->fontSize);
-
-	CompVGLFreeTypeStyle* style_ = const_cast<CompVGLFreeTypeStyle*>(style);
 	
 	// Create face for the style if not already done
 	if (!style_->face) {
@@ -137,11 +144,11 @@ COMPV_ERROR_CODE CompVGLFreeType::character(const GLchar inChar, const CompVGLFr
 	COMPV_glTexImage2D(
 		GL_TEXTURE_2D,
 		0,
-		GL_RED,
+		COMPV_GL_FORMAT_Y,
 		face->glyph->bitmap.width,
 		face->glyph->bitmap.rows,
 		0,
-		GL_RED,
+		COMPV_GL_FORMAT_Y,
 		GL_UNSIGNED_BYTE,
 		face->glyph->bitmap.buffer
 	);
@@ -156,11 +163,34 @@ COMPV_ERROR_CODE CompVGLFreeType::character(const GLchar inChar, const CompVGLFr
 	outChar.size[1] = face->glyph->bitmap.rows;
 	outChar.bearing[0] = face->glyph->bitmap_left;
 	outChar.bearing[1] = face->glyph->bitmap_top;
-	outChar.advance = face->glyph->advance.x;
+	outChar.advance[0] = face->glyph->advance.x;
+	outChar.advance[1] = face->glyph->advance.y;
 	// Add new char
 	style_->characters.insert(std::pair<GLchar, CompVGLFreeTypeCharacter>(inChar, outChar));
 
 bail:
+	COMPV_CHECK_CODE_NOP(s_mutex->unlock());
+	return err;
+}
+
+COMPV_ERROR_CODE CompVGLFreeType::character_remove(const GLchar inChar, CompVGLFreeTypeStyle* style)
+{
+	COMPV_CHECK_EXP_RETURN(!style, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::currentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT, "No OpenGL context");
+
+	COMPV_CHECK_CODE_RETURN(s_mutex->lock());
+
+	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
+
+	CompVGLFreeTypeStyle* style_ = const_cast<CompVGLFreeTypeStyle*>(style);
+
+	// Find character in the builtin map
+	CompVGLFreeTypeCharacterMap::iterator it = style_->characters.find(inChar);
+	if (it != style->characters.end()) {
+		COMPV_CHECK_CODE_NOP(CompVGLUtils::textureDelete(&it->second.nameTexture));
+		style_->characters.erase(it);
+	}
+	
 	COMPV_CHECK_CODE_NOP(s_mutex->unlock());
 	return err;
 }

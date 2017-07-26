@@ -30,7 +30,7 @@ struct CompVGLFreeTypeCharacter {
 	GLuint nameTexture = kCompVGLNameInvalid;
 	GLint size[2];
 	GLint bearing[2];
-	GLuint advance;
+	GLuint advance[2];
 };
 typedef std::map<GLchar, CompVGLFreeTypeCharacter> CompVGLFreeTypeCharacterMap;
 
@@ -65,8 +65,9 @@ public:
 
 	static const char* errorMessage(FT_Error err);
 
-	static COMPV_ERROR_CODE style(const std::string& fontName, size_t fontSize, CompVGLFreeTypeStyle& style);
-	static COMPV_ERROR_CODE character(const GLchar inChar, const CompVGLFreeTypeStyle* style, CompVGLFreeTypeCharacter& outChar);
+	static COMPV_ERROR_CODE style(const std::string& fontName, size_t fontSize, CompVGLFreeTypeStyle*& style);
+	static COMPV_ERROR_CODE character_find(const GLchar inChar, const CompVGLFreeTypeStyle* style, CompVGLFreeTypeCharacter& outChar);
+	static COMPV_ERROR_CODE character_remove(const GLchar inChar, CompVGLFreeTypeStyle* style);
 
 private:
 	static bool s_bInitialized;

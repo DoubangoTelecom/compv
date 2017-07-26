@@ -7,7 +7,6 @@
 #include "compv/gl/drawing/compv_gl_draw_texts.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/base/compv_mat.h"
-#include "compv/gl/compv_gl_freetype.h"
 #include "compv/gl/compv_gl.h"
 #include "compv/gl/compv_gl_utils.h"
 #include "compv/gl/compv_gl_info.h"
@@ -18,7 +17,6 @@
 #else
 #	define COMPV_GL_FORMAT_Y	GL_RED
 #endif
-
 
 static const std::string& kProgramVertexData =
 #	if defined(HAVE_OPENGLES)
@@ -40,7 +38,7 @@ static const std::string& kProgramFragmentData =
 "	uniform sampler2D tex;"
 "	uniform vec4 color;"
 "	void main() {"
-"		gl_FragColor = vec4(1.0, 1.0, 1.0, texture2D(tex, texcoord).r);"
+"		gl_FragColor = vec4(1, 1, 1, texture2D(tex, texcoord).r) * color;"
 "	}";
 
 #define kVertexDataWithMVP_Yes	true
@@ -56,12 +54,23 @@ CompVGLDrawTexts::CompVGLDrawTexts()
 	: CompVGLDraw(kProgramVertexData, kProgramFragmentData, kVertexDataWithMVP_Yes)
 	, m_fboWidth(0)
 	, m_fboHeight(0)
+#if HAVE_FREETYPE
+	, m_face(nullptr)
+#endif
 {
 
 }
 
 CompVGLDrawTexts::~CompVGLDrawTexts()
 {
+#if HAVE_FREETYPE
+	if (m_face) {
+		if (CompVGLFreeType::library()) {
+			COMPV_CHECK_EXP_NOP(FT_Done_Face(m_face) != 0, COMPV_ERROR_CODE_E_FREETYPE);
+		}
+		m_face = nullptr;
+	}
+#endif
 }
 
 COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const CompVPointFloat32Vector& positions, const CompVDrawingOptions* options COMPV_DEFAULT(nullptr))
@@ -69,10 +78,34 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Change function parameters to accept CompVGLText2D* like what is done for drawPoints and drawLines");
 #if HAVE_FREETYPE
-	CompVGLFreeTypeStyle* style = nullptr;
-	CompVGLFreeTypeCharacter character;
+	const bool randomColors = (!options || options->colorType == COMPV_DRAWING_COLOR_TYPE_RANDOM);
 	static const std::string fontName = "C:/Windows/Fonts/arial.ttf";
 	static const size_t fontSize = 16;
+
+	static size_t count = 188548;
+	const std::string str = std::string("Mamadou DIOP (Mauritanie): ") + std::to_string(++count);
+	const char *p;
+	const char *text = str.c_str();
+
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Change m_face if font or pixel size change");
+
+	FT_Error ft_err;
+	if (!m_face) {
+		COMPV_DEBUG_INFO_CODE_FOR_TESTING("Use relative path for the the font or read from memory");
+		COMPV_DEBUG_INFO_CODE_FOR_TESTING("Under windows check fonts in 'C:/Windows/Fonts'");
+		if ((ft_err = FT_New_Face(CompVGLFreeType::library(), "C:/Windows/Fonts/arial.ttf", 0, &m_face))) {
+			COMPV_DEBUG_ERROR("FT_New_Face('FreeSans.ttf', 0) failed with error '%s'", CompVGLFreeType::errorMessage(ft_err));
+			return COMPV_ERROR_CODE_E_FREETYPE;
+		}
+		if ((ft_err = FT_Set_Pixel_Sizes(m_face, 0, 16))) {
+			COMPV_DEBUG_ERROR("FT_Set_Pixel_Sizes(face, 0, 16) failed with error '%s'", CompVGLFreeType::errorMessage(ft_err));
+			return COMPV_ERROR_CODE_E_FREETYPE;
+		}
+	}
+
+	FT_GlyphSlot g = m_face->glyph;
+
+	GLuint nameTexture = kCompVGLNameInvalid;
 
 	// Bind to VAO, VBO, Program
 	GLint fboWidth = 0, fboHeight = 0;
@@ -92,12 +125,30 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 		COMPV_glVertexAttribPointer(attribute_coord, 4, GL_FLOAT, GL_FALSE, 0, 0);
 
 		// Set color attribute
-		//GLuint uNameColor = COMPV_glGetAttribLocation(program()->name(), "color");
-		//COMPV_glEnableVertexAttribArray(uNameColor);
-		//COMPV_glVertexAttribPointer(uNameColor, 4, GL_FLOAT, GL_FALSE, sizeof(CompVGLPoint2D), reinterpret_cast<const GLvoid *>(offsetof(CompVGLPoint2D, color)));
+		GLuint uniform_color = COMPV_glGetUniformLocation(program()->name(), "color");
+		GLfloat r, g, b, a;
+		if (randomColors) {
+			const GLfloat(*c)[3] = &kCompVGLRandomColors[rand() % kCompVGLRandomColorsCount];
+			r = (*c)[0], g = (*c)[1], b = (*c)[2], a = 1.f;
+		}
+		else {
+			r = options->color[0], g = options->color[1], b = options->color[2], a = options->color[3];
+		}
+		COMPV_DEBUG_INFO_CODE_FOR_TESTING("Add support for glUniform4f");
+		glUniform4f(uniform_color, r, g, b, a);
+
+		// Set texture attribute
+		GLuint uniform_tex = COMPV_glGetUniformLocation(program()->name(), "tex");
+		glUniform1i(uniform_tex, 0);
 
 		// Set projection
 		COMPV_CHECK_CODE_BAIL(err = CompVGLDraw::setOrtho(0, static_cast<GLfloat>(fboWidth), static_cast<GLfloat>(fboHeight), 0, -1, 1));
+	}
+	else if (randomColors) {
+		GLuint uniform_color = COMPV_glGetUniformLocation(program()->name(), "color");
+		const GLfloat(*c)[3] = &kCompVGLRandomColors[rand() % kCompVGLRandomColorsCount];
+		COMPV_DEBUG_INFO_CODE_FOR_TESTING("Add support for glUniform4f");
+		glUniform4f(uniform_color, (*c)[0], (*c)[1], (*c)[2], 1.f);
 	}
 
 	// Set viewport
@@ -105,37 +156,44 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Under windows check fonts in 'C:/Windows/Fonts'");
 
-	COMPV_CHECK_CODE_BAIL(err = CompVGLFreeType::style(fontName, fontSize, style));
-
-	const char *p;
-	const char *text = "Mamadou DIOP (Mauritanie)";
 	float sx = 2.f / static_cast<float>(fboWidth);
 	float sy = 2.f / static_cast<float>(fboHeight);
 	float x = 0.f;
 	float y = 0.f;
 
-	//GLuint tex;
-	//glActiveTexture(GL_TEXTURE0);
-	//glGenTextures(1, &tex);
-	//glBindTexture(GL_TEXTURE_2D, tex);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	GLuint uniform_tex = COMPV_glGetUniformLocation(program()->name(), "tex");
-	glUniform1i(uniform_tex, 0);
+	COMPV_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	
+	// Create texture
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Create texture once");
+	COMPV_glActiveTexture(GL_TEXTURE0);
+	COMPV_CHECK_CODE_BAIL(err = CompVGLUtils::textureGen(&nameTexture));
+	COMPV_glBindTexture(GL_TEXTURE_2D, nameTexture);
+	COMPV_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	COMPV_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	COMPV_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	COMPV_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	COMPV_glActiveTexture(GL_TEXTURE0);
 
 	// this affects glTexImage2D and glSubTexImage2D
 
 	for (p = text; *p; p++) {
-		COMPV_CHECK_CODE_BAIL(err = CompVGLFreeType::character_find(*p, style, character));
+		if ((ft_err = FT_Load_Char(m_face, *p, FT_LOAD_RENDER))) {
+			COMPV_DEBUG_ERROR("FT_Load_Char(face, %c) failed with error code %d", ft_err, *p);
+			continue;
+		}
 
-		FT_GlyphSlot g = style->face->glyph;
-		
-		COMPV_glBindTexture(GL_TEXTURE_2D, character.nameTexture);
+		COMPV_glTexImage2D(
+			GL_TEXTURE_2D,
+			0,
+			COMPV_GL_FORMAT_Y,
+			g->bitmap.width,
+			g->bitmap.rows,
+			0,
+			COMPV_GL_FORMAT_Y,
+			GL_UNSIGNED_BYTE,
+			g->bitmap.buffer
+		);
 
 		float x2 = x + g->bitmap_left * sx;
 		float y2 = -y - g->bitmap_top * sy;
@@ -160,7 +218,7 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 		x += (g->advance.x / 64) * sx;
 		y += (g->advance.y / 64) * sy;
 
-		//COMPV_DEBUG_INFO_CODE_FOR_TESTING("Remove");
+		COMPV_DEBUG_INFO_CODE_FOR_TESTING("Remove");
 		//CompVGLFreeType::character_remove(*p, style);
 	}
 
@@ -169,6 +227,7 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 	m_fboHeight = fboHeight;
 
 bail:
+	COMPV_CHECK_CODE_NOP( CompVGLUtils::textureDelete(&nameTexture));
 	COMPV_CHECK_CODE_NOP(CompVGLDraw::unbind());
 #else
 	COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED, "No thirdparty library for text drawing could be found (e.g. freetype)");
