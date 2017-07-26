@@ -87,6 +87,9 @@
     <ClInclude Include="include\compv\gl\drawing\compv_gl_draw_texts.h">
       <Filter>include\drawing</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\gl\compv_gl_freetype.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_gl.cxx">
@@ -148,6 +151,9 @@
     </ClCompile>
     <ClCompile Include="drawing\compv_gl_draw_texts.cxx">
       <Filter>source\drawing</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_gl_freetype.cxx">
+      <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

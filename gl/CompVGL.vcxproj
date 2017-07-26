@@ -26,6 +26,7 @@
     <ClInclude Include="include\compv\gl\compv_gl_config.h" />
     <ClInclude Include="include\compv\gl\compv_gl_context.h" />
     <ClInclude Include="include\compv\gl\compv_gl_fbo.h" />
+    <ClInclude Include="include\compv\gl\compv_gl_freetype.h" />
     <ClInclude Include="include\compv\gl\compv_gl_func.h" />
     <ClInclude Include="include\compv\gl\compv_gl_headers.h" />
     <ClInclude Include="include\compv\gl\compv_gl_info.h" />
@@ -50,6 +51,7 @@
     <ClCompile Include="compv_gl_canvas.cxx" />
     <ClCompile Include="compv_gl_context.cxx" />
     <ClCompile Include="compv_gl_fbo.cxx" />
+    <ClCompile Include="compv_gl_freetype.cxx" />
     <ClCompile Include="compv_gl_info.cxx" />
     <ClCompile Include="compv_gl_mvp.cxx" />
     <ClCompile Include="compv_gl_program.cxx" />

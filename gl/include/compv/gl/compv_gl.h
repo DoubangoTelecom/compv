@@ -10,14 +10,6 @@
 #include "compv/gl/compv_gl_config.h"
 #include "compv/base/compv_sharedlib.h"
 
-#if HAVE_FREETYPE_FREETYPE_H || HAVE_FREETYPE_H
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#include FT_OUTLINE_H
-#undef HAVE_FREETYPE
-#define HAVE_FREETYPE 1
-#endif /* HAVE_FREETYPE_FREETYPE_H || HAVE_FREETYPE_H */
-
 COMPV_NAMESPACE_BEGIN()
 
 class COMPV_GL_API CompVGL
@@ -28,15 +20,9 @@ public:
 #	if defined(HAVE_GL_GLEW_H)
     static COMPV_ERROR_CODE glewInit();
 #endif
-#if HAVE_FREETYPE
-	static FT_Library freeTypeLibrary();
-#endif
 
 private:
     static bool s_bInitialized;
-#if HAVE_FREETYPE
-	static FT_Library s_freetype;
-#endif /* HAVE_FREETYPE */
 };
 
 COMPV_NAMESPACE_END()

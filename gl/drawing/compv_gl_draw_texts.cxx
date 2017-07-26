@@ -12,6 +12,13 @@
 #include "compv/gl/compv_gl_info.h"
 #include "compv/gl/compv_gl_func.h"
 
+#if defined(HAVE_OPENGLES)
+#	define COMPV_GL_FORMAT_Y	GL_LUMINANCE
+#else
+#	define COMPV_GL_FORMAT_Y	GL_RED
+#endif
+
+
 static const std::string& kProgramVertexData =
 #	if defined(HAVE_OPENGLES)
 "	precision mediump float;"
@@ -32,13 +39,15 @@ static const std::string& kProgramFragmentData =
 "	uniform sampler2D tex;"
 "	uniform vec4 color;"
 "	void main() {"
-"		gl_FragColor = vec4(1, 1, 1, texture2D(tex, texcoord).r);"
+"		gl_FragColor = vec4(1.0, 1.0, 1.0, texture2D(tex, texcoord).r);"
 "	}";
 
 #define kVertexDataWithMVP_Yes	true
 #define kVertexDataWithMVP_No	false
 
-// FreeType tuto: https://www.freetype.org/freetype2/docs/tutorial/step1.html
+// FreeType tutos:
+//	- https://www.freetype.org/freetype2/docs/tutorial/step1.html
+//	- https://learnopengl.com/#!In-Practice/Text-Rendering
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -69,7 +78,9 @@ CompVGLDrawTexts::~CompVGLDrawTexts()
 {
 #if HAVE_FREETYPE
 	if (m_face) {
-		COMPV_CHECK_EXP_NOP(FT_Done_Face(m_face) != 0, COMPV_ERROR_CODE_E_FREETYPE);
+		if (CompVGLFreeType::library()) {
+			COMPV_CHECK_EXP_NOP(FT_Done_Face(m_face) != 0, COMPV_ERROR_CODE_E_FREETYPE);
+		}
 		m_face = nullptr;
 	}
 #endif
@@ -84,7 +95,7 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 	if (!m_face) {
 		COMPV_DEBUG_INFO_CODE_FOR_TESTING("Use relative path for the the font or read from memory");
 		COMPV_DEBUG_INFO_CODE_FOR_TESTING("Under windows check fonts in 'C:/Windows/Fonts'");
-		if ((ft_err = FT_New_Face(CompVGL::freeTypeLibrary(), "C:/Windows/Fonts/arial.ttf", 0, &m_face))) {
+		if ((ft_err = FT_New_Face(CompVGLFreeType::library(), "C:/Windows/Fonts/arial.ttf", 0, &m_face))) {
 			COMPV_DEBUG_ERROR("FT_New_Face('FreeSans.ttf', 0) failed with error '%s'", FT_ErrorMessage(ft_err));
 			return COMPV_ERROR_CODE_E_FREETYPE;
 		}
@@ -170,14 +181,15 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 	glActiveTexture(GL_TEXTURE0);
 	glGenTextures(1, &tex);
 	glBindTexture(GL_TEXTURE_2D, tex);
-	GLuint uniform_tex = COMPV_glGetUniformLocation(program()->name(), "tex");
-	glUniform1i(uniform_tex, 0);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+	GLuint uniform_tex = COMPV_glGetUniformLocation(program()->name(), "tex");
+	glUniform1i(uniform_tex, 0);
+
+	// this affects glTexImage2D and glSubTexImage2D
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
 	for (p = text; *p; p++) {
@@ -189,11 +201,11 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 		COMPV_glTexImage2D(
 			GL_TEXTURE_2D,
 			0,
-			GL_RED,
+			COMPV_GL_FORMAT_Y,
 			g->bitmap.width,
 			g->bitmap.rows,
 			0,
-			GL_RED,
+			COMPV_GL_FORMAT_Y,
 			GL_UNSIGNED_BYTE,
 			g->bitmap.buffer
 		);
