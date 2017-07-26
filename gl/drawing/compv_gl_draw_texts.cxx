@@ -26,7 +26,7 @@ static const std::string& kProgramVertexData =
 "	varying vec2 texcoord;"
 "	uniform mat4 MVP;"
 "	void main() {"
-"		gl_Position = vec4(coord.xy, 0.0, 1.0);"
+"		gl_Position = MVP * vec4(coord.xy, 1.0, 1.0);"
 "		texcoord = coord.zw;"
 "	}";
 
@@ -47,6 +47,7 @@ static const std::string& kProgramFragmentData =
 // FreeType tutos:
 //	- https://www.freetype.org/freetype2/docs/tutorial/step1.html
 //	- https://learnopengl.com/#!In-Practice/Text-Rendering
+//  - Implementation based on https://en.wikibooks.org/wiki/OpenGL_Programming/Modern_OpenGL_Tutorial_Text_Rendering_01
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -157,10 +158,8 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Under windows check fonts in 'C:/Windows/Fonts'");
 
-	float sx = 2.f / static_cast<float>(fboWidth);
-	float sy = 2.f / static_cast<float>(fboHeight);
-	float x = 0.f;
-	float y = 0.f;
+	float x = 0;
+	float y = 0;
 
 	COMPV_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 	
@@ -196,16 +195,16 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 			g->bitmap.buffer
 		);
 
-		float x2 = x + g->bitmap_left * sx;
-		float y2 = -y - g->bitmap_top * sy;
-		float w = g->bitmap.width * sx;
-		float h = g->bitmap.rows * sy;
+		float x2 = x + g->bitmap_left * 1.f;
+		float y2 = y - g->bitmap_top * 1.f;
+		float w = g->bitmap.width * 1.f;
+		float h = g->bitmap.rows * 1.f;
 
 		GLfloat box[4][4] = {
-			{ x2,     -y2    , 0, 0 },
-			{ x2 + w, -y2    , 1, 0 },
-			{ x2,     -y2 - h, 0, 1 },
-			{ x2 + w, -y2 - h, 1, 1 },
+			{ x2,     y2    , 0, 0 },
+			{ x2 + w, y2    , 1, 0 },
+			{ x2,     y2 + h, 0, 1 },
+			{ x2 + w, y2 + h, 1, 1 },
 		};
 
 		COMPV_DEBUG_INFO_CODE_FOR_TESTING("Call COMPV_glBufferData and COMPV_glDrawArrays once");
@@ -216,8 +215,8 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 		// Draw points
 		COMPV_glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-		x += (g->advance.x / 64) * sx;
-		y += (g->advance.y / 64) * sy;
+		x += (g->advance.x >> 6) * 1.f;
+		y += (g->advance.y >> 6) * 1.f;
 
 		COMPV_DEBUG_INFO_CODE_FOR_TESTING("Remove");
 		//CompVGLFreeType::character_remove(*p, style);

@@ -44,6 +44,21 @@ COMPV_ERROR_CODE CompVGLDraw::setOrtho(float left, float right, float bottom, fl
 	return COMPV_ERROR_CODE_S_OK;
 }
 
+COMPV_ERROR_CODE CompVGLDraw::scale(float sx, float sy, float sz COMPV_DEFAULT(1.f))
+{
+	COMPV_CHECK_EXP_RETURN(!m_ptrMVP, COMPV_ERROR_CODE_E_INVALID_CALL, "No MVP");
+	CompVVec3f vec3(sx, sy, sz);
+	COMPV_CHECK_CODE_RETURN(m_ptrMVP->projection2D()->matrix()->scale(vec3));
+	if (m_ptrProgram && m_ptrProgram->isBound()) {
+		m_uNamePrgUnifMVP = COMPV_glGetUniformLocation(m_ptrProgram->name(), "MVP");
+		// If "MVP" uniform is unused then, the compiler can remove it: https://stackoverflow.com/questions/23058149/opengl-es-shaders-wrong-uniforms-location
+		// Make sure you're using MVP variable.
+		COMPV_CHECK_EXP_NOP(m_uNamePrgUnifMVP == GL_INVALID_INDEX, COMPV_ERROR_CODE_E_GL, "Invalid uniform location (make sure 'MVP' variable is used in the code)");
+		COMPV_glUniformMatrix4fv(m_uNamePrgUnifMVP, 1, GL_FALSE, m_ptrMVP->matrix()->ptr());
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 COMPV_ERROR_CODE CompVGLDraw::bind() /*Overrides(CompVBind)*/
 {
 	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::currentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT, "No OpenGL context");
