@@ -108,7 +108,7 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 	COMPV_CHECK_CODE_BAIL(err = CompVGLFreeType::style(fontName, fontSize, style));
 
 	const char *p;
-	const char *text = "Mamadou DIOP (Français)";
+	const char *text = "Mamadou DIOP (Mauritanie)";
 	float sx = 2.f / static_cast<float>(fboWidth);
 	float sy = 2.f / static_cast<float>(fboHeight);
 	float x = 0.f;
@@ -126,14 +126,15 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 	GLuint uniform_tex = COMPV_glGetUniformLocation(program()->name(), "tex");
 	glUniform1i(uniform_tex, 0);
 
-	// this affects glTexImage2D and glSubTexImage2D
 	COMPV_glActiveTexture(GL_TEXTURE0);
 
+	// this affects glTexImage2D and glSubTexImage2D
+
 	for (p = text; *p; p++) {
-		COMPV_CHECK_CODE_BAIL(err = CompVGLFreeType::character(*p, style, character));
+		COMPV_CHECK_CODE_BAIL(err = CompVGLFreeType::character_find(*p, style, character));
 
 		FT_GlyphSlot g = style->face->glyph;
-	
+		
 		COMPV_glBindTexture(GL_TEXTURE_2D, character.nameTexture);
 
 		float x2 = x + g->bitmap_left * sx;
@@ -158,6 +159,9 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 
 		x += (g->advance.x / 64) * sx;
 		y += (g->advance.y / 64) * sy;
+
+		//COMPV_DEBUG_INFO_CODE_FOR_TESTING("Remove");
+		//CompVGLFreeType::character_remove(*p, style);
 	}
 
 	// Update size
