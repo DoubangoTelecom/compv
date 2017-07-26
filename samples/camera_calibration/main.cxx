@@ -3,14 +3,14 @@
 using namespace compv;
 
 #define CAMERA_IDX			0
-#define CAMERA_WIDTH		1280
-#define CAMERA_HEIGHT		720
-#define CAMERA_FPS			25
+#define CAMERA_WIDTH		640
+#define CAMERA_HEIGHT		480
+#define CAMERA_FPS			15
 #define CAMERA_SUBTYPE		COMPV_SUBTYPE_PIXELS_YUY2
 #define CAMERA_AUTOFOCUS	true
 
-#define WINDOW_WIDTH		1280
-#define WINDOW_HEIGHT		720
+#define WINDOW_WIDTH		640
+#define WINDOW_HEIGHT		480
 
 #define TAG_SAMPLE			"Camera calibration"
 
@@ -136,7 +136,7 @@ public:
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->drawImage(m_CalibResult.edges));
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->renderer()->canvas()->drawLines(m_CalibResult.lines_grouped.lines_cartesian, &m_DrawingOptionsGroupedLines));
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->renderer()->canvas()->drawPoints(m_CalibResult.points_intersections, &m_DrawingOptionsRawLines));
-			if (!m_CalibResult.points_intersections.empty()) {
+			if (!m_CalibResult.points_intersections.empty() && m_ptrSurfaceLineGrouped->renderer()->canvas()->haveDrawTexts()) {
 				CompVStringVector labels(m_CalibResult.points_intersections.size());
 				for (size_t index = 0; index < m_CalibResult.points_intersections.size(); ++index) {
 					labels[index] = CompVBase::to_string(index);

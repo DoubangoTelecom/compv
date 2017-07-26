@@ -174,17 +174,6 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 
 	// this affects glTexImage2D and glSubTexImage2D
 
-	//12pt font
-	float font_size = fontSize;
-	float resolution = 1.f;
-
-	//Resolution means DPI here
-	float pixel_size = fontSize * resolution / 72;
-
-	//Font height and width in pixels
-	int font_height = (int)std::round((m_face->bbox.yMax - m_face->bbox.yMin)*pixel_size / m_face->units_per_EM);
-	int font_width = (int)std::round((m_face->bbox.xMax - m_face->bbox.xMin)*pixel_size / m_face->units_per_EM);
-
 	for (it_texts = texts.begin(), it_positions = positions.begin(); it_texts < texts.end(); ++it_texts, ++it_positions) {
 		x = it_positions->x;
 		y = it_positions->y;

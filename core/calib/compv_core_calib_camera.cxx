@@ -28,7 +28,7 @@
 #define HOUGH_KHT_CLUSTER_MIN_SIZE			10
 #define HOUGH_KHT_KERNEL_MIN_HEIGTH			0.002f // must be within [0, 1]
 
-#define CANNY_LOW							1.83f
+#define CANNY_LOW							1.33f
 #define CANNY_HIGH							CANNY_LOW*2.f
 #define CANNY_KERNEL_SIZE					3
 

@@ -198,6 +198,16 @@ bail:
 	return err;
 }
 
+// Public override
+bool CompVGLCanvas::haveDrawTexts() const /*Overrides(CompVCanvas)*/
+{
+#if HAVE_FREETYPE
+	return true;
+#else
+	return false;
+#endif
+}
+
 COMPV_ERROR_CODE CompVGLCanvas::close()
 {
 	m_ptrDrawPoints = NULL;

@@ -216,6 +216,9 @@ COMPV_ERROR_CODE CompVGLBlitter::init(size_t width, size_t height, size_t stride
 
     if (bMVP) {
 		m_uNamePrgUnifMVP = COMPV_glGetUniformLocation(m_ptrProgram->name(), "MVP");
+		// If "MVP" uniform is unused then, the compiler can remove it: https://stackoverflow.com/questions/23058149/opengl-es-shaders-wrong-uniforms-location
+		// Make sure you're using MVP variable.
+		COMPV_CHECK_EXP_NOP(m_uNamePrgUnifMVP == GL_INVALID_INDEX, COMPV_ERROR_CODE_E_GL, "Invalid uniform location (make sure 'MVP' variable is used in the code)");
     }
     COMPV_glBindBuffer(GL_ARRAY_BUFFER, m_uNameVertexBuffer);
     COMPV_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_uNameIndiceBuffer);
