@@ -1,1 +1,0 @@
-To build *static* SDL 2.0 for VS2015 you must add HAVE_LIBC in the CFLAGS

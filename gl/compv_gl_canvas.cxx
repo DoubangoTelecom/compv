@@ -24,16 +24,24 @@ CompVGLCanvas::~CompVGLCanvas()
 }
 
 // Public override
-COMPV_ERROR_CODE CompVGLCanvas::drawTexts(const void** textPtrs, const size_t* textLengthsInBytes, const CompVPointFloat32Vector& positions, const CompVDrawingOptions* options COMPV_DEFAULT(nullptr)) /*Overrides(CompVCanvasInterface)*/
+COMPV_ERROR_CODE CompVGLCanvas::drawTexts(const CompVStringVector& texts, const CompVPointFloat32Vector& positions, const CompVDrawingOptions* options COMPV_DEFAULT(nullptr)) /*Overrides(CompVCanvasInterface)*/
 {
 	if (positions.empty()) {
 		return COMPV_ERROR_CODE_S_OK;
 	}
-    COMPV_CHECK_EXP_RETURN(!textPtrs || !textLengthsInBytes, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-    COMPV_GL_FBO_AUTOBIND(*m_ptrFBO);
-	COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
-    unMakeEmpty();
-    return COMPV_ERROR_CODE_S_OK;
+    COMPV_CHECK_EXP_RETURN(texts.size() != positions.size(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+	if (!m_ptrDrawTexts) {
+		COMPV_CHECK_CODE_RETURN(CompVGLDrawTexts::newObj(&m_ptrDrawTexts));
+	}
+	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
+	COMPV_CHECK_CODE_BAIL(err = m_ptrFBO->bind());
+	COMPV_CHECK_CODE_BAIL(err = m_ptrDrawTexts->texts(texts, positions, options));
+
+bail:
+	COMPV_CHECK_CODE_NOP(m_ptrFBO->unbind());
+	unMakeEmpty();
+	return err;
 }
 
 // Public override
@@ -98,17 +106,17 @@ COMPV_ERROR_CODE CompVGLCanvas::drawPoints(const CompVPointFloat32Vector& points
 	if (!m_ptrDrawPoints) {
 		COMPV_CHECK_CODE_RETURN(CompVGLDrawPoints::newObj(&m_ptrDrawPoints));
 	}
-	CompVGLPoint2D* glMemPoints_ = NULL, *glMemPoint_;
+	CompVGLPoint2D* glMemPoint_;
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	const GLfloat(*color)[3];
 
-	glMemPoints_ = reinterpret_cast<CompVGLPoint2D*>(CompVMem::malloc(points.size() * sizeof(CompVGLPoint2D)));
-	COMPV_CHECK_EXP_RETURN(!glMemPoints_, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY), "Failed to allocation GL points");
+	CompVMatPtr glMemPoints;
+	COMPV_CHECK_CODE_RETURN((CompVMat::newObj<CompVGLPoint2D, COMPV_MAT_TYPE_STRUCT>(&glMemPoints, 1, points.size(), 1)));
 
 	CompVPointFloat32Vector::const_iterator it;
 	bool randomColors = (!options || options->colorType == COMPV_DRAWING_COLOR_TYPE_RANDOM);
 	if (randomColors) {
-		for (it = points.begin(), glMemPoint_ = glMemPoints_; it != points.end(); ++it, ++glMemPoint_) {
+		for (it = points.begin(), glMemPoint_ = glMemPoints->ptr<CompVGLPoint2D>(); it != points.end(); ++it, ++glMemPoint_) {
 			// x, y
 			glMemPoint_->position[0] = static_cast<GLfloat>((*it).x);
 			glMemPoint_->position[1] = static_cast<GLfloat>((*it).y);
@@ -121,7 +129,7 @@ COMPV_ERROR_CODE CompVGLCanvas::drawPoints(const CompVPointFloat32Vector& points
 		}
 	}
 	else {
-		for (it = points.begin(), glMemPoint_ = glMemPoints_; it != points.end(); ++it, ++glMemPoint_) {
+		for (it = points.begin(), glMemPoint_ = glMemPoints->ptr<CompVGLPoint2D>(); it != points.end(); ++it, ++glMemPoint_) {
 			// x, y
 			glMemPoint_->position[0] = static_cast<GLfloat>((*it).x);
 			glMemPoint_->position[1] = static_cast<GLfloat>((*it).y);
@@ -134,11 +142,10 @@ COMPV_ERROR_CODE CompVGLCanvas::drawPoints(const CompVPointFloat32Vector& points
 	}
 
 	COMPV_CHECK_CODE_BAIL(err = m_ptrFBO->bind());
-	COMPV_CHECK_CODE_BAIL(err = m_ptrDrawPoints->points(glMemPoints_, static_cast<GLsizei>(points.size())));
+	COMPV_CHECK_CODE_BAIL(err = m_ptrDrawPoints->points(glMemPoints->ptr<CompVGLPoint2D>(), static_cast<GLsizei>(points.size())));
 
 bail:
 	COMPV_CHECK_CODE_NOP(m_ptrFBO->unbind());
-	CompVMem::free(reinterpret_cast<void**>(&glMemPoints_));
 	unMakeEmpty();
 	return err;
 }

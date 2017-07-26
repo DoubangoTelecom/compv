@@ -18,6 +18,9 @@
 COMPV_NAMESPACE_BEGIN()
 
 bool CompVGL::s_bInitialized = false;
+#if HAVE_FREETYPE
+FT_Library CompVGL::s_freetype = nullptr;
+#endif /* HAVE_FREETYPE */
 
 COMPV_ERROR_CODE CompVGL::init()
 {
@@ -61,6 +64,17 @@ COMPV_ERROR_CODE CompVGL::init()
     COMPV_CHECK_CODE_BAIL(err = CompVGLVAO::init());
 #endif
 
+#if HAVE_FREETYPE
+	{
+		FT_Error ft_err;
+		if ((ft_err = FT_Init_FreeType(&s_freetype))) {
+			COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "FT_Init_FreeType failed with error code %d", ft_err);
+			COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_FREETYPE);
+		}
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "FreeType implementation enabled");
+	}
+#endif
+
     CompVGL::s_bInitialized = true;
 
 bail:
@@ -77,6 +91,13 @@ COMPV_ERROR_CODE CompVGL::deInit()
 
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
     COMPV_CHECK_CODE_ASSERT(CompVGLVAO::deInit());
+#endif
+
+#if HAVE_FREETYPE
+	if (s_freetype) {
+		COMPV_CHECK_EXP_ASSERT(FT_Done_FreeType(s_freetype) != 0, COMPV_ERROR_CODE_E_FREETYPE);
+		s_freetype = nullptr;
+	}
 #endif
 
     CompVGL::s_bInitialized = false;
@@ -101,6 +122,13 @@ COMPV_ERROR_CODE CompVGL::glewInit()
     return COMPV_ERROR_CODE_S_OK;
 }
 #endif /* HAVE_GL_GLEW_H */
+
+#if HAVE_FREETYPE
+FT_Library CompVGL::freeTypeLibrary()
+{
+	return s_freetype;
+}
+#endif /* HAVE_FREETYPE */
 
 COMPV_NAMESPACE_END()
 

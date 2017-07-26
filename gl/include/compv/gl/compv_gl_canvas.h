@@ -14,6 +14,7 @@
 #include "compv/gl/compv_gl_fbo.h"
 #include "compv/gl/drawing/compv_gl_draw_points.h"
 #include "compv/gl/drawing/compv_gl_draw_lines.h"
+#include "compv/gl/drawing/compv_gl_draw_texts.h"
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
@@ -34,7 +35,7 @@ public:
         return m_bEmpty;
     }
 
-    virtual COMPV_ERROR_CODE drawTexts(const void** textPtrs, const size_t* textLengthsInBytes, const CompVPointFloat32Vector& positions, const CompVDrawingOptions* options = nullptr) override /*Overrides(CompVCanvas)*/;
+    virtual COMPV_ERROR_CODE drawTexts(const CompVStringVector& texts, const CompVPointFloat32Vector& positions, const CompVDrawingOptions* options = nullptr) override /*Overrides(CompVCanvas)*/;
 	virtual COMPV_ERROR_CODE drawLines(const CompVLineFloat32Vector& lines, const CompVDrawingOptions* options = nullptr) override /*Overrides(CompVCanvas)*/;
 	virtual COMPV_ERROR_CODE drawRectangles(const CompVRectFloat32Vector& rects, const CompVDrawingOptions* options = nullptr) override /*Overrides(CompVCanvas)*/;
 	virtual COMPV_ERROR_CODE drawPoints(const CompVPointFloat32Vector& points, const CompVDrawingOptions* options = nullptr) override /*Overrides(CompVCanvas)*/;
@@ -66,6 +67,7 @@ private:
     CompVGLFboPtr m_ptrFBO;
 	CompVGLDrawPointsPtr m_ptrDrawPoints;
 	CompVGLDrawLinesPtr m_ptrDrawLines;
+	CompVGLDrawTextsPtr m_ptrDrawTexts;
     COMPV_VS_DISABLE_WARNINGS_END()
 };
 

@@ -42,6 +42,7 @@
     <ClInclude Include="include\compv\gl\drawing\compv_gl_draw.h" />
     <ClInclude Include="include\compv\gl\drawing\compv_gl_draw_lines.h" />
     <ClInclude Include="include\compv\gl\drawing\compv_gl_draw_points.h" />
+    <ClInclude Include="include\compv\gl\drawing\compv_gl_draw_texts.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_gl.cxx" />
@@ -63,6 +64,7 @@
     <ClCompile Include="drawing\compv_gl_draw.cxx" />
     <ClCompile Include="drawing\compv_gl_draw_lines.cxx" />
     <ClCompile Include="drawing\compv_gl_draw_points.cxx" />
+    <ClCompile Include="drawing\compv_gl_draw_texts.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\base\CompVBase.vcxproj">
@@ -137,16 +139,16 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_WIN32_WINNT=0x0501;_USRDLL;GLEW_STATIC;HAVE_GL_GLEW_H;COMPV_GL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_WIN32_WINNT=0x0501;_USRDLL;GLEW_STATIC;HAVE_GL_GLEW_H;COMPV_GL_EXPORTS;%(PreprocessorDefinitions);HAVE_FREETYPE_FREETYPE_H=1</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>include;../base/include;../thirdparties/include/common/glew-2.3.4;../thirdparties/include/common/glm-0.9.8.2</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;../base/include;../thirdparties/include/common/glew-2.3.4;../thirdparties/include/common/glm-0.9.8.2;../thirdparties/include/common/freetype-2.8</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(OutDir)CompVBase.lib;OpenGL32.lib;Glu32.lib;glew32s.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>../thirdparties/libraries/windows/glew-2.3.4-win32</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(OutDir)CompVBase.lib;OpenGL32.lib;Glu32.lib;glew32s.lib;freetype.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>../thirdparties/libraries/windows/glew-2.3.4-win32;../thirdparties/libraries/windows/freetype-2.8-win32</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -155,16 +157,16 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_DEBUG;_WINDOWS;_WIN32_WINNT=0x0501;_USRDLL;GLEW_STATIC;HAVE_GL_GLEW_H;COMPV_GL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_WINDOWS;_WIN32_WINNT=0x0501;_USRDLL;GLEW_STATIC;HAVE_GL_GLEW_H;COMPV_GL_EXPORTS;%(PreprocessorDefinitions);HAVE_FREETYPE_FREETYPE_H=1</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>include;../base/include;../thirdparties/include/common/glew-2.3.4;../thirdparties/include/common/glm-0.9.8.2</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;../base/include;../thirdparties/include/common/glew-2.3.4;../thirdparties/include/common/glm-0.9.8.2;../thirdparties/include/common/freetype-2.8</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(OutDir)CompVBase.lib;OpenGL32.lib;Glu32.lib;glew32s.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>../thirdparties/libraries/windows/glew-2.3.4-win64</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(OutDir)CompVBase.lib;OpenGL32.lib;Glu32.lib;glew32s.lib;freetype.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>../thirdparties/libraries/windows/glew-2.3.4-win64;../thirdparties/libraries/windows/freetype-2.8-win64</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -175,9 +177,9 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_WIN32_WINNT=0x0501;_USRDLL;GLEW_STATIC;HAVE_GL_GLEW_H;COMPV_GL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_WIN32_WINNT=0x0501;_USRDLL;GLEW_STATIC;HAVE_GL_GLEW_H;COMPV_GL_EXPORTS;%(PreprocessorDefinitions);HAVE_FREETYPE_FREETYPE_H=1</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>include;../base/include;../thirdparties/include/common/glew-2.3.4;../thirdparties/include/common/glm-0.9.8.2</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;../base/include;../thirdparties/include/common/glew-2.3.4;../thirdparties/include/common/glm-0.9.8.2;../thirdparties/include/common/freetype-2.8</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
@@ -185,8 +187,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(OutDir)CompVBase.lib;OpenGL32.lib;Glu32.lib;glew32s.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>../thirdparties/libraries/windows/glew-2.3.4-win32</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(OutDir)CompVBase.lib;OpenGL32.lib;Glu32.lib;glew32s.lib;freetype.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>../thirdparties/libraries/windows/glew-2.3.4-win32;../thirdparties/libraries/windows/freetype-2.8-win32</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -197,9 +199,9 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>NDEBUG;_WINDOWS;_WIN32_WINNT=0x0501;_USRDLL;GLEW_STATIC;HAVE_GL_GLEW_H;COMPV_GL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_WINDOWS;_WIN32_WINNT=0x0501;_USRDLL;GLEW_STATIC;HAVE_GL_GLEW_H;COMPV_GL_EXPORTS;%(PreprocessorDefinitions);HAVE_FREETYPE_FREETYPE_H=1</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>include;../base/include;../thirdparties/include/common/glew-2.3.4;../thirdparties/include/common/glm-0.9.8.2</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;../base/include;../thirdparties/include/common/glew-2.3.4;../thirdparties/include/common/glm-0.9.8.2;../thirdparties/include/common/freetype-2.8</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
@@ -207,8 +209,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(OutDir)CompVBase.lib;OpenGL32.lib;Glu32.lib;glew32s.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>../thirdparties/libraries/windows/glew-2.3.4-win64</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(OutDir)CompVBase.lib;OpenGL32.lib;Glu32.lib;glew32s.lib;freetype.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>../thirdparties/libraries/windows/glew-2.3.4-win64;../thirdparties/libraries/windows/freetype-2.8-win64</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

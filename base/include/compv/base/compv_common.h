@@ -185,6 +185,7 @@ typedef compv_float32_t compv_float32x2_t[2];
 typedef compv_float32_t compv_float32x4_t[4];
 typedef uint8_t compv_uint8x3_t[3];
 typedef uint8_t compv_uint8x4_t[4];
+typedef std::vector<std::string> CompVStringVector;
 
 enum COMPV_DEBUG_LEVEL {
     COMPV_DEBUG_LEVEL_INFO = 4,
@@ -244,6 +245,7 @@ enum COMPV_ERROR_CODE {
 	COMPV_ERROR_CODE_E_INTEL_IPP,
 	COMPV_ERROR_CODE_E_INTEL_TBB,
 	COMPV_ERROR_CODE_E_FFMPEG,
+	COMPV_ERROR_CODE_E_FREETYPE,
 
     COMPV_ERROR_CODE_F = kErrorCodeFatalStart,
 };

@@ -135,7 +135,14 @@ public:
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->activate());
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->drawImage(m_CalibResult.edges));
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->renderer()->canvas()->drawLines(m_CalibResult.lines_grouped.lines_cartesian, &m_DrawingOptionsGroupedLines));
-			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->renderer()->canvas()->drawPoints(m_CalibResult.points_intersections, &m_DrawingOptionsRawLines));
+			//COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->renderer()->canvas()->drawPoints(m_CalibResult.points_intersections, &m_DrawingOptionsRawLines));
+			if (!m_CalibResult.points_intersections.empty()) {
+				CompVStringVector labels(m_CalibResult.points_intersections.size());
+				for (size_t index = 0; index < m_CalibResult.points_intersections.size(); ++index) {
+					labels[index] = CompVBase::to_string(index);
+				}
+				COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->renderer()->canvas()->drawTexts(labels, m_CalibResult.points_intersections, nullptr));
+			}
 
 			// Grouped and ordered lines
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGroupedAndOrdered->activate());

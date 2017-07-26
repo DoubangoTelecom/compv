@@ -18,15 +18,21 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-typedef struct {
-    GLfloat Position[3];
+struct CompVGLVertex {
+    GLfloat Position[3]; // x, y, z
     GLfloat TexCoord[2];
-} CompVGLVertex;
+};
 
-typedef struct {
+struct CompVGLPoint2D {
 	GLfloat position[2]; // x, y
 	GLfloat color[4]; // r, g, b, a
-} CompVGLPoint2D;
+};
+
+struct CompVGLText2D {
+	GLfloat position[2]; // x, y
+	GLfloat color[4]; // r, g, b, a
+	GLfloat box[4][4];
+};
 
 static const GLint kCompVGLNameInvalid = 0;
 static const GLint kCompVGLNameSystemFrameBuffer = 0;

@@ -1,0 +1,42 @@
+To build *static* SDL 2.0 for VS2015 you must add HAVE_LIBC in the CFLAGS
+
+
+Visual Studio Community 2015: https://www.visualstudio.com/vs/community/
+
+Skia link libraries: $(OutDir)CompVBase.lib;$(OutDir)CompVGL.lib;skia_core.lib;skia_effects.lib;skia_images.lib;skia_opts.lib;skia_opts_hsw.lib;skia_opts_sse41.lib;skia_opts_sse42.lib;skia_opts_ssse3.lib;skia_opts_avx.lib;skia_ports.lib;skia_sfnt.lib;skia_utils.lib;skia_skgpu.lib;skia_codec.lib;libjpeg-turbo.lib;libpng_static.lib;libwebp_dec.lib;libwebp_dsp.lib;libwebp_demux.lib;libwebp_utils.lib;raw_codec.lib;dng_sdk.lib;piex.lib;giflib.lib;zlib.lib;libSkKTX.lib;libetc1.lib;glew32s.lib;OpenGL32.lib;Glu32.lib;SDL2.lib;Winmm.lib;imm32.lib;version.lib;%(AdditionalDependencies)
+
+mkdir base_skia
+cd base_skia
+set GYP_MSVS_VERSION=2015
+gclient runhooks
+gclient config --unmanaged https://skia.googlesource.com/skia.git
+gclient sync
+
+#mkdir skia
+cd skia
+#git clone https://skia.googlesource.com/skia.git
+git checkout chrome/m55
+
+Edit 'skia/gyp/libjpeg-turbo.gyp' and add '../third_party/externals/libjpeg-turbo/jdatasrc.c',
+-> This adds support for 'jpeg_stdio_src'
+
+* For Windows only, In 'jmorecfg.h' redefine 'boolean' as 'unsigned char boolean'
+
+********** Windows **********
+python gyp_skia -Dskia_arch_type=x86 -Dskia_os=win
+ninja -C out/Debug
+ninja -C out/Release
+
+delete out folder
+
+python gyp_skia -Dskia_arch_type=x86_64 -Dskia_os=win
+ninja -C out/Debug_x64
+ninja -C out/Release_x64
+---------------------
+
+If you get 'bash\r: No such file or directory' on OSX: Reconfigure git to ignore rewriting endlines: git config --global core.autocrlf false
+
+If you get 'python: /lib64/libc.so.6: version `GLIBC_2.14' not found (required by python)' on CentOS6: http://unix.stackexchange.com/questions/176489/how-to-update-glibc-to-2-14-in-centos-6-5
+
+***** Android *****
+gn gen out/arm --args='ndk="/Users/mamadou/Documents/android-ndk-r11c” target_cpu="arm" target_os="android" is_debug=false ndk_api=18'
