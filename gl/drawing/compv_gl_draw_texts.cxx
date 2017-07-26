@@ -7,6 +7,7 @@
 #include "compv/gl/drawing/compv_gl_draw_texts.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/base/compv_mat.h"
+#include "compv/gl/compv_gl_freetype.h"
 #include "compv/gl/compv_gl.h"
 #include "compv/gl/compv_gl_utils.h"
 #include "compv/gl/compv_gl_info.h"
@@ -55,23 +56,12 @@ CompVGLDrawTexts::CompVGLDrawTexts()
 	: CompVGLDraw(kProgramVertexData, kProgramFragmentData, kVertexDataWithMVP_Yes)
 	, m_fboWidth(0)
 	, m_fboHeight(0)
-#if HAVE_FREETYPE
-	, m_face(nullptr)
-#endif
 {
 
 }
 
 CompVGLDrawTexts::~CompVGLDrawTexts()
 {
-#if HAVE_FREETYPE
-	if (m_face) {
-		if (CompVGLFreeType::library()) {
-			COMPV_CHECK_EXP_NOP(FT_Done_Face(m_face) != 0, COMPV_ERROR_CODE_E_FREETYPE);
-		}
-		m_face = nullptr;
-	}
-#endif
 }
 
 COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const CompVPointFloat32Vector& positions, const CompVDrawingOptions* options COMPV_DEFAULT(nullptr))
@@ -79,53 +69,10 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Change function parameters to accept CompVGLText2D* like what is done for drawPoints and drawLines");
 #if HAVE_FREETYPE
-	FT_Error ft_err;
-	if (!m_face) {
-		COMPV_DEBUG_INFO_CODE_FOR_TESTING("Use relative path for the the font or read from memory");
-		COMPV_DEBUG_INFO_CODE_FOR_TESTING("Under windows check fonts in 'C:/Windows/Fonts'");
-		if ((ft_err = FT_New_Face(CompVGLFreeType::library(), "C:/Windows/Fonts/arial.ttf", 0, &m_face))) {
-			COMPV_DEBUG_ERROR("FT_New_Face('FreeSans.ttf', 0) failed with error '%s'", CompVGLFreeType::errorMessage(ft_err));
-			return COMPV_ERROR_CODE_E_FREETYPE;
-		}
-		if ((ft_err = FT_Set_Pixel_Sizes(m_face, 0, 16))) {
-			COMPV_DEBUG_ERROR("FT_Set_Pixel_Sizes(face, 0, 16) failed with error '%s'", CompVGLFreeType::errorMessage(ft_err));
-			return COMPV_ERROR_CODE_E_FREETYPE;
-		}
-	}
-
-#if 0
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Move creting glMemTexts to canvas like what is done from drawPoints and drawLines");
-	CompVMatPtr glMemTexts;
-	COMPV_CHECK_CODE_RETURN((CompVMat::newObj<CompVGLText2D, COMPV_MAT_TYPE_STRUCT>(&glMemTexts, 1, texts.size(), 1)));
-	CompVPointFloat32Vector::const_iterator it;
-	bool randomColors = (!options || options->colorType == COMPV_DRAWING_COLOR_TYPE_RANDOM);
-	const GLfloat(*color)[3];
-	if (randomColors) {
-		for (it = positions.begin(), glMemPoint_ = glMemPoints->ptr<CompVGLPoint2D>(); it != positions.end(); ++it, ++glMemPoint_) {
-			// x, y
-			glMemPoint_->position[0] = static_cast<GLfloat>((*it).x);
-			glMemPoint_->position[1] = static_cast<GLfloat>((*it).y);
-			// r, g, b
-			color = &kCompVGLRandomColors[rand() % kCompVGLRandomColorsCount];
-			glMemPoint_->color[0] = (*color)[0];
-			glMemPoint_->color[1] = (*color)[1];
-			glMemPoint_->color[2] = (*color)[2];
-			glMemPoint_->color[3] = 1.f; // alpha
-		}
-	}
-	else {
-		for (it = positions.begin(), glMemPoint_ = glMemPoints->ptr<CompVGLPoint2D>(); it != positions.end(); ++it, ++glMemPoint_) {
-			// x, y
-			glMemPoint_->position[0] = static_cast<GLfloat>((*it).x);
-			glMemPoint_->position[1] = static_cast<GLfloat>((*it).y);
-			// r, g, b
-			glMemPoint_->color[0] = options->color[0];
-			glMemPoint_->color[1] = options->color[1];
-			glMemPoint_->color[2] = options->color[2];
-			glMemPoint_->color[3] = options->color[3];
-		}
-	}
-#endif
+	CompVGLFreeTypeStyle* style = nullptr;
+	CompVGLFreeTypeCharacter character;
+	static const std::string fontName = "C:/Windows/Fonts/arial.ttf";
+	static const size_t fontSize = 16;
 
 	// Bind to VAO, VBO, Program
 	GLint fboWidth = 0, fboHeight = 0;
@@ -156,6 +103,10 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 	// Set viewport
 	COMPV_glViewport(0, 0, static_cast<GLsizei>(fboWidth), static_cast<GLsizei>(fboHeight));
 
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Under windows check fonts in 'C:/Windows/Fonts'");
+
+	COMPV_CHECK_CODE_BAIL(err = CompVGLFreeType::style(fontName, fontSize, style));
+
 	const char *p;
 	const char *text = "Mamadou DIOP (Français)";
 	float sx = 2.f / static_cast<float>(fboWidth);
@@ -163,40 +114,27 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 	float x = 0.f;
 	float y = 0.f;
 
-	FT_GlyphSlot g = m_face->glyph;
-
-	GLuint tex;
-	glActiveTexture(GL_TEXTURE0);
-	glGenTextures(1, &tex);
-	glBindTexture(GL_TEXTURE_2D, tex);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	//GLuint tex;
+	//glActiveTexture(GL_TEXTURE0);
+	//glGenTextures(1, &tex);
+	//glBindTexture(GL_TEXTURE_2D, tex);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	GLuint uniform_tex = COMPV_glGetUniformLocation(program()->name(), "tex");
 	glUniform1i(uniform_tex, 0);
 
 	// this affects glTexImage2D and glSubTexImage2D
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	COMPV_glActiveTexture(GL_TEXTURE0);
 
 	for (p = text; *p; p++) {
-		if ((ft_err = FT_Load_Char(m_face, *p, FT_LOAD_RENDER))) {
-			COMPV_DEBUG_ERROR("FT_Load_Char(face, %c) failed with error code %d", ft_err, *p);
-			continue;
-		}
+		COMPV_CHECK_CODE_BAIL(err = CompVGLFreeType::character(*p, style, character));
 
-		COMPV_glTexImage2D(
-			GL_TEXTURE_2D,
-			0,
-			COMPV_GL_FORMAT_Y,
-			g->bitmap.width,
-			g->bitmap.rows,
-			0,
-			COMPV_GL_FORMAT_Y,
-			GL_UNSIGNED_BYTE,
-			g->bitmap.buffer
-		);
+		FT_GlyphSlot g = style->face->glyph;
+	
+		COMPV_glBindTexture(GL_TEXTURE_2D, character.nameTexture);
 
 		float x2 = x + g->bitmap_left * sx;
 		float y2 = -y - g->bitmap_top * sy;
@@ -221,8 +159,6 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 		x += (g->advance.x / 64) * sx;
 		y += (g->advance.y / 64) * sy;
 	}
-
-	glDeleteTextures(1, &tex);
 
 	// Update size
 	m_fboWidth = fboWidth;
