@@ -8,6 +8,7 @@
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/base/compv_mat.h"
 #include "compv/base/math/compv_math.h"
+#include "compv/base/time/compv_time.h"
 #include "compv/gl/compv_gl.h"
 #include "compv/gl/compv_gl_utils.h"
 #include "compv/gl/compv_gl_info.h"
@@ -45,7 +46,7 @@ static const std::string& kProgramFragmentData =
 #define kVertexDataWithMVP_Yes	true
 #define kVertexDataWithMVP_No	false
 
-typedef GLfloat CompVGLFreeTypeBox[4*4]; // (fbo_x, fbo_y, tex_x, tex_y) * 4
+typedef GLfloat CompVGLFreeTypeBox[4*6]; // (fbo_x, fbo_y, tex_x, tex_y) * 6
 
 #define COMPV_THIS_CLASS_NAME "CompVGLDrawTexts"
 
@@ -114,7 +115,7 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 			COMPV_DEBUG_ERROR("FT_New_Face('FreeSans.ttf', 0) failed with error '%s'", CompVGLFreeType::errorMessage(ft_err));
 			return COMPV_ERROR_CODE_E_FREETYPE;
 		}
-		if ((ft_err = FT_Set_Pixel_Sizes(m_face, 0, 16))) {
+		if ((ft_err = FT_Set_Pixel_Sizes(m_face, 0, fontSize))) {
 			COMPV_DEBUG_ERROR("FT_Set_Pixel_Sizes(face, 0, 16) failed with error '%s'", CompVGLFreeType::errorMessage(ft_err));
 			return COMPV_ERROR_CODE_E_FREETYPE;
 		}
@@ -216,9 +217,12 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 	COMPV_glBindTexture(GL_TEXTURE_2D, m_uTextureAtlas);
 	COMPV_CHECK_CODE_RETURN((CompVMat::newObj<uint8_t>(&ptrAtlas, fboHeight, fboWidth, 1, fboWidth)));
 	COMPV_CHECK_CODE_RETURN((CompVMat::newObj<CompVGLFreeTypeBox, COMPV_MAT_TYPE_STRUCT>(&ptrBoxes, 1, numChars, 1, numChars)));
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Comment zeroall");
-	//ptrAtlas->zero_all();
+	
+	
 	COMPV_CHECK_CODE_BAIL(err = fillAtlas(texts, positions, ptrAtlas, ptrBoxes, numChars));
+	
+
+	//uint64_t timeStart = CompVTime::nowMillis();
 	COMPV_glTexSubImage2D(
 		GL_TEXTURE_2D,
 		0,
@@ -234,25 +238,12 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 	boxesPtr = ptrBoxes->ptr<const CompVGLFreeTypeBox>();
 
 	COMPV_glViewport(0, 0, static_cast<GLsizei>(fboWidth), static_cast<GLsizei>(fboHeight));
-#if 1
-	//COMPV_glBufferData(GL_ARRAY_BUFFER, sizeof(CompVGLFreeTypeBox) * numChars, nullptr, GL_DYNAMIC_DRAW);
-	//COMPV_glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(CompVGLFreeTypeBox) * numChars, boxesPtr);
-
 	COMPV_glBufferData(GL_ARRAY_BUFFER, sizeof(CompVGLFreeTypeBox) * numChars, boxesPtr, GL_STATIC_DRAW);
-	COMPV_glDrawArrays(GL_TRIANGLE_STRIP, 0, static_cast<GLsizei>(numChars) * 4);
-#else
-	
-	COMPV_glBufferData(GL_ARRAY_BUFFER, sizeof(CompVGLFreeTypeBox), NULL, GL_DYNAMIC_DRAW);
-	for (size_t i = 0; i < numChars; ++i, ++boxesPtr) {
-		COMPV_DEBUG_INFO_CODE_FOR_TESTING("Call COMPV_glBufferData and COMPV_glDrawArrays once");
+	COMPV_glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(numChars) * 6);
 
-		// Submit vertices data
-		COMPV_glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(CompVGLFreeTypeBox), boxesPtr);
+	//uint64_t timeEnd = CompVTime::nowMillis();
+	//COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASS_NAME, "fillAtlas Elapsed time = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 
-		// Draw points
-		COMPV_glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-	}
-#endif
 	// Update size
 	m_fboWidth = fboWidth;
 	m_fboHeight = fboHeight;
@@ -284,8 +275,8 @@ COMPV_ERROR_CODE CompVGLDrawTexts::fillAtlas(const CompVStringVector& texts, con
 	const GLuint fboWidth = static_cast<GLuint>(ptrAtlas->cols());
 	const GLuint fboHeight = static_cast<GLuint>(ptrAtlas->rows());
 
-	const GLfloat sx = (1.f / fboWidth);
-	const GLfloat sy = (1.f / fboHeight);
+	const GLfloat sx = (1.f / (fboWidth));
+	const GLfloat sy = (1.f / (fboHeight));
 	
 	numChars = 0;
 	const size_t maxBoxes = ptrBoxes->cols();
@@ -333,10 +324,13 @@ COMPV_ERROR_CODE CompVGLDrawTexts::fillAtlas(const CompVStringVector& texts, con
 			sw = w * sx;
 			sh = h * sy;
 
-			(*ptrBox)[0] = x2, (*ptrBox)[1] = y2, (*ptrBox)[2] = sx2, (*ptrBox)[3] = sy2;
-			(*ptrBox)[4] = x2 + w, (*ptrBox)[5] = y2, (*ptrBox)[6] = sx2 + sw, (*ptrBox)[7] = sy2;
-			(*ptrBox)[8] = x2, (*ptrBox)[9] = y2 + h, (*ptrBox)[10] = sx2, (*ptrBox)[11] = sy2 + sh;
-			(*ptrBox)[12] = x2 + w, (*ptrBox)[13] = y2 + h, (*ptrBox)[14] = sx2 + sw, (*ptrBox)[15] = sy2 + sh;
+			(*ptrBox)[0] = x2,		(*ptrBox)[1] = y2,		(*ptrBox)[2] = sx2,			(*ptrBox)[3] = sy2;
+			(*ptrBox)[4] = x2,		(*ptrBox)[5] = y2 + h,	(*ptrBox)[6] = sx2,			(*ptrBox)[7] = sy2 + sh;
+			(*ptrBox)[8] = x2 + w,	(*ptrBox)[9] = y2 + h,	(*ptrBox)[10] = sx2 + sw,	(*ptrBox)[11] = sy2 + sh;
+
+			(*ptrBox)[12] = x2,		(*ptrBox)[13] = y2,		(*ptrBox)[14] = sx2,		(*ptrBox)[15] = sy2;
+			(*ptrBox)[16] = x2 + w, (*ptrBox)[17] = y2 + h,	(*ptrBox)[18] = sx2 + sw,	(*ptrBox)[19] = sy2 + sh;
+			(*ptrBox)[20] = x2 + w, (*ptrBox)[21] = y2,		(*ptrBox)[22] = sx2 + sw,	(*ptrBox)[23] = sy2;
 			++ptrBox;
 
 			if (numChars++ >= maxBoxes) {

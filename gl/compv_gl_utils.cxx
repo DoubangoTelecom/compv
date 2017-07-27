@@ -177,7 +177,7 @@ bool CompVGLUtils::isFrameBufferValid(GLuint uFrameBuffer)
 COMPV_ERROR_CODE CompVGLUtils::vertexArraysGen(GLuint* uVertexArrays)
 {
     COMPV_CHECK_EXP_RETURN(!uVertexArrays, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-    COMPV_CHECK_EXP_RETURN(!CompVGLInfo::extensions::vertex_array_object(), COMPV_ERROR_CODE_E_GL);
+    COMPV_CHECK_EXP_RETURN(!CompVGLInfo::extensions::vertex_array_object(), COMPV_ERROR_CODE_E_GL, "Vertex Array not supported");
     COMPV_glGenVertexArrays(1, uVertexArrays);
     if (!CompVGLUtils::isVertexArrays(*uVertexArrays)) {
         std::string errString;
