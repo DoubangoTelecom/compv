@@ -17,6 +17,7 @@ GLint CompVGLInfo::s_iVersionMajor = 0;
 GLint CompVGLInfo::s_iVersionMinor = 0;
 GLint CompVGLInfo::s_iMaxColorAttachments = 0;
 GLint CompVGLInfo::s_iMaxDrawBuffers = 0;
+GLint CompVGLInfo::s_iMaxtextureSize = 1024;
 
 bool CompVGLInfo::extensions::s_bvertex_array_object = false;
 bool CompVGLInfo::extensions::s_btexture_float = false;
@@ -36,6 +37,10 @@ COMPV_ERROR_CODE CompVGLInfo::gather()
     COMPV_DEBUG_INFO("OpenGL renderer string: %s", glGetString(GL_RENDERER));
     COMPV_DEBUG_INFO("OpenGL vendor string: %s", glGetString(GL_VENDOR));
     COMPV_DEBUG_INFO("OpenGL extensions string: %s", extensions);
+
+	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &s_iMaxtextureSize);
+	COMPV_DEBUG_INFO("GL_MAX_TEXTURE_SIZE: %d", s_iMaxtextureSize);
+
 #if defined(HAVE_OPENGL)
     glGetIntegerv(GL_MAJOR_VERSION, &s_iVersionMajor);
     glGetIntegerv(GL_MINOR_VERSION, &s_iVersionMinor);

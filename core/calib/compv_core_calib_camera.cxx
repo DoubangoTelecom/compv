@@ -34,6 +34,10 @@
 
 #define COMPV_THIS_CLASSNAME	"CompVCalibCamera"
 
+// Implementation based on video course "Photogrammetry I - 16b - DLT & Camera Calibration (2015)": https://www.youtube.com/watch?v=Ou9Uj75DJX0
+// TODO(dmi): use "ceres-solver" http://ceres-solver.org/index.html
+// TODO(dmi): add support for lmfit (FreeBSD): http://apps.jcns.fz-juelich.de/doku/sc/lmfit
+
 COMPV_NAMESPACE_BEGIN()
 
 static const float kSmallRhoFactVt = 0.015f; /* small = (rho * fact) */

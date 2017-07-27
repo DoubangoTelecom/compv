@@ -42,12 +42,16 @@ public:
 	static GLint versionMinor() {
 		return s_iVersionMinor;
 	}
+	static GLint maxtextureSize() {
+		return s_iMaxtextureSize;
+	}
 private:
     static bool s_bGathered;
     static GLint s_iVersionMajor;
     static GLint s_iVersionMinor;
     static GLint s_iMaxColorAttachments;
     static GLint s_iMaxDrawBuffers;
+	static GLint s_iMaxtextureSize;
 };
 
 COMPV_NAMESPACE_END()

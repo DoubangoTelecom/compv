@@ -37,13 +37,12 @@ public:
 
 private:
 #if HAVE_FREETYPE
-	COMPV_ERROR_CODE buildAtlas(const CompVStringVector& texts, const CompVPointFloat32Vector& positions);
+	COMPV_ERROR_CODE fillAtlas(const CompVStringVector& texts, const CompVPointFloat32Vector& positions, CompVMatPtr& ptrAtlas, CompVMatPtr& ptrBitmaps);
 #endif /* HAVE_FREETYPE */
 
 private:
 	GLint m_fboWidth;
 	GLint m_fboHeight;
-	CompVMatPtr m_ptrAtlas;
 	GLuint m_uTextureAtlas;
 #if HAVE_FREETYPE
 	FT_Face m_face;

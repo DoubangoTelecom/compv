@@ -94,12 +94,12 @@ public:
 		COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 		if (CompVDrawing::isLoopRunning()) {
 			CompVMatPtr imageGray, imageOrig;
-#if 1
+#if 0
 			COMPV_CHECK_CODE_RETURN(CompVImage::convertGrayscale(image, &imageGray));
 			imageOrig = image;
 #else
 			static size_t __index = 0;
-			size_t file_index = 47 + ((__index++) % 20)/*50*//*65*//*47*//*65*//*47*//*55*//*47*//*48*//*52*/;
+			size_t file_index = /*47 + ((__index++) % 20)*/65/*65*//*47*//*65*//*47*//*55*//*47*//*48*//*52*/;
 			std::string file_path = std::string("C:/Projects/GitHub/data/calib/P10100")+ CompVBase::to_string(file_index) +std::string("s_640x480_gray.yuv");
 			COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 640, 480, 640, file_path.c_str(), &imageGray));
 			imageOrig = imageGray;
@@ -139,9 +139,18 @@ public:
 			if (!m_CalibResult.points_intersections.empty() && m_ptrSurfaceLineGrouped->renderer()->canvas()->haveDrawTexts()) {
 				CompVStringVector labels(m_CalibResult.points_intersections.size());
 				for (size_t index = 0; index < m_CalibResult.points_intersections.size(); ++index) {
-					labels[index] = CompVBase::to_string(index);
+					labels[index] = CompVBase::to_string(index) + std::string(" Mamadou DIOP (Français)");
 				}
-				COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->renderer()->canvas()->drawTexts(labels, m_CalibResult.points_intersections, &m_DrawingOptionsGroupedLines));
+
+				COMPV_DEBUG_INFO_CODE_FOR_TESTING("Just for testing (0,0)");
+				m_CalibResult.points_intersections.begin()->x = 0.f;
+
+				uint64_t timeStart = CompVTime::nowMillis();
+				/*for (size_t i = 0; i < 10; ++i)*/ {
+					COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->renderer()->canvas()->drawTexts(labels, m_CalibResult.points_intersections, &m_DrawingOptionsGroupedLines));
+				}
+				uint64_t timeEnd = CompVTime::nowMillis();
+				COMPV_DEBUG_INFO_EX(TAG_SAMPLE, "drawTexts Elapsed time = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 			}
 
 			// Grouped and ordered lines
