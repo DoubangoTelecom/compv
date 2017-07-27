@@ -71,16 +71,19 @@ CompVCalibCamera::~CompVCalibCamera()
 // FIXME(dmi): remove (Code from StackOverflow)
 // Returns 1 if the lines intersect, otherwise 0. In addition, if the lines 
 // intersect the intersection point may be stored in the floats i_x and i_y.
-static int get_line_intersection(compv_float32_t p0_x, compv_float32_t p0_y, compv_float32_t p1_x, compv_float32_t p1_y,
-	compv_float32_t p2_x, compv_float32_t p2_y, compv_float32_t p3_x, compv_float32_t p3_y, compv_float32_t *i_x, compv_float32_t *i_y)
+template<typename T = compv_float32_t>
+static int get_line_segments_intersection(T p0_x, T p0_y, T p1_x, T p1_y,
+	compv_float32_t p2_x, compv_float32_t p2_y, T p3_x, T p3_y, T *i_x, T *i_y)
 {
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Re-write code from StackOverflow");
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
-	compv_float32_t s1_x, s1_y, s2_x, s2_y;
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Intersections with x-axis and y-axis can be speeded");
+#if 0
+	T s1_x, s1_y, s2_x, s2_y;
 	s1_x = p1_x - p0_x;     s1_y = p1_y - p0_y;
 	s2_x = p3_x - p2_x;     s2_y = p3_y - p2_y;
 
-	compv_float32_t s, t;
+	T s, t;
 	s = (-s1_y * (p0_x - p2_x) + s1_x * (p0_y - p2_y)) / (-s2_x * s1_y + s1_x * s2_y);
 	t = (s2_x * (p0_y - p2_y) - s2_y * (p0_x - p2_x)) / (-s2_x * s1_y + s1_x * s2_y);
 
@@ -90,8 +93,40 @@ static int get_line_intersection(compv_float32_t p0_x, compv_float32_t p0_y, com
 		*i_y = p0_y + (t * s1_y);
 		return 1;
 	}
-
 	return 0; // No collision
+#else
+	// https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect
+	T s02_x, s02_y, s10_x, s10_y, s32_x, s32_y, s_numer, t_numer, denom, t;
+	s10_x = p1_x - p0_x;
+	s10_y = p1_y - p0_y;
+	s32_x = p3_x - p2_x; // 0.f for y-axis instersection
+	s32_y = p3_y - p2_y; // 0.f for x-axis intersection
+
+	denom = s10_x * s32_y - s32_x * s10_y;
+	if (denom == 0)
+		return 0; // Collinear
+	bool denomPositive = denom > 0;
+
+	s02_x = p0_x - p2_x;
+	s02_y = p0_y - p2_y;
+	s_numer = s10_x * s02_y - s10_y * s02_x;
+	if ((s_numer < 0) == denomPositive)
+		return 0; // No collision
+
+	t_numer = s32_x * s02_y - s32_y * s02_x;
+	if ((t_numer < 0) == denomPositive)
+		return 0; // No collision
+
+	if (((s_numer > denom) == denomPositive) || ((t_numer > denom) == denomPositive))
+		return 0; // No collision
+				  // Collision detected
+	t = t_numer / denom;
+
+	*i_x = p0_x + (t * s10_x);
+	*i_y = p0_y + (t * s10_y);
+
+	return 1;
+#endif
 }
 
 COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibCameraResult& result)
@@ -103,6 +138,13 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 
 	const size_t image_width = image->cols();
 	const size_t image_height = image->rows();
+	const compv_float32_t image_widthF = static_cast<compv_float32_t>(image_width);
+	const compv_float32_t image_heightF = static_cast<compv_float32_t>(image_height);
+
+	int intersect;
+	compv_float32_t intersect_x, intersect_y;
+	static const compv_float32_t intersect_z = 1.f;
+
 
 	/* Canny edge detection */
 	COMPV_CHECK_CODE_RETURN(m_ptrCanny->process(image, &result.edges));
@@ -189,27 +231,18 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 		return std::tie(line1.a.y, line1.b.y) < std::tie(line2.a.y, line2.b.y); // coorect only because x-components are constant when using CompV's hough implementations
 	});
 	// Sort left-right: sort the intersection with x-axis
-	// The line equation could be defined as 'y = mx + b', with 'm' the slope and 'b' the 'intercept'.
-	// m = (b.y - a.y) / (b.x - a.x), '(b.x - a.x)' being a contant when using CompV's hough lines then we can consider using 
-	// m = (b.y - a.y).
-	// b = y - mx, 'x' being a contant when using CompV's hough lines then we can consider using 
-	// b = y - m.
-	// The intersection with x-axis is defined by "y = 0" -> "0 = mx + b" -> "x = -b/m"
 	std::vector<std::pair<compv_float32_t, CompVLineFloat32> > intersections;
+	const compv_float32_t image_widthF_minus = -image_widthF;
 	intersections.reserve(lines_vt_grouped.size());
-	std::for_each(lines_vt_grouped.begin(), lines_vt_grouped.end(), [&intersections](CompVLineFloat32 &line) {
-		if (line.a.x == line.b.x) { // perfect vt line?
-			// For perfect vt lines "a.x == b.x == rho", "a.y == r" and "b.y = -r"
-			intersections.push_back(std::make_pair(line.a.x, line));
+	for (CompVLineFloat32Vector::const_iterator i = lines_vt_grouped.begin(); i < lines_vt_grouped.end(); ++i) {
+		intersect = get_line_segments_intersection(i->a.x, i->a.y, i->b.x, i->b.y,
+			image_widthF_minus, 0.f, image_widthF, 0.f, &intersect_x, &intersect_y);
+		if (intersect) { // no need to check if it's in the image domain (for sure it is)
+			intersections.push_back(std::make_pair(intersect_x, *i));
 		}
-		else {
-			const compv_float32_t slope = (line.b.y - line.a.y);
-			const compv_float32_t intercept = (line.a.y - slope);
-			intersections.push_back(std::make_pair((intercept / slope), line));
-		}
-	});
+	}
 	std::sort(intersections.begin(), intersections.end(), [](const std::pair<compv_float32_t, const CompVLineFloat32> &pair1, const std::pair<compv_float32_t, const CompVLineFloat32> &pair2) {
-		return pair1.first > pair2.first;
+		return pair1.first < pair2.first;
 	});
 	lines_vt_grouped.clear();
 	std::transform(intersections.begin(), intersections.end(), std::back_inserter(lines_vt_grouped), [](const std::pair<compv_float32_t, CompVLineFloat32>& p) { 
@@ -222,13 +255,9 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 	result.lines_grouped.lines_cartesian.insert(result.lines_grouped.lines_cartesian.end(), lines_vt_grouped.begin(), lines_vt_grouped.end());
 
 	/* Compute intersections */
-	const compv_float32_t image_widthF = static_cast<compv_float32_t>(image_width);
-	const compv_float32_t image_heightF = static_cast<compv_float32_t>(image_height);
-	compv_float32_t intersect_x, intersect_y;
-	static const compv_float32_t intersect_z = 1.f;
 	for (CompVLineFloat32Vector::const_iterator i = lines_hz_grouped.begin(); i < lines_hz_grouped.end(); ++i) {
 		for (CompVLineFloat32Vector::const_iterator j = lines_vt_grouped.begin(); j < lines_vt_grouped.end(); ++j) {
-			int intersect = get_line_intersection(i->a.x, i->a.y, i->b.x, i->b.y,
+			intersect = get_line_segments_intersection(i->a.x, i->a.y, i->b.x, i->b.y,
 				j->a.x, j->a.y, j->b.x, j->b.y, &intersect_x, &intersect_y);
 			if (!intersect) {
 				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No intersection between the lines. Stop processing");
@@ -348,7 +377,7 @@ COMPV_ERROR_CODE CompVCalibCamera::grouping(const size_t image_width, const size
 				// If the distance isn't small be reasonably close (medium) then, check
 				// if the lines intersect in the image domain
 				compv_float32_t i_x, i_y;
-				int intersect = get_line_intersection(g->pivot_cartesian->a.x, g->pivot_cartesian->a.y, g->pivot_cartesian->b.x, g->pivot_cartesian->b.y,
+				int intersect = get_line_segments_intersection(g->pivot_cartesian->a.x, g->pivot_cartesian->a.y, g->pivot_cartesian->b.x, g->pivot_cartesian->b.y,
 					i->a.x, i->a.y, i->b.x, i->b.y, &i_x, &i_y);
 				COMPV_DEBUG_INFO_CODE_FOR_TESTING("Also check intersection angle");
 				// No need to check for the intersection angle because the lines are the same type (hz or vt)
