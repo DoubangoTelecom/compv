@@ -45,6 +45,8 @@ static const std::string& kProgramFragmentData =
 #define kVertexDataWithMVP_Yes	true
 #define kVertexDataWithMVP_No	false
 
+typedef GLfloat CompVGLFreeTypeBox[4][4];
+
 struct CompVGLFreeTypeBitmap {
 	GLfloat left;
 	GLfloat top;
@@ -109,8 +111,9 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 	CompVStringVector::const_iterator it_texts;
 	CompVPointFloat32Vector::const_iterator it_positions;
 	std::string::const_iterator it_string;
-	compv_float32_t x, y;
-	CompVMatPtr ptrAtlas, ptrBitmaps;
+	CompVMatPtr ptrAtlas, ptrBoxes;
+	const CompVGLFreeTypeBox* boxesPtr;
+	size_t numChars, maxChars;
 
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Change m_face if font or pixel size change");
 
@@ -210,12 +213,25 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 	// Create texture
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Create texture once");
 
+	// Get maximum chars
+	maxChars = (fboWidth * fboHeight) /*/ fontSize*/; // do not divide by fontSize to allow overwritting and give some room
+
+	// Get number of chars
+	numChars = 0;
+	for (it_texts = texts.begin(); it_texts < texts.end(); ++it_texts) {
+		numChars += it_texts->size();
+	}
+	if (numChars > maxChars) {
+		COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASS_NAME, "Too much characters to write, truncating (%zu > %zu)", numChars, maxChars);
+		numChars = maxChars;
+	}
+
 	// Build atlas and send data to texture
 	COMPV_CHECK_CODE_RETURN((CompVMat::newObj<uint8_t>(&ptrAtlas, fboHeight, fboWidth, 1, fboWidth)));
-	COMPV_CHECK_CODE_RETURN((CompVMat::newObj<CompVGLFreeTypeBitmap, COMPV_MAT_TYPE_STRUCT>(&ptrBitmaps, 1, kMaxFreeTypeCharsPerProcess, 1, kMaxFreeTypeCharsPerProcess)));
+	COMPV_CHECK_CODE_RETURN((CompVMat::newObj<CompVGLFreeTypeBox, COMPV_MAT_TYPE_STRUCT>(&ptrBoxes, 1, numChars, 1, numChars)));
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Comment zeroall");
 	ptrAtlas->zero_all();
-	COMPV_CHECK_CODE_BAIL(err = fillAtlas(texts, positions, ptrAtlas, ptrBitmaps));
+	COMPV_CHECK_CODE_BAIL(err = fillAtlas(texts, positions, ptrAtlas, ptrBoxes, numChars));
 	COMPV_glTexSubImage2D(
 		GL_TEXTURE_2D,
 		0,
@@ -227,67 +243,15 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 		GL_UNSIGNED_BYTE,
 		ptrAtlas->ptr());
 
-	// this affects glTexImage2D and glSubTexImage2D
+	boxesPtr = ptrBoxes->ptr<const CompVGLFreeTypeBox>();
+	for (size_t i = 0; i < numChars; ++i, ++boxesPtr) {
+		COMPV_DEBUG_INFO_CODE_FOR_TESTING("Call COMPV_glBufferData and COMPV_glDrawArrays once");
 
-	for (it_texts = texts.begin(), it_positions = positions.begin(); it_texts < texts.end(); ++it_texts, ++it_positions) {
-		x = it_positions->x;
-		y = it_positions->y;
-		for (it_string = it_texts->begin(); it_string < it_texts->end(); ++it_string) {
-			if ((ft_err = FT_Load_Char(m_face, *it_string, FT_LOAD_RENDER))) {
-				COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASS_NAME, "FT_Load_Char(face, %c) failed with error code %d", ft_err, *it_string);
-				continue;
-			}
+		// Submit vertices data
+		COMPV_glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(CompVGLFreeTypeBox), boxesPtr);
 
-			/*COMPV_glTexImage2D(
-				GL_TEXTURE_2D,
-				0,
-				COMPV_GL_FORMAT_Y,
-				g->bitmap.width,
-				g->bitmap.rows,
-				0,
-				COMPV_GL_FORMAT_Y,
-				GL_UNSIGNED_BYTE,
-				g->bitmap.buffer
-			);*/
-			float x2 = x + g->bitmap_left * 1.f;
-			float y2 = y - g->bitmap_top * 1.f;
-			float w = g->bitmap.width * 1.f;
-			float h = g->bitmap.rows * 1.f;
-
-			float sx = 1.f / fboWidth;
-			float sy = 1.f / fboHeight;
-			float cx = x * sx;
-			float cy = y * sy;
-			float sw = w * sx;
-			float sh = h * sy;
-
-#if 0
-			GLfloat box[4][4] = {
-				{ x2,     y2    , 0.f, 0.f }, // (fbo_x, fbo_y), (texture_x, texture_y)
-				{ x2 + w, y2    , 1.f, 0.f },
-				{ x2,     y2 + h, 0.f, 1.f },
-				{ x2 + w, y2 + h, 1.f, 1.f },
-			};
-#else
-			GLfloat box[4][4] = {
-				{ x2,     y2    , cx, cy }, // (fbo_x, fbo_y), (texture_x, texture_y)
-				{ x2 + w, y2    , cx + sw, cy },
-				{ x2,     y2 + h, cx, cy + sh },
-				{ x2 + w, y2 + h, cx + sw, cy + sh },
-			};
-#endif
-
-			COMPV_DEBUG_INFO_CODE_FOR_TESTING("Call COMPV_glBufferData and COMPV_glDrawArrays once");
-
-			// Submit vertices data
-			COMPV_glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(box), box);
-
-			// Draw points
-			COMPV_glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-			x += (g->advance.x >> 6) * 1.f;
-			y += (g->advance.y >> 6) * 1.f;
-		}
+		// Draw points
+		COMPV_glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 	}
 
 	// Update size
@@ -305,7 +269,7 @@ bail:
 
 #if HAVE_FREETYPE
 
-COMPV_ERROR_CODE CompVGLDrawTexts::fillAtlas(const CompVStringVector& texts, const CompVPointFloat32Vector& positions, CompVMatPtr& ptrAtlas, CompVMatPtr& ptrBitmaps)
+COMPV_ERROR_CODE CompVGLDrawTexts::fillAtlas(const CompVStringVector& texts, const CompVPointFloat32Vector& positions, CompVMatPtr& ptrAtlas, CompVMatPtr& ptrBoxes, size_t& numChars)
 {
 	// Internal function, do not check input parameters
 	CompVStringVector::const_iterator it_texts = texts.begin();
@@ -314,15 +278,20 @@ COMPV_ERROR_CODE CompVGLDrawTexts::fillAtlas(const CompVStringVector& texts, con
 	uint8_t *atlas_buffer, *bitmap_buffer;
 
 	GLuint ai, bi, xi, yi;
+	GLfloat x2, y2, w, h, sx2, sy2, sw, sh;
 	FT_GlyphSlot g = m_face->glyph;
 	FT_Error ft_err;
 
 	const GLuint fboWidth = static_cast<GLuint>(ptrAtlas->cols());
 	const GLuint fboHeight = static_cast<GLuint>(ptrAtlas->rows());
+
+	const GLfloat sx = 1.f / fboWidth;
+	const GLfloat sy = 1.f / fboHeight;
 	
-	size_t countBitmaps = 0;
-	const size_t maxBitmpas = ptrBitmaps->cols();
-	CompVGLFreeTypeBitmap* ptrBitmap = ptrBitmaps->ptr<CompVGLFreeTypeBitmap>();
+	numChars = 0;
+	const size_t maxBoxes = ptrBoxes->cols();
+	CompVGLFreeTypeBox* ptrBox = ptrBoxes->ptr<CompVGLFreeTypeBox>();
+	GLfloat(*box_row)[4];
 
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Uncomment all COMPV_DEBUG_WARN_EX");
 
@@ -355,14 +324,30 @@ COMPV_ERROR_CODE CompVGLDrawTexts::fillAtlas(const CompVStringVector& texts, con
 				bitmap_buffer += g->bitmap.width;
 				atlas_buffer += fboWidth;
 			}
+
+			x2 = static_cast<GLfloat>(xi + g->bitmap_left);
+			y2 = static_cast<GLfloat>(yi - g->bitmap_top);
+			w = static_cast<GLfloat>(g->bitmap.width);
+			h = static_cast<GLfloat>(g->bitmap.rows);
+
+			sx2 = xi * sx;
+			sy2 = yi * sy;
+			sw = w * sx;
+			sh = h * sy;
+
+			box_row = &(*ptrBox)[0], (*box_row)[0] = x2, (*box_row)[1] = y2, (*box_row)[2] = sx2, (*box_row)[3] = sy2;
+			box_row = &(*ptrBox)[1], (*box_row)[0] = x2 + w, (*box_row)[1] = y2, (*box_row)[2] = sx2 + sw, (*box_row)[3] = sy2;
+			box_row = &(*ptrBox)[2], (*box_row)[0] = x2, (*box_row)[1] = y2 + h, (*box_row)[2] = sx2, (*box_row)[3] = sy2 + sh;
+			box_row = &(*ptrBox)[3], (*box_row)[0] = x2 + w, (*box_row)[1] = y2 + h, (*box_row)[2] = sx2 + sw, (*box_row)[3] = sy2 + sh;
+			++ptrBox;
+
+			if (numChars++ >= maxBoxes) {
+				COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASS_NAME, "Breaking FreeType processing because we reached the maximum bitmaps per process (%zu)", numChars);
+				return COMPV_ERROR_CODE_S_OK; // trucation but do not exit
+			}
 			
 			xi += static_cast<GLuint>(g->advance.x >> 6);
 			yi += static_cast<GLuint>(g->advance.y >> 6);
-			
-			if (++countBitmaps > maxBitmpas) {
-				//COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASS_NAME, "Breaking FreeType processing because we reached the maximum bitmaps per process (%zu)", countBitmaps);
-				//return COMPV_ERROR_CODE_E_OUT_OF_BOUND;
-			}
 		}		
 	}
 
