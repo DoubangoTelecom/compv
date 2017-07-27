@@ -23,12 +23,12 @@ static const std::string& kProgramVertexData =
 #	if defined(HAVE_OPENGLES)
 "	precision mediump float;"
 #	endif
-"	attribute vec4 coord;"
+"	attribute vec4 box;"
 "	varying vec2 texcoord;"
 "	uniform mat4 MVP;"
 "	void main() {"
-"		gl_Position = MVP * vec4(coord.xy, 1.0, 1.0);"
-"		texcoord = coord.zw;"
+"		gl_Position = MVP * vec4(box.xy, 1.0, 1.0);"
+"		texcoord = box.zw;"
 "	}";
 
 static const std::string& kProgramFragmentData =
@@ -45,7 +45,8 @@ static const std::string& kProgramFragmentData =
 #define kVertexDataWithMVP_Yes	true
 #define kVertexDataWithMVP_No	false
 
-typedef GLfloat CompVGLFreeTypeBox[4][4];
+typedef GLfloat CompVGLFreeTypeBoxRow[4];
+typedef CompVGLFreeTypeBoxRow CompVGLFreeTypeBox[4];
 
 struct CompVGLFreeTypeBitmap {
 	GLfloat left;
@@ -168,11 +169,10 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 				nullptr
 			);
 		}
-		// Set coords. attribute
-		COMPV_glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 4 * 4, NULL, GL_DYNAMIC_DRAW);
-		GLuint attribute_coord = COMPV_glGetAttribLocation(program()->name(), "coord");
-		COMPV_glEnableVertexAttribArray(attribute_coord);
-		COMPV_glVertexAttribPointer(attribute_coord, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), 0);
+		// Set boxes attribute
+		GLuint attribute_box = COMPV_glGetAttribLocation(program()->name(), "box");
+		COMPV_glEnableVertexAttribArray(attribute_box);
+		COMPV_glVertexAttribPointer(attribute_box, 4, GL_FLOAT, GL_FALSE, sizeof(CompVGLFreeTypeBoxRow), 0);
 
 		// Set color attribute
 		GLuint uniform_color = COMPV_glGetUniformLocation(program()->name(), "color");
@@ -201,14 +201,8 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 		glUniform4f(uniform_color, (*c)[0], (*c)[1], (*c)[2], 1.f);
 	}
 
-	// Set viewport
-	COMPV_glViewport(0, 0, static_cast<GLsizei>(fboWidth), static_cast<GLsizei>(fboHeight));
 
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Under windows check fonts in 'C:/Windows/Fonts'");
-
-	COMPV_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-	COMPV_glActiveTexture(GL_TEXTURE0);
-	COMPV_glBindTexture(GL_TEXTURE_2D, m_uTextureAtlas);
 	
 	// Create texture
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Create texture once");
@@ -227,6 +221,9 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 	}
 
 	// Build atlas and send data to texture
+	COMPV_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	COMPV_glActiveTexture(GL_TEXTURE0);
+	COMPV_glBindTexture(GL_TEXTURE_2D, m_uTextureAtlas);
 	COMPV_CHECK_CODE_RETURN((CompVMat::newObj<uint8_t>(&ptrAtlas, fboHeight, fboWidth, 1, fboWidth)));
 	COMPV_CHECK_CODE_RETURN((CompVMat::newObj<CompVGLFreeTypeBox, COMPV_MAT_TYPE_STRUCT>(&ptrBoxes, 1, numChars, 1, numChars)));
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Comment zeroall");
@@ -243,7 +240,19 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 		GL_UNSIGNED_BYTE,
 		ptrAtlas->ptr());
 
+	// Submit vertices data
 	boxesPtr = ptrBoxes->ptr<const CompVGLFreeTypeBox>();
+
+	COMPV_glViewport(0, 0, static_cast<GLsizei>(fboWidth), static_cast<GLsizei>(fboHeight));
+#if 1
+	//COMPV_glBufferData(GL_ARRAY_BUFFER, sizeof(CompVGLFreeTypeBox) * numChars, nullptr, GL_DYNAMIC_DRAW);
+	//COMPV_glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(CompVGLFreeTypeBox) * numChars, boxesPtr);
+
+	COMPV_glBufferData(GL_ARRAY_BUFFER, sizeof(CompVGLFreeTypeBox) * numChars, boxesPtr, GL_STATIC_DRAW);
+	COMPV_glDrawArrays(GL_TRIANGLE_STRIP, 0, static_cast<GLsizei>(numChars));
+#else
+	
+	COMPV_glBufferData(GL_ARRAY_BUFFER, sizeof(CompVGLFreeTypeBox), NULL, GL_DYNAMIC_DRAW);
 	for (size_t i = 0; i < numChars; ++i, ++boxesPtr) {
 		COMPV_DEBUG_INFO_CODE_FOR_TESTING("Call COMPV_glBufferData and COMPV_glDrawArrays once");
 
@@ -253,7 +262,7 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 		// Draw points
 		COMPV_glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 	}
-
+#endif
 	// Update size
 	m_fboWidth = fboWidth;
 	m_fboHeight = fboHeight;
