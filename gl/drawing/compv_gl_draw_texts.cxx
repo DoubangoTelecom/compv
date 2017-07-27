@@ -249,7 +249,7 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 	//COMPV_glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(CompVGLFreeTypeBox) * numChars, boxesPtr);
 
 	COMPV_glBufferData(GL_ARRAY_BUFFER, sizeof(CompVGLFreeTypeBox) * numChars, boxesPtr, GL_STATIC_DRAW);
-	COMPV_glDrawArrays(GL_TRIANGLE_STRIP, 0, static_cast<GLsizei>(numChars));
+	COMPV_glDrawArrays(GL_TRIANGLE_STRIP, 0, static_cast<GLsizei>(numChars) * 4);
 #else
 	
 	COMPV_glBufferData(GL_ARRAY_BUFFER, sizeof(CompVGLFreeTypeBox), NULL, GL_DYNAMIC_DRAW);

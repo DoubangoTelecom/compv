@@ -111,13 +111,13 @@ public:
 			if (m_nImageWidth != imageOrig->cols() || m_nImageHeight != imageOrig->rows()) {
 				COMPV_CHECK_CODE_RETURN(onImageSizeChanged(imageOrig->cols(), imageOrig->rows()));
 			}
-
+			
 			// Calibration
 			COMPV_CHECK_CODE_RETURN(m_ptrCalib->process(imageGray, m_CalibResult));
-			
+
 			// Begin drawing
 			COMPV_CHECK_CODE_BAIL(err = m_ptrWindow->beginDraw());
-
+			
 			// Original image
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceOriginal->activate());
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceOriginal->drawImage(imageOrig));
