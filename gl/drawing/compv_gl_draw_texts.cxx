@@ -44,6 +44,8 @@ static const std::string& kProgramFragmentData =
 #define kVertexDataWithMVP_Yes	true
 #define kVertexDataWithMVP_No	false
 
+#define COMPV_THIS_CLASS_NAME "CompVGLDrawTexts"
+
 // FreeType tutos:
 //	- https://www.freetype.org/freetype2/docs/tutorial/step1.html
 //	- https://learnopengl.com/#!In-Practice/Text-Rendering
@@ -55,6 +57,7 @@ CompVGLDrawTexts::CompVGLDrawTexts()
 	: CompVGLDraw(kProgramVertexData, kProgramFragmentData, kVertexDataWithMVP_Yes)
 	, m_fboWidth(0)
 	, m_fboHeight(0)
+	, m_uTextureAtlas(kCompVGLNameInvalid)
 #if HAVE_FREETYPE
 	, m_face(nullptr)
 #endif
@@ -72,6 +75,14 @@ CompVGLDrawTexts::~CompVGLDrawTexts()
 		m_face = nullptr;
 	}
 #endif
+	if (m_uTextureAtlas != kCompVGLNameInvalid) {
+		if (CompVGLUtils::currentContext()) {
+			COMPV_CHECK_CODE_NOP(CompVGLUtils::textureDelete(&m_uTextureAtlas));
+		}
+		else {
+			COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASS_NAME, "No OpenGL context: %d texture will leak", m_uTextureAtlas);
+		}
+	}
 }
 
 COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const CompVPointFloat32Vector& positions, const CompVDrawingOptions* options COMPV_DEFAULT(nullptr))
@@ -87,6 +98,17 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 	CompVPointFloat32Vector::const_iterator it_positions;
 	std::string::const_iterator it_string;
 	compv_float32_t x, y;
+
+	// Create texture if not already done
+	if (m_uTextureAtlas == kCompVGLNameInvalid) {
+		COMPV_CHECK_CODE_RETURN(CompVGLUtils::textureGen(&m_uTextureAtlas));
+		COMPV_glBindTexture(GL_TEXTURE_2D, m_uTextureAtlas);
+		COMPV_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		COMPV_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		COMPV_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		COMPV_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		COMPV_glBindTexture(GL_TEXTURE_2D, kCompVGLNameInvalid);
+	}
 
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Change m_face if font or pixel size change");
 
@@ -105,8 +127,6 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 	}
 
 	FT_GlyphSlot g = m_face->glyph;
-
-	GLuint nameTexture = kCompVGLNameInvalid;
 
 	// Bind to VAO, VBO, Program
 	GLint fboWidth = 0, fboHeight = 0;
@@ -159,18 +179,13 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Under windows check fonts in 'C:/Windows/Fonts'");
 
 	COMPV_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	COMPV_glActiveTexture(GL_TEXTURE0);
+	COMPV_glBindTexture(GL_TEXTURE_2D, m_uTextureAtlas);
 	
 	// Create texture
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Create texture once");
-	COMPV_glActiveTexture(GL_TEXTURE0);
-	COMPV_CHECK_CODE_BAIL(err = CompVGLUtils::textureGen(&nameTexture));
-	COMPV_glBindTexture(GL_TEXTURE_2D, nameTexture);
-	COMPV_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	COMPV_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	COMPV_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	COMPV_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-	COMPV_glActiveTexture(GL_TEXTURE0);
+	
 
 	// this affects glTexImage2D and glSubTexImage2D
 
@@ -225,7 +240,6 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 	m_fboHeight = fboHeight;
 
 bail:
-	COMPV_CHECK_CODE_NOP( CompVGLUtils::textureDelete(&nameTexture));
 	COMPV_CHECK_CODE_NOP(CompVGLDraw::unbind());
 #else
 	COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED, "No thirdparty library for text drawing could be found (e.g. freetype)");
@@ -233,6 +247,32 @@ bail:
 
 	return err;
 }
+
+#if HAVE_FREETYPE
+
+COMPV_ERROR_CODE CompVGLDrawTexts::buildAtlas(const CompVStringVector& texts, const CompVPointFloat32Vector& positions)
+{
+	CompVStringVector::const_iterator it_texts;
+	CompVPointFloat32Vector::const_iterator it_positions;
+	std::string::const_iterator it_string;
+
+	compv_float32_t x, y;
+	FT_GlyphSlot g = m_face->glyph;
+	FT_Error ft_err;
+
+	for (it_texts = texts.begin(), it_positions = positions.begin(); it_texts < texts.end(); ++it_texts, ++it_positions) {
+		x = it_positions->x;
+		y = it_positions->y;
+		for (it_string = it_texts->begin(); it_string < it_texts->end(); ++it_string) {
+			if ((ft_err = FT_Load_Char(m_face, *it_string, FT_LOAD_RENDER))) {
+				COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASS_NAME, "FT_Load_Char(face, %c) failed with error code %d", ft_err, *it_string);
+				continue;
+			}
+		}
+	}
+}
+
+#endif /* HAVE_FREETYPE */
 
 COMPV_ERROR_CODE CompVGLDrawTexts::newObj(CompVGLDrawTextsPtrPtr drawTexts)
 {

@@ -13,6 +13,7 @@
 #include "compv/gl/compv_gl_common.h"
 #include "compv/gl/compv_gl_freetype.h"
 #include "compv/gl/drawing/compv_gl_draw.h"
+#include "compv/base/compv_mat.h"
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
@@ -35,11 +36,18 @@ public:
 	static COMPV_ERROR_CODE newObj(CompVGLDrawTextsPtrPtr drawTexts);
 
 private:
+#if HAVE_FREETYPE
+	COMPV_ERROR_CODE buildAtlas(const CompVStringVector& texts, const CompVPointFloat32Vector& positions);
+#endif /* HAVE_FREETYPE */
+
+private:
 	GLint m_fboWidth;
 	GLint m_fboHeight;
+	CompVMatPtr m_ptrAtlas;
+	GLuint m_uTextureAtlas;
 #if HAVE_FREETYPE
 	FT_Face m_face;
-#endif
+#endif /* HAVE_FREETYPE */
 };
 
 COMPV_NAMESPACE_END()

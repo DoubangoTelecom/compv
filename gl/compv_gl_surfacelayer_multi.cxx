@@ -73,9 +73,7 @@ COMPV_ERROR_CODE CompVGLMultiSurfaceLayer::close()
         COMPV_CHECK_CODE_ASSERT(m_ptrCoverSurfaceGL->close());
     }
     for (std::map<compv_surface_id_t, CompVGLSurfacePtr>::iterator it = m_mapSurfaces.begin(); it != m_mapSurfaces.end(); ++it) {
-        if (it->second->isActive()) {
-            COMPV_CHECK_CODE_ASSERT(it->second->close());
-        }
+        COMPV_CHECK_CODE_ASSERT(it->second->close());
     }
     m_mapSurfaces.clear();
     return COMPV_ERROR_CODE_S_OK;

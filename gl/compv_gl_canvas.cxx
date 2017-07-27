@@ -210,8 +210,10 @@ bool CompVGLCanvas::haveDrawTexts() const /*Overrides(CompVCanvas)*/
 
 COMPV_ERROR_CODE CompVGLCanvas::close()
 {
-	m_ptrDrawPoints = NULL;
-	m_ptrDrawLines = NULL;
+	// Function always called with valid GL context -> good time to destroy drawers and release GL allocated objects
+	m_ptrDrawPoints = nullptr;
+	m_ptrDrawLines = nullptr;
+	m_ptrDrawTexts = nullptr;
     if (m_ptrFBO) {
 		COMPV_CHECK_CODE_NOP(m_ptrFBO->close());
     }
