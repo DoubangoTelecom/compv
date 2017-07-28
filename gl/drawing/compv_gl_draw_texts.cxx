@@ -408,10 +408,6 @@ COMPV_ERROR_CODE CompVGLDrawTexts::freeTypeFillAtlas(const bool bUtf8, const Com
 			it_char = it_texts->begin();
 			count = it_texts->size();
 		}
-		
-		if (count > 50) {
-			int kaka = 0;
-		}
 
 		// Loop through the characters
 		for (size_t i = 0; i < count; ++i) {
