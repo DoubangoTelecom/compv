@@ -1,4 +1,4 @@
-#include <compv/compv_api.h>
+ï»¿#include <compv/compv_api.h>
 
 using namespace compv;
 
@@ -139,18 +139,9 @@ public:
 			if (!m_CalibResult.points_intersections.empty() && m_ptrSurfaceLineGrouped->renderer()->canvas()->haveDrawTexts()) {
 				CompVStringVector labels(m_CalibResult.points_intersections.size());
 				for (size_t index = 0; index < m_CalibResult.points_intersections.size(); ++index) {
-					labels[index] = CompVBase::to_string(index) + std::string(" Mamadou DIOP (Français)");
+					labels[index] = CompVBase::to_string(index);
 				}
-
-				COMPV_DEBUG_INFO_CODE_FOR_TESTING("Just for testing (0,0)");
-				m_CalibResult.points_intersections.begin()->x = 0.f;
-
-				uint64_t timeStart = CompVTime::nowMillis();
-				/*for (size_t i = 0; i < 10; ++i)*/ {
-					COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->renderer()->canvas()->drawTexts(labels, m_CalibResult.points_intersections, &m_DrawingOptionsGroupedLines));
-				}
-				uint64_t timeEnd = CompVTime::nowMillis();
-				COMPV_DEBUG_INFO_EX(TAG_SAMPLE, "drawTexts Elapsed time = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
+				COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->renderer()->canvas()->drawTexts(labels, m_CalibResult.points_intersections, &m_DrawingOptionsGroupedLines));
 			}
 
 			// Grouped and ordered lines

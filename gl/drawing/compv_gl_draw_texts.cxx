@@ -101,7 +101,6 @@ CompVGLDrawTexts::~CompVGLDrawTexts()
 COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const CompVPointFloat32Vector& positions, const CompVDrawingOptions* options COMPV_DEFAULT(nullptr))
 {
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Change function parameters to accept CompVGLText2D* like what is done for drawPoints and drawLines");
 #if HAVE_FREETYPE
 	const bool randomColors = (!options || options->colorType == COMPV_DRAWING_COLOR_TYPE_RANDOM);
 	const bool utf8 = (options && options->fontUtf8);
@@ -181,9 +180,7 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 	}
 	
 	// Get maximum chars
-	maxChars = (fboWidth * fboHeight) /*/ fontSize*/; // do not divide by fontSize to allow overwritting and give some room
-
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Create MT implementation for freeTypeFillAtlas and compute numChars for each thread");
+	maxChars = ((fboWidth * fboHeight) /*/ fontSize*/); // do not divide by fontSize to allow overwritting and give some room
 
 	// Get number of chars
 	numChars = 0;
@@ -196,9 +193,10 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 	}
 
 	// Create boxes' holder
-	COMPV_CHECK_CODE_RETURN((CompVMat::newObj<CompVGLFreeTypeBox, COMPV_MAT_TYPE_STRUCT>(&ptrBoxes, 1, numChars, 1, numChars)));
+	COMPV_CHECK_CODE_RETURN((CompVMat::newObj<CompVGLFreeTypeBox, COMPV_MAT_TYPE_STRUCT>(&ptrBoxes, 1, (numChars + 1), 1, (numChars + 1))));
 
-	// Build atlas
+	// Build atlas: Filling the atlas not thread-safe because of the shared charcode cache. If we
+	// remove the cache to make tha code thread-safe then we'll loose.
 	COMPV_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 	COMPV_glActiveTexture(GL_TEXTURE0);
 	COMPV_glBindTexture(GL_TEXTURE_2D, m_uTextureAtlas);
@@ -217,7 +215,7 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 		GL_UNSIGNED_BYTE,
 		ptrAtlas->ptr());
 
-	// Draw chars
+	// Draw chars (OpenGL/GPU process)
 	COMPV_glViewport(0, 0, static_cast<GLsizei>(fboWidth), static_cast<GLsizei>(fboHeight));
 	COMPV_glBufferData(GL_ARRAY_BUFFER, sizeof(CompVGLFreeTypeBox) * numChars, ptrBoxes->ptr(), GL_STATIC_DRAW);
 	COMPV_glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(numChars) * 6);
@@ -237,6 +235,42 @@ bail:
 
 #if HAVE_FREETYPE
 
+COMPV_ERROR_CODE CompVGLDrawTexts::freeTypeAddChar(unsigned long charcode)
+{
+	FT_Error ft_err;
+	FT_UInt ft_chridx;
+	FT_GlyphSlot ft_g = m_face->glyph;
+
+	ft_chridx = FT_Get_Char_Index(m_face, charcode);
+	if ((ft_err = FT_Load_Glyph(m_face, ft_chridx, FT_LOAD_RENDER))) {
+		COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASS_NAME, "FT_Load_Char(face, %d) failed with error code %d (%s)", ft_chridx, ft_err, CompVGLFreeType::errorMessage(ft_err));
+		return COMPV_ERROR_CODE_E_FREETYPE;
+	}
+
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASS_NAME, "Adding new charcode to the cache: %ld", charcode);
+	void* memory = CompVMem::malloc(ft_g->bitmap.rows * ft_g->bitmap.width);
+	COMPV_CHECK_EXP_RETURN(!memory, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+	CompVFreeTypeChar& fchar = m_freeTypeCache[charcode] = CompVFreeTypeChar();
+	fchar.mem = reinterpret_cast<uint8_t*>(memory);
+	fchar.left = ft_g->bitmap_left;
+	fchar.top = ft_g->bitmap_top;
+	fchar.width = ft_g->bitmap.width;
+	fchar.height = ft_g->bitmap.rows;
+	fchar.advance_x = static_cast<GLuint>(ft_g->advance.x >> 6);
+	fchar.advance_y = static_cast<GLuint>(ft_g->advance.y >> 6);
+
+	uint8_t* fchar_buffer = fchar.mem;
+	const uint8_t* bitmap_buffer = ft_g->bitmap.buffer;
+	for (GLuint bi = 0; bi < fchar.height; ++bi) {
+		for (GLuint ai = 0; ai < fchar.width; ++ai) {
+			fchar_buffer[ai] = bitmap_buffer[ai];
+		}
+		bitmap_buffer += ft_g->bitmap.pitch;
+		fchar_buffer += fchar.width;
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 COMPV_ERROR_CODE CompVGLDrawTexts::freeTypeCreateFace(const std::string fontFullPath, size_t fontSize)
 {
 	COMPV_CHECK_EXP_RETURN(!fontSize, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Font size must be > 0");
@@ -249,6 +283,7 @@ COMPV_ERROR_CODE CompVGLDrawTexts::freeTypeCreateFace(const std::string fontFull
 				COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASS_NAME, "FT_Set_Pixel_Sizes(face, 0, 16) failed with error '%s'", CompVGLFreeType::errorMessage(ft_err));
 				return COMPV_ERROR_CODE_E_FREETYPE;
 			}
+			m_freeTypeCache.clear();
 			m_fontSize = fontSize;
 		}
 		return COMPV_ERROR_CODE_S_OK;
@@ -262,6 +297,7 @@ COMPV_ERROR_CODE CompVGLDrawTexts::freeTypeCreateFace(const std::string fontFull
 			COMPV_CHECK_EXP_RETURN(FT_Done_Face(m_face) != 0, COMPV_ERROR_CODE_E_FREETYPE);
 		}
 		m_face = nullptr;
+		m_freeTypeCache.clear();
 	}
 
 	std::string fontPath_ = fontFullPath;
@@ -323,21 +359,25 @@ COMPV_ERROR_CODE CompVGLDrawTexts::freeTypeCreateFace(const std::string fontFull
 COMPV_ERROR_CODE CompVGLDrawTexts::freeTypeFillAtlas(const bool bUtf8, const CompVStringVector& texts, const CompVPointFloat32Vector& positions, CompVMatPtr& ptrAtlas, CompVMatPtr& ptrBoxes, size_t& numChars)
 {
 	// Internal function, do not check input parameters
-	CompVStringVector::const_iterator it_texts = texts.begin();
+	CompVStringVector::const_iterator it_texts;
 	CompVPointFloat32Vector::const_iterator it_positions;
 	uint8_t *atlas_buffer, *bitmap_buffer;
 
 	GLuint ai, bi, xi, yi;
 	GLfloat x2, y2, w, h, sx2, sy2, sw, sh;
-	FT_GlyphSlot g = m_face->glyph;
-	FT_Error ft_err;
-	FT_UInt ft_chridx;
+
+	COMPV_ERROR_CODE err;
+	
+	FT_ULong ft_charcode;
 
 	std::vector<int> utf32;
 	std::vector<int>::const_iterator it_utf32;
 	bool have_utf32;
 
 	std::string::const_iterator it_char;
+
+	CompVFreeTypeCache::const_iterator it_cache;
+	const CompVFreeTypeChar* cache_char;
 
 	size_t count;
 
@@ -373,44 +413,59 @@ COMPV_ERROR_CODE CompVGLDrawTexts::freeTypeFillAtlas(const bool bUtf8, const Com
 			it_char = it_texts->begin();
 			count = it_texts->size();
 		}
+		
+		if (count > 50) {
+			int kaka = 0;
+		}
 
 		// Loop through the characters
 		for (size_t i = 0; i < count; ++i) {
-			ft_chridx = FT_Get_Char_Index(m_face, have_utf32 ? *it_utf32++ : *it_char++);
-			if ((ft_err = FT_Load_Glyph(m_face, ft_chridx, FT_LOAD_RENDER))) {
-				COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASS_NAME, "FT_Load_Char(face, %s) failed with error code %d (%s)", (*it_texts).c_str(), ft_err, CompVGLFreeType::errorMessage(ft_err));
-				continue;
+			// Get next charcode from the current string
+			ft_charcode = have_utf32 ? static_cast<FT_ULong>(*it_utf32++) : static_cast<FT_ULong>(*it_char++);
+
+			// Find the charcode from the cache
+			it_cache = m_freeTypeCache.find(ft_charcode);
+			if (it_cache == m_freeTypeCache.end()) {
+				err = freeTypeAddChar(ft_charcode);
+				if (err == COMPV_ERROR_CODE_E_FREETYPE) {
+					continue; // do not stop the process if we fail because of FreeType failing to load a charcode (FT_Load_Glyph)
+				}
+				COMPV_CHECK_CODE_RETURN(err);
+				it_cache = m_freeTypeCache.find(ft_charcode);
+				COMPV_CHECK_EXP_RETURN((it_cache == m_freeTypeCache.end()), COMPV_ERROR_CODE_E_SYSTEM, "Hum, this must never happen");
 			}
+			cache_char = &it_cache->second;
 
 			// Do not write partial chars
-			if ((xi + g->bitmap.width) >= fboWidth || (yi + g->bitmap.rows) >= fboHeight) {
+			if ((xi + cache_char->width) >= fboWidth || (yi + cache_char->height) >= fboHeight) {
 				//COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASS_NAME, "Trying to write outside the screen domain (partial char): skip");
 				break; // end the string
 			}
 
-			COMPV_DEBUG_INFO_CODE_FOR_TESTING("compute atlas_buffer once for each string then advance");
-
 			// Write bitmap to buffer
-			bitmap_buffer = g->bitmap.buffer;
+			bitmap_buffer = cache_char->mem;
 			atlas_buffer = ptrAtlas->ptr<uint8_t>(yi, xi);
-			for (bi = 0; bi < g->bitmap.rows; ++bi) {
-				for (ai = 0; ai < g->bitmap.width; ++ai) {
+			for (bi = 0; bi < cache_char->height; ++bi) {
+				for (ai = 0; ai < cache_char->width; ++ai) {
 					atlas_buffer[ai] = bitmap_buffer[ai];
 				}
-				bitmap_buffer += g->bitmap.pitch;
+				bitmap_buffer += cache_char->width;
 				atlas_buffer += fboWidth;
 			}
 
-			x2 = static_cast<GLfloat>(xi + g->bitmap_left);
-			y2 = static_cast<GLfloat>(yi - g->bitmap_top);
-			w = static_cast<GLfloat>(g->bitmap.width);
-			h = static_cast<GLfloat>(g->bitmap.rows);
+			// Screen indices
+			x2 = static_cast<GLfloat>(xi + cache_char->left);
+			y2 = static_cast<GLfloat>(yi - cache_char->top);
+			w = static_cast<GLfloat>(cache_char->width);
+			h = static_cast<GLfloat>(cache_char->height);
 
+			// Scaling factors (screen -> gl.uv[0-1])
 			sx2 = xi * sx;
 			sy2 = yi * sy;
 			sw = w * sx;
 			sh = h * sy;
 
+			// Indices (6x4) [scren.x, screen.y, gl.u, gl.v]
 			(*ptrBox)[0] = x2, (*ptrBox)[1] = y2, (*ptrBox)[2] = sx2, (*ptrBox)[3] = sy2;
 			(*ptrBox)[4] = x2, (*ptrBox)[5] = y2 + h, (*ptrBox)[6] = sx2, (*ptrBox)[7] = sy2 + sh;
 			(*ptrBox)[8] = x2 + w, (*ptrBox)[9] = y2 + h, (*ptrBox)[10] = sx2 + sw, (*ptrBox)[11] = sy2 + sh;
@@ -420,13 +475,15 @@ COMPV_ERROR_CODE CompVGLDrawTexts::freeTypeFillAtlas(const bool bUtf8, const Com
 			(*ptrBox)[20] = x2 + w, (*ptrBox)[21] = y2, (*ptrBox)[22] = sx2 + sw, (*ptrBox)[23] = sy2;
 			++ptrBox;
 
+			// Make sure we haven't reached our capacity
 			if (++numChars >= maxBoxes) {
 				COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASS_NAME, "Breaking FreeType processing because we reached the maximum bitmaps per process (%zu)", numChars);
 				return COMPV_ERROR_CODE_S_OK; // trucation but do not exit
 			}
 
-			xi += static_cast<GLuint>(g->advance.x >> 6);
-			yi += static_cast<GLuint>(g->advance.y >> 6);
+			// Move cursor
+			xi += cache_char->advance_x;
+			yi += cache_char->advance_y;
 		}
 	}
 

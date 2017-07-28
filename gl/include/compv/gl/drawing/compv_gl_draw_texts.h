@@ -15,11 +15,28 @@
 #include "compv/gl/drawing/compv_gl_draw.h"
 #include "compv/base/compv_mat.h"
 
+#include <map>
+
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
 #endif
 
 COMPV_NAMESPACE_BEGIN()
+
+struct CompVFreeTypeChar {
+	GLuint left;
+	GLuint top;
+	GLuint width;
+	GLuint height;
+	GLuint advance_x;
+	GLuint advance_y;
+	uint8_t* mem = nullptr;
+public:
+	virtual ~CompVFreeTypeChar() {
+		CompVMem::free(reinterpret_cast<void**>(&mem));
+	}
+};
+typedef std::map<unsigned long, CompVFreeTypeChar> CompVFreeTypeCache;
 
 COMPV_OBJECT_DECLARE_PTRS(GLDrawTexts)
 
@@ -37,6 +54,7 @@ public:
 
 private:
 #if HAVE_FREETYPE
+	COMPV_ERROR_CODE freeTypeAddChar(unsigned long charcode);
 	COMPV_ERROR_CODE freeTypeCreateFace(const std::string fontFullPath, size_t fontSize);
 	COMPV_ERROR_CODE freeTypeFillAtlas(const bool bUtf8, const CompVStringVector& texts, const CompVPointFloat32Vector& positions, CompVMatPtr& ptrAtlas, CompVMatPtr& ptrBoxes, size_t& numChars);
 #endif /* HAVE_FREETYPE */
@@ -48,6 +66,7 @@ private:
 	std::string m_fontFullPath;
 	size_t m_fontSize;
 	CompVBufferPtr m_ptrFaceBuffer;
+	CompVFreeTypeCache m_freeTypeCache;
 #if HAVE_FREETYPE
 	FT_Face m_face;
 #endif /* HAVE_FREETYPE */
