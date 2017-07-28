@@ -7,6 +7,7 @@
 #include "compv/gl/drawing/compv_gl_draw_texts.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/base/compv_mat.h"
+#include "compv/base/compv_fileutils.h"
 #include "compv/base/utf8/utf8.h"
 #include "compv/base/math/compv_math.h"
 #include "compv/base/time/compv_time.h"
@@ -50,14 +51,17 @@ static const std::string& kProgramFragmentData =
 #define kVertexDataWithMVP_Yes	true
 #define kVertexDataWithMVP_No	false
 
+#define COMPV_FONT_SIZE_DEFAULT	16
+#define COMPV_FONT_PATH_DEFAULT	"arial.ttf"
+
 typedef GLfloat CompVGLFreeTypeBox[4 * 6]; // (fbo_x, fbo_y, tex_x, tex_y) * 6
 
 #define COMPV_THIS_CLASS_NAME "CompVGLDrawTexts"
 
-										   // FreeType tutos:
-										   //	- https://www.freetype.org/freetype2/docs/tutorial/step1.html
-										   //	- https://learnopengl.com/#!In-Practice/Text-Rendering
-										   //  - Implementation based on https://en.wikibooks.org/wiki/OpenGL_Programming/Modern_OpenGL_Tutorial_Text_Rendering_01
+// FreeType tutos:
+//	- https://www.freetype.org/freetype2/docs/tutorial/step1.html
+//	- https://learnopengl.com/#!In-Practice/Text-Rendering
+//  - Implementation based on https://en.wikibooks.org/wiki/OpenGL_Programming/Modern_OpenGL_Tutorial_Text_Rendering_01
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -66,6 +70,7 @@ CompVGLDrawTexts::CompVGLDrawTexts()
 	, m_fboWidth(0)
 	, m_fboHeight(0)
 	, m_uTextureAtlas(kCompVGLNameInvalid)
+	, m_fontSize(COMPV_FONT_SIZE_DEFAULT)
 #if HAVE_FREETYPE
 	, m_face(nullptr)
 #endif
@@ -100,8 +105,8 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 #if HAVE_FREETYPE
 	const bool randomColors = (!options || options->colorType == COMPV_DRAWING_COLOR_TYPE_RANDOM);
 	const bool utf8 = (options && options->fontUtf8);
-	static const std::string fontName = "C:/Users/dmi/Downloads/arial-unicode-ms/ARIALUNI.ttf";
-	static const size_t fontSize = 16;
+	const std::string fontFullPath = (options ? options->fontFullPath : "");
+	const size_t fontSize = (options ? options->fontSize : COMPV_FONT_SIZE_DEFAULT);
 
 	CompVStringVector::const_iterator it_texts;
 	CompVPointFloat32Vector::const_iterator it_positions;
@@ -110,26 +115,8 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 	const CompVGLFreeTypeBox* boxesPtr;
 	size_t numChars, maxChars;
 
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING("use %%windir%% to retrieve windows directory");
-
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Change m_face if font or pixel size change");
-
-	FT_Error ft_err;
-	if (!m_face) {
-		COMPV_DEBUG_INFO_CODE_FOR_TESTING("Use relative path for the the font or read from memory");
-		COMPV_DEBUG_INFO_CODE_FOR_TESTING("Under windows check fonts in 'C:/Windows/Fonts'");
-		if ((ft_err = FT_New_Face(CompVGLFreeType::library(), "C:/Windows/Fonts/arial.ttf", 0, &m_face))) {
-			COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASS_NAME, "FT_New_Face('FreeSans.ttf', 0) failed with error '%s'", CompVGLFreeType::errorMessage(ft_err));
-			return COMPV_ERROR_CODE_E_FREETYPE;
-		}
-		if ((ft_err = FT_Select_Charmap(m_face, ft_encoding_unicode))) {
-			COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASS_NAME, "FT_Select_Charmap(face, ft_encoding_unicode) failed with error '%s'", CompVGLFreeType::errorMessage(ft_err));
-		}
-		if ((ft_err = FT_Set_Pixel_Sizes(m_face, 0, fontSize))) {
-			COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASS_NAME, "FT_Set_Pixel_Sizes(face, 0, 16) failed with error '%s'", CompVGLFreeType::errorMessage(ft_err));
-			return COMPV_ERROR_CODE_E_FREETYPE;
-		}
-	}
+	// Create face if not already done
+	COMPV_CHECK_CODE_RETURN(freeTypeCreateFace(fontFullPath, fontSize));
 
 	FT_GlyphSlot g = m_face->glyph;
 
@@ -209,7 +196,7 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 	// Get maximum chars
 	maxChars = (fboWidth * fboHeight) /*/ fontSize*/; // do not divide by fontSize to allow overwritting and give some room
 
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Create MT implementation for fillAtlas and compute numChars for each thread");
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Create MT implementation for freeTypeFillAtlas and compute numChars for each thread");
 
 	// Get number of chars
 	numChars = 0;
@@ -227,7 +214,7 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 	COMPV_glBindTexture(GL_TEXTURE_2D, m_uTextureAtlas);
 	COMPV_CHECK_CODE_RETURN((CompVMat::newObj<uint8_t>(&ptrAtlas, fboHeight, fboWidth, 1, fboWidth)));
 	COMPV_CHECK_CODE_RETURN((CompVMat::newObj<CompVGLFreeTypeBox, COMPV_MAT_TYPE_STRUCT>(&ptrBoxes, 1, numChars, 1, numChars)));
-	COMPV_CHECK_CODE_BAIL(err = fillAtlas(utf8, texts, positions, ptrAtlas, ptrBoxes, numChars));
+	COMPV_CHECK_CODE_BAIL(err = freeTypeFillAtlas(utf8, texts, positions, ptrAtlas, ptrBoxes, numChars));
 	//uint64_t timeStart = CompVTime::nowMillis();
 	COMPV_glTexSubImage2D(
 		GL_TEXTURE_2D,
@@ -248,7 +235,7 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 	COMPV_glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(numChars) * 6);
 
 	//uint64_t timeEnd = CompVTime::nowMillis();
-	//COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASS_NAME, "fillAtlas Elapsed time = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
+	//COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASS_NAME, "freeTypeFillAtlas Elapsed time = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 
 	// Update size
 	m_fboWidth = fboWidth;
@@ -265,7 +252,90 @@ bail:
 
 #if HAVE_FREETYPE
 
-COMPV_ERROR_CODE CompVGLDrawTexts::fillAtlas(const bool bUtf8, const CompVStringVector& texts, const CompVPointFloat32Vector& positions, CompVMatPtr& ptrAtlas, CompVMatPtr& ptrBoxes, size_t& numChars)
+COMPV_ERROR_CODE CompVGLDrawTexts::freeTypeCreateFace(const std::string fontFullPath, size_t fontSize)
+{
+	COMPV_CHECK_EXP_RETURN(!fontSize, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Font size must be > 0");
+	COMPV_CHECK_EXP_RETURN(!CompVGLFreeType::library(), COMPV_ERROR_CODE_E_INVALID_STATE, "FreeType library not loaded");
+	FT_Error ft_err;
+	if (m_face && (fontFullPath.empty() || m_fontFullPath == fontFullPath)) {
+		if (fontSize != m_fontSize) {
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASS_NAME, "Font size changed: %zu -> %zu.", m_fontSize, fontSize);
+			if ((ft_err = FT_Set_Pixel_Sizes(m_face, 0, static_cast<FT_UInt>(fontSize)))) {
+				COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASS_NAME, "FT_Set_Pixel_Sizes(face, 0, 16) failed with error '%s'", CompVGLFreeType::errorMessage(ft_err));
+				return COMPV_ERROR_CODE_E_FREETYPE;
+			}
+			m_fontSize = fontSize;
+		}
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASS_NAME, "Creating new face for the first time or because the font changed (%s -> %s)", m_fontFullPath.c_str(), fontFullPath.c_str());
+
+	// Delete previous face
+	if (m_face) {
+		if (CompVGLFreeType::library()) {
+			COMPV_CHECK_EXP_RETURN(FT_Done_Face(m_face) != 0, COMPV_ERROR_CODE_E_FREETYPE);
+		}
+		m_face = nullptr;
+	}
+
+	std::string fontPath_ = fontFullPath;
+
+	// Try to guess the full path to the font if not provided
+	if (fontPath_.empty()) {
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASS_NAME, "No font path provided, trying to guess...");
+#if COMPV_OS_WINDOWS
+		CHAR dir[MAX_PATH + 1];
+		COMPV_CHECK_EXP_RETURN(GetWindowsDirectoryA(dir, MAX_PATH) == 0, COMPV_ERROR_CODE_E_FILE_NOT_FOUND, "GetWindowsDirectoryA faited");
+		fontPath_ = dir + std::string("/Fonts/") + std::string(COMPV_FONT_PATH_DEFAULT);
+#else
+		fontPath_ = COMPV_PATH_FROM_NAME(COMPV_FONT_PATH_DEFAULT); // Android or iOS retrieve full path from assets/bundle	
+#endif /* COMPV_OS_WINDOWS */
+	}
+
+	// Make sure fontPath_ not empty
+	COMPV_CHECK_EXP_RETURN(fontPath_.empty(), COMPV_ERROR_CODE_E_FILE_NOT_FOUND, "No font path provided and we failed to guess one");
+
+	// If the font path doesn't exist then, try to build fullpath (maybe the user provided a relative one)
+	if (!CompVFileUtils::exists(fontPath_.c_str())) {
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASS_NAME, "Font path (%s) doesn't exist, trying to get full path...", fontPath_.c_str());
+		fontPath_ = COMPV_PATH_FROM_NAME(fontPath_.c_str());
+	}
+
+	// Make sure now we have a valid full path
+	if (!CompVFileUtils::exists(fontPath_.c_str())) {
+		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASS_NAME, "Font path provided (or guessed) but doesn't exist: %s", fontPath_.c_str());
+		return COMPV_ERROR_CODE_E_FILE_NOT_FOUND;
+	}
+	
+	// Read file into buffer, we don't provide the full path to FreeType because it'll fail to read data from
+	// assets (Android) or bundle (iOS)
+	COMPV_CHECK_CODE_RETURN(CompVFileUtils::read(fontPath_.c_str(), &m_ptrFaceBuffer), "Failed to read font file");
+	if (m_ptrFaceBuffer->size() > (1024 * 1024)) {
+		COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASS_NAME, "Font (%s) loaded but memory usage is very high (%zuMo). You should consider using another font", fontPath_.c_str(), m_ptrFaceBuffer->size()>>20);
+	}
+
+	// Create the face from memory
+	// Memory must not be deallocated until we're done with the face: https://www.freetype.org/freetype2/docs/reference/ft2-base_interface.html#FT_New_Memory_Face
+	if ((ft_err = FT_New_Memory_Face(CompVGLFreeType::library(), reinterpret_cast<const FT_Byte*>(m_ptrFaceBuffer->ptr()), static_cast<FT_Long>(m_ptrFaceBuffer->size()), 0, &m_face))) {
+		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASS_NAME, "FT_New_Face(%s, 0) failed with error '%s'", fontPath_.c_str(), CompVGLFreeType::errorMessage(ft_err));
+		return COMPV_ERROR_CODE_E_FREETYPE;
+	}
+	if ((ft_err = FT_Set_Pixel_Sizes(m_face, 0, static_cast<FT_UInt>(fontSize)))) {
+		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASS_NAME, "FT_Set_Pixel_Sizes(face, 0, %zu) failed with error '%s'", fontSize, CompVGLFreeType::errorMessage(ft_err));
+		return COMPV_ERROR_CODE_E_FREETYPE;
+	}
+	if ((ft_err = FT_Select_Charmap(m_face, ft_encoding_unicode))) {
+		COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASS_NAME, "FT_Select_Charmap(%s, ft_encoding_unicode) failed with error '%s'", fontPath_.c_str(), CompVGLFreeType::errorMessage(ft_err));
+	}
+
+	m_fontFullPath = fontFullPath; // not fontPath_ because we want to make sure comparing it with the provided parameter value will be ok and face not created several times
+	m_fontSize = fontSize;
+
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVGLDrawTexts::freeTypeFillAtlas(const bool bUtf8, const CompVStringVector& texts, const CompVPointFloat32Vector& positions, CompVMatPtr& ptrAtlas, CompVMatPtr& ptrBoxes, size_t& numChars)
 {
 	// Internal function, do not check input parameters
 	CompVStringVector::const_iterator it_texts = texts.begin();
@@ -309,6 +379,7 @@ COMPV_ERROR_CODE CompVGLDrawTexts::fillAtlas(const bool bUtf8, const CompVString
 		// A way to declare utf8 string: const string myString = u8"Déclarer une chaine en Français";
 		have_utf32 = (bUtf8 && utf8::is_valid(it_texts->begin(), it_texts->end()));
 		if (have_utf32) {
+			utf32.clear();
 			utf8::utf8to32(it_texts->begin(), it_texts->end(), std::back_inserter(utf32));
 			it_utf32 = utf32.begin();
 			count = utf32.size();
@@ -322,7 +393,7 @@ COMPV_ERROR_CODE CompVGLDrawTexts::fillAtlas(const bool bUtf8, const CompVString
 		for (size_t i = 0; i < count; ++i) {
 			ft_chridx = FT_Get_Char_Index(m_face, have_utf32 ? *it_utf32++ : *it_char++);
 			if ((ft_err = FT_Load_Glyph(m_face, ft_chridx, FT_LOAD_RENDER))) {
-				COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASS_NAME, "FT_Load_Char(face, %s) failed with error code %d", (*it_texts).c_str(), ft_err);
+				COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASS_NAME, "FT_Load_Char(face, %s) failed with error code %d (%s)", (*it_texts).c_str(), ft_err, CompVGLFreeType::errorMessage(ft_err));
 				continue;
 			}
 

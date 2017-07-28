@@ -520,7 +520,7 @@ struct CompVDrawingOptions {
 	compv_float32_t lineWidth = 2.f;
 	COMPV_DRAWING_LINE_TYPE lineType = COMPV_DRAWING_LINE_TYPE_SIMPLE;
 	size_t fontSize = 16; // Pixel Size (FreeType)
-	std::string fontPath; // Full/Relative path to the font (e.g. "C:/Windows/Fonts/arial.ttf")
+	std::string fontFullPath; // Full path to the font (e.g. "C:/Windows/Fonts/arial.ttf") - on Android or iOS, to retrieve the full path (from the assets/bundle), use 'COMPV_PATH_FROM_NAME' (a.k.a 'CompVFileUtils::getFullPathFromFileName')
 	bool fontUtf8 = false; // Whether to consider the string passed to drawTexts() as utf8 or not
 public:
 	static CompVDrawingOptions clone(const CompVDrawingOptions* options) {

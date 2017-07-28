@@ -241,7 +241,7 @@ COMPV_ERROR_CODE CompVFileUtils::read(const char* pcPath, CompVBufferPtrPtr buff
         }
         mem_ = CompVMem::malloc(size_ + 1);
         if (!mem_) {
-            COMPV_DEBUG_ERROR_EX(kModuleNameFileUtils, "Failed to alloc mem with size = %u", (unsigned)size_);
+            COMPV_DEBUG_ERROR_EX(kModuleNameFileUtils, "Failed to alloc mem with size = %zu", size_);
             fclose(file_);
             return COMPV_ERROR_CODE_E_OUT_OF_MEMORY;
         }

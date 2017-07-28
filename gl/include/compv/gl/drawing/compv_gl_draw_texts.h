@@ -37,13 +37,17 @@ public:
 
 private:
 #if HAVE_FREETYPE
-	COMPV_ERROR_CODE fillAtlas(const bool bUtf8, const CompVStringVector& texts, const CompVPointFloat32Vector& positions, CompVMatPtr& ptrAtlas, CompVMatPtr& ptrBoxes, size_t& numChars);
+	COMPV_ERROR_CODE freeTypeCreateFace(const std::string fontFullPath, size_t fontSize);
+	COMPV_ERROR_CODE freeTypeFillAtlas(const bool bUtf8, const CompVStringVector& texts, const CompVPointFloat32Vector& positions, CompVMatPtr& ptrAtlas, CompVMatPtr& ptrBoxes, size_t& numChars);
 #endif /* HAVE_FREETYPE */
 
 private:
 	GLint m_fboWidth;
 	GLint m_fboHeight;
 	GLuint m_uTextureAtlas;
+	std::string m_fontFullPath;
+	size_t m_fontSize;
+	CompVBufferPtr m_ptrFaceBuffer;
 #if HAVE_FREETYPE
 	FT_Face m_face;
 #endif /* HAVE_FREETYPE */
