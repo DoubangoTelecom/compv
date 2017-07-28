@@ -126,7 +126,7 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 		if (bFirstTimeOrChanged) {
 			// Create texture if not already done
 			if (m_uTextureAtlas == kCompVGLNameInvalid) {
-				COMPV_CHECK_CODE_RETURN(CompVGLUtils::textureGen(&m_uTextureAtlas));
+				COMPV_CHECK_CODE_BAIL(err = CompVGLUtils::textureGen(&m_uTextureAtlas));
 				COMPV_glBindTexture(GL_TEXTURE_2D, m_uTextureAtlas);
 				COMPV_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 				COMPV_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -190,14 +190,14 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 	}
 
 	// Create boxes' holder
-	COMPV_CHECK_CODE_RETURN((CompVMat::newObj<CompVGLFreeTypeBox, COMPV_MAT_TYPE_STRUCT>(&ptrBoxes, 1, (numChars + 1), 1, (numChars + 1))));
+	COMPV_CHECK_CODE_BAIL(err = (CompVMat::newObj<CompVGLFreeTypeBox, COMPV_MAT_TYPE_STRUCT>(&ptrBoxes, 1, (numChars + 1), 1, (numChars + 1))));
 
 	// Build atlas: Filling the atlas not thread-safe because of the shared charcode cache. If we
 	// remove the cache to make tha code thread-safe then we'll loose.
 	COMPV_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 	COMPV_glActiveTexture(GL_TEXTURE0);
 	COMPV_glBindTexture(GL_TEXTURE_2D, m_uTextureAtlas);
-	COMPV_CHECK_CODE_RETURN((CompVMat::newObj<uint8_t>(&ptrAtlas, fboHeight, fboWidth, 1, fboWidth)));
+	COMPV_CHECK_CODE_BAIL(err = (CompVMat::newObj<uint8_t>(&ptrAtlas, fboHeight, fboWidth, 1, fboWidth)));
 	COMPV_CHECK_CODE_BAIL(err = freeTypeFillAtlas(utf8, texts, positions, ptrAtlas, ptrBoxes, numChars));
 
 	// Submit atlas data to texture
@@ -388,8 +388,6 @@ COMPV_ERROR_CODE CompVGLDrawTexts::freeTypeFillAtlas(const bool bUtf8, const Com
 	const size_t maxBoxes = ptrBoxes->cols();
 	CompVGLFreeTypeBox* ptrBox = ptrBoxes->ptr<CompVGLFreeTypeBox>();
 
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Uncomment all COMPV_DEBUG_WARN_EX");
-
 	// Loop through the strings
 	for (it_texts = texts.begin(), it_positions = positions.begin(); it_texts < texts.end(); ++it_texts, ++it_positions) {
 		if (it_positions->x < 0.f || it_positions->y < 0.f || (xi = COMPV_MATH_ROUNDFU_2_NEAREST_INT(it_positions->x, GLuint)) >= fboWidth || (yi = COMPV_MATH_ROUNDFU_2_NEAREST_INT(it_positions->y, GLuint)) >= fboHeight) { // cast to unsigned, this is why comparison against 0 must be done before																																																		   //COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASS_NAME, "Trying to write outside the screen domain (start): skip");
@@ -435,7 +433,7 @@ COMPV_ERROR_CODE CompVGLDrawTexts::freeTypeFillAtlas(const bool bUtf8, const Com
 
 			// Do not write partial chars
 			if ((xi + cache_char->width) >= fboWidth || (yi + cache_char->height) >= fboHeight) {
-				//COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASS_NAME, "Trying to write outside the screen domain (partial char): skip");
+				COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASS_NAME, "Trying to write outside the screen domain (partial char): skip");
 				break; // end the string
 			}
 
