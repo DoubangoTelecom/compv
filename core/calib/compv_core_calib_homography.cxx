@@ -266,18 +266,24 @@ static COMPV_ERROR_CODE ransac(CompVMatPtrPtr inliers, T& variance, const CompVM
 		srcsubsetx_[0] = srcx_[idx0], srcsubsetx_[1] = srcx_[idx1], srcsubsetx_[2] = srcx_[idx2], srcsubsetx_[3] = srcx_[idx3];
 		srcsubsety_[0] = srcy_[idx0], srcsubsety_[1] = srcy_[idx1], srcsubsety_[2] = srcy_[idx2], srcsubsety_[3] = srcy_[idx3];
 
-		// Reject colinear points
-		// TODO(dmi): doesn't worth it -> colinear points will compute a wrong homography with too much outliers -> not an issue
-#if 0
-		COMPV_CHECK_CODE_RETURN(CompVMatrix::isColinear2D(srcsubset_, colinear));
+		// Reject colinear points: Testing for colinearity -> Find line equation (y = mx + b) from the two first points, then make sure the two others respect it
+		// For more than #4 points, use CompVMatrix::isColinear2D method which checks that the matrix rank is equal to #2
+		if (srcsubsetx_[0] == srcsubsetx_[1]) {
+			// First two points are a vertical line -> all x values must be equal
+			colinear = (srcsubsetx_[0] == srcsubsetx_[2] && srcsubsetx_[0] == srcsubsetx_[3]);
+		}
+		else {
+			const T slope = (srcsubsety_[1] - srcsubsety_[0]) / (srcsubsetx_[1] - srcsubsetx_[0]);
+			const T intercept = srcsubsety_[0] - (slope * srcsubsetx_[0]);
+			colinear = (srcsubsety_[2] == ((slope * srcsubsetx_[2]) + intercept))
+				&& (srcsubsety_[3] == ((slope * srcsubsetx_[3]) + intercept));
+		}
 		if (colinear) {
 			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "ignore colinear points ...");
 			++t_; // to avoid endless loops
 			continue;
 		}
-#else
-		colinear = false;
-#endif
+
 		// Set the #4 random points (dst)
 		dstsubsetx_[0] = dstx1_[idx0], dstsubsetx_[1] = dstx1_[idx1], dstsubsetx_[2] = dstx1_[idx2], dstsubsetx_[3] = dstx1_[idx3];
 		dstsubsety_[0] = dsty1_[idx0], dstsubsety_[1] = dsty1_[idx1], dstsubsety_[2] = dsty1_[idx2], dstsubsety_[3] = dsty1_[idx3];
