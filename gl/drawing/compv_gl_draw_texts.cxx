@@ -1,4 +1,4 @@
-/* Copyright (C) 2016-2017 Doubango Telecom <https://www.doubango.org>
+﻿/* Copyright (C) 2016-2017 Doubango Telecom <https://www.doubango.org>
 * File author: Mamadou DIOP (Doubango Telecom, France).
 * License: GPLv3. For commercial license please contact us.
 * Source code: https://github.com/DoubangoTelecom/compv
@@ -7,12 +7,16 @@
 #include "compv/gl/drawing/compv_gl_draw_texts.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/base/compv_mat.h"
+#include "compv/base/utf8/utf8.h"
 #include "compv/base/math/compv_math.h"
 #include "compv/base/time/compv_time.h"
 #include "compv/gl/compv_gl.h"
 #include "compv/gl/compv_gl_utils.h"
 #include "compv/gl/compv_gl_info.h"
 #include "compv/gl/compv_gl_func.h"
+
+#include <codecvt>
+#include <locale>
 
 #if defined(HAVE_OPENGLES)
 #	define COMPV_GL_FORMAT_Y	GL_LUMINANCE
@@ -46,14 +50,14 @@ static const std::string& kProgramFragmentData =
 #define kVertexDataWithMVP_Yes	true
 #define kVertexDataWithMVP_No	false
 
-typedef GLfloat CompVGLFreeTypeBox[4*6]; // (fbo_x, fbo_y, tex_x, tex_y) * 6
+typedef GLfloat CompVGLFreeTypeBox[4 * 6]; // (fbo_x, fbo_y, tex_x, tex_y) * 6
 
 #define COMPV_THIS_CLASS_NAME "CompVGLDrawTexts"
 
-// FreeType tutos:
-//	- https://www.freetype.org/freetype2/docs/tutorial/step1.html
-//	- https://learnopengl.com/#!In-Practice/Text-Rendering
-//  - Implementation based on https://en.wikibooks.org/wiki/OpenGL_Programming/Modern_OpenGL_Tutorial_Text_Rendering_01
+										   // FreeType tutos:
+										   //	- https://www.freetype.org/freetype2/docs/tutorial/step1.html
+										   //	- https://learnopengl.com/#!In-Practice/Text-Rendering
+										   //  - Implementation based on https://en.wikibooks.org/wiki/OpenGL_Programming/Modern_OpenGL_Tutorial_Text_Rendering_01
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -95,7 +99,8 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Change function parameters to accept CompVGLText2D* like what is done for drawPoints and drawLines");
 #if HAVE_FREETYPE
 	const bool randomColors = (!options || options->colorType == COMPV_DRAWING_COLOR_TYPE_RANDOM);
-	static const std::string fontName = "C:/Windows/Fonts/arial.ttf";
+	const bool utf8 = (options && options->fontUtf8);
+	static const std::string fontName = "C:/Users/dmi/Downloads/arial-unicode-ms/ARIALUNI.ttf";
 	static const size_t fontSize = 16;
 
 	CompVStringVector::const_iterator it_texts;
@@ -105,6 +110,8 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 	const CompVGLFreeTypeBox* boxesPtr;
 	size_t numChars, maxChars;
 
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING("use %%windir%% to retrieve windows directory");
+
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Change m_face if font or pixel size change");
 
 	FT_Error ft_err;
@@ -112,11 +119,14 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 		COMPV_DEBUG_INFO_CODE_FOR_TESTING("Use relative path for the the font or read from memory");
 		COMPV_DEBUG_INFO_CODE_FOR_TESTING("Under windows check fonts in 'C:/Windows/Fonts'");
 		if ((ft_err = FT_New_Face(CompVGLFreeType::library(), "C:/Windows/Fonts/arial.ttf", 0, &m_face))) {
-			COMPV_DEBUG_ERROR("FT_New_Face('FreeSans.ttf', 0) failed with error '%s'", CompVGLFreeType::errorMessage(ft_err));
+			COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASS_NAME, "FT_New_Face('FreeSans.ttf', 0) failed with error '%s'", CompVGLFreeType::errorMessage(ft_err));
 			return COMPV_ERROR_CODE_E_FREETYPE;
 		}
+		if ((ft_err = FT_Select_Charmap(m_face, ft_encoding_unicode))) {
+			COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASS_NAME, "FT_Select_Charmap(face, ft_encoding_unicode) failed with error '%s'", CompVGLFreeType::errorMessage(ft_err));
+		}
 		if ((ft_err = FT_Set_Pixel_Sizes(m_face, 0, fontSize))) {
-			COMPV_DEBUG_ERROR("FT_Set_Pixel_Sizes(face, 0, 16) failed with error '%s'", CompVGLFreeType::errorMessage(ft_err));
+			COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASS_NAME, "FT_Set_Pixel_Sizes(face, 0, 16) failed with error '%s'", CompVGLFreeType::errorMessage(ft_err));
 			return COMPV_ERROR_CODE_E_FREETYPE;
 		}
 	}
@@ -180,7 +190,7 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 		GLuint uniform_tex = COMPV_glGetUniformLocation(program()->name(), "tex");
 		COMPV_glUniform1i(uniform_tex, 0); // GL_TEXTURE0
 
-		// Set projection
+										   // Set projection
 		COMPV_CHECK_CODE_BAIL(err = CompVGLDraw::setOrtho(0, static_cast<GLfloat>(fboWidth), static_cast<GLfloat>(fboHeight), 0, -1, 1));
 	}
 	else if (randomColors) {
@@ -192,7 +202,7 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 
 
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Under windows check fonts in 'C:/Windows/Fonts'");
-	
+
 	// Create texture
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Create texture once");
 
@@ -217,11 +227,7 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 	COMPV_glBindTexture(GL_TEXTURE_2D, m_uTextureAtlas);
 	COMPV_CHECK_CODE_RETURN((CompVMat::newObj<uint8_t>(&ptrAtlas, fboHeight, fboWidth, 1, fboWidth)));
 	COMPV_CHECK_CODE_RETURN((CompVMat::newObj<CompVGLFreeTypeBox, COMPV_MAT_TYPE_STRUCT>(&ptrBoxes, 1, numChars, 1, numChars)));
-	
-	
-	COMPV_CHECK_CODE_BAIL(err = fillAtlas(texts, positions, ptrAtlas, ptrBoxes, numChars));
-	
-
+	COMPV_CHECK_CODE_BAIL(err = fillAtlas(utf8, texts, positions, ptrAtlas, ptrBoxes, numChars));
 	//uint64_t timeStart = CompVTime::nowMillis();
 	COMPV_glTexSubImage2D(
 		GL_TEXTURE_2D,
@@ -259,39 +265,64 @@ bail:
 
 #if HAVE_FREETYPE
 
-COMPV_ERROR_CODE CompVGLDrawTexts::fillAtlas(const CompVStringVector& texts, const CompVPointFloat32Vector& positions, CompVMatPtr& ptrAtlas, CompVMatPtr& ptrBoxes, size_t& numChars)
+COMPV_ERROR_CODE CompVGLDrawTexts::fillAtlas(const bool bUtf8, const CompVStringVector& texts, const CompVPointFloat32Vector& positions, CompVMatPtr& ptrAtlas, CompVMatPtr& ptrBoxes, size_t& numChars)
 {
 	// Internal function, do not check input parameters
 	CompVStringVector::const_iterator it_texts = texts.begin();
 	CompVPointFloat32Vector::const_iterator it_positions;
-	std::string::const_iterator it_string;
 	uint8_t *atlas_buffer, *bitmap_buffer;
 
 	GLuint ai, bi, xi, yi;
 	GLfloat x2, y2, w, h, sx2, sy2, sw, sh;
 	FT_GlyphSlot g = m_face->glyph;
 	FT_Error ft_err;
+	FT_UInt ft_chridx;
+
+	std::vector<int> utf32;
+	std::vector<int>::const_iterator it_utf32;
+	bool have_utf32;
+
+	std::string::const_iterator it_char;
+
+	size_t count;
 
 	const GLuint fboWidth = static_cast<GLuint>(ptrAtlas->cols());
 	const GLuint fboHeight = static_cast<GLuint>(ptrAtlas->rows());
 
 	const GLfloat sx = (1.f / (fboWidth));
 	const GLfloat sy = (1.f / (fboHeight));
-	
+
 	numChars = 0;
 	const size_t maxBoxes = ptrBoxes->cols();
 	CompVGLFreeTypeBox* ptrBox = ptrBoxes->ptr<CompVGLFreeTypeBox>();
 
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Uncomment all COMPV_DEBUG_WARN_EX");
 
+	// Loop through the strings
 	for (it_texts = texts.begin(), it_positions = positions.begin(); it_texts < texts.end(); ++it_texts, ++it_positions) {
-		if (it_positions->x < 0.f || it_positions->y < 0.f || (xi = COMPV_MATH_ROUNDFU_2_NEAREST_INT(it_positions->x, GLuint)) >= fboWidth || (yi = COMPV_MATH_ROUNDFU_2_NEAREST_INT(it_positions->y, GLuint)) >= fboHeight) { // cast to unsigned, this is why comparison against 0 must be done before
-			//COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASS_NAME, "Trying to write outside the screen domain (start): skip");
+		if (it_positions->x < 0.f || it_positions->y < 0.f || (xi = COMPV_MATH_ROUNDFU_2_NEAREST_INT(it_positions->x, GLuint)) >= fboWidth || (yi = COMPV_MATH_ROUNDFU_2_NEAREST_INT(it_positions->y, GLuint)) >= fboHeight) { // cast to unsigned, this is why comparison against 0 must be done before																																																		   //COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASS_NAME, "Trying to write outside the screen domain (start): skip");
 			continue;
 		}
-		for (it_string = it_texts->begin(); it_string < it_texts->end(); ++it_string) {
-			if ((ft_err = FT_Load_Char(m_face, *it_string, FT_LOAD_RENDER))) {
-				COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASS_NAME, "FT_Load_Char(face, %c) failed with error code %d", ft_err, *it_string);
+		
+		// Check whether the string can be converted to utf32 (when utf8 encoded only)
+		// Please note that you also need a font supporting unicode (e.g. 'arialuni.ttf')
+		// A way to declare utf8 string: const string myString = u8"Déclarer une chaine en Français";
+		have_utf32 = (bUtf8 && utf8::is_valid(it_texts->begin(), it_texts->end()));
+		if (have_utf32) {
+			utf8::utf8to32(it_texts->begin(), it_texts->end(), std::back_inserter(utf32));
+			it_utf32 = utf32.begin();
+			count = utf32.size();
+		}
+		else {
+			it_char = it_texts->begin();
+			count = it_texts->size();
+		}
+
+		// Loop through the characters
+		for (size_t i = 0; i < count; ++i) {
+			ft_chridx = FT_Get_Char_Index(m_face, have_utf32 ? *it_utf32++ : *it_char++);
+			if ((ft_err = FT_Load_Glyph(m_face, ft_chridx, FT_LOAD_RENDER))) {
+				COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASS_NAME, "FT_Load_Char(face, %s) failed with error code %d", (*it_texts).c_str(), ft_err);
 				continue;
 			}
 
@@ -324,23 +355,23 @@ COMPV_ERROR_CODE CompVGLDrawTexts::fillAtlas(const CompVStringVector& texts, con
 			sw = w * sx;
 			sh = h * sy;
 
-			(*ptrBox)[0] = x2,		(*ptrBox)[1] = y2,		(*ptrBox)[2] = sx2,			(*ptrBox)[3] = sy2;
-			(*ptrBox)[4] = x2,		(*ptrBox)[5] = y2 + h,	(*ptrBox)[6] = sx2,			(*ptrBox)[7] = sy2 + sh;
-			(*ptrBox)[8] = x2 + w,	(*ptrBox)[9] = y2 + h,	(*ptrBox)[10] = sx2 + sw,	(*ptrBox)[11] = sy2 + sh;
+			(*ptrBox)[0] = x2, (*ptrBox)[1] = y2, (*ptrBox)[2] = sx2, (*ptrBox)[3] = sy2;
+			(*ptrBox)[4] = x2, (*ptrBox)[5] = y2 + h, (*ptrBox)[6] = sx2, (*ptrBox)[7] = sy2 + sh;
+			(*ptrBox)[8] = x2 + w, (*ptrBox)[9] = y2 + h, (*ptrBox)[10] = sx2 + sw, (*ptrBox)[11] = sy2 + sh;
 
-			(*ptrBox)[12] = x2,		(*ptrBox)[13] = y2,		(*ptrBox)[14] = sx2,		(*ptrBox)[15] = sy2;
-			(*ptrBox)[16] = x2 + w, (*ptrBox)[17] = y2 + h,	(*ptrBox)[18] = sx2 + sw,	(*ptrBox)[19] = sy2 + sh;
-			(*ptrBox)[20] = x2 + w, (*ptrBox)[21] = y2,		(*ptrBox)[22] = sx2 + sw,	(*ptrBox)[23] = sy2;
+			(*ptrBox)[12] = x2, (*ptrBox)[13] = y2, (*ptrBox)[14] = sx2, (*ptrBox)[15] = sy2;
+			(*ptrBox)[16] = x2 + w, (*ptrBox)[17] = y2 + h, (*ptrBox)[18] = sx2 + sw, (*ptrBox)[19] = sy2 + sh;
+			(*ptrBox)[20] = x2 + w, (*ptrBox)[21] = y2, (*ptrBox)[22] = sx2 + sw, (*ptrBox)[23] = sy2;
 			++ptrBox;
 
-			if (numChars++ >= maxBoxes) {
+			if (++numChars >= maxBoxes) {
 				COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASS_NAME, "Breaking FreeType processing because we reached the maximum bitmaps per process (%zu)", numChars);
 				return COMPV_ERROR_CODE_S_OK; // trucation but do not exit
 			}
-			
+
 			xi += static_cast<GLuint>(g->advance.x >> 6);
 			yi += static_cast<GLuint>(g->advance.y >> 6);
-		}		
+		}
 	}
 
 	return COMPV_ERROR_CODE_S_OK;

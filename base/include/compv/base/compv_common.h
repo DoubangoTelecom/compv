@@ -514,19 +514,15 @@ public:
 typedef std::vector<CompVHoughLine, CompVAllocatorNoDefaultConstruct<CompVHoughLine> > CompVHoughLineVector;
 
 struct CompVDrawingOptions {
-	COMPV_DRAWING_COLOR_TYPE colorType;
-	compv_float32x4_t color;
-	compv_float32_t pointSize;
-	compv_float32_t lineWidth;
-	COMPV_DRAWING_LINE_TYPE lineType;
+	COMPV_DRAWING_COLOR_TYPE colorType = COMPV_DRAWING_COLOR_TYPE_RANDOM;
+	compv_float32x4_t color = {1.f, 1.f, 1.f, 1.f};
+	compv_float32_t pointSize = 7.f;
+	compv_float32_t lineWidth = 2.f;
+	COMPV_DRAWING_LINE_TYPE lineType = COMPV_DRAWING_LINE_TYPE_SIMPLE;
+	size_t fontSize = 16; // Pixel Size (FreeType)
+	std::string fontPath; // Full/Relative path to the font (e.g. "C:/Windows/Fonts/arial.ttf")
+	bool fontUtf8 = false; // Whether to consider the string passed to drawTexts() as utf8 or not
 public:
-	CompVDrawingOptions() {
-		colorType = COMPV_DRAWING_COLOR_TYPE_RANDOM;
-		color[0] = color[1] = color[2] = 0.f, color[3] = 1.f;
-		pointSize = 7.f;
-		lineWidth = 2.f;
-		lineType = COMPV_DRAWING_LINE_TYPE_SIMPLE;
-	}
 	static CompVDrawingOptions clone(const CompVDrawingOptions* options) {
 		return options ? *options : CompVDrawingOptions();
 	}

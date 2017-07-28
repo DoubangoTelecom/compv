@@ -124,6 +124,9 @@
     <Filter Include="source\video">
       <UniqueIdentifier>{2fdaefe5-2d04-44ad-9f10-52d6033a2252}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\utf8">
+      <UniqueIdentifier>{01bebaad-0751-4b02-ad0b-be219c1884c5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\base\compv_base.h">
@@ -488,6 +491,18 @@
     </ClInclude>
     <ClInclude Include="include\compv\base\compv_allocators.h">
       <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\utf8\checked.h">
+      <Filter>include\utf8</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\utf8\core.h">
+      <Filter>include\utf8</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\utf8\unchecked.h">
+      <Filter>include\utf8</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\utf8\utf8.h">
+      <Filter>include\utf8</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

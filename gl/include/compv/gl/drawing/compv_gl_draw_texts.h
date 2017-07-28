@@ -37,7 +37,7 @@ public:
 
 private:
 #if HAVE_FREETYPE
-	COMPV_ERROR_CODE fillAtlas(const CompVStringVector& texts, const CompVPointFloat32Vector& positions, CompVMatPtr& ptrAtlas, CompVMatPtr& ptrBoxes, size_t& numChars);
+	COMPV_ERROR_CODE fillAtlas(const bool bUtf8, const CompVStringVector& texts, const CompVPointFloat32Vector& positions, CompVMatPtr& ptrAtlas, CompVMatPtr& ptrBoxes, size_t& numChars);
 #endif /* HAVE_FREETYPE */
 
 private:
