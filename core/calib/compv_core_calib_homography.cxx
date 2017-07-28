@@ -187,13 +187,14 @@ static COMPV_ERROR_CODE ransac(CompVMatPtrPtr inliers, T& variance, const CompVM
 	dsty1_ = dst->ptr<const T>(1);
 
 	const size_t k_ = src->cols(); // total number of elements (must be > 4)
-	const T kf_ = static_cast<T>(k_);
+	const T skf_ = static_cast<T>(1) / static_cast<T>(k_);
 	static const T p_ = static_cast<T>(0.995); // probability for inlier (TODO(dmi): try with 0.95f which is more realistic)
+	static const T log_1_minus_p_ = std::log(static_cast<T>(1.) - p_);
 	static const size_t maxTries = 2000;
 	const size_t d_ = static_cast<size_t>(p_ * k_); // minimum number of inliers to stop the tries
 	static const size_t subset_ = 4; // subset size: 2 for line, 3 for plane, 4 for homography, 8 for essential / essential matrix
 	static const T subsetf_ = static_cast<T>(subset_);
-	T e_ = static_cast<T>(0.70); // outliers ratio (70% is a worst case, will be updated) = 1 - (inliersCount/total)
+	T w_; // number of inliers in data / number of points in data
 	size_t n_, nnew_; // maximum number of tries
 	size_t t_; // number of tries
 
@@ -299,14 +300,14 @@ static COMPV_ERROR_CODE ransac(CompVMatPtrPtr inliers, T& variance, const CompVM
 			variance = variance_;
 			// Copy inliers
 			COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<size_t>(inliers, 1, inliersCount_));
-			CompVMem::copyNTA((*inliers)->ptr<size_t>(0), inliersubset_->ptr(0), (inliersCount_ * sizeof(size_t)));
+			CompVMem::copy((*inliers)->ptr<size_t>(0), inliersubset_->ptr(0), (inliersCount_ * sizeof(size_t)));
 		}
 
 		// update outliers ratio
-		e_ = (static_cast<T>(1.) - (COMPV_MATH_MAX(1, inliersCount_) / kf_)); // "inliersCount_" == 0 lead to NaN for "n_"
+		w_ = inliersCount_ *skf_;
 
 		// update total tries
-		nnew_ = (static_cast<size_t>(std::log(static_cast<T>(1.) - p_) / std::log(static_cast<T>(1.) - std::pow(static_cast<T>(1.) - e_, subsetf_))) / threadsCount) + 1;
+		nnew_ = (static_cast<size_t>(log_1_minus_p_ / std::log(static_cast<T>(1.) - std::pow(w_, subsetf_))) / threadsCount) + 1;
 		n_ = COMPV_MATH_MIN(maxTries, nnew_);
 
 		++t_;

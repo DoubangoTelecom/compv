@@ -320,7 +320,8 @@ compv_main()
 		CompVDebugMgr::setLevel(COMPV_DEBUG_LEVEL_INFO);
 
 		// Init the modules
-		COMPV_CHECK_CODE_BAIL(err = CompVInit());
+		COMPV_DEBUG_INFO_CODE_FOR_TESTING("Enable multi-threading");
+		COMPV_CHECK_CODE_BAIL(err = CompVInit(1));
 
 		// Create window
 		COMPV_CHECK_CODE_BAIL(err = CompVWindow::newObj(&m_ptrWindow, WINDOW_WIDTH, WINDOW_HEIGHT, TAG_SAMPLE));

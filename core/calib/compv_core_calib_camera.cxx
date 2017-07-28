@@ -163,6 +163,7 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 			std::min(HOUGH_SHT_THRESHOLD_MAX, static_cast<int>(static_cast<double>(std::min(image->cols(), image->rows())) * HOUGH_SHT_THRESHOLD_FACT) + 1))
 		);
 	}
+
 	// Process
 	COMPV_CHECK_CODE_RETURN(m_ptrHough->process(result.edges, result.lines_raw.lines_hough));
 
@@ -246,6 +247,11 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 			image_widthF_minus, 0.f, image_widthF, 0.f, &intersect_x, &intersect_y);
 		if (intersect) { // no need to check if it's in the image domain (for sure it is)
 			intersections.push_back(std::make_pair(intersect_x, *i));
+		}
+		else {
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Vertical line doesn't intersect with x-axis. Stop processing");
+			result.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_INTERSECTIONS;
+			return COMPV_ERROR_CODE_S_OK;
 		}
 	}
 	std::sort(intersections.begin(), intersections.end(), [](const std::pair<compv_float32_t, const CompVLineFloat32> &pair1, const std::pair<compv_float32_t, const CompVLineFloat32> &pair2) {
@@ -559,8 +565,8 @@ COMPV_ERROR_CODE CompVCalibCamera::homography(CompVCalibCameraResult& result)
 	COMPV_CHECK_CODE_RETURN(query->one_row<compv_float64_t>(2)); // homogeneous coord. with Z = 1
 	size_t index = 0;
 	for (CompVPointFloat32Vector::const_iterator i = result.points_intersections.begin(); i < result.points_intersections.end(); ++i, ++index) {
-		queryX[index] = static_cast<compv_float64_t>(i->x);
-		queryY[index] = static_cast<compv_float64_t>(i->y);
+		//queryX[index] = static_cast<compv_float64_t>(i->x);
+		//queryY[index] = static_cast<compv_float64_t>(i->y);
 	}
 
 	// Find homography

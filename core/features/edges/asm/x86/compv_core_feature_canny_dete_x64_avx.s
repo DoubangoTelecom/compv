@@ -31,7 +31,7 @@ sym(CompVCannyNMSGatherRow_16mpw_Asm_X64_AVX2):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 7
-	COMPV_YASM_SAVE_YMM 7
+	COMPV_YASM_SAVE_YMM 15
 	push rsi
 	push rdi
 	push rbx
