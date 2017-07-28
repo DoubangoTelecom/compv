@@ -108,17 +108,12 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 	const std::string fontFullPath = (options ? options->fontFullPath : "");
 	const size_t fontSize = (options ? options->fontSize : COMPV_FONT_SIZE_DEFAULT);
 
-	CompVStringVector::const_iterator it_texts;
-	CompVPointFloat32Vector::const_iterator it_positions;
-	std::string::const_iterator it_string;
 	CompVMatPtr ptrAtlas, ptrBoxes;
-	const CompVGLFreeTypeBox* boxesPtr;
+
 	size_t numChars, maxChars;
 
 	// Create face if not already done
 	COMPV_CHECK_CODE_RETURN(freeTypeCreateFace(fontFullPath, fontSize));
-
-	FT_GlyphSlot g = m_face->glyph;
 
 	// Bind to VAO, VBO, Program
 	GLint fboWidth = 0, fboHeight = 0;
@@ -170,29 +165,21 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 		else {
 			r = options->color[0], g = options->color[1], b = options->color[2], a = options->color[3];
 		}
-		COMPV_DEBUG_INFO_CODE_FOR_TESTING("Add support for glUniform4f");
-		glUniform4f(uniform_color, r, g, b, a);
+		COMPV_glUniform4f(uniform_color, r, g, b, a);
 
 		// Set texture attribute
 		GLuint uniform_tex = COMPV_glGetUniformLocation(program()->name(), "tex");
 		COMPV_glUniform1i(uniform_tex, 0); // GL_TEXTURE0
 
-										   // Set projection
+		// Set projection
 		COMPV_CHECK_CODE_BAIL(err = CompVGLDraw::setOrtho(0, static_cast<GLfloat>(fboWidth), static_cast<GLfloat>(fboHeight), 0, -1, 1));
 	}
 	else if (randomColors) {
 		GLuint uniform_color = COMPV_glGetUniformLocation(program()->name(), "color");
 		const GLfloat(*c)[3] = &kCompVGLRandomColors[rand() % kCompVGLRandomColorsCount];
-		COMPV_DEBUG_INFO_CODE_FOR_TESTING("Add support for glUniform4f");
-		glUniform4f(uniform_color, (*c)[0], (*c)[1], (*c)[2], 1.f);
+		COMPV_glUniform4f(uniform_color, (*c)[0], (*c)[1], (*c)[2], 1.f);
 	}
-
-
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Under windows check fonts in 'C:/Windows/Fonts'");
-
-	// Create texture
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Create texture once");
-
+	
 	// Get maximum chars
 	maxChars = (fboWidth * fboHeight) /*/ fontSize*/; // do not divide by fontSize to allow overwritting and give some room
 
@@ -200,7 +187,7 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 
 	// Get number of chars
 	numChars = 0;
-	for (it_texts = texts.begin(); it_texts < texts.end(); ++it_texts) {
+	for (CompVStringVector::const_iterator it_texts = texts.begin(); it_texts < texts.end(); ++it_texts) {
 		numChars += it_texts->size();
 	}
 	if (numChars > maxChars) {
@@ -208,14 +195,17 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 		numChars = maxChars;
 	}
 
-	// Build atlas and send data to texture
+	// Create boxes' holder
+	COMPV_CHECK_CODE_RETURN((CompVMat::newObj<CompVGLFreeTypeBox, COMPV_MAT_TYPE_STRUCT>(&ptrBoxes, 1, numChars, 1, numChars)));
+
+	// Build atlas
 	COMPV_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 	COMPV_glActiveTexture(GL_TEXTURE0);
 	COMPV_glBindTexture(GL_TEXTURE_2D, m_uTextureAtlas);
 	COMPV_CHECK_CODE_RETURN((CompVMat::newObj<uint8_t>(&ptrAtlas, fboHeight, fboWidth, 1, fboWidth)));
-	COMPV_CHECK_CODE_RETURN((CompVMat::newObj<CompVGLFreeTypeBox, COMPV_MAT_TYPE_STRUCT>(&ptrBoxes, 1, numChars, 1, numChars)));
 	COMPV_CHECK_CODE_BAIL(err = freeTypeFillAtlas(utf8, texts, positions, ptrAtlas, ptrBoxes, numChars));
-	//uint64_t timeStart = CompVTime::nowMillis();
+
+	// Submit atlas data to texture
 	COMPV_glTexSubImage2D(
 		GL_TEXTURE_2D,
 		0,
@@ -227,15 +217,10 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 		GL_UNSIGNED_BYTE,
 		ptrAtlas->ptr());
 
-	// Submit vertices data
-	boxesPtr = ptrBoxes->ptr<const CompVGLFreeTypeBox>();
-
+	// Draw chars
 	COMPV_glViewport(0, 0, static_cast<GLsizei>(fboWidth), static_cast<GLsizei>(fboHeight));
-	COMPV_glBufferData(GL_ARRAY_BUFFER, sizeof(CompVGLFreeTypeBox) * numChars, boxesPtr, GL_STATIC_DRAW);
+	COMPV_glBufferData(GL_ARRAY_BUFFER, sizeof(CompVGLFreeTypeBox) * numChars, ptrBoxes->ptr(), GL_STATIC_DRAW);
 	COMPV_glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(numChars) * 6);
-
-	//uint64_t timeEnd = CompVTime::nowMillis();
-	//COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASS_NAME, "freeTypeFillAtlas Elapsed time = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 
 	// Update size
 	m_fboWidth = fboWidth;
