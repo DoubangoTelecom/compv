@@ -16,9 +16,6 @@
 #include "compv/gl/compv_gl_info.h"
 #include "compv/gl/compv_gl_func.h"
 
-#include <codecvt>
-#include <locale>
-
 #if defined(HAVE_OPENGLES)
 #	define COMPV_GL_FORMAT_Y	GL_LUMINANCE
 #else
@@ -67,11 +64,11 @@ COMPV_NAMESPACE_BEGIN()
 
 CompVGLDrawTexts::CompVGLDrawTexts()
 	: CompVGLDraw(kProgramVertexData, kProgramFragmentData, kVertexDataWithMVP_Yes)
+#if HAVE_FREETYPE
 	, m_fboWidth(0)
 	, m_fboHeight(0)
 	, m_uTextureAtlas(kCompVGLNameInvalid)
 	, m_fontSize(COMPV_FONT_SIZE_DEFAULT)
-#if HAVE_FREETYPE
 	, m_face(nullptr)
 #endif
 {
@@ -87,7 +84,6 @@ CompVGLDrawTexts::~CompVGLDrawTexts()
 		}
 		m_face = nullptr;
 	}
-#endif
 	if (m_uTextureAtlas != kCompVGLNameInvalid) {
 		if (CompVGLUtils::currentContext()) {
 			COMPV_CHECK_CODE_NOP(CompVGLUtils::textureDelete(&m_uTextureAtlas));
@@ -96,6 +92,7 @@ CompVGLDrawTexts::~CompVGLDrawTexts()
 			COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASS_NAME, "No OpenGL context: %d texture will leak", m_uTextureAtlas);
 		}
 	}
+#endif
 }
 
 COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const CompVPointFloat32Vector& positions, const CompVDrawingOptions* options COMPV_DEFAULT(nullptr))

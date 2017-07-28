@@ -13,6 +13,10 @@
 
 #define COMPV_THIS_CLASSNAME	"CompVGLBlitter"
 
+#if !defined(GL_INVALID_INDEX)
+#	define GL_INVALID_INDEX 0xFFFFFFFFu
+#endif
+
 COMPV_NAMESPACE_BEGIN()
 
 CompVGLBlitter::CompVGLBlitter()

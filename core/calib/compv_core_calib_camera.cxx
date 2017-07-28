@@ -5,6 +5,7 @@
 * WebSite: http://compv.org
 */
 #include "compv/core/calib/compv_core_calib_camera.h"
+#include "compv/core/calib/compv_core_calib_homography.h"
 #include "compv/base/image/compv_image.h"
 #include "compv/base/math/compv_math_utils.h"
 #include "compv/base/math/compv_math_gauss.h"
@@ -15,6 +16,7 @@
 #define PATTERN_COL_CORNERS_NUM				8  // Number of corners per column
 #define PATTERN_CORNERS_NUM					(PATTERN_ROW_CORNERS_NUM * PATTERN_COL_CORNERS_NUM) // Total number of corners
 #define PATTERN_GROUP_MAXLINES				10 // Maximum number of lines per group (errors)
+#define PATTERN_BLOCK_SIZE_PIXEL			40					
 
 #define HOUGH_ID							COMPV_HOUGHSHT_ID
 #define HOUGH_RHO							0.5f // "rho-delta" (half-pixel)
@@ -62,6 +64,7 @@ CompVCalibCamera::CompVCalibCamera()
 	, m_nPatternCornersNumCol(PATTERN_COL_CORNERS_NUM)
 	, m_nPatternLinesHz(PATTERN_ROW_CORNERS_NUM)
 	, m_nPatternLinesVt(PATTERN_COL_CORNERS_NUM)
+	, m_nPatternBlockSizePixel(PATTERN_BLOCK_SIZE_PIXEL)
 {
 	m_nPatternCornersTotal = m_nPatternCornersNumRow * m_nPatternCornersNumCol;
 	m_nPatternLinesTotal = (m_nPatternCornersNumRow + m_nPatternCornersNumCol);
@@ -277,8 +280,13 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 		}
 	}
 
+	/* Compute homography */
+	COMPV_CHECK_CODE_RETURN(homography(result));
+
 	//static size_t count = 0;
 	//COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "\n\nCOOOOOOL %zu\n\n", ++count);
+
+	result.code = COMPV_CALIB_CAMERA_RESULT_OK;
 
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -354,7 +362,7 @@ COMPV_ERROR_CODE CompVCalibCamera::grouping(const size_t image_width, const size
 
 	const compv_float32_t r = std::sqrt(static_cast<compv_float32_t>((image_width * image_width) + (image_height * image_height)));
 	const compv_float32_t rsmall = smallRhoFact * r;
-	const compv_float32_t rmedium = rsmall * 2.f;
+	const compv_float32_t rmedium = rsmall * 8.f;
 	
 	compv_float32_t distance, c, d, distance_diff;
 
@@ -535,6 +543,55 @@ COMPV_ERROR_CODE CompVCalibCamera::newObj(CompVCalibCameraPtrPtr calib)
 	COMPV_CHECK_CODE_RETURN(CompVEdgeDete::newObj(&calib_->m_ptrCanny, COMPV_CANNY_ID, CANNY_LOW, CANNY_HIGH, CANNY_KERNEL_SIZE));
 
 	*calib = *calib_;
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// Build pattern's corners
+COMPV_ERROR_CODE CompVCalibCamera::buildPatternCorners()
+{
+	if (!m_ptrPatternCorners || m_ptrPatternCorners->cols() != m_nPatternCornersTotal) {
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Building pattern corners");
+		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float64_t>(&m_ptrPatternCorners, 3, m_nPatternCornersTotal));
+		compv_float64_t* trainX = m_ptrPatternCorners->ptr<compv_float64_t>(0);
+		compv_float64_t* trainY = m_ptrPatternCorners->ptr<compv_float64_t>(1);
+		COMPV_CHECK_CODE_RETURN(m_ptrPatternCorners->one_row<compv_float64_t>(2)); // homogeneous coord. with Z = 1
+		COMPV_CHECK_EXP_RETURN(m_nPatternCornersTotal != (m_nPatternCornersNumRow * m_nPatternCornersNumCol), COMPV_ERROR_CODE_E_INVALID_STATE, "Pattern is invalid");
+		const compv_float64_t patternBlockSizePixel = static_cast<compv_float64_t>(m_nPatternBlockSizePixel);
+		compv_float64_t x, y;
+		size_t i, j, k;
+		for (j = 0, y = 0.0, k = 0; j < m_nPatternCornersNumRow; ++j, y += patternBlockSizePixel) {
+			for (i = 0, x = 0.0; i < m_nPatternCornersNumCol; ++i, x += patternBlockSizePixel, ++k) {
+				trainX[k] = x;
+				trainY[k] = y;
+			}
+		}
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// Compute homography
+COMPV_ERROR_CODE CompVCalibCamera::homography(CompVCalibCameraResult& result)
+{
+	COMPV_CHECK_EXP_RETURN(result.points_intersections.size() != m_nPatternCornersTotal, COMPV_ERROR_CODE_E_INVALID_CALL, "Invalid number of corners");
+
+	// Build pattern's corners
+	COMPV_CHECK_CODE_RETURN(buildPatternCorners());
+
+	// Convert the intersections from float32 to float64 for homagraphy
+	CompVMatPtr query;
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float64_t>(&query, 3, m_nPatternCornersTotal));
+	compv_float64_t* queryX = query->ptr<compv_float64_t>(0);
+	compv_float64_t* queryY = query->ptr<compv_float64_t>(1);
+	COMPV_CHECK_CODE_RETURN(query->one_row<compv_float64_t>(2)); // homogeneous coord. with Z = 1
+	size_t index = 0;
+	for (CompVPointFloat32Vector::const_iterator i = result.points_intersections.begin(); i < result.points_intersections.end(); ++i, ++index) {
+		queryX[index] = static_cast<compv_float64_t>(i->x);
+		queryY[index] = static_cast<compv_float64_t>(i->y);
+	}
+
+	// Find homography
+	COMPV_CHECK_CODE_RETURN(CompVHomography<compv_float64_t>::find(&result.homography, m_ptrPatternCorners, query));
+
 	return COMPV_ERROR_CODE_S_OK;
 }
 

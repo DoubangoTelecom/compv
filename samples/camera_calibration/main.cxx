@@ -99,7 +99,7 @@ public:
 			imageOrig = image;
 #else
 			static size_t __index = 0;
-			size_t file_index = /*47 + ((__index++) % 20)*/65/*65*//*47*//*65*//*47*//*55*//*47*//*48*//*52*/;
+			size_t file_index = 47 + ((__index++) % 20)/*65*//*65*//*47*//*65*//*47*//*55*//*47*//*48*//*52*/;
 			std::string file_path = std::string("C:/Projects/GitHub/data/calib/P10100")+ CompVBase::to_string(file_index) +std::string("s_640x480_gray.yuv");
 			COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 640, 480, 640, file_path.c_str(), &imageGray));
 			imageOrig = imageGray;
@@ -112,26 +112,26 @@ public:
 				COMPV_CHECK_CODE_RETURN(onImageSizeChanged(imageOrig->cols(), imageOrig->rows()));
 			}
 			
-			// Calibration
+			/* Calibration */
 			COMPV_CHECK_CODE_RETURN(m_ptrCalib->process(imageGray, m_CalibResult));
 
-			// Begin drawing
+			/* Begin drawing */
 			COMPV_CHECK_CODE_BAIL(err = m_ptrWindow->beginDraw());
 			
-			// Original image
+			/* Original image */
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceOriginal->activate());
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceOriginal->drawImage(imageOrig));
 
-			// Edges
+			/* Edges */
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceEdges->activate());
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceEdges->drawImage(m_CalibResult.edges));
 
-			// Raw Lines
+			/* Raw Lines */
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLinesRaw->activate());
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLinesRaw->drawImage(m_CalibResult.edges));
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLinesRaw->renderer()->canvas()->drawLines(m_CalibResult.lines_raw.lines_cartesian/*, &m_DrawingOptionsRawLines*/));
 
-			// Grouped lines
+			/* Grouped lines */
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->activate());
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->drawImage(m_CalibResult.edges));
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->renderer()->canvas()->drawLines(m_CalibResult.lines_grouped.lines_cartesian, &m_DrawingOptionsGroupedLines));
@@ -143,19 +143,41 @@ public:
 				}
 				COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->renderer()->canvas()->drawTexts(labels, m_CalibResult.points_intersections, &m_DrawingOptionsGroupedLines));
 			}
+			if (m_CalibResult.isOK() && m_CalibResult.homography) {
+				CompVMatPtr rectPattern, rectHomograyApplied;
+				compv_float64_t *x, *y;
+				CompVLineFloat32Vector rectLines(4);
+				COMPV_CHECK_CODE_BAIL(err = CompVMat::newObjAligned<compv_float64_t>(&rectPattern, 3, 4));
+				COMPV_CHECK_CODE_BAIL(err = rectPattern->one_row<compv_float64_t>(2)); // with Z = 1
+				x = rectPattern->ptr<compv_float64_t>(0);
+				y = rectPattern->ptr<compv_float64_t>(1);
+				x[0] = 0, x[1] = static_cast<compv_float64_t>(m_ptrCalib->patternWidth()), x[2] = static_cast<compv_float64_t>(m_ptrCalib->patternWidth()), x[3] = 0.0;
+				y[0] = 0, y[1] = 0, y[2] = static_cast<compv_float64_t>(m_ptrCalib->patternHeight()), y[3] = static_cast<compv_float64_t>(m_ptrCalib->patternHeight());
+				// Perspecive transform using homography matrix
+				COMPV_CHECK_CODE_BAIL(err = CompVMathTransform<compv_float64_t>::perspective2D(&rectHomograyApplied, rectPattern, m_CalibResult.homography));
+				// Draw the transformed rectangle
+				x = rectHomograyApplied->ptr<compv_float64_t>(0);
+				y = rectHomograyApplied->ptr<compv_float64_t>(1);
+				// using drawLines instead of drawRectangles because the rectangle doesn't have square angles (90 degrees)
+				rectLines[0].a.x = static_cast<compv_float32_t>(x[0]), rectLines[0].a.y = static_cast<compv_float32_t>(y[0]), rectLines[0].b.x = static_cast<compv_float32_t>(x[1]), rectLines[0].b.y = static_cast<compv_float32_t>(y[1]);
+				rectLines[1].a.x = static_cast<compv_float32_t>(x[1]), rectLines[1].a.y = static_cast<compv_float32_t>(y[1]), rectLines[1].b.x = static_cast<compv_float32_t>(x[2]), rectLines[1].b.y = static_cast<compv_float32_t>(y[2]);
+				rectLines[2].a.x = static_cast<compv_float32_t>(x[2]), rectLines[2].a.y = static_cast<compv_float32_t>(y[2]), rectLines[2].b.x = static_cast<compv_float32_t>(x[3]), rectLines[2].b.y = static_cast<compv_float32_t>(y[3]);
+				rectLines[3].a.x = static_cast<compv_float32_t>(x[3]), rectLines[3].a.y = static_cast<compv_float32_t>(y[3]), rectLines[3].b.x = static_cast<compv_float32_t>(x[0]), rectLines[3].b.y = static_cast<compv_float32_t>(y[0]);
+				COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->renderer()->canvas()->drawLines(rectLines, &m_DrawingOptionsHomography));
+			}
 
-			// Grouped and ordered lines
+			/* Grouped and ordered lines */
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGroupedAndOrdered->activate());
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGroupedAndOrdered->drawImage(m_CalibResult.edges));
 
-			// Corners
+			/* Corners */
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceCorners->activate());
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceCorners->drawImage(m_CalibResult.edges));
 
-			// Swap back buffer <-> front
+			/* Swap back buffer <-> front */
 			COMPV_CHECK_CODE_BAIL(err = m_ptrMultiSurface->blit());
 		bail:
-			// End drawing
+			/* End drawing */
 			COMPV_CHECK_CODE_NOP(err = m_ptrWindow->endDraw()); // Make sure 'endDraw()' will be called regardless the result
 			// Deactivate the surfaces
 			COMPV_CHECK_CODE_NOP(err = m_ptrSurfaceOriginal->deActivate());
@@ -201,6 +223,13 @@ public:
 		listener_->m_DrawingOptionsGroupedLines.color[2] = 0.f;
 		listener_->m_DrawingOptionsGroupedLines.color[3] = 1.f;
 		listener_->m_DrawingOptionsGroupedLines.lineWidth = 1.5f;
+
+		listener_->m_DrawingOptionsHomography.colorType = COMPV_DRAWING_COLOR_TYPE_STATIC;
+		listener_->m_DrawingOptionsHomography.color[0] = 0.f;
+		listener_->m_DrawingOptionsHomography.color[1] = 0.f;
+		listener_->m_DrawingOptionsHomography.color[2] = 1.f;
+		listener_->m_DrawingOptionsHomography.color[3] = 1.f;
+		listener_->m_DrawingOptionsHomography.lineWidth = 1.5f;
 
 		// Multi-layer surface
 		COMPV_CHECK_CODE_RETURN(listener_->m_ptrWindow->addMultiLayerSurface(&listener_->m_ptrMultiSurface));
@@ -273,6 +302,7 @@ private:
 	CompVCalibCameraResult m_CalibResult;
 	CompVDrawingOptions m_DrawingOptionsRawLines;
 	CompVDrawingOptions m_DrawingOptionsGroupedLines;
+	CompVDrawingOptions m_DrawingOptionsHomography;
 	CompVMyWindowListenerPtr m_ptrWindowListener;
 	CompVMultiSurfaceLayerPtr m_ptrMultiSurface;
 	CompVSurfacePtr m_ptrSurfaceOriginal;

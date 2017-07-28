@@ -158,6 +158,10 @@
     <ClInclude Include="..\include\compv\base\parallel\compv_threaddisptbb.h" />
     <ClInclude Include="..\include\compv\base\time\compv_time.h" />
     <ClInclude Include="..\include\compv\base\time\compv_timer.h" />
+    <ClInclude Include="..\include\compv\base\utf8\checked.h" />
+    <ClInclude Include="..\include\compv\base\utf8\core.h" />
+    <ClInclude Include="..\include\compv\base\utf8\unchecked.h" />
+    <ClInclude Include="..\include\compv\base\utf8\utf8.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\android\compv_android_cpu-features.cxx" />

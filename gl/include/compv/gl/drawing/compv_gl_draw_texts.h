@@ -60,6 +60,7 @@ private:
 #endif /* HAVE_FREETYPE */
 
 private:
+#if HAVE_FREETYPE
 	GLint m_fboWidth;
 	GLint m_fboHeight;
 	GLuint m_uTextureAtlas;
@@ -67,7 +68,6 @@ private:
 	size_t m_fontSize;
 	CompVBufferPtr m_ptrFaceBuffer;
 	CompVFreeTypeCache m_freeTypeCache;
-#if HAVE_FREETYPE
 	FT_Face m_face;
 #endif /* HAVE_FREETYPE */
 };

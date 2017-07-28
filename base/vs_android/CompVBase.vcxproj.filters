@@ -124,6 +124,9 @@
     <Filter Include="source\math\asm\arm">
       <UniqueIdentifier>{cfcfaad7-ee32-4b00-9d19-266a371a1130}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\utf8">
+      <UniqueIdentifier>{dd86e817-c516-4e65-a287-06bf81b976fa}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\compv\base\compv_base.h">
@@ -494,6 +497,18 @@
     </ClInclude>
     <ClInclude Include="..\include\compv\base\compv_allocators.h">
       <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\utf8\checked.h">
+      <Filter>include\utf8</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\utf8\core.h">
+      <Filter>include\utf8</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\utf8\unchecked.h">
+      <Filter>include\utf8</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\utf8\utf8.h">
+      <Filter>include\utf8</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

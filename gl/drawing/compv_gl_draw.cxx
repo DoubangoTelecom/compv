@@ -11,6 +11,10 @@
 #include "compv/gl/compv_gl_info.h"
 #include "compv/gl/compv_gl_func.h"
 
+#if !defined(GL_INVALID_INDEX)
+#	define GL_INVALID_INDEX 0xFFFFFFFFu
+#endif
+
 COMPV_NAMESPACE_BEGIN()
 
 CompVGLDraw::CompVGLDraw(const std::string& strProgramVertexData, const std::string& strProgramFragmentData, bool bMVP COMPV_DEFAULT(false))

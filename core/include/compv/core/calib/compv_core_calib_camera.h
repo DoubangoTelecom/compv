@@ -36,6 +36,7 @@ struct CompVCalibCameraResult {
 	CompVCabLines lines_grouped;
 	CompVPointFloat32Vector points_intersections;
 	CompVMatPtr edges;
+	CompVMatPtr homography;
 public:
 	void reset() {
 		code = COMPV_CALIB_CAMERA_RESULT_NONE;
@@ -44,7 +45,9 @@ public:
 		lines_grouped.lines_cartesian.clear();
 		lines_grouped.lines_hough.clear();
 		points_intersections.clear();
-		edges = nullptr;
+	}
+	COMPV_INLINE bool isOK() const {
+		return code == COMPV_CALIB_CAMERA_RESULT_OK;
 	}
 };
 
@@ -61,6 +64,9 @@ public:
 
 	COMPV_INLINE CompVEdgeDetePtr edgeDetector() { return m_ptrCanny; }
 	COMPV_INLINE CompVHoughPtr houghTransform() { return m_ptrHough; }
+
+	COMPV_INLINE size_t patternWidth() const { return (m_nPatternCornersNumCol - 1) * m_nPatternBlockSizePixel; }
+	COMPV_INLINE size_t patternHeight() const { return (m_nPatternCornersNumRow - 1) * m_nPatternBlockSizePixel; }
 	
 	static COMPV_ERROR_CODE newObj(CompVCalibCameraPtrPtr calib);
 
@@ -68,6 +74,8 @@ private:
 	COMPV_ERROR_CODE subdivision(const size_t image_width, const size_t image_height, const CompVCabLines& lines, CompVCabLines& lines_hz, CompVCabLines& lines_vt);
 	COMPV_ERROR_CODE grouping(const size_t image_width, const size_t image_height, const CompVCabLines& lines_parallel, const compv_float32_t smallRhoFact, CompVLineFloat32Vector& lines_parallel_grouped);
 	COMPV_ERROR_CODE lineBestFit(const CompVLineFloat32Vector& points_cartesian, const CompVHoughLineVector& points_hough, CompVLineFloat32& line);
+	COMPV_ERROR_CODE buildPatternCorners();
+	COMPV_ERROR_CODE homography(CompVCalibCameraResult& result);
 
 private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
@@ -77,8 +85,10 @@ private:
 	size_t m_nPatternLinesTotal;
 	size_t m_nPatternLinesHz;
 	size_t m_nPatternLinesVt;
+	size_t m_nPatternBlockSizePixel;
 	CompVEdgeDetePtr m_ptrCanny;
 	CompVHoughPtr m_ptrHough;
+	CompVMatPtr m_ptrPatternCorners;
 	COMPV_VS_DISABLE_WARNINGS_END()
 };
 

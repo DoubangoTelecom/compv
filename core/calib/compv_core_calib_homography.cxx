@@ -78,8 +78,8 @@ COMPV_ERROR_CODE CompVHomography<T>::find(CompVMatPtrPtr H, const CompVMatPtr &s
 	const T* srcz_ = src->ptr<const T>(2);
 	const T* dstz_ = dst->ptr<const T>(2);
 	for (size_t i = 0; i < numPoints_; ++i) {
-		if (srcz_[i] != 1 || dstz_[i] != 1) {
-			COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_PARAMETER, "src and dst must be 2D homogeneous coords.");
+		if (srcz_[i] != dstz_[i]) {
+			COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_PARAMETER, "src and dst must be on the same plane.");
 		}
 	}
 
@@ -137,9 +137,7 @@ COMPV_ERROR_CODE CompVHomography<T>::find(CompVMatPtrPtr H, const CompVMatPtr &s
 	}
 
 	if (bestInliersCount_ == numPoints_) {
-#if defined(DEBUG_) || defined(DEBUG)
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "All %zu points are inliers", numPoints_);
-#endif
 		// Copy H
 		COMPV_CHECK_CODE_RETURN(computeH<T>(H, src, dst, true));
 		return COMPV_ERROR_CODE_S_OK;

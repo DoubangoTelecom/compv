@@ -31,6 +31,8 @@ DEALINGS IN THE SOFTWARE.
 #include "core.h"
 #include <stdexcept>
 
+#include "compv/base/compv_common.h"
+
 namespace utf8
 {
     // Base for the exceptions that may be thrown from the library
@@ -72,8 +74,12 @@ namespace utf8
     template <typename octet_iterator>
     octet_iterator append(uint32_t cp, octet_iterator result)
     {
-        if (!utf8::internal::is_code_point_valid(cp))
+		if (!utf8::internal::is_code_point_valid(cp))
+#if COMPV_OS_ANDROID
+			COMPV_ASSERT(false);
+#else
             throw invalid_code_point(cp);
+#endif
 
         if (cp < 0x80)                        // one octet
             *(result++) = static_cast<uint8_t>(cp);
@@ -107,7 +113,11 @@ namespace utf8
                         *out++ = *it;
                     break;
                 case internal::NOT_ENOUGH_ROOM:
+#if COMPV_OS_ANDROID
+					COMPV_ASSERT(false);
+#else
                     throw not_enough_room();
+#endif
                 case internal::INVALID_LEAD:
                     out = utf8::append (replacement, out);
                     ++start;
@@ -142,13 +152,25 @@ namespace utf8
             case internal::UTF8_OK :
                 break;
             case internal::NOT_ENOUGH_ROOM :
+#if COMPV_OS_ANDROID
+				COMPV_ASSERT(false);
+#else
                 throw not_enough_room();
+#endif
             case internal::INVALID_LEAD :
             case internal::INCOMPLETE_SEQUENCE :
             case internal::OVERLONG_SEQUENCE :
+#if COMPV_OS_ANDROID
+				COMPV_ASSERT(false);
+#else
                 throw invalid_utf8(*it);
+#endif
             case internal::INVALID_CODE_POINT :
+#if COMPV_OS_ANDROID
+				COMPV_ASSERT(false);
+#else
                 throw invalid_code_point(cp);
+#endif
         }
         return cp;
     }
@@ -164,13 +186,21 @@ namespace utf8
     {
         // can't do much if it == start
         if (it == start)
+#if COMPV_OS_ANDROID
+			COMPV_ASSERT(false);
+#else
             throw not_enough_room();
+#endif
 
         octet_iterator end = it;
         // Go back until we hit either a lead octet or start
         while (utf8::internal::is_trail(*(--it)))
             if (it == start)
+#if COMPV_OS_ANDROID
+				COMPV_ASSERT(false);
+#else
                 throw invalid_utf8(*it); // error - no lead byte in the sequence
+#endif
         return utf8::peek_next(it, end);
     }
 
@@ -181,7 +211,11 @@ namespace utf8
         octet_iterator end = it;
         while (utf8::internal::is_trail(*(--it)))
             if (it == pass_start)
+#if COMPV_OS_ANDROID
+				COMPV_ASSERT(false);
+#else
                 throw invalid_utf8(*it); // error - no lead byte in the sequence
+#endif
         octet_iterator temp = it;
         return utf8::next(temp, end);
     }
@@ -215,15 +249,27 @@ namespace utf8
                     if (utf8::internal::is_trail_surrogate(trail_surrogate))
                         cp = (cp << 10) + trail_surrogate + internal::SURROGATE_OFFSET;
                     else
+#if COMPV_OS_ANDROID
+						COMPV_ASSERT(false);
+#else
                         throw invalid_utf16(static_cast<uint16_t>(trail_surrogate));
+#endif
                 }
                 else
+#if COMPV_OS_ANDROID
+					COMPV_ASSERT(false);
+#else
                     throw invalid_utf16(static_cast<uint16_t>(cp));
+#endif
 
             }
             // Lone trail surrogate
             else if (utf8::internal::is_trail_surrogate(cp))
+#if COMPV_OS_ANDROID
+				COMPV_ASSERT(false);
+#else
                 throw invalid_utf16(static_cast<uint16_t>(cp));
+#endif
 
             result = utf8::append(cp, result);
         }
@@ -277,7 +323,11 @@ namespace utf8
                it(octet_it), range_start(range_start), range_end(range_end)
       {
           if (it < range_start || it > range_end)
+#if COMPV_OS_ANDROID
+			  COMPV_ASSERT(false);
+#else
               throw std::out_of_range("Invalid utf-8 iterator position");
+#endif
       }
       // the default "big three" are OK
       octet_iterator base () const { return it; }
@@ -289,7 +339,11 @@ namespace utf8
       bool operator == (const iterator& rhs) const
       {
           if (range_start != rhs.range_start || range_end != rhs.range_end)
+#if COMPV_OS_ANDROID
+			  COMPV_ASSERT(false);
+#else
               throw std::logic_error("Comparing utf-8 iterators defined with different ranges");
+#endif
           return (it == rhs.it);
       }
       bool operator != (const iterator& rhs) const
