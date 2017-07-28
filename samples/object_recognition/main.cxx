@@ -263,9 +263,9 @@ private:
 		COMPV_CHECK_EXP_RETURN(m_vecGoodMatches.size() < THRESHOLD_GOOD_MATCHES, COMPV_ERROR_CODE_E_INVALID_CALL, "No enough points");
 		
 		// Find homography
-		COMPV_CHECK_CODE_RETURN(CompVHomography<compv_float64_t>::find(&m_ptrHomography, m_ptrGoodMatchesTrain, m_ptrGoodMatchesQuery));
+		COMPV_CHECK_CODE_RETURN(CompVHomography<compv_float64_t>::find(m_ptrGoodMatchesTrain, m_ptrGoodMatchesQuery, &m_ptrHomography));
 		// Perspecive transform using homography matrix
-		COMPV_CHECK_CODE_RETURN(CompVMathTransform<compv_float64_t>::perspective2D(&m_ptrRectMatched, m_ptrRectTrain, m_ptrHomography));
+		COMPV_CHECK_CODE_RETURN(CompVMathTransform<compv_float64_t>::perspective2D(m_ptrRectTrain, m_ptrHomography, &m_ptrRectMatched));
 		
 		return COMPV_ERROR_CODE_S_OK;
 	}

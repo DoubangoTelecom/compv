@@ -523,6 +523,9 @@ struct CompVDrawingOptions {
 	std::string fontFullPath; // Full path to the font (e.g. "C:/Windows/Fonts/arial.ttf") - on Android or iOS, to retrieve the full path (from the assets/bundle), use 'COMPV_PATH_FROM_NAME' (a.k.a 'CompVFileUtils::getFullPathFromFileName')
 	bool fontUtf8 = false; // Whether to consider the string passed to drawTexts() as utf8 or not
 public:
+	COMPV_INLINE void setColor(const compv_float32x4_t& c) {
+		color[0] = c[0], color[1] = c[1], color[2] = c[2], color[3] = c[3];
+	}
 	static CompVDrawingOptions clone(const CompVDrawingOptions* options) {
 		return options ? *options : CompVDrawingOptions();
 	}

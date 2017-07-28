@@ -34,25 +34,25 @@ COMPV_NAMESPACE_BEGIN()
 // Operation: dst = mul(M, src)
 // For Homography (M = H): src must be homogeneous coordinates
 template<class T>
-COMPV_ERROR_CODE CompVMathTransform<T>::perspective2D(CompVMatPtrPtr dst, const CompVMatPtr &src, const CompVMatPtr &M)
+COMPV_ERROR_CODE CompVMathTransform<T>::perspective2D(const CompVMatPtr &src, const CompVMatPtr &M, CompVMatPtrPtr dst)
 {
 	COMPV_CHECK_EXP_RETURN(!src || !M || !dst || src->isEmpty() || M->isEmpty() || src->rows() != 3, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
 	// TODO(dmi): #4 points too common
 
 	COMPV_CHECK_CODE_RETURN(CompVMatrix::mulAB(M, src, dst));
-	COMPV_CHECK_CODE_RETURN(CompVMathTransform<T>::homogeneousToCartesian2D(dst, *dst));
+	COMPV_CHECK_CODE_RETURN(CompVMathTransform<T>::homogeneousToCartesian2D(*dst, dst));
 
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-// Change from 2D homogeneous coordinates (X, Y, Z) to cartesian 2D coordinates (x, y)
+// Change from 2D homogeneous coordinates (X, Y, Z) to cartesian 2D coordinates (x, y) = (X/Z, Y/Z)
 template<class T>
-COMPV_ERROR_CODE CompVMathTransform<T>::homogeneousToCartesian2D(CompVMatPtrPtr dst, const CompVMatPtr &src)
+COMPV_ERROR_CODE CompVMathTransform<T>::homogeneousToCartesian2D(const CompVMatPtr &src, CompVMatPtrPtr dst)
 {
 	COMPV_CHECK_EXP_RETURN(!src || !dst || src->rows() != 3 || !src->cols(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	
-	CompVMatPtr dst_ = (src == *dst) ? (CompVMatPtr)NULL: *dst;
+	CompVMatPtr dst_ = (src == *dst) ? nullptr: *dst;
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<T>(&dst_, 2, src->cols()));
 	const T* srcX = src->ptr<const T>(0);
 	const T* srcY = src->ptr<const T>(1);

@@ -17,7 +17,7 @@ template<class T>
 class COMPV_CORE_API CompVHomography
 {
 public:
-	static COMPV_ERROR_CODE find(CompVMatPtrPtr H, const CompVMatPtr &src, const CompVMatPtr &dst, COMPV_MODELEST_TYPE model = COMPV_MODELEST_TYPE_RANSAC);
+	static COMPV_ERROR_CODE find(const CompVMatPtr &src, const CompVMatPtr &dst, CompVMatPtrPtr H, COMPV_MODELEST_TYPE model = COMPV_MODELEST_TYPE_RANSAC);
 };
 
 COMPV_NAMESPACE_END()

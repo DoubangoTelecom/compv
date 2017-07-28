@@ -17,8 +17,8 @@ template<class T>
 class COMPV_BASE_API CompVMathTransform
 {
 public:
-	static COMPV_ERROR_CODE perspective2D(CompVMatPtrPtr dst, const CompVMatPtr &src, const CompVMatPtr &M);
-	static COMPV_ERROR_CODE homogeneousToCartesian2D(CompVMatPtrPtr dst, const CompVMatPtr &src);
+	static COMPV_ERROR_CODE perspective2D(const CompVMatPtr &src, const CompVMatPtr &M, CompVMatPtrPtr dst);
+	static COMPV_ERROR_CODE homogeneousToCartesian2D(const CompVMatPtr &src, CompVMatPtrPtr dst);
 };
 
 COMPV_NAMESPACE_END()

@@ -57,7 +57,7 @@ static COMPV_ERROR_CODE countInliers(CompVTempArraysCountInliers& tempArrays, si
 // H: (3 x 3) array. Will be created if NULL.
 // src and dst must have the same number of columns.
 template<class T>
-COMPV_ERROR_CODE CompVHomography<T>::find(CompVMatPtrPtr H, const CompVMatPtr &src, const CompVMatPtr &dst, COMPV_MODELEST_TYPE model COMPV_DEFAULT(COMPV_MODELEST_TYPE_RANSAC))
+COMPV_ERROR_CODE CompVHomography<T>::find(const CompVMatPtr &src, const CompVMatPtr &dst, CompVMatPtrPtr H, COMPV_MODELEST_TYPE model COMPV_DEFAULT(COMPV_MODELEST_TYPE_RANSAC))
 {
 	// Homography requires at least #4 points
 	// src and dst must be 2-rows array. 1st row = X, 2nd-row = Y

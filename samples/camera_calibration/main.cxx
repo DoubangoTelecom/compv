@@ -14,6 +14,12 @@ using namespace compv;
 
 #define TAG_SAMPLE			"Camera calibration"
 
+static const compv_float32x4_t __color_black = { 0.f, 0.f, 0.f, 1.f };
+static const compv_float32x4_t __color_red = { 1.f, 0.f, 0.f, 1.f };
+static const compv_float32x4_t __color_green = { 0.f, 1.f, 0.f, 1.f };
+static const compv_float32x4_t __color_bleu = { 0.f, 0.f, 1.f, 1.f };
+static const compv_float32x4_t __color_yellow = { 1.f, 1.f, 0.f, 1.f };
+
 /* IWindowSizeChanged */
 class IWindowSizeChanged {
 public:
@@ -127,21 +133,26 @@ public:
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceEdges->drawImage(m_CalibResult.edges));
 
 			/* Raw Lines */
+			m_DrawingOptions.colorType = COMPV_DRAWING_COLOR_TYPE_RANDOM;
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLinesRaw->activate());
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLinesRaw->drawImage(m_CalibResult.edges));
-			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLinesRaw->renderer()->canvas()->drawLines(m_CalibResult.lines_raw.lines_cartesian/*, &m_DrawingOptionsRawLines*/));
+			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLinesRaw->renderer()->canvas()->drawLines(m_CalibResult.lines_raw.lines_cartesian, &m_DrawingOptions));
 
 			/* Grouped lines */
+			m_DrawingOptions.colorType = COMPV_DRAWING_COLOR_TYPE_STATIC;
+			m_DrawingOptions.setColor(__color_yellow);
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->activate());
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->drawImage(m_CalibResult.edges));
-			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->renderer()->canvas()->drawLines(m_CalibResult.lines_grouped.lines_cartesian, &m_DrawingOptionsGroupedLines));
-			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->renderer()->canvas()->drawPoints(m_CalibResult.points_intersections, &m_DrawingOptionsRawLines));
+			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->renderer()->canvas()->drawLines(m_CalibResult.lines_grouped.lines_cartesian, &m_DrawingOptions));
+			m_DrawingOptions.setColor(__color_red);
+			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->renderer()->canvas()->drawPoints(m_CalibResult.points_intersections, &m_DrawingOptions));
 			if (!m_CalibResult.points_intersections.empty() && m_ptrSurfaceLineGrouped->renderer()->canvas()->haveDrawTexts()) {
 				CompVStringVector labels(m_CalibResult.points_intersections.size());
 				for (size_t index = 0; index < m_CalibResult.points_intersections.size(); ++index) {
 					labels[index] = CompVBase::to_string(index);
 				}
-				COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->renderer()->canvas()->drawTexts(labels, m_CalibResult.points_intersections, &m_DrawingOptionsGroupedLines));
+				m_DrawingOptions.setColor(__color_yellow);
+				COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->renderer()->canvas()->drawTexts(labels, m_CalibResult.points_intersections, &m_DrawingOptions));
 			}
 			if (m_CalibResult.isOK() && m_CalibResult.homography) {
 				CompVMatPtr rectPattern, rectHomograyApplied;
@@ -154,7 +165,7 @@ public:
 				x[0] = 0, x[1] = static_cast<compv_float64_t>(m_ptrCalib->patternWidth()), x[2] = static_cast<compv_float64_t>(m_ptrCalib->patternWidth()), x[3] = 0.0;
 				y[0] = 0, y[1] = 0, y[2] = static_cast<compv_float64_t>(m_ptrCalib->patternHeight()), y[3] = static_cast<compv_float64_t>(m_ptrCalib->patternHeight());
 				// Perspecive transform using homography matrix
-				COMPV_CHECK_CODE_BAIL(err = CompVMathTransform<compv_float64_t>::perspective2D(&rectHomograyApplied, rectPattern, m_CalibResult.homography));
+				COMPV_CHECK_CODE_BAIL(err = CompVMathTransform<compv_float64_t>::perspective2D(rectPattern, m_CalibResult.homography, &rectHomograyApplied));
 				// Draw the transformed rectangle
 				x = rectHomograyApplied->ptr<compv_float64_t>(0);
 				y = rectHomograyApplied->ptr<compv_float64_t>(1);
@@ -163,7 +174,8 @@ public:
 				rectLines[1].a.x = static_cast<compv_float32_t>(x[1]), rectLines[1].a.y = static_cast<compv_float32_t>(y[1]), rectLines[1].b.x = static_cast<compv_float32_t>(x[2]), rectLines[1].b.y = static_cast<compv_float32_t>(y[2]);
 				rectLines[2].a.x = static_cast<compv_float32_t>(x[2]), rectLines[2].a.y = static_cast<compv_float32_t>(y[2]), rectLines[2].b.x = static_cast<compv_float32_t>(x[3]), rectLines[2].b.y = static_cast<compv_float32_t>(y[3]);
 				rectLines[3].a.x = static_cast<compv_float32_t>(x[3]), rectLines[3].a.y = static_cast<compv_float32_t>(y[3]), rectLines[3].b.x = static_cast<compv_float32_t>(x[0]), rectLines[3].b.y = static_cast<compv_float32_t>(y[0]);
-				COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->renderer()->canvas()->drawLines(rectLines, &m_DrawingOptionsHomography));
+				m_DrawingOptions.setColor(__color_bleu);
+				COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->renderer()->canvas()->drawLines(rectLines, &m_DrawingOptions));
 			}
 
 			/* Grouped and ordered lines */
@@ -210,26 +222,7 @@ public:
 		COMPV_CHECK_CODE_RETURN(CompVCalibCamera::newObj(&listener_->m_ptrCalib));
 
 		// Drawing options
-		listener_->m_DrawingOptionsRawLines.colorType = COMPV_DRAWING_COLOR_TYPE_STATIC;
-		listener_->m_DrawingOptionsRawLines.color[0] = 1.f;
-		listener_->m_DrawingOptionsRawLines.color[1] = 0.f;
-		listener_->m_DrawingOptionsRawLines.color[2] = 0.f;
-		listener_->m_DrawingOptionsRawLines.color[3] = 1.f;
-		listener_->m_DrawingOptionsRawLines.lineWidth = 1.5f;
-
-		listener_->m_DrawingOptionsGroupedLines.colorType = COMPV_DRAWING_COLOR_TYPE_STATIC;
-		listener_->m_DrawingOptionsGroupedLines.color[0] = 1.f;
-		listener_->m_DrawingOptionsGroupedLines.color[1] = 1.f;
-		listener_->m_DrawingOptionsGroupedLines.color[2] = 0.f;
-		listener_->m_DrawingOptionsGroupedLines.color[3] = 1.f;
-		listener_->m_DrawingOptionsGroupedLines.lineWidth = 1.5f;
-
-		listener_->m_DrawingOptionsHomography.colorType = COMPV_DRAWING_COLOR_TYPE_STATIC;
-		listener_->m_DrawingOptionsHomography.color[0] = 0.f;
-		listener_->m_DrawingOptionsHomography.color[1] = 0.f;
-		listener_->m_DrawingOptionsHomography.color[2] = 1.f;
-		listener_->m_DrawingOptionsHomography.color[3] = 1.f;
-		listener_->m_DrawingOptionsHomography.lineWidth = 1.5f;
+		listener_->m_DrawingOptions.lineWidth = 1.f;
 
 		// Multi-layer surface
 		COMPV_CHECK_CODE_RETURN(listener_->m_ptrWindow->addMultiLayerSurface(&listener_->m_ptrMultiSurface));
@@ -300,9 +293,7 @@ private:
 	CompVWindowPtr m_ptrWindow;
 	CompVCalibCameraPtr m_ptrCalib;
 	CompVCalibCameraResult m_CalibResult;
-	CompVDrawingOptions m_DrawingOptionsRawLines;
-	CompVDrawingOptions m_DrawingOptionsGroupedLines;
-	CompVDrawingOptions m_DrawingOptionsHomography;
+	CompVDrawingOptions m_DrawingOptions;
 	CompVMyWindowListenerPtr m_ptrWindowListener;
 	CompVMultiSurfaceLayerPtr m_ptrMultiSurface;
 	CompVSurfacePtr m_ptrSurfaceOriginal;

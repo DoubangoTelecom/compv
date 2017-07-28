@@ -564,7 +564,7 @@ COMPV_ERROR_CODE CompVCalibCamera::homography(CompVCalibCameraResult& result)
 	}
 
 	// Find homography
-	COMPV_CHECK_CODE_RETURN(CompVHomography<compv_float64_t>::find(&result.homography, m_ptrPatternCorners, query));
+	COMPV_CHECK_CODE_RETURN(CompVHomography<compv_float64_t>::find(m_ptrPatternCorners, query, &result.homography));
 
 	return COMPV_ERROR_CODE_S_OK;
 }
