@@ -13,11 +13,19 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+struct CompVHomographyResult {
+	size_t inlinersCount;
+public:
+	void reset() {
+		inlinersCount = 0;
+	}
+};
+
 template<class T>
 class COMPV_CORE_API CompVHomography
 {
 public:
-	static COMPV_ERROR_CODE find(const CompVMatPtr &src, const CompVMatPtr &dst, CompVMatPtrPtr H, COMPV_MODELEST_TYPE model = COMPV_MODELEST_TYPE_RANSAC);
+	static COMPV_ERROR_CODE find(const CompVMatPtr &src, const CompVMatPtr &dst, CompVMatPtrPtr H, CompVHomographyResult* result = nullptr, COMPV_MODELEST_TYPE model = COMPV_MODELEST_TYPE_RANSAC);
 };
 
 COMPV_NAMESPACE_END()

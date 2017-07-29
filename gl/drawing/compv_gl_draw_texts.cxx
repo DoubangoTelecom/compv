@@ -429,7 +429,7 @@ COMPV_ERROR_CODE CompVGLDrawTexts::freeTypeFillAtlas(const bool bUtf8, const Com
 
 			// Do not write partial chars
 			if ((xi + cache_char->width) >= fboWidth || (yi + cache_char->height) >= fboHeight) {
-				COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASS_NAME, "Trying to write outside the screen domain (partial char): skip");
+				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASS_NAME, "Trying to write outside the screen domain (partial char): skip");
 				break; // end the string
 			}
 

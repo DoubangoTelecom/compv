@@ -9,6 +9,7 @@
 
 #include "compv/core/compv_core_config.h"
 #include "compv/core/compv_core_common.h"
+#include "compv/core/calib/compv_core_calib_homography.h"
 #include "compv/base/compv_mat.h"
 #include "compv/base/compv_allocators.h"
 #include "compv/base/compv_features.h"
@@ -27,6 +28,7 @@ enum COMPV_CALIB_CAMERA_RESULT_CODE {
 	COMPV_CALIB_CAMERA_RESULT_OK,
 	COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_POINTS,
 	COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_INTERSECTIONS,
+	COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_INLIERS,
 	COMPV_CALIB_CAMERA_RESULT_TOO_MUCH_LINES,
 };
 
@@ -75,7 +77,7 @@ private:
 	COMPV_ERROR_CODE grouping(const size_t image_width, const size_t image_height, const CompVCabLines& lines_parallel, const compv_float32_t smallRhoFact, CompVLineFloat32Vector& lines_parallel_grouped);
 	COMPV_ERROR_CODE lineBestFit(const CompVLineFloat32Vector& points_cartesian, const CompVHoughLineVector& points_hough, CompVLineFloat32& line);
 	COMPV_ERROR_CODE buildPatternCorners();
-	COMPV_ERROR_CODE homography(CompVCalibCameraResult& result);
+	COMPV_ERROR_CODE homography(CompVCalibCameraResult& result_calib, CompVHomographyResult& result_homography);
 
 private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)

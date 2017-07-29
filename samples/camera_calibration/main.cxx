@@ -100,7 +100,7 @@ public:
 		COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 		if (CompVDrawing::isLoopRunning()) {
 			CompVMatPtr imageGray, imageOrig;
-#if 0
+#if 1
 			COMPV_CHECK_CODE_RETURN(CompVImage::convertGrayscale(image, &imageGray));
 			imageOrig = image;
 #else
@@ -320,8 +320,7 @@ compv_main()
 		CompVDebugMgr::setLevel(COMPV_DEBUG_LEVEL_INFO);
 
 		// Init the modules
-		COMPV_DEBUG_INFO_CODE_FOR_TESTING("Enable multi-threading");
-		COMPV_CHECK_CODE_BAIL(err = CompVInit(1));
+		COMPV_CHECK_CODE_BAIL(err = CompVInit());
 
 		// Create window
 		COMPV_CHECK_CODE_BAIL(err = CompVWindow::newObj(&m_ptrWindow, WINDOW_WIDTH, WINDOW_HEIGHT, TAG_SAMPLE));

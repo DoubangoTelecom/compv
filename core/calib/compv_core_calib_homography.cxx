@@ -57,7 +57,7 @@ static COMPV_ERROR_CODE countInliers(CompVTempArraysCountInliers& tempArrays, si
 // H: (3 x 3) array. Will be created if NULL.
 // src and dst must have the same number of columns.
 template<class T>
-COMPV_ERROR_CODE CompVHomography<T>::find(const CompVMatPtr &src, const CompVMatPtr &dst, CompVMatPtrPtr H, COMPV_MODELEST_TYPE model COMPV_DEFAULT(COMPV_MODELEST_TYPE_RANSAC))
+COMPV_ERROR_CODE CompVHomography<T>::find(const CompVMatPtr &src, const CompVMatPtr &dst, CompVMatPtrPtr H, CompVHomographyResult* result COMPV_DEFAULT(nullptr), COMPV_MODELEST_TYPE model COMPV_DEFAULT(COMPV_MODELEST_TYPE_RANSAC))
 {
 	// Homography requires at least #4 points
 	// src and dst must be 2-rows array. 1st row = X, 2nd-row = Y
@@ -74,7 +74,7 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVMatPtr &src, const CompVMat
 	}
 
 	// Make sure coordinates are homogeneous 2D
-	size_t numPoints_ = src->cols();
+	const size_t numPoints_ = src->cols();
 	const T* srcz_ = src->ptr<const T>(2);
 	const T* dstz_ = dst->ptr<const T>(2);
 	for (size_t i = 0; i < numPoints_; ++i) {
@@ -83,9 +83,17 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVMatPtr &src, const CompVMat
 		}
 	}
 
+	// Reset the result
+	if (result) {
+		result->reset();
+	}
+
 	// No estimation model selected -> compute homography using all points (inliers + outliers)
 	if (model == COMPV_MODELEST_TYPE_NONE) {
 		COMPV_CHECK_CODE_RETURN(computeH<T>(H, src, dst, true));
+		if (result) {
+			result->inlinersCount = numPoints_;
+		}
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
@@ -134,6 +142,10 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVMatPtr &src, const CompVMat
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Not enought inliers(< 4). InlinersCount = %zu, NumPoints = %zu, threadsCount = %zu", bestInliersCount_, numPoints_, threadsCount_);
 		COMPV_CHECK_CODE_RETURN(computeH<T>(H, src, dst, true));
 		return COMPV_ERROR_CODE_S_OK;
+	}
+
+	if (result) {
+		result->inlinersCount = bestInliersCount_;
 	}
 
 	if (bestInliersCount_ == numPoints_) {
@@ -188,14 +200,17 @@ static COMPV_ERROR_CODE ransac(CompVMatPtrPtr inliers, T& variance, const CompVM
 
 	const size_t k_ = src->cols(); // total number of elements (must be > 4)
 	const T skf_ = static_cast<T>(1) / static_cast<T>(k_);
+	static const T eps_ = std::numeric_limits<T>::epsilon();
 	static const T p_ = static_cast<T>(0.995); // probability for inlier (TODO(dmi): try with 0.95f which is more realistic)
 	static const T log_1_minus_p_ = std::log(static_cast<T>(1.) - p_);
 	static const size_t maxTries = 2000;
+	static const size_t zeroTries = 20;
 	const size_t d_ = static_cast<size_t>(p_ * k_); // minimum number of inliers to stop the tries
 	static const size_t subset_ = 4; // subset size: 2 for line, 3 for plane, 4 for homography, 8 for essential / essential matrix
 	static const T subsetf_ = static_cast<T>(subset_);
-	T w_; // number of inliers in data / number of points in data
-	size_t n_, nnew_; // maximum number of tries
+
+	T num_, denum_, w_, kf_ = static_cast<T>(k_);
+	size_t n_; // maximum number of tries
 	size_t t_; // number of tries
 
 	size_t inliersCount_, bestInlinersCount_ = 0;
@@ -303,12 +318,20 @@ static COMPV_ERROR_CODE ransac(CompVMatPtrPtr inliers, T& variance, const CompVM
 			CompVMem::copy((*inliers)->ptr<size_t>(0), inliersubset_->ptr(0), (inliersCount_ * sizeof(size_t)));
 		}
 
-		// update outliers ratio
-		w_ = inliersCount_ *skf_;
-
-		// update total tries
-		nnew_ = (static_cast<size_t>(log_1_minus_p_ / std::log(static_cast<T>(1.) - std::pow(w_, subsetf_))) / threadsCount) + 1;
-		n_ = COMPV_MATH_MIN(maxTries, nnew_);
+		w_ = (kf_ - inliersCount_) * skf_;
+		num_ = std::max(1 - p_, eps_);
+		denum_ = 1 - std::pow(1 - w_, subsetf_);
+		if (denum_ < eps_) {
+			// Happens when number of inliners close to number of points
+			n_ = 0;
+		}
+		else {
+			num_ = std::log(num_);
+			denum_ = std::log(denum_);
+			if (denum_ < 0 && num_ > (n_*denum_)) {
+				n_ = COMPV_MATH_ROUNDFU_2_NEAREST_INT(num_ / denum_, size_t);
+			}
+		}
 
 		++t_;
 	}
@@ -485,7 +508,6 @@ static COMPV_ERROR_CODE countInliers(CompVTempArraysCountInliers& tempArrays, si
 	// Apply H* to the destination and compute mse: a = H*b, mse(a, H*b)
 	COMPV_CHECK_CODE_RETURN(CompVMatrix::invA3x3(H, &tempArrays.Hinv_, pseudoInverseIfSingular, &isSingular));
 	if (isSingular) {
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Singlular matrix");
 		inliersCount = 0;
 		return COMPV_ERROR_CODE_S_OK;
 	}

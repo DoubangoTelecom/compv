@@ -5,10 +5,10 @@
 * WebSite: http://compv.org
 */
 #include "compv/core/calib/compv_core_calib_camera.h"
-#include "compv/core/calib/compv_core_calib_homography.h"
 #include "compv/base/image/compv_image.h"
 #include "compv/base/math/compv_math_utils.h"
 #include "compv/base/math/compv_math_gauss.h"
+#include "compv/base/time/compv_time.h"
 
 #include <iterator> /* std::back_inserter */
 
@@ -136,12 +136,12 @@ static int get_line_segments_intersection(T p0_x, T p0_y, T p1_x, T p1_y,
 #endif
 }
 
-COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibCameraResult& result)
+COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibCameraResult& result_calib)
 {
 	COMPV_CHECK_EXP_RETURN(!image || image->elmtInBytes() != sizeof(uint8_t) || image->planeCount() != 1, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Input image is null or not in grayscale format");
 
 	// Reset the previous result
-	result.reset();
+	result_calib.reset();
 
 	const size_t image_width = image->cols();
 	const size_t image_height = image->rows();
@@ -154,7 +154,7 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 
 
 	/* Canny edge detection */
-	COMPV_CHECK_CODE_RETURN(m_ptrCanny->process(image, &result.edges));
+	COMPV_CHECK_CODE_RETURN(m_ptrCanny->process(image, &result_calib.edges));
 
 	/* Hough lines */
 	// For SHT, set the threshold before processing. But for KHT, we need the global scale (GS) which is defined only *after* processing
@@ -165,34 +165,34 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 	}
 
 	// Process
-	COMPV_CHECK_CODE_RETURN(m_ptrHough->process(result.edges, result.lines_raw.lines_hough));
+	COMPV_CHECK_CODE_RETURN(m_ptrHough->process(result_calib.edges, result_calib.lines_raw.lines_hough));
 
 	/* Remove weak lines using global scale (GS) */
 	if (m_ptrHough->id() == COMPV_HOUGHKHT_ID) {
 		compv_float64_t gs;
 		COMPV_CHECK_CODE_RETURN(m_ptrHough->getFloat64(COMPV_HOUGHKHT_GET_FLT64_GS, &gs));
 		const size_t min_strength = static_cast<size_t>(gs * HOUGH_KHT_THRESHOLD_FACT);
-		auto fncShortLines = std::remove_if(result.lines_raw.lines_hough.begin(), result.lines_raw.lines_hough.end(), [&](const CompVHoughLine& line) {
+		auto fncShortLines = std::remove_if(result_calib.lines_raw.lines_hough.begin(), result_calib.lines_raw.lines_hough.end(), [&](const CompVHoughLine& line) {
 			return line.strength < min_strength;
 		});
-		result.lines_raw.lines_hough.erase(fncShortLines, result.lines_raw.lines_hough.end());
+		result_calib.lines_raw.lines_hough.erase(fncShortLines, result_calib.lines_raw.lines_hough.end());
 	}
 
 	/* Return if no enough points */
-	if (result.lines_raw.lines_hough.size() < m_nPatternLinesTotal) {
-		result.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_POINTS;
+	if (result_calib.lines_raw.lines_hough.size() < m_nPatternLinesTotal) {
+		result_calib.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_POINTS;
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
 	/* Convert from polar to cartesian coordinates */
-	COMPV_CHECK_CODE_RETURN(m_ptrHough->toCartesian(image_width, image_height, result.lines_raw.lines_hough, result.lines_raw.lines_cartesian));
+	COMPV_CHECK_CODE_RETURN(m_ptrHough->toCartesian(image_width, image_height, result_calib.lines_raw.lines_hough, result_calib.lines_raw.lines_cartesian));
 
 	/* Lines subdivision */
 	CompVCabLines lines_hz, lines_vt;
-	COMPV_CHECK_CODE_RETURN(subdivision(image_width, image_height, result.lines_raw, lines_hz, lines_vt));
+	COMPV_CHECK_CODE_RETURN(subdivision(image_width, image_height, result_calib.lines_raw, lines_hz, lines_vt));
 	if (lines_hz.lines_cartesian.size() < m_nPatternLinesHz || lines_vt.lines_cartesian.size() < m_nPatternLinesVt) {
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "After subdivision we got no enough hz or vt lines");
-		result.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_POINTS;
+		result_calib.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_POINTS;
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
@@ -250,7 +250,7 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 		}
 		else {
 			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Vertical line doesn't intersect with x-axis. Stop processing");
-			result.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_INTERSECTIONS;
+			result_calib.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_INTERSECTIONS;
 			return COMPV_ERROR_CODE_S_OK;
 		}
 	}
@@ -264,8 +264,8 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 
 	/* Push grouped lines */
 	lines_vt_grouped.reserve(lines_hz_grouped.size() + lines_vt_grouped.size());
-	result.lines_grouped.lines_cartesian.assign(lines_hz_grouped.begin(), lines_hz_grouped.end());
-	result.lines_grouped.lines_cartesian.insert(result.lines_grouped.lines_cartesian.end(), lines_vt_grouped.begin(), lines_vt_grouped.end());
+	result_calib.lines_grouped.lines_cartesian.assign(lines_hz_grouped.begin(), lines_hz_grouped.end());
+	result_calib.lines_grouped.lines_cartesian.insert(result_calib.lines_grouped.lines_cartesian.end(), lines_vt_grouped.begin(), lines_vt_grouped.end());
 
 	/* Compute intersections */
 	for (CompVLineFloat32Vector::const_iterator i = lines_hz_grouped.begin(); i < lines_hz_grouped.end(); ++i) {
@@ -274,25 +274,35 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 				j->a.x, j->a.y, j->b.x, j->b.y, &intersect_x, &intersect_y);
 			if (!intersect) {
 				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No intersection between the lines. Stop processing");
-				result.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_INTERSECTIONS;
+				result_calib.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_INTERSECTIONS;
 				return COMPV_ERROR_CODE_S_OK;
 			}
 			if (intersect_x < 0.f || intersect_y < 0.f || intersect_x >= image_widthF || intersect_y >= image_heightF) {
 				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Intersection outside the image domain. Stop processing");
-				result.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_INTERSECTIONS;
+				result_calib.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_INTERSECTIONS;
 				return COMPV_ERROR_CODE_S_OK;
 			}
-			result.points_intersections.push_back(CompVPointFloat32(intersect_x, intersect_y, intersect_z)); // z is fake and contain distance to origine (to avoid computing distance several times)
+			result_calib.points_intersections.push_back(CompVPointFloat32(intersect_x, intersect_y, intersect_z)); // z is fake and contain distance to origine (to avoid computing distance several times)
 		}
 	}
 
 	/* Compute homography */
-	COMPV_CHECK_CODE_RETURN(homography(result));
+	uint64_t timeStart = CompVTime::nowMillis();
+	CompVHomographyResult result_homography;
+	COMPV_CHECK_CODE_RETURN(homography(result_calib, result_homography));
+	uint64_t timeEnd = CompVTime::nowMillis();
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Homography Elapsed time = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
+
+	if (result_homography.inlinersCount < (m_nPatternCornersTotal >> 1)) {
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough inliners after homography computation (%zu / %zu)", result_homography.inlinersCount, m_nPatternCornersTotal);
+		result_calib.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_INLIERS;
+		return COMPV_ERROR_CODE_S_OK;
+	}
 
 	//static size_t count = 0;
 	//COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "\n\nCOOOOOOL %zu\n\n", ++count);
 
-	result.code = COMPV_CALIB_CAMERA_RESULT_OK;
+	result_calib.code = COMPV_CALIB_CAMERA_RESULT_OK;
 
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -550,9 +560,9 @@ COMPV_ERROR_CODE CompVCalibCamera::buildPatternCorners()
 }
 
 // Compute homography
-COMPV_ERROR_CODE CompVCalibCamera::homography(CompVCalibCameraResult& result)
+COMPV_ERROR_CODE CompVCalibCamera::homography(CompVCalibCameraResult& result_calib, CompVHomographyResult& result_homography)
 {
-	COMPV_CHECK_EXP_RETURN(result.points_intersections.size() != m_nPatternCornersTotal, COMPV_ERROR_CODE_E_INVALID_CALL, "Invalid number of corners");
+	COMPV_CHECK_EXP_RETURN(result_calib.points_intersections.size() != m_nPatternCornersTotal, COMPV_ERROR_CODE_E_INVALID_CALL, "Invalid number of corners");
 
 	// Build pattern's corners
 	COMPV_CHECK_CODE_RETURN(buildPatternCorners());
@@ -564,13 +574,13 @@ COMPV_ERROR_CODE CompVCalibCamera::homography(CompVCalibCameraResult& result)
 	compv_float64_t* queryY = query->ptr<compv_float64_t>(1);
 	COMPV_CHECK_CODE_RETURN(query->one_row<compv_float64_t>(2)); // homogeneous coord. with Z = 1
 	size_t index = 0;
-	for (CompVPointFloat32Vector::const_iterator i = result.points_intersections.begin(); i < result.points_intersections.end(); ++i, ++index) {
-		//queryX[index] = static_cast<compv_float64_t>(i->x);
-		//queryY[index] = static_cast<compv_float64_t>(i->y);
+	for (CompVPointFloat32Vector::const_iterator i = result_calib.points_intersections.begin(); i < result_calib.points_intersections.end(); ++i, ++index) {
+		queryX[index] = static_cast<compv_float64_t>(i->x);
+		queryY[index] = static_cast<compv_float64_t>(i->y);
 	}
 
 	// Find homography
-	COMPV_CHECK_CODE_RETURN(CompVHomography<compv_float64_t>::find(m_ptrPatternCorners, query, &result.homography));
+	COMPV_CHECK_CODE_RETURN(CompVHomography<compv_float64_t>::find(m_ptrPatternCorners, query, &result_calib.homography, &result_homography));
 
 	return COMPV_ERROR_CODE_S_OK;
 }

@@ -121,8 +121,17 @@ public:
 				line1.a.x = static_cast<compv_float32_t>(x[1] + xoffset), line1.a.y = static_cast<compv_float32_t>(y[1]), line1.b.x = static_cast<compv_float32_t>(x[2] + xoffset), line1.b.y = static_cast<compv_float32_t>(y[2]);
 				line2.a.x = static_cast<compv_float32_t>(x[2] + xoffset), line2.a.y = static_cast<compv_float32_t>(y[2]), line2.b.x = static_cast<compv_float32_t>(x[3] + xoffset), line2.b.y = static_cast<compv_float32_t>(y[3]);
 				line3.a.x = static_cast<compv_float32_t>(x[3] + xoffset), line3.a.y = static_cast<compv_float32_t>(y[3]), line3.b.x = static_cast<compv_float32_t>(x[0] + xoffset), line3.b.y = static_cast<compv_float32_t>(y[0]);
-				COMPV_CHECK_CODE_BAIL(err = m_ptrMatchingSurfaceLayer->surface()->canvas()->drawLines(lines, &m_DrawingOptionsRectMatched));
-				COMPV_DEBUG_INFO_EX(TAG_SAMPLE, "Object Recognized (%zu)!", num++);
+				COMPV_CHECK_CODE_BAIL(err = m_ptrMatchingSurfaceLayer->surface()->canvas()->drawLines(lines, &m_DrawingOptions));
+				if (m_ptrMatchingSurfaceLayer->surface()->canvas()->haveDrawTexts()) {
+					CompVStringVector text(1);
+					CompVPointFloat32Vector pos(1);
+					text[0] = std::string("Object Recognized(") + CompVBase::to_string(num++) + std::string(")!");
+					pos[0] = line0.a;
+					COMPV_CHECK_CODE_BAIL(err = m_ptrMatchingSurfaceLayer->surface()->canvas()->drawTexts(text, pos, &m_DrawingOptions));
+				}
+				else {
+					COMPV_DEBUG_INFO_EX(TAG_SAMPLE, "Object Recognized (%zu)!", num++);
+				}
 			}
 
 			COMPV_CHECK_CODE_BAIL(err = m_ptrMatchingSurfaceLayer->blit());
@@ -165,12 +174,13 @@ public:
 
 		// Set drawing options
 		listener_->m_DrawingOptionsMatches.colorType = COMPV_DRAWING_COLOR_TYPE_RANDOM;
-		listener_->m_DrawingOptionsRectMatched.colorType = COMPV_DRAWING_COLOR_TYPE_STATIC;
-		listener_->m_DrawingOptionsRectMatched.color[0] = 1.f;
-		listener_->m_DrawingOptionsRectMatched.color[1] = 1.f;
-		listener_->m_DrawingOptionsRectMatched.color[2] = 0.f;
-		listener_->m_DrawingOptionsRectMatched.color[3] = 1.f;
-		listener_->m_DrawingOptionsRectMatched.lineWidth = 4.f;
+		listener_->m_DrawingOptions.colorType = COMPV_DRAWING_COLOR_TYPE_STATIC;
+		listener_->m_DrawingOptions.color[0] = 1.f;
+		listener_->m_DrawingOptions.color[1] = 1.f;
+		listener_->m_DrawingOptions.color[2] = 0.f;
+		listener_->m_DrawingOptions.color[3] = 1.f;
+		listener_->m_DrawingOptions.lineWidth = 4.f;
+		listener_->m_DrawingOptions.fontSize = 32;
 
 		// Set output
 		*listener = listener_;
@@ -263,7 +273,10 @@ private:
 		COMPV_CHECK_EXP_RETURN(m_vecGoodMatches.size() < THRESHOLD_GOOD_MATCHES, COMPV_ERROR_CODE_E_INVALID_CALL, "No enough points");
 		
 		// Find homography
+		uint64_t timeStart = CompVTime::nowMillis();
 		COMPV_CHECK_CODE_RETURN(CompVHomography<compv_float64_t>::find(m_ptrGoodMatchesTrain, m_ptrGoodMatchesQuery, &m_ptrHomography));
+		uint64_t timeEnd = CompVTime::nowMillis();
+		COMPV_DEBUG_INFO_EX(TAG_SAMPLE, "Homography Elapsed time = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 		// Perspecive transform using homography matrix
 		COMPV_CHECK_CODE_RETURN(CompVMathTransform<compv_float64_t>::perspective2D(m_ptrRectTrain, m_ptrHomography, &m_ptrRectMatched));
 		
@@ -291,7 +304,7 @@ private:
 	CompVInterestPointVector m_vecInterestPointsQuery;
 	CompVInterestPointVector m_vecInterestPointsTrain;
 	CompVDrawingOptions m_DrawingOptionsMatches;
-	CompVDrawingOptions m_DrawingOptionsRectMatched;
+	CompVDrawingOptions m_DrawingOptions;
 };
 
 /* Entry point function */
