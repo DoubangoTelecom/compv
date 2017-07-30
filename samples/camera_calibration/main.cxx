@@ -110,7 +110,7 @@ public:
 			imageOrig = image;
 #else
 			static size_t __index = 0;
-			size_t file_index = 47 + ((__index++) % 20)/*49*//*65*//*65*//*47*//*65*//*47*//*55*//*47*//*48*//*52*/;
+			size_t file_index = 47 + ((__index++) % 20)/*47*//*65*//*65*//*47*//*65*//*47*//*55*//*47*//*48*//*52*/;
 			std::string file_path = std::string("C:/Projects/GitHub/data/calib/P10100")+ CompVBase::to_string(file_index) +std::string("s_640x480_gray.yuv");
 			//std::string file_path = "C:/Projects/GitHub/data/calib/P1010047s_90deg_640x480_gray.yuv";
 			COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 640, 480, 640, file_path.c_str(), &imageGray));

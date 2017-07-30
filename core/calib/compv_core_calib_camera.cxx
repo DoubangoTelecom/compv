@@ -22,11 +22,11 @@
 #define HOUGH_ID							COMPV_HOUGHSHT_ID
 #define HOUGH_RHO							0.5f // "rho-delta" (half-pixel)
 #define HOUGH_THETA							0.5f // "theta-delta" (half-radian)
-#define HOUGH_SHT_THRESHOLD_FACT			0.10416667
+#define HOUGH_SHT_THRESHOLD_FACT			0.3
 #define HOUGH_SHT_THRESHOLD_MAX				120
-#define HOUGH_SHT_THRESHOLD_MIN				40
+#define HOUGH_SHT_THRESHOLD_MIN				30
+#define HOUGH_SHT_THRESHOLD					10
 #define HOUGH_KHT_THRESHOLD_FACT			1.0 // GS
-#define HOUGH_SHT_THRESHOLD					50
 #define HOUGH_KHT_THRESHOLD					1 // filter later when GS is known	
 #define HOUGH_KHT_CLUSTER_MIN_DEVIATION		2.0f
 #define HOUGH_KHT_CLUSTER_MIN_SIZE			10
@@ -44,8 +44,8 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-#define kSmallRhoFactVt				0.0075f /* small = (rho * fact) */
-#define kSmallRhoFactHz				0.0075f /* small = (rho * fact) */
+#define kSmallRhoFactVt				0.035f /* small = (rho * fact) */
+#define kSmallRhoFactHz				0.035f /* small = (rho * fact) */
 #define kCheckerboardBoxDistFact	0.357f /* distance * fact */
 
 struct CompVCabLineGroup {
@@ -128,27 +128,43 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 	/* Hough lines */
 	// For SHT, set the threshold before processing. But for KHT, we need the global scale (GS) which is defined only *after* processing
 	if (m_ptrHough->id() == COMPV_HOUGHSHT_ID) {
-		COMPV_CHECK_CODE_RETURN(m_ptrHough->setInt(COMPV_HOUGH_SET_INT_THRESHOLD, 
-			std::max(HOUGH_SHT_THRESHOLD_MIN, std::min(HOUGH_SHT_THRESHOLD_MAX, static_cast<int>(static_cast<double>(std::min(image->cols(), image->rows())) * HOUGH_SHT_THRESHOLD_FACT) + 1)))
-		);
+		COMPV_CHECK_CODE_RETURN(m_ptrHough->setInt(COMPV_HOUGH_SET_INT_THRESHOLD, HOUGH_SHT_THRESHOLD_MIN));
 	}
-
 	// Process
 	COMPV_CHECK_CODE_RETURN(m_ptrHough->process(result_calib.edges, result_calib.lines_raw.lines_hough));
 
-	/* Remove weak lines using global scale (GS) */
-	if (m_ptrHough->id() == COMPV_HOUGHKHT_ID) {
-		compv_float64_t gs;
-		COMPV_CHECK_CODE_RETURN(m_ptrHough->getFloat64(COMPV_HOUGHKHT_GET_FLT64_GS, &gs));
-		const size_t min_strength = static_cast<size_t>(gs * HOUGH_KHT_THRESHOLD_FACT);
-		auto fncShortLines = std::remove_if(result_calib.lines_raw.lines_hough.begin(), result_calib.lines_raw.lines_hough.end(), [&](const CompVHoughLine& line) {
-			return line.strength < min_strength;
-		});
-		result_calib.lines_raw.lines_hough.erase(fncShortLines, result_calib.lines_raw.lines_hough.end());
+	/* Return if no enough points */
+	if (result_calib.lines_raw.lines_hough.size() < m_nPatternLinesTotal) {
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough lines after hough transform: %zu", result_calib.lines_raw.lines_hough.size());
+		result_calib.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
+	/* Remove weak lines */
+	if (result_calib.lines_raw.lines_hough.size() > m_nPatternLinesTotal) {
+		if (m_ptrHough->id() == COMPV_HOUGHKHT_ID) {
+			// Remove weak lines using global scale (GS)
+			compv_float64_t gs;
+			COMPV_CHECK_CODE_RETURN(m_ptrHough->getFloat64(COMPV_HOUGHKHT_GET_FLT64_GS, &gs));
+			const size_t min_strength = static_cast<size_t>(gs * HOUGH_KHT_THRESHOLD_FACT);
+			auto fncShortLines = std::remove_if(result_calib.lines_raw.lines_hough.begin(), result_calib.lines_raw.lines_hough.end(), [&](const CompVHoughLine& line) {
+				return line.strength < min_strength;
+			});
+			result_calib.lines_raw.lines_hough.erase(fncShortLines, result_calib.lines_raw.lines_hough.end());
+		}
+		else {
+			// Remove weak lines using global max_strength
+			const size_t min_strength = static_cast<size_t>(result_calib.lines_raw.lines_hough.begin()->strength * HOUGH_SHT_THRESHOLD_FACT);
+			auto fncShortLines = std::remove_if(result_calib.lines_raw.lines_hough.begin(), result_calib.lines_raw.lines_hough.end(), [&](const CompVHoughLine& line) {
+				return line.strength < min_strength;
+			});
+			result_calib.lines_raw.lines_hough.erase(fncShortLines, result_calib.lines_raw.lines_hough.end());
+		}
 	}
 
 	/* Return if no enough points */
 	if (result_calib.lines_raw.lines_hough.size() < m_nPatternLinesTotal) {
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough lines after removing weak lines: %zu", result_calib.lines_raw.lines_hough.size());
 		result_calib.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
 		return COMPV_ERROR_CODE_S_OK;
 	}
@@ -179,9 +195,10 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 	}
 
 	// Hz-grouping
+	const size_t max_strength = result_calib.lines_raw.lines_hough.begin()->strength; // lines_hough is sorted (by hought->process)
 	CompVCabLineFloat32Vector lines_cab_hz_grouped, lines_cab_vt_grouped;
 	if (lines_hz.lines_cartesian.size() > nPatternLinesHzVtMin) {
-		COMPV_CHECK_CODE_RETURN(grouping(image_width, image_height, lines_hz, false, lines_cab_hz_grouped));
+		COMPV_CHECK_CODE_RETURN(grouping(image_width, image_height, lines_hz, false, max_strength, lines_cab_hz_grouped));
 		if (lines_cab_hz_grouped.size() < nPatternLinesHzVtMin) {
 			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "After [hz] grouping we got less lines than what is requires, not a good news at all");
 			result_calib.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
@@ -194,7 +211,7 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 	
 	// Vt-grouping
 	if (lines_vt.lines_cartesian.size() > nPatternLinesHzVtMin) {
-		COMPV_CHECK_CODE_RETURN(grouping(image_width, image_height, lines_vt, true, lines_cab_vt_grouped));
+		COMPV_CHECK_CODE_RETURN(grouping(image_width, image_height, lines_vt, true, max_strength, lines_cab_vt_grouped));
 		if (lines_cab_vt_grouped.size() < nPatternLinesHzVtMin) {
 			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "After [vt] grouping we got less lines than what is requires. Not a good news at all");
 			result_calib.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
@@ -411,7 +428,7 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 	uint64_t timeEnd = CompVTime::nowMillis();
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Homography Elapsed time = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 
-	if (result_homography.inlinersCount < (m_nPatternCornersTotal >> 1)) {
+	if (result_homography.inlinersCount < (m_nPatternCornersTotal - std::max(m_nPatternCornersNumRow, m_nPatternCornersNumCol))) {
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough inliners after homography computation (%zu / %zu)", result_homography.inlinersCount, m_nPatternCornersTotal);
 		result_calib.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_INLIERS;
 		return COMPV_ERROR_CODE_S_OK;
@@ -481,13 +498,14 @@ COMPV_ERROR_CODE CompVCalibCamera::subdivision(const size_t image_width, const s
 
 // Grouping using cartesian distances
 // "lines_hough_parallel" must contains lines almost parallel so that the distances are meaningful
-COMPV_ERROR_CODE CompVCalibCamera::grouping(const size_t image_width, const size_t image_height, const CompVCabLines& lines_parallel, const bool vt, CompVCabLineFloat32Vector& lines_parallel_grouped)
+COMPV_ERROR_CODE CompVCalibCamera::grouping(const size_t image_width, const size_t image_height, const CompVCabLines& lines_parallel, const bool vt, const size_t max_strength, CompVCabLineFloat32Vector& lines_parallel_grouped)
 {
 	lines_parallel_grouped.clear();
 
 	// Group using distance to the origine point (x0,y0) = (0, 0)
 	// https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line#Line_defined_by_two_points
 	CompVCabLineGroupVector groups;
+	CompVHoughLineVector::const_iterator it_hough;
 
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT impementation found");
 
@@ -496,15 +514,13 @@ COMPV_ERROR_CODE CompVCalibCamera::grouping(const size_t image_width, const size
 	const compv_float32_t image_widthF = static_cast<compv_float32_t>(image_width);
 	const compv_float32_t image_heightF = static_cast<compv_float32_t>(image_height);
 
-	const compv_float32_t r = std::sqrt(static_cast<compv_float32_t>((image_width * image_width) + (image_height * image_height)));
-	const compv_float32_t smallRhoFact = vt ? kSmallRhoFactVt : kSmallRhoFactHz;
-	const compv_float32_t rsmall = smallRhoFact * r;
-	const compv_float32_t rmedium = rsmall * 8.f;
+	const compv_float32_t rsmall = (vt ? kSmallRhoFactVt : kSmallRhoFactHz) * static_cast<compv_float32_t>(max_strength);
+	const compv_float32_t rmedium = rsmall * 4.f;
 	
 	compv_float32_t distance, c, d, distance_diff;
 
 	// Grouping
-	CompVHoughLineVector::const_iterator it_hough = lines_parallel.lines_hough.begin();
+	it_hough = lines_parallel.lines_hough.begin();
 	for (CompVLineFloat32Vector::const_iterator i = lines_parallel.lines_cartesian.begin(); i < lines_parallel.lines_cartesian.end(); ++i, ++it_hough) {
 		// Compute the distance from the origine (x0, y0) to the line
 		// https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line#Line_defined_by_two_points
@@ -523,7 +539,7 @@ COMPV_ERROR_CODE CompVCalibCamera::grouping(const size_t image_width, const size
 				break;
 			}
 			else if (distance_diff < rmedium) {
-				// If the distance isn't small be reasonably close (medium) then, check
+				// If the distance isn't small but reasonably close (medium) then, check
 				// if the lines intersect in the image domain
 				compv_float32_t i_x, i_y;
 				bool intersect = CompVMathLineSegmentGetIntersection(g->pivot_cartesian->a.x, g->pivot_cartesian->a.y, g->pivot_cartesian->b.x, g->pivot_cartesian->b.y,
