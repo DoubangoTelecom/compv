@@ -483,10 +483,10 @@ class CompVMatrixGeneric
 			}
 #elif COMPV_ARCH_ARM
 			if (CompVCpu::isEnabled(compv::kCpuFlagARM_NEON) && A3x3->isAlignedNEON() && (*R)->isAlignedNEON() && A3x3->strideInBytes() == (*R)->strideInBytes()) {
-                COMPV_EXEC_IFDEF_ASM_ARM32((CompVMathMatrixInvA3x3_64f = CompVMathMatrixInvA3x3_64f_Asm_NEON32, hasSIMD = true, nameSIMD = "CompVMathMatrixInvA3x3_64f_Asm_NEON32"));
+				COMPV_EXEC_IFDEF_ASM_ARM32((CompVMathMatrixInvA3x3_64f = CompVMathMatrixInvA3x3_64f_Asm_NEON32, hasSIMD = true, nameSIMD = "CompVMathMatrixInvA3x3_64f_Asm_NEON32"));
 				COMPV_EXEC_IFDEF_INTRIN_ARM64((CompVMathMatrixInvA3x3_64f = CompVMathMatrixInvA3x3_64f_Intrin_NEON64, hasSIMD = true, nameSIMD = "CompVMathMatrixInvA3x3_64f_Intrin_NEON64"));
-                COMPV_EXEC_IFDEF_ASM_ARM64((CompVMathMatrixInvA3x3_64f = CompVMathMatrixInvA3x3_64f_Asm_NEON64, hasSIMD = true, nameSIMD = "CompVMathMatrixInvA3x3_64f_Asm_NEON64"));
-                
+				COMPV_EXEC_IFDEF_ASM_ARM64((CompVMathMatrixInvA3x3_64f = CompVMathMatrixInvA3x3_64f_Asm_NEON64, hasSIMD = true, nameSIMD = "CompVMathMatrixInvA3x3_64f_Asm_NEON64"));
+
 			}
 #endif
 			if (CompVMathMatrixInvA3x3_64f) {
@@ -495,11 +495,12 @@ class CompVMatrixGeneric
 					return COMPV_ERROR_CODE_S_OK; // Matrix not singular -> break process
 				}
 			}
-		}	
+		}
 
 		if (hasSIMD) {
 			// Matrix is singular (detA == 0)
 			if (pseudoInverseIfSingular) {
+				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "3x3 Matrix is singluar according to '%s'... computing pseudoinverse instead of the inverse", nameSIMD);
 				COMPV_CHECK_CODE_RETURN(CompVMatrixGeneric<T>::pseudoinv(A3x3, R));
 			}
 		}
@@ -515,6 +516,7 @@ class CompVMatrixGeneric
 				+ a2[0] * (a0[1] * a1[2] - a1[1] * a0[2]);
 			if (detA == 0) {
 				if (pseudoInverseIfSingular) {
+					COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "3x3 Matrix is singluar... computing pseudoinverse instead of the inverse");
 					COMPV_CHECK_CODE_RETURN(CompVMatrixGeneric<T>::pseudoinv(A3x3, R));
 				}
 			}
@@ -537,6 +539,9 @@ class CompVMatrixGeneric
 		}
 		if (isSingular) {
 			*isSingular = (detA == 0);
+		}
+		if (detA == 0 && !pseudoInverseIfSingular) {
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "3x3 Matrix is singluar... not computing pseudoinverse because pseudoInverseIfSingular is equal to false");
 		}
 		return COMPV_ERROR_CODE_S_OK;
 	}

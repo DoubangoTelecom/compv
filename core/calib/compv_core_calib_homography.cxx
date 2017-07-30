@@ -508,6 +508,7 @@ static COMPV_ERROR_CODE countInliers(CompVTempArraysCountInliers& tempArrays, si
 	// Apply H* to the destination and compute mse: a = H*b, mse(a, H*b)
 	COMPV_CHECK_CODE_RETURN(CompVMatrix::invA3x3(H, &tempArrays.Hinv_, pseudoInverseIfSingular, &isSingular));
 	if (isSingular) {
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Singlular matrix");
 		inliersCount = 0;
 		return COMPV_ERROR_CODE_S_OK;
 	}

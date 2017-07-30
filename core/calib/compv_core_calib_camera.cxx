@@ -44,8 +44,9 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-static const float kSmallRhoFactVt = 0.0075f; /* small = (rho * fact) */
-static const float kSmallRhoFactHz = 0.0075f; /* small = (rho * fact) */
+#define kSmallRhoFactVt				0.0075f /* small = (rho * fact) */
+#define kSmallRhoFactHz				0.0075f /* small = (rho * fact) */
+#define kCheckerboardBoxDistFact	0.357f /* distance * fact */
 
 struct CompVCabLineGroup {
 	const CompVLineFloat32* pivot_cartesian;
@@ -368,23 +369,73 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 		}
 
 		// Computing homography on garbage is very sloow and to make sure this is a checkerboard, we check
-		// that the intersections with the x-axis are almost equidistant
+		// that the intersections with the (x/y)-axis are almost equidistant and going forward (increasing)
+		// !!The boxes in the checkerboard MUST BE SQUARE!!
 		if (i != lines_hz_grouped.begin()) { // not first line
-			CompVPointFloat32Vector::const_iterator two_rows = result_calib.points_intersections.end() - (nPatternLinesVtExpected << 1); // #2 last rows
-			for (CompVPointFloat32Vector::const_iterator k = two_rows, m = two_rows + nPatternLinesVtExpected; m < result_calib.points_intersections.end(); ++k, ++m) {
-				// Previous x-intersection must be < current x-intersection
-				if (k != two_rows) { // not first index
+			compv_float32_t dist, dist_err, dist_approx_x, dist_err_max_x, dist_approx_y, dist_err_max_y; // not same distortion across x and y -> use different distance estimation
+			CompVPointFloat32Vector::const_iterator k = result_calib.points_intersections.end() - (nPatternLinesVtExpected << 1); // #2 last rows
+			CompVPointFloat32Vector::const_iterator m = (k + nPatternLinesVtExpected); // move to next line
+			for (size_t index = 0; index < nPatternLinesVtExpected; ++k, ++m, ++index) {
+				/* x-axis */
+				if (index == 1) {
+					// compute default approx distance (x-axis)
+					dist_approx_x = (k->x - (k - 1)->x);
+					dist_err_max_x = (dist_approx_x * kCheckerboardBoxDistFact) + 1.f;
+				}
+				if (index) { // not first index
+					// Previous x-intersection must be < current x-intersection (increasing)
 					if ((k->x <= (k - 1)->x) || (m->x <= (m - 1)->x)) {
 						COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Intersections not going forward (x-axis). Stop processing");
 						result_calib.code = COMPV_CALIB_CAMERA_RESULT_INCOHERENT_INTERSECTIONS;
 						return COMPV_ERROR_CODE_S_OK;
 					}
+					// Check if equidistant (x-axis)
+					if (index > 1) {
+						dist = (m->x - (m - 1)->x);
+						dist_err = std::abs(dist - dist_approx_x);
+						if (dist_err > dist_err_max_x) {
+							COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Intersections not equidistant (xm-axis). Stop processing");
+							result_calib.code = COMPV_CALIB_CAMERA_RESULT_INCOHERENT_INTERSECTIONS;
+							return COMPV_ERROR_CODE_S_OK;
+						}
+						dist = (k->x - (k - 1)->x);
+						dist_err = std::abs(dist - dist_approx_x);
+						if (dist_err > dist_err_max_x) {
+							COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Intersections not equidistant (xk-axis). Stop processing");
+							result_calib.code = COMPV_CALIB_CAMERA_RESULT_INCOHERENT_INTERSECTIONS;
+							return COMPV_ERROR_CODE_S_OK;
+						}
+						// Refine dist-approx
+						dist_approx_x = dist;
+						dist_err_max_x = (dist_approx_x * kCheckerboardBoxDistFact) + 1.f;
+					}
 				}
-				// Top y-intersection must be < bottom y-intersection
-				if (k->y >= m->y) {
+
+				/* y-axis */
+				dist = (m->y - k->y);
+				if (!index) {
+					// compute default approx distance (y-axis)
+					dist_approx_y = dist;
+					dist_err_max_y = (dist_approx_y * kCheckerboardBoxDistFact) + 1.f;
+				}
+				// Top y-intersection must be < bottom y-intersection (increasing)
+				if (dist <= 0.f) {
 					COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Intersections not going forward (y-axis). Stop processing");
 					result_calib.code = COMPV_CALIB_CAMERA_RESULT_INCOHERENT_INTERSECTIONS;
 					return COMPV_ERROR_CODE_S_OK;
+				}
+				// Check if equidistant (y-axis)
+				if (index > 0) {
+					// y-axis
+					dist_err = std::abs(dist - dist_approx_y);
+					if (dist_err > dist_err_max_y) {
+						COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Intersections not equidistant (y-axis). Stop processing");
+						result_calib.code = COMPV_CALIB_CAMERA_RESULT_INCOHERENT_INTERSECTIONS;
+						return COMPV_ERROR_CODE_S_OK;
+					}
+					// Refine dist-approx
+					dist_approx_y = dist;
+					dist_err_max_y = (dist_approx_y * kCheckerboardBoxDistFact) + 1.f;
 				}
 			}
 		}
