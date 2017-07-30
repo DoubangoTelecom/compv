@@ -213,18 +213,15 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 	if (lines_cab_vt_grouped.size() > nPatternLinesHzVtMax) {
 		lines_cab_vt_grouped.resize(nPatternLinesHzVtMax);
 	}
-	CompVCabLineFloat32Vector lines_cab_all_grouped;
 	CompVLineFloat32Vector lines_hz_grouped, lines_vt_grouped;
-	lines_cab_all_grouped.reserve(lines_cab_hz_grouped.size() + lines_cab_vt_grouped.size());
-	lines_cab_all_grouped.assign(lines_cab_hz_grouped.begin(), lines_cab_hz_grouped.end());
-	lines_cab_all_grouped.insert(lines_cab_all_grouped.end(), lines_cab_vt_grouped.begin(), lines_cab_vt_grouped.end());
-	std::sort(lines_cab_all_grouped.begin(), lines_cab_all_grouped.end(), [](const CompVCabLineFloat32 &line1, const CompVCabLineFloat32 &line2) {
+	lines_cab_hz_grouped.insert(lines_cab_hz_grouped.end(), lines_cab_vt_grouped.begin(), lines_cab_vt_grouped.end()); // Pack [hz] and [vt] lines together
+	std::sort(lines_cab_hz_grouped.begin(), lines_cab_hz_grouped.end(), [](const CompVCabLineFloat32 &line1, const CompVCabLineFloat32 &line2) {
 		return (line1.strength > line2.strength);
 	});
-	lines_cab_all_grouped.resize(m_nPatternLinesTotal); // keep best only
+	lines_cab_hz_grouped.resize(m_nPatternLinesTotal); // keep best only
 	lines_hz_grouped.reserve(nPatternLinesHzVtMax);
 	lines_vt_grouped.reserve(nPatternLinesHzVtMax);
-	for (CompVCabLineFloat32Vector::const_iterator i = lines_cab_all_grouped.begin(); i < lines_cab_all_grouped.end(); ++i) {
+	for (CompVCabLineFloat32Vector::const_iterator i = lines_cab_hz_grouped.begin(); i < lines_cab_hz_grouped.end(); ++i) {
 		if (i->vt) {
 			lines_vt_grouped.push_back(i->line);
 		}
@@ -416,6 +413,8 @@ COMPV_ERROR_CODE CompVCalibCamera::subdivision(const size_t image_width, const s
 	COMPV_CHECK_EXP_RETURN(lines.lines_cartesian.size() < m_nPatternLinesTotal, COMPV_ERROR_CODE_E_INVALID_STATE, "No enought points");
 	COMPV_CHECK_EXP_RETURN(lines.lines_cartesian.size() < lines.lines_hough.size(), COMPV_ERROR_CODE_E_INVALID_STATE, "Must have same number of cartesian and polar lines");
 
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT impementation found");
+
 	CompVHoughLineVector::const_iterator it_hough;
 	CompVLineFloat32Vector::const_iterator it_cartesian;
 
@@ -473,6 +472,8 @@ COMPV_ERROR_CODE CompVCalibCamera::grouping(const size_t image_width, const size
 	// Group using distance to the origine point (x0,y0) = (0, 0)
 	// https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line#Line_defined_by_two_points
 	CompVCabLineGroupVector groups;
+
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT impementation found");
 
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Using distance approximation: sqrt (c**2 + d**2) = abs(c + d)");
 
@@ -563,6 +564,8 @@ COMPV_ERROR_CODE CompVCalibCamera::lineBestFit(const CompVLineFloat32Vector& poi
 	COMPV_CHECK_EXP_RETURN(points_cartesian.size() < 2, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Need at least #2 points");
 	COMPV_CHECK_EXP_RETURN(points_cartesian.size() != points_hough.size(), COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Must have same number of points for polar and cartesian points");
 	
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT impementation found"); // Not really needed (number of points should always be very low)
+
 	// Implementing "Least Square Method" (https://www.varsitytutors.com/hotmath/hotmath_help/topics/line-of-best-fit)
 	// while ignoring the x-component for the simple reason that they are always constant
 	// when using CompV's KHT and SHT implementations (a.x = 0 and b.x = image_width)
