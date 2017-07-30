@@ -172,6 +172,11 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 		result_calib.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
 		return COMPV_ERROR_CODE_S_OK;
 	}
+	if ((lines_hz.lines_cartesian.size() + lines_vt.lines_cartesian.size()) < m_nPatternLinesTotal) {
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough [vt+hz] lines after subdivision: %zu+%zu", lines_hz.lines_cartesian.size(), lines_vt.lines_cartesian.size());
+		result_calib.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
+		return COMPV_ERROR_CODE_S_OK;
+	}
 
 	// Hz-grouping
 	CompVCabLineFloat32Vector lines_cab_hz_grouped, lines_cab_vt_grouped;
@@ -200,18 +205,29 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "After [vt] grouping we don't have exactly %zu lines but more (%zu). Maybe our grouping function missed some orphans", m_nPatternLinesVt, lines_cab_vt_grouped.size());
 	}
 
-	if ((lines_vt.lines_cartesian.size() + lines_hz.lines_cartesian.size()) < m_nPatternLinesTotal) {
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough [vt+hz] lines after grouping: %zu+%zu", lines_vt.lines_cartesian.size(), lines_hz.lines_cartesian.size());
+	if ((lines_cab_vt_grouped.size() + lines_cab_hz_grouped.size()) < m_nPatternLinesTotal) {
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough [vt+hz] lines after grouping: %zu+%zu", lines_cab_vt_grouped.size(), lines_cab_hz_grouped.size());
 		result_calib.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
 	/* Pack all lines, sort and keep the best */
 	if (lines_cab_hz_grouped.size() > nPatternLinesHzVtMax) {
+		std::sort(lines_cab_hz_grouped.begin(), lines_cab_hz_grouped.end(), [](const CompVCabLineFloat32 &line1, const CompVCabLineFloat32 &line2) {
+			return (line1.strength > line2.strength);
+		});
 		lines_cab_hz_grouped.resize(nPatternLinesHzVtMax);
 	}
 	if (lines_cab_vt_grouped.size() > nPatternLinesHzVtMax) {
+		std::sort(lines_cab_vt_grouped.begin(), lines_cab_vt_grouped.end(), [](const CompVCabLineFloat32 &line1, const CompVCabLineFloat32 &line2) {
+			return (line1.strength > line2.strength);
+		});
 		lines_cab_vt_grouped.resize(nPatternLinesHzVtMax);
+	}
+	if ((lines_cab_vt_grouped.size() + lines_cab_hz_grouped.size()) < m_nPatternLinesTotal) {
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough [vt+hz] lines after grouping: %zu+%zu", lines_cab_vt_grouped.size(), lines_cab_hz_grouped.size());
+		result_calib.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
+		return COMPV_ERROR_CODE_S_OK;
 	}
 	CompVLineFloat32Vector lines_hz_grouped, lines_vt_grouped;
 	lines_cab_hz_grouped.insert(lines_cab_hz_grouped.end(), lines_cab_vt_grouped.begin(), lines_cab_vt_grouped.end()); // Pack [hz] and [vt] lines together
@@ -275,8 +291,8 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 		intersect = CompVMathLineSegmentGetIntersection(i->a.x, i->a.y, i->b.x, i->b.y,
 			x_axis_left, 0.f, x_axis_right, 0.f, &intersect_x);
 		if (!intersect) {
-			// TODO(dmi): must not happen, but happen when we get a point detected as line (more an issue in hough than intersection algo)
-			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Vertical line must intersect with x-axis (%f, %f)-(%f, %f)", i->a.x, i->a.y, i->b.x, i->b.y);
+			// Must never happen
+			COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Vertical line must intersect with x-axis (%f, %f)-(%f, %f)", i->a.x, i->a.y, i->b.x, i->b.y);
 			result_calib.code = COMPV_CALIB_CAMERA_RESULT_INCOHERENT_INTERSECTIONS;
 			return COMPV_ERROR_CODE_S_OK;
 		}
