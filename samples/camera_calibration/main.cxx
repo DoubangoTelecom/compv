@@ -3,8 +3,13 @@
 using namespace compv;
 
 #define CAMERA_IDX			0
-#define CAMERA_WIDTH		640
-#define CAMERA_HEIGHT		480
+#if COMPV_ARCH_ARM
+#	define CAMERA_WIDTH		320
+#	define CAMERA_HEIGHT	240
+#else
+#	define CAMERA_WIDTH		640
+#	define CAMERA_HEIGHT	480
+#endif
 #define CAMERA_FPS			15
 #define CAMERA_SUBTYPE		COMPV_SUBTYPE_PIXELS_YUY2
 #define CAMERA_AUTOFOCUS	true
@@ -107,6 +112,7 @@ public:
 			static size_t __index = 0;
 			size_t file_index = 47 + ((__index++) % 20)/*65*//*65*//*47*//*65*//*47*//*55*//*47*//*48*//*52*/;
 			std::string file_path = std::string("C:/Projects/GitHub/data/calib/P10100")+ CompVBase::to_string(file_index) +std::string("s_640x480_gray.yuv");
+			//std::string file_path = "C:/Projects/GitHub/data/calib/P1010047s_90deg_640x480_gray.yuv";
 			COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 640, 480, 640, file_path.c_str(), &imageGray));
 			imageOrig = imageGray;
 			COMPV_DEBUG_INFO_EX(TAG_SAMPLE, "%s", file_path.c_str());
@@ -177,10 +183,11 @@ public:
 				m_DrawingOptions.setColor(__color_bleu);
 				COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->renderer()->canvas()->drawLines(rectLines, &m_DrawingOptions));
 			}
+			
 
-			/* Grouped and ordered lines */
-			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGroupedAndOrdered->activate());
-			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGroupedAndOrdered->drawImage(m_CalibResult.edges));
+			/* Reprojection */
+			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineReProj->activate());
+			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineReProj->drawImage(m_CalibResult.edges));
 
 			/* Corners */
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceCorners->activate());
@@ -196,7 +203,7 @@ public:
 			COMPV_CHECK_CODE_NOP(err = m_ptrSurfaceEdges->deActivate());
 			COMPV_CHECK_CODE_NOP(err = m_ptrSurfaceLinesRaw->deActivate());
 			COMPV_CHECK_CODE_NOP(err = m_ptrSurfaceLineGrouped->deActivate());
-			COMPV_CHECK_CODE_NOP(err = m_ptrSurfaceLineGroupedAndOrdered->deActivate());
+			COMPV_CHECK_CODE_NOP(err = m_ptrSurfaceLineReProj->deActivate());
 			COMPV_CHECK_CODE_NOP(err = m_ptrSurfaceCorners->deActivate());
 		}
 		return err;
@@ -223,6 +230,7 @@ public:
 
 		// Drawing options
 		listener_->m_DrawingOptions.lineWidth = 1.f;
+		listener_->m_DrawingOptions.fontSize = 14;
 
 		// Multi-layer surface
 		COMPV_CHECK_CODE_RETURN(listener_->m_ptrWindow->addMultiLayerSurface(&listener_->m_ptrMultiSurface));
@@ -230,7 +238,7 @@ public:
 		COMPV_CHECK_CODE_RETURN(listener_->m_ptrMultiSurface->addSurface(&listener_->m_ptrSurfaceEdges, ptrWindow->width(), ptrWindow->height(), false));
 		COMPV_CHECK_CODE_RETURN(listener_->m_ptrMultiSurface->addSurface(&listener_->m_ptrSurfaceLinesRaw, ptrWindow->width(), ptrWindow->height(), false));
 		COMPV_CHECK_CODE_RETURN(listener_->m_ptrMultiSurface->addSurface(&listener_->m_ptrSurfaceLineGrouped, ptrWindow->width(), ptrWindow->height(), false));
-		COMPV_CHECK_CODE_RETURN(listener_->m_ptrMultiSurface->addSurface(&listener_->m_ptrSurfaceLineGroupedAndOrdered, ptrWindow->width(), ptrWindow->height(), false));
+		COMPV_CHECK_CODE_RETURN(listener_->m_ptrMultiSurface->addSurface(&listener_->m_ptrSurfaceLineReProj, ptrWindow->width(), ptrWindow->height(), false));
 		COMPV_CHECK_CODE_RETURN(listener_->m_ptrMultiSurface->addSurface(&listener_->m_ptrSurfaceCorners, ptrWindow->width(), ptrWindow->height(), false));
 
 		// Window listener
@@ -258,7 +266,7 @@ private:
 		const int image_Width_int = static_cast<int>(image_Width);
 		const int image_height_int = static_cast<int>(image_height);
 		const int w_width = (window_Width_int / 3);
-		const int w_height = (window_height_int / 2);
+		const int w_height = (window_height_int >> 1);
 
 		src.left = src.top = dst.left = dst.top = 0;
 		src.right = (image_Width_int);
@@ -278,7 +286,7 @@ private:
 		COMPV_CHECK_CODE_RETURN(m_ptrSurfaceLinesRaw->viewport()->reset(CompViewportSizeFlags::makeStatic(), view.left + (w_width << 1), view.top, v_width, v_height));
 		// Second row
 		COMPV_CHECK_CODE_RETURN(m_ptrSurfaceLineGrouped->viewport()->reset(CompViewportSizeFlags::makeStatic(), view.left, (view.top + w_height), v_width, v_height));
-		COMPV_CHECK_CODE_RETURN(m_ptrSurfaceLineGroupedAndOrdered->viewport()->reset(CompViewportSizeFlags::makeStatic(), view.left + w_width, (view.top + w_height), v_width, v_height));
+		COMPV_CHECK_CODE_RETURN(m_ptrSurfaceLineReProj->viewport()->reset(CompViewportSizeFlags::makeStatic(), view.left + w_width, (view.top + w_height), v_width, v_height));
 		COMPV_CHECK_CODE_RETURN(m_ptrSurfaceCorners->viewport()->reset(CompViewportSizeFlags::makeStatic(), view.left + (w_width << 1), (view.top + w_height), v_width, v_height));
 
 		m_nImageWidth = image_Width;
@@ -300,7 +308,7 @@ private:
 	CompVSurfacePtr m_ptrSurfaceEdges;
 	CompVSurfacePtr m_ptrSurfaceLinesRaw;
 	CompVSurfacePtr m_ptrSurfaceLineGrouped;
-	CompVSurfacePtr m_ptrSurfaceLineGroupedAndOrdered;
+	CompVSurfacePtr m_ptrSurfaceLineReProj;
 	CompVSurfacePtr m_ptrSurfaceCorners;
 };
 

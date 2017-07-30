@@ -24,6 +24,7 @@
 #define HOUGH_THETA							0.5f // "theta-delta" (half-radian)
 #define HOUGH_SHT_THRESHOLD_FACT			0.10416667
 #define HOUGH_SHT_THRESHOLD_MAX				120
+#define HOUGH_SHT_THRESHOLD_MIN				40
 #define HOUGH_KHT_THRESHOLD_FACT			1.0 // GS
 #define HOUGH_SHT_THRESHOLD					50
 #define HOUGH_KHT_THRESHOLD					1 // filter later when GS is known	
@@ -43,7 +44,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-static const float kSmallRhoFactVt = 0.015f; /* small = (rho * fact) */
+static const float kSmallRhoFactVt = 0.0075f; /* small = (rho * fact) */
 static const float kSmallRhoFactHz = 0.0075f; /* small = (rho * fact) */
 
 struct CompVCabLineGroup {
@@ -177,7 +178,7 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 	// For SHT, set the threshold before processing. But for KHT, we need the global scale (GS) which is defined only *after* processing
 	if (m_ptrHough->id() == COMPV_HOUGHSHT_ID) {
 		COMPV_CHECK_CODE_RETURN(m_ptrHough->setInt(COMPV_HOUGH_SET_INT_THRESHOLD, 
-			std::min(HOUGH_SHT_THRESHOLD_MAX, static_cast<int>(static_cast<double>(std::min(image->cols(), image->rows())) * HOUGH_SHT_THRESHOLD_FACT) + 1))
+			std::max(HOUGH_SHT_THRESHOLD_MIN, std::min(HOUGH_SHT_THRESHOLD_MAX, static_cast<int>(static_cast<double>(std::min(image->cols(), image->rows())) * HOUGH_SHT_THRESHOLD_FACT) + 1)))
 		);
 	}
 

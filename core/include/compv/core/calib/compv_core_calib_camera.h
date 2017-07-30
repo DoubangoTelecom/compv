@@ -23,13 +23,22 @@ struct CompVCabLines {
 	CompVLineFloat32Vector lines_cartesian;
 };
 
+struct CompVCabLineFloat32 {
+	CompVLineFloat32 line;
+	bool vt;
+	size_t strength;
+};
+typedef std::vector<CompVCabLineFloat32, CompVAllocatorNoDefaultConstruct<CompVCabLineFloat32> > CompVCabLineFloat32Vector;
+
 enum COMPV_CALIB_CAMERA_RESULT_CODE {
 	COMPV_CALIB_CAMERA_RESULT_NONE,
 	COMPV_CALIB_CAMERA_RESULT_OK,
 	COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_POINTS,
 	COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_INTERSECTIONS,
 	COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_INLIERS,
+	COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES,
 	COMPV_CALIB_CAMERA_RESULT_TOO_MUCH_LINES,
+	COMPV_CALIB_CAMERA_RESULT_INCOHERENT_INTERSECTIONS,
 };
 
 struct CompVCalibCameraResult {
@@ -37,6 +46,7 @@ struct CompVCalibCameraResult {
 	CompVCabLines lines_raw;
 	CompVCabLines lines_grouped;
 	CompVPointFloat32Vector points_intersections;
+	bool rotated;
 	CompVMatPtr edges;
 	CompVMatPtr homography;
 public:
@@ -67,16 +77,16 @@ public:
 	COMPV_INLINE CompVEdgeDetePtr edgeDetector() { return m_ptrCanny; }
 	COMPV_INLINE CompVHoughPtr houghTransform() { return m_ptrHough; }
 
-	COMPV_INLINE size_t patternWidth() const { return (m_nPatternCornersNumCol - 1) * m_nPatternBlockSizePixel; }
-	COMPV_INLINE size_t patternHeight() const { return (m_nPatternCornersNumRow - 1) * m_nPatternBlockSizePixel; }
+	COMPV_INLINE size_t patternWidth() const { return ((m_bPatternCornersRotated ? m_nPatternCornersNumRow : m_nPatternCornersNumCol) - 1) * m_nPatternBlockSizePixel; }
+	COMPV_INLINE size_t patternHeight() const { return ((m_bPatternCornersRotated ? m_nPatternCornersNumCol : m_nPatternCornersNumRow) - 1) * m_nPatternBlockSizePixel; }
 	
 	static COMPV_ERROR_CODE newObj(CompVCalibCameraPtrPtr calib);
 
 private:
 	COMPV_ERROR_CODE subdivision(const size_t image_width, const size_t image_height, const CompVCabLines& lines, CompVCabLines& lines_hz, CompVCabLines& lines_vt);
-	COMPV_ERROR_CODE grouping(const size_t image_width, const size_t image_height, const CompVCabLines& lines_parallel, const compv_float32_t smallRhoFact, CompVLineFloat32Vector& lines_parallel_grouped);
+	COMPV_ERROR_CODE grouping(const size_t image_width, const size_t image_height, const CompVCabLines& lines_parallel, const bool vt, CompVCabLineFloat32Vector& lines_parallel_grouped);
 	COMPV_ERROR_CODE lineBestFit(const CompVLineFloat32Vector& points_cartesian, const CompVHoughLineVector& points_hough, CompVLineFloat32& line);
-	COMPV_ERROR_CODE buildPatternCorners();
+	COMPV_ERROR_CODE buildPatternCorners(const CompVCalibCameraResult& result_calib);
 	COMPV_ERROR_CODE homography(CompVCalibCameraResult& result_calib, CompVHomographyResult& result_homography);
 
 private:
@@ -91,6 +101,7 @@ private:
 	CompVEdgeDetePtr m_ptrCanny;
 	CompVHoughPtr m_ptrHough;
 	CompVMatPtr m_ptrPatternCorners;
+	bool m_bPatternCornersRotated;
 	COMPV_VS_DISABLE_WARNINGS_END()
 };
 
