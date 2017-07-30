@@ -54,18 +54,13 @@ struct CompVCabLineGroup {
 };
 typedef std::vector<CompVCabLineGroup, CompVAllocatorNoDefaultConstruct<CompVCabLineGroup> > CompVCabLineGroupVector;
 
-struct CompVCabLineFloat32 {
-	CompVLineFloat32 line;
-	size_t strength;
-};
-typedef std::vector<CompVCabLineFloat32, CompVAllocatorNoDefaultConstruct<CompVCabLineFloat32> > CompVCabLineFloat32Vector;
-
 CompVCalibCamera::CompVCalibCamera()
 	: m_nPatternCornersNumRow(PATTERN_ROW_CORNERS_NUM)
 	, m_nPatternCornersNumCol(PATTERN_COL_CORNERS_NUM)
 	, m_nPatternLinesHz(PATTERN_ROW_CORNERS_NUM)
 	, m_nPatternLinesVt(PATTERN_COL_CORNERS_NUM)
 	, m_nPatternBlockSizePixel(PATTERN_BLOCK_SIZE_PIXEL)
+	, m_bPatternCornersRotated(false)
 {
 	m_nPatternCornersTotal = m_nPatternCornersNumRow * m_nPatternCornersNumCol;
 	m_nPatternLinesTotal = (m_nPatternCornersNumRow + m_nPatternCornersNumCol);
@@ -172,8 +167,8 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 	compv_float32_t intersect_x, intersect_y;
 	static const compv_float32_t intersect_z = 1.f;
 
-	static const compv_float32_t x_axis_right = 1e10f;
-	static const compv_float32_t x_axis_left = -1e10f;
+	static const compv_float32_t x_axis_right = 1e15f;
+	static const compv_float32_t x_axis_left = -1e15f;
 	
 	/* Canny edge detection */
 	COMPV_CHECK_CODE_RETURN(m_ptrCanny->process(image, &result_calib.edges));
@@ -209,79 +204,115 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 	/* Convert from polar to cartesian coordinates */
 	COMPV_CHECK_CODE_RETURN(m_ptrHough->toCartesian(image_width, image_height, result_calib.lines_raw.lines_hough, result_calib.lines_raw.lines_cartesian));
 
+	const size_t nPatternLinesHzVtMax = std::max(m_nPatternLinesHz, m_nPatternLinesVt);
+	const size_t nPatternLinesHzVtMin = std::min(m_nPatternLinesHz, m_nPatternLinesVt);
+
 	/* Lines subdivision */
 	CompVCabLines lines_hz, lines_vt;
 	COMPV_CHECK_CODE_RETURN(subdivision(image_width, image_height, result_calib.lines_raw, lines_hz, lines_vt));
-	if (lines_hz.lines_cartesian.size() < m_nPatternLinesHz || lines_vt.lines_cartesian.size() < m_nPatternLinesVt) {
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "After subdivision we got no enough hz or vt lines");
+	if (lines_hz.lines_cartesian.size() < nPatternLinesHzVtMin) {
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough [hz] lines after subdivision: %zu", lines_hz.lines_cartesian.size());
+		result_calib.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
+		return COMPV_ERROR_CODE_S_OK;
+	}
+	if (lines_vt.lines_cartesian.size() < nPatternLinesHzVtMin) {
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough [vt] lines after subdivision: %zu", lines_vt.lines_cartesian.size());
 		result_calib.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
-	/* Line grouping (round2) and sorting */
-	CompVLineFloat32Vector lines_hz_grouped, lines_vt_grouped;
-	const size_t m_nPatternLinesHzVtMax = std::max(m_nPatternLinesHz, m_nPatternLinesVt);
-	const size_t m_nPatternLinesHzVtMin = std::min(m_nPatternLinesHz, m_nPatternLinesVt);
-
-	// Hz
-	if (lines_hz.lines_cartesian.size() > m_nPatternLinesHzVtMin) {
-		COMPV_CHECK_CODE_RETURN(grouping(image_width, image_height, lines_hz, kSmallRhoFactHz, lines_hz_grouped));
-		if (lines_hz_grouped.size() < m_nPatternLinesHzVtMin) {
+	// Hz-grouping
+	CompVCabLineFloat32Vector lines_cab_hz_grouped, lines_cab_vt_grouped;
+	if (lines_hz.lines_cartesian.size() > nPatternLinesHzVtMin) {
+		COMPV_CHECK_CODE_RETURN(grouping(image_width, image_height, lines_hz, false, lines_cab_hz_grouped));
+		if (lines_cab_hz_grouped.size() < nPatternLinesHzVtMin) {
 			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "After [hz] grouping we got less lines than what is requires, not a good news at all");
-			lines_hz_grouped = lines_hz.lines_cartesian;
+			result_calib.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
+			return COMPV_ERROR_CODE_S_OK;
 		}
 	}
-	else {
-		lines_hz_grouped = lines_hz.lines_cartesian;
-	}
-	if (lines_hz_grouped.size() != m_nPatternLinesHz && lines_hz_grouped.size() != m_nPatternLinesVt) {
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "After [hz] grouping we don't have exactly %zu/%zu lines but more (%zu). Maybe our grouping function missed some orphans", m_nPatternLinesHz, m_nPatternLinesVt, lines_hz_grouped.size());
+	if (lines_cab_hz_grouped.size() != m_nPatternLinesHz && lines_cab_hz_grouped.size() != m_nPatternLinesVt) {
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "After [hz] grouping we don't have exactly %zu/%zu lines but more (%zu). Maybe our grouping function missed some orphans", m_nPatternLinesHz, m_nPatternLinesVt, lines_cab_hz_grouped.size());
 	}
 	
-	// Vt
-	if (lines_vt.lines_cartesian.size() > m_nPatternLinesHzVtMin) {
-		COMPV_CHECK_CODE_RETURN(grouping(image_width, image_height, lines_vt, kSmallRhoFactVt, lines_vt_grouped));
-		if (lines_vt_grouped.size() < m_nPatternLinesHzVtMin) {
+	// Vt-grouping
+	if (lines_vt.lines_cartesian.size() > nPatternLinesHzVtMin) {
+		COMPV_CHECK_CODE_RETURN(grouping(image_width, image_height, lines_vt, true, lines_cab_vt_grouped));
+		if (lines_cab_vt_grouped.size() < nPatternLinesHzVtMin) {
 			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "After [vt] grouping we got less lines than what is requires. Not a good news at all");
-			lines_vt_grouped = lines_vt.lines_cartesian;
+			result_calib.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
+			return COMPV_ERROR_CODE_S_OK;
 		}
 	}
-	else {
-		lines_vt_grouped = lines_vt.lines_cartesian;
+	if (lines_cab_vt_grouped.size() != m_nPatternLinesHz && lines_cab_vt_grouped.size() != m_nPatternLinesVt) {
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "After [vt] grouping we don't have exactly %zu lines but more (%zu). Maybe our grouping function missed some orphans", m_nPatternLinesVt, lines_cab_vt_grouped.size());
 	}
-	if (lines_vt_grouped.size() != m_nPatternLinesHz && lines_vt_grouped.size() != m_nPatternLinesVt) {
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "After [vt] grouping we don't have exactly %zu lines but more (%zu). Maybe our grouping function missed some orphans", m_nPatternLinesVt, lines_vt_grouped.size());
+
+	if ((lines_vt.lines_cartesian.size() + lines_hz.lines_cartesian.size()) < m_nPatternLinesTotal) {
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough [vt+hz] lines after grouping: %zu+%zu", lines_vt.lines_cartesian.size(), lines_hz.lines_cartesian.size());
+		result_calib.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
+	/* Pack all lines, sort and keep the best */
+	if (lines_cab_hz_grouped.size() > nPatternLinesHzVtMax) {
+		lines_cab_hz_grouped.resize(nPatternLinesHzVtMax);
+	}
+	if (lines_cab_vt_grouped.size() > nPatternLinesHzVtMax) {
+		lines_cab_vt_grouped.resize(nPatternLinesHzVtMax);
+	}
+	CompVCabLineFloat32Vector lines_cab_all_grouped;
+	CompVLineFloat32Vector lines_hz_grouped, lines_vt_grouped;
+	lines_cab_all_grouped.reserve(lines_cab_hz_grouped.size() + lines_cab_vt_grouped.size());
+	lines_cab_all_grouped.assign(lines_cab_hz_grouped.begin(), lines_cab_hz_grouped.end());
+	lines_cab_all_grouped.insert(lines_cab_all_grouped.end(), lines_cab_vt_grouped.begin(), lines_cab_vt_grouped.end());
+	std::sort(lines_cab_all_grouped.begin(), lines_cab_all_grouped.end(), [](const CompVCabLineFloat32 &line1, const CompVCabLineFloat32 &line2) {
+		return (line1.strength > line2.strength);
+	});
+	lines_cab_all_grouped.resize(m_nPatternLinesTotal); // keep best only
+	lines_hz_grouped.reserve(nPatternLinesHzVtMax);
+	lines_vt_grouped.reserve(nPatternLinesHzVtMax);
+	for (CompVCabLineFloat32Vector::const_iterator i = lines_cab_all_grouped.begin(); i < lines_cab_all_grouped.end(); ++i) {
+		if (i->vt) {
+			lines_vt_grouped.push_back(i->line);
+		}
+		else {
+			lines_hz_grouped.push_back(i->line);
+		}
+	}
+	if (lines_hz_grouped.size() < nPatternLinesHzVtMin) {
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough [hz] lines after packing: %zu", lines_hz_grouped.size());
+		result_calib.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
+		return COMPV_ERROR_CODE_S_OK;
+	}
+	if (lines_vt_grouped.size() < nPatternLinesHzVtMin) {
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough [vt] lines after packing: %zu", lines_vt_grouped.size());
+		result_calib.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
+		return COMPV_ERROR_CODE_S_OK;
 	}
 
 	/* The pattern could be rectanglar (hz != vt) and it's time to decide what is really hz and vt */
 	size_t vt_size = lines_vt_grouped.size();
 	size_t hz_size = lines_hz_grouped.size();
-	const bool swap = ((m_nPatternCornersNumCol > m_nPatternCornersNumRow) && (lines_vt_grouped.size() < lines_hz_grouped.size()))
+	result_calib.rotated = ((m_nPatternCornersNumCol > m_nPatternCornersNumRow) && (lines_vt_grouped.size() < lines_hz_grouped.size()))
 		|| ((m_nPatternCornersNumCol < m_nPatternCornersNumRow) && (lines_vt_grouped.size() > lines_hz_grouped.size()));
-	if (swap) {
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Swapping [hz] <-> [vt], checkerboard probably close to 90deg position");
-		CompVLineFloat32Vector lines_grouped = lines_hz_grouped;
-		lines_hz_grouped = lines_vt_grouped;
-		lines_vt_grouped = lines_grouped;
+	if (result_calib.rotated) {
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Checkerboard probably rotated: close to 90deg position");
 	}
-	const size_t nPatternLinesHzExpected = swap ? m_nPatternLinesVt : m_nPatternLinesHz;
-	const size_t nPatternLinesVtExpected = swap ? m_nPatternLinesHz : m_nPatternLinesVt;
+	const size_t nPatternLinesHzExpected = result_calib.rotated ? m_nPatternLinesVt : m_nPatternLinesHz;
+	const size_t nPatternLinesVtExpected = result_calib.rotated ? m_nPatternLinesHz : m_nPatternLinesVt;
 
 	/* Make sure we have the right number of lines in each group or keep the bests */
-	if (lines_hz_grouped.size() < nPatternLinesHzExpected) {
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough [hz] lines (%zu < %zu)", lines_hz_grouped.size(), nPatternLinesHzExpected);
+	if (lines_hz_grouped.size() != nPatternLinesHzExpected) {
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No expected number of [hz] lines (%zu != %zu)", lines_hz_grouped.size(), nPatternLinesHzExpected);
 		result_calib.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
 		return COMPV_ERROR_CODE_S_OK;
 	}
-	if (lines_vt_grouped.size() < nPatternLinesVtExpected) {
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough [vt] lines (%zu < %zu)", lines_vt_grouped.size(), nPatternLinesVtExpected);
+	if (lines_vt_grouped.size() != nPatternLinesVtExpected) {
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No expected number of [vt] lines (%zu != %zu)", lines_vt_grouped.size(), nPatternLinesVtExpected);
 		result_calib.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
 		return COMPV_ERROR_CODE_S_OK;
 	}
-	 
-	/* Keep best lines only (already sorted by strength in grouping function) */
-	lines_hz_grouped.resize(nPatternLinesHzExpected);
-	lines_vt_grouped.resize(nPatternLinesVtExpected);
 
 	/* Sorting the lines */
 	// Sort top-bottom (hz lines)
@@ -294,7 +325,12 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 	for (CompVLineFloat32Vector::const_iterator i = lines_vt_grouped.begin(); i < lines_vt_grouped.end(); ++i) {
 		intersect = get_line_segments_intersection(i->a.x, i->a.y, i->b.x, i->b.y,
 			x_axis_left, 0.f, x_axis_right, 0.f, &intersect_x, &intersect_y);
-		COMPV_CHECK_EXP_RETURN(!intersect, COMPV_ERROR_CODE_E_INVALID_CALL, "Vertical lines must intersect with x-axis");
+		if (!intersect) {
+			// TODO(dmi): must not happen, but happen when we get a point detected as line (more an issue in hough than intersection algo)
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Vertical line must intersect with x-axis (%f, %f)-(%f, %f)", i->a.x, i->a.y, i->b.x, i->b.y);
+			result_calib.code = COMPV_CALIB_CAMERA_RESULT_INCOHERENT_INTERSECTIONS;
+			return COMPV_ERROR_CODE_S_OK;
+		}
 		intersections.push_back(std::make_pair(intersect_x, *i));
 	}
 	std::sort(intersections.begin(), intersections.end(), [](const std::pair<compv_float32_t, const CompVLineFloat32> &pair1, const std::pair<compv_float32_t, const CompVLineFloat32> &pair2) {
@@ -340,21 +376,21 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 					if ((k->x <= (k - 1)->x) || (m->x <= (m - 1)->x)) {
 						COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Intersections not going forward (x-axis). Stop processing");
 						result_calib.code = COMPV_CALIB_CAMERA_RESULT_INCOHERENT_INTERSECTIONS;
-						//return COMPV_ERROR_CODE_S_OK;
+						return COMPV_ERROR_CODE_S_OK;
 					}
 				}
 				// Top y-intersection must be < bottom y-intersection
 				if (k->y >= m->y) {
 					COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Intersections not going forward (y-axis). Stop processing");
 					result_calib.code = COMPV_CALIB_CAMERA_RESULT_INCOHERENT_INTERSECTIONS;
-					//return COMPV_ERROR_CODE_S_OK;
+					return COMPV_ERROR_CODE_S_OK;
 				}
 			}
 		}
 	}
 
 	/* Compute homography */
-	/*uint64_t timeStart = CompVTime::nowMillis();
+	uint64_t timeStart = CompVTime::nowMillis();
 	CompVHomographyResult result_homography;
 	COMPV_CHECK_CODE_RETURN(homography(result_calib, result_homography));
 	uint64_t timeEnd = CompVTime::nowMillis();
@@ -364,11 +400,9 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough inliners after homography computation (%zu / %zu)", result_homography.inlinersCount, m_nPatternCornersTotal);
 		result_calib.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_INLIERS;
 		return COMPV_ERROR_CODE_S_OK;
-	}*/
+	}
 
-	//static size_t count = 0;
-	//COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "\n\nCOOOOOOL %zu\n\n", ++count);
-
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING("result.code must not be set to ok now");
 	result_calib.code = COMPV_CALIB_CAMERA_RESULT_OK;
 
 	return COMPV_ERROR_CODE_S_OK;
@@ -430,7 +464,7 @@ COMPV_ERROR_CODE CompVCalibCamera::subdivision(const size_t image_width, const s
 
 // Grouping using cartesian distances
 // "lines_hough_parallel" must contains lines almost parallel so that the distances are meaningful
-COMPV_ERROR_CODE CompVCalibCamera::grouping(const size_t image_width, const size_t image_height, const CompVCabLines& lines_parallel, const compv_float32_t smallRhoFact, CompVLineFloat32Vector& lines_parallel_grouped)
+COMPV_ERROR_CODE CompVCalibCamera::grouping(const size_t image_width, const size_t image_height, const CompVCabLines& lines_parallel, const bool vt, CompVCabLineFloat32Vector& lines_parallel_grouped)
 {
 	lines_parallel_grouped.clear();
 
@@ -444,6 +478,7 @@ COMPV_ERROR_CODE CompVCalibCamera::grouping(const size_t image_width, const size
 	const compv_float32_t image_heightF = static_cast<compv_float32_t>(image_height);
 
 	const compv_float32_t r = std::sqrt(static_cast<compv_float32_t>((image_width * image_width) + (image_height * image_height)));
+	const compv_float32_t smallRhoFact = vt ? kSmallRhoFactVt : kSmallRhoFactHz;
 	const compv_float32_t rsmall = smallRhoFact * r;
 	const compv_float32_t rmedium = rsmall * 8.f;
 	
@@ -494,8 +529,7 @@ COMPV_ERROR_CODE CompVCalibCamera::grouping(const size_t image_width, const size
 		group->lines.lines_hough.push_back(*it_hough);
 	}
 
-	CompVCabLineFloat32Vector lines_cab_gouped;
-	lines_cab_gouped.reserve(groups.size());
+	lines_parallel_grouped.reserve(groups.size());
 	CompVHoughLineVector::const_iterator i;
 	CompVLineFloat32Vector::const_iterator j;
 	for (CompVCabLineGroupVector::const_iterator g = groups.begin(); g < groups.end(); ++g) {
@@ -507,26 +541,17 @@ COMPV_ERROR_CODE CompVCalibCamera::grouping(const size_t image_width, const size
 			CompVCabLineFloat32 line_cab_cartesian;
 			COMPV_CHECK_CODE_RETURN(lineBestFit(g->lines.lines_cartesian, g->lines.lines_hough, line_cab_cartesian.line));
 			line_cab_cartesian.strength = strength_sum;
-			lines_cab_gouped.push_back(line_cab_cartesian);
+			line_cab_cartesian.vt = vt;
+			lines_parallel_grouped.push_back(line_cab_cartesian);
 		}
 		else {
 			CompVCabLineFloat32 line_cab_cartesian;
 			line_cab_cartesian.line = *g->lines.lines_cartesian.begin();
 			line_cab_cartesian.strength = g->lines.lines_hough.begin()->strength;
-			lines_cab_gouped.push_back(line_cab_cartesian);
+			line_cab_cartesian.vt = vt;
+			lines_parallel_grouped.push_back(line_cab_cartesian);
 		}
 	}
-
-	// Sort
-	std::sort(lines_cab_gouped.begin(), lines_cab_gouped.end(), [](const CompVCabLineFloat32 &line1, const CompVCabLineFloat32 &line2) {
-		return (line1.strength > line2.strength);
-	});
-
-	// Push
-	lines_parallel_grouped.reserve(lines_cab_gouped.size());
-	std::transform(lines_cab_gouped.begin(), lines_cab_gouped.end(), std::back_inserter(lines_parallel_grouped), [](const CompVCabLineFloat32& line_cab_cartesian) {
-		return line_cab_cartesian.line;
-	});
 
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -604,24 +629,26 @@ COMPV_ERROR_CODE CompVCalibCamera::lineBestFit(const CompVLineFloat32Vector& poi
 }
 
 // Build pattern's corners
-COMPV_ERROR_CODE CompVCalibCamera::buildPatternCorners()
+COMPV_ERROR_CODE CompVCalibCamera::buildPatternCorners(const CompVCalibCameraResult& result_calib)
 {
-	if (!m_ptrPatternCorners || m_ptrPatternCorners->cols() != m_nPatternCornersTotal) {
+	if (!m_ptrPatternCorners || (m_ptrPatternCorners->cols() != m_nPatternCornersTotal || m_bPatternCornersRotated != result_calib.rotated)) {
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Building pattern corners");
 		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float64_t>(&m_ptrPatternCorners, 3, m_nPatternCornersTotal));
 		compv_float64_t* trainX = m_ptrPatternCorners->ptr<compv_float64_t>(0);
 		compv_float64_t* trainY = m_ptrPatternCorners->ptr<compv_float64_t>(1);
 		COMPV_CHECK_CODE_RETURN(m_ptrPatternCorners->one_row<compv_float64_t>(2)); // homogeneous coord. with Z = 1
-		COMPV_CHECK_EXP_RETURN(m_nPatternCornersTotal != (m_nPatternCornersNumRow * m_nPatternCornersNumCol), COMPV_ERROR_CODE_E_INVALID_STATE, "Pattern is invalid");
 		const compv_float64_t patternBlockSizePixel = static_cast<compv_float64_t>(m_nPatternBlockSizePixel);
 		compv_float64_t x, y;
 		size_t i, j, k;
-		for (j = 0, y = 0.0, k = 0; j < m_nPatternCornersNumRow; ++j, y += patternBlockSizePixel) {
-			for (i = 0, x = 0.0; i < m_nPatternCornersNumCol; ++i, x += patternBlockSizePixel, ++k) {
+		const size_t nPatternCornersNumRowExpected = result_calib.rotated ? m_nPatternCornersNumCol : m_nPatternCornersNumRow;
+		const size_t nPatternCornersNumColExpected = result_calib.rotated ? m_nPatternCornersNumRow : m_nPatternCornersNumCol;
+		for (j = 0, y = 0.0, k = 0; j < nPatternCornersNumRowExpected; ++j, y += patternBlockSizePixel) {
+			for (i = 0, x = 0.0; i < nPatternCornersNumColExpected; ++i, x += patternBlockSizePixel, ++k) {
 				trainX[k] = x;
 				trainY[k] = y;
 			}
 		}
+		m_bPatternCornersRotated = result_calib.rotated;
 	}
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -632,7 +659,7 @@ COMPV_ERROR_CODE CompVCalibCamera::homography(CompVCalibCameraResult& result_cal
 	COMPV_CHECK_EXP_RETURN(result_calib.points_intersections.size() != m_nPatternCornersTotal, COMPV_ERROR_CODE_E_INVALID_CALL, "Invalid number of corners");
 
 	// Build pattern's corners
-	COMPV_CHECK_CODE_RETURN(buildPatternCorners());
+	COMPV_CHECK_CODE_RETURN(buildPatternCorners(result_calib));
 
 	// Convert the intersections from float32 to float64 for homagraphy
 	CompVMatPtr query;
