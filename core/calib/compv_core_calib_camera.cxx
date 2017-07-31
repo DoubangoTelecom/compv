@@ -8,6 +8,8 @@
 #include "compv/base/image/compv_image.h"
 #include "compv/base/math/compv_math_utils.h"
 #include "compv/base/math/compv_math_gauss.h"
+#include "compv/base/math/compv_math_matrix.h"
+#include "compv/base/math/compv_math_eigen.h"
 #include "compv/base/time/compv_time.h"
 
 #include <iterator> /* std::back_inserter */
@@ -17,7 +19,9 @@
 #define PATTERN_COL_CORNERS_NUM				8  // Number of corners per column
 #define PATTERN_CORNERS_NUM					(PATTERN_ROW_CORNERS_NUM * PATTERN_COL_CORNERS_NUM) // Total number of corners
 #define PATTERN_GROUP_MAXLINES				10 // Maximum number of lines per group (errors)
-#define PATTERN_BLOCK_SIZE_PIXEL			40					
+#define PATTERN_BLOCK_SIZE_PIXEL			40
+
+#define CALIBRATION_MIN_IMAGES				11 // Minimum images before computing calibrartion (must be >= 3)
 
 #define HOUGH_ID							COMPV_HOUGHSHT_ID
 #define HOUGH_RHO							0.5f // "rho-delta" (half-pixel)
@@ -62,6 +66,7 @@ CompVCalibCamera::CompVCalibCamera()
 	, m_nPatternLinesHz(PATTERN_ROW_CORNERS_NUM)
 	, m_nPatternLinesVt(PATTERN_COL_CORNERS_NUM)
 	, m_nPatternBlockSizePixel(PATTERN_BLOCK_SIZE_PIXEL)
+	, m_nMinImageCountBeforeCalib(CALIBRATION_MIN_IMAGES)
 	, m_bPatternCornersRotated(false)
 {
 	m_nPatternCornersTotal = m_nPatternCornersNumRow * m_nPatternCornersNumCol;
@@ -422,17 +427,23 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 	}
 
 	/* Compute homography */
-	uint64_t timeStart = CompVTime::nowMillis();
 	CompVHomographyResult result_homography;
 	COMPV_CHECK_CODE_RETURN(homography(result_calib, result_homography));
-	uint64_t timeEnd = CompVTime::nowMillis();
-	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Homography Elapsed time = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
-
-	if (result_homography.inlinersCount < (m_nPatternCornersTotal - std::max(m_nPatternCornersNumRow, m_nPatternCornersNumCol))) {
+	if (result_homography.inlinersCount < (m_nPatternCornersTotal - std::max(m_nPatternCornersNumRow, m_nPatternCornersNumCol))) { // We allow at most #1 row/col error (outliers)
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough inliners after homography computation (%zu / %zu)", result_homography.inlinersCount, m_nPatternCornersTotal);
 		result_calib.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_INLIERS;
 		return COMPV_ERROR_CODE_S_OK;
 	}
+	m_Homographies.push_back(result_calib.homography);
+
+	/* Compute calibration */
+	if (m_Homographies.size() < m_nMinImageCountBeforeCalib) {
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough homographies (%zu) yet, delaying calibration", m_Homographies.size());
+		result_calib.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_HOMOGRAPHIES;
+		return COMPV_ERROR_CODE_S_OK;
+	}
+	COMPV_CHECK_CODE_RETURN(calibrate(result_calib));
+
 
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("result.code must not be set to ok now");
 	result_calib.code = COMPV_CALIB_CAMERA_RESULT_OK;
@@ -713,6 +724,77 @@ COMPV_ERROR_CODE CompVCalibCamera::homography(CompVCalibCameraResult& result_cal
 	// Find homography
 	COMPV_CHECK_CODE_RETURN(CompVHomography<compv_float64_t>::find(m_ptrPatternCorners, query, &result_calib.homography, &result_homography));
 
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVCalibCamera::calibrate(CompVCalibCameraResult& result_calib)
+{
+	COMPV_CHECK_EXP_RETURN(m_Homographies.size() < 3, COMPV_ERROR_CODE_E_INVALID_CALL, "Calibration process requires at least #3 images");
+	
+	/* Compute the V matrix */
+	// For multiple images (2n x 6) matrix: https://youtu.be/Ou9Uj75DJX0?t=22m13s
+	// Each image have #2 contribution and we require at least #3 images
+	CompVMatPtr V;
+	const size_t numHomographies = m_Homographies.size();
+	COMPV_CHECK_CODE_RETURN((CompVMat::newObjAligned<compv_float64_t>(&V, (numHomographies << 1), 6)));
+	compv_float64_t* V0 = V->ptr<compv_float64_t>(0); // v12
+	compv_float64_t* V1 = V->ptr<compv_float64_t>(1); // (v11 - v22)
+	const size_t strideTimes2 = V->stride() << 1;
+	size_t j;
+	std::vector<CompVMatPtr>::const_iterator it_homography;
+	const compv_float64_t *h1, *h2, *h3;
+	compv_float64_t h11, h12, h21, h22, h31, h32;
+
+	for (j = 0, it_homography = m_Homographies.begin(); j < numHomographies; ++j, ++it_homography) {
+		// For one image, computing v12, v11 and v22: https://youtu.be/Ou9Uj75DJX0?t=22m
+		h1 = (*it_homography)->ptr<const compv_float64_t>(0);
+		h2 = (*it_homography)->ptr<const compv_float64_t>(1);
+		h3 = (*it_homography)->ptr<const compv_float64_t>(2);
+		h11 = h1[0];
+		h12 = h1[1];
+		h21 = h2[0];
+		h22 = h2[1];
+		h31 = h3[0];
+		h32 = h3[1];
+		// const compv_float64_t v12[6] = { h11*h12, (h11*h22) + (h21*h12), (h31*h12) + (h11*h32), h21*h22, (h31*h22) + (h21*h32), h31*h32 };
+		// const compv_float64_t v11[6] = { h11*h11, (h11*h21) + (h21*h12), (h31*h11) + (h11*h31), h21*h21, (h31*h21) + (h21*h31), h31*h31 };
+		// const compv_float64_t v22[6] = { h12*h12, (h12*h22) + (h22*h12), (h32*h12) + (h12*h32), h22*h22, (h32*h22) + (h22*h32), h32*h32 };
+		V0[0] = h11*h12, V0[1] = (h11*h22) + (h21*h12), V0[2] = (h31*h12) + (h11*h32), V0[3] = h21*h22, V0[4] = (h31*h22) + (h21*h32); V0[5] = h31*h32;
+		V1[0] = (h11*h11) - (h12*h12), V1[1] = ((h11*h21) + (h21*h12)) - ((h12*h22) + (h22*h12)), V1[2] = ((h31*h11) + (h11*h31)) - ((h32*h12) + (h12*h32)), V1[3] = (h21*h21) - (h22*h22), V1[4] = ((h31*h21) + (h21*h31)) - ((h32*h22) + (h22*h32)); V1[5] = (h31*h31) - (h32*h32);
+		
+		V0 += strideTimes2;
+		V1 += strideTimes2;
+	}
+
+	/* Find b by solving Vb = 0: https://youtu.be/Ou9Uj75DJX0?t=23m47s */
+	// Vector B = (K*t.K*) = (Lt.L) https://youtu.be/Ou9Uj75DJX0?t=21m14s
+	// Compute S = Vt*V, 6x6 symetric matrix
+	CompVMatPtr S;
+	COMPV_CHECK_CODE_RETURN(CompVMatrix::mulAtA(V, &S));
+	// Find Eigen values and vectors
+	CompVMatPtr eigenValues, eigneVectors;
+	static const bool sortEigenValuesVectors = false;
+	static const bool transposeEigenVectors = false; // row-vector?
+	static const bool promoteZerosInEigenValues = false; // set to zero when < eps
+	COMPV_CHECK_CODE_RETURN(CompVMathEigen<compv_float64_t>::findSymm(S, &eigenValues, &eigneVectors, sortEigenValuesVectors, transposeEigenVectors, promoteZerosInEigenValues));
+	// Find higest eigenValue index
+	size_t lowestEigenValueIndex = 0;
+	compv_float64_t eigenValue, lowestEigenValue = *eigenValues->ptr<const compv_float64_t>(0, 0);
+	for (size_t index = 1; index < 6; ++index) {
+		eigenValue = *eigenValues->ptr<const compv_float64_t>(index, index);
+		if (lowestEigenValue > eigenValue) {
+			lowestEigenValueIndex = index;
+			lowestEigenValue = eigenValue;
+		}
+	}
+	const compv_float64_t b11 = *eigneVectors->ptr<const compv_float64_t>(0, lowestEigenValueIndex);
+	const compv_float64_t b12 = *eigneVectors->ptr<const compv_float64_t>(1, lowestEigenValueIndex);
+	const compv_float64_t b13 = *eigneVectors->ptr<const compv_float64_t>(2, lowestEigenValueIndex);
+	const compv_float64_t b22 = *eigneVectors->ptr<const compv_float64_t>(3, lowestEigenValueIndex);
+	const compv_float64_t b23 = *eigneVectors->ptr<const compv_float64_t>(4, lowestEigenValueIndex);
+	const compv_float64_t b33 = *eigneVectors->ptr<const compv_float64_t>(5, lowestEigenValueIndex);
+
+	/* Cholesky decomposition on B to find L */
 	return COMPV_ERROR_CODE_S_OK;
 }
 
