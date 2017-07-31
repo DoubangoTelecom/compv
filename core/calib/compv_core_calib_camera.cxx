@@ -13,7 +13,7 @@
 #include "compv/base/time/compv_time.h"
 
 #include <iterator> /* std::back_inserter */
-#include <limits> /* std::numeric_limits::lowest */
+#include <limits> /* std::numeric_limits::smallest */
 
 #define PATTERN_ROW_CORNERS_NUM				10 // Number of corners per row
 #define PATTERN_COL_CORNERS_NUM				8  // Number of corners per column
@@ -42,7 +42,9 @@
 
 #define COMPV_THIS_CLASSNAME	"CompVCalibCamera"
 
-// Implementation based on video course "Photogrammetry I - 16b - DLT & Camera Calibration (2015)": https://www.youtube.com/watch?v=Ou9Uj75DJX0
+// Implementation based on:
+//	- "Photogrammetry I - 16b - DLT & Camera Calibration (2015)": https://www.youtube.com/watch?v=Ou9Uj75DJX0
+//	- and http://www.cim.mcgill.ca/~langer/558/19-cameracalibration.pdf
 // TODO(dmi): use "ceres-solver" http://ceres-solver.org/index.html
 // TODO(dmi): add support for lmfit (FreeBSD): http://apps.jcns.fz-juelich.de/doku/sc/lmfit
 
@@ -777,22 +779,53 @@ COMPV_ERROR_CODE CompVCalibCamera::calibrate(CompVCalibCameraResult& result_cali
 	static const bool transposeEigenVectors = false; // row-vector?
 	static const bool promoteZerosInEigenValues = false; // set to zero when < eps
 	COMPV_CHECK_CODE_RETURN(CompVMathEigen<compv_float64_t>::findSymm(S, &eigenValues, &eigneVectors, sortEigenValuesVectors, transposeEigenVectors, promoteZerosInEigenValues));
-	// Find higest eigenValue index
-	size_t lowestEigenValueIndex = 0;
-	compv_float64_t eigenValue, lowestEigenValue = *eigenValues->ptr<const compv_float64_t>(0, 0);
+	// Find smallest eigenValue index
+	size_t smallestEigenValueIndex = 0;
+	compv_float64_t eigenValue, smallestEigenValue = *eigenValues->ptr<const compv_float64_t>(0, 0);
 	for (size_t index = 1; index < 6; ++index) {
 		eigenValue = *eigenValues->ptr<const compv_float64_t>(index, index);
-		if (lowestEigenValue > eigenValue) {
-			lowestEigenValueIndex = index;
-			lowestEigenValue = eigenValue;
+		if (smallestEigenValue > eigenValue) {
+			smallestEigenValueIndex = index;
+			smallestEigenValue = eigenValue;
 		}
 	}
-	const compv_float64_t b11 = *eigneVectors->ptr<const compv_float64_t>(0, lowestEigenValueIndex);
-	const compv_float64_t b12 = *eigneVectors->ptr<const compv_float64_t>(1, lowestEigenValueIndex);
-	const compv_float64_t b13 = *eigneVectors->ptr<const compv_float64_t>(2, lowestEigenValueIndex);
-	const compv_float64_t b22 = *eigneVectors->ptr<const compv_float64_t>(3, lowestEigenValueIndex);
-	const compv_float64_t b23 = *eigneVectors->ptr<const compv_float64_t>(4, lowestEigenValueIndex);
-	const compv_float64_t b33 = *eigneVectors->ptr<const compv_float64_t>(5, lowestEigenValueIndex);
+	const compv_float64_t b11 = *eigneVectors->ptr<const compv_float64_t>(0, smallestEigenValueIndex);
+	const compv_float64_t b12 = *eigneVectors->ptr<const compv_float64_t>(1, smallestEigenValueIndex);
+	const compv_float64_t b13 = *eigneVectors->ptr<const compv_float64_t>(2, smallestEigenValueIndex);
+	const compv_float64_t b22 = *eigneVectors->ptr<const compv_float64_t>(3, smallestEigenValueIndex);
+	const compv_float64_t b23 = *eigneVectors->ptr<const compv_float64_t>(4, smallestEigenValueIndex);
+	const compv_float64_t b33 = *eigneVectors->ptr<const compv_float64_t>(5, smallestEigenValueIndex);
+
+	/* Cholesky decomposition: https://youtu.be/Ou9Uj75DJX0?t=19m24s */
+	// Chol(B) = LLt, with L = K*t -> Lt = K*
+	// Cholesky decomposition for 3x3 matrix: https://rosettacode.org/wiki/Cholesky_decomposition
+	const compv_float64_t k11 = std::sqrt(b11);
+	const compv_float64_t k22 = std::sqrt(b22 - (b12 * b12)); // b21 = b12
+	const compv_float64_t k33 = std::sqrt(b33 - ((b13 * b13) + (b23 * b23))); // b31 = b13, b32 = b23
+	const compv_float64_t k11s = (1.0 / k11);
+	const compv_float64_t k21 = k11s * b12; // b21 = b12
+	const compv_float64_t k31 = k11s * b13; // b31 = b13
+	const compv_float64_t k32 = (1.0 / k22) * (b23 - (k31*k21)); // b32 = b23
+	// Build Lt
+	CompVMatPtr Lt;
+	COMPV_CHECK_CODE_RETURN((CompVMat::newObjAligned<compv_float64_t>(&Lt, 3, 3)));
+	compv_float64_t* Lt1 = Lt->ptr<compv_float64_t>(0);
+	compv_float64_t* Lt2 = Lt->ptr<compv_float64_t>(1);
+	compv_float64_t* Lt3 = Lt->ptr<compv_float64_t>(2);
+	Lt1[0] = k11, Lt1[1] = k21, Lt1[2] = k31;
+	Lt2[0] = 0.0, Lt2[1] = k22, Lt2[2] = k32;
+	Lt3[0] = 0.0, Lt3[1] = 0.0, Lt3[2] = k33;
+	// Compute K* = Lt -> K = Lt*
+	CompVMatPtr K;
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Inverse of upper triangular matrix should be obvious (do not call CompVMatrix::invA3x3)");
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("K is upper triangular matrix with k33 = 1.0");
+	COMPV_CHECK_CODE_RETURN(CompVMatrix::invA3x3(Lt, &K));
+
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "K = %f, %f, %f\n %f, %f, %f\n %f, %f, %f",
+		*K->ptr<const compv_float64_t>(0, 0), *K->ptr<const compv_float64_t>(0, 1), *K->ptr<const compv_float64_t>(0, 2),
+		*K->ptr<const compv_float64_t>(1, 0), *K->ptr<const compv_float64_t>(1, 1), *K->ptr<const compv_float64_t>(1, 2),
+		*K->ptr<const compv_float64_t>(2, 0), *K->ptr<const compv_float64_t>(2, 1), *K->ptr<const compv_float64_t>(2, 2)
+	);
 
 	/* Cholesky decomposition on B to find L */
 	return COMPV_ERROR_CODE_S_OK;
