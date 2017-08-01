@@ -37,6 +37,7 @@ enum COMPV_CALIB_CAMERA_RESULT_CODE {
 	COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_INTERSECTIONS,
 	COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_INLIERS,
 	COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES,
+	COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_HOMOGRAPHIES,
 	COMPV_CALIB_CAMERA_RESULT_TOO_MUCH_LINES,
 	COMPV_CALIB_CAMERA_RESULT_INCOHERENT_INTERSECTIONS,
 };
@@ -49,6 +50,9 @@ struct CompVCalibCameraResult {
 	bool rotated;
 	CompVMatPtr edges;
 	CompVMatPtr homography;
+	CompVMatPtr K; // camera matrix (3x3)
+	CompVMatPtr R; // Rotation matrix (3x3)
+	CompVMatPtr T; // Translation matrix (1x3)
 public:
 	void reset() {
 		code = COMPV_CALIB_CAMERA_RESULT_NONE;
@@ -57,6 +61,7 @@ public:
 		lines_grouped.lines_cartesian.clear();
 		lines_grouped.lines_hough.clear();
 		points_intersections.clear();
+		homography = nullptr; // saved into m_Homographies, no need for re-use. Also used to check if new homography computed
 	}
 	COMPV_INLINE bool isOK() const {
 		return code == COMPV_CALIB_CAMERA_RESULT_OK;
@@ -73,12 +78,13 @@ public:
 	COMPV_OBJECT_GET_ID(CompVBoxInterestPoint);
 
 	COMPV_ERROR_CODE process(const CompVMatPtr& image, CompVCalibCameraResult& result);
+	COMPV_ERROR_CODE test(const CompVCalibCameraResult& result_calib, CompVPointFloat32Vector& corrected);
 
 	COMPV_INLINE CompVEdgeDetePtr edgeDetector() { return m_ptrCanny; }
 	COMPV_INLINE CompVHoughPtr houghTransform() { return m_ptrHough; }
 
-	COMPV_INLINE size_t patternWidth() const { return ((m_bPatternCornersRotated ? m_nPatternCornersNumRow : m_nPatternCornersNumCol) - 1) * m_nPatternBlockSizePixel; }
-	COMPV_INLINE size_t patternHeight() const { return ((m_bPatternCornersRotated ? m_nPatternCornersNumCol : m_nPatternCornersNumRow) - 1) * m_nPatternBlockSizePixel; }
+	COMPV_INLINE size_t patternWidth() const { return static_cast<size_t>(((m_bPatternCornersRotated ? m_nPatternCornersNumRow : m_nPatternCornersNumCol) - 1) * m_nPatternBlockSizePixel); }
+	COMPV_INLINE size_t patternHeight() const { return static_cast<size_t>(((m_bPatternCornersRotated ? m_nPatternCornersNumCol : m_nPatternCornersNumRow) - 1) * m_nPatternBlockSizePixel); }
 	
 	static COMPV_ERROR_CODE newObj(CompVCalibCameraPtrPtr calib);
 
@@ -88,6 +94,7 @@ private:
 	COMPV_ERROR_CODE lineBestFit(const CompVLineFloat32Vector& points_cartesian, const CompVHoughLineVector& points_hough, CompVLineFloat32& line);
 	COMPV_ERROR_CODE buildPatternCorners(const CompVCalibCameraResult& result_calib);
 	COMPV_ERROR_CODE homography(CompVCalibCameraResult& result_calib, CompVHomographyResult& result_homography);
+	COMPV_ERROR_CODE calibrate(CompVCalibCameraResult& result_calib);
 
 private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
@@ -97,11 +104,13 @@ private:
 	size_t m_nPatternLinesTotal;
 	size_t m_nPatternLinesHz;
 	size_t m_nPatternLinesVt;
-	size_t m_nPatternBlockSizePixel;
+	compv_float32_t m_nPatternBlockSizePixel;
+	size_t m_nMinImageCountBeforeCalib;
 	CompVEdgeDetePtr m_ptrCanny;
 	CompVHoughPtr m_ptrHough;
 	CompVMatPtr m_ptrPatternCorners;
 	bool m_bPatternCornersRotated;
+	std::vector<CompVMatPtr> m_Homographies;
 	COMPV_VS_DISABLE_WARNINGS_END()
 };
 

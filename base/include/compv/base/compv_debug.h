@@ -99,6 +99,7 @@ private:
 #define COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(...) COMPV_DEBUG_INFO_CODE_ONCE("Not optimized -> " __VA_ARGS__)
 #define COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED_GPU(...) COMPV_DEBUG_INFO_CODE_ONCE("Not optimized for GPU -> " __VA_ARGS__)
 #define COMPV_DEBUG_INFO_CODE_FOR_TESTING(...) COMPV_DEBUG_INFO_CODE_ONCE("Is for testing and must not be called -> " __VA_ARGS__)
+#define COMPV_DEBUG_INFO_CODE_TODO(...) COMPV_DEBUG_INFO_CODE_ONCE("Contains a TODO: -> " __VA_ARGS__)
 
 #if !defined(__AVX__)
 #	define COMPV_DEBUG_INFO_CHECK_AVX() COMPV_DEBUG_INFO_CODE_ONCE("May be slow because of AVX/SSE transition issues")

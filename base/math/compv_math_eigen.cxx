@@ -27,6 +27,8 @@ COMPV_ERROR_CODE CompVMathEigen<T>::findSymm(const CompVMatPtr &S, CompVMatPtrPt
 	COMPV_CHECK_EXP_RETURN(!S || !D || !Q || !S->rows() || S->rows() != S->cols(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
 
+	COMPV_DEBUG_INFO_CODE_TODO("Remove T and create CompVMathEigenGeneric like what is done with CompVMathMatrix (type of S discovered at runtime)");
+
 #if defined(_DEBUG) || defined(DEBUG)
 	// For homography and Fundamental matrices S is 9x9 matrix
 	if (S->rows() > 9 || S->cols() > 9) {
@@ -73,6 +75,10 @@ COMPV_ERROR_CODE CompVMathEigen<T>::findSymm(const CompVMatPtr &S, CompVMatPtrPt
 	// D = GtDG = Gt(GtDt)t
 
 	// Instead of returning Q = QG, return Qt, Qt = GtQt
+
+	COMPV_DEBUG_INFO_CODE_TODO("jacobiAngles contains few lines, embedd the code instead of calling a function");
+
+	COMPV_DEBUG_INFO_CODE_TODO("Try to eliminate extract2Cols/insert2Cols which were made to make mulAG thread-safe and SIMD-friendly. Took too much time");
 
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<T>(&GD_2rows, 2, D_->rows()));
 	do {

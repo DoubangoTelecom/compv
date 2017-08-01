@@ -10,7 +10,7 @@ using namespace compv;
 #	define CAMERA_WIDTH		640
 #	define CAMERA_HEIGHT	480
 #endif
-#define CAMERA_FPS			15
+#define CAMERA_FPS			10
 #define CAMERA_SUBTYPE		COMPV_SUBTYPE_PIXELS_YUY2
 #define CAMERA_AUTOFOCUS	true
 
@@ -110,14 +110,19 @@ public:
 			imageOrig = image;
 #else
 			static size_t __index = 0;
-			size_t file_index = 47 + ((__index++) % 20)/*47*//*65*//*65*//*47*//*65*//*47*//*55*//*47*//*48*//*52*/;
+			size_t file_index = 47 + ((__index++) % 20)/*65*//*65*//*47*//*65*//*47*//*55*//*47*//*48*//*52*/;
+			if (m_CalibResult.K && m_CalibResult.R && m_CalibResult.T) {
+				file_index = 48;
+			}
 			std::string file_path = std::string("C:/Projects/GitHub/data/calib/P10100")+ CompVBase::to_string(file_index) +std::string("s_640x480_gray.yuv");
 			//std::string file_path = "C:/Projects/GitHub/data/calib/P1010047s_90deg_640x480_gray.yuv";
 			COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 640, 480, 640, file_path.c_str(), &imageGray));
 			imageOrig = imageGray;
 			COMPV_DEBUG_INFO_EX(TAG_SAMPLE, "%s", file_path.c_str());
 			COMPV_DEBUG_INFO_CODE_FOR_TESTING("Remove the sleep function");
-			CompVThread::sleep(1000);
+			if (m_CalibResult.K && m_CalibResult.R && m_CalibResult.T) {
+				CompVThread::sleep(1000);
+			}
 #endif
 			// Check if image size changed
 			if (m_nImageWidth != imageOrig->cols() || m_nImageHeight != imageOrig->rows()) {
@@ -160,7 +165,7 @@ public:
 				m_DrawingOptions.setColor(__color_yellow);
 				COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->renderer()->canvas()->drawTexts(labels, m_CalibResult.points_intersections, &m_DrawingOptions));
 			}
-			if (m_CalibResult.isOK() && m_CalibResult.homography) {
+			if (m_CalibResult.homography) {
 				CompVMatPtr rectPattern, rectHomograyApplied;
 				compv_float64_t *x, *y;
 				CompVLineFloat32Vector rectLines(4);
@@ -188,6 +193,14 @@ public:
 			/* Reprojection */
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineReProj->activate());
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineReProj->drawImage(m_CalibResult.edges));
+			if (m_CalibResult.K && m_CalibResult.R && m_CalibResult.T) {
+				CompVPointFloat32Vector points;
+				m_DrawingOptions.setColor(__color_red);
+				COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineReProj->renderer()->canvas()->drawPoints(m_CalibResult.points_intersections, &m_DrawingOptions));
+				m_DrawingOptions.setColor(__color_bleu);
+				COMPV_CHECK_CODE_BAIL(err = m_ptrCalib->test(m_CalibResult, points));
+				COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineReProj->renderer()->canvas()->drawPoints(points, &m_DrawingOptions));
+			}
 
 			/* Corners */
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceCorners->activate());
