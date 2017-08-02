@@ -112,7 +112,7 @@ public:
 			static size_t __index = 0;
 			size_t file_index = 47 + ((__index++) % 20)/*65*//*65*//*47*//*65*//*47*//*55*//*47*//*48*//*52*/;
 			if (m_CalibResult.isDone()) {
-				file_index = 48;
+				//file_index = 48;
 			}
 			//if (file_index == 50) return COMPV_ERROR_CODE_S_OK;
 			std::string file_path = std::string("C:/Projects/GitHub/data/calib/P10100")+ CompVBase::to_string(file_index) +std::string("s_640x480_gray.yuv");

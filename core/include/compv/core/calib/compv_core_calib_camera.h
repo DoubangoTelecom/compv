@@ -49,7 +49,7 @@ struct CompVCalibCameraPlan {
 	CompVPointFloat32Vector intersections;
 	CompVMatPtr homography;
 	CompVMatPtr R; // Rotation matrix(3x3) - extrinsic
-	CompVMatPtr t; // Translation matrix (1x3) - extrinsic
+	CompVMatPtr t; // Translation matrix (3x1)t vector - extrinsic
 public:
 	COMPV_INLINE void reset() {
 		pattern = nullptr;
@@ -71,9 +71,9 @@ struct CompVCalibCameraResult {
 	bool rotated;
 	CompVMatPtr edges;
 	CompVCalibCameraPlanVector planes;
-	CompVMatPtr K; // camera matrix (3x3) - intrinsic
-	CompVMatPtr k; // Radial distorsion (2x1) - "intrinsic"
-	CompVMatPtr p; // Tangential distorsion (2x1) - "intrinsic"
+	CompVMatPtr K; // camera matrix (3x3) matrix - intrinsic
+	CompVMatPtr k; // Radial distorsion (2x1) vector - "intrinsic"
+	CompVMatPtr p; // Tangential distorsion (2x1) vector - "intrinsic"
 public:
 	COMPV_INLINE void reset() {
 		code = COMPV_CALIB_CAMERA_RESULT_NONE;
@@ -115,6 +115,8 @@ private:
 	COMPV_ERROR_CODE buildPatternCorners(const CompVCalibCameraResult& result_calib);
 	COMPV_ERROR_CODE homography(CompVCalibCameraResult& result_calib, CompVHomographyResult& result_homography, CompVMatPtrPtr homographyMat);
 	COMPV_ERROR_CODE calibrate(CompVCalibCameraResult& result_calib);
+	COMPV_ERROR_CODE proj(const CompVMatPtr& inPoints, const CompVMatPtr& K, const CompVMatPtr& k, const CompVMatPtr& p, const CompVMatPtr& R, const CompVMatPtr&t, CompVMatPtrPtr outPoints);
+	COMPV_ERROR_CODE projError(const CompVCalibCameraResult& result_calib, compv_float64_t& error);
 
 private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)

@@ -476,87 +476,30 @@ COMPV_ERROR_CODE CompVCalibCamera::test(const CompVCalibCameraResult& result_cal
 {
 	const size_t base_file_index = file_index - 47;
 	COMPV_CHECK_EXP_RETURN(base_file_index >= result_calib.planes.size() || base_file_index >= result_calib.planes.size(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	
 	corrected.clear();
 
-	if (result_calib.K && result_calib.k) {
-		const CompVCalibCameraPlan& plan = result_calib.planes[base_file_index];
-		CompVMatPtr correctedPoints;
-		const size_t numPoints = plan.intersections.size();
-		const compv_float64_t* patternX = plan.pattern->ptr<compv_float64_t>(0); //correctedPoints->ptr<compv_float64_t>(0);
-		const compv_float64_t* patternY = plan.pattern->ptr<compv_float64_t>(1); // correctedPoints->ptr<compv_float64_t>(1);
-		const compv_float64_t* patternZ = plan.pattern->ptr<compv_float64_t>(2); // correctedPoints->ptr<compv_float64_t>(2);
-		size_t index;
+	CompVMatPtr correctedMat;
+	const CompVCalibCameraPlan& plan = result_calib.planes[base_file_index];
+	COMPV_CHECK_CODE_RETURN(proj(plan.pattern, result_calib.K, result_calib.k, result_calib.p, plan.R, plan.t, &correctedMat));
+	const compv_float64_t* projX = correctedMat->ptr<compv_float64_t>(0);
+	const compv_float64_t* projY = correctedMat->ptr<compv_float64_t>(1);
+	const compv_float64_t* projZ = correctedMat->ptr<compv_float64_t>(2);
 
-		// https://youtu.be/Ou9Uj75DJX0?t=25m34s
-
-		//compv_float64_t scale;
-		const double R[9] = {
-			/*0.99929074317845490,
-			0.0090807231738267141,
-			0.036545192084482779,
-			-0.0077379654999582773,
-			0.99929572407437162,
-			-0.036717567138888983,
-			-0.036852876248304849,
-			0.036408739518386114,
-			0.99865723308796472*/
-			*plan.R->ptr<const compv_float64_t>(0, 0),
-			*plan.R->ptr<const compv_float64_t>(0, 1),
-			*plan.R->ptr<const compv_float64_t>(0, 2),
-			*plan.R->ptr<const compv_float64_t>(1, 0),
-			*plan.R->ptr<const compv_float64_t>(1, 1),
-			*plan.R->ptr<const compv_float64_t>(1, 2),
-			*plan.R->ptr<const compv_float64_t>(2, 0),
-			*plan.R->ptr<const compv_float64_t>(2, 1),
-			*plan.R->ptr<const compv_float64_t>(2, 2)
-		};
-		const compv_float64_t t[3] = {
-			*plan.t->ptr<const compv_float64_t>(0, 0), *plan.t->ptr<const compv_float64_t>(0, 1), *plan.t->ptr<const compv_float64_t>(0, 2)
-			/*-133.78836059570312, -157.81092834472656, 672.31890869140625*/
-		};
-		const compv_float64_t k[4] = {
-			*result_calib.k->ptr<const compv_float64_t>(0, 0), *result_calib.k->ptr<const compv_float64_t>(1, 0), 0.0, 0.0
-			/*0.33050471544265747, -1.6837677955627441, 0, 0 */
-		}; // (k1, k2), (p1, p2) = (radial), (tangential)
-		const compv_float64_t fx = *result_calib.K->ptr<const compv_float64_t>(0, 0); // 723.29589843750000
-		const compv_float64_t fy = *result_calib.K->ptr<const compv_float64_t>(1, 1); // 732.23962402343750
-		const compv_float64_t cx = *result_calib.K->ptr<const compv_float64_t>(0, 2); // 308.55270385742187
-		const compv_float64_t cy = *result_calib.K->ptr<const compv_float64_t>(1, 2); // 235.20997619628906
-		const compv_float64_t k1 = k[0];
-		const compv_float64_t k2 = k[1];
-		const compv_float64_t p1 = k[2];
-		const compv_float64_t p2 = k[3];
-		for (index = 0; index < numPoints; ++index) {
-			compv_float64_t X = patternX[index], Y = patternY[index], Z = patternZ[index];
-			// Apply R and T
-			compv_float64_t x = R[0] * X + R[1] * Y + R[2] * Z + t[0];
-			compv_float64_t y = R[3] * X + R[4] * Y + R[5] * Z + t[1];
-			compv_float64_t z = R[6] * X + R[7] * Y + R[8] * Z + t[2];
-			compv_float64_t x2, y2, r2, r4, a1, a2, a3, radialdist;
-
-			// https://youtu.be/Ou9Uj75DJX0?t=25m34s (1)
-			z = z ? 1. / z : 1;
-			x *= z; y *= z;
-
-			// https://youtu.be/Ou9Uj75DJX0?t=25m34s (2) or general form: https://en.wikipedia.org/wiki/Distortion_(optics)#Software_correction
-			x2 = (x * x);
-			y2 = (y * y);
-			r2 = x2 + y2;
-			r4 = r2 * r2;
-			a1 = 2 * (x * y);
-			a2 = r2 + (2 * x2);
-			a3 = r2 + (2 * y2);
-			radialdist = 1 + k1 * r2 + k2 * r4;
-			// TODO(dmi): Add SIMD versions for (p1,p2) = (0,0) only
-			x = x*radialdist + p1 * a1 + p2 * a2;
-			y = y*radialdist + p1 * a3 + p2 * a1;
-
-			// Apply K
-			x = x * fx + cx;
-			y = y * fy + cy;
-			corrected.push_back(CompVPointFloat32(static_cast<compv_float32_t>(x), static_cast<compv_float32_t>(y), 1.f));
-		}
+	const size_t numPoints = correctedMat->cols();
+	size_t i;
+	corrected.resize(numPoints);
+	CompVPointFloat32Vector::iterator it;
+	for (i = 0, it = corrected.begin(); it < corrected.end(); ++it, ++i) {
+		it->x = static_cast<compv_float32_t>(projX[i]);
+		it->y = static_cast<compv_float32_t>(projY[i]);
+		it->z = static_cast<compv_float32_t>(projZ[i]);
 	}
+
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Remove next code");
+	//compv_float64_t error;
+	//COMPV_CHECK_CODE_RETURN(projError(result_calib, error));
+
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -1094,9 +1037,142 @@ COMPV_ERROR_CODE CompVCalibCamera::calibrate(CompVCalibCameraResult& result_cali
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "k = %f, %f", *result_calib.k->ptr<const compv_float64_t>(0, 0), *result_calib.k->ptr<const compv_float64_t>(1, 0));
 
 	// https://www.inf.ethz.ch/personal/pomarc/pubs/KumarCVPR08.pdf
+	
+	return COMPV_ERROR_CODE_S_OK;
+}
 
+// Project to 2D plan
+COMPV_ERROR_CODE CompVCalibCamera::proj(const CompVMatPtr& inPoints, const CompVMatPtr& K, const CompVMatPtr& k, const CompVMatPtr& p, const CompVMatPtr& R, const CompVMatPtr&t, CompVMatPtrPtr outPoints)
+{
+	COMPV_CHECK_EXP_RETURN(!inPoints || inPoints->isEmpty() || inPoints->rows() != 3 || !K || !k || !outPoints || !R || !t, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(K->rows() != 3 || K->cols() != 3, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "K must be (3x3) matrix");
+	COMPV_CHECK_EXP_RETURN(k->rows() < 2 || k->cols() != 1, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "k must be (2+x1) vector");
+	COMPV_CHECK_EXP_RETURN(p && (p->rows() < 2 || p->cols() != 1), COMPV_ERROR_CODE_E_INVALID_PARAMETER, "p must be (2+x1) vector");
+	COMPV_CHECK_EXP_RETURN(R->rows() != 3 || R->cols() != 3, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "R must be (3x3) matrix");
+	COMPV_CHECK_EXP_RETURN(t->rows() != 1 || t->cols() != 3, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "R must be (1x3) vector");
 
+	CompVPointFloat32Vector::const_iterator it_intersections;
+	size_t index;
+	const size_t numPoints = inPoints->cols();
 
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float64_t>(outPoints, 3, numPoints));
+
+	compv_float64_t* outPointsX = (*outPoints)->ptr<compv_float64_t>(0);
+	compv_float64_t* outPointsY = (*outPoints)->ptr<compv_float64_t>(1);
+	compv_float64_t* outPointsZ = (*outPoints)->ptr<compv_float64_t>(2);
+
+	const compv_float64_t* inPointsX = inPoints->ptr<compv_float64_t>(0);
+	const compv_float64_t* inPointsY = inPoints->ptr<compv_float64_t>(1);
+	const compv_float64_t* inPointsZ = inPoints->ptr<compv_float64_t>(2);
+
+	const compv_float64_t fx = *K->ptr<const compv_float64_t>(0, 0);
+	const compv_float64_t fy = *K->ptr<const compv_float64_t>(1, 1);
+	const compv_float64_t cx = *K->ptr<const compv_float64_t>(0, 2);
+	const compv_float64_t cy = *K->ptr<const compv_float64_t>(1, 2);
+
+	const compv_float64_t k1 = *k->ptr<const compv_float64_t>(0, 0);
+	const compv_float64_t k2 = *k->ptr<const compv_float64_t>(1, 0);
+	const compv_float64_t p1 = p ? *p->ptr<const compv_float64_t>(0, 0) : 0.0;
+	const compv_float64_t p2 = p ? *p->ptr<const compv_float64_t>(1, 0) : 0.0;
+
+	// https://youtu.be/Ou9Uj75DJX0?t=25m34s
+	const compv_float64_t R0 = *R->ptr<const compv_float64_t>(0, 0);
+	const compv_float64_t R1 = *R->ptr<const compv_float64_t>(0, 1);
+	const compv_float64_t R2 = *R->ptr<const compv_float64_t>(0, 2);
+	const compv_float64_t R3 = *R->ptr<const compv_float64_t>(1, 0);
+	const compv_float64_t R4 = *R->ptr<const compv_float64_t>(1, 1);
+	const compv_float64_t R5 = *R->ptr<const compv_float64_t>(1, 2);
+	const compv_float64_t R6 = *R->ptr<const compv_float64_t>(2, 0);
+	const compv_float64_t R7 = *R->ptr<const compv_float64_t>(2, 1);
+	const compv_float64_t R8 = *R->ptr<const compv_float64_t>(2, 2);
+
+	const compv_float64_t tx = *t->ptr<const compv_float64_t>(0, 0);
+	const compv_float64_t ty = *t->ptr<const compv_float64_t>(0, 1);
+	const compv_float64_t tz = *t->ptr<const compv_float64_t>(0, 2);
+
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
+
+	compv_float64_t xp, yp, zp;
+	compv_float64_t x, y, z;
+	compv_float64_t x2, y2, r2, r4, a1, a2, a3, radialdist;
+	for (index = 0; index < numPoints; ++index) {
+		xp = inPointsX[index];
+		yp = inPointsY[index];
+		zp = inPointsZ[index];
+		// Apply R and t
+		x = R0 * xp + R1 * yp + R2 * zp + tx;
+		y = R3 * xp + R4 * yp + R5 * zp + ty;
+		z = R6 * xp + R7 * yp + R8 * zp + tz;
+
+		// https://youtu.be/Ou9Uj75DJX0?t=25m34s (1)
+		z = z ? (1.0 / z) : 1.0;
+		x *= z;
+		y *= z;
+
+		// https://youtu.be/Ou9Uj75DJX0?t=25m34s (2) or general form: https://en.wikipedia.org/wiki/Distortion_(optics)#Software_correction
+		x2 = (x * x);
+		y2 = (y * y);
+		r2 = x2 + y2;
+		r4 = r2 * r2;
+		a1 = 2 * (x * y);
+		a2 = r2 + (2 * x2);
+		a3 = r2 + (2 * y2);
+		radialdist = 1 + k1 * r2 + k2 * r4;
+		// TODO(dmi): Add SIMD versions for (p1,p2) = (0,0) only
+		x = x*radialdist + p1 * a1 + p2 * a2;
+		y = y*radialdist + p1 * a3 + p2 * a1;
+
+		// https://youtu.be/Ou9Uj75DJX0?t=25m34s (3)
+		outPointsX[index] = x * fx + cx;
+		outPointsY[index] = y * fy + cy;
+		outPointsZ[index] = 1.0;
+	}
+
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVCalibCamera::projError(const CompVCalibCameraResult& result_calib, compv_float64_t& error)
+{
+	COMPV_CHECK_EXP_RETURN(!result_calib.k || !result_calib.K || result_calib.planes.size() < m_nMinPanesCountBeforeCalib, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	
+	error = 0;
+
+	CompVMatPtr reprojected;
+	const compv_float64_t *reprojectedX, *reprojectedY;
+	compv_float64_t *intersectionsX, *intersectionsY;
+	compv_float64_t diffX, diffY;
+	size_t i;
+	CompVMatPtr intersections;
+	CompVPointFloat32Vector::const_iterator it_intersections;
+
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float64_t>(&intersections,
+		result_calib.planes.begin()->pattern->rows(),
+		result_calib.planes.begin()->pattern->cols(),
+		result_calib.planes.begin()->pattern->stride()));
+	intersectionsX = intersections->ptr<compv_float64_t>(0);
+	intersectionsY = intersections->ptr<compv_float64_t>(1);
+	const size_t numPointsPerPlan = intersections->cols();
+
+	for (CompVCalibCameraPlanVector::const_iterator i_plans = result_calib.planes.begin(); i_plans < result_calib.planes.end(); ++i_plans) {
+		COMPV_CHECK_CODE_RETURN(proj(i_plans->pattern, result_calib.K, result_calib.k, result_calib.p, i_plans->R, i_plans->t, &reprojected));
+		reprojectedX = reprojected->ptr<const compv_float64_t>(0);
+		reprojectedY = reprojected->ptr<const compv_float64_t>(1);
+
+		COMPV_CHECK_EXP_RETURN(i_plans->intersections.size() != reprojected->cols() || intersections->cols() != reprojected->cols(), COMPV_ERROR_CODE_E_INVALID_STATE);
+		for (i = 0, it_intersections = i_plans->intersections.begin(); i < numPointsPerPlan; ++i, ++it_intersections) {
+			intersectionsX[i] = static_cast<compv_float64_t>(it_intersections->x);
+			intersectionsY[i] = static_cast<compv_float64_t>(it_intersections->y);
+		}
+		
+		for (i = 0; i < numPointsPerPlan; ++i) {
+			diffX = reprojectedX[i] - intersectionsX[i];
+			diffY = reprojectedY[i] - intersectionsY[i];
+			error += (diffX * diffX) + (diffY * diffY);
+		}
+	}
+
+	const compv_float64_t numPointsTotal = static_cast<compv_float64_t>(numPointsPerPlan * result_calib.planes.size());
+	error = std::sqrt(error / numPointsTotal);
 	
 	return COMPV_ERROR_CODE_S_OK;
 }
