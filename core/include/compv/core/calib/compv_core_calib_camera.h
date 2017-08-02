@@ -42,31 +42,52 @@ enum COMPV_CALIB_CAMERA_RESULT_CODE {
 	COMPV_CALIB_CAMERA_RESULT_INCOHERENT_INTERSECTIONS,
 };
 
+struct CompVCalibCameraPlan {
+	CompVMatPtr pattern;
+	size_t pattern_width;
+	size_t pattern_height;
+	CompVPointFloat32Vector intersections;
+	CompVMatPtr homography;
+	CompVMatPtr R; // Rotation matrix(3x3) - extrinsic
+	CompVMatPtr t; // Translation matrix (1x3) - extrinsic
+public:
+	COMPV_INLINE void reset() {
+		pattern = nullptr;
+		pattern_width = 0;
+		pattern_height = 0;
+		intersections.clear();
+		homography = nullptr;
+		R = nullptr;
+		t = nullptr;
+	}
+};
+typedef std::vector<CompVCalibCameraPlan, CompVAllocatorNoDefaultConstruct<CompVCalibCameraPlan> > CompVCalibCameraPlanVector;
+
 struct CompVCalibCameraResult {
 	COMPV_CALIB_CAMERA_RESULT_CODE code;
 	CompVCabLines lines_raw;
 	CompVCabLines lines_grouped;
-	CompVPointFloat32Vector points_intersections;
+	CompVCalibCameraPlan plane_curr;
 	bool rotated;
 	CompVMatPtr edges;
-	CompVMatPtr homography;
-	CompVMatPtr K; // camera matrix (3x3)
-	CompVMatPtr R; // Rotation matrix (3x3)
-	CompVMatPtr T; // Translation matrix (1x3)
-	CompVMatPtr k; // Radial distorsion (2x1)
-	CompVMatPtr p; // Tangential distorsion (2x1)
+	CompVCalibCameraPlanVector planes;
+	CompVMatPtr K; // camera matrix (3x3) - intrinsic
+	CompVMatPtr k; // Radial distorsion (2x1) - "intrinsic"
+	CompVMatPtr p; // Tangential distorsion (2x1) - "intrinsic"
 public:
-	void reset() {
+	COMPV_INLINE void reset() {
 		code = COMPV_CALIB_CAMERA_RESULT_NONE;
 		lines_raw.lines_cartesian.clear();
 		lines_raw.lines_hough.clear();
 		lines_grouped.lines_cartesian.clear();
 		lines_grouped.lines_hough.clear();
-		points_intersections.clear();
-		homography = nullptr; // saved into m_Homographies, no need for re-use. Also used to check if new homography computed
+		plane_curr.reset();
 	}
 	COMPV_INLINE bool isOK() const {
 		return code == COMPV_CALIB_CAMERA_RESULT_OK;
+	}
+	COMPV_INLINE bool isDone() const {
+		return (K && k);
 	}
 };
 
@@ -80,13 +101,10 @@ public:
 	COMPV_OBJECT_GET_ID(CompVBoxInterestPoint);
 
 	COMPV_ERROR_CODE process(const CompVMatPtr& image, CompVCalibCameraResult& result);
-	COMPV_ERROR_CODE test(const CompVCalibCameraResult& result_calib, CompVPointFloat32Vector& corrected);
+	COMPV_ERROR_CODE test(const CompVCalibCameraResult& result_calib, CompVPointFloat32Vector& corrected, size_t file_index = 47);
 
 	COMPV_INLINE CompVEdgeDetePtr edgeDetector() { return m_ptrCanny; }
 	COMPV_INLINE CompVHoughPtr houghTransform() { return m_ptrHough; }
-
-	COMPV_INLINE size_t patternWidth() const { return static_cast<size_t>(((m_bPatternCornersRotated ? m_nPatternCornersNumRow : m_nPatternCornersNumCol) - 1) * m_nPatternBlockSizePixel); }
-	COMPV_INLINE size_t patternHeight() const { return static_cast<size_t>(((m_bPatternCornersRotated ? m_nPatternCornersNumCol : m_nPatternCornersNumRow) - 1) * m_nPatternBlockSizePixel); }
 	
 	static COMPV_ERROR_CODE newObj(CompVCalibCameraPtrPtr calib);
 
@@ -95,7 +113,7 @@ private:
 	COMPV_ERROR_CODE grouping(const size_t image_width, const size_t image_height, const CompVCabLines& lines_parallel, const bool vt, const size_t max_strength, CompVCabLineFloat32Vector& lines_parallel_grouped);
 	COMPV_ERROR_CODE lineBestFit(const CompVLineFloat32Vector& points_cartesian, const CompVHoughLineVector& points_hough, CompVLineFloat32& line);
 	COMPV_ERROR_CODE buildPatternCorners(const CompVCalibCameraResult& result_calib);
-	COMPV_ERROR_CODE homography(CompVCalibCameraResult& result_calib, CompVHomographyResult& result_homography);
+	COMPV_ERROR_CODE homography(CompVCalibCameraResult& result_calib, CompVHomographyResult& result_homography, CompVMatPtrPtr homographyMat);
 	COMPV_ERROR_CODE calibrate(CompVCalibCameraResult& result_calib);
 
 private:
@@ -106,14 +124,12 @@ private:
 	size_t m_nPatternLinesTotal;
 	size_t m_nPatternLinesHz;
 	size_t m_nPatternLinesVt;
-	compv_float32_t m_nPatternBlockSizePixel;
-	size_t m_nMinImageCountBeforeCalib;
+	size_t m_nPatternBlockSizePixel;
+	size_t m_nMinPanesCountBeforeCalib;
 	CompVEdgeDetePtr m_ptrCanny;
 	CompVHoughPtr m_ptrHough;
-	CompVMatPtr m_ptrPatternCorners;
-	bool m_bPatternCornersRotated;
-	std::vector<CompVMatPtr> m_Homographies;
-	std::vector<CompVPointFloat32Vector> m_Intersections;
+	CompVMatPtr m_ptrPatternCornersInPlace;
+	CompVMatPtr m_ptrPatternCornersRotated;
 	COMPV_VS_DISABLE_WARNINGS_END()
 };
 

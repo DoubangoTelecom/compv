@@ -111,16 +111,17 @@ public:
 #else
 			static size_t __index = 0;
 			size_t file_index = 47 + ((__index++) % 20)/*65*//*65*//*47*//*65*//*47*//*55*//*47*//*48*//*52*/;
-			if (m_CalibResult.K && m_CalibResult.R && m_CalibResult.T) {
+			if (m_CalibResult.isDone()) {
 				file_index = 48;
 			}
+			//if (file_index == 50) return COMPV_ERROR_CODE_S_OK;
 			std::string file_path = std::string("C:/Projects/GitHub/data/calib/P10100")+ CompVBase::to_string(file_index) +std::string("s_640x480_gray.yuv");
 			//std::string file_path = "C:/Projects/GitHub/data/calib/P1010047s_90deg_640x480_gray.yuv";
 			COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 640, 480, 640, file_path.c_str(), &imageGray));
 			imageOrig = imageGray;
 			COMPV_DEBUG_INFO_EX(TAG_SAMPLE, "%s", file_path.c_str());
 			COMPV_DEBUG_INFO_CODE_FOR_TESTING("Remove the sleep function");
-			if (m_CalibResult.K && m_CalibResult.R && m_CalibResult.T) {
+			if (m_CalibResult.isDone()) {
 				CompVThread::sleep(1000);
 			}
 #endif
@@ -156,16 +157,18 @@ public:
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->drawImage(m_CalibResult.edges));
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->renderer()->canvas()->drawLines(m_CalibResult.lines_grouped.lines_cartesian, &m_DrawingOptions));
 			m_DrawingOptions.setColor(__color_red);
-			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->renderer()->canvas()->drawPoints(m_CalibResult.points_intersections, &m_DrawingOptions));
-			if (!m_CalibResult.points_intersections.empty() && m_ptrSurfaceLineGrouped->renderer()->canvas()->haveDrawTexts()) {
-				CompVStringVector labels(m_CalibResult.points_intersections.size());
-				for (size_t index = 0; index < m_CalibResult.points_intersections.size(); ++index) {
+			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->renderer()->canvas()->drawPoints(m_CalibResult.plane_curr.intersections, &m_DrawingOptions));
+			if (!m_CalibResult.plane_curr.intersections.empty() && m_ptrSurfaceLineGrouped->renderer()->canvas()->haveDrawTexts()) {
+				CompVStringVector labels(m_CalibResult.plane_curr.intersections.size());
+				for (size_t index = 0; index < m_CalibResult.plane_curr.intersections.size(); ++index) {
 					labels[index] = CompVBase::to_string(index);
 				}
 				m_DrawingOptions.setColor(__color_yellow);
-				COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->renderer()->canvas()->drawTexts(labels, m_CalibResult.points_intersections, &m_DrawingOptions));
+				COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->renderer()->canvas()->drawTexts(labels, m_CalibResult.plane_curr.intersections, &m_DrawingOptions));
 			}
-			if (m_CalibResult.homography) {
+			if (m_CalibResult.plane_curr.homography) {
+				const size_t pattern_w = m_CalibResult.plane_curr.pattern_width;
+				const size_t pattern_h = m_CalibResult.plane_curr.pattern_height;
 				CompVMatPtr rectPattern, rectHomograyApplied;
 				compv_float64_t *x, *y;
 				CompVLineFloat32Vector rectLines(4);
@@ -173,10 +176,10 @@ public:
 				COMPV_CHECK_CODE_BAIL(err = rectPattern->one_row<compv_float64_t>(2)); // with Z = 1
 				x = rectPattern->ptr<compv_float64_t>(0);
 				y = rectPattern->ptr<compv_float64_t>(1);
-				x[0] = 0, x[1] = static_cast<compv_float64_t>(m_ptrCalib->patternWidth()), x[2] = static_cast<compv_float64_t>(m_ptrCalib->patternWidth()), x[3] = 0.0;
-				y[0] = 0, y[1] = 0, y[2] = static_cast<compv_float64_t>(m_ptrCalib->patternHeight()), y[3] = static_cast<compv_float64_t>(m_ptrCalib->patternHeight());
+				x[0] = 0, x[1] = static_cast<compv_float64_t>(pattern_w), x[2] = static_cast<compv_float64_t>(pattern_w), x[3] = 0.0;
+				y[0] = 0, y[1] = 0, y[2] = static_cast<compv_float64_t>(pattern_h), y[3] = static_cast<compv_float64_t>(pattern_h);
 				// Perspecive transform using homography matrix
-				COMPV_CHECK_CODE_BAIL(err = CompVMathTransform<compv_float64_t>::perspective2D(rectPattern, m_CalibResult.homography, &rectHomograyApplied));
+				COMPV_CHECK_CODE_BAIL(err = CompVMathTransform<compv_float64_t>::perspective2D(rectPattern, m_CalibResult.plane_curr.homography, &rectHomograyApplied));
 				// Draw the transformed rectangle
 				x = rectHomograyApplied->ptr<compv_float64_t>(0);
 				y = rectHomograyApplied->ptr<compv_float64_t>(1);
@@ -193,12 +196,12 @@ public:
 			/* Reprojection */
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineReProj->activate());
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineReProj->drawImage(m_CalibResult.edges));
-			if (m_CalibResult.K && m_CalibResult.R && m_CalibResult.T) {
+			if (m_CalibResult.isDone()) {
 				CompVPointFloat32Vector points;
 				m_DrawingOptions.setColor(__color_red);
-				COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineReProj->renderer()->canvas()->drawPoints(m_CalibResult.points_intersections, &m_DrawingOptions));
+				COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineReProj->renderer()->canvas()->drawPoints(m_CalibResult.plane_curr.intersections, &m_DrawingOptions));
 				m_DrawingOptions.setColor(__color_bleu);
-				COMPV_CHECK_CODE_BAIL(err = m_ptrCalib->test(m_CalibResult, points));
+				COMPV_CHECK_CODE_BAIL(err = m_ptrCalib->test(m_CalibResult, points, file_index));
 				COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineReProj->renderer()->canvas()->drawPoints(points, &m_DrawingOptions));
 			}
 
