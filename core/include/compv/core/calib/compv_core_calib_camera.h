@@ -53,6 +53,8 @@ struct CompVCalibCameraResult {
 	CompVMatPtr K; // camera matrix (3x3)
 	CompVMatPtr R; // Rotation matrix (3x3)
 	CompVMatPtr T; // Translation matrix (1x3)
+	CompVMatPtr k; // Radial distorsion (2x1)
+	CompVMatPtr p; // Tangential distorsion (2x1)
 public:
 	void reset() {
 		code = COMPV_CALIB_CAMERA_RESULT_NONE;
@@ -111,6 +113,7 @@ private:
 	CompVMatPtr m_ptrPatternCorners;
 	bool m_bPatternCornersRotated;
 	std::vector<CompVMatPtr> m_Homographies;
+	std::vector<CompVPointFloat32Vector> m_Intersections;
 	COMPV_VS_DISABLE_WARNINGS_END()
 };
 
