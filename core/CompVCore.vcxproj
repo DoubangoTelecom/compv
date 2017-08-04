@@ -199,6 +199,7 @@
     </YASM>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\opencv-tests\calibration\levmar-2.6\Axb.c" />
     <ClCompile Include="calib\compv_core_calib_camera.cxx" />
     <ClCompile Include="calib\compv_core_calib_homography.cxx" />
     <ClCompile Include="calib\compv_core_calib_utils.cxx" />

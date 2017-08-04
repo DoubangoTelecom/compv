@@ -124,6 +124,10 @@
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_utils_intrin_sse2.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_utils_intrin_sse41.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_utils_intrin_ssse3.h" />
+    <ClInclude Include="include\compv\base\math\lmfit-6.1\lmcurve.h" />
+    <ClInclude Include="include\compv\base\math\lmfit-6.1\lmcurve_tyd.h" />
+    <ClInclude Include="include\compv\base\math\lmfit-6.1\lmmin.h" />
+    <ClInclude Include="include\compv\base\math\lmfit-6.1\lmstruct.h" />
     <ClInclude Include="include\compv\base\parallel\compv_asynctask10.h" />
     <ClInclude Include="include\compv\base\parallel\compv_asynctask11.h" />
     <ClInclude Include="include\compv\base\parallel\compv_condvar.h" />
@@ -352,6 +356,9 @@
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
+    <ClCompile Include="math\lmfit-6.1\lmcurve.cxx" />
+    <ClCompile Include="math\lmfit-6.1\lmcurve_tyd.cxx" />
+    <ClCompile Include="math\lmfit-6.1\lmmin.cxx" />
     <ClCompile Include="parallel\compv_asynctask10.cxx" />
     <ClCompile Include="parallel\compv_asynctask11.cxx" />
     <ClCompile Include="parallel\compv_condvar.cxx" />

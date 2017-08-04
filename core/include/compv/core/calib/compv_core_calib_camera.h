@@ -101,7 +101,7 @@ public:
 	COMPV_OBJECT_GET_ID(CompVBoxInterestPoint);
 
 	COMPV_ERROR_CODE process(const CompVMatPtr& image, CompVCalibCameraResult& result);
-	COMPV_ERROR_CODE test(const CompVCalibCameraResult& result_calib, CompVPointFloat32Vector& corrected, size_t file_index = 47);
+	COMPV_ERROR_CODE test(CompVCalibCameraResult& result_calib, CompVPointFloat32Vector& corrected, size_t file_index = 47);
 
 	COMPV_INLINE CompVEdgeDetePtr edgeDetector() { return m_ptrCanny; }
 	COMPV_INLINE CompVHoughPtr houghTransform() { return m_ptrHough; }
@@ -115,8 +115,6 @@ private:
 	COMPV_ERROR_CODE buildPatternCorners(const CompVCalibCameraResult& result_calib);
 	COMPV_ERROR_CODE homography(CompVCalibCameraResult& result_calib, CompVHomographyResult& result_homography, CompVMatPtrPtr homographyMat);
 	COMPV_ERROR_CODE calibrate(CompVCalibCameraResult& result_calib);
-	COMPV_ERROR_CODE proj(const CompVMatPtr& inPoints, const CompVMatPtr& K, const CompVMatPtr& k, const CompVMatPtr& p, const CompVMatPtr& R, const CompVMatPtr&t, CompVMatPtrPtr outPoints);
-	COMPV_ERROR_CODE projError(const CompVCalibCameraResult& result_calib, compv_float64_t& error);
 
 private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)

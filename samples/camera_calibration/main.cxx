@@ -191,7 +191,6 @@ public:
 				m_DrawingOptions.setColor(__color_bleu);
 				COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->renderer()->canvas()->drawLines(rectLines, &m_DrawingOptions));
 			}
-			
 
 			/* Reprojection */
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineReProj->activate());
