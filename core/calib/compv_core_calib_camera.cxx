@@ -287,15 +287,18 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 	}
 
 	/* The pattern could be rectanglar (hz != vt) and it's time to decide what is really hz and vt */
-	size_t vt_size = lines_vt_grouped.size();
-	size_t hz_size = lines_hz_grouped.size();
-	result_calib.rotated = ((m_nPatternCornersNumCol > m_nPatternCornersNumRow) && (lines_vt_grouped.size() < lines_hz_grouped.size()))
+	const size_t vt_size = lines_vt_grouped.size();
+	const size_t hz_size = lines_hz_grouped.size();
+	const bool rotated = ((m_nPatternCornersNumCol > m_nPatternCornersNumRow) && (lines_vt_grouped.size() < lines_hz_grouped.size()))
 		|| ((m_nPatternCornersNumCol < m_nPatternCornersNumRow) && (lines_vt_grouped.size() > lines_hz_grouped.size()));
-	if (result_calib.rotated) {
+	if (rotated) {
+		// TODO(dmi): Provides bad result, have to check (maybe better to use square checkerboard)
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Checkerboard probably rotated: close to 90deg position");
+		result_calib.code = COMPV_CALIB_CAMERA_RESULT_PATTERN_ROTATED;
+		return COMPV_ERROR_CODE_S_OK;
 	}
-	const size_t nPatternLinesHzExpected = result_calib.rotated ? m_nPatternLinesVt : m_nPatternLinesHz;
-	const size_t nPatternLinesVtExpected = result_calib.rotated ? m_nPatternLinesHz : m_nPatternLinesVt;
+	const size_t nPatternLinesHzExpected = rotated ? m_nPatternLinesVt : m_nPatternLinesHz;
+	const size_t nPatternLinesVtExpected = rotated ? m_nPatternLinesHz : m_nPatternLinesVt;
 
 	/* Make sure we have the right number of lines in each group or keep the bests */
 	if (lines_hz_grouped.size() != nPatternLinesHzExpected) {
@@ -434,6 +437,20 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 		}
 	}
 
+	/* Transpose the intersections */
+	if (rotated) {
+		COMPV_ASSERT(m_nPatternCornersTotal == plan_curr.intersections.size());
+		CompVPointFloat32Vector intersections(m_nPatternCornersTotal);
+		CompVPointFloat32Vector::const_iterator it0 = plan_curr.intersections.begin() + (m_nPatternCornersTotal - m_nPatternCornersNumRow);
+		size_t i, j, k, m;
+		for (j = 0, m = 0; j < m_nPatternCornersNumRow; ++j, ++it0) {
+			for (i = 0, k = 0; i < m_nPatternCornersNumCol; ++i, ++m, k += m_nPatternCornersNumRow) {
+				intersections[m] = *(it0 - k);
+			}
+		}
+		plan_curr.intersections.assign(intersections.begin(), intersections.end());
+	}
+
 	COMPV_DEBUG_INFO_CODE_TODO("Do not waste time computing homography and calibration if the image is almost same plan than previous one. To check same plane: compare SAD(intersections(n, (n-1)))");
 
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Remove FIXME_once");
@@ -446,18 +463,19 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 
 	/* Build patterns */
 	COMPV_CHECK_CODE_RETURN(buildPatternCorners(result_calib));
-	plan_curr.pattern = result_calib.rotated ? m_ptrPatternCornersRotated : m_ptrPatternCornersInPlace;
-	plan_curr.pattern_width = (((result_calib.rotated ? m_nPatternCornersNumRow : m_nPatternCornersNumCol) - 1) * m_nPatternBlockSizePixel);
-	plan_curr.pattern_height = (((result_calib.rotated ? m_nPatternCornersNumCol : m_nPatternCornersNumRow) - 1) * m_nPatternBlockSizePixel);
+	plan_curr.pattern = m_ptrPatternCorners;
+	plan_curr.pattern_width = ((m_nPatternCornersNumCol - 1) * m_nPatternBlockSizePixel);
+	plan_curr.pattern_height = ((m_nPatternCornersNumRow - 1) * m_nPatternBlockSizePixel);
 
 	/* Compute homography */
 	CompVHomographyResult result_homography;
-	COMPV_CHECK_CODE_RETURN(homography(result_calib, result_homography, &plan_curr.homography));
+	COMPV_CHECK_CODE_RETURN(homography(plan_curr, result_homography, &plan_curr.homography));
 	if (result_homography.inlinersCount < (m_nPatternCornersTotal - std::max(m_nPatternCornersNumRow, m_nPatternCornersNumCol))) { // We allow at most #1 row/col error (outliers)
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough inliners after homography computation (%zu / %zu)", result_homography.inlinersCount, m_nPatternCornersTotal);
 		result_calib.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_INLIERS;
 		return COMPV_ERROR_CODE_S_OK;
 	}
+	
 	// Save the plane for future calibration
 	result_calib.planes.push_back(plan_curr);
 
@@ -601,22 +619,24 @@ static COMPV_ERROR_CODE CompVMathTrigRodrigues1x3(const CompVMatPtr& rot3x3, com
 }
 
 /* data structure to transmit data arays and fit model */
-typedef struct {
+struct lmmin_data {
 	const double *cornersPtr;
-	CompVMatPtr pattern; // FIXME(dmi): not correct when upside down
-	size_t nplanes;
-	double(*f)(double corX, double corY, const double *p);
-} data_struct;
+	const CompVCalibCameraPlanVector& planes;
+public:
+	lmmin_data(const CompVCalibCameraPlanVector& planes_, const double *cornersPtr_)
+		: planes(planes_) 
+		, cornersPtr(cornersPtr_)
+	{ }
+};
 
 /* function evaluation, determination of residues */
 static void lmmin_eval(const double *par, int m_dat, const void *data, double *fvec, int *userbreak)
 {
 	/* for readability, explicit type conversion */
-	const data_struct *Data = reinterpret_cast<const data_struct*>(data);
+	const lmmin_data *Data = reinterpret_cast<const lmmin_data*>(data);
 
 	const compv_float64_t* cornersPtr = Data->cornersPtr;
 
-	const size_t ncorners = Data->pattern->cols();
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Recreating matrices");
 
 	size_t index;
@@ -627,7 +647,7 @@ static void lmmin_eval(const double *par, int m_dat, const void *data, double *f
 	//	5 // fx, fy, cx, cy, skew
 	//	+ 4 // k1, k2, p1, p2
 	//	+ ((3 + 3) * nplanes) // Rt
-	size_t nplanes = Data->nplanes;
+	size_t nplanes = Data->planes.size();
 	CompVMatPtr K;
 	COMPV_CHECK_CODE_ASSERT(CompVMat::newObjAligned<compv_float64_t>(&K, 3, 3));
 	COMPV_CHECK_CODE_ASSERT(K->zero_all());
@@ -648,8 +668,9 @@ static void lmmin_eval(const double *par, int m_dat, const void *data, double *f
 	CompVMatPtr R, t, reprojected;
 	compv_float64x3_t r;
 	COMPV_CHECK_CODE_ASSERT(CompVMat::newObjAligned<compv_float64_t>(&t, 1, 3));
-	size_t nindex = 0;
-	for (size_t i = 0; i < nplanes; ++i) {
+	size_t nindex = 0, i;
+	CompVCalibCameraPlanVector::const_iterator it_planes;
+	for (i = 0, it_planes = Data->planes.begin(); i < nplanes; ++i, ++it_planes) {
 		r[0] = par[index++]; // r0
 		r[1] = par[index++]; // r1
 		r[2] = par[index++]; // r2
@@ -659,8 +680,9 @@ static void lmmin_eval(const double *par, int m_dat, const void *data, double *f
 		*t->ptr<compv_float64_t>(0, 2) = par[index++]; // tz
 
 		COMPV_CHECK_CODE_ASSERT(CompVMathTrigRodrigues3x3(r, &R));
-		COMPV_CHECK_CODE_ASSERT(proj(Data->pattern, K, d, R, t, &reprojected));
-		COMPV_ASSERT(ncorners == reprojected->cols());
+		COMPV_CHECK_CODE_ASSERT(proj(it_planes->pattern, K, d, R, t, &reprojected));
+		COMPV_ASSERT(it_planes->pattern->cols() == reprojected->cols());
+		const size_t ncorners = it_planes->pattern->cols();
 		const compv_float64_t* reprojectedX = reprojected->ptr<const compv_float64_t>(0);
 		const compv_float64_t* reprojectedY = reprojected->ptr<const compv_float64_t>(1);
 		for (size_t j = 0, z = (i * ncorners * 2); j < ncorners; ++j, z += 2) {
@@ -706,7 +728,7 @@ COMPV_ERROR_CODE CompVCalibCamera::test(CompVCalibCameraResult& result_calib, Co
 
 	const size_t nplanes = result_calib.planes.size();
 
-	//Measurement
+	// Measurement
 	const size_t ncorners = result_calib.planes.begin()->intersections.size();
 	const size_t n = (nplanes * ncorners) << 1; // (x,y)
 	CompVMatPtr corners;
@@ -767,10 +789,7 @@ COMPV_ERROR_CODE CompVCalibCamera::test(CompVCalibCameraResult& result_calib, Co
 
 	/* data points */
 	int m_dat = static_cast<int>(n);
-	data_struct data;
-	data.cornersPtr = cornersPtr;
-	data.pattern = result_calib.planes.begin()->pattern;
-	data.nplanes = nplanes;
+	lmmin_data data(result_calib.planes, cornersPtr);
 
 	/* perform the fit */
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Fitting:");
@@ -1042,33 +1061,21 @@ COMPV_ERROR_CODE CompVCalibCamera::lineBestFit(const CompVLineFloat32Vector& poi
 // Build pattern's corners
 COMPV_ERROR_CODE CompVCalibCamera::buildPatternCorners(const CompVCalibCameraResult& result_calib)
 {
-	if (!m_ptrPatternCornersInPlace || !m_ptrPatternCornersRotated) {
+	if (!m_ptrPatternCorners) {
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Building pattern corners");
-		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float64_t>(&m_ptrPatternCornersInPlace, 3, m_nPatternCornersTotal));
-		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float64_t>(&m_ptrPatternCornersRotated, 3, m_nPatternCornersTotal));
-		compv_float64_t* corX0 = m_ptrPatternCornersInPlace->ptr<compv_float64_t>(0);
-		compv_float64_t* corY0 = m_ptrPatternCornersInPlace->ptr<compv_float64_t>(1);
-		compv_float64_t* corX1 = m_ptrPatternCornersRotated->ptr<compv_float64_t>(0);
-		compv_float64_t* corY1 = m_ptrPatternCornersRotated->ptr<compv_float64_t>(1);
-		COMPV_CHECK_CODE_RETURN(m_ptrPatternCornersInPlace->one_row<compv_float64_t>(2)); // homogeneous coord. with Z = 1
-		COMPV_CHECK_CODE_RETURN(m_ptrPatternCornersRotated->one_row<compv_float64_t>(2)); // homogeneous coord. with Z = 1
+		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float64_t>(&m_ptrPatternCorners, 3, m_nPatternCornersTotal));
+		compv_float64_t* corX0 = m_ptrPatternCorners->ptr<compv_float64_t>(0);
+		compv_float64_t* corY0 = m_ptrPatternCorners->ptr<compv_float64_t>(1);
+		COMPV_CHECK_CODE_RETURN(m_ptrPatternCorners->one_row<compv_float64_t>(2)); // homogeneous coord. with Z = 1
 		const compv_float64_t patternBlockSizePixel = static_cast<compv_float64_t>(m_nPatternBlockSizePixel);
-		compv_float64_t x0, y0, x1, y1;
+		compv_float64_t x0, y0;
 		size_t i, j, k;
 		const size_t nPatternCornersNumRow0 = m_nPatternCornersNumRow;
 		const size_t nPatternCornersNumCol0 = m_nPatternCornersNumCol;
-		const size_t nPatternCornersNumRow1 = m_nPatternCornersNumCol;
-		const size_t nPatternCornersNumCol1 = m_nPatternCornersNumRow;
 		for (j = 0, y0 = 0.0, k = 0; j < nPatternCornersNumRow0; ++j, y0 += patternBlockSizePixel) {
 			for (i = 0, x0 = 0.0; i < nPatternCornersNumCol0; ++i, x0 += patternBlockSizePixel, ++k) {
 				corX0[k] = x0;
 				corY0[k] = y0;
-			}
-		}
-		for (j = 0, y1 = 0.0, k = 0; j < nPatternCornersNumRow1; ++j, y1 += patternBlockSizePixel) {
-			for (i = 0, x1 = 0.0; i < nPatternCornersNumCol1; ++i, x1 += patternBlockSizePixel, ++k) {
-				corX1[k] = x1;
-				corY1[k] = y1;
 			}
 		}
 	}
@@ -1076,10 +1083,9 @@ COMPV_ERROR_CODE CompVCalibCamera::buildPatternCorners(const CompVCalibCameraRes
 }
 
 // Compute homography
-COMPV_ERROR_CODE CompVCalibCamera::homography(CompVCalibCameraResult& result_calib, CompVHomographyResult& result_homography, CompVMatPtrPtr homographyMat)
+COMPV_ERROR_CODE CompVCalibCamera::homography(const CompVCalibCameraPlan& plan, CompVHomographyResult& result_homography, CompVMatPtrPtr homographyMat)
 {
-	const CompVCalibCameraPlan& plane_curr = result_calib.plane_curr;
-	const CompVPointFloat32Vector& intersections = plane_curr.intersections;
+	const CompVPointFloat32Vector& intersections = plan.intersections;
 	COMPV_CHECK_EXP_RETURN(intersections.size() != m_nPatternCornersTotal, COMPV_ERROR_CODE_E_INVALID_CALL, "Invalid number of corners");
 
 	// Convert the intersections from float32 to float64 for homagraphy
@@ -1095,7 +1101,7 @@ COMPV_ERROR_CODE CompVCalibCamera::homography(CompVCalibCameraResult& result_cal
 	}
 
 	// Find homography
-	COMPV_CHECK_CODE_RETURN(CompVHomography<compv_float64_t>::find(plane_curr.pattern, query, homographyMat, &result_homography));
+	COMPV_CHECK_CODE_RETURN(CompVHomography<compv_float64_t>::find(plan.pattern, query, homographyMat, &result_homography));
 
 	return COMPV_ERROR_CODE_S_OK;
 }

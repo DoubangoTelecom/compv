@@ -40,6 +40,7 @@ enum COMPV_CALIB_CAMERA_RESULT_CODE {
 	COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_HOMOGRAPHIES,
 	COMPV_CALIB_CAMERA_RESULT_TOO_MUCH_LINES,
 	COMPV_CALIB_CAMERA_RESULT_INCOHERENT_INTERSECTIONS,
+	COMPV_CALIB_CAMERA_RESULT_PATTERN_ROTATED, // This is a TODO(dmi) to fix
 };
 
 struct CompVCalibCameraPlan {
@@ -68,7 +69,6 @@ struct CompVCalibCameraResult {
 	CompVCabLines lines_raw;
 	CompVCabLines lines_grouped;
 	CompVCalibCameraPlan plane_curr;
-	bool rotated;
 	CompVMatPtr edges;
 	CompVCalibCameraPlanVector planes;
 	CompVMatPtr K; // Camera matrix (3x3) matrix - intrinsic
@@ -112,7 +112,7 @@ private:
 	COMPV_ERROR_CODE grouping(const size_t image_width, const size_t image_height, const CompVCabLines& lines_parallel, const bool vt, const size_t max_strength, CompVCabLineFloat32Vector& lines_parallel_grouped);
 	COMPV_ERROR_CODE lineBestFit(const CompVLineFloat32Vector& points_cartesian, const CompVHoughLineVector& points_hough, CompVLineFloat32& line);
 	COMPV_ERROR_CODE buildPatternCorners(const CompVCalibCameraResult& result_calib);
-	COMPV_ERROR_CODE homography(CompVCalibCameraResult& result_calib, CompVHomographyResult& result_homography, CompVMatPtrPtr homographyMat);
+	COMPV_ERROR_CODE homography(const CompVCalibCameraPlan& plan, CompVHomographyResult& result_homography, CompVMatPtrPtr homographyMat);
 	COMPV_ERROR_CODE calibrate(CompVCalibCameraResult& result_calib);
 
 private:
@@ -127,8 +127,7 @@ private:
 	size_t m_nMinPanesCountBeforeCalib;
 	CompVEdgeDetePtr m_ptrCanny;
 	CompVHoughPtr m_ptrHough;
-	CompVMatPtr m_ptrPatternCornersInPlace;
-	CompVMatPtr m_ptrPatternCornersRotated;
+	CompVMatPtr m_ptrPatternCorners;
 	COMPV_VS_DISABLE_WARNINGS_END()
 };
 
