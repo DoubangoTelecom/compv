@@ -43,7 +43,11 @@
 
 #define COMPV_THIS_CLASSNAME	"CompVCalibCamera"
 
-// Implementation based on "Photogrammetry I - 16b - DLT & Camera Calibration (2015)": https://www.youtube.com/watch?v=Ou9Uj75DJX0
+// Some documentation used in this implementation:
+//	- [1] A Flexible New Technique for Camera Calibration: https://github.com/DoubangoTelecom/compv/blob/master/documentation/Camera%20calibration/Zhang_CamCal.pdf
+//	- [2] Zhang's Camera Calibration Algorithm: In-Depth Tutorial and Implementation: https://github.com/DoubangoTelecom/compv/blob/master/documentation/Camera%20calibration/Burger-CameraCalibration-20160516.pdf
+//	- [3] Photogrammetry I - 16b - DLT & Camera Calibration (2015): https://www.youtube.com/watch?v=Ou9Uj75DJX0
+
 // TODO(dmi): use "ceres-solver" http://ceres-solver.org/index.html
 
 COMPV_NAMESPACE_BEGIN()
@@ -60,8 +64,8 @@ struct CompVCabLineGroup {
 };
 typedef std::vector<CompVCabLineGroup, CompVAllocatorNoDefaultConstruct<CompVCabLineGroup> > CompVCabLineGroupVector;
 
-static COMPV_ERROR_CODE proj(const CompVMatPtr& inPoints, const CompVMatPtr& K, const CompVMatPtr& k, const CompVMatPtr& p, const CompVMatPtr& R, const CompVMatPtr&t, CompVMatPtrPtr outPoints);
-static COMPV_ERROR_CODE projError(const CompVMatPtr& inPoints, const CompVMatPtr& outPoints, const CompVMatPtr& K, const CompVMatPtr& k, const CompVMatPtr& p, const CompVMatPtr& R, const CompVMatPtr&t, compv_float64_t& error);
+static COMPV_ERROR_CODE proj(const CompVMatPtr& inPoints, const CompVMatPtr& K, const CompVMatPtr& d, const CompVMatPtr& R, const CompVMatPtr&t, CompVMatPtrPtr outPoints);
+static COMPV_ERROR_CODE projError(const CompVMatPtr& inPoints, const CompVMatPtr& outPoints, compv_float64_t& error);
 static COMPV_ERROR_CODE projError(const CompVCalibCameraResult& result_calib, compv_float64_t& error);
 
 template<typename T = compv_float32_t>
@@ -481,6 +485,10 @@ static COMPV_ERROR_CODE CompVMathTrigRodrigues3x3(const compv_float64x3_t& rot3,
 	// http://mathworld.wolfram.com/RodriguesRotationFormula.html
 	// https://www.cs.duke.edu/courses/compsci527/fall13/notes/rodrigues.pdf
 
+	// Zhang's Camera Calibration Algorithm: In-Depth Tutorial and Implementation: https://github.com/DoubangoTelecom/compv/blob/master/documentation/Camera%20calibration/Burger-CameraCalibration-20160516.pdf
+	// A.2.4 Converting rotations
+	// Rodrigues vector to Rotation matrix
+
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float64_t>(rot3x3, 3, 3));
 	compv_float64_t* R0 = (*rot3x3)->ptr<compv_float64_t>(0);
 	compv_float64_t* R1 = (*rot3x3)->ptr<compv_float64_t>(1);
@@ -530,6 +538,10 @@ static COMPV_ERROR_CODE CompVMathTrigRodrigues1x3(const CompVMatPtr& rot3x3, com
 	COMPV_CHECK_EXP_RETURN(!rot3x3 || rot3x3->cols() != 3 || rot3x3->rows() != 3, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	
 	// https://www.cs.duke.edu/courses/compsci527/fall13/notes/rodrigues.pdf
+
+	// Zhang's Camera Calibration Algorithm: In-Depth Tutorial and Implementation: https://github.com/DoubangoTelecom/compv/blob/master/documentation/Camera%20calibration/Burger-CameraCalibration-20160516.pdf
+	// A.2.4 Converting rotations
+	// Rotation matrix to Rodrigues vector
 
 	const compv_float64_t* R = rot3x3->ptr<const compv_float64_t>(0);
 	const compv_float64_t R11 = R[0];
@@ -600,12 +612,11 @@ typedef struct {
 static void lmmin_eval(const double *par, int m_dat, const void *data, double *fvec, int *userbreak)
 {
 	/* for readability, explicit type conversion */
-	data_struct *D;
-	D = (data_struct*)data;
+	const data_struct *Data = reinterpret_cast<const data_struct*>(data);
 
-	const compv_float64_t* cornersPtr = D->cornersPtr;
+	const compv_float64_t* cornersPtr = Data->cornersPtr;
 
-	const size_t ncorners = D->pattern->cols();
+	const size_t ncorners = Data->pattern->cols();
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Recreating matrices");
 
 	size_t index;
@@ -614,9 +625,9 @@ static void lmmin_eval(const double *par, int m_dat, const void *data, double *f
 
 	//const size_t m =
 	//	5 // fx, fy, cx, cy, skew
-	//	+ 2 // k1, k2[, p1, p2]
+	//	+ 4 // k1, k2, p1, p2
 	//	+ ((3 + 3) * nplanes) // Rt
-	size_t nplanes = D->nplanes;
+	size_t nplanes = Data->nplanes;
 	CompVMatPtr K;
 	COMPV_CHECK_CODE_ASSERT(CompVMat::newObjAligned<compv_float64_t>(&K, 3, 3));
 	COMPV_CHECK_CODE_ASSERT(K->zero_all());
@@ -626,13 +637,13 @@ static void lmmin_eval(const double *par, int m_dat, const void *data, double *f
 	*K->ptr<compv_float64_t>(0, 2) = par[index++]; //cx
 	*K->ptr<compv_float64_t>(1, 2) = par[index++]; // cy
 	*K->ptr<compv_float64_t>(0, 1) = par[index++]; // skew
-	CompVMatPtr k/*, pp*/;
-	COMPV_CHECK_CODE_ASSERT(CompVMat::newObjAligned<compv_float64_t>(&k, 2, 1));
+	CompVMatPtr d;
+	COMPV_CHECK_CODE_ASSERT(CompVMat::newObjAligned<compv_float64_t>(&d, 4, 1));
 	//COMPV_CHECK_CODE_ASSERT(CompVMat::newObjAligned<compv_float64_t>(&pp, 2, 1));
-	*k->ptr<compv_float64_t>(0, 0) = par[index++]; // k1
-	*k->ptr<compv_float64_t>(1, 0) = par[index++]; // k2
-	//*pp->ptr<compv_float64_t>(0, 0) = p[index++]; // p1
-	//*pp->ptr<compv_float64_t>(1, 0) = p[index++]; // p2
+	*d->ptr<compv_float64_t>(0, 0) = par[index++]; // k1
+	*d->ptr<compv_float64_t>(1, 0) = par[index++]; // k2
+	*d->ptr<compv_float64_t>(2, 0) = par[index++]; // p1
+	*d->ptr<compv_float64_t>(3, 0) = par[index++]; // p2
 
 	CompVMatPtr R, t, reprojected;
 	compv_float64x3_t r;
@@ -648,7 +659,7 @@ static void lmmin_eval(const double *par, int m_dat, const void *data, double *f
 		*t->ptr<compv_float64_t>(0, 2) = par[index++]; // tz
 
 		COMPV_CHECK_CODE_ASSERT(CompVMathTrigRodrigues3x3(r, &R));
-		COMPV_CHECK_CODE_ASSERT(proj(D->pattern, K, k, nullptr, R, t, &reprojected));
+		COMPV_CHECK_CODE_ASSERT(proj(Data->pattern, K, d, R, t, &reprojected));
 		COMPV_ASSERT(ncorners == reprojected->cols());
 		const compv_float64_t* reprojectedX = reprojected->ptr<const compv_float64_t>(0);
 		const compv_float64_t* reprojectedY = reprojected->ptr<const compv_float64_t>(1);
@@ -659,7 +670,7 @@ static void lmmin_eval(const double *par, int m_dat, const void *data, double *f
 		}
 	}
 
-	COMPV_ASSERT(index == 127); // FIXME(dmi): remove
+	COMPV_ASSERT(index == 129); // FIXME(dmi): remove
 }
 
 // FIXME(dmi): remove
@@ -672,7 +683,7 @@ COMPV_ERROR_CODE CompVCalibCamera::test(CompVCalibCameraResult& result_calib, Co
 
 	CompVMatPtr correctedMat;
 	const CompVCalibCameraPlan& plan = result_calib.planes[base_file_index];
-	COMPV_CHECK_CODE_RETURN(proj(plan.pattern, result_calib.K, result_calib.k, result_calib.p, plan.R, plan.t, &correctedMat));
+	COMPV_CHECK_CODE_RETURN(proj(plan.pattern, result_calib.K, result_calib.d, plan.R, plan.t, &correctedMat));
 	const compv_float64_t* projX = correctedMat->ptr<compv_float64_t>(0);
 	const compv_float64_t* projY = correctedMat->ptr<compv_float64_t>(1);
 	const compv_float64_t* projZ = correctedMat->ptr<compv_float64_t>(2);
@@ -691,23 +702,7 @@ COMPV_ERROR_CODE CompVCalibCamera::test(CompVCalibCameraResult& result_calib, Co
 	compv_float64_t error;
 	COMPV_CHECK_CODE_RETURN(projError(result_calib, error));
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "error before LM: %f", error);
-
-
-	/*{
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "plan.R = %f, %f, %f\n %f, %f, %f\n %f, %f, %f",
-			*plan.R->ptr<const compv_float64_t>(0, 0), *plan.R->ptr<const compv_float64_t>(0, 1), *plan.R->ptr<const compv_float64_t>(0, 2),
-			*plan.R->ptr<const compv_float64_t>(1, 0), *plan.R->ptr<const compv_float64_t>(1, 1), *plan.R->ptr<const compv_float64_t>(1, 2),
-			*plan.R->ptr<const compv_float64_t>(2, 0), *plan.R->ptr<const compv_float64_t>(2, 1), *plan.R->ptr<const compv_float64_t>(2, 2)
-		);
-		compv_float64x3_t r;
-		COMPV_CHECK_CODE_RETURN(CompVMathTrigRodrigues1x3(plan.R, r));
-		COMPV_CHECK_CODE_RETURN(CompVMathTrigRodrigues3x3(r, (CompVMatPtrPtr)&plan.R));
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "plan.R' = %f, %f, %f\n %f, %f, %f\n %f, %f, %f",
-			*plan.R->ptr<const compv_float64_t>(0, 0), *plan.R->ptr<const compv_float64_t>(0, 1), *plan.R->ptr<const compv_float64_t>(0, 2),
-			*plan.R->ptr<const compv_float64_t>(1, 0), *plan.R->ptr<const compv_float64_t>(1, 1), *plan.R->ptr<const compv_float64_t>(1, 2),
-			*plan.R->ptr<const compv_float64_t>(2, 0), *plan.R->ptr<const compv_float64_t>(2, 1), *plan.R->ptr<const compv_float64_t>(2, 2)
-		);
-	}*/
+	//COMPV_ASSERT(error <= 0.99229103488377923); // FIXME: remove
 
 	const size_t nplanes = result_calib.planes.size();
 
@@ -731,7 +726,7 @@ COMPV_ERROR_CODE CompVCalibCamera::test(CompVCalibCameraResult& result_calib, Co
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Too much parameters for R, use rodrigues to diminish");
 	const size_t m =
 		5 // fx, fy, cx, cy, skew
-		+ 2 // k1, k2[, p1, p2]
+		+ 4 // k1, k2, p1, p2
 		+ ((3 + 3) * nplanes) // R, t
 		;
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float64_t>(&parameters, 1, m));
@@ -743,10 +738,10 @@ COMPV_ERROR_CODE CompVCalibCamera::test(CompVCalibCameraResult& result_calib, Co
 	parametersPtr[index++] = *result_calib.K->ptr<const compv_float64_t>(1, 2); // cy
 	parametersPtr[index++] = *result_calib.K->ptr<const compv_float64_t>(0, 1); // skew
 
-	parametersPtr[index++] = *result_calib.k->ptr<const compv_float64_t>(0, 0); // k1
-	parametersPtr[index++] = *result_calib.k->ptr<const compv_float64_t>(1, 0); // k2
-	//parametersPtr[index++] = result_calib.p ? *result_calib.p->ptr<const compv_float64_t>(0, 0) : 0.0; // p1
-	//parametersPtr[index++] = result_calib.p ? *result_calib.p->ptr<const compv_float64_t>(1, 0) : 0.0; // p2
+	parametersPtr[index++] = *result_calib.d->ptr<const compv_float64_t>(0, 0); // k1
+	parametersPtr[index++] = *result_calib.d->ptr<const compv_float64_t>(1, 0); // k2
+	parametersPtr[index++] = *result_calib.d->ptr<const compv_float64_t>(2, 0); // p1
+	parametersPtr[index++] = *result_calib.d->ptr<const compv_float64_t>(3, 0); // p2
 
 	// Rt
 	compv_float64x3_t r;
@@ -764,7 +759,7 @@ COMPV_ERROR_CODE CompVCalibCamera::test(CompVCalibCameraResult& result_calib, Co
 
 	lm_status_struct status;
 	lm_control_struct control = lm_control_double;
-	control.verbosity = 3;
+	control.verbosity = 0;
 
 	/* parameter vector */
 	int n_par = static_cast<int>(m); /* number of parameters in model function f */
@@ -794,15 +789,10 @@ COMPV_ERROR_CODE CompVCalibCamera::test(CompVCalibCameraResult& result_calib, Co
 	*result_calib.K->ptr<compv_float64_t>(0, 2) = parametersPtr[index++]; //cx
 	*result_calib.K->ptr<compv_float64_t>(1, 2) = parametersPtr[index++]; // cy
 	*result_calib.K->ptr<compv_float64_t>(0, 1) = parametersPtr[index++]; // skew
-	*result_calib.k->ptr<compv_float64_t>(0, 0) = parametersPtr[index++]; // k1
-	*result_calib.k->ptr<compv_float64_t>(1, 0) = parametersPtr[index++]; // k2
-	/*if (result_calib.p) {
-		*result_calib.p->ptr<compv_float64_t>(0, 0) = p[index++]; // p1
-		*result_calib.p->ptr<compv_float64_t>(1, 0) = p[index++]; // p2
-	}
-	else {
-		index += 2;
-	}*/
+	*result_calib.d->ptr<compv_float64_t>(0, 0) = parametersPtr[index++]; // k1
+	*result_calib.d->ptr<compv_float64_t>(1, 0) = parametersPtr[index++]; // k2
+	*result_calib.d->ptr<compv_float64_t>(2, 0) = parametersPtr[index++]; // p1
+	*result_calib.d->ptr<compv_float64_t>(3, 0) = parametersPtr[index++]; // p2
 
 	for (size_t i = 0; i < nplanes; ++i) {
 		CompVCalibCameraPlan& plan = result_calib.planes[i];
@@ -819,7 +809,7 @@ COMPV_ERROR_CODE CompVCalibCamera::test(CompVCalibCameraResult& result_calib, Co
 	
 	COMPV_CHECK_CODE_RETURN(projError(result_calib, error));
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "error afert LM: %f", error);
-	
+	//COMPV_ASSERT(error <= 0.77481636416311939); // FIXME(dmi): remove
 
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -1216,7 +1206,7 @@ COMPV_ERROR_CODE CompVCalibCamera::calibrate(CompVCalibCameraResult& result_cali
 	const compv_float64_t cy = *K->ptr<const compv_float64_t>(1, 2);
 
 	CompVMatPtr D, d;
-	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float64_t>(&D, (numPlanes * m_nPatternCornersTotal) << 1, 2));
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float64_t>(&D, (numPlanes * m_nPatternCornersTotal) << 1, 4));
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float64_t>(&d, (numPlanes * m_nPatternCornersTotal) << 1, 1));
 	const size_t DStrideTimes2 = D->stride() << 1;
 	const size_t dStrideTimes2 = d->stride() << 1;
@@ -1282,7 +1272,10 @@ COMPV_ERROR_CODE CompVCalibCamera::calibrate(CompVCalibCameraResult& result_cali
 		//r12  r22  t12
 		//r13  r23  t13
 
-		/* Computing radial distorsion */
+		/* 
+			Computing radial distorsion 
+			[1] 3.3 Dealing with radial distortion
+		*/
 		const CompVPointFloat32Vector& intersections = it_planes->intersections;
 		const size_t numPoints = intersections.size();
 		CompVPointFloat32Vector::const_iterator it_intersection;
@@ -1300,16 +1293,26 @@ COMPV_ERROR_CODE CompVCalibCamera::calibrate(CompVCalibCameraResult& result_cali
 			compv_float64_t scale = z ? (1.0 / z) : 1.0;
 			compv_float64_t x = ((patternX[i] * r11) + (patternY[i] * r21) + t11) * scale;
 			compv_float64_t y = ((patternX[i] * r12) + (patternY[i] * r22) + t12) * scale;
-			compv_float64_t r2 = x * x + y * y;
+			compv_float64_t r2 = (x * x) + (y * y);
 			compv_float64_t r4 = r2 * r2;
 			compv_float64_t u = static_cast<compv_float64_t>(it_intersection->x);
 			compv_float64_t v = static_cast<compv_float64_t>(it_intersection->y);
 			compv_float64_t uh = cx + fx * x + skew * y;
 			compv_float64_t vh = cy + fy * y;
-			DPtr0[0] = ((u - cx) * r2);
-			DPtr0[1] = ((u - cx) * r4);
-			DPtr1[0] = ((v - cy) * r2);
-			DPtr1[1] = ((v - cy) * r4);
+			compv_float64_t du = (u - cx);
+			compv_float64_t dv = (v - cy);
+			compv_float64_t two_dudv = 2 * du * dv;
+
+			DPtr0[0] = (du * r2);
+			DPtr0[1] = (du * r4);
+			DPtr0[2] = two_dudv;
+			DPtr0[3] = r2 + (2 * (du * du));
+
+			DPtr1[0] = (dv * r2);
+			DPtr1[1] = (dv * r4);
+			DPtr1[2] = r2 + (dv * dv);
+			DPtr1[3] = two_dudv;
+
 			dPtr0[0] = (uh - u);
 			dPtr1[0] = (vh - v);
 
@@ -1333,10 +1336,17 @@ COMPV_ERROR_CODE CompVCalibCamera::calibrate(CompVCalibCameraResult& result_cali
 		ptr = t->ptr<compv_float64_t>(0), ptr[0] = t11, ptr[1] = t12, ptr[2] = t13;
 	}
 
-	/* Final radial distorsions (Least Square minimization) */
-	CompVMatPtr DtD;
-	// Dt.D
-	COMPV_CHECK_CODE_RETURN(CompVMatrix::mulAtA(D, &DtD));
+	/* 
+		Final radial distorsions (Least Square minimization): [1] 3.3 Dealing with radial distortion 
+		k = (Dt.D)*.Dt.d
+	*/
+#if 1
+	CompVMatPtr DtD, DtDinv, kd, k;
+	COMPV_CHECK_CODE_RETURN(CompVMatrix::mulAtA(D, &DtD)); // Dt.D
+	COMPV_CHECK_CODE_RETURN(CompVMatrix::pseudoinv(DtD, &DtDinv)); // (Dt.D)*
+	COMPV_CHECK_CODE_RETURN(CompVMatrix::mulABt(DtDinv, D, &kd)); // (Dt.D)*.Dt
+	COMPV_CHECK_CODE_RETURN(CompVMatrix::mulAB(kd, d, &result_calib.d)); // (Dt.D)*.Dt.d
+#else
 	const compv_float64_t aa = *DtD->ptr<const compv_float64_t>(0, 0);
 	const compv_float64_t bb = *DtD->ptr<const compv_float64_t>(0, 1);
 	const compv_float64_t cc = *DtD->ptr<const compv_float64_t>(1, 0);
@@ -1356,6 +1366,7 @@ COMPV_ERROR_CODE CompVCalibCamera::calibrate(CompVCalibCameraResult& result_cali
 	COMPV_CHECK_CODE_RETURN(CompVMatrix::mulABt(DtD, D, &kd));
 	COMPV_CHECK_CODE_RETURN(CompVMatrix::mulAB(kd, d, &result_calib.k));
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "k = %f, %f", *result_calib.k->ptr<const compv_float64_t>(0, 0), *result_calib.k->ptr<const compv_float64_t>(1, 0));
+#endif
 
 	// https://www.inf.ethz.ch/personal/pomarc/pubs/KumarCVPR08.pdf
 	
@@ -1363,12 +1374,11 @@ COMPV_ERROR_CODE CompVCalibCamera::calibrate(CompVCalibCameraResult& result_cali
 }
 
 // Project to 2D plan
-static COMPV_ERROR_CODE proj(const CompVMatPtr& inPoints, const CompVMatPtr& K, const CompVMatPtr& k, const CompVMatPtr& p, const CompVMatPtr& R, const CompVMatPtr&t, CompVMatPtrPtr outPoints)
+static COMPV_ERROR_CODE proj(const CompVMatPtr& inPoints, const CompVMatPtr& K, const CompVMatPtr& d, const CompVMatPtr& R, const CompVMatPtr&t, CompVMatPtrPtr outPoints)
 {
-	COMPV_CHECK_EXP_RETURN(!inPoints || inPoints->isEmpty() || inPoints->rows() != 3 || !K || !k || !outPoints || !R || !t, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(!inPoints || inPoints->isEmpty() || inPoints->rows() != 3 || !K || !d || !outPoints || !R || !t, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_CHECK_EXP_RETURN(K->rows() != 3 || K->cols() != 3, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "K must be (3x3) matrix");
-	COMPV_CHECK_EXP_RETURN(k->rows() < 2 || k->cols() != 1, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "k must be (2+x1) vector");
-	COMPV_CHECK_EXP_RETURN(p && (p->rows() < 2 || p->cols() != 1), COMPV_ERROR_CODE_E_INVALID_PARAMETER, "p must be (2+x1) vector");
+	COMPV_CHECK_EXP_RETURN(d->rows() < 4 || d->cols() != 1, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "d must be (1x4+) vector");
 	COMPV_CHECK_EXP_RETURN(R->rows() != 3 || R->cols() != 3, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "R must be (3x3) matrix");
 	COMPV_CHECK_EXP_RETURN(t->rows() != 1 || t->cols() != 3, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "R must be (1x3) vector");
 
@@ -1391,10 +1401,10 @@ static COMPV_ERROR_CODE proj(const CompVMatPtr& inPoints, const CompVMatPtr& K, 
 	const compv_float64_t cx = *K->ptr<const compv_float64_t>(0, 2);
 	const compv_float64_t cy = *K->ptr<const compv_float64_t>(1, 2);
 
-	const compv_float64_t k1 = *k->ptr<const compv_float64_t>(0, 0);
-	const compv_float64_t k2 = *k->ptr<const compv_float64_t>(1, 0);
-	const compv_float64_t p1 = p ? *p->ptr<const compv_float64_t>(0, 0) : 0.0;
-	const compv_float64_t p2 = p ? *p->ptr<const compv_float64_t>(1, 0) : 0.0;
+	const compv_float64_t k1 = *d->ptr<const compv_float64_t>(0, 0);
+	const compv_float64_t k2 = *d->ptr<const compv_float64_t>(1, 0);
+	const compv_float64_t p1 = *d->ptr<const compv_float64_t>(2, 0);
+	const compv_float64_t p2 = *d->ptr<const compv_float64_t>(3, 0);
 
 	// https://youtu.be/Ou9Uj75DJX0?t=25m34s
 	const compv_float64_t R0 = *R->ptr<const compv_float64_t>(0, 0);
@@ -1415,7 +1425,7 @@ static COMPV_ERROR_CODE proj(const CompVMatPtr& inPoints, const CompVMatPtr& K, 
 
 	compv_float64_t xp, yp, zp;
 	compv_float64_t x, y, z;
-	compv_float64_t x2, y2, r2, r4, a1, a2, a3, radialdist;
+	compv_float64_t x2, y2, r2, r4, a1, a2, a3, rdist;
 	for (index = 0; index < numPoints; ++index) {
 		xp = inPointsX[index];
 		yp = inPointsY[index];
@@ -1438,10 +1448,9 @@ static COMPV_ERROR_CODE proj(const CompVMatPtr& inPoints, const CompVMatPtr& K, 
 		a1 = 2 * (x * y);
 		a2 = r2 + (2 * x2);
 		a3 = r2 + (2 * y2);
-		radialdist = 1 + k1 * r2 + k2 * r4;
-		// TODO(dmi): Add SIMD versions for (p1,p2) = (0,0) only
-		x = x*radialdist + p1 * a1 + p2 * a2;
-		y = y*radialdist + p1 * a3 + p2 * a1;
+		rdist = 1 + k1 * r2 + k2 * r4;
+		x = (x*rdist) + p1 * a1 + p2 * a2; // add tangential distortion
+		y = (y*rdist) + p1 * a3 + p2 * a1; // add tangential distortion
 
 		// https://youtu.be/Ou9Uj75DJX0?t=25m34s (3)
 		outPointsX[index] = x * fx + cx;
@@ -1452,9 +1461,9 @@ static COMPV_ERROR_CODE proj(const CompVMatPtr& inPoints, const CompVMatPtr& K, 
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-static COMPV_ERROR_CODE projError(const CompVMatPtr& inPoints, const CompVMatPtr& outPoints, const CompVMatPtr& K, const CompVMatPtr& k, const CompVMatPtr& p, const CompVMatPtr& R, const CompVMatPtr&t, compv_float64_t& error)
+static COMPV_ERROR_CODE projError(const CompVMatPtr& inPoints, const CompVMatPtr& outPoints, compv_float64_t& error)
 {
-	COMPV_CHECK_EXP_RETURN(!inPoints || !outPoints || !K || !k || !R || !t || inPoints->cols() != outPoints->cols() || inPoints->rows() != outPoints->rows() || inPoints->rows() != 3,
+	COMPV_CHECK_EXP_RETURN(!inPoints || !outPoints || inPoints->cols() != outPoints->cols() || inPoints->rows() != outPoints->rows() || inPoints->rows() != 3,
 		COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	error = 0.0;
 	const size_t numPoints = outPoints->cols();
@@ -1475,7 +1484,7 @@ static COMPV_ERROR_CODE projError(const CompVMatPtr& inPoints, const CompVMatPtr
 
 static COMPV_ERROR_CODE projError(const CompVCalibCameraResult& result_calib, compv_float64_t& error)
 {
-	COMPV_CHECK_EXP_RETURN(!result_calib.k || !result_calib.K || result_calib.planes.empty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(!result_calib.K || !result_calib.d || result_calib.planes.empty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	
 	error = 0;
 
@@ -1495,7 +1504,7 @@ static COMPV_ERROR_CODE projError(const CompVCalibCameraResult& result_calib, co
 	const size_t numPointsPerPlan = intersections->cols();
 
 	for (CompVCalibCameraPlanVector::const_iterator i_plans = result_calib.planes.begin(); i_plans < result_calib.planes.end(); ++i_plans) {
-		COMPV_CHECK_CODE_RETURN(proj(i_plans->pattern, result_calib.K, result_calib.k, result_calib.p, i_plans->R, i_plans->t, &reprojected));
+		COMPV_CHECK_CODE_RETURN(proj(i_plans->pattern, result_calib.K, result_calib.d, i_plans->R, i_plans->t, &reprojected));
 
 		COMPV_CHECK_EXP_RETURN(i_plans->intersections.size() != reprojected->cols() || intersections->cols() != reprojected->cols(), COMPV_ERROR_CODE_E_INVALID_STATE);
 		for (i = 0, it_intersections = i_plans->intersections.begin(); i < numPointsPerPlan; ++i, ++it_intersections) {
@@ -1503,7 +1512,7 @@ static COMPV_ERROR_CODE projError(const CompVCalibCameraResult& result_calib, co
 			intersectionsY[i] = static_cast<compv_float64_t>(it_intersections->y);
 		}
 		
-		COMPV_CHECK_CODE_RETURN(projError(reprojected, intersections, result_calib.K, result_calib.k, result_calib.p, i_plans->R, i_plans->t, e));
+		COMPV_CHECK_CODE_RETURN(projError(reprojected, intersections, e));
 		error += e;
 	}
 

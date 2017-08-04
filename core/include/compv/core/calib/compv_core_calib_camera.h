@@ -71,9 +71,8 @@ struct CompVCalibCameraResult {
 	bool rotated;
 	CompVMatPtr edges;
 	CompVCalibCameraPlanVector planes;
-	CompVMatPtr K; // camera matrix (3x3) matrix - intrinsic
-	CompVMatPtr k; // Radial distorsion (2x1) vector - "intrinsic"
-	CompVMatPtr p; // Tangential distorsion (2x1) vector - "intrinsic"
+	CompVMatPtr K; // Camera matrix (3x3) matrix - intrinsic
+	CompVMatPtr d; // Radial/Tangential distorsions (4x1) vector [k1, k2, p1, p2]t - "intrinsic"
 public:
 	COMPV_INLINE void reset() {
 		code = COMPV_CALIB_CAMERA_RESULT_NONE;
@@ -87,7 +86,7 @@ public:
 		return code == COMPV_CALIB_CAMERA_RESULT_OK;
 	}
 	COMPV_INLINE bool isDone() const {
-		return (K && k);
+		return (K && d);
 	}
 };
 
