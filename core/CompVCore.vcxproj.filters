@@ -257,9 +257,6 @@
     <ClCompile Include="features\hough\intrin\arm\compv_core_feature_houghkht_intrin_neon.cxx">
       <Filter>Source Files\features\hough\intrin\arm</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\opencv-tests\calibration\levmar-2.6\Axb.c">
-      <Filter>Source Files\calib</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\core\compv_core.h">

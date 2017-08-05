@@ -33,6 +33,7 @@ typedef std::vector<CompVCabLineFloat32, CompVAllocatorNoDefaultConstruct<CompVC
 enum COMPV_CALIB_CAMERA_RESULT_CODE {
 	COMPV_CALIB_CAMERA_RESULT_NONE,
 	COMPV_CALIB_CAMERA_RESULT_OK,
+	COMPV_CALIB_CAMERA_RESULT_NO_CHANGES, /// almost same plane. Only if "check_plans" is set to true
 	COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_POINTS,
 	COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_INTERSECTIONS,
 	COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_INLIERS,
@@ -65,11 +66,15 @@ public:
 typedef std::vector<CompVCalibCameraPlan, CompVAllocatorNoDefaultConstruct<CompVCalibCameraPlan> > CompVCalibCameraPlanVector;
 
 struct CompVCalibCameraResult {
-	COMPV_CALIB_CAMERA_RESULT_CODE code;
+	bool levenberg_marquardt = true; // whether to perform non-linear levenberg marquardt optimisation after getting initial calib results
+	bool check_plans = true; // whether to check if the current and previous plan are almost the same. If they are almost the same, reject!
+	compv_float32_t check_plans_min_sad;
+	COMPV_CALIB_CAMERA_RESULT_CODE code = COMPV_CALIB_CAMERA_RESULT_NONE;
 	CompVCabLines lines_raw;
 	CompVCabLines lines_grouped;
 	CompVCalibCameraPlan plane_curr;
 	CompVMatPtr edges;
+	compv_float64_t reproj_error = DBL_MAX; // reprojection error, should be < 0.8
 	CompVCalibCameraPlanVector planes;
 	CompVMatPtr K; // Camera matrix (3x3) matrix - intrinsic
 	CompVMatPtr d; // Radial/Tangential distorsions (4x1) vector [k1, k2, p1, p2]t - "intrinsic"
@@ -81,6 +86,11 @@ public:
 		lines_grouped.lines_cartesian.clear();
 		lines_grouped.lines_hough.clear();
 		plane_curr.reset();
+		reproj_error = DBL_MAX;
+	}
+	COMPV_INLINE void clean() {
+		reset();
+		planes.clear();
 	}
 	COMPV_INLINE bool isOK() const {
 		return code == COMPV_CALIB_CAMERA_RESULT_OK;
@@ -100,7 +110,7 @@ public:
 	COMPV_OBJECT_GET_ID(CompVBoxInterestPoint);
 
 	COMPV_ERROR_CODE process(const CompVMatPtr& image, CompVCalibCameraResult& result);
-	COMPV_ERROR_CODE test(CompVCalibCameraResult& result_calib, CompVPointFloat32Vector& corrected, size_t file_index = 47);
+	COMPV_ERROR_CODE calibrate(CompVCalibCameraResult& result_calib);
 
 	COMPV_INLINE CompVEdgeDetePtr edgeDetector() { return m_ptrCanny; }
 	COMPV_INLINE CompVHoughPtr houghTransform() { return m_ptrHough; }
@@ -113,7 +123,7 @@ private:
 	COMPV_ERROR_CODE lineBestFit(const CompVLineFloat32Vector& points_cartesian, const CompVHoughLineVector& points_hough, CompVLineFloat32& line);
 	COMPV_ERROR_CODE buildPatternCorners(const CompVCalibCameraResult& result_calib);
 	COMPV_ERROR_CODE homography(const CompVCalibCameraPlan& plan, CompVHomographyResult& result_homography, CompVMatPtrPtr homographyMat);
-	COMPV_ERROR_CODE calibrate(CompVCalibCameraResult& result_calib);
+	COMPV_ERROR_CODE levmarq(CompVCalibCameraResult& result_calib);
 
 private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
@@ -124,7 +134,6 @@ private:
 	size_t m_nPatternLinesHz;
 	size_t m_nPatternLinesVt;
 	size_t m_nPatternBlockSizePixel;
-	size_t m_nMinPanesCountBeforeCalib;
 	CompVEdgeDetePtr m_ptrCanny;
 	CompVHoughPtr m_ptrHough;
 	CompVMatPtr m_ptrPatternCorners;
