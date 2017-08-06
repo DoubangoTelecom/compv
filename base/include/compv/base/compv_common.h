@@ -182,7 +182,9 @@ typedef uintptr_t compv_uscalar_t;  /* This type *must* have the width of a gene
 typedef float compv_float32_t;
 typedef double compv_float64_t;
 typedef compv_float32_t compv_float32x2_t[2];
+typedef compv_float32_t compv_float32x3_t[3];
 typedef compv_float32_t compv_float32x4_t[4];
+typedef compv_float64_t compv_float64x3_t[3];
 typedef uint8_t compv_uint8x3_t[3];
 typedef uint8_t compv_uint8x4_t[4];
 typedef std::vector<std::string> CompVStringVector;

@@ -38,6 +38,7 @@
 #include <compv/base/math/compv_math_histogram.h>
 #include <compv/base/math/compv_math_matrix.h>
 #include <compv/base/math/compv_math_transform.h>
+#include <compv/base/math/compv_math_trig.h>
 #include <compv/base/math/compv_math_stats.h>
 #include <compv/base/math/compv_math_utils.h>
 

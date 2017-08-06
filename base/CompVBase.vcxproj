@@ -103,6 +103,7 @@
     <ClInclude Include="include\compv\base\math\compv_math_matrix.h" />
     <ClInclude Include="include\compv\base\math\compv_math_stats.h" />
     <ClInclude Include="include\compv\base\math\compv_math_transform.h" />
+    <ClInclude Include="include\compv\base\math\compv_math_trig.h" />
     <ClInclude Include="include\compv\base\math\compv_math_utils.h" />
     <ClInclude Include="include\compv\base\math\intrin\arm\compv_math_convlt_intrin_fma_neon.h" />
     <ClInclude Include="include\compv\base\math\intrin\arm\compv_math_convlt_intrin_neon.h" />
@@ -287,6 +288,7 @@
     <ClCompile Include="math\compv_math_matrix.cxx" />
     <ClCompile Include="math\compv_math_stats.cxx" />
     <ClCompile Include="math\compv_math_transform.cxx" />
+    <ClCompile Include="math\compv_math_trig.cxx" />
     <ClCompile Include="math\compv_math_utils.cxx" />
     <ClCompile Include="math\intrin\arm\compv_math_convlt_intrin_fma_neon.cxx" />
     <ClCompile Include="math\intrin\arm\compv_math_convlt_intrin_neon.cxx" />
