@@ -2,23 +2,25 @@
 
 using namespace compv;
 
-#define CAMERA_IDX			0
+#define CAMERA_IDX				0
 #if COMPV_ARCH_ARM
-#	define CAMERA_WIDTH		320
-#	define CAMERA_HEIGHT	240
+#	define CAMERA_WIDTH			320
+#	define CAMERA_HEIGHT		240
 #else
-#	define CAMERA_WIDTH		640
-#	define CAMERA_HEIGHT	480
+#	define CAMERA_WIDTH			640
+#	define CAMERA_HEIGHT		480
 #endif
-#define CAMERA_FPS			10
-#define CAMERA_SUBTYPE		COMPV_SUBTYPE_PIXELS_YUY2
-#define CAMERA_AUTOFOCUS	true
+#define CAMERA_FPS				10
+#define CAMERA_SUBTYPE			COMPV_SUBTYPE_PIXELS_YUY2
+#define CAMERA_AUTOFOCUS		true
 
-#define CALIB_MIN_PLANS		20
-#define CALIB_MAX_ERROR		0.78 // With my Logitech camera 0.41 is the best number I can get
+#define CALIB_MIN_PLANS			20
+#define CALIB_MAX_ERROR			0.76 // With my Logitech camera 0.41 is the best number I can get
+#define CALIB_COMPUTE_TAN_DIST	false // whether to compute tangential distorsion (p1, p2) in addition to radial distorsion (k1, k2)
+#define CALIB_COMPUTE_SKEW		true // whether to compute skew value (part of camera matrix K)
 
-#define WINDOW_WIDTH		640
-#define WINDOW_HEIGHT		480
+#define WINDOW_WIDTH			640
+#define WINDOW_HEIGHT			480
 
 #define TAG_SAMPLE			"Camera calibration"
 
@@ -109,15 +111,12 @@ public:
 		if (CompVDrawing::isLoopRunning()) {
 			CompVMatPtr imageGray, imageOrig;
 
-			static size_t __index = 0;
-			size_t file_index = 47 + ((__index++) % 20)/*65*//*65*//*47*//*65*//*47*//*55*//*47*//*48*//*52*/;
-#if 1
+#if 0
 			COMPV_CHECK_CODE_RETURN(CompVImage::convertGrayscale(image, &imageGray));
 			imageOrig = image;
 #else
-			if (m_CalibResult.isDone()) {
-				//file_index = 48;
-			}
+			static size_t __index = 0;
+			size_t file_index = 47 + ((__index++) % 20)/*65*//*65*//*47*//*65*//*47*//*55*//*47*//*48*//*52*/;
 			std::string file_path = std::string("C:/Projects/GitHub/data/calib/P10100")+ CompVBase::to_string(file_index) +std::string("s_640x480_gray.yuv");
 			//std::string file_path = "C:/Projects/GitHub/data/calib/P1010047s_90deg_640x480_gray.yuv";
 			COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 640, 480, 640, file_path.c_str(), &imageGray));
@@ -144,8 +143,9 @@ public:
 						m_CalibResult.clean(); // clean all plans and start over
 					}
 					else {
-						m_bCalibrationDone = true;
-						COMPV_CHECK_CODE_RETURN(onImageSizeChanged(imageOrig->cols(), imageOrig->rows()));
+						m_CalibResult.clean(); // FIXME(dmi): remove
+						//m_bCalibrationDone = true;
+						//COMPV_CHECK_CODE_RETURN(onImageSizeChanged(imageOrig->cols(), imageOrig->rows()));
 						COMPV_DEBUG_INFO_EX(TAG_SAMPLE, "Calibration is done!!");
 					}
 				}
@@ -250,6 +250,10 @@ public:
 		CompVMyCameraListenerPtr listener_ = new CompVMyCameraListener(ptrWindow);
 		COMPV_CHECK_EXP_RETURN(!listener_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 		COMPV_CHECK_CODE_RETURN(CompVCalibCamera::newObj(&listener_->m_ptrCalib));
+
+		// Calibration options
+		listener_->m_CalibResult.compute_skew = CALIB_COMPUTE_SKEW;
+		listener_->m_CalibResult.compute_tangential_dist = CALIB_COMPUTE_TAN_DIST;
 
 		// Drawing options
 		listener_->m_DrawingOptions.lineWidth = 1.f;
