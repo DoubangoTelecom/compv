@@ -5,6 +5,7 @@
 * WebSite: http://compv.org
 */
 #include "compv/core/calib/compv_core_calib_camera.h"
+#include "compv/core/calib/compv_core_calib_utils.h"
 #include "compv/base/image/compv_image.h"
 #include "compv/base/math/compv_math_utils.h"
 #include "compv/base/math/compv_math_gauss.h"
@@ -66,12 +67,12 @@ struct CompVCabLineGroup {
 typedef std::vector<CompVCabLineGroup, CompVAllocatorNoDefaultConstruct<CompVCabLineGroup> > CompVCabLineGroupVector;
 
 struct levmarq_data {
-	const double *cornersPtr;
+	const compv_float64_t *cornersPtr;
 	const CompVCalibCameraPlanVector& planes;
 	const bool have_tangential_dist;
 	const bool have_skew;
 public:
-	levmarq_data(const CompVCalibCameraPlanVector& planes_, const double *cornersPtr_, const bool have_tangential_dist_, const bool have_skew_)
+	levmarq_data(const CompVCalibCameraPlanVector& planes_, const compv_float64_t *cornersPtr_, const bool have_tangential_dist_, const bool have_skew_)
 		: planes(planes_)
 		, cornersPtr(cornersPtr_)
 		, have_tangential_dist(have_tangential_dist_)
@@ -79,42 +80,12 @@ public:
 	{ }
 };
 
-static void levmarq_eval(const double *par, int m_dat, const void *data, double *fvec, int *userbreak);
+static void levmarq_eval(const compv_float64_t *par, int m_dat, const void *data, compv_float64_t *fvec, int *userbreak);
+static bool segment_get_intersection(const CompVLineFloat32& line0, const CompVLineFloat32& line1, compv_float32_t *i_x, compv_float32_t *i_y = nullptr);
 
 static COMPV_ERROR_CODE proj(const CompVMatPtr& inPoints, const CompVMatPtr& K, const CompVMatPtr& d, const CompVMatPtr& R, const CompVMatPtr&t, CompVMatPtrPtr outPoints);
-static COMPV_ERROR_CODE projError(const CompVMatPtr& inPoints, const CompVMatPtr& outPoints, compv_float64_t& error);
-static COMPV_ERROR_CODE projError(const CompVCalibCameraResult& result_calib, compv_float64_t& error);
+static COMPV_ERROR_CODE projError(const CompVCalibContex& context, compv_float64_t& error);
 static COMPV_ERROR_CODE projError(const CompVCalibCameraPlanVector& planes, const CompVMatPtr& K, const CompVMatPtr& d, const std::vector<CompVMatPtr>& R, const std::vector<CompVMatPtr>& t, compv_float64_t& error);
-
-template<typename T = compv_float32_t>
-static bool CompVMathLineSegmentGetIntersection(T p0_x, T p0_y, T p1_x, T p1_y,
-	compv_float32_t p2_x, compv_float32_t p2_y, T p3_x, T p3_y, T *i_x, T *i_y = nullptr)
-{
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Re-write code from StackOverflow");
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
-
-	const compv_float32_t a1 = p1_y - p0_y;
-	const compv_float32_t b1 = p0_x - p1_x;
-
-	const compv_float32_t a2 = p3_y - p2_y;
-	const compv_float32_t b2 = p2_x - p3_x;
-
-	const compv_float32_t det = a1 * b2 - a2 * b1;
-	if (det == 0) {
-		// lines are parallel
-		return false;
-	}
-
-	const compv_float32_t scale = (1.f / det);
-	const compv_float32_t c1 = a1 * p0_x + b1 * p0_y;
-	const compv_float32_t c2 = a2 * p2_x + b2 * p2_y;
-	*i_x = (b2 * c1 - b1 * c2) * scale;
-	if (i_y) {
-		*i_y = (a1 * c2 - a2 * c1) * scale;
-	}
-
-	return true;
-}
 
 CompVCalibCamera::CompVCalibCamera()
 	: m_nPatternCornersNumRow(PATTERN_ROW_CORNERS_NUM)
@@ -132,28 +103,28 @@ CompVCalibCamera::~CompVCalibCamera()
 
 }
 
-COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibCameraResult& result_calib)
+COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibContex& context)
 {
 	COMPV_CHECK_EXP_RETURN(!image || image->elmtInBytes() != sizeof(uint8_t) || image->planeCount() != 1, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Input image is null or not in grayscale format");
 
 	// Reset the previous result
-	result_calib.reset();
-	CompVCalibCameraPlan& plan_curr = result_calib.plane_curr;
+	context.reset();
+	CompVCalibCameraPlan& plan_curr = context.plane_curr;
 
 	const size_t image_width = image->cols();
 	const size_t image_height = image->rows();
 	const compv_float32_t image_widthF = static_cast<compv_float32_t>(image_width);
 	const compv_float32_t image_heightF = static_cast<compv_float32_t>(image_height);
 
-	bool intersect;
 	compv_float32_t intersect_x, intersect_y;
 	static const compv_float32_t intersect_z = 1.f;
 
 	static const compv_float32_t x_axis_right = 1e15f;
 	static const compv_float32_t x_axis_left = -1e15f;
+	static const CompVLineFloat32 x_axis(CompVPointFloat32(x_axis_left, 0.f), CompVPointFloat32(x_axis_right, 0.f));
 	
 	/* Canny edge detection */
-	COMPV_CHECK_CODE_RETURN(m_ptrCanny->process(image, &result_calib.edges));
+	COMPV_CHECK_CODE_RETURN(m_ptrCanny->process(image, &context.edges));
 
 	/* Hough lines */
 	// For SHT, set the threshold before processing. But for KHT, we need the global scale (GS) which is defined only *after* processing
@@ -161,77 +132,77 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 		COMPV_CHECK_CODE_RETURN(m_ptrHough->setInt(COMPV_HOUGH_SET_INT_THRESHOLD, HOUGH_SHT_THRESHOLD_MIN));
 	}
 	// Process
-	COMPV_CHECK_CODE_RETURN(m_ptrHough->process(result_calib.edges, result_calib.lines_raw.lines_hough));
+	COMPV_CHECK_CODE_RETURN(m_ptrHough->process(context.edges, context.lines_raw.lines_hough));
 
 	/* Return if no enough points */
-	if (result_calib.lines_raw.lines_hough.size() < m_nPatternLinesTotal) {
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough lines after hough transform: %zu", result_calib.lines_raw.lines_hough.size());
-		result_calib.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
+	if (context.lines_raw.lines_hough.size() < m_nPatternLinesTotal) {
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough lines after hough transform: %zu", context.lines_raw.lines_hough.size());
+		context.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
 	/* Remove weak lines */
-	if (result_calib.lines_raw.lines_hough.size() > m_nPatternLinesTotal) {
+	if (context.lines_raw.lines_hough.size() > m_nPatternLinesTotal) {
 		if (m_ptrHough->id() == COMPV_HOUGHKHT_ID) {
 			// Remove weak lines using global scale (GS)
 			compv_float64_t gs;
 			COMPV_CHECK_CODE_RETURN(m_ptrHough->getFloat64(COMPV_HOUGHKHT_GET_FLT64_GS, &gs));
 			const size_t min_strength = static_cast<size_t>(gs * HOUGH_KHT_THRESHOLD_FACT);
-			auto fncShortLines = std::remove_if(result_calib.lines_raw.lines_hough.begin(), result_calib.lines_raw.lines_hough.end(), [&](const CompVHoughLine& line) {
+			auto fncShortLines = std::remove_if(context.lines_raw.lines_hough.begin(), context.lines_raw.lines_hough.end(), [&](const CompVHoughLine& line) {
 				return line.strength < min_strength;
 			});
-			result_calib.lines_raw.lines_hough.erase(fncShortLines, result_calib.lines_raw.lines_hough.end());
+			context.lines_raw.lines_hough.erase(fncShortLines, context.lines_raw.lines_hough.end());
 		}
 		else {
 			// Remove weak lines using global max_strength
-			const size_t min_strength = static_cast<size_t>(result_calib.lines_raw.lines_hough.begin()->strength * HOUGH_SHT_THRESHOLD_FACT);
-			auto fncShortLines = std::remove_if(result_calib.lines_raw.lines_hough.begin(), result_calib.lines_raw.lines_hough.end(), [&](const CompVHoughLine& line) {
+			const size_t min_strength = static_cast<size_t>(context.lines_raw.lines_hough.begin()->strength * HOUGH_SHT_THRESHOLD_FACT);
+			auto fncShortLines = std::remove_if(context.lines_raw.lines_hough.begin(), context.lines_raw.lines_hough.end(), [&](const CompVHoughLine& line) {
 				return line.strength < min_strength;
 			});
-			result_calib.lines_raw.lines_hough.erase(fncShortLines, result_calib.lines_raw.lines_hough.end());
+			context.lines_raw.lines_hough.erase(fncShortLines, context.lines_raw.lines_hough.end());
 		}
 	}
 
 	/* Return if no enough points */
-	if (result_calib.lines_raw.lines_hough.size() < m_nPatternLinesTotal) {
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough lines after removing weak lines: %zu", result_calib.lines_raw.lines_hough.size());
-		result_calib.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
+	if (context.lines_raw.lines_hough.size() < m_nPatternLinesTotal) {
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough lines after removing weak lines: %zu", context.lines_raw.lines_hough.size());
+		context.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
 	/* Convert from polar to cartesian coordinates */
-	COMPV_CHECK_CODE_RETURN(m_ptrHough->toCartesian(image_width, image_height, result_calib.lines_raw.lines_hough, result_calib.lines_raw.lines_cartesian));
+	COMPV_CHECK_CODE_RETURN(m_ptrHough->toCartesian(image_width, image_height, context.lines_raw.lines_hough, context.lines_raw.lines_cartesian));
 
 	const size_t nPatternLinesHzVtMax = std::max(m_nPatternLinesHz, m_nPatternLinesVt);
 	const size_t nPatternLinesHzVtMin = std::min(m_nPatternLinesHz, m_nPatternLinesVt);
 
 	/* Lines subdivision */
 	CompVCabLines lines_hz, lines_vt;
-	COMPV_CHECK_CODE_RETURN(subdivision(image_width, image_height, result_calib.lines_raw, lines_hz, lines_vt));
+	COMPV_CHECK_CODE_RETURN(subdivision(image_width, image_height, context.lines_raw, lines_hz, lines_vt));
 	if (lines_hz.lines_cartesian.size() < nPatternLinesHzVtMin) {
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough [hz] lines after subdivision: %zu", lines_hz.lines_cartesian.size());
-		result_calib.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
+		context.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	if (lines_vt.lines_cartesian.size() < nPatternLinesHzVtMin) {
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough [vt] lines after subdivision: %zu", lines_vt.lines_cartesian.size());
-		result_calib.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
+		context.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	if ((lines_hz.lines_cartesian.size() + lines_vt.lines_cartesian.size()) < m_nPatternLinesTotal) {
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough [vt+hz] lines after subdivision: %zu+%zu", lines_hz.lines_cartesian.size(), lines_vt.lines_cartesian.size());
-		result_calib.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
+		context.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
 	// Hz-grouping
-	const size_t max_strength = result_calib.lines_raw.lines_hough.begin()->strength; // lines_hough is sorted (by hought->process)
+	const size_t max_strength = context.lines_raw.lines_hough.begin()->strength; // lines_hough is sorted (by hought->process)
 	CompVCabLineFloat32Vector lines_cab_hz_grouped, lines_cab_vt_grouped;
 	if (lines_hz.lines_cartesian.size() > nPatternLinesHzVtMin) {
 		COMPV_CHECK_CODE_RETURN(grouping(image_width, image_height, lines_hz, false, max_strength, lines_cab_hz_grouped));
 		if (lines_cab_hz_grouped.size() < nPatternLinesHzVtMin) {
 			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "After [hz] grouping we got less lines than what is requires, not a good news at all");
-			result_calib.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
+			context.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
 			return COMPV_ERROR_CODE_S_OK;
 		}
 	}
@@ -244,7 +215,7 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 		COMPV_CHECK_CODE_RETURN(grouping(image_width, image_height, lines_vt, true, max_strength, lines_cab_vt_grouped));
 		if (lines_cab_vt_grouped.size() < nPatternLinesHzVtMin) {
 			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "After [vt] grouping we got less lines than what is requires. Not a good news at all");
-			result_calib.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
+			context.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
 			return COMPV_ERROR_CODE_S_OK;
 		}
 	}
@@ -254,7 +225,7 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 
 	if ((lines_cab_vt_grouped.size() + lines_cab_hz_grouped.size()) < m_nPatternLinesTotal) {
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough [vt+hz] lines after grouping: %zu+%zu", lines_cab_vt_grouped.size(), lines_cab_hz_grouped.size());
-		result_calib.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
+		context.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
@@ -273,7 +244,7 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 	}
 	if ((lines_cab_vt_grouped.size() + lines_cab_hz_grouped.size()) < m_nPatternLinesTotal) {
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough [vt+hz] lines after grouping: %zu+%zu", lines_cab_vt_grouped.size(), lines_cab_hz_grouped.size());
-		result_calib.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
+		context.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	CompVLineFloat32Vector lines_hz_grouped, lines_vt_grouped;
@@ -294,12 +265,12 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 	}
 	if (lines_hz_grouped.size() < nPatternLinesHzVtMin) {
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough [hz] lines after packing: %zu", lines_hz_grouped.size());
-		result_calib.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
+		context.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	if (lines_vt_grouped.size() < nPatternLinesHzVtMin) {
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough [vt] lines after packing: %zu", lines_vt_grouped.size());
-		result_calib.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
+		context.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
@@ -311,7 +282,7 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 	if (rotated) {
 		// TODO(dmi): Provides bad result, have to check (maybe better to use square checkerboard)
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Checkerboard probably rotated: close to 90deg position");
-		result_calib.code = COMPV_CALIB_CAMERA_RESULT_PATTERN_ROTATED;
+		context.code = COMPV_CALIB_CAMERA_RESULT_PATTERN_ROTATED;
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	const size_t nPatternLinesHzExpected = rotated ? m_nPatternLinesVt : m_nPatternLinesHz;
@@ -320,12 +291,12 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 	/* Make sure we have the right number of lines in each group or keep the bests */
 	if (lines_hz_grouped.size() != nPatternLinesHzExpected) {
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No expected number of [hz] lines (%zu != %zu)", lines_hz_grouped.size(), nPatternLinesHzExpected);
-		result_calib.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
+		context.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	if (lines_vt_grouped.size() != nPatternLinesVtExpected) {
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No expected number of [vt] lines (%zu != %zu)", lines_vt_grouped.size(), nPatternLinesVtExpected);
-		result_calib.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
+		context.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
@@ -338,12 +309,10 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 	std::vector<std::pair<compv_float32_t, CompVLineFloat32> > intersections;
 	intersections.reserve(lines_vt_grouped.size());
 	for (CompVLineFloat32Vector::const_iterator i = lines_vt_grouped.begin(); i < lines_vt_grouped.end(); ++i) {
-		intersect = CompVMathLineSegmentGetIntersection(i->a.x, i->a.y, i->b.x, i->b.y,
-			x_axis_left, 0.f, x_axis_right, 0.f, &intersect_x);
-		if (!intersect) {
+		if (!segment_get_intersection(*i, x_axis, &intersect_x)) {
 			// Must never happen
 			COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Vertical line must intersect with x-axis (%f, %f)-(%f, %f)", i->a.x, i->a.y, i->b.x, i->b.y);
-			result_calib.code = COMPV_CALIB_CAMERA_RESULT_INCOHERENT_INTERSECTIONS;
+			context.code = COMPV_CALIB_CAMERA_RESULT_INCOHERENT_INTERSECTIONS;
 			return COMPV_ERROR_CODE_S_OK;
 		}
 		intersections.push_back(std::make_pair(intersect_x, *i));
@@ -358,23 +327,21 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 
 	/* Push grouped lines */
 	lines_vt_grouped.reserve(lines_hz_grouped.size() + lines_vt_grouped.size());
-	result_calib.lines_grouped.lines_cartesian.assign(lines_hz_grouped.begin(), lines_hz_grouped.end());
-	result_calib.lines_grouped.lines_cartesian.insert(result_calib.lines_grouped.lines_cartesian.end(), lines_vt_grouped.begin(), lines_vt_grouped.end());
+	context.lines_grouped.lines_cartesian.assign(lines_hz_grouped.begin(), lines_hz_grouped.end());
+	context.lines_grouped.lines_cartesian.insert(context.lines_grouped.lines_cartesian.end(), lines_vt_grouped.begin(), lines_vt_grouped.end());
 
 	/* Compute intersections */
 	for (CompVLineFloat32Vector::const_iterator i = lines_hz_grouped.begin(); i < lines_hz_grouped.end(); ++i) {
 		for (CompVLineFloat32Vector::const_iterator j = lines_vt_grouped.begin(); j < lines_vt_grouped.end(); ++j) {
 			// Compute intersection
-			intersect = CompVMathLineSegmentGetIntersection(i->a.x, i->a.y, i->b.x, i->b.y,
-				j->a.x, j->a.y, j->b.x, j->b.y, &intersect_x, &intersect_y);
-			if (!intersect) {
+			if (!segment_get_intersection(*i, *j, &intersect_x, &intersect_y)) {
 				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No intersection between the lines. Stop processing");
-				result_calib.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_INTERSECTIONS;
+				context.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_INTERSECTIONS;
 				return COMPV_ERROR_CODE_S_OK;
 			}
 			if (intersect_x < 0.f || intersect_y < 0.f || intersect_x >= image_widthF || intersect_y >= image_heightF) {
 				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Intersection outside the image domain. Stop processing");
-				result_calib.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_INTERSECTIONS;
+				context.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_INTERSECTIONS;
 				return COMPV_ERROR_CODE_S_OK;
 			}
 			// Push intersection
@@ -399,7 +366,7 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 					// Previous x-intersection must be < current x-intersection (increasing)
 					if ((k->x <= (k - 1)->x) || (m->x <= (m - 1)->x)) {
 						COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Intersections not going forward (x-axis). Stop processing");
-						result_calib.code = COMPV_CALIB_CAMERA_RESULT_INCOHERENT_INTERSECTIONS;
+						context.code = COMPV_CALIB_CAMERA_RESULT_INCOHERENT_INTERSECTIONS;
 						return COMPV_ERROR_CODE_S_OK;
 					}
 					// Check if equidistant (x-axis)
@@ -408,14 +375,14 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 						dist_err = std::abs(dist - dist_approx_x);
 						if (dist_err > dist_err_max_x) {
 							COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Intersections not equidistant (xm-axis). Stop processing");
-							result_calib.code = COMPV_CALIB_CAMERA_RESULT_INCOHERENT_INTERSECTIONS;
+							context.code = COMPV_CALIB_CAMERA_RESULT_INCOHERENT_INTERSECTIONS;
 							return COMPV_ERROR_CODE_S_OK;
 						}
 						dist = (k->x - (k - 1)->x);
 						dist_err = std::abs(dist - dist_approx_x);
 						if (dist_err > dist_err_max_x) {
 							COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Intersections not equidistant (xk-axis). Stop processing");
-							result_calib.code = COMPV_CALIB_CAMERA_RESULT_INCOHERENT_INTERSECTIONS;
+							context.code = COMPV_CALIB_CAMERA_RESULT_INCOHERENT_INTERSECTIONS;
 							return COMPV_ERROR_CODE_S_OK;
 						}
 						// Refine dist-approx
@@ -434,7 +401,7 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 				// Top y-intersection must be < bottom y-intersection (increasing)
 				if (dist <= 0.f) {
 					COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Intersections not going forward (y-axis). Stop processing");
-					result_calib.code = COMPV_CALIB_CAMERA_RESULT_INCOHERENT_INTERSECTIONS;
+					context.code = COMPV_CALIB_CAMERA_RESULT_INCOHERENT_INTERSECTIONS;
 					return COMPV_ERROR_CODE_S_OK;
 				}
 				// Check if equidistant (y-axis)
@@ -443,7 +410,7 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 					dist_err = std::abs(dist - dist_approx_y);
 					if (dist_err > dist_err_max_y) {
 						COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Intersections not equidistant (y-axis). Stop processing");
-						result_calib.code = COMPV_CALIB_CAMERA_RESULT_INCOHERENT_INTERSECTIONS;
+						context.code = COMPV_CALIB_CAMERA_RESULT_INCOHERENT_INTERSECTIONS;
 						return COMPV_ERROR_CODE_S_OK;
 					}
 					// Refine dist-approx
@@ -469,8 +436,8 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 	}
 
 	/* Check if it's the same plane or not */
-	if (result_calib.check_plans && !result_calib.planes.empty()) {
-		const CompVCalibCameraPlan& plan_last = result_calib.planes.back();
+	if (context.check_plans && !context.planes.empty()) {
+		const CompVCalibCameraPlan& plan_last = context.planes.back();
 		compv_float32_t sad = 0.f;
 		CompVPointFloat32Vector::const_iterator i, j;
 		const size_t count = std::min(plan_last.intersections.size(), plan_curr.intersections.size()); // should be the same number of intersections
@@ -479,15 +446,15 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 			sad += std::abs(i->x - j->x) + std::abs(i->y - j->y);
 		}
 		sad /= static_cast<compv_float32_t>(count); // mean
-		if (sad < result_calib.check_plans_min_sad) {
-			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Almost same plane. mean(SAD)=%f < %f", sad, result_calib.check_plans_min_sad);
-			result_calib.code = COMPV_CALIB_CAMERA_RESULT_NO_CHANGES;
+		if (sad < context.check_plans_min_sad) {
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Almost same plane. mean(SAD)=%f < %f", sad, context.check_plans_min_sad);
+			context.code = COMPV_CALIB_CAMERA_RESULT_NO_CHANGES;
 			return COMPV_ERROR_CODE_S_OK;
 		}
 	}
 
 	/* Build patterns */
-	COMPV_CHECK_CODE_RETURN(buildPatternCorners(result_calib));
+	COMPV_CHECK_CODE_RETURN(buildPatternCorners(context));
 	plan_curr.pattern = m_ptrPatternCorners;
 	plan_curr.pattern_width = ((m_nPatternCornersNumCol - 1) * m_nPatternBlockSizePixel);
 	plan_curr.pattern_height = ((m_nPatternCornersNumRow - 1) * m_nPatternBlockSizePixel);
@@ -497,22 +464,22 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 	COMPV_CHECK_CODE_RETURN(homography(plan_curr, result_homography, &plan_curr.homography));
 	if (result_homography.inlinersCount < (m_nPatternCornersTotal - std::max(m_nPatternCornersNumRow, m_nPatternCornersNumCol))) { // We allow at most #1 row/col error (outliers)
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough inliners after homography computation (%zu / %zu)", result_homography.inlinersCount, m_nPatternCornersTotal);
-		result_calib.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_INLIERS;
+		context.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_INLIERS;
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	
 	// Save the plane for future calibration
-	result_calib.planes.push_back(plan_curr);
+	context.planes.push_back(plan_curr);
 
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVCalibCamera::calibrate(CompVCalibCameraResult& result_calib)
+COMPV_ERROR_CODE CompVCalibCamera::calibrate(CompVCalibContex& context)
 {
-	COMPV_CHECK_EXP_RETURN(result_calib.planes.size() < CALIBRATION_MIN_PLANS, COMPV_ERROR_CODE_E_INVALID_CALL, "Calibration process requires at least #3 images");
+	COMPV_CHECK_EXP_RETURN(context.planes.size() < CALIBRATION_MIN_PLANS, COMPV_ERROR_CODE_E_INVALID_CALL, "Calibration process requires at least #3 images");
 
-	const size_t numPlanes = result_calib.planes.size();
-	CompVCalibCameraPlanVector& planes = result_calib.planes;
+	const size_t numPlanes = context.planes.size();
+	CompVCalibCameraPlanVector& planes = context.planes;
 	CompVCalibCameraPlanVector::iterator it_planes;
 	const compv_float64_t *h0, *h1, *h2;
 	compv_float64_t h00, h01, h10, h11, h20, h21;
@@ -678,12 +645,12 @@ COMPV_ERROR_CODE CompVCalibCamera::calibrate(CompVCalibCameraResult& result_cali
 	);
 
 	// Reset skew if not needed
-	if (!result_calib.compute_skew) {
+	if (!context.compute_skew) {
 		*K->ptr<compv_float64_t>(0, 1) = 0.0;
 	}
 
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Remove");
-	result_calib.K = K;
+	context.K = K;
 
 	/*
 		[2] Algorithm 4.6 Calculation of extrinsic view parameters
@@ -697,7 +664,7 @@ COMPV_ERROR_CODE CompVCalibCamera::calibrate(CompVCalibCameraResult& result_cali
 	const compv_float64_t cy = *K->ptr<const compv_float64_t>(1, 2);
 
 	CompVMatPtr D, d;
-	const bool compute_tangential_dist = result_calib.compute_tangential_dist;
+	const bool compute_tangential_dist = context.compute_tangential_dist;
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float64_t>(&D, (numPlanes * m_nPatternCornersTotal) << 1, compute_tangential_dist ? 4 : 2));
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float64_t>(&d, (numPlanes * m_nPatternCornersTotal) << 1, 1));
 	const size_t DStrideTimes2 = D->stride() << 1;
@@ -846,7 +813,7 @@ COMPV_ERROR_CODE CompVCalibCamera::calibrate(CompVCalibCameraResult& result_cali
 		CompVMatPtr DtDinv, k;
 		COMPV_CHECK_CODE_RETURN(CompVMatrix::pseudoinv(DtD, &DtDinv)); // (Dt.D)*
 		COMPV_CHECK_CODE_RETURN(CompVMatrix::mulABt(DtDinv, D, &kd)); // (Dt.D)*.Dt
-		COMPV_CHECK_CODE_RETURN(CompVMatrix::mulAB(kd, d, &result_calib.d)); // (Dt.D)*.Dt.d
+		COMPV_CHECK_CODE_RETURN(CompVMatrix::mulAB(kd, d, &context.d)); // (Dt.D)*.Dt.d
 	}
 	else {
 		const compv_float64_t aa = *DtD->ptr<const compv_float64_t>(0, 0);
@@ -865,32 +832,32 @@ COMPV_ERROR_CODE CompVCalibCamera::calibrate(CompVCalibCameraResult& result_cali
 			*DtD->ptr<const compv_float64_t>(0, 0), *DtD->ptr<const compv_float64_t>(0, 1), *DtD->ptr<const compv_float64_t>(1, 0), *DtD->ptr<const compv_float64_t>(1, 1));
 		// (DtDinv.Dt).d
 		COMPV_CHECK_CODE_RETURN(CompVMatrix::mulABt(DtD, D, &kd));
-		COMPV_CHECK_CODE_RETURN(CompVMatrix::mulAB(kd, d, &result_calib.d));
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "d = %f, %f", *result_calib.d->ptr<const compv_float64_t>(0, 0), *result_calib.d->ptr<const compv_float64_t>(1, 0));
+		COMPV_CHECK_CODE_RETURN(CompVMatrix::mulAB(kd, d, &context.d));
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "d = %f, %f", *context.d->ptr<const compv_float64_t>(0, 0), *context.d->ptr<const compv_float64_t>(1, 0));
 	}
 
 	/* Compute reproj error */
-	COMPV_CHECK_CODE_RETURN(projError(result_calib, result_calib.reproj_error));	
-	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Reproj error before levmarq: %f", result_calib.reproj_error);
-	if (result_calib.levenberg_marquardt) {
+	COMPV_CHECK_CODE_RETURN(projError(context, context.reproj_error));	
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Reproj error before levmarq: %f", context.reproj_error);
+	if (context.levenberg_marquardt) {
 		CompVMatPtr levmarq_K, levmarq_d;
 		std::vector<CompVMatPtr> levmarq_R, levmarq_t;
 		compv_float64_t levmarq_error;
-		COMPV_CHECK_CODE_RETURN(levmarq(result_calib, &levmarq_K, &levmarq_d, levmarq_R, levmarq_t));
-		COMPV_CHECK_CODE_RETURN(projError(result_calib.planes, levmarq_K, levmarq_d, levmarq_R, levmarq_t, levmarq_error));
+		COMPV_CHECK_CODE_RETURN(levmarq(context, &levmarq_K, &levmarq_d, levmarq_R, levmarq_t));
+		COMPV_CHECK_CODE_RETURN(projError(context.planes, levmarq_K, levmarq_d, levmarq_R, levmarq_t, levmarq_error));
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Reproj error after levmarq: %f", levmarq_error);
-		if (levmarq_error > result_calib.reproj_error) {
+		if (levmarq_error > context.reproj_error) {
 			// TODO(dmi): because of skew (exclude in proj?)
-			COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASSNAME, "Reproj error after levmarq is higher (%f > %f)", levmarq_error, result_calib.reproj_error);
+			COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASSNAME, "Reproj error after levmarq is higher (%f > %f)", levmarq_error, context.reproj_error);
 		}
 		else {
 			// Update result with refined parameters
-			result_calib.reproj_error = levmarq_error;
-			result_calib.K = levmarq_K; // Camera matrix (fx, fy, cx, cy, skew)
-			result_calib.d = levmarq_d; // Distorsion coefficients (k1, k2, p1, p2)
+			context.reproj_error = levmarq_error;
+			context.K = levmarq_K; // Camera matrix (fx, fy, cx, cy, skew)
+			context.d = levmarq_d; // Distorsion coefficients (k1, k2, p1, p2)
 			std::vector<CompVMatPtr>::const_iterator it_R = levmarq_R.begin(), it_t = levmarq_t.begin();
-			CompVCalibCameraPlanVector::iterator it_planes = result_calib.planes.begin();
-			for (; it_planes < result_calib.planes.end(); ++it_planes, ++it_R, ++it_t) {
+			CompVCalibCameraPlanVector::iterator it_planes = context.planes.begin();
+			for (; it_planes < context.planes.end(); ++it_planes, ++it_R, ++it_t) {
 				it_planes->R = *it_R; // Rotation matrices (3x3)
 				it_planes->t = *it_t; // Translation vectors (tx, ty, tz)
 			}
@@ -898,67 +865,6 @@ COMPV_ERROR_CODE CompVCalibCamera::calibrate(CompVCalibCameraResult& result_cali
 	}
 
 	return COMPV_ERROR_CODE_S_OK;
-}
-
-static void levmarq_eval(const double *par, int m_dat, const void *data, double *fvec, int *userbreak)
-{
-	/* for readability, explicit type conversion */
-	const levmarq_data *Data = reinterpret_cast<const levmarq_data*>(data);
-
-	const compv_float64_t* cornersPtr = Data->cornersPtr;
-
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Recreating matrices");
-
-	size_t index;
-
-	//const size_t m =
-	//	5 // fx, fy, cx, cy, skew
-	//	+ 4 // k1, k2, p1, p2
-	//	+ ((3 + 3) * nplanes) // Rt
-	size_t nplanes = Data->planes.size();
-	CompVMatPtr K;
-	COMPV_CHECK_CODE_ASSERT(CompVMat::newObjAligned<compv_float64_t>(&K, 3, 3));
-	COMPV_CHECK_CODE_ASSERT(K->zero_all());
-	index = 0;
-	*K->ptr<compv_float64_t>(0, 0) = par[index++]; // fx
-	*K->ptr<compv_float64_t>(1, 1) = par[index++]; // fy
-	*K->ptr<compv_float64_t>(0, 2) = par[index++]; //cx
-	*K->ptr<compv_float64_t>(1, 2) = par[index++]; // cy
-	*K->ptr<compv_float64_t>(0, 1) = Data->have_skew ? par[index++] : 0; // skew
-	CompVMatPtr d;
-	COMPV_CHECK_CODE_ASSERT(CompVMat::newObjAligned<compv_float64_t>(&d, 4, 1));
-	//COMPV_CHECK_CODE_ASSERT(CompVMat::newObjAligned<compv_float64_t>(&pp, 2, 1));
-	*d->ptr<compv_float64_t>(0, 0) = par[index++]; // k1
-	*d->ptr<compv_float64_t>(1, 0) = par[index++]; // k2
-	*d->ptr<compv_float64_t>(2, 0) = Data->have_tangential_dist ? par[index++] : 0.0; // p1
-	*d->ptr<compv_float64_t>(3, 0) = Data->have_tangential_dist ? par[index++] : 0.0; // p2
-
-	CompVMatPtr R, t, reprojected;
-	compv_float64x3_t r;
-	COMPV_CHECK_CODE_ASSERT(CompVMat::newObjAligned<compv_float64_t>(&t, 1, 3));
-	size_t nindex = 0, i;
-	CompVCalibCameraPlanVector::const_iterator it_planes;
-	for (i = 0, it_planes = Data->planes.begin(); i < nplanes; ++i, ++it_planes) {
-		r[0] = par[index++]; // r0
-		r[1] = par[index++]; // r1
-		r[2] = par[index++]; // r2
-
-		*t->ptr<compv_float64_t>(0, 0) = par[index++]; // tx
-		*t->ptr<compv_float64_t>(0, 1) = par[index++]; // ty
-		*t->ptr<compv_float64_t>(0, 2) = par[index++]; // tz
-
-		COMPV_CHECK_CODE_ASSERT(CompVMathTrig::rodriguesVectorToMatrix(r, &R));
-		COMPV_CHECK_CODE_ASSERT(proj(it_planes->pattern, K, d, R, t, &reprojected));
-		COMPV_ASSERT(it_planes->pattern->cols() == reprojected->cols());
-		const size_t ncorners = it_planes->pattern->cols();
-		const compv_float64_t* reprojectedX = reprojected->ptr<const compv_float64_t>(0);
-		const compv_float64_t* reprojectedY = reprojected->ptr<const compv_float64_t>(1);
-		for (size_t j = 0, z = (i * ncorners * 2); j < ncorners; ++j, z += 2) {
-			// compute the residual
-			fvec[z + 0] = (cornersPtr[z + 0] - reprojectedX[j]);
-			fvec[z + 1] = (cornersPtr[z + 1] - reprojectedY[j]);
-		}
-	}
 }
 
 // Subdivide the lines in two groups: those parallel to the strongest lines and those vertical
@@ -1063,9 +969,7 @@ COMPV_ERROR_CODE CompVCalibCamera::grouping(const size_t image_width, const size
 				// If the distance isn't small but reasonably close (medium) then, check
 				// if the lines intersect in the image domain
 				compv_float32_t i_x, i_y;
-				bool intersect = CompVMathLineSegmentGetIntersection(g->pivot_cartesian->a.x, g->pivot_cartesian->a.y, g->pivot_cartesian->b.x, g->pivot_cartesian->b.y,
-					i->a.x, i->a.y, i->b.x, i->b.y, &i_x, &i_y);
-				COMPV_DEBUG_INFO_CODE_FOR_TESTING("Also check intersection angle");
+				const bool intersect = segment_get_intersection(*g->pivot_cartesian, *i, &i_x, &i_y);
 				// No need to check for the intersection angle because the lines are the same type (hz or vt)
 				if (intersect && i_x >= 0.f && i_y >= 0.f && i_x < image_widthF && i_y < image_heightF) { // FIXME(dmi): also check intersection angle
 					group = &(*g);
@@ -1187,7 +1091,7 @@ COMPV_ERROR_CODE CompVCalibCamera::lineBestFit(const CompVLineFloat32Vector& poi
 }
 
 // Build pattern's corners
-COMPV_ERROR_CODE CompVCalibCamera::buildPatternCorners(const CompVCalibCameraResult& result_calib)
+COMPV_ERROR_CODE CompVCalibCamera::buildPatternCorners(const CompVCalibContex& context)
 {
 	if (!m_ptrPatternCorners) {
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Building pattern corners");
@@ -1237,20 +1141,20 @@ COMPV_ERROR_CODE CompVCalibCamera::homography(const CompVCalibCameraPlan& plan, 
 // Parameters refinement:
 //	- [2] 3.6 Step 5: Refining all parameters
 //	- [2] 3.6.3 Non-linear optimization
-COMPV_ERROR_CODE CompVCalibCamera::levmarq(const CompVCalibCameraResult& result_calib, CompVMatPtrPtr K, CompVMatPtrPtr d, std::vector<CompVMatPtr>& R, std::vector<CompVMatPtr>& t)
+COMPV_ERROR_CODE CompVCalibCamera::levmarq(const CompVCalibContex& context, CompVMatPtrPtr K, CompVMatPtrPtr d, std::vector<CompVMatPtr>& R, std::vector<CompVMatPtr>& t)
 {
-	const size_t nplanes = result_calib.planes.size();
-	const bool have_skew = result_calib.compute_skew;
-	const bool have_tangential_dist = result_calib.compute_tangential_dist;
+	const size_t nplanes = context.planes.size();
+	const bool have_skew = context.compute_skew;
+	const bool have_tangential_dist = context.compute_tangential_dist;
 
 	// Measurements
-	const size_t ncorners = result_calib.planes.begin()->intersections.size();
+	const size_t ncorners = context.planes.begin()->intersections.size();
 	const size_t xyCount = (nplanes * ncorners) << 1; // (x,y)
 	CompVMatPtr corners;
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float64_t>(&corners, 2, xyCount));
 	compv_float64_t* cornersPtr = corners->ptr<compv_float64_t>(0);
 	size_t index = 0;
-	for (CompVCalibCameraPlanVector::const_iterator it_plans = result_calib.planes.begin(); it_plans < result_calib.planes.end(); ++it_plans) {
+	for (CompVCalibCameraPlanVector::const_iterator it_plans = context.planes.begin(); it_plans < context.planes.end(); ++it_plans) {
 		for (CompVPointFloat32Vector::const_iterator it_intersections = it_plans->intersections.begin(); it_intersections < it_plans->intersections.end(); ++it_intersections) {
 			cornersPtr[index++] = static_cast<compv_float64_t>(it_intersections->x);
 			cornersPtr[index++] = static_cast<compv_float64_t>(it_intersections->y);
@@ -1268,21 +1172,21 @@ COMPV_ERROR_CODE CompVCalibCamera::levmarq(const CompVCalibCameraResult& result_
 	compv_float64_t* parametersPtr = parametersMat->ptr<compv_float64_t>();
 	index = 0;
 	// Camera matrix (K)
-	parametersPtr[index++] = *result_calib.K->ptr<const compv_float64_t>(0, 0); // fx
-	parametersPtr[index++] = *result_calib.K->ptr<const compv_float64_t>(1, 1); // fy
-	parametersPtr[index++] = *result_calib.K->ptr<const compv_float64_t>(0, 2); //cx
-	parametersPtr[index++] = *result_calib.K->ptr<const compv_float64_t>(1, 2); // cy
-	parametersPtr[index++] = have_skew ? *result_calib.K->ptr<const compv_float64_t>(0, 1) : 0.0; // skew
+	parametersPtr[index++] = *context.K->ptr<const compv_float64_t>(0, 0); // fx
+	parametersPtr[index++] = *context.K->ptr<const compv_float64_t>(1, 1); // fy
+	parametersPtr[index++] = *context.K->ptr<const compv_float64_t>(0, 2); //cx
+	parametersPtr[index++] = *context.K->ptr<const compv_float64_t>(1, 2); // cy
+	parametersPtr[index++] = have_skew ? *context.K->ptr<const compv_float64_t>(0, 1) : 0.0; // skew
 	// Distorsions (k1, k2, p1, p2)
-	parametersPtr[index++] = *result_calib.d->ptr<const compv_float64_t>(0, 0); // k1
-	parametersPtr[index++] = *result_calib.d->ptr<const compv_float64_t>(1, 0); // k2
+	parametersPtr[index++] = *context.d->ptr<const compv_float64_t>(0, 0); // k1
+	parametersPtr[index++] = *context.d->ptr<const compv_float64_t>(1, 0); // k2
 	if (have_tangential_dist) {
-		parametersPtr[index++] = *result_calib.d->ptr<const compv_float64_t>(2, 0); // p1
-		parametersPtr[index++] = *result_calib.d->ptr<const compv_float64_t>(3, 0); // p2
+		parametersPtr[index++] = *context.d->ptr<const compv_float64_t>(2, 0); // p1
+		parametersPtr[index++] = *context.d->ptr<const compv_float64_t>(3, 0); // p2
 	}
 	// Rotation (R) and translation (t) vectors
 	compv_float64x3_t rVector;
-	for (CompVCalibCameraPlanVector::const_iterator it_plans = result_calib.planes.begin(); it_plans < result_calib.planes.end(); ++it_plans, index += 6) {
+	for (CompVCalibCameraPlanVector::const_iterator it_plans = context.planes.begin(); it_plans < context.planes.end(); ++it_plans, index += 6) {
 		// [2] 3.6.2 Parameterizing the extrinsic rotation matrices Ri
 		COMPV_CHECK_CODE_RETURN(CompVMathTrig::rodriguesMatrixToVector(it_plans->R, rVector));
 		parametersPtr[index] = rVector[0]; // r0
@@ -1298,7 +1202,7 @@ COMPV_ERROR_CODE CompVCalibCamera::levmarq(const CompVCalibCameraResult& result_
 	lm_status_struct status;
 	lm_control_struct control = lm_control_double;
 	control.verbosity = 0;
-	levmarq_data data(result_calib.planes, cornersPtr, have_tangential_dist, have_skew);
+	levmarq_data data(context.planes, cornersPtr, have_tangential_dist, have_skew);
 	lmmin(static_cast<int>(parametersCount), parametersPtr, static_cast<int>(xyCount), (const void*)&data, levmarq_eval,
 		&control, &status);
 
@@ -1328,7 +1232,7 @@ COMPV_ERROR_CODE CompVCalibCamera::levmarq(const CompVCalibCameraResult& result_
 		*(*d)->ptr<compv_float64_t>(3, 0) = parametersPtr[index++]; // p2
 	}
 	// Rotations and translations
-	for (CompVCalibCameraPlanVector::const_iterator i = result_calib.planes.begin(); i < result_calib.planes.end(); ++i, index += 6) {
+	for (CompVCalibCameraPlanVector::const_iterator i = context.planes.begin(); i < context.planes.end(); ++i, index += 6) {
 		// Rotation
 		rVector[0] = parametersPtr[index]; // r0
 		rVector[1] = parametersPtr[index + 1]; // r1
@@ -1442,30 +1346,9 @@ static COMPV_ERROR_CODE proj(const CompVMatPtr& inPoints, const CompVMatPtr& K, 
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-static COMPV_ERROR_CODE projError(const CompVMatPtr& inPoints, const CompVMatPtr& outPoints, compv_float64_t& error)
+static COMPV_ERROR_CODE projError(const CompVCalibContex& context, compv_float64_t& error)
 {
-	COMPV_CHECK_EXP_RETURN(!inPoints || !outPoints || inPoints->cols() != outPoints->cols() || inPoints->rows() != outPoints->rows() || inPoints->rows() != 3,
-		COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	error = 0.0;
-	const size_t numPoints = outPoints->cols();
-	compv_float64_t diffX, diffY;
-	const compv_float64_t* inPointsX = inPoints->ptr<compv_float64_t>(0);
-	const compv_float64_t* inPointsY = inPoints->ptr<compv_float64_t>(1);
-	const compv_float64_t* outPointsX = outPoints->ptr<compv_float64_t>(0);
-	const compv_float64_t* outPointsY = outPoints->ptr<compv_float64_t>(1);
-	// MSE
-	for (size_t i = 0; i < numPoints; ++i) {
-		diffX = inPointsX[i] - outPointsX[i];
-		diffY = inPointsY[i] - outPointsY[i];
-		error += (diffX * diffX) + (diffY * diffY);
-	}
-	error = std::sqrt(error / static_cast<compv_float64_t>(numPoints));
-	return COMPV_ERROR_CODE_S_OK;
-}
-
-static COMPV_ERROR_CODE projError(const CompVCalibCameraResult& result_calib, compv_float64_t& error)
-{
-	COMPV_CHECK_EXP_RETURN(!result_calib.K || !result_calib.d || result_calib.planes.empty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(!context.K || !context.d || context.planes.empty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	
 	error = 0;
 
@@ -1477,15 +1360,15 @@ static COMPV_ERROR_CODE projError(const CompVCalibCameraResult& result_calib, co
 	compv_float64_t e;
 
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float64_t>(&intersections,
-		result_calib.planes.begin()->pattern->rows(),
-		result_calib.planes.begin()->pattern->cols(),
-		result_calib.planes.begin()->pattern->stride()));
+		context.planes.begin()->pattern->rows(),
+		context.planes.begin()->pattern->cols(),
+		context.planes.begin()->pattern->stride()));
 	intersectionsX = intersections->ptr<compv_float64_t>(0);
 	intersectionsY = intersections->ptr<compv_float64_t>(1);
 	const size_t numPointsPerPlan = intersections->cols();
 
-	for (CompVCalibCameraPlanVector::const_iterator i_plans = result_calib.planes.begin(); i_plans < result_calib.planes.end(); ++i_plans) {
-		COMPV_CHECK_CODE_RETURN(proj(i_plans->pattern, result_calib.K, result_calib.d, i_plans->R, i_plans->t, &reprojected));
+	for (CompVCalibCameraPlanVector::const_iterator i_plans = context.planes.begin(); i_plans < context.planes.end(); ++i_plans) {
+		COMPV_CHECK_CODE_RETURN(proj(i_plans->pattern, context.K, context.d, i_plans->R, i_plans->t, &reprojected));
 
 		COMPV_CHECK_EXP_RETURN(i_plans->intersections.size() != reprojected->cols() || intersections->cols() != reprojected->cols(), COMPV_ERROR_CODE_E_INVALID_STATE);
 		for (i = 0, it_intersections = i_plans->intersections.begin(); i < numPointsPerPlan; ++i, ++it_intersections) {
@@ -1493,11 +1376,11 @@ static COMPV_ERROR_CODE projError(const CompVCalibCameraResult& result_calib, co
 			intersectionsY[i] = static_cast<compv_float64_t>(it_intersections->y);
 		}
 		
-		COMPV_CHECK_CODE_RETURN(projError(reprojected, intersections, e));
+		COMPV_CHECK_CODE_RETURN(CompVCalibUtils::projError(reprojected, intersections, e));
 		error += e;
 	}
 
-	error /= static_cast<compv_float64_t>(result_calib.planes.size());
+	error /= static_cast<compv_float64_t>(context.planes.size());
 	
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -1534,13 +1417,99 @@ static COMPV_ERROR_CODE projError(const CompVCalibCameraPlanVector& planes, cons
 			intersectionsY[i] = static_cast<compv_float64_t>(it_intersections->y);
 		}
 
-		COMPV_CHECK_CODE_RETURN(projError(reprojected, intersections, e));
+		COMPV_CHECK_CODE_RETURN(CompVCalibUtils::projError(reprojected, intersections, e));
 		error += e;
 	}
 
 	error /= static_cast<compv_float64_t>(planes.size());
 
 	return COMPV_ERROR_CODE_S_OK;
+}
+
+static void levmarq_eval(const compv_float64_t *par, int m_dat, const void *data, compv_float64_t *fvec, int *userbreak)
+{
+	/* for readability, explicit type conversion */
+	const levmarq_data *Data = reinterpret_cast<const levmarq_data*>(data);
+
+	const compv_float64_t* cornersPtr = Data->cornersPtr;
+
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Recreating matrices");
+
+	size_t index;
+
+	//const size_t m =
+	//	5 // fx, fy, cx, cy, skew
+	//	+ 4 // k1, k2, p1, p2
+	//	+ ((3 + 3) * nplanes) // Rt
+	size_t nplanes = Data->planes.size();
+	CompVMatPtr K;
+	COMPV_CHECK_CODE_ASSERT(CompVMat::newObjAligned<compv_float64_t>(&K, 3, 3));
+	COMPV_CHECK_CODE_ASSERT(K->zero_all());
+	index = 0;
+	*K->ptr<compv_float64_t>(0, 0) = par[index++]; // fx
+	*K->ptr<compv_float64_t>(1, 1) = par[index++]; // fy
+	*K->ptr<compv_float64_t>(0, 2) = par[index++]; //cx
+	*K->ptr<compv_float64_t>(1, 2) = par[index++]; // cy
+	*K->ptr<compv_float64_t>(0, 1) = Data->have_skew ? par[index++] : 0; // skew
+	CompVMatPtr d;
+	COMPV_CHECK_CODE_ASSERT(CompVMat::newObjAligned<compv_float64_t>(&d, 4, 1));
+	//COMPV_CHECK_CODE_ASSERT(CompVMat::newObjAligned<compv_float64_t>(&pp, 2, 1));
+	*d->ptr<compv_float64_t>(0, 0) = par[index++]; // k1
+	*d->ptr<compv_float64_t>(1, 0) = par[index++]; // k2
+	*d->ptr<compv_float64_t>(2, 0) = Data->have_tangential_dist ? par[index++] : 0.0; // p1
+	*d->ptr<compv_float64_t>(3, 0) = Data->have_tangential_dist ? par[index++] : 0.0; // p2
+
+	CompVMatPtr R, t, reprojected;
+	compv_float64x3_t r;
+	COMPV_CHECK_CODE_ASSERT(CompVMat::newObjAligned<compv_float64_t>(&t, 1, 3));
+	size_t nindex = 0, i;
+	CompVCalibCameraPlanVector::const_iterator it_planes;
+	for (i = 0, it_planes = Data->planes.begin(); i < nplanes; ++i, ++it_planes) {
+		r[0] = par[index++]; // r0
+		r[1] = par[index++]; // r1
+		r[2] = par[index++]; // r2
+
+		*t->ptr<compv_float64_t>(0, 0) = par[index++]; // tx
+		*t->ptr<compv_float64_t>(0, 1) = par[index++]; // ty
+		*t->ptr<compv_float64_t>(0, 2) = par[index++]; // tz
+
+		COMPV_CHECK_CODE_ASSERT(CompVMathTrig::rodriguesVectorToMatrix(r, &R));
+		COMPV_CHECK_CODE_ASSERT(proj(it_planes->pattern, K, d, R, t, &reprojected));
+		COMPV_ASSERT(it_planes->pattern->cols() == reprojected->cols());
+		const size_t ncorners = it_planes->pattern->cols();
+		const compv_float64_t* reprojectedX = reprojected->ptr<const compv_float64_t>(0);
+		const compv_float64_t* reprojectedY = reprojected->ptr<const compv_float64_t>(1);
+		for (size_t j = 0, z = (i * ncorners * 2); j < ncorners; ++j, z += 2) {
+			// compute the residual
+			fvec[z + 0] = (cornersPtr[z + 0] - reprojectedX[j]);
+			fvec[z + 1] = (cornersPtr[z + 1] - reprojectedY[j]);
+		}
+	}
+}
+
+static bool segment_get_intersection(const CompVLineFloat32& line0, const CompVLineFloat32& line1, compv_float32_t *i_x, compv_float32_t *i_y COMPV_DEFAULT(nullptr))
+{
+	const compv_float32_t a1 = line0.b.y - line0.a.y;
+	const compv_float32_t b1 = line0.a.x - line0.b.x;
+
+	const compv_float32_t a2 = line1.b.y - line1.a.y;
+	const compv_float32_t b2 = line1.a.x - line1.b.x;
+
+	const compv_float32_t det = a1 * b2 - a2 * b1;
+	if (det == 0) {
+		// lines are parallel
+		return false;
+	}
+
+	const compv_float32_t scale = (1.f / det);
+	const compv_float32_t c1 = a1 * line0.a.x + b1 * line0.a.y;
+	const compv_float32_t c2 = a2 * line1.a.x + b2 * line1.a.y;
+	*i_x = (b2 * c1 - b1 * c2) * scale;
+	if (i_y) {
+		*i_y = (a1 * c2 - a2 * c1) * scale;
+	}
+
+	return true;
 }
 
 COMPV_ERROR_CODE CompVCalibCamera::newObj(CompVCalibCameraPtrPtr calib)

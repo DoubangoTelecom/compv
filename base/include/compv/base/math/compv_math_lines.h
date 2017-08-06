@@ -4,21 +4,20 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#if !defined(_COMPV_CORE_CALIB_UTILS_H_)
-#define _COMPV_CORE_CALIB_UTILS_H_
+#if !defined(_COMPV_BASE_MATH_LINES_H_)
+#define _COMPV_BASE_MATH_LINES_H_
 
-#include "compv/core/compv_core_config.h"
-#include "compv/core/compv_core_common.h"
+#include "compv/base/compv_config.h"
+#include "compv/base/compv_common.h"
 #include "compv/base/compv_mat.h"
 
 COMPV_NAMESPACE_BEGIN()
 
-class COMPV_CORE_API CompVCalibUtils
+class COMPV_BASE_API CompVMathLines
 {
-public:
-	static COMPV_ERROR_CODE projError(const CompVMatPtr& aPoints, const CompVMatPtr& bPoints, compv_float64_t& error);
+
 };
 
 COMPV_NAMESPACE_END()
 
-#endif /* _COMPV_CORE_CALIB_UTILS_H_ */
+#endif /* _COMPV_BASE_MATH_LINES_H_ */

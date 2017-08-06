@@ -525,6 +525,9 @@
     <ClInclude Include="include\compv\base\math\compv_math_trig.h">
       <Filter>include\math</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\math\compv_math_lines.h">
+      <Filter>include\math</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx">
@@ -882,6 +885,9 @@
       <Filter>source\math\lmfit-6.1</Filter>
     </ClCompile>
     <ClCompile Include="math\compv_math_trig.cxx">
+      <Filter>source\math</Filter>
+    </ClCompile>
+    <ClCompile Include="math\compv_math_lines.cxx">
       <Filter>source\math</Filter>
     </ClCompile>
   </ItemGroup>

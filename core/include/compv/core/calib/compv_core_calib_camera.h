@@ -65,7 +65,7 @@ public:
 };
 typedef std::vector<CompVCalibCameraPlan, CompVAllocatorNoDefaultConstruct<CompVCalibCameraPlan> > CompVCalibCameraPlanVector;
 
-struct CompVCalibCameraResult {
+struct CompVCalibContex {
 	bool levenberg_marquardt = true; // whether to perform non-linear levenberg marquardt optimisation after getting initial calib results
 	bool check_plans = true; // whether to check if the current and previous plan are almost the same. If they are almost the same, reject!
 	bool compute_tangential_dist = false; // whether to compute tangential distorsions (p1, p2) in addition to radial distorsions (k1, k2)
@@ -113,8 +113,8 @@ public:
 	virtual ~CompVCalibCamera();
 	COMPV_OBJECT_GET_ID(CompVBoxInterestPoint);
 
-	COMPV_ERROR_CODE process(const CompVMatPtr& image, CompVCalibCameraResult& result);
-	COMPV_ERROR_CODE calibrate(CompVCalibCameraResult& result_calib);
+	COMPV_ERROR_CODE process(const CompVMatPtr& image, CompVCalibContex& result);
+	COMPV_ERROR_CODE calibrate(CompVCalibContex& context);
 
 	COMPV_INLINE CompVEdgeDetePtr edgeDetector() { return m_ptrCanny; }
 	COMPV_INLINE CompVHoughPtr houghTransform() { return m_ptrHough; }
@@ -125,9 +125,9 @@ private:
 	COMPV_ERROR_CODE subdivision(const size_t image_width, const size_t image_height, const CompVCabLines& lines, CompVCabLines& lines_hz, CompVCabLines& lines_vt);
 	COMPV_ERROR_CODE grouping(const size_t image_width, const size_t image_height, const CompVCabLines& lines_parallel, const bool vt, const size_t max_strength, CompVCabLineFloat32Vector& lines_parallel_grouped);
 	COMPV_ERROR_CODE lineBestFit(const CompVLineFloat32Vector& points_cartesian, const CompVHoughLineVector& points_hough, CompVLineFloat32& line);
-	COMPV_ERROR_CODE buildPatternCorners(const CompVCalibCameraResult& result_calib);
+	COMPV_ERROR_CODE buildPatternCorners(const CompVCalibContex& context);
 	COMPV_ERROR_CODE homography(const CompVCalibCameraPlan& plan, CompVHomographyResult& result_homography, CompVMatPtrPtr homographyMat);
-	COMPV_ERROR_CODE levmarq(const CompVCalibCameraResult& result_calib, CompVMatPtrPtr K, CompVMatPtrPtr d, std::vector<CompVMatPtr>& R, std::vector<CompVMatPtr>& t);
+	COMPV_ERROR_CODE levmarq(const CompVCalibContex& context, CompVMatPtrPtr K, CompVMatPtrPtr d, std::vector<CompVMatPtr>& R, std::vector<CompVMatPtr>& t);
 
 private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)

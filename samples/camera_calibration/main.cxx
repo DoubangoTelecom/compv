@@ -134,16 +134,16 @@ public:
 			
 			/* Process image and calibration */
 			if (!m_bCalibrationDone) {
-				COMPV_CHECK_CODE_RETURN(m_ptrCalib->process(imageGray, m_CalibResult));
-				if (m_CalibResult.planes.size() >= CALIB_MIN_PLANS) {
+				COMPV_CHECK_CODE_RETURN(m_ptrCalib->process(imageGray, m_CalibContext));
+				if (m_CalibContext.planes.size() >= CALIB_MIN_PLANS) {
 					/* Calibration */
-					COMPV_CHECK_CODE_RETURN(m_ptrCalib->calibrate(m_CalibResult));
-					if (m_CalibResult.reproj_error > CALIB_MAX_ERROR) {
-						COMPV_DEBUG_INFO_EX(TAG_SAMPLE, "Reproj error too high (%f > %f), trying again", m_CalibResult.reproj_error, CALIB_MAX_ERROR);
-						m_CalibResult.clean(); // clean all plans and start over
+					COMPV_CHECK_CODE_RETURN(m_ptrCalib->calibrate(m_CalibContext));
+					if (m_CalibContext.reproj_error > CALIB_MAX_ERROR) {
+						COMPV_DEBUG_INFO_EX(TAG_SAMPLE, "Reproj error too high (%f > %f), trying again", m_CalibContext.reproj_error, CALIB_MAX_ERROR);
+						m_CalibContext.clean(); // clean all plans and start over
 					}
 					else {
-						m_CalibResult.clean(); // FIXME(dmi): remove
+						m_CalibContext.clean(); // FIXME(dmi): remove
 						//m_bCalibrationDone = true;
 						//COMPV_CHECK_CODE_RETURN(onImageSizeChanged(imageOrig->cols(), imageOrig->rows()));
 						COMPV_DEBUG_INFO_EX(TAG_SAMPLE, "Calibration is done!!");
@@ -166,33 +166,33 @@ public:
 			else {
 				/* Edges */
 				COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceEdges->activate());
-				COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceEdges->drawImage(m_CalibResult.edges));
+				COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceEdges->drawImage(m_CalibContext.edges));
 
 				/* Raw Lines */
 				m_DrawingOptions.colorType = COMPV_DRAWING_COLOR_TYPE_RANDOM;
 				COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLinesRaw->activate());
-				COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLinesRaw->drawImage(m_CalibResult.edges));
-				COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLinesRaw->renderer()->canvas()->drawLines(m_CalibResult.lines_raw.lines_cartesian, &m_DrawingOptions));
+				COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLinesRaw->drawImage(m_CalibContext.edges));
+				COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLinesRaw->renderer()->canvas()->drawLines(m_CalibContext.lines_raw.lines_cartesian, &m_DrawingOptions));
 
 				/* Grouped lines */
 				m_DrawingOptions.colorType = COMPV_DRAWING_COLOR_TYPE_STATIC;
 				m_DrawingOptions.setColor(__color_yellow);
 				COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->activate());
-				COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->drawImage(m_CalibResult.edges));
-				COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->renderer()->canvas()->drawLines(m_CalibResult.lines_grouped.lines_cartesian, &m_DrawingOptions));
+				COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->drawImage(m_CalibContext.edges));
+				COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->renderer()->canvas()->drawLines(m_CalibContext.lines_grouped.lines_cartesian, &m_DrawingOptions));
 				m_DrawingOptions.setColor(__color_red);
-				COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->renderer()->canvas()->drawPoints(m_CalibResult.plane_curr.intersections, &m_DrawingOptions));
-				if (!m_CalibResult.plane_curr.intersections.empty() && m_ptrSurfaceLineGrouped->renderer()->canvas()->haveDrawTexts()) {
-					CompVStringVector labels(m_CalibResult.plane_curr.intersections.size());
-					for (size_t index = 0; index < m_CalibResult.plane_curr.intersections.size(); ++index) {
+				COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->renderer()->canvas()->drawPoints(m_CalibContext.plane_curr.intersections, &m_DrawingOptions));
+				if (!m_CalibContext.plane_curr.intersections.empty() && m_ptrSurfaceLineGrouped->renderer()->canvas()->haveDrawTexts()) {
+					CompVStringVector labels(m_CalibContext.plane_curr.intersections.size());
+					for (size_t index = 0; index < m_CalibContext.plane_curr.intersections.size(); ++index) {
 						labels[index] = CompVBase::to_string(index);
 					}
 					m_DrawingOptions.setColor(__color_yellow);
-					COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->renderer()->canvas()->drawTexts(labels, m_CalibResult.plane_curr.intersections, &m_DrawingOptions));
+					COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceLineGrouped->renderer()->canvas()->drawTexts(labels, m_CalibContext.plane_curr.intersections, &m_DrawingOptions));
 				}
-				if (m_CalibResult.plane_curr.homography) {
-					const size_t pattern_w = m_CalibResult.plane_curr.pattern_width;
-					const size_t pattern_h = m_CalibResult.plane_curr.pattern_height;
+				if (m_CalibContext.plane_curr.homography) {
+					const size_t pattern_w = m_CalibContext.plane_curr.pattern_width;
+					const size_t pattern_h = m_CalibContext.plane_curr.pattern_height;
 					CompVMatPtr rectPattern, rectHomograyApplied;
 					compv_float64_t *x, *y;
 					CompVLineFloat32Vector rectLines(4);
@@ -203,7 +203,7 @@ public:
 					x[0] = 0, x[1] = static_cast<compv_float64_t>(pattern_w), x[2] = static_cast<compv_float64_t>(pattern_w), x[3] = 0.0;
 					y[0] = 0, y[1] = 0, y[2] = static_cast<compv_float64_t>(pattern_h), y[3] = static_cast<compv_float64_t>(pattern_h);
 					// Perspecive transform using homography matrix
-					COMPV_CHECK_CODE_BAIL(err = CompVMathTransform<compv_float64_t>::perspective2D(rectPattern, m_CalibResult.plane_curr.homography, &rectHomograyApplied));
+					COMPV_CHECK_CODE_BAIL(err = CompVMathTransform<compv_float64_t>::perspective2D(rectPattern, m_CalibContext.plane_curr.homography, &rectHomograyApplied));
 					// Draw the transformed rectangle
 					x = rectHomograyApplied->ptr<compv_float64_t>(0);
 					y = rectHomograyApplied->ptr<compv_float64_t>(1);
@@ -252,8 +252,8 @@ public:
 		COMPV_CHECK_CODE_RETURN(CompVCalibCamera::newObj(&listener_->m_ptrCalib));
 
 		// Calibration options
-		listener_->m_CalibResult.compute_skew = CALIB_COMPUTE_SKEW;
-		listener_->m_CalibResult.compute_tangential_dist = CALIB_COMPUTE_TAN_DIST;
+		listener_->m_CalibContext.compute_skew = CALIB_COMPUTE_SKEW;
+		listener_->m_CalibContext.compute_tangential_dist = CALIB_COMPUTE_TAN_DIST;
 
 		// Drawing options
 		listener_->m_DrawingOptions.lineWidth = 1.f;
@@ -333,7 +333,7 @@ private:
 	size_t m_nImageHeight;
 	CompVWindowPtr m_ptrWindow;
 	CompVCalibCameraPtr m_ptrCalib;
-	CompVCalibCameraResult m_CalibResult;
+	CompVCalibContex m_CalibContext;
 	CompVDrawingOptions m_DrawingOptions;
 	CompVMyWindowListenerPtr m_ptrWindowListener;
 	CompVMultiSurfaceLayerPtr m_ptrMultiSurface;

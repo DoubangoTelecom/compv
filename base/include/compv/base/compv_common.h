@@ -438,6 +438,9 @@ typedef std::vector<CompVPointInt, CompVAllocatorNoDefaultConstruct<CompVPointIn
 template <typename T>
 struct CompVLine {
 	CompVPoint<T> a, b;
+public:
+	CompVLine(const CompVPoint<T>& a_, const CompVPoint<T>& b_): a(a_), b(b_) { }
+	CompVLine() { }
 };
 typedef CompVLine<compv_float32_t> CompVLineFloat32;
 typedef CompVLine<compv_float64_t> CompVLineFloat64;

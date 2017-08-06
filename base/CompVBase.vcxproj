@@ -100,6 +100,7 @@
     <ClInclude Include="include\compv\base\math\compv_math_eigen.h" />
     <ClInclude Include="include\compv\base\math\compv_math_gauss.h" />
     <ClInclude Include="include\compv\base\math\compv_math_histogram.h" />
+    <ClInclude Include="include\compv\base\math\compv_math_lines.h" />
     <ClInclude Include="include\compv\base\math\compv_math_matrix.h" />
     <ClInclude Include="include\compv\base\math\compv_math_stats.h" />
     <ClInclude Include="include\compv\base\math\compv_math_transform.h" />
@@ -285,6 +286,7 @@
     <ClCompile Include="math\compv_math_eigen.cxx" />
     <ClCompile Include="math\compv_math_gauss.cxx" />
     <ClCompile Include="math\compv_math_histogram.cxx" />
+    <ClCompile Include="math\compv_math_lines.cxx" />
     <ClCompile Include="math\compv_math_matrix.cxx" />
     <ClCompile Include="math\compv_math_stats.cxx" />
     <ClCompile Include="math\compv_math_transform.cxx" />

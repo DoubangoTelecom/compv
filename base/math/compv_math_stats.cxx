@@ -196,6 +196,38 @@ COMPV_ERROR_CODE CompVMathStats<T>::mse2D_homogeneous(CompVMatPtrPtr mse, const 
 	return COMPV_ERROR_CODE_S_OK;
 }
 
+template <class T>
+COMPV_ERROR_CODE CompVMathStats<T>::mse2D(const CompVMatPtr& aPoints, const CompVMatPtr& bPoints, T& error)
+{
+	COMPV_CHECK_EXP_RETURN(!aPoints || !bPoints || aPoints->cols() != bPoints->cols() || aPoints->rows() != bPoints->rows() || aPoints->rows() < 2 || aPoints->subType() != bPoints->subType(),
+		COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	switch (aPoints->subType()) {
+	case COMPV_SUBTYPE_RAW_FLOAT64:
+		COMPV_CHECK_EXP_RETURN((!std::is_same<T, compv_float64_t>::value), COMPV_ERROR_CODE_E_INVALID_SUBTYPE);
+		break;
+	case COMPV_SUBTYPE_RAW_FLOAT32:
+		COMPV_CHECK_EXP_RETURN((!std::is_same<T, compv_float32_t>::value), COMPV_ERROR_CODE_E_INVALID_SUBTYPE);
+		break;
+	default:
+		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
+		break;
+	}
+	error = 0;
+	const size_t numPoints = bPoints->cols();
+	T diffX, diffY;
+	const T* aPointsX = aPoints->ptr<T>(0);
+	const T* aPointsY = aPoints->ptr<T>(1);
+	const T* bPointsX = bPoints->ptr<T>(0);
+	const T* bPointsY = bPoints->ptr<T>(1);
+	// MSE
+	for (size_t i = 0; i < numPoints; ++i) {
+		diffX = aPointsX[i] - bPointsX[i];
+		diffY = aPointsY[i] - bPointsY[i];
+		error += (diffX * diffX) + (diffY * diffY);
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 // Computes the variance : https://en.wikipedia.org/wiki/Variance
 template <class T>
 COMPV_ERROR_CODE CompVMathStats<T>::variance(const T* data, size_t count, T mean, T* var1)
