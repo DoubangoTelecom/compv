@@ -124,7 +124,7 @@ public:
 			imageOrig = imageGray;
 			COMPV_DEBUG_INFO_EX(TAG_SAMPLE, "%s", file_path.c_str());
 			COMPV_DEBUG_INFO_CODE_FOR_TESTING("Remove the sleep function");
-			if (m_bCalibrationDone) {
+			/*if (m_bCalibrationDone)*/ {
 				CompVThread::sleep(1000);
 			}
 #endif

@@ -323,7 +323,9 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 		|| ((m_nPatternCornersNumCol < m_nPatternCornersNumRow) && (lines_vt_grouped.size() > lines_hz_grouped.size()));
 	if (rotated) {
 		// TODO(dmi): Provides bad result, have to check (maybe better to use square checkerboard)
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Checkerboard probably rotated: close to 90deg position");
+		if (context.verbosity > 0) {
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Checkerboard probably rotated: close to 90deg position");
+		}
 		context.code = COMPV_CALIB_CAMERA_RESULT_PATTERN_ROTATED;
 		return COMPV_ERROR_CODE_S_OK;
 	}
@@ -812,7 +814,7 @@ COMPV_ERROR_CODE CompVCalibCamera::calibrate(CompVCalibContex& context)
 		COMPV_CHECK_CODE_RETURN(projError(context.planes, levmarq_K, levmarq_d, levmarq_R, levmarq_t, levmarq_error));
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Reproj error after levmarq: %f", levmarq_error);
 		if (levmarq_error > context.reproj_error) {
-			// TODO(dmi): because of skew (exclude in proj?)
+			// TODO(dmi): because of skew (exclude in proj?)??
 			COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASSNAME, "Reproj error after levmarq is higher (%f > %f)", levmarq_error, context.reproj_error);
 		}
 		else {
@@ -832,64 +834,34 @@ COMPV_ERROR_CODE CompVCalibCamera::calibrate(CompVCalibContex& context)
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-// Subdivide the lines in two groups: those parallel to the strongest lines and those vertical
+// Subdivide the lines in two groups: almost vt and almost hz
+// This function is thread-safe
 COMPV_ERROR_CODE CompVCalibCamera::subdivision(const size_t image_width, const size_t image_height, const CompVCabLines& lines, CompVCabLines& lines_hz, CompVCabLines& lines_vt)
 {
 	COMPV_CHECK_EXP_RETURN(lines.lines_cartesian.size() < m_nPatternLinesTotal, COMPV_ERROR_CODE_E_INVALID_STATE, "No enought points");
 	COMPV_CHECK_EXP_RETURN(lines.lines_cartesian.size() < lines.lines_hough.size(), COMPV_ERROR_CODE_E_INVALID_STATE, "Must have same number of cartesian and polar lines");
 
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT impementation found");
-
 	CompVHoughLineVector::const_iterator it_hough;
 	CompVLineFloat32Vector::const_iterator it_cartesian;
-
-	// Find the strongest line
-	size_t lines_cartesian_strongestIndex = 0, strongestStrength = 0, index;
-	index = 0;
-	for (it_hough = lines.lines_hough.begin(); it_hough < lines.lines_hough.end(); ++it_hough, ++index) {
-		if (it_hough->strength > strongestStrength) {
-			strongestStrength = it_hough->strength;
-			lines_cartesian_strongestIndex = index;
-		}
-	}
-	const CompVLineFloat32& lines_cartesian_strongest = lines.lines_cartesian[lines_cartesian_strongestIndex];
-	CompVCabLines *p_lines_hz, *p_lines_vt;
-
-	// FIXME(dmi): use cross-product instead of slopes https://math.stackexchange.com/questions/1858274/how-to-determine-if-two-lines-are-parallel-almost-parallel
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Use cross-product which is faster -> no arctan or sin comparisons");
-
-	// Find the angle between the strongest line and other lines
-	// When a line is vertical, (a.x == b.x) and slope is undefined (infinine which means atan(slope) is pi/2)
-	it_hough = lines.lines_hough.begin();
-	compv_float32_t angle, angle_diff, angle_sin;
-	const compv_float32_t st_angle = std::atan2((lines_cartesian_strongest.b.y - lines_cartesian_strongest.a.y), (lines_cartesian_strongest.b.x - lines_cartesian_strongest.a.x)); // inclinaison angle, within [-pi/2, pi/2]
-	if (std::sin(std::abs(st_angle)) > 0.5f) {
-		p_lines_hz = &lines_hz;
-		p_lines_vt = &lines_vt;
-	}
-	else {
-		p_lines_hz = &lines_vt;
-		p_lines_vt = &lines_hz;
-	}
+	compv_float32_t angle;
 	for (it_hough = lines.lines_hough.begin(), it_cartesian = lines.lines_cartesian.begin(); it_cartesian < lines.lines_cartesian.end(); ++it_cartesian, ++it_hough) {
 		angle = std::atan2((it_cartesian->b.y - it_cartesian->a.y), (it_cartesian->b.x - it_cartesian->a.x)); // inclinaison angle, within [-pi/2, pi/2]
-		angle_diff = std::abs(st_angle - angle); // within [0, pi]
-		angle_sin = std::sin(angle_diff); // within [0, 1]
-		if (angle_sin > 0.5f) {
-			// almost parallel
-			p_lines_hz->lines_hough.push_back(*it_hough);
-			p_lines_hz->lines_cartesian.push_back(*it_cartesian);
+		if (std::abs(std::sin(angle)) > 0.5f) { // sin(angle) within [-1, 1]
+			lines_vt.lines_hough.push_back(*it_hough);
+			lines_vt.lines_cartesian.push_back(*it_cartesian);
 		}
 		else {
-			p_lines_vt->lines_hough.push_back(*it_hough);
-			p_lines_vt->lines_cartesian.push_back(*it_cartesian);
+			lines_hz.lines_hough.push_back(*it_hough);
+			lines_hz.lines_cartesian.push_back(*it_cartesian);
 		}
 	}
+
 	return COMPV_ERROR_CODE_S_OK;
 }
 
 // Grouping using cartesian distances
 // "lines_hough_parallel" must contains lines almost parallel so that the distances are meaningful
+// This function is thread-safe
 COMPV_ERROR_CODE CompVCalibCamera::grouping(const size_t image_width, const size_t image_height, const CompVCabLines& lines_parallel, const bool vt, const size_t max_strength, CompVCabLineFloat32Vector& lines_parallel_grouped)
 {
 	lines_parallel_grouped.clear();
@@ -898,10 +870,6 @@ COMPV_ERROR_CODE CompVCalibCamera::grouping(const size_t image_width, const size
 	// https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line#Line_defined_by_two_points
 	CompVCabLineGroupVector groups;
 	CompVHoughLineVector::const_iterator it_hough;
-
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT impementation found");
-
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Using distance approximation: sqrt (c**2 + d**2) = abs(c + d)");
 
 	const compv_float32_t image_widthF = static_cast<compv_float32_t>(image_width);
 	const compv_float32_t image_heightF = static_cast<compv_float32_t>(image_height);
@@ -936,7 +904,7 @@ COMPV_ERROR_CODE CompVCalibCamera::grouping(const size_t image_width, const size
 				compv_float32_t i_x, i_y;
 				const bool intersect = segment_get_intersection(*g->pivot_cartesian, *i, &i_x, &i_y);
 				// No need to check for the intersection angle because the lines are the same type (hz or vt)
-				if (intersect && i_x >= 0.f && i_y >= 0.f && i_x < image_widthF && i_y < image_heightF) { // FIXME(dmi): also check intersection angle
+				if (intersect && i_x >= 0.f && i_y >= 0.f && i_x < image_widthF && i_y < image_heightF) {
 					group = &(*g);
 					break;
 				}
@@ -981,12 +949,11 @@ COMPV_ERROR_CODE CompVCalibCamera::grouping(const size_t image_width, const size
 	return COMPV_ERROR_CODE_S_OK;
 }
 
+// This function is thread-safe
 COMPV_ERROR_CODE CompVCalibCamera::lineBestFit(const CompVLineFloat32Vector& points_cartesian, const CompVHoughLineVector& points_hough, CompVLineFloat32& line)
 {
 	COMPV_CHECK_EXP_RETURN(points_cartesian.size() < 2, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Need at least #2 points");
 	COMPV_CHECK_EXP_RETURN(points_cartesian.size() != points_hough.size(), COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Must have same number of points for polar and cartesian points");
-	
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT impementation found"); // Not really needed (number of points should always be very low)
 
 	// Implementing "Least Square Method" (https://www.varsitytutors.com/hotmath/hotmath_help/topics/line-of-best-fit)
 	// while ignoring the x-component for the simple reason that they are always constant

@@ -65,6 +65,7 @@ private:
 	COMPV_ERROR_CODE acc_gather(std::vector<CompVHoughShtEdge >::const_iterator start, std::vector<CompVHoughShtEdge >::const_iterator end, CompVHoughAccThreadsCtx* threadsCtx);
 	COMPV_ERROR_CODE nms_gather(size_t rowStart, size_t rowCount, CompVPtr<CompVMemZero<int32_t> *>& acc);
 	COMPV_ERROR_CODE nms_apply(size_t rowStart, size_t rowCount, CompVPtr<CompVMemZero<int32_t> *>& acc, CompVHoughLineVector& lines);
+	COMPV_ERROR_CODE toCartesian(const size_t imageWidth, const size_t imageHeight, CompVHoughLineVector::const_iterator polar_begin, CompVHoughLineVector::const_iterator polar_end, CompVLineFloat32Vector& cartesian);
 
 private:
 	float m_fRho;
