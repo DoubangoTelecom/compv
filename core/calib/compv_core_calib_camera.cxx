@@ -544,8 +544,6 @@ COMPV_ERROR_CODE CompVCalibCamera::calibrate(CompVCalibContex& context)
 	const compv_float64_t *h0, *h1, *h2;
 	compv_float64_t h00, h01, h10, h11, h20, h21;
 
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Upside-down (image #50 renamed) produce odd result");
-
 	/* [2] 3.3 Step 2: Determining the intrinsic camera parameters */
 	// For multiple images (2n x 6) matrix: https://youtu.be/Ou9Uj75DJX0?t=22m13s
 	// Each image have #2 contribution and we require at least #3 images
@@ -632,21 +630,17 @@ COMPV_ERROR_CODE CompVCalibCamera::calibrate(CompVCalibContex& context)
 	*K->ptr<compv_float64_t>(2, 2) = 1.0;
 	/* Compute Kinv (3x3) */
 	// Inverse (3x3): http://mathworld.wolfram.com/MatrixInverse.html
-	compv_float64_t k11, k21, k31, k22, k32, k33; // Kinv coeff.
-	const compv_float64_t* a0 = K->ptr<const compv_float64_t>(0);
-	const compv_float64_t* a1 = K->ptr<const compv_float64_t>(1);
-	const compv_float64_t* a2 = K->ptr<const compv_float64_t>(2);
 	// Compute determinant(Kinv)
 	compv_float64_t detKinv = (alpha * beta);
 	COMPV_CHECK_EXP_RETURN(!detKinv, COMPV_ERROR_CODE_E_INVALID_CALL, "Camera matrix is singular");
 	// Compute Kinv values
 	detKinv = (1.0 / detKinv);
-	k11 = (beta * detKinv);
-	k21 = -(gamma * detKinv);
-	k31 = ((gamma * vc) - (beta * uc)) * detKinv;
-	k22 = (alpha * detKinv);
-	k32 = -(vc * alpha * detKinv);
-	k33 = (alpha * beta) * detKinv;
+	const compv_float64_t k11 = (beta * detKinv);
+	const compv_float64_t k21 = -(gamma * detKinv);
+	const compv_float64_t k31 = ((gamma * vc) - (beta * uc)) * detKinv;
+	const compv_float64_t k22 = (alpha * detKinv);
+	const compv_float64_t k32 = -(vc * alpha * detKinv);
+	const compv_float64_t k33 = (alpha * beta) * detKinv;
 
 	/*
 		[2] Algorithm 4.6 Calculation of extrinsic view parameters
