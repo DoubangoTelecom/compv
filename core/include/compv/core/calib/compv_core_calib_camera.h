@@ -66,6 +66,7 @@ public:
 typedef std::vector<CompVCalibCameraPlan, CompVAllocatorNoDefaultConstruct<CompVCalibCameraPlan> > CompVCalibCameraPlanVector;
 
 struct CompVCalibContex {
+	int verbosity = 0;
 	bool levenberg_marquardt = true; // whether to perform non-linear levenberg marquardt optimisation after getting initial calib results
 	bool check_plans = true; // whether to check if the current and previous plan are almost the same. If they are almost the same, reject!
 	bool compute_tangential_dist = false; // whether to compute tangential distorsions (p1, p2) in addition to radial distorsions (k1, k2)

@@ -18,6 +18,7 @@ using namespace compv;
 #define CALIB_MAX_ERROR			0.76 // With my Logitech camera 0.41 is the best number I can get
 #define CALIB_COMPUTE_TAN_DIST	false // whether to compute tangential distorsion (p1, p2) in addition to radial distorsion (k1, k2)
 #define CALIB_COMPUTE_SKEW		true // whether to compute skew value (part of camera matrix K)
+#define CALIB_VERBOSITY			0
 
 #define WINDOW_WIDTH			640
 #define WINDOW_HEIGHT			480
@@ -254,6 +255,7 @@ public:
 		// Calibration options
 		listener_->m_CalibContext.compute_skew = CALIB_COMPUTE_SKEW;
 		listener_->m_CalibContext.compute_tangential_dist = CALIB_COMPUTE_TAN_DIST;
+		listener_->m_CalibContext.verbosity = CALIB_VERBOSITY;
 
 		// Drawing options
 		listener_->m_DrawingOptions.lineWidth = 1.f;

@@ -383,8 +383,10 @@ class CompVMatrixGeneric
 	}
 
 	// sort -> sort D and V
+	// Output is V not Vt
 	static COMPV_ERROR_CODE svd(const CompVMatPtr &A, CompVMatPtrPtr U, CompVMatPtrPtr D, CompVMatPtrPtr V, bool sort)
 	{
+		// https://ocw.mit.edu/courses/mathematics/18-06sc-linear-algebra-fall-2011/positive-definite-matrices-and-applications/singular-value-decomposition/MIT18_06SCF11_Ses3.5sum.pdf
 		// Input parameters checked in the calling function
 		CompVMatPtr S_, D_;
 		T d_;
@@ -431,10 +433,10 @@ class CompVMatrixGeneric
 				}
 			}
 		}
-
-		// A = UDVt -> AV = UD -> AVDi = U
-		COMPV_CHECK_CODE_RETURN(CompVMatrixGeneric<T>::invD(*D, &D_, dIsSorted));// D_ will contain inverse(D) = Di
-		COMPV_CHECK_CODE_RETURN(CompVMatrixGeneric<T>::mulABt(*V, D_, &S_)); // transpose inverseOf(D) -> nop for square matrix
+		
+		// A = UDVt, U and V are orthogonal matrices -> AV = UD -> AVD* = U
+		COMPV_CHECK_CODE_RETURN(CompVMatrixGeneric<T>::invD(*D, &D_, dIsSorted)); // D_ will contain inverse(D) = D*
+		COMPV_CHECK_CODE_RETURN(CompVMatrixGeneric<T>::mulABt(*V, D_, &S_)); // transpose(D*) -> nop for square matrix
 		COMPV_CHECK_CODE_RETURN(CompVMatrixGeneric<T>::mulAB(A, S_, U));
 
 		return COMPV_ERROR_CODE_S_OK;

@@ -71,6 +71,22 @@ struct levmarq_data {
 	const CompVCalibCameraPlanVector& planes;
 	const bool have_tangential_dist;
 	const bool have_skew;
+	CompVMatPtr K;
+	CompVMatPtr d;
+	CompVMatPtr t;
+	compv_float64_t* K_fx = nullptr;
+	compv_float64_t* K_fy = nullptr;
+	compv_float64_t* K_cx = nullptr;
+	compv_float64_t* K_cy = nullptr;
+	compv_float64_t* K_skew = nullptr;
+	compv_float64_t* d_k1 = nullptr;
+	compv_float64_t* d_k2 = nullptr;
+	compv_float64_t* d_p1 = nullptr;
+	compv_float64_t* d_p2 = nullptr;
+	compv_float64_t* t_x = nullptr;
+	compv_float64_t* t_y = nullptr;
+	compv_float64_t* t_z = nullptr;
+
 public:
 	levmarq_data(const CompVCalibCameraPlanVector& planes_, const compv_float64_t *cornersPtr_, const bool have_tangential_dist_, const bool have_skew_)
 		: planes(planes_)
@@ -136,7 +152,9 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 
 	/* Return if no enough points */
 	if (context.lines_raw.lines_hough.size() < m_nPatternLinesTotal) {
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough lines after hough transform: %zu", context.lines_raw.lines_hough.size());
+		if (context.verbosity > 0) {
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough lines after hough transform: %zu", context.lines_raw.lines_hough.size());
+		}
 		context.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
 		return COMPV_ERROR_CODE_S_OK;
 	}
@@ -165,7 +183,9 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 
 	/* Return if no enough points */
 	if (context.lines_raw.lines_hough.size() < m_nPatternLinesTotal) {
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough lines after removing weak lines: %zu", context.lines_raw.lines_hough.size());
+		if (context.verbosity > 0) {
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough lines after removing weak lines: %zu", context.lines_raw.lines_hough.size());
+		}
 		context.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
 		return COMPV_ERROR_CODE_S_OK;
 	}
@@ -180,17 +200,23 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 	CompVCabLines lines_hz, lines_vt;
 	COMPV_CHECK_CODE_RETURN(subdivision(image_width, image_height, context.lines_raw, lines_hz, lines_vt));
 	if (lines_hz.lines_cartesian.size() < nPatternLinesHzVtMin) {
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough [hz] lines after subdivision: %zu", lines_hz.lines_cartesian.size());
+		if (context.verbosity > 0) {
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough [hz] lines after subdivision: %zu", lines_hz.lines_cartesian.size());
+		}
 		context.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	if (lines_vt.lines_cartesian.size() < nPatternLinesHzVtMin) {
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough [vt] lines after subdivision: %zu", lines_vt.lines_cartesian.size());
+		if (context.verbosity > 0) {
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough [vt] lines after subdivision: %zu", lines_vt.lines_cartesian.size());
+		}
 		context.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	if ((lines_hz.lines_cartesian.size() + lines_vt.lines_cartesian.size()) < m_nPatternLinesTotal) {
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough [vt+hz] lines after subdivision: %zu+%zu", lines_hz.lines_cartesian.size(), lines_vt.lines_cartesian.size());
+		if (context.verbosity > 0) {
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough [vt+hz] lines after subdivision: %zu+%zu", lines_hz.lines_cartesian.size(), lines_vt.lines_cartesian.size());
+		}
 		context.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
 		return COMPV_ERROR_CODE_S_OK;
 	}
@@ -201,30 +227,40 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 	if (lines_hz.lines_cartesian.size() > nPatternLinesHzVtMin) {
 		COMPV_CHECK_CODE_RETURN(grouping(image_width, image_height, lines_hz, false, max_strength, lines_cab_hz_grouped));
 		if (lines_cab_hz_grouped.size() < nPatternLinesHzVtMin) {
-			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "After [hz] grouping we got less lines than what is requires, not a good news at all");
+			if (context.verbosity > 0) {
+				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "After [hz] grouping we got less lines than what is requires, not a good news at all");
+			}
 			context.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
 			return COMPV_ERROR_CODE_S_OK;
 		}
 	}
 	if (lines_cab_hz_grouped.size() != m_nPatternLinesHz && lines_cab_hz_grouped.size() != m_nPatternLinesVt) {
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "After [hz] grouping we don't have exactly %zu/%zu lines but more (%zu). Maybe our grouping function missed some orphans", m_nPatternLinesHz, m_nPatternLinesVt, lines_cab_hz_grouped.size());
+		if (context.verbosity > 0) {
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "After [hz] grouping we don't have exactly %zu/%zu lines but more (%zu). Maybe our grouping function missed some orphans", m_nPatternLinesHz, m_nPatternLinesVt, lines_cab_hz_grouped.size());
+		}
 	}
 	
 	// Vt-grouping
 	if (lines_vt.lines_cartesian.size() > nPatternLinesHzVtMin) {
 		COMPV_CHECK_CODE_RETURN(grouping(image_width, image_height, lines_vt, true, max_strength, lines_cab_vt_grouped));
 		if (lines_cab_vt_grouped.size() < nPatternLinesHzVtMin) {
-			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "After [vt] grouping we got less lines than what is requires. Not a good news at all");
+			if (context.verbosity > 0) {
+				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "After [vt] grouping we got less lines than what is requires. Not a good news at all");
+			}
 			context.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
 			return COMPV_ERROR_CODE_S_OK;
 		}
 	}
 	if (lines_cab_vt_grouped.size() != m_nPatternLinesHz && lines_cab_vt_grouped.size() != m_nPatternLinesVt) {
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "After [vt] grouping we don't have exactly %zu lines but more (%zu). Maybe our grouping function missed some orphans", m_nPatternLinesVt, lines_cab_vt_grouped.size());
+		if (context.verbosity > 0) {
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "After [vt] grouping we don't have exactly %zu lines but more (%zu). Maybe our grouping function missed some orphans", m_nPatternLinesVt, lines_cab_vt_grouped.size());
+		}
 	}
 
 	if ((lines_cab_vt_grouped.size() + lines_cab_hz_grouped.size()) < m_nPatternLinesTotal) {
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough [vt+hz] lines after grouping: %zu+%zu", lines_cab_vt_grouped.size(), lines_cab_hz_grouped.size());
+		if (context.verbosity > 0) {
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough [vt+hz] lines after grouping: %zu+%zu", lines_cab_vt_grouped.size(), lines_cab_hz_grouped.size());
+		}
 		context.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
 		return COMPV_ERROR_CODE_S_OK;
 	}
@@ -243,7 +279,9 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 		lines_cab_vt_grouped.resize(nPatternLinesHzVtMax);
 	}
 	if ((lines_cab_vt_grouped.size() + lines_cab_hz_grouped.size()) < m_nPatternLinesTotal) {
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough [vt+hz] lines after grouping: %zu+%zu", lines_cab_vt_grouped.size(), lines_cab_hz_grouped.size());
+		if (context.verbosity > 0) {
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough [vt+hz] lines after grouping: %zu+%zu", lines_cab_vt_grouped.size(), lines_cab_hz_grouped.size());
+		}
 		context.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
 		return COMPV_ERROR_CODE_S_OK;
 	}
@@ -264,12 +302,16 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 		}
 	}
 	if (lines_hz_grouped.size() < nPatternLinesHzVtMin) {
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough [hz] lines after packing: %zu", lines_hz_grouped.size());
+		if (context.verbosity > 0) {
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough [hz] lines after packing: %zu", lines_hz_grouped.size());
+		}
 		context.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	if (lines_vt_grouped.size() < nPatternLinesHzVtMin) {
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough [vt] lines after packing: %zu", lines_vt_grouped.size());
+		if (context.verbosity > 0) {
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough [vt] lines after packing: %zu", lines_vt_grouped.size());
+		}
 		context.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
 		return COMPV_ERROR_CODE_S_OK;
 	}
@@ -290,12 +332,16 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 
 	/* Make sure we have the right number of lines in each group or keep the bests */
 	if (lines_hz_grouped.size() != nPatternLinesHzExpected) {
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No expected number of [hz] lines (%zu != %zu)", lines_hz_grouped.size(), nPatternLinesHzExpected);
+		if (context.verbosity > 0) {
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No expected number of [hz] lines (%zu != %zu)", lines_hz_grouped.size(), nPatternLinesHzExpected);
+		}
 		context.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	if (lines_vt_grouped.size() != nPatternLinesVtExpected) {
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No expected number of [vt] lines (%zu != %zu)", lines_vt_grouped.size(), nPatternLinesVtExpected);
+		if (context.verbosity > 0) {
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No expected number of [vt] lines (%zu != %zu)", lines_vt_grouped.size(), nPatternLinesVtExpected);
+		}
 		context.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
 		return COMPV_ERROR_CODE_S_OK;
 	}
@@ -335,12 +381,16 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 		for (CompVLineFloat32Vector::const_iterator j = lines_vt_grouped.begin(); j < lines_vt_grouped.end(); ++j) {
 			// Compute intersection
 			if (!segment_get_intersection(*i, *j, &intersect_x, &intersect_y)) {
-				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No intersection between the lines. Stop processing");
+				if (context.verbosity > 0) {
+					COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No intersection between the lines. Stop processing");
+				}
 				context.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_INTERSECTIONS;
 				return COMPV_ERROR_CODE_S_OK;
 			}
 			if (intersect_x < 0.f || intersect_y < 0.f || intersect_x >= image_widthF || intersect_y >= image_heightF) {
-				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Intersection outside the image domain. Stop processing");
+				if (context.verbosity > 0) {
+					COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Intersection outside the image domain. Stop processing");
+				}
 				context.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_INTERSECTIONS;
 				return COMPV_ERROR_CODE_S_OK;
 			}
@@ -365,7 +415,9 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 				if (index) { // not first index
 					// Previous x-intersection must be < current x-intersection (increasing)
 					if ((k->x <= (k - 1)->x) || (m->x <= (m - 1)->x)) {
-						COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Intersections not going forward (x-axis). Stop processing");
+						if (context.verbosity > 0) {
+							COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Intersections not going forward (x-axis). Stop processing");
+						}
 						context.code = COMPV_CALIB_CAMERA_RESULT_INCOHERENT_INTERSECTIONS;
 						return COMPV_ERROR_CODE_S_OK;
 					}
@@ -374,14 +426,18 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 						dist = (m->x - (m - 1)->x);
 						dist_err = std::abs(dist - dist_approx_x);
 						if (dist_err > dist_err_max_x) {
-							COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Intersections not equidistant (xm-axis). Stop processing");
+							if (context.verbosity > 0) {
+								COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Intersections not equidistant (xm-axis). Stop processing");
+							}
 							context.code = COMPV_CALIB_CAMERA_RESULT_INCOHERENT_INTERSECTIONS;
 							return COMPV_ERROR_CODE_S_OK;
 						}
 						dist = (k->x - (k - 1)->x);
 						dist_err = std::abs(dist - dist_approx_x);
 						if (dist_err > dist_err_max_x) {
-							COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Intersections not equidistant (xk-axis). Stop processing");
+							if (context.verbosity > 0) {
+								COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Intersections not equidistant (xk-axis). Stop processing");
+							}
 							context.code = COMPV_CALIB_CAMERA_RESULT_INCOHERENT_INTERSECTIONS;
 							return COMPV_ERROR_CODE_S_OK;
 						}
@@ -400,7 +456,9 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 				}
 				// Top y-intersection must be < bottom y-intersection (increasing)
 				if (dist <= 0.f) {
-					COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Intersections not going forward (y-axis). Stop processing");
+					if (context.verbosity > 0) {
+						COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Intersections not going forward (y-axis). Stop processing");
+					}
 					context.code = COMPV_CALIB_CAMERA_RESULT_INCOHERENT_INTERSECTIONS;
 					return COMPV_ERROR_CODE_S_OK;
 				}
@@ -409,7 +467,9 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 					// y-axis
 					dist_err = std::abs(dist - dist_approx_y);
 					if (dist_err > dist_err_max_y) {
-						COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Intersections not equidistant (y-axis). Stop processing");
+						if (context.verbosity > 0) {
+							COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Intersections not equidistant (y-axis). Stop processing");
+						}
 						context.code = COMPV_CALIB_CAMERA_RESULT_INCOHERENT_INTERSECTIONS;
 						return COMPV_ERROR_CODE_S_OK;
 					}
@@ -459,7 +519,7 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 	plan_curr.pattern_width = ((m_nPatternCornersNumCol - 1) * m_nPatternBlockSizePixel);
 	plan_curr.pattern_height = ((m_nPatternCornersNumRow - 1) * m_nPatternBlockSizePixel);
 
-	/* Compute homography */
+	/* Compute homography: [2] 3.2.1 Homography estimation with the Direct Linear Transformation(DLT) */
 	CompVHomographyResult result_homography;
 	COMPV_CHECK_CODE_RETURN(homography(plan_curr, result_homography, &plan_curr.homography));
 	if (result_homography.inlinersCount < (m_nPatternCornersTotal - std::max(m_nPatternCornersNumRow, m_nPatternCornersNumCol))) { // We allow at most #1 row/col error (outliers)
@@ -486,18 +546,17 @@ COMPV_ERROR_CODE CompVCalibCamera::calibrate(CompVCalibContex& context)
 
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Upside-down (image #50 renamed) produce odd result");
 
-	/* Compute the V matrix */
+	/* [2] 3.3 Step 2: Determining the intrinsic camera parameters */
 	// For multiple images (2n x 6) matrix: https://youtu.be/Ou9Uj75DJX0?t=22m13s
 	// Each image have #2 contribution and we require at least #3 images
 	CompVMatPtr V;
-	COMPV_CHECK_CODE_RETURN((CompVMat::newObjAligned<compv_float64_t>(&V, (numPlanes << 1), 6)));
+	COMPV_CHECK_CODE_RETURN((CompVMat::newObj<compv_float64_t>(&V, (numPlanes << 1), 6, 1)));
 	compv_float64_t* V0 = V->ptr<compv_float64_t>(0); // v12
 	compv_float64_t* V1 = V->ptr<compv_float64_t>(1); // (v11 - v22)
 	const size_t vStrideTimes2 = V->stride() << 1;
-
-	// [2] 3.3 Step 2: Determining the intrinsic camera parameters
+	// Computing V matrix use to solve V.b = 0 equation
 	for (it_planes = planes.begin(); it_planes < planes.end(); ++it_planes) {
-		// For one image, computing v12, v11 and v22: https://youtu.be/Ou9Uj75DJX0?t=22m
+		// [2] equation (96)
 		const CompVMatPtr& homography = it_planes->homography;
 		h0 = homography->ptr<const compv_float64_t>(0);
 		h1 = homography->ptr<const compv_float64_t>(1);
@@ -508,34 +567,26 @@ COMPV_ERROR_CODE CompVCalibCamera::calibrate(CompVCalibContex& context)
 		h11 = h1[1];
 		h20 = h2[0];
 		h21 = h2[1];
-
-		//h0p*h0q
-		//h0p*h1q+h1p*h0q
-		//h1p*h1q
-		//h2p*h0q+h0p*h2q
-		//h2p*h1q+h1p*h2q
-		//h2p*h2q
-
-		V0[0] = h00*h01;
-		V0[1] = h00*h11 + h10*h01;
-		V0[2] = h10*h11;
-		V0[3] = h20*h01 + h00*h21;
-		V0[4] = h20*h11 + h10*h21;
-		V0[5] = h20*h21;
-
+		// v01(H)
+		V0[0] = (h00*h01);
+		V0[1] = (h00*h11) + (h10*h01);
+		V0[2] = (h10*h11);
+		V0[3] = (h20*h01) + (h00*h21);
+		V0[4] = (h20*h11) + (h10*h21);
+		V0[5] = (h20*h21);
+		// v00(H) - v11(H)
 		V1[0] = (h00*h00) - (h01*h01);
 		V1[1] = (h00*h10 + h10*h00) - (h01*h11 + h11*h01);
 		V1[2] = (h10*h10) - (h11*h11);
 		V1[3] = (h20*h00 + h00*h20) - (h21*h01 + h01*h21);
 		V1[4] = (h20*h10 + h10*h20) - (h21*h11 + h11*h21);
 		V1[5] = (h20*h20) - (h21*h21);
-
+		// Next
 		V0 += vStrideTimes2;
 		V1 += vStrideTimes2;
 	}
 
-	/* Find b by solving Vb = 0: https://youtu.be/Ou9Uj75DJX0?t=23m47s */
-	// Vector B = (K*t.K*) = (Lt.L) https://youtu.be/Ou9Uj75DJX0?t=21m14s
+	/* Find b by solving Vb = 0: [2] equation (98)*/
 	// Compute S = Vt*V, 6x6 symetric matrix
 	CompVMatPtr S;
 	COMPV_CHECK_CODE_RETURN(CompVMatrix::mulAtA(V, &S));
@@ -545,58 +596,8 @@ COMPV_ERROR_CODE CompVCalibCamera::calibrate(CompVCalibContex& context)
 	static const bool transposeEigenVectors = true; // row-vector?
 	static const bool promoteZerosInEigenValues = false; // set to zero when < eps
 	COMPV_CHECK_CODE_RETURN(CompVMathEigen<compv_float64_t>::findSymm(S, &eigenValues, &eigneVectors, sortEigenValuesVectors, transposeEigenVectors, promoteZerosInEigenValues));
-	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "EigenValues: %f, %f, %f, %f, %f, %f", 
-		*eigenValues->ptr<compv_float64_t>(0, 0), 
-		*eigenValues->ptr<compv_float64_t>(1, 1),
-		*eigenValues->ptr<compv_float64_t>(2, 2),
-		*eigenValues->ptr<compv_float64_t>(3, 3),
-		*eigenValues->ptr<compv_float64_t>(4, 4),
-		*eigenValues->ptr<compv_float64_t>(5, 5)
-	);
 	const compv_float64_t* bPtr = eigneVectors->ptr<const compv_float64_t>(5); // 6x6 matrix -> index of the smallest eigen value is last one = #5
 
-#if 0
-	compv_float64_t b11 = bPtr[0]; // B0
-	compv_float64_t b12 = bPtr[1]; // B1
-	compv_float64_t b13 = bPtr[2]; // B3
-	compv_float64_t b22 = bPtr[3]; // B2
-	compv_float64_t b23 = bPtr[4]; // B4
-	compv_float64_t b33 = bPtr[5]; // B5
-	/* Cholesky decomposition: [2] Algorithm 4.5 Calculation of intrinsic camera parameters (Version B, using Cholesky decomposition) */
-	// [2] C Extraction of camera intrinsics by Cholesky decomposition
-	// Chol(B) = L.Lt, with L = K*t -> Lt = K*
-	// Cholesky decomposition for 3x3 matrix: https://rosettacode.org/wiki/Cholesky_decomposition
-	if (b11 < 0 || b22 < 0 || b33 < 0) {
-		b11 = -b11;
-		b12 = -b12;
-		b13 = -b13;
-		b22 = -b22;
-		b23 = -b23;
-		b33 = -b33;
-	}
-	const compv_float64_t k11 = std::sqrt(b11);
-	const compv_float64_t k22 = std::sqrt(b22 - (b12 * b12)); // b21 = b12
-	const compv_float64_t k33 = std::sqrt(b33 - ((b13 * b13) + (b23 * b23))); // b31 = b13, b32 = b23
-	const compv_float64_t k11s = (1.0 / k11);
-	const compv_float64_t k21 = k11s * b12; // b21 = b12
-	const compv_float64_t k31 = k11s * b13; // b31 = b13
-	const compv_float64_t k32 = (1.0 / k22) * (b23 - (k31*k21)); // b32 = b23
-
-	// Build Lt
-	CompVMatPtr Lt;
-	COMPV_CHECK_CODE_RETURN((CompVMat::newObjAligned<compv_float64_t>(&Lt, 3, 3)));
-	compv_float64_t* Lt1 = Lt->ptr<compv_float64_t>(0);
-	compv_float64_t* Lt2 = Lt->ptr<compv_float64_t>(1);
-	compv_float64_t* Lt3 = Lt->ptr<compv_float64_t>(2);
-	Lt1[0] = k11, Lt1[1] = k21, Lt1[2] = k31;
-	Lt2[0] = 0.0, Lt2[1] = k22, Lt2[2] = k32;
-	Lt3[0] = 0.0, Lt3[1] = 0.0, Lt3[2] = k33;
-	// Compute K* = Lt -> K = Lt*
-	CompVMatPtr K;
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Inverse of upper triangular matrix should be obvious (do not call CompVMatrix::invA3x3)");
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("K is upper triangular matrix with k33 = 1.0");
-	COMPV_CHECK_CODE_RETURN(CompVMatrix::invA3x3(Lt, &K));
-#else
 	// [2] Algorithm 4.4 Calculation of intrinsic camera parameters (Version A).
 	const compv_float64_t B0 = bPtr[0];
 	const compv_float64_t B1 = bPtr[1];
@@ -609,16 +610,16 @@ COMPV_ERROR_CODE CompVCalibCamera::calibrate(CompVCalibContex& context)
 	const compv_float64_t B0B4 = B0*B4;
 	const compv_float64_t B1B4 = B1*B4;
 	const compv_float64_t B2B3 = B2*B3;
-	const compv_float64_t ww = (B0B2 * B5) - (B1s * B5) - (B0B4*B4) + (2 * B1B4*B3) - (B2B3*B3);
-	const compv_float64_t dd = B0B2 - B1s;
+	const compv_float64_t ww = (B0B2 * B5) - (B1s * B5) - (B0B4*B4) + (2 * B1B4*B3) - (B2B3*B3); // // [2] equation (104)
+	const compv_float64_t dd = B0B2 - B1s; // // [2] equation (105)
 	const compv_float64_t dd2 = dd * dd;
 	const compv_float64_t dds = 1.0 / dd;
-	const compv_float64_t alpha = std::sqrt(std::abs(ww / (dd * B0)));
-	const compv_float64_t beta = std::sqrt(std::abs((ww / dd2) * B0));
-	const compv_float64_t gamma = std::sqrt(std::abs(ww / (dd2 * B0))) * B1;
-	const compv_float64_t uc = (B1B4 - B2B3) * dds;
-	const compv_float64_t vc = ((B1*B3) - B0B4) * dds;
-	CompVMatPtr K, Kinv;
+	const compv_float64_t alpha = std::sqrt(std::abs(ww / (dd * B0))); // [2] equation (99)
+	const compv_float64_t beta = std::sqrt(std::abs((ww / dd2) * B0)); // [2] equation (100)
+	const compv_float64_t gamma = context.compute_skew ? (std::sqrt(std::abs(ww / (dd2 * B0))) * B1) : 0.0; // [2] equation (101)
+	const compv_float64_t uc = (B1B4 - B2B3) * dds; // [2] equation (102)
+	const compv_float64_t vc = ((B1*B3) - B0B4) * dds; // // [2] equation (103)
+	CompVMatPtr& K = context.K;
 	COMPV_CHECK_CODE_RETURN((CompVMat::newObjAligned<compv_float64_t>(&K, 3, 3)));
 	*K->ptr<compv_float64_t>(0, 0) = alpha;
 	*K->ptr<compv_float64_t>(0, 1) = gamma;
@@ -629,40 +630,29 @@ COMPV_ERROR_CODE CompVCalibCamera::calibrate(CompVCalibContex& context)
 	*K->ptr<compv_float64_t>(2, 0) = 0.0;
 	*K->ptr<compv_float64_t>(2, 1) = 0.0;
 	*K->ptr<compv_float64_t>(2, 2) = 1.0;
-	COMPV_CHECK_CODE_RETURN(CompVMatrix::invA3x3(K, &Kinv));
-	const compv_float64_t k11 = *Kinv->ptr<const compv_float64_t>(0, 0);
-	const compv_float64_t k21 = *Kinv->ptr<const compv_float64_t>(0, 1);
-	const compv_float64_t k31 = *Kinv->ptr<const compv_float64_t>(0, 2);
-	const compv_float64_t k22 = *Kinv->ptr<const compv_float64_t>(1, 1);
-	const compv_float64_t k32 = *Kinv->ptr<const compv_float64_t>(1, 2);
-	const compv_float64_t k33 = *Kinv->ptr<const compv_float64_t>(2, 2);
-#endif
-
-	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "K = %f, %f, %f\n %f, %f, %f\n %f, %f, %f",
-		*K->ptr<const compv_float64_t>(0, 0), *K->ptr<const compv_float64_t>(0, 1), *K->ptr<const compv_float64_t>(0, 2),
-		*K->ptr<const compv_float64_t>(1, 0), *K->ptr<const compv_float64_t>(1, 1), *K->ptr<const compv_float64_t>(1, 2),
-		*K->ptr<const compv_float64_t>(2, 0), *K->ptr<const compv_float64_t>(2, 1), *K->ptr<const compv_float64_t>(2, 2)
-	);
-
-	// Reset skew if not needed
-	if (!context.compute_skew) {
-		*K->ptr<compv_float64_t>(0, 1) = 0.0;
-	}
-
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Remove");
-	context.K = K;
+	/* Compute Kinv (3x3) */
+	// Inverse (3x3): http://mathworld.wolfram.com/MatrixInverse.html
+	compv_float64_t k11, k21, k31, k22, k32, k33; // Kinv coeff.
+	const compv_float64_t* a0 = K->ptr<const compv_float64_t>(0);
+	const compv_float64_t* a1 = K->ptr<const compv_float64_t>(1);
+	const compv_float64_t* a2 = K->ptr<const compv_float64_t>(2);
+	// Compute determinant(Kinv)
+	compv_float64_t detKinv = (alpha * beta);
+	COMPV_CHECK_EXP_RETURN(!detKinv, COMPV_ERROR_CODE_E_INVALID_CALL, "Camera matrix is singular");
+	// Compute Kinv values
+	detKinv = (1.0 / detKinv);
+	k11 = (beta * detKinv);
+	k21 = -(gamma * detKinv);
+	k31 = ((gamma * vc) - (beta * uc)) * detKinv;
+	k22 = (alpha * detKinv);
+	k32 = -(vc * alpha * detKinv);
+	k33 = (alpha * beta) * detKinv;
 
 	/*
 		[2] Algorithm 4.6 Calculation of extrinsic view parameters
 		[2] Algorithm 4.7 Estimation of the radial lens distortion parameters.
 	*/
-	compv_float64_t r11, r12, r13, r21, r22, r23, r31, r32, r33, t11, t12, t13, norm, ha, hb, hc;
-	const compv_float64_t fx = *K->ptr<const compv_float64_t>(0, 0);
-	const compv_float64_t fy = *K->ptr<const compv_float64_t>(1, 1);
-	const compv_float64_t skew = *K->ptr<const compv_float64_t>(0, 1);
-	const compv_float64_t cx = *K->ptr<const compv_float64_t>(0, 2);
-	const compv_float64_t cy = *K->ptr<const compv_float64_t>(1, 2);
-
+	compv_float64_t r11, r12, r13, r21, r22, r23, r31, r32, r33, t11, t12, t13, k;
 	CompVMatPtr D, d;
 	const bool compute_tangential_dist = context.compute_tangential_dist;
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float64_t>(&D, (numPlanes * m_nPatternCornersTotal) << 1, compute_tangential_dist ? 4 : 2));
@@ -675,61 +665,44 @@ COMPV_ERROR_CODE CompVCalibCamera::calibrate(CompVCalibContex& context)
 	compv_float64_t* dPtr1 = dPtr0 + d->stride();
 	for (it_planes = planes.begin(); it_planes < planes.end(); ++it_planes) {
 		const CompVMatPtr& homography = it_planes->homography;
-		// r1 = k*.h1 and ||r1|| = 1
-		ha = *homography->ptr<const compv_float64_t>(0, 0);
-		hb = *homography->ptr<const compv_float64_t>(1, 0);
-		hc = *homography->ptr<const compv_float64_t>(2, 0);
-		r11 = ((k11 * ha) + (k21 * hb) + (k31 * hc));
-		r12 = ((k22 * hb) + (k32 * hc));
-		r13 = (k33 * hc);
-		norm = 1.0 / std::sqrt((r11 * r11) + (r12 * r12) + (r13 * r13)); // use same norm for r1, r2 and t to have same scaling
-		r11 *= norm;
-		r12 *= norm;
-		r13 *= norm;
+		// r0 = k.(Kinv.h0)
+		h00 = *homography->ptr<const compv_float64_t>(0, 0);
+		h10 = *homography->ptr<const compv_float64_t>(1, 0);
+		h20 = *homography->ptr<const compv_float64_t>(2, 0);
+		r11 = ((k11 * h00) + (k21 * h10) + (k31 * h20));
+		r12 = ((k22 * h10) + (k32 * h20));
+		r13 = (k33 * h20);
+		k = 1.0 / std::sqrt((r11 * r11) + (r12 * r12) + (r13 * r13)); // use same norm for r1, r2 and t to have same scaling
+		r11 *= k;
+		r12 *= k;
+		r13 *= k;
 
-		// r2 = k*.h2 and ||r2|| = 1
-		ha = *homography->ptr<const compv_float64_t>(0, 1);
-		hb = *homography->ptr<const compv_float64_t>(1, 1);
-		hc = *homography->ptr<const compv_float64_t>(2, 1);
-		r21 = ((k11 * ha) + (k21 * hb) + (k31 * hc));
-		r22 = ((k22 * hb) + (k32 * hc));
-		r23 = (k33 * hc);
-		//norm = 1.0 / std::sqrt((r21 * r21) + (r22 * r22) + (r23 * r23));
-		r21 *= norm;
-		r22 *= norm;
-		r23 *= norm;
+		// r1 = k.(Kinv.h1)
+		h00 = *homography->ptr<const compv_float64_t>(0, 1);
+		h10 = *homography->ptr<const compv_float64_t>(1, 1);
+		h20 = *homography->ptr<const compv_float64_t>(2, 1);
+		r21 = ((k11 * h00) + (k21 * h10) + (k31 * h20));
+		r22 = ((k22 * h10) + (k32 * h20));
+		r23 = (k33 * h20);
+		r21 *= k;
+		r22 *= k;
+		r23 *= k;
 
-		// r3 = r1 x r2 (https://www.mathsisfun.com/algebra/vectors-cross-product.html)
+		// r2 = r0 x r1 (https://www.mathsisfun.com/algebra/vectors-cross-product.html)
 		r31 = r12 * r23 - r13 * r22;
 		r32 = r13 * r21 - r11 * r23;
 		r33 = r11 * r22 - r12 * r21;
-		//norm = 1.0 / std::sqrt((r31 * r31) + (r32 * r32) + (r33 * r33));
-		//r31 *= norm;
-		//r32 *= norm;
-		//r33 *= norm;
-		//mamadou = (r31 * r31) + (r32 * r32) + (r33 * r33);
 
-		// r = pack(r1, r2, r3)
-		//rptr = rt->ptr<compv_float64_t>(0), rptr[0] = r11, rptr[1] = r21, rptr[2] = r31;
-		//rptr = rt->ptr<compv_float64_t>(1), rptr[0] = r12, rptr[1] = r22, rptr[2] = r32;
-		//rptr = rt->ptr<compv_float64_t>(2), rptr[0] = r13, rptr[1] = r23, rptr[2] = r33;
-
-		// t = k*.h3
-		ha = *homography->ptr<const compv_float64_t>(0, 2);
-		hb = *homography->ptr<const compv_float64_t>(1, 2);
-		hc = *homography->ptr<const compv_float64_t>(2, 2);
-		t11 = ((k11 * ha) + (k21 * hb) + (k31 * hc));
-		t12 = ((k22 * hb) + (k32 * hc));
-		t13 = (k33 * hc);
-		//norm = 1.0 / std::sqrt((t11 * t11) + (t12 * t12) + (t13 * t13));
-		t11 *= norm;
-		t12 *= norm;
-		t13 *= norm;
-
-		// RT = pack(r1, r2, t)
-		//r11  r21  t11
-		//r12  r22  t12
-		//r13  r23  t13
+		// t = k.(kinv.h2)
+		h00 = *homography->ptr<const compv_float64_t>(0, 2);
+		h10 = *homography->ptr<const compv_float64_t>(1, 2);
+		h20 = *homography->ptr<const compv_float64_t>(2, 2);
+		t11 = ((k11 * h00) + (k21 * h10) + (k31 * h20));
+		t12 = ((k22 * h10) + (k32 * h20));
+		t13 = (k33 * h20);
+		t11 *= k;
+		t12 *= k;
+		t13 *= k;
 
 		/*
 		Computing radial distorsion
@@ -745,11 +718,6 @@ COMPV_ERROR_CODE CompVCalibCamera::calibrate(CompVCalibContex& context)
 
 		/* [2] Algorithm 4.7 Estimation of the radial lens distortion parameters. */
 		for (i = 0, it_intersection = intersections.begin(); i < numPoints; ++i, ++it_intersection) {
-			// Rt.[X,Y,Z]
-			// Rt = pack(r1, r2, t)
-			//r11  r21  t11
-			//r12  r22  t12
-			//r13  r23  t13
 			const compv_float64_t z = (patternX[i] * r13) + (patternY[i] * r23) + t13;
 			const compv_float64_t scale = z ? (1.0 / z) : 1.0;
 			const compv_float64_t x = ((patternX[i] * r11) + (patternY[i] * r21) + t11) * scale;
@@ -758,10 +726,10 @@ COMPV_ERROR_CODE CompVCalibCamera::calibrate(CompVCalibContex& context)
 			const compv_float64_t r4 = r2 * r2;
 			const compv_float64_t u = static_cast<compv_float64_t>(it_intersection->x);
 			const compv_float64_t v = static_cast<compv_float64_t>(it_intersection->y);
-			const compv_float64_t uh = (fx * x) + (skew * y) + cx;
-			const compv_float64_t vh = (fy * y) + cy;
-			const compv_float64_t du = (u - cx);
-			const compv_float64_t dv = (v - cy);
+			const compv_float64_t uh = (alpha * x) + (gamma * y) + uc;
+			const compv_float64_t vh = (beta * y) + vc;
+			const compv_float64_t du = (u - uc);
+			const compv_float64_t dv = (v - vc);
 
 			// Radial distorsion part (D)
 			DPtr0[0] = (du * r2);
@@ -785,21 +753,25 @@ COMPV_ERROR_CODE CompVCalibCamera::calibrate(CompVCalibContex& context)
 			DPtr1 += DStrideTimes2;
 			dPtr0 += dStrideTimes2;
 			dPtr1 += dStrideTimes2;
-		}
+		} // for (it_intersection....
 
-		// Calibration matrice R (extrinsic)
+		// Packing rotation matrix R (extrinsic)
 		compv_float64_t *ptr;
 		CompVMatPtr& R = it_planes->R;
+		CompVMatPtr U, D;
 		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float64_t>(&R, 3, 3));
 		ptr = R->ptr<compv_float64_t>(0), ptr[0] = r11, ptr[1] = r21, ptr[2] = r31;
 		ptr = R->ptr<compv_float64_t>(1), ptr[0] = r12, ptr[1] = r22, ptr[2] = r32;
 		ptr = R->ptr<compv_float64_t>(2), ptr[0] = r13, ptr[1] = r23, ptr[2] = r33;
+		// [1] Appendix C Approximating a 3x3 matrix by a Rotation Matrix
+		COMPV_CHECK_CODE_RETURN(CompVMatrix::svd(R, &U, &D, &V, false));
+		COMPV_CHECK_CODE_RETURN(CompVMatrix::mulABt(U, V, &R));
 
-		// Calibration matrice t (extrinsic)
+		// Packing translation vector t (extrinsic)
 		CompVMatPtr& t = it_planes->t;
 		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float64_t>(&t, 1, 3));
 		ptr = t->ptr<compv_float64_t>(0), ptr[0] = t11, ptr[1] = t12, ptr[2] = t13;
-	}
+	} // for (it_planes...
 
 	/*
 	Final radial distorsions (Least Square minimization):
@@ -1114,7 +1086,7 @@ COMPV_ERROR_CODE CompVCalibCamera::buildPatternCorners(const CompVCalibContex& c
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-// Compute homography
+// [2] 3.2.1 Homography estimation with the Direct Linear Transformation(DLT)
 COMPV_ERROR_CODE CompVCalibCamera::homography(const CompVCalibCameraPlan& plan, CompVHomographyResult& result_homography, CompVMatPtrPtr homographyMat)
 {
 	const CompVPointFloat32Vector& intersections = plan.intersections;
@@ -1198,11 +1170,35 @@ COMPV_ERROR_CODE CompVCalibCamera::levmarq(const CompVCalibContex& context, Comp
 		parametersPtr[index + 5] = *it_plans->t->ptr<const compv_float64_t>(0, 2); // tz
 	}
 
-	// https://en.wikipedia.org/wiki/Levenberg%E2%80%93Marquardt_algorithm
+	/* https://en.wikipedia.org/wiki/Levenberg%E2%80%93Marquardt_algorithm */
+	// LM data
 	lm_status_struct status;
 	lm_control_struct control = lm_control_double;
 	control.verbosity = 0;
 	levmarq_data data(context.planes, cornersPtr, have_tangential_dist, have_skew);
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float64_t>(&data.K, 3, 3));
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float64_t>(&data.d, have_tangential_dist ? 4 : 2, 1));
+	COMPV_CHECK_CODE_ASSERT(CompVMat::newObjAligned<compv_float64_t>(&data.t, 1, 3));
+	*data.K->ptr<compv_float64_t>(0, 1) = 0.0;
+	*data.K->ptr<compv_float64_t>(1, 0) = 0.0;
+	*data.K->ptr<compv_float64_t>(2, 0) = 0.0;
+	*data.K->ptr<compv_float64_t>(2, 1) = 0.0;
+	*data.K->ptr<compv_float64_t>(2, 2) = 1.0;
+	data.K_fx = data.K->ptr<compv_float64_t>(0, 0); // fx
+	data.K_fy = data.K->ptr<compv_float64_t>(1, 1); // fy
+	data.K_cx = data.K->ptr<compv_float64_t>(0, 2); // cx
+	data.K_cy = data.K->ptr<compv_float64_t>(1, 2); // cy
+	data.K_skew = data.K->ptr<compv_float64_t>(0, 1); // skew
+	data.d_k1 = data.d->ptr<compv_float64_t>(0, 0); // k1
+	data.d_k2 = data.d->ptr<compv_float64_t>(1, 0); // k2
+	if (have_tangential_dist) {
+		data.d_p1 = data.d->ptr<compv_float64_t>(2, 0); // p1
+		data.d_p2 = data.d->ptr<compv_float64_t>(3, 0); // p2
+	}
+	data.t_x = data.t->ptr<compv_float64_t>(0, 0);
+	data.t_y = data.t_x + 1;
+	data.t_z = data.t_y + 1;
+	// LM process
 	lmmin(static_cast<int>(parametersCount), parametersPtr, static_cast<int>(xyCount), (const void*)&data, levmarq_eval,
 		&control, &status);
 
@@ -1210,27 +1206,25 @@ COMPV_ERROR_CODE CompVCalibCamera::levmarq(const CompVCalibContex& context, Comp
 		status.nfev, lm_infmsg[status.outcome]);
 
 	/* Copy results */
-	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float64_t>(K, 3, 3));
-	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float64_t>(d, have_tangential_dist ? 4 : 2, 1));
 	index = 0;
+
 	// Camera matrix
-	*(*K)->ptr<compv_float64_t>(0, 0) = parametersPtr[index++]; // fx
-	*(*K)->ptr<compv_float64_t>(1, 1) = parametersPtr[index++]; // fy
-	*(*K)->ptr<compv_float64_t>(0, 2) = parametersPtr[index++]; // cx
-	*(*K)->ptr<compv_float64_t>(1, 2) = parametersPtr[index++]; // cy
-	*(*K)->ptr<compv_float64_t>(0, 1) = have_skew ? parametersPtr[index++] : 0.0; // skew
-	*(*K)->ptr<compv_float64_t>(1, 0) = 0.0;
-	*(*K)->ptr<compv_float64_t>(2, 0) = 0.0;
-	*(*K)->ptr<compv_float64_t>(2, 1) = 0.0;
-	*(*K)->ptr<compv_float64_t>(2, 2) = 1.0;
+	*data.K_fx = parametersPtr[index++]; // fx
+	*data.K_fy = parametersPtr[index++]; // fy
+	*data.K_cx = parametersPtr[index++]; // cx
+	*data.K_cy = parametersPtr[index++]; // cy
+	*data.K_skew = have_skew ? parametersPtr[index++] : 0.0; // skew
+	*K = data.K;
 	
 	// Distorsions (radial and tangential)
-	*(*d)->ptr<compv_float64_t>(0, 0) = parametersPtr[index++]; // k1
-	*(*d)->ptr<compv_float64_t>(1, 0) = parametersPtr[index++]; // k2
+	*data.d_k1 = parametersPtr[index++]; // k1
+	*data.d_k2 = parametersPtr[index++]; // k2
 	if (have_tangential_dist) {
-		*(*d)->ptr<compv_float64_t>(2, 0) = parametersPtr[index++]; // p1
-		*(*d)->ptr<compv_float64_t>(3, 0) = parametersPtr[index++]; // p2
+		*data.d_p1 = parametersPtr[index++]; // p1
+		*data.d_p2 = parametersPtr[index++]; // p2
 	}
+	*d = data.d;
+
 	// Rotations and translations
 	for (CompVCalibCameraPlanVector::const_iterator i = context.planes.begin(); i < context.planes.end(); ++i, index += 6) {
 		// Rotation
@@ -1428,59 +1422,57 @@ static COMPV_ERROR_CODE projError(const CompVCalibCameraPlanVector& planes, cons
 
 static void levmarq_eval(const compv_float64_t *par, int m_dat, const void *data, compv_float64_t *fvec, int *userbreak)
 {
-	/* for readability, explicit type conversion */
-	const levmarq_data *Data = reinterpret_cast<const levmarq_data*>(data);
-
+	levmarq_data *Data = const_cast<levmarq_data*>(reinterpret_cast<const levmarq_data*>(data));
 	const compv_float64_t* cornersPtr = Data->cornersPtr;
 
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Recreating matrices");
-
-	size_t index;
-
-	//const size_t m =
-	//	5 // fx, fy, cx, cy, skew
-	//	+ 4 // k1, k2, p1, p2
-	//	+ ((3 + 3) * nplanes) // Rt
 	size_t nplanes = Data->planes.size();
-	CompVMatPtr K;
-	COMPV_CHECK_CODE_ASSERT(CompVMat::newObjAligned<compv_float64_t>(&K, 3, 3));
-	COMPV_CHECK_CODE_ASSERT(K->zero_all());
-	index = 0;
-	*K->ptr<compv_float64_t>(0, 0) = par[index++]; // fx
-	*K->ptr<compv_float64_t>(1, 1) = par[index++]; // fy
-	*K->ptr<compv_float64_t>(0, 2) = par[index++]; //cx
-	*K->ptr<compv_float64_t>(1, 2) = par[index++]; // cy
-	*K->ptr<compv_float64_t>(0, 1) = Data->have_skew ? par[index++] : 0; // skew
-	CompVMatPtr d;
-	COMPV_CHECK_CODE_ASSERT(CompVMat::newObjAligned<compv_float64_t>(&d, 4, 1));
-	//COMPV_CHECK_CODE_ASSERT(CompVMat::newObjAligned<compv_float64_t>(&pp, 2, 1));
-	*d->ptr<compv_float64_t>(0, 0) = par[index++]; // k1
-	*d->ptr<compv_float64_t>(1, 0) = par[index++]; // k2
-	*d->ptr<compv_float64_t>(2, 0) = Data->have_tangential_dist ? par[index++] : 0.0; // p1
-	*d->ptr<compv_float64_t>(3, 0) = Data->have_tangential_dist ? par[index++] : 0.0; // p2
+	size_t index = 0;
 
-	CompVMatPtr R, t, reprojected;
+	/*  Parameters */
+	//	5 // fx, fy, cx, cy, skew
+	//	+ 4 // k1, k2, [p1, p2]
+	//	+ ((3 + 3) * nplanes) // Rt
+	// Camera matrix
+	*Data->K_fx = par[index++]; // fx
+	*Data->K_fy = par[index++]; // fy
+	*Data->K_cx = par[index++]; // cx
+	*Data->K_cy = par[index++]; // cy
+	*Data->K_skew = Data->have_skew ? par[index++] : 0.0; // skew
+	// Distorsions
+	*Data->d_k1 = par[index++]; // k1
+	*Data->d_k2 = par[index++]; // k2
+	if (Data->have_tangential_dist) {
+		*Data->d_p1 = par[index++]; // p1
+		*Data->d_p2 = par[index++]; // p2
+	}
+
+	CompVMatPtr& K = Data->K;
+	CompVMatPtr& d = Data->d;
+	CompVMatPtr& t = Data->t;
+	CompVMatPtr R, reprojected;
+	size_t i, ncorners;
 	compv_float64x3_t r;
-	COMPV_CHECK_CODE_ASSERT(CompVMat::newObjAligned<compv_float64_t>(&t, 1, 3));
-	size_t nindex = 0, i;
+	const compv_float64_t *reprojectedX, *reprojectedY;
 	CompVCalibCameraPlanVector::const_iterator it_planes;
 	for (i = 0, it_planes = Data->planes.begin(); i < nplanes; ++i, ++it_planes) {
+		// Rotation vector
 		r[0] = par[index++]; // r0
 		r[1] = par[index++]; // r1
 		r[2] = par[index++]; // r2
-
-		*t->ptr<compv_float64_t>(0, 0) = par[index++]; // tx
-		*t->ptr<compv_float64_t>(0, 1) = par[index++]; // ty
-		*t->ptr<compv_float64_t>(0, 2) = par[index++]; // tz
-
+		// Translation
+		*Data->t_x = par[index++]; // tx
+		*Data->t_y = par[index++]; // ty
+		*Data->t_z = par[index++]; // tz
+		// Convert rotation vector to 3x3 matrix (Rodrigues)
 		COMPV_CHECK_CODE_ASSERT(CompVMathTrig::rodriguesVectorToMatrix(r, &R));
+		// Compute projection
 		COMPV_CHECK_CODE_ASSERT(proj(it_planes->pattern, K, d, R, t, &reprojected));
 		COMPV_ASSERT(it_planes->pattern->cols() == reprojected->cols());
-		const size_t ncorners = it_planes->pattern->cols();
-		const compv_float64_t* reprojectedX = reprojected->ptr<const compv_float64_t>(0);
-		const compv_float64_t* reprojectedY = reprojected->ptr<const compv_float64_t>(1);
+		// Compute the residual
+		ncorners = it_planes->pattern->cols();
+		reprojectedX = reprojected->ptr<const compv_float64_t>(0);
+		reprojectedY = reprojected->ptr<const compv_float64_t>(1);
 		for (size_t j = 0, z = (i * ncorners * 2); j < ncorners; ++j, z += 2) {
-			// compute the residual
 			fvec[z + 0] = (cornersPtr[z + 0] - reprojectedX[j]);
 			fvec[z + 1] = (cornersPtr[z + 1] - reprojectedY[j]);
 		}
