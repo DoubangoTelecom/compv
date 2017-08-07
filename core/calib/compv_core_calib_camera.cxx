@@ -713,8 +713,8 @@ COMPV_ERROR_CODE CompVCalibCamera::calibrate(CompVCalibContex& context)
 		const size_t numPoints = intersections.size();
 		CompVPointFloat32Vector::const_iterator it_intersection;
 		size_t i;
-		const compv_float64_t* patternX = it_planes->pattern->ptr<compv_float64_t>(0); //correctedPoints->ptr<compv_float64_t>(0);
-		const compv_float64_t* patternY = it_planes->pattern->ptr<compv_float64_t>(1); // correctedPoints->ptr<compv_float64_t>(1);
+		const compv_float64_t* patternX = it_planes->pattern->ptr<compv_float64_t>(0);
+		const compv_float64_t* patternY = it_planes->pattern->ptr<compv_float64_t>(1);
 
 		/* [2] Algorithm 4.7 Estimation of the radial lens distortion parameters. */
 		for (i = 0, it_intersection = intersections.begin(); i < numPoints; ++i, ++it_intersection) {
@@ -764,6 +764,9 @@ COMPV_ERROR_CODE CompVCalibCamera::calibrate(CompVCalibContex& context)
 		ptr = R->ptr<compv_float64_t>(1), ptr[0] = r12, ptr[1] = r22, ptr[2] = r32;
 		ptr = R->ptr<compv_float64_t>(2), ptr[0] = r13, ptr[1] = r23, ptr[2] = r33;
 		// [1] Appendix C Approximating a 3x3 matrix by a Rotation Matrix
+		// TODO(dmi): in the future if you've any base MSE after computing projError then,
+		// blame the next code. Just, comment the next lines to avoid overriding R and check
+		// if this solve the issue.
 		COMPV_CHECK_CODE_RETURN(CompVMatrix::svd(R, &U, &D, &V, false));
 		COMPV_CHECK_CODE_RETURN(CompVMatrix::mulABt(U, V, &R));
 
@@ -792,7 +795,6 @@ COMPV_ERROR_CODE CompVCalibCamera::calibrate(CompVCalibContex& context)
 		const compv_float64_t bb = *DtD->ptr<const compv_float64_t>(0, 1);
 		const compv_float64_t cc = *DtD->ptr<const compv_float64_t>(1, 0);
 		const compv_float64_t dd = *DtD->ptr<const compv_float64_t>(1, 1);
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "DtD = %f, %f\n %f, %f", aa, bb, cc, dd);
 		// (2x2) matrix inverse: https://www.mathsisfun.com/algebra/matrix-inverse.html
 		compv_float64_t det = (aa*dd) - (bb*cc);
 		det = 1.0 / det;
@@ -800,12 +802,9 @@ COMPV_ERROR_CODE CompVCalibCamera::calibrate(CompVCalibContex& context)
 		*DtD->ptr<compv_float64_t>(0, 1) = -(bb * det);
 		*DtD->ptr<compv_float64_t>(1, 0) = -(cc * det);
 		*DtD->ptr<compv_float64_t>(1, 1) = (aa * det);
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "DtDinv = %f, %f\n %f, %f",
-			*DtD->ptr<const compv_float64_t>(0, 0), *DtD->ptr<const compv_float64_t>(0, 1), *DtD->ptr<const compv_float64_t>(1, 0), *DtD->ptr<const compv_float64_t>(1, 1));
 		// (DtDinv.Dt).d
 		COMPV_CHECK_CODE_RETURN(CompVMatrix::mulABt(DtD, D, &kd));
 		COMPV_CHECK_CODE_RETURN(CompVMatrix::mulAB(kd, d, &context.d));
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "d = %f, %f", *context.d->ptr<const compv_float64_t>(0, 0), *context.d->ptr<const compv_float64_t>(1, 0));
 	}
 
 	/* Compute reproj error */
