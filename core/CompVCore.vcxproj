@@ -278,6 +278,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\core\calib\compv_core_calib_camera.h" />
+    <ClInclude Include="include\compv\core\calib\compv_core_calib_common.h" />
     <ClInclude Include="include\compv\core\calib\compv_core_calib_homography.h" />
     <ClInclude Include="include\compv\core\calib\compv_core_calib_utils.h" />
     <ClInclude Include="include\compv\core\compv_core.h" />

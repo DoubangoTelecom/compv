@@ -2,23 +2,25 @@
 
 using namespace compv;
 
-#define CAMERA_IDX				0
+#define CAMERA_IDX							0
 #if COMPV_ARCH_ARM
-#	define CAMERA_WIDTH			320
-#	define CAMERA_HEIGHT		240
+#	define CAMERA_WIDTH						320
+#	define CAMERA_HEIGHT					240
 #else
-#	define CAMERA_WIDTH			640
-#	define CAMERA_HEIGHT		480
+#	define CAMERA_WIDTH						640
+#	define CAMERA_HEIGHT					480
 #endif
-#define CAMERA_FPS				10
-#define CAMERA_SUBTYPE			COMPV_SUBTYPE_PIXELS_YUY2
-#define CAMERA_AUTOFOCUS		true
+#define CAMERA_FPS							10
+#define CAMERA_SUBTYPE						COMPV_SUBTYPE_PIXELS_YUY2
+#define CAMERA_AUTOFOCUS					true
 
-#define CALIB_MIN_PLANS			20
-#define CALIB_MAX_ERROR			0.76 // With my Logitech camera 0.41 is the best number I can get
-#define CALIB_COMPUTE_TAN_DIST	false // whether to compute tangential distorsion (p1, p2) in addition to radial distorsion (k1, k2)
-#define CALIB_COMPUTE_SKEW		true // whether to compute skew value (part of camera matrix K)
-#define CALIB_VERBOSITY			0
+#define CALIB_MIN_PLANS						20
+#define CALIB_MAX_ERROR						0.76 // With my Logitech camera 0.41 is the best number I can get
+#define CALIB_COMPUTE_TAN_DIST				false // whether to compute tangential distorsion (p1, p2) in addition to radial distorsion (k1, k2)
+#define CALIB_COMPUTE_SKEW					true // whether to compute skew value (part of camera matrix K)
+#define CALIB_VERBOSITY						0
+#define CALIB_CHEKERBORAD_ROWS_COUNT		10 // Number of rows
+#define CALIB_CHEKERBORAD_COLS_COUNT		8  // Number of cols
 
 #define WINDOW_WIDTH			640
 #define WINDOW_HEIGHT			480
@@ -110,7 +112,7 @@ public:
 	virtual COMPV_ERROR_CODE onNewFrame(const CompVMatPtr& image) override {
 		COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 		if (CompVDrawing::isLoopRunning()) {
-			CompVMatPtr imageGray, imageOrig;
+			CompVMatPtr imageGray, imageOrig, imageUndist;
 
 #if 0
 			COMPV_CHECK_CODE_RETURN(CompVImage::convertGrayscale(image, &imageGray));
@@ -118,13 +120,16 @@ public:
 #else
 			static size_t __index = 0;
 			size_t file_index = 47 + ((__index++) % 20)/*65*//*65*//*47*//*65*//*47*//*55*//*47*//*48*//*52*/;
+			if (m_bCalibrationDone) {
+				file_index = 47;
+			}
 			std::string file_path = std::string("C:/Projects/GitHub/data/calib/P10100")+ CompVBase::to_string(file_index) +std::string("s_640x480_gray.yuv");
 			//std::string file_path = "C:/Projects/GitHub/data/calib/P1010047s_90deg_640x480_gray.yuv";
 			COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 640, 480, 640, file_path.c_str(), &imageGray));
 			imageOrig = imageGray;
 			COMPV_DEBUG_INFO_EX(TAG_SAMPLE, "%s", file_path.c_str());
 			COMPV_DEBUG_INFO_CODE_FOR_TESTING("Remove the sleep function");
-			/*if (m_bCalibrationDone)*/ {
+			if (m_bCalibrationDone) {
 				CompVThread::sleep(1000);
 			}
 #endif
@@ -144,12 +149,16 @@ public:
 						m_CalibContext.clean(); // clean all plans and start over
 					}
 					else {
-						m_CalibContext.clean(); // FIXME(dmi): remove
-						//m_bCalibrationDone = true;
-						//COMPV_CHECK_CODE_RETURN(onImageSizeChanged(imageOrig->cols(), imageOrig->rows()));
+						m_bCalibrationDone = true;
+						COMPV_CHECK_CODE_RETURN(onImageSizeChanged(imageOrig->cols(), imageOrig->rows()));
 						COMPV_DEBUG_INFO_EX(TAG_SAMPLE, "Calibration is done!!");
 					}
 				}
+			}
+
+			/* undist */
+			if (m_bCalibrationDone) {
+				COMPV_CHECK_CODE_RETURN(CompVCalibUtils::undist2DImage(imageOrig, m_CalibContext.K, m_CalibContext.d, &imageUndist));
 			}
 
 			/* Begin drawing */
@@ -162,7 +171,7 @@ public:
 			if (m_bCalibrationDone) {
 				/* Undist */
 				COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceUndist->activate());
-				COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceUndist->drawImage(imageOrig));
+				COMPV_CHECK_CODE_BAIL(err = m_ptrSurfaceUndist->drawImage(imageUndist));
 			}
 			else {
 				/* Edges */
@@ -204,7 +213,7 @@ public:
 					x[0] = 0, x[1] = static_cast<compv_float64_t>(pattern_w), x[2] = static_cast<compv_float64_t>(pattern_w), x[3] = 0.0;
 					y[0] = 0, y[1] = 0, y[2] = static_cast<compv_float64_t>(pattern_h), y[3] = static_cast<compv_float64_t>(pattern_h);
 					// Perspecive transform using homography matrix
-					COMPV_CHECK_CODE_BAIL(err = CompVMathTransform<compv_float64_t>::perspective2D(rectPattern, m_CalibContext.plane_curr.homography, &rectHomograyApplied));
+					COMPV_CHECK_CODE_BAIL(err = CompVMathTransform::perspective2D(rectPattern, m_CalibContext.plane_curr.homography, &rectHomograyApplied));
 					// Draw the transformed rectangle
 					x = rectHomograyApplied->ptr<compv_float64_t>(0);
 					y = rectHomograyApplied->ptr<compv_float64_t>(1);
@@ -250,7 +259,7 @@ public:
 		COMPV_CHECK_EXP_RETURN(!listener || !ptrWindow, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 		CompVMyCameraListenerPtr listener_ = new CompVMyCameraListener(ptrWindow);
 		COMPV_CHECK_EXP_RETURN(!listener_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-		COMPV_CHECK_CODE_RETURN(CompVCalibCamera::newObj(&listener_->m_ptrCalib));
+		COMPV_CHECK_CODE_RETURN(CompVCalibCamera::newObj(&listener_->m_ptrCalib, CALIB_CHEKERBORAD_ROWS_COUNT, CALIB_CHEKERBORAD_COLS_COUNT));
 
 		// Calibration options
 		listener_->m_CalibContext.compute_skew = CALIB_COMPUTE_SKEW;

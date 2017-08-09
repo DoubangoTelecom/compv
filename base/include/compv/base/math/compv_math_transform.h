@@ -13,7 +13,6 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-template<class T>
 class COMPV_BASE_API CompVMathTransform
 {
 public:
