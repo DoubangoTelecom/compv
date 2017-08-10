@@ -19,17 +19,25 @@ using namespace compv;
 #define CALIB_COMPUTE_TAN_DIST				false // whether to compute tangential distorsion (p1, p2) in addition to radial distorsion (k1, k2)
 #define CALIB_COMPUTE_SKEW					true // whether to compute skew value (part of camera matrix K)
 #define CALIB_VERBOSITY						0
+#define CALIB_CHECK_PLANS					true // whether to check if the current and previous plan are almost the same. If they are almost the same, reject!
+#define CALIB_CHECK_PLANS_MIN_SAD			13.f
 #define CALIB_CHEKERBORAD_ROWS_COUNT		10 // Number of rows
 #define CALIB_CHEKERBORAD_COLS_COUNT		8  // Number of cols
+
+#if COMPV_OS_WINDOWS
+#	define COMPV_SAMPLE_IMAGE_FOLDER			"C:/Projects/GitHub/data/calib/"
+#elif COMPV_OS_OSX
+#	define COMPV_SAMPLE_IMAGE_FOLDER			"/Users/mamadou/Projects/GitHub/data/calib/"
+#else
+#	define COMPV_SAMPLE_IMAGE_FOLDER			""
+#endif
 
 #define WINDOW_WIDTH			640
 #define WINDOW_HEIGHT			480
 
 #define TAG_SAMPLE			"Camera calibration"
 
-static const compv_float32x4_t __color_black = { 0.f, 0.f, 0.f, 1.f };
 static const compv_float32x4_t __color_red = { 1.f, 0.f, 0.f, 1.f };
-static const compv_float32x4_t __color_green = { 0.f, 1.f, 0.f, 1.f };
 static const compv_float32x4_t __color_bleu = { 0.f, 0.f, 1.f, 1.f };
 static const compv_float32x4_t __color_yellow = { 1.f, 1.f, 0.f, 1.f };
 
@@ -114,7 +122,7 @@ public:
 		if (CompVDrawing::isLoopRunning()) {
 			CompVMatPtr imageGray, imageOrig, imageUndist;
 
-#if 0
+#if 1
 			COMPV_CHECK_CODE_RETURN(CompVImage::convertGrayscale(image, &imageGray));
 			imageOrig = image;
 #else
@@ -123,11 +131,11 @@ public:
 			if (m_bCalibrationDone) {
 				file_index = 47;
 			}
-			std::string file_path = std::string("C:/Projects/GitHub/data/calib/P10100")+ CompVBase::to_string(file_index) +std::string("s_640x480_gray.yuv");
-			//std::string file_path = "C:/Projects/GitHub/data/calib/P1010047s_90deg_640x480_gray.yuv";
-			COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 640, 480, 640, file_path.c_str(), &imageGray));
+			std::string file_name = std::string("P10100") + CompVBase::to_string(file_index) +std::string("s_640x480_gray.yuv");
+			//std::string file_path = "P1010047s_90deg_640x480_gray.yuv";
+			COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 640, 480, 640, COMPV_PATH_FROM_NAME((std::string(COMPV_SAMPLE_IMAGE_FOLDER) + file_name).c_str()), &imageGray));
 			imageOrig = imageGray;
-			COMPV_DEBUG_INFO_EX(TAG_SAMPLE, "%s", file_path.c_str());
+			COMPV_DEBUG_INFO_EX(TAG_SAMPLE, "%s", file_name.c_str());
 			COMPV_DEBUG_INFO_CODE_FOR_TESTING("Remove the sleep function");
 			if (m_bCalibrationDone) {
 				CompVThread::sleep(1000);
@@ -158,7 +166,7 @@ public:
 
 			/* undist */
 			if (m_bCalibrationDone) {
-				COMPV_CHECK_CODE_RETURN(CompVCalibUtils::undist2DImage(imageOrig, m_CalibContext.K, m_CalibContext.d, &imageUndist));
+				COMPV_CHECK_CODE_RETURN(CompVCalibUtils::undist2DImage(imageGray, m_CalibContext.K, m_CalibContext.d, &imageUndist));
 			}
 
 			/* Begin drawing */
@@ -265,6 +273,8 @@ public:
 		listener_->m_CalibContext.compute_skew = CALIB_COMPUTE_SKEW;
 		listener_->m_CalibContext.compute_tangential_dist = CALIB_COMPUTE_TAN_DIST;
 		listener_->m_CalibContext.verbosity = CALIB_VERBOSITY;
+		listener_->m_CalibContext.check_plans = CALIB_CHECK_PLANS;
+		listener_->m_CalibContext.check_plans_min_sad = CALIB_CHECK_PLANS_MIN_SAD;
 
 		// Drawing options
 		listener_->m_DrawingOptions.lineWidth = 1.f;
@@ -295,7 +305,7 @@ private:
 
 	COMPV_ERROR_CODE onWindowOrImageSizeChanged(const size_t window_Width, const size_t window_height, const size_t image_Width, const size_t image_height)
 	{
-		COMPV_DEBUG_INFO_EX(TAG_SAMPLE, __FUNCTION__);
+		COMPV_DEBUG_INFO_EX(TAG_SAMPLE, "%s", __FUNCTION__);
 		
 		CompVRectInt src, dst, view;
 

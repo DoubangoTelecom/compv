@@ -127,6 +127,12 @@
     <Filter Include="include\utf8">
       <UniqueIdentifier>{dd86e817-c516-4e65-a287-06bf81b976fa}</UniqueIdentifier>
     </Filter>
+    <Filter Include="source\math\lmfit-6.1">
+      <UniqueIdentifier>{35dc3b92-dc8c-440a-b8d4-442b04fd7ef0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\math\lmfit-6.1">
+      <UniqueIdentifier>{bebe5203-c52c-4983-9fb4-92db97f9cdd5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\compv\base\compv_base.h">
@@ -510,6 +516,24 @@
     <ClInclude Include="..\include\compv\base\utf8\utf8.h">
       <Filter>include\utf8</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\compv\base\math\lmfit-6.1\lmcurve.h">
+      <Filter>include\math\lmfit-6.1</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\math\lmfit-6.1\lmcurve_tyd.h">
+      <Filter>include\math\lmfit-6.1</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\math\lmfit-6.1\lmmin.h">
+      <Filter>include\math\lmfit-6.1</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\math\lmfit-6.1\lmstruct.h">
+      <Filter>include\math\lmfit-6.1</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\math\compv_math_lines.h">
+      <Filter>include\math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\math\compv_math_trig.h">
+      <Filter>include\math</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_base.cxx">
@@ -856,6 +880,21 @@
     </ClCompile>
     <ClCompile Include="..\intrin\arm\compv_mem_intrin_neon.cxx">
       <Filter>source\intrin\arm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\lmfit-6.1\lmcurve.cxx">
+      <Filter>source\math\lmfit-6.1</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\lmfit-6.1\lmcurve_tyd.cxx">
+      <Filter>source\math\lmfit-6.1</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\lmfit-6.1\lmmin.cxx">
+      <Filter>source\math\lmfit-6.1</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\compv_math_lines.cxx">
+      <Filter>source\math</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\compv_math_trig.cxx">
+      <Filter>source\math</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

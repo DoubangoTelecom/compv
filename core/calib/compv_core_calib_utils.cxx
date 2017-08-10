@@ -232,7 +232,6 @@ COMPV_ERROR_CODE CompVCalibUtils::undist2DImage(const CompVMatPtr& imageIn, cons
 	const size_t coords_num = std::max(img_width, img_height);
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float64_t>(&coords, coords_num, 3)); // transposed to call "mulABt" instead of "mulAB" -> (nx3) matrix
 	const size_t coords_stride = coords->stride();
-	const size_t coords_num_times_stride = (coords_num * coords_stride);
 	compv_float64_t* coordsX = coords->ptr<compv_float64_t>(0, 0);
 	compv_float64_t* coordsY = coords->ptr<compv_float64_t>(0, 1);
 	compv_float64_t* coordsZ = coords->ptr<compv_float64_t>(0, 2);
@@ -316,13 +315,13 @@ COMPV_ERROR_CODE CompVCalibUtils::undist2DImage(const CompVMatPtr& imageIn, cons
 	for (size_t j = 0; j < img_height; ++j) {
 		y = coordsY[j];
 		const size_t fixme_y = COMPV_MATH_ROUNDFU_2_NEAREST_INT(y, size_t);
-		if (fixme_y >= 0 && fixme_y < img_height) {
+		if (/*fixme_y >= 0 &&*/ fixme_y < img_height) {
 			imageInPtr = imageIn->ptr<const uint8_t>(fixme_y);
 			for (size_t i = 0; i < img_width; ++i) {
 				x = coordsX[i];
 				const size_t fixme_x = COMPV_MATH_ROUNDFU_2_NEAREST_INT(x, size_t);
 				// FIXME(dmi): must interpolate
-				imageOutPtr[i] = (fixme_x >= 0 && fixme_x < img_width) ? imageInPtr[fixme_x] : 0;
+				imageOutPtr[i] = (/*fixme_x >= 0 &&*/ fixme_x < img_width) ? imageInPtr[fixme_x] : 0;
 			}
 		}
 		else {

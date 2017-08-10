@@ -201,9 +201,7 @@ static COMPV_ERROR_CODE ransac(CompVMatPtrPtr inliers, T& variance, const CompVM
 	const T skf_ = static_cast<T>(1) / static_cast<T>(k_);
 	static const T eps_ = std::numeric_limits<T>::epsilon();
 	static const T p_ = static_cast<T>(0.995); // probability for inlier (TODO(dmi): try with 0.95f which is more realistic)
-	static const T log_1_minus_p_ = std::log(static_cast<T>(1.) - p_);
 	static const size_t maxTries = 2000;
-	static const size_t zeroTries = 20;
 	const size_t d_ = static_cast<size_t>(p_ * k_); // minimum number of inliers to stop the tries
 	static const size_t subset_ = 4; // subset size: 2 for line, 3 for plane, 4 for homography, 8 for essential / essential matrix
 	static const T subsetf_ = static_cast<T>(subset_);

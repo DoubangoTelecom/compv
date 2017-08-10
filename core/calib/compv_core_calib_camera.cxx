@@ -87,8 +87,8 @@ struct levmarq_data {
 
 public:
 	levmarq_data(const CompVCalibCameraPlanVector& planes_, const compv_float64_t *cornersPtr_, const bool have_tangential_dist_, const bool have_skew_)
-		: planes(planes_)
-		, cornersPtr(cornersPtr_)
+		: cornersPtr(cornersPtr_)
+		, planes(planes_)
 		, have_tangential_dist(have_tangential_dist_)
 		, have_skew(have_skew_)
 	{ }
@@ -313,8 +313,8 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 	/* The pattern could be rectanglar (hz != vt) and it's time to decide what is really hz and vt */
 	const size_t vt_size = lines_vt_grouped.size();
 	const size_t hz_size = lines_hz_grouped.size();
-	const bool rotated = ((m_nPatternCornersNumCol > m_nPatternCornersNumRow) && (lines_vt_grouped.size() < lines_hz_grouped.size()))
-		|| ((m_nPatternCornersNumCol < m_nPatternCornersNumRow) && (lines_vt_grouped.size() > lines_hz_grouped.size()));
+	const bool rotated = ((m_nPatternCornersNumCol > m_nPatternCornersNumRow) && (vt_size < hz_size))
+		|| ((m_nPatternCornersNumCol < m_nPatternCornersNumRow) && (vt_size > hz_size));
 	if (rotated) {
 		// TODO(dmi): Provides bad result, have to check (maybe better to use square checkerboard)
 		// You can check by using "P1010050s_640x480_gray_rot.yuv" file.
@@ -1132,6 +1132,7 @@ COMPV_ERROR_CODE CompVCalibCamera::levmarq(const CompVCalibContex& context, Comp
 	lm_status_struct status;
 	lm_control_struct control = lm_control_double;
 	control.verbosity = 0;
+	control.patience = 2000;
 	levmarq_data data(context.planes, cornersPtr, have_tangential_dist, have_skew);
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float64_t>(&data.K, 3, 3));
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float64_t>(&data.d, have_tangential_dist ? 4 : 2, 1));

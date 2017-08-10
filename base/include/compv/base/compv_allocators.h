@@ -13,7 +13,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-template <typename T, typename A=std::allocator<T>>
+template <typename T, typename A=std::allocator<T> >
 class CompVAllocatorNoDefaultConstruct : public A {
     typedef std::allocator_traits<A> a_t;
 public:

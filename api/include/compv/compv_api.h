@@ -17,6 +17,7 @@
 #include <compv/base/compv_debug.h>
 #include <compv/base/compv_features.h>
 #include <compv/base/compv_fileutils.h>
+#include <compv/base/compv_lock.h>
 #include <compv/base/compv_mat.h>
 #include <compv/base/compv_matchers.h>
 #include <compv/base/compv_md5.h>
