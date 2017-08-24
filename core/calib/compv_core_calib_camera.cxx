@@ -19,7 +19,7 @@
 #include <limits> /* std::numeric_limits::smallest */
 
 #define PATTERN_CORNERS_NUM					(PATTERN_ROW_CORNERS_NUM * PATTERN_COL_CORNERS_NUM) // Total number of corners
-#define PATTERN_GROUP_MAXLINES				10 // Maximum number of lines per group (errors)
+#define PATTERN_GROUP_MAXLINES				60 // Maximum number of lines per group (errors)
 #define PATTERN_BLOCK_SIZE_PIXEL			40
 
 #define CALIBRATION_MIN_PLANS				3
@@ -27,10 +27,9 @@
 #define HOUGH_ID							COMPV_HOUGHSHT_ID
 #define HOUGH_RHO							0.5f // "rho-delta" (half-pixel)
 #define HOUGH_THETA							0.5f // "theta-delta" (half-radian)
-#define HOUGH_SHT_THRESHOLD_FACT			0.3
-#define HOUGH_SHT_THRESHOLD_MAX				120
-#define HOUGH_SHT_THRESHOLD_MIN				30
-#define HOUGH_SHT_THRESHOLD					10
+#define HOUGH_SHT_THRESHOLD_FACT			0.1
+#define HOUGH_SHT_THRESHOLD_MIN				5
+#define HOUGH_SHT_THRESHOLD					30
 #define HOUGH_KHT_THRESHOLD_FACT			1.0 // GS
 #define HOUGH_KHT_THRESHOLD					1 // filter later when GS is known	
 #define HOUGH_KHT_CLUSTER_MIN_DEVIATION		2.0f
@@ -52,8 +51,8 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-#define kSmallRhoFactVt				0.035f /* small = (rho * fact) */
-#define kSmallRhoFactHz				0.035f /* small = (rho * fact) */
+#define kSmallRhoFactVt				0.035f /* small = (rho * fact) - this is for 8 cols */
+#define kSmallRhoFactHz				0.035f /* small = (rho * fact) - this is for #10 rows */
 #define kCheckerboardBoxDistFact	0.357f /* distance * fact */
 
 struct CompVCabLineGroup {
@@ -153,7 +152,8 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
-	/* Remove weak lines */
+	/* Remove weak lines (round #1) */
+	const size_t strongestStrength = context.lines_raw.lines_hough.begin()->strength;
 	if (context.lines_raw.lines_hough.size() > m_nPatternLinesTotal) {
 		if (m_ptrHough->id() == COMPV_HOUGHKHT_ID) {
 			// Remove weak lines using global scale (GS)
@@ -167,7 +167,7 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 		}
 		else {
 			// Remove weak lines using global max_strength
-			const size_t min_strength = static_cast<size_t>(context.lines_raw.lines_hough.begin()->strength * HOUGH_SHT_THRESHOLD_FACT);
+			const size_t min_strength = static_cast<size_t>((strongestStrength << 1) / std::max(m_nPatternLinesHz, m_nPatternLinesVt));
 			auto fncShortLines = std::remove_if(context.lines_raw.lines_hough.begin(), context.lines_raw.lines_hough.end(), [&](const CompVHoughLine& line) {
 				return line.strength < min_strength;
 			});
@@ -187,20 +187,17 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 	/* Convert from polar to cartesian coordinates */
 	COMPV_CHECK_CODE_RETURN(m_ptrHough->toCartesian(image_width, image_height, context.lines_raw.lines_hough, context.lines_raw.lines_cartesian));
 
-	const size_t nPatternLinesHzVtMax = std::max(m_nPatternLinesHz, m_nPatternLinesVt);
-	const size_t nPatternLinesHzVtMin = std::min(m_nPatternLinesHz, m_nPatternLinesVt);
-
 	/* Lines subdivision */
 	CompVCabLines lines_hz, lines_vt;
 	COMPV_CHECK_CODE_RETURN(subdivision(image_width, image_height, context.lines_raw, lines_hz, lines_vt));
-	if (lines_hz.lines_cartesian.size() < nPatternLinesHzVtMin) {
+	if (lines_hz.lines_cartesian.size() < m_nPatternLinesHz) {
 		if (context.verbosity > 0) {
 			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough [hz] lines after subdivision: %zu", lines_hz.lines_cartesian.size());
 		}
 		context.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
 		return COMPV_ERROR_CODE_S_OK;
 	}
-	if (lines_vt.lines_cartesian.size() < nPatternLinesHzVtMin) {
+	if (lines_vt.lines_cartesian.size() < m_nPatternLinesVt) {
 		if (context.verbosity > 0) {
 			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough [vt] lines after subdivision: %zu", lines_vt.lines_cartesian.size());
 		}
@@ -218,9 +215,9 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 	// Hz-grouping
 	const size_t max_strength = context.lines_raw.lines_hough.begin()->strength; // lines_hough is sorted (by hought->process)
 	CompVCabLineFloat32Vector lines_cab_hz_grouped, lines_cab_vt_grouped;
-	if (lines_hz.lines_cartesian.size() > nPatternLinesHzVtMin) {
-		COMPV_CHECK_CODE_RETURN(grouping(image_width, image_height, lines_hz, false, max_strength, lines_cab_hz_grouped));
-		if (lines_cab_hz_grouped.size() < nPatternLinesHzVtMin) {
+	if (lines_hz.lines_cartesian.size() > m_nPatternLinesHz) {
+		COMPV_CHECK_CODE_RETURN(grouping(image_width, image_height, lines_hz, false, max_strength, std::max(m_nPatternLinesVt, m_nPatternLinesHz), lines_cab_hz_grouped));
+		if (lines_cab_hz_grouped.size() < m_nPatternLinesHz) {
 			if (context.verbosity > 0) {
 				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "After [hz] grouping we got less lines than what is requires, not a good news at all");
 			}
@@ -228,16 +225,16 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 			return COMPV_ERROR_CODE_S_OK;
 		}
 	}
-	if (lines_cab_hz_grouped.size() != m_nPatternLinesHz && lines_cab_hz_grouped.size() != m_nPatternLinesVt) {
+	if (lines_cab_hz_grouped.size() != m_nPatternLinesHz) {
 		if (context.verbosity > 0) {
-			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "After [hz] grouping we don't have exactly %zu/%zu lines but more (%zu). Maybe our grouping function missed some orphans", m_nPatternLinesHz, m_nPatternLinesVt, lines_cab_hz_grouped.size());
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "After [hz] grouping we don't have exactly %zu lines but (%zu). Maybe our grouping function missed some orphans", m_nPatternLinesHz, lines_cab_hz_grouped.size());
 		}
 	}
 	
 	// Vt-grouping
-	if (lines_vt.lines_cartesian.size() > nPatternLinesHzVtMin) {
-		COMPV_CHECK_CODE_RETURN(grouping(image_width, image_height, lines_vt, true, max_strength, lines_cab_vt_grouped));
-		if (lines_cab_vt_grouped.size() < nPatternLinesHzVtMin) {
+	if (lines_vt.lines_cartesian.size() > m_nPatternLinesVt) {
+		COMPV_CHECK_CODE_RETURN(grouping(image_width, image_height, lines_vt, true, max_strength, std::max(m_nPatternLinesVt, m_nPatternLinesHz), lines_cab_vt_grouped));
+		if (lines_cab_vt_grouped.size() < m_nPatternLinesVt) {
 			if (context.verbosity > 0) {
 				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "After [vt] grouping we got less lines than what is requires. Not a good news at all");
 			}
@@ -245,103 +242,33 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 			return COMPV_ERROR_CODE_S_OK;
 		}
 	}
-	if (lines_cab_vt_grouped.size() != m_nPatternLinesHz && lines_cab_vt_grouped.size() != m_nPatternLinesVt) {
+	if (lines_cab_vt_grouped.size() != m_nPatternLinesVt) {
 		if (context.verbosity > 0) {
-			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "After [vt] grouping we don't have exactly %zu lines but more (%zu). Maybe our grouping function missed some orphans", m_nPatternLinesVt, lines_cab_vt_grouped.size());
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "After [vt] grouping we don't have exactly %zu lines but (%zu). Maybe our grouping function missed some orphans", m_nPatternLinesVt, lines_cab_vt_grouped.size());
 		}
-	}
-
-	if ((lines_cab_vt_grouped.size() + lines_cab_hz_grouped.size()) < m_nPatternLinesTotal) {
-		if (context.verbosity > 0) {
-			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough [vt+hz] lines after grouping: %zu+%zu", lines_cab_vt_grouped.size(), lines_cab_hz_grouped.size());
-		}
-		context.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
-		return COMPV_ERROR_CODE_S_OK;
 	}
 
 	/* Pack all lines, sort and keep the best */
-	if (lines_cab_hz_grouped.size() > nPatternLinesHzVtMax) {
+	if (lines_cab_hz_grouped.size() > m_nPatternLinesHz) {
 		std::sort(lines_cab_hz_grouped.begin(), lines_cab_hz_grouped.end(), [](const CompVCabLineFloat32 &line1, const CompVCabLineFloat32 &line2) {
 			return (line1.strength > line2.strength);
 		});
-		lines_cab_hz_grouped.resize(nPatternLinesHzVtMax);
+		lines_cab_hz_grouped.resize(m_nPatternLinesHz);
 	}
-	if (lines_cab_vt_grouped.size() > nPatternLinesHzVtMax) {
+	if (lines_cab_vt_grouped.size() > m_nPatternLinesVt) {
 		std::sort(lines_cab_vt_grouped.begin(), lines_cab_vt_grouped.end(), [](const CompVCabLineFloat32 &line1, const CompVCabLineFloat32 &line2) {
 			return (line1.strength > line2.strength);
 		});
-		lines_cab_vt_grouped.resize(nPatternLinesHzVtMax);
+		lines_cab_vt_grouped.resize(m_nPatternLinesVt);
 	}
-	if ((lines_cab_vt_grouped.size() + lines_cab_hz_grouped.size()) < m_nPatternLinesTotal) {
-		if (context.verbosity > 0) {
-			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough [vt+hz] lines after grouping: %zu+%zu", lines_cab_vt_grouped.size(), lines_cab_hz_grouped.size());
-		}
-		context.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
-		return COMPV_ERROR_CODE_S_OK;
-	}
+	
 	CompVLineFloat32Vector lines_hz_grouped, lines_vt_grouped;
-	lines_cab_hz_grouped.insert(lines_cab_hz_grouped.end(), lines_cab_vt_grouped.begin(), lines_cab_vt_grouped.end()); // Pack [hz] and [vt] lines together
-	std::sort(lines_cab_hz_grouped.begin(), lines_cab_hz_grouped.end(), [](const CompVCabLineFloat32 &line1, const CompVCabLineFloat32 &line2) {
-		return (line1.strength > line2.strength);
+	std::transform(lines_cab_hz_grouped.begin(), lines_cab_hz_grouped.end(), std::back_inserter(lines_hz_grouped), [](const CompVCabLineFloat32& line) {
+		return line.line;
 	});
-	lines_cab_hz_grouped.resize(m_nPatternLinesTotal); // keep best only
-	lines_hz_grouped.reserve(nPatternLinesHzVtMax);
-	lines_vt_grouped.reserve(nPatternLinesHzVtMax);
-	for (CompVCabLineFloat32Vector::const_iterator i = lines_cab_hz_grouped.begin(); i < lines_cab_hz_grouped.end(); ++i) {
-		if (i->vt) {
-			lines_vt_grouped.push_back(i->line);
-		}
-		else {
-			lines_hz_grouped.push_back(i->line);
-		}
-	}
-	if (lines_hz_grouped.size() < nPatternLinesHzVtMin) {
-		if (context.verbosity > 0) {
-			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough [hz] lines after packing: %zu", lines_hz_grouped.size());
-		}
-		context.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
-		return COMPV_ERROR_CODE_S_OK;
-	}
-	if (lines_vt_grouped.size() < nPatternLinesHzVtMin) {
-		if (context.verbosity > 0) {
-			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No enough [vt] lines after packing: %zu", lines_vt_grouped.size());
-		}
-		context.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
-		return COMPV_ERROR_CODE_S_OK;
-	}
-
-	/* The pattern could be rectanglar (hz != vt) and it's time to decide what is really hz and vt */
-	const size_t vt_size = lines_vt_grouped.size();
-	const size_t hz_size = lines_hz_grouped.size();
-	const bool rotated = ((m_nPatternCornersNumCol > m_nPatternCornersNumRow) && (vt_size < hz_size))
-		|| ((m_nPatternCornersNumCol < m_nPatternCornersNumRow) && (vt_size > hz_size));
-	if (rotated) {
-		// TODO(dmi): Provides bad result, have to check (maybe better to use square checkerboard)
-		// You can check by using "P1010050s_640x480_gray_rot.yuv" file.
-		if (context.verbosity > 0) {
-			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Checkerboard probably rotated: close to 90deg position");
-		}
-		context.code = COMPV_CALIB_CAMERA_RESULT_PATTERN_ROTATED;
-		return COMPV_ERROR_CODE_S_OK;
-	}
-	const size_t nPatternLinesHzExpected = rotated ? m_nPatternLinesVt : m_nPatternLinesHz;
-	const size_t nPatternLinesVtExpected = rotated ? m_nPatternLinesHz : m_nPatternLinesVt;
-
-	/* Make sure we have the right number of lines in each group or keep the bests */
-	if (lines_hz_grouped.size() != nPatternLinesHzExpected) {
-		if (context.verbosity > 0) {
-			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No expected number of [hz] lines (%zu != %zu)", lines_hz_grouped.size(), nPatternLinesHzExpected);
-		}
-		context.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
-		return COMPV_ERROR_CODE_S_OK;
-	}
-	if (lines_vt_grouped.size() != nPatternLinesVtExpected) {
-		if (context.verbosity > 0) {
-			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No expected number of [vt] lines (%zu != %zu)", lines_vt_grouped.size(), nPatternLinesVtExpected);
-		}
-		context.code = COMPV_CALIB_CAMERA_RESULT_NO_ENOUGH_LINES;
-		return COMPV_ERROR_CODE_S_OK;
-	}
+	std::transform(lines_cab_vt_grouped.begin(), lines_cab_vt_grouped.end(), std::back_inserter(lines_vt_grouped), [](const CompVCabLineFloat32& line) {
+		return line.line;
+	});
 
 	/* Sorting the lines */
 	// Sort top-bottom (hz lines)
@@ -400,9 +327,9 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 		// !!The boxes in the checkerboard MUST BE SQUARE!!
 		if (i != lines_hz_grouped.begin()) { // not first line
 			compv_float32_t dist, dist_err, dist_approx_x, dist_err_max_x, dist_approx_y, dist_err_max_y; // not same distortion across x and y -> use different distance estimation
-			CompVPointFloat32Vector::const_iterator k = plan_curr.intersections.end() - (nPatternLinesVtExpected << 1); // #2 last rows
-			CompVPointFloat32Vector::const_iterator m = (k + nPatternLinesVtExpected); // move to next line
-			for (size_t index = 0; index < nPatternLinesVtExpected; ++k, ++m, ++index) {
+			CompVPointFloat32Vector::const_iterator k = plan_curr.intersections.end() - (m_nPatternLinesVt << 1); // #2 last rows
+			CompVPointFloat32Vector::const_iterator m = (k + m_nPatternLinesVt); // move to next line
+			for (size_t index = 0; index < m_nPatternLinesVt; ++k, ++m, ++index) {
 				/* x-axis */
 				if (index == 1) {
 					// compute default approx distance (x-axis)
@@ -479,6 +406,7 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 	}
 
 	/* Transpose the intersections */
+#if 0
 	if (rotated) {
 		COMPV_ASSERT(m_nPatternCornersTotal == plan_curr.intersections.size());
 		CompVPointFloat32Vector intersections(m_nPatternCornersTotal);
@@ -491,6 +419,7 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 		}
 		plan_curr.intersections.assign(intersections.begin(), intersections.end());
 	}
+#endif
 
 	/* Check if it's the same plane or not */
 	if (context.check_plans && !context.planes.empty()) {
@@ -663,7 +592,7 @@ COMPV_ERROR_CODE CompVCalibCamera::calibrate(CompVCalibContex& context)
 		r11 = ((k11 * h00) + (k21 * h10) + (k31 * h20));
 		r12 = ((k22 * h10) + (k32 * h20));
 		r13 = (k33 * h20);
-		k = 1.0 / std::sqrt((r11 * r11) + (r12 * r12) + (r13 * r13)); // use same norm for r1, r2 and t to have same scaling
+		k = 1.0 / std::sqrt((r11 * r11) + (r12 * r12) + (r13 * r13));
 		r11 *= k;
 		r12 *= k;
 		r13 *= k;
@@ -841,7 +770,7 @@ COMPV_ERROR_CODE CompVCalibCamera::subdivision(const size_t image_width, const s
 	compv_float32_t angle;
 	for (it_hough = lines.lines_hough.begin(), it_cartesian = lines.lines_cartesian.begin(); it_cartesian < lines.lines_cartesian.end(); ++it_cartesian, ++it_hough) {
 		angle = std::atan2((it_cartesian->b.y - it_cartesian->a.y), (it_cartesian->b.x - it_cartesian->a.x)); // inclinaison angle, within [-pi/2, pi/2]
-		if (std::abs(std::sin(angle)) > 0.5f) { // sin(angle) within [-1, 1]
+		if (std::abs(std::sin(angle)) > 0.7071067691f) { // sin(angle) within [-1, 1] > sin(45)
 			lines_vt.lines_hough.push_back(*it_hough);
 			lines_vt.lines_cartesian.push_back(*it_cartesian);
 		}
@@ -857,7 +786,7 @@ COMPV_ERROR_CODE CompVCalibCamera::subdivision(const size_t image_width, const s
 // Grouping using cartesian distances
 // "lines_hough_parallel" must contains lines almost parallel so that the distances are meaningful
 // This function is thread-safe
-COMPV_ERROR_CODE CompVCalibCamera::grouping(const size_t image_width, const size_t image_height, const CompVCabLines& lines_parallel, const bool vt, const size_t max_strength, CompVCabLineFloat32Vector& lines_parallel_grouped)
+COMPV_ERROR_CODE CompVCalibCamera::grouping(const size_t image_width, const size_t image_height, const CompVCabLines& lines_parallel, const bool vt, const size_t max_strength, const size_t max_lines, CompVCabLineFloat32Vector& lines_parallel_grouped)
 {
 	lines_parallel_grouped.clear();
 
@@ -869,8 +798,7 @@ COMPV_ERROR_CODE CompVCalibCamera::grouping(const size_t image_width, const size
 	const compv_float32_t image_widthF = static_cast<compv_float32_t>(image_width);
 	const compv_float32_t image_heightF = static_cast<compv_float32_t>(image_height);
 
-	const compv_float32_t rsmall = (vt ? kSmallRhoFactVt : kSmallRhoFactHz) * static_cast<compv_float32_t>(max_strength);
-	const compv_float32_t rmedium = rsmall * 4.f;
+	const compv_float32_t rsmall = (static_cast<compv_float32_t>(max_strength >> 1) / static_cast<compv_float32_t>(max_lines)); // 0.5f because black squares are alterning
 	
 	compv_float32_t distance, c, d, distance_diff;
 
@@ -884,10 +812,12 @@ COMPV_ERROR_CODE CompVCalibCamera::grouping(const size_t image_width, const size
 		c = (i->b.y - i->a.y);
 		d = (i->b.x - i->a.x);
 		distance = std::abs(((i->b.x * i->a.y) - (i->b.y * i->a.x)) / std::sqrt((c * c) + (d * d)));
+		const compv_float32_t angle1 = std::atan2((i->b.y - i->a.y), (i->b.x - i->a.x)); // inclinaison angle, within [-pi/2, pi/2]
 
 		// Get the group associated to the curent line
 		CompVCabLineGroup* group = nullptr;
 		for (CompVCabLineGroupVector::iterator g = groups.begin(); g < groups.end(); ++g) {
+#if 0
 			distance_diff = std::abs(g->pivot_distance - distance);
 			if (distance_diff < rsmall) {
 				group = &(*g);
@@ -904,6 +834,44 @@ COMPV_ERROR_CODE CompVCalibCamera::grouping(const size_t image_width, const size
 					break;
 				}
 			}
+#else
+			compv_float32_t i_x, i_y;
+			bool same_group = false;
+			const bool intersect = segment_get_intersection(*g->pivot_cartesian, *i, &i_x, &i_y);
+			if (intersect) {
+				if ((i_x >= 0.f && i_y >= 0.f && i_x < image_widthF && i_y < image_heightF)) {
+					const compv_float32_t angle2 = std::atan2((g->pivot_cartesian->b.y - g->pivot_cartesian->a.y), (g->pivot_cartesian->b.x - g->pivot_cartesian->a.x)); // inclinaison angle, within [-pi/2, pi/2]
+					const compv_float32_t angle_intersection = kfMathTrigPi - std::abs(angle2 - angle1); // within [0, pi]
+
+					//same_group = std::abs(((g->pivot_hough->theta - it_hough->theta))) < COMPV_MATH_DEGREE_TO_RADIAN_FLOAT(45);
+					same_group = true||(std::sin(angle_intersection) < std::sin(COMPV_MATH_DEGREE_TO_RADIAN_FLOAT(65))); 
+
+					/*if (!vt)*/ {
+						distance_diff = std::abs(g->pivot_distance - distance);
+						//same_group |= (distance_diff < (rsmall) * 3);
+					}
+				}
+				else if (vt) {
+					distance_diff = std::abs(g->pivot_distance - distance);
+					//same_group |= (distance_diff < (rsmall)*3);
+				}
+			}
+			else {
+				// lines are parallel
+				const compv_float32_t cc = (i->a.x - g->pivot_cartesian->a.x);
+				const compv_float32_t dd = (i->a.y - g->pivot_cartesian->a.y);
+				const compv_float32_t di = std::sqrt((cc*cc) + (dd*dd));
+				same_group = (di < rsmall*1);
+			}
+			if (vt) { // Because of the perspective
+				distance_diff = std::abs(g->pivot_distance - distance);
+				same_group |= (distance_diff < (rsmall) * 1.f);
+			}
+			if (same_group) {
+				group = &(*g);
+				break;
+			}
+#endif
 		}
 		if (!group) {
 			CompVCabLineGroup g;

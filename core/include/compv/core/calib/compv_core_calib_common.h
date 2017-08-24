@@ -71,9 +71,9 @@ typedef std::vector<CompVCalibCameraPlan, CompVAllocatorNoDefaultConstruct<CompV
 struct CompVCalibContex {
 	int verbosity = 0;
 	bool levenberg_marquardt = true; // whether to perform non-linear levenberg marquardt optimisation after getting initial calib results
-	bool check_plans = false; // whether to check if the current and previous plan are almost the same. If they are almost the same, reject!
+	bool check_plans = false; // whether to check if the current and previous plans are almost the same. If they are almost the same, reject!
 	bool compute_tangential_dist = false; // whether to compute tangential distorsions (p1, p2) in addition to radial distorsions (k1, k2)
-	bool compute_skew = true; // whether to compute skew value (part of camera matrix K) or set value to 0. 99.99% cameras should have skew equal 0 and this speedup levmarq process (less params)
+	bool compute_skew = false; // whether to compute skew value (part of camera matrix K) or set value to 0. 99.99% cameras should have skew equal 0 and this speedup levmarq process (less params)
 	compv_float32_t check_plans_min_sad = 13.f;
 	COMPV_CALIB_CAMERA_RESULT_CODE code = COMPV_CALIB_CAMERA_RESULT_NONE;
 	CompVCabLines lines_raw;

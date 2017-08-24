@@ -15,17 +15,17 @@ using namespace compv;
 #define CAMERA_AUTOFOCUS					true
 
 #define CALIB_MIN_PLANS						20
-#define CALIB_MAX_ERROR						0.76 // With my Logitech camera 0.41 is the best number I can get
-#define CALIB_COMPUTE_TAN_DIST				false // whether to compute tangential distorsion (p1, p2) in addition to radial distorsion (k1, k2)
+#define CALIB_MAX_ERROR						0.65 // With my Logitech camera 0.41 is the best number I can get
+#define CALIB_COMPUTE_TAN_DIST				true // whether to compute tangential distorsion (p1, p2) in addition to radial distorsion (k1, k2)
 #define CALIB_COMPUTE_SKEW					true // whether to compute skew value (part of camera matrix K)
-#define CALIB_VERBOSITY						0
+#define CALIB_VERBOSITY						1
 #define CALIB_CHECK_PLANS					true // whether to check if the current and previous plan are almost the same. If they are almost the same, reject!
 #define CALIB_CHECK_PLANS_MIN_SAD			13.f
-#define CALIB_CHEKERBORAD_ROWS_COUNT		10 // Number of rows
-#define CALIB_CHEKERBORAD_COLS_COUNT		8  // Number of cols
+#define CALIB_CHEKERBORAD_ROWS_COUNT		17//17//10 // Number of rows
+#define CALIB_CHEKERBORAD_COLS_COUNT		12//12//8  // Number of cols
 
 #if COMPV_OS_WINDOWS
-#	define COMPV_SAMPLE_IMAGE_FOLDER			"C:/Projects/GitHub/data/calib/"
+#	define COMPV_SAMPLE_IMAGE_FOLDER			"C:/Projects/GitHub/data/calib2/"
 #elif COMPV_OS_OSX
 #	define COMPV_SAMPLE_IMAGE_FOLDER			"/Users/mamadou/Projects/GitHub/data/calib/"
 #else
@@ -127,19 +127,23 @@ public:
 			imageOrig = image;
 #else
 			static size_t __index = 0;
-			size_t file_index = 47 + ((__index++) % 20)/*65*//*65*//*47*//*65*//*47*//*55*//*47*//*48*//*52*/;
+			size_t file_index = ((__index++ % 20) + 1)/*7*//*2*//*65*//*65*//*47*//*65*//*47*//*55*//*47*//*48*//*52*/;
 			if (m_bCalibrationDone) {
-				file_index = 47;
+				//file_index = 5;
 			}
-			std::string file_name = std::string("P10100") + CompVBase::to_string(file_index) +std::string("s_640x480_gray.yuv");
-			//std::string file_path = "P1010047s_90deg_640x480_gray.yuv";
-			COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 640, 480, 640, COMPV_PATH_FROM_NAME((std::string(COMPV_SAMPLE_IMAGE_FOLDER) + file_name).c_str()), &imageGray));
+			const std::string file_name = std::string("calib") + CompVBase::to_string(file_index) + std::string("_640x480_gray.yuv");
+			const std::string file_path = COMPV_PATH_FROM_NAME((std::string(COMPV_SAMPLE_IMAGE_FOLDER) + file_name).c_str());
+			COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 640, 480, 640, file_path.c_str(), &imageGray));
+
+			//const std::string file_path = "C:/Projects/GitHub/data/adas/birdview_chess_1920x1090_gray.yuv";
+			//COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 1920, 1090, 1920, file_path.c_str(), &imageGray));
+			
 			imageOrig = imageGray;
-			COMPV_DEBUG_INFO_EX(TAG_SAMPLE, "%s", file_name.c_str());
+			//COMPV_DEBUG_INFO_EX(TAG_SAMPLE, "%s", file_name.c_str());
 			COMPV_DEBUG_INFO_CODE_FOR_TESTING("Remove the sleep function");
-			if (m_bCalibrationDone) {
-				CompVThread::sleep(1000);
-			}
+			//if (m_bCalibrationDone) {
+				//CompVThread::sleep(1000);
+			//}
 #endif
 			// Check if image size changed
 			if (m_nImageWidth != imageOrig->cols() || m_nImageHeight != imageOrig->rows()) {
@@ -153,13 +157,24 @@ public:
 					/* Calibration */
 					COMPV_CHECK_CODE_RETURN(m_ptrCalib->calibrate(m_CalibContext));
 					if (m_CalibContext.reproj_error > CALIB_MAX_ERROR) {
-						COMPV_DEBUG_INFO_EX(TAG_SAMPLE, "Reproj error too high (%f > %f), trying again", m_CalibContext.reproj_error, CALIB_MAX_ERROR);
+						COMPV_DEBUG_INFO_EX(TAG_SAMPLE, "Reproj error too high (%f > %f). You should really try with #%d different planes trying again", m_CalibContext.reproj_error, CALIB_MAX_ERROR, CALIB_MIN_PLANS);
 						m_CalibContext.clean(); // clean all plans and start over
 					}
 					else {
 						m_bCalibrationDone = true;
 						COMPV_CHECK_CODE_RETURN(onImageSizeChanged(imageOrig->cols(), imageOrig->rows()));
 						COMPV_DEBUG_INFO_EX(TAG_SAMPLE, "Calibration is done!!");
+						COMPV_DEBUG_INFO_EX(TAG_SAMPLE, "Camera matrix (K) = \n%f,%f,%f\n%f,%f,%f\n%f,%f,%f",
+							*m_CalibContext.K->ptr<const compv_float64_t>(0, 0), *m_CalibContext.K->ptr<const compv_float64_t>(0, 1), *m_CalibContext.K->ptr<const compv_float64_t>(0, 2),
+							*m_CalibContext.K->ptr<const compv_float64_t>(1, 0), *m_CalibContext.K->ptr<const compv_float64_t>(1, 1), *m_CalibContext.K->ptr<const compv_float64_t>(1, 2),
+							*m_CalibContext.K->ptr<const compv_float64_t>(2, 0), *m_CalibContext.K->ptr<const compv_float64_t>(2, 1), *m_CalibContext.K->ptr<const compv_float64_t>(2, 2));
+						COMPV_DEBUG_INFO_EX(TAG_SAMPLE, "Radial distorsions (d.r) = %f,%f",
+							*m_CalibContext.d->ptr<const compv_float64_t>(0, 0), *m_CalibContext.d->ptr<const compv_float64_t>(1, 0));
+						if (m_CalibContext.d->rows() > 2) {
+							COMPV_DEBUG_INFO_EX(TAG_SAMPLE, "Tangential distorsions (d.t) = %f,%f",
+								*m_CalibContext.d->ptr<const compv_float64_t>(2, 0), *m_CalibContext.d->ptr<const compv_float64_t>(3, 0));
+						}
+						// Rotation matrices and translation vectors are stored in "m_CalibContext.planes[n].R/t"
 					}
 				}
 			}
