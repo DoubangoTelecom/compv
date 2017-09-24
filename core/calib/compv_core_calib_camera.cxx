@@ -55,6 +55,9 @@ COMPV_NAMESPACE_BEGIN()
 #define kSmallRhoFactHz				0.035f /* small = (rho * fact) - this is for #10 rows */
 #define kCheckerboardBoxDistFact	0.357f /* distance * fact */
 
+/*
+Groups holding close lines: most-likely to be merged into a single line
+*/
 struct CompVCabLineGroup {
 	const CompVLineFloat32* pivot_cartesian;
 	const CompVHoughLine* pivot_hough;
@@ -63,6 +66,9 @@ struct CompVCabLineGroup {
 };
 typedef std::vector<CompVCabLineGroup, CompVAllocatorNoDefaultConstruct<CompVCabLineGroup> > CompVCabLineGroupVector;
 
+/*
+LevMarq user callback data
+*/
 struct levmarq_data {
 	const compv_float64_t *cornersPtr;
 	const CompVCalibCameraPlanVector& planes;
@@ -93,7 +99,13 @@ public:
 	{ }
 };
 
+/*
+LevMarq evalution callback function
+*/
 static void levmarq_eval(const compv_float64_t *par, int m_dat, const void *data, compv_float64_t *fvec, int *userbreak);
+/*
+Function to check whether the segments intersect
+*/
 static bool segment_get_intersection(const CompVLineFloat32& line0, const CompVLineFloat32& line1, compv_float32_t *i_x, compv_float32_t *i_y = nullptr);
 
 CompVCalibCamera::CompVCalibCamera(size_t nPatternRowsCount, size_t nPatternColsCount)
@@ -405,7 +417,7 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 		}
 	}
 
-	/* Transpose the intersections */
+	/* Transpose the intersections (no longer needed) */
 #if 0
 	if (rotated) {
 		COMPV_ASSERT(m_nPatternCornersTotal == plan_curr.intersections.size());
@@ -457,6 +469,10 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 	// Save the plane for future calibration
 	context.planes.push_back(plan_curr);
 
+	// Set result code to OK
+	context.code = COMPV_CALIB_CAMERA_RESULT_OK;
+
+	// Return
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -801,6 +817,7 @@ COMPV_ERROR_CODE CompVCalibCamera::grouping(const size_t image_width, const size
 	const compv_float32_t rsmall = (static_cast<compv_float32_t>(max_strength >> 1) / static_cast<compv_float32_t>(max_lines)); // 0.5f because black squares are alterning
 	
 	compv_float32_t distance, c, d, distance_diff;
+	compv_float32_t i_x, i_y;
 
 	// Grouping
 	it_hough = lines_parallel.lines_hough.begin();
@@ -812,57 +829,12 @@ COMPV_ERROR_CODE CompVCalibCamera::grouping(const size_t image_width, const size
 		c = (i->b.y - i->a.y);
 		d = (i->b.x - i->a.x);
 		distance = std::abs(((i->b.x * i->a.y) - (i->b.y * i->a.x)) / std::sqrt((c * c) + (d * d)));
-		const compv_float32_t angle1 = std::atan2((i->b.y - i->a.y), (i->b.x - i->a.x)); // inclinaison angle, within [-pi/2, pi/2]
 
 		// Get the group associated to the curent line
 		CompVCabLineGroup* group = nullptr;
 		for (CompVCabLineGroupVector::iterator g = groups.begin(); g < groups.end(); ++g) {
-#if 0
-			distance_diff = std::abs(g->pivot_distance - distance);
-			if (distance_diff < rsmall) {
-				group = &(*g);
-				break;
-			}
-			else if (distance_diff < rmedium) {
-				// If the distance isn't small but reasonably close (medium) then, check
-				// if the lines intersect in the image domain
-				compv_float32_t i_x, i_y;
-				const bool intersect = segment_get_intersection(*g->pivot_cartesian, *i, &i_x, &i_y);
-				// No need to check for the intersection angle because the lines are the same type (hz or vt)
-				if (intersect && i_x >= 0.f && i_y >= 0.f && i_x < image_widthF && i_y < image_heightF) {
-					group = &(*g);
-					break;
-				}
-			}
-#else
-			compv_float32_t i_x, i_y;
-			bool same_group = false;
-			const bool intersect = segment_get_intersection(*g->pivot_cartesian, *i, &i_x, &i_y);
-			if (intersect) {
-				if ((i_x >= 0.f && i_y >= 0.f && i_x < image_widthF && i_y < image_heightF)) {
-					const compv_float32_t angle2 = std::atan2((g->pivot_cartesian->b.y - g->pivot_cartesian->a.y), (g->pivot_cartesian->b.x - g->pivot_cartesian->a.x)); // inclinaison angle, within [-pi/2, pi/2]
-					const compv_float32_t angle_intersection = kfMathTrigPi - std::abs(angle2 - angle1); // within [0, pi]
-
-					//same_group = std::abs(((g->pivot_hough->theta - it_hough->theta))) < COMPV_MATH_DEGREE_TO_RADIAN_FLOAT(45);
-					same_group = true||(std::sin(angle_intersection) < std::sin(COMPV_MATH_DEGREE_TO_RADIAN_FLOAT(65))); 
-
-					/*if (!vt)*/ {
-						distance_diff = std::abs(g->pivot_distance - distance);
-						//same_group |= (distance_diff < (rsmall) * 3);
-					}
-				}
-				else if (vt) {
-					distance_diff = std::abs(g->pivot_distance - distance);
-					//same_group |= (distance_diff < (rsmall)*3);
-				}
-			}
-			else {
-				// lines are parallel
-				const compv_float32_t cc = (i->a.x - g->pivot_cartesian->a.x);
-				const compv_float32_t dd = (i->a.y - g->pivot_cartesian->a.y);
-				const compv_float32_t di = std::sqrt((cc*cc) + (dd*dd));
-				same_group = (di < rsmall*1);
-			}
+			bool same_group = segment_get_intersection(*g->pivot_cartesian, *i, &i_x, &i_y)
+				&& ((i_x >= 0.f && i_y >= 0.f && i_x < image_widthF && i_y < image_heightF));
 			if (vt) { // Because of the perspective
 				distance_diff = std::abs(g->pivot_distance - distance);
 				same_group |= (distance_diff < (rsmall) * 1.f);
@@ -871,7 +843,6 @@ COMPV_ERROR_CODE CompVCalibCamera::grouping(const size_t image_width, const size
 				group = &(*g);
 				break;
 			}
-#endif
 		}
 		if (!group) {
 			CompVCabLineGroup g;
@@ -985,7 +956,9 @@ COMPV_ERROR_CODE CompVCalibCamera::lineBestFit(const CompVLineFloat32Vector& poi
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-// Build pattern's corners
+/* 
+* Build pattern's corners
+*/
 COMPV_ERROR_CODE CompVCalibCamera::buildPatternCorners(const CompVCalibContex& context)
 {
 	if (!m_ptrPatternCorners) {
@@ -1009,7 +982,9 @@ COMPV_ERROR_CODE CompVCalibCamera::buildPatternCorners(const CompVCalibContex& c
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-// [2] 3.2.1 Homography estimation with the Direct Linear Transformation(DLT)
+/*
+* [2] 3.2.1 Homography estimation with the Direct Linear Transformation(DLT)
+*/
 COMPV_ERROR_CODE CompVCalibCamera::homography(const CompVCalibCameraPlan& plan, CompVHomographyResult& result_homography, CompVMatPtrPtr homographyMat)
 {
 	const CompVPointFloat32Vector& intersections = plan.intersections;
@@ -1173,6 +1148,9 @@ COMPV_ERROR_CODE CompVCalibCamera::levmarq(const CompVCalibContex& context, Comp
 	return COMPV_ERROR_CODE_S_OK;
 }
 
+/*
+* LevMarq evaluation function (callback)
+*/
 static void levmarq_eval(const compv_float64_t *par, int m_dat, const void *data, compv_float64_t *fvec, int *userbreak)
 {
 	levmarq_data *Data = const_cast<levmarq_data*>(reinterpret_cast<const levmarq_data*>(data));
@@ -1232,6 +1210,9 @@ static void levmarq_eval(const compv_float64_t *par, int m_dat, const void *data
 	}
 }
 
+/*
+* Check whether the segments intersect.
+*/
 static bool segment_get_intersection(const CompVLineFloat32& line0, const CompVLineFloat32& line1, compv_float32_t *i_x, compv_float32_t *i_y COMPV_DEFAULT(nullptr))
 {
 	const compv_float32_t a1 = line0.b.y - line0.a.y;
@@ -1240,10 +1221,10 @@ static bool segment_get_intersection(const CompVLineFloat32& line0, const CompVL
 	const compv_float32_t a2 = line1.b.y - line1.a.y;
 	const compv_float32_t b2 = line1.a.x - line1.b.x;
 
+	// Compute determinent
 	const compv_float32_t det = a1 * b2 - a2 * b1;
 	if (det == 0) {
-		// lines are parallel
-		return false;
+		return false; // segments are parallel (no intersection)
 	}
 
 	const compv_float32_t scale = (1.f / det);

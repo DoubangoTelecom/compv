@@ -25,7 +25,7 @@ using namespace compv;
 #define CALIB_CHEKERBORAD_COLS_COUNT		12//12//8  // Number of cols
 
 #if COMPV_OS_WINDOWS
-#	define COMPV_SAMPLE_IMAGE_FOLDER			"C:/Projects/GitHub/data/calib2/"
+#	define COMPV_SAMPLE_IMAGE_FOLDER			"C:/Projects/GitHub/data/calib/checkerboard/"
 #elif COMPV_OS_OSX
 #	define COMPV_SAMPLE_IMAGE_FOLDER			"/Users/mamadou/Projects/GitHub/data/calib/"
 #else
@@ -122,7 +122,7 @@ public:
 		if (CompVDrawing::isLoopRunning()) {
 			CompVMatPtr imageGray, imageOrig, imageUndist;
 
-#if 1
+#if 0
 			COMPV_CHECK_CODE_RETURN(CompVImage::convertGrayscale(image, &imageGray));
 			imageOrig = image;
 #else
@@ -153,6 +153,13 @@ public:
 			/* Process image and calibration */
 			if (!m_bCalibrationDone) {
 				COMPV_CHECK_CODE_RETURN(m_ptrCalib->process(imageGray, m_CalibContext));
+
+				// FIXME:
+				COMPV_DEBUG_INFO_CODE_FOR_TESTING("Remove");
+				if (m_CalibContext.code != COMPV_CALIB_CAMERA_RESULT_OK) {
+					int kaka = 0;
+				}
+
 				if (m_CalibContext.planes.size() >= CALIB_MIN_PLANS) {
 					/* Calibration */
 					COMPV_CHECK_CODE_RETURN(m_ptrCalib->calibrate(m_CalibContext));
