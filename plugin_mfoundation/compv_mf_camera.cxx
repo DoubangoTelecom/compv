@@ -490,15 +490,15 @@ HRESULT STDMETHODCALLTYPE CompVMFCamera::BufferCB(REFGUID guidMajorMediaType, DW
 	COMPV_CHECK_HRESULT_EXP_RETURN(!pSampleBuffer || !dwSampleSiz, E_POINTER);
 	CompVMFCameraPtr camera = const_cast<CompVMFCamera*>(static_cast<const CompVMFCamera*>(pcUserData));
 	CompVAutoLock<CompVMFCamera> autoLock(*camera);
-	CompVCameraListenerPtr listener = camera->listener();
-	if (!listener) {
+	CompVCameraCallbackOnNewFrame& callback = camera->callbackOnNewFrame();
+	if (!callback) {
 		return S_OK;
 	}
 	
 	COMPV_ERROR_CODE err;
 	// Forward the image data to the listeners
 	COMPV_CHECK_CODE_BAIL(err = CompVImage::wrap(camera->m_eSubTypeNeg, static_cast<const void*>(pSampleBuffer), static_cast<size_t>(camera->m_CapsNeg.width), static_cast<size_t>(camera->m_CapsNeg.height), static_cast<size_t>(camera->m_CapsNeg.width), &camera->m_ptrImageCB));
-	COMPV_CHECK_CODE_BAIL(err = listener->onNewFrame(camera->m_ptrImageCB));
+	COMPV_CHECK_CODE_BAIL(err = callback(camera->m_ptrImageCB));
 
 bail:
 	COMPV_CHECK_HRESULT_EXP_RETURN(COMPV_ERROR_CODE_IS_NOK(err), E_FAIL);
@@ -539,9 +539,9 @@ void *COMPV_STDCALL CompVMFCamera::RunSessionThread(void * arg)
 bail:
 	if (FAILED(hr) && ptrCamera->m_bStarted) {
 		CompVAutoLock<CompVMFCamera> autoLock(*ptrCamera);
-		CompVCameraListenerPtr listener = ptrCamera->listener();
-		if (listener) {
-			listener->onError(std::string("Media foundation error:") + std::to_string(hr)); // TODO(dmi): set the correct error message
+		CompVCameraCallbackOnError& callback = ptrCamera->callbackOnError();
+		if (callback) {
+			callback(std::string("Media foundation error:") + std::to_string(hr)); // TODO(dmi): set the correct error message
 		}
 	}
 	COMPV_MF_SAFE_RELEASE(&pEvent);

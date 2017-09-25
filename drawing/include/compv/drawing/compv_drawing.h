@@ -15,6 +15,8 @@
 #include "compv/base/android/compv_android_native_activity.h"
 #include "compv/base/drawing/compv_window.h"
 
+#include <functional>
+
 COMPV_NAMESPACE_BEGIN()
 
 #if COMPV_OS_ANDROID
@@ -43,18 +45,7 @@ enum COMPV_RUNLOOP_STATE {
 
 COMPV_OBJECT_DECLARE_PTRS(RunLoopListener)
 
-class COMPV_DRAWING_API CompVRunLoopListener : public CompVObj
-{
-protected:
-	CompVRunLoopListener() { }
-public:
-	virtual ~CompVRunLoopListener() { }
-	COMPV_OBJECT_GET_ID(CompVRunLoopListener);
-
-	virtual COMPV_ERROR_CODE onStateChanged(COMPV_RUNLOOP_STATE newState) {
-		return COMPV_ERROR_CODE_S_OK; 
-	}
-};
+typedef std::function<COMPV_ERROR_CODE(const COMPV_RUNLOOP_STATE& newState)> CompVRunLoopOnNewState;
 
 class COMPV_DRAWING_API CompVDrawing
 {
@@ -71,7 +62,7 @@ public:
     static COMPV_INLINE bool isLoopRunning() {
         return s_bLoopRunning;
     }
-    static COMPV_ERROR_CODE runLoop(CompVRunLoopListenerPtr listener = NULL);
+    static COMPV_ERROR_CODE runLoop(CompVRunLoopOnNewState cbOnNewState = nullptr);
     static COMPV_ERROR_CODE breakLoop();
 
 private:
@@ -92,7 +83,7 @@ private:
     COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
     static CompVThreadPtr s_WorkerThread;
 	static CompVSemaphorePtr s_WorkerSemaphore;
-	static CompVRunLoopListenerPtr s_ptrListener;
+	static CompVRunLoopOnNewState s_cbRunLoopOnNewState;
 	static std::vector<COMPV_RUNLOOP_STATE> s_vecStates;
 #if COMPV_OS_ANDROID
     static CompVDrawingAndroidEngine s_AndroidEngine;

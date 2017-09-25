@@ -15,6 +15,7 @@
 #include "compv/base/compv_caps.h"
 
 #include <vector>
+#include <functional>
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -46,32 +47,16 @@ typedef std::vector<CompVCameraDeviceInfo > CompVCameraDeviceInfoList;
 
 
 //
-//	CompVCameraListener
-//
-COMPV_OBJECT_DECLARE_PTRS(CameraListener)
-
-class COMPV_CAMERA_API CompVCameraListener : public CompVObj
-{
-protected:
-	CompVCameraListener() { }
-public:
-	virtual ~CompVCameraListener() {  }
-	COMPV_OBJECT_GET_ID(CompVCameraListener);
-
-	virtual COMPV_ERROR_CODE onNewFrame(const CompVMatPtr& image) {
-		return COMPV_ERROR_CODE_S_OK;
-	}
-	virtual COMPV_ERROR_CODE onError(const std::string& message) {
-		return COMPV_ERROR_CODE_S_OK;
-	}
-};
-
-//
 //	CompVCamera
 //
 COMPV_OBJECT_DECLARE_PTRS(Camera)
 
+// Plugin constructor (exported through DLLs)
 typedef COMPV_ERROR_CODE(*CompVCameraNewFunc)(CompVCameraPtrPtr camera);
+
+// Callbacks
+typedef std::function<COMPV_ERROR_CODE(const CompVMatPtr& image)>		CompVCameraCallbackOnNewFrame;
+typedef std::function<COMPV_ERROR_CODE(const std::string& message)>		CompVCameraCallbackOnError;
 
 class COMPV_CAMERA_API CompVCamera : public CompVObj, public CompVCaps
 {
@@ -90,7 +75,14 @@ public:
     virtual COMPV_ERROR_CODE start(const std::string& deviceId = "") = 0;
     virtual COMPV_ERROR_CODE stop() = 0;
 
-	virtual COMPV_ERROR_CODE setListener(CompVCameraListenerPtr listener);
+	COMPV_INLINE COMPV_ERROR_CODE setCallbackOnNewFrame(CompVCameraCallbackOnNewFrame cbOnNewFrame) {
+		m_cbOnNewFrame = cbOnNewFrame;
+		return COMPV_ERROR_CODE_S_OK;
+	}
+	COMPV_INLINE COMPV_ERROR_CODE setCallbackOnError(CompVCameraCallbackOnError cbOnError) {
+		m_cbOnError = cbOnError;
+		return COMPV_ERROR_CODE_S_OK;
+	}
 
     static COMPV_ERROR_CODE newObj(CompVCameraPtrPtr camera);
 
@@ -107,15 +99,19 @@ public:
     };
 
 protected:
-	COMPV_INLINE CompVCameraListenerPtr listener()const {
-		return m_ptrListener;
+	COMPV_INLINE CompVCameraCallbackOnError& callbackOnError() {
+		return  m_cbOnError;
+	}
+	COMPV_INLINE CompVCameraCallbackOnNewFrame& callbackOnNewFrame() {
+		return m_cbOnNewFrame;
 	}
 
 private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
     static bool s_bInitialized;
     static CameraFactory s_CameraFactory;
-	CompVCameraListenerPtr m_ptrListener;
+	CompVCameraCallbackOnError m_cbOnError;
+	CompVCameraCallbackOnNewFrame m_cbOnNewFrame;
 	COMPV_VS_DISABLE_WARNINGS_END()
 };
 

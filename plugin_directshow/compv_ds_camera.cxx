@@ -115,12 +115,12 @@ HRESULT STDMETHODCALLTYPE CompVDSCamera::DSBufferCB(const CompVMatPtr image, con
 {
 	CompVDSCameraPtr camera = const_cast<CompVDSCamera*>(static_cast<const CompVDSCamera*>(pcUserData));
 	CompVAutoLock<CompVDSCamera> autoLock(*camera);
-	CompVCameraListenerPtr listener = camera->listener();
-	if (!listener) {
+	CompVCameraCallbackOnNewFrame& callback = camera->callbackOnNewFrame();
+	if (!callback) {
 		return S_OK;
 	}
 	COMPV_ERROR_CODE err;
-	COMPV_CHECK_CODE_BAIL(err = listener->onNewFrame(image));
+	COMPV_CHECK_CODE_BAIL(err = callback(image));
 bail:
 	return COMPV_ERROR_CODE_IS_NOK(err) ? E_FAIL : S_OK;
 }

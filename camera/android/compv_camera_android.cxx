@@ -459,8 +459,8 @@ bool CompVCameraAndroid::onPreviewFrame(const void* frameDataPtr, size_t frameDa
 {
 	CompVCameraAndroidPtr camera = const_cast<CompVCameraAndroid*>(static_cast<const CompVCameraAndroid*>(userData));
 	CompVAutoLock<CompVCameraAndroid> autoLock(*camera);
-	CompVCameraListenerPtr listener = camera->listener();
-	if (!listener) {
+	CompVCameraCallbackOnNewFrame& callback = camera->callbackOnNewFrame();
+	if (!callback) {
 		return true;
 	}
 	if (!camera->m_bStarted) {
@@ -476,7 +476,7 @@ bool CompVCameraAndroid::onPreviewFrame(const void* frameDataPtr, size_t frameDa
 		COMPV_CHECK_CODE_BAIL(err = CompVCameraAndroid::convertFormat(framePixelFormat, camera->m_eSubTypeNeg), "Query neg caps failed");
 	}
 	COMPV_CHECK_CODE_BAIL(err = CompVImage::wrap(camera->m_eSubTypeNeg, frameDataPtr, frameWidth, frameHeight, frameWidth, &camera->m_ptrImageCB));
-	COMPV_CHECK_CODE_BAIL(err = listener->onNewFrame(camera->m_ptrImageCB));
+	COMPV_CHECK_CODE_BAIL(err = callback(camera->m_ptrImageCB));
 
 bail:
 	return COMPV_ERROR_CODE_IS_OK(err);

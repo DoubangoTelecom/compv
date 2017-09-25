@@ -30,12 +30,6 @@ CompVCamera::~CompVCamera()
 
 }
 
-COMPV_ERROR_CODE CompVCamera::setListener(CompVCameraListenerPtr listener)
-{
-	m_ptrListener = listener;
-	return COMPV_ERROR_CODE_S_OK;
-}
-
 COMPV_ERROR_CODE CompVCamera::init()
 {
     if (s_bInitialized) {
