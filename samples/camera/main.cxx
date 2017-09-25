@@ -53,7 +53,7 @@ compv_main()
 		COMPV_CHECK_CODE_BAIL(err = camera->setInt(COMPV_CAMERA_CAP_INT_SUBTYPE, CAMERA_SUBTYPE));
 		COMPV_CHECK_CODE_BAIL(err = camera->setBool(COMPV_CAMERA_CAP_BOOL_AUTOFOCUS, CAMERA_AUTOFOCUS));
 
-		// Add callbacks to the camera
+		// Add 'OnNewFrame' callback to the camera
 		COMPV_CHECK_CODE_BAIL(err = camera->setCallbackOnNewFrame([&](const CompVMatPtr& image) -> COMPV_ERROR_CODE {
 			COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 			if (CompVDrawing::isLoopRunning()) {
@@ -65,12 +65,15 @@ compv_main()
 			}
 			return err;
 		}));
+
+		// Add 'OnError' callback to the camera
 		COMPV_CHECK_CODE_BAIL(err = camera->setCallbackOnError([&](const std::string& message) -> COMPV_ERROR_CODE {
 			COMPV_DEBUG_ERROR_EX(TAG_SAMPLE, "Camera error: %s", message.c_str()); // probably a disconnect
 			return COMPV_ERROR_CODE_S_OK;
 		}));
 
 		// Start ui runloop
+		// Setting a state listener is optional but used here to show how to handle Android onStart, onPause, onResume.... activity states
 		COMPV_CHECK_CODE_BAIL(err = CompVDrawing::runLoop([&](const COMPV_RUNLOOP_STATE& newState) -> COMPV_ERROR_CODE {
 			COMPV_DEBUG_INFO_EX(TAG_SAMPLE, "RunLoop onStateChanged(%d)", newState);
 			switch (newState) {
