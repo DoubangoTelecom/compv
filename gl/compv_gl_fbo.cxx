@@ -56,7 +56,7 @@ COMPV_ERROR_CODE CompVGLFbo::updateSize(size_t width, size_t height)
 {
     COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 
-    if (m_nWidth != width && m_nHeight != height) {
+    if (m_nWidth != width || m_nHeight != height) {
         if (m_bInit) {
             GLenum fboStatus_;
             COMPV_glActiveTexture(GL_TEXTURE0);

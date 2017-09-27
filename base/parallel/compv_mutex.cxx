@@ -138,9 +138,9 @@ COMPV_ERROR_CODE CompVMutex::unlock()
 COMPV_ERROR_CODE CompVMutex::newObj(CompVMutexPtrPtr mutex, bool recursive /*= true*/)
 {
     COMPV_CHECK_CODE_RETURN(CompVBase::init());
-    COMPV_CHECK_EXP_RETURN(mutex == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-    CompVPtr<CompVMutex*> mutex_ = new CompVMutex(recursive);
-    COMPV_CHECK_EXP_RETURN(*mutex_ == NULL, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+    COMPV_CHECK_EXP_RETURN(!mutex, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+    CompVMutexPtr mutex_ = new CompVMutex(recursive);
+    COMPV_CHECK_EXP_RETURN(!mutex_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
     *mutex = mutex_;
     return COMPV_ERROR_CODE_S_OK;
 }

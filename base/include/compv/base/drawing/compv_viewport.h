@@ -75,6 +75,7 @@ public:
     }
 
     COMPV_ERROR_CODE reset(const CompViewportSizeFlags& sizeFlags, int x = 0, int y = 0, int width = 0, int height = 0);
+	COMPV_ERROR_CODE reset(const CompViewportSizeFlags& sizeFlags, const CompVRectInt& rect);
 
     COMPV_ERROR_CODE setPixelAspectRatio(const CompVRatio& ratio);
 

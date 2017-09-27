@@ -37,6 +37,12 @@ COMPV_ERROR_CODE CompVViewport::reset(const CompViewportSizeFlags& sizeFlags, in
     return COMPV_ERROR_CODE_S_OK;
 }
 
+COMPV_ERROR_CODE CompVViewport::reset(const CompViewportSizeFlags& sizeFlags, const CompVRectInt& rect)
+{
+	COMPV_CHECK_CODE_RETURN(CompVViewport::reset(sizeFlags, rect.left, rect.top, (rect.right - rect.left), (rect.bottom - rect.top)));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 COMPV_ERROR_CODE CompVViewport::setPixelAspectRatio(const CompVRatio& ratio)
 {
     COMPV_CHECK_EXP_RETURN(ratio.numerator < 0 || ratio.denominator <= 0, COMPV_ERROR_CODE_E_INVALID_PARAMETER);

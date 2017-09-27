@@ -50,7 +50,7 @@ COMPV_ERROR_CODE CompVGLMultiSurfaceLayer::blit() /* Overrides(CompVMultiSurface
     CompVGLFboPtr fboCover = m_ptrCoverSurfaceGL->blitter()->fbo();
     for (std::map<compv_surface_id_t, CompVGLSurfacePtr>::iterator it = m_mapSurfaces.begin(); it != m_mapSurfaces.end(); ++it) {
         if (it->second->isActive()) {
-			COMPV_CHECK_CODE_RETURN(it->second->blitRenderer(fboCover));
+			COMPV_CHECK_CODE_RETURN(it->second->blitRenderer(fboCover), "Cannot blit renderer for the current surface. Maybe it's active but not initialized.");
         }
     }
     if (m_ptrCoverSurfaceGL->isActive()) {

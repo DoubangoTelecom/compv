@@ -141,7 +141,7 @@ bail:
 
 COMPV_ERROR_CODE CompVGLSurface::blitRenderer(const CompVGLFboPtr ptrFboDst)
 {
-    COMPV_CHECK_EXP_RETURN(!m_ptrRenderer, COMPV_ERROR_CODE_E_INVALID_STATE);
+    COMPV_CHECK_EXP_RETURN(!m_ptrRenderer, COMPV_ERROR_CODE_E_INVALID_STATE, "No renderer associated to this surface");
     COMPV_CHECK_CODE_RETURN(blit(m_ptrRenderer->blitter()->fbo(), ptrFboDst));
     return COMPV_ERROR_CODE_S_OK;
 }

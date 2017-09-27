@@ -21,6 +21,8 @@ bool CompVCamera::s_bInitialized = false;
 CompVCamera::CameraFactory CompVCamera::s_CameraFactory = { NULL, NULL };
 
 CompVCamera::CompVCamera()
+: m_cbOnError(nullptr)
+, m_cbOnNewFrame(nullptr)
 {
 
 }

@@ -13,20 +13,31 @@
 
 #include "compv/base/parallel/compv_thread.h"
 
+#include <functional>
+
 COMPV_NAMESPACE_BEGIN()
 
-class COMPV_BASE_API CompVRunnable
+COMPV_OBJECT_DECLARE_PTRS(Runnable)
+
+typedef std::function<COMPV_ERROR_CODE(void)>		CompVRunnableCallbackOnRunning; // Use std::bind(cbOnRunning, args...) to add more arguments to the callback
+
+class COMPV_BASE_API CompVRunnable : public CompVObj
 {
 protected:
-	CompVRunnable();
+	CompVRunnable(CompVRunnableCallbackOnRunning cbOnRunning);
 public:
 	virtual ~CompVRunnable();
+	virtual COMPV_INLINE const char* getObjectId() {
+		return "CompVRunnable";
+	};
 
 	virtual COMPV_ERROR_CODE start();
-	virtual COMPV_ERROR_CODE running() = 0;
+	virtual COMPV_ERROR_CODE stop();
 	virtual COMPV_INLINE bool isRunning() {
 		return (m_bRunning && m_ptrThread);
 	}
+
+	static COMPV_ERROR_CODE newObj(CompVRunnablePtrPtr runnable, CompVRunnableCallbackOnRunning cbOnRunning);
 
 private:
 	static void* COMPV_STDCALL workerThread(void* arg);
@@ -35,6 +46,7 @@ private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
 	bool m_bRunning;
 	CompVThreadPtr m_ptrThread;
+	CompVRunnableCallbackOnRunning m_cbOnRunning;
 	COMPV_VS_DISABLE_WARNINGS_END()
 };
 

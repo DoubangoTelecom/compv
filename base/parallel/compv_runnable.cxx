@@ -5,34 +5,31 @@
 * WebSite: http://compv.org
 */
 #include "compv/base/parallel/compv_runnable.h"
+#include "compv/base/compv_base.h"
 #include "compv/base/compv_debug.h"
 
 #define COMPV_THIS_CLASSNAME	"CompVRunnable"
 
 COMPV_NAMESPACE_BEGIN()
 
-CompVRunnable::CompVRunnable()
+CompVRunnable::CompVRunnable(CompVRunnableCallbackOnRunning cbOnRunning)
 	: m_bRunning(false)
+	, m_cbOnRunning(cbOnRunning)
 {
 
 }
 
 CompVRunnable::~CompVRunnable()
 {
-	if (m_ptrThread) {
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Joining the thread");
-		COMPV_CHECK_CODE_NOP(m_ptrThread->join());
-	}
+	COMPV_CHECK_CODE_NOP(stop());
 }
 
 COMPV_ERROR_CODE CompVRunnable::start()
 {
-	if (m_ptrThread && m_bRunning) {
+	if (isRunning()) {
 		return COMPV_ERROR_CODE_S_OK;
 	}
-	if (m_ptrThread) {
-		COMPV_CHECK_CODE_RETURN(m_ptrThread->join());
-	}
+	COMPV_CHECK_EXP_RETURN(m_ptrThread, COMPV_ERROR_CODE_E_INVALID_STATE, "Thread must be null");
 	COMPV_ERROR_CODE err;
 	m_bRunning = true;
 	COMPV_CHECK_CODE_BAIL(err = CompVThread::newObj(&m_ptrThread, CompVRunnable::workerThread, this));
@@ -46,12 +43,36 @@ bail:
 	}
 	return err;
 }
+
+COMPV_ERROR_CODE CompVRunnable::stop()
+{
+	m_bRunning = false;
+	if (m_ptrThread) {
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Joining the thread");
+		COMPV_CHECK_CODE_RETURN(m_ptrThread->join());
+		m_ptrThread = nullptr;
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVRunnable::newObj(CompVRunnablePtrPtr runnable, CompVRunnableCallbackOnRunning cbOnRunning)
+{
+	COMPV_CHECK_CODE_RETURN(CompVBase::init());
+	COMPV_CHECK_EXP_RETURN(!runnable || !cbOnRunning, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	CompVRunnablePtr runnable_ = new CompVRunnable(cbOnRunning);
+	COMPV_CHECK_EXP_RETURN(!runnable_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+	*runnable = runnable_;
+	return COMPV_ERROR_CODE_S_OK;
+}
 	
 void* COMPV_STDCALL CompVRunnable::workerThread(void* arg)
 {
-	CompVRunnable* runnable = reinterpret_cast<CompVRunnable*>(arg);
-	COMPV_CHECK_CODE_NOP(runnable->running());
-	runnable->m_bRunning = false;
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Entering worker thread...");
+	CompVRunnable* This = reinterpret_cast<CompVRunnable*>(arg);
+	This->m_bRunning = true;
+	COMPV_CHECK_CODE_NOP(This->m_cbOnRunning());
+	This->m_bRunning = false;
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Exiting worker thread...");
 	return NULL;
 }
 
