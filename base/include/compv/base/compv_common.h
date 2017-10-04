@@ -281,8 +281,9 @@ enum COMPV_MODELEST_TYPE {
 	COMPV_MODELEST_TYPE_RANSAC
 };
 
-enum COMPV_SCALE_TYPE {
-	COMPV_SCALE_TYPE_BILINEAR
+enum COMPV_INTERPOLATION_TYPE {
+	COMPV_INTERPOLATION_TYPE_BILINEAR,
+	COMPV_INTERPOLATION_TYPE_NEAREST,
 };
 
 enum COMPV_MAT_TYPE {
@@ -396,6 +397,9 @@ public:
 	T right;
 	T bottom;
     CompVRect(T left_ = 0, T top_ = 0, T right_ = 0, T bottom_ = 0) : left(left_), top(top_), right(right_), bottom(bottom_) {  }
+	bool operator==(const CompVRect &other) const {
+		return left == other.left && top == other.top && right == other.right && bottom == other.bottom;
+	}
     static CompVRect makeFromWidthHeight(T x, T y, T width, T height) {
         return CompVRect(x, y, x + width, y + height);
     }
@@ -415,6 +419,9 @@ public:
     int numerator;
     int denominator;
     CompVRatio(int numerator_ = 1, int denominator_ = 1) : numerator(numerator_), denominator(denominator_) { }
+	bool operator==(const CompVRatio &other) const {
+		return numerator == other.numerator && denominator == other.denominator;
+	}
 };
 
 template <typename T>
@@ -422,6 +429,9 @@ struct CompVPoint {
 public:
 	CompVPoint(T x_ = 0, T y_ = 0, T z_ = 1) {
 		x = x_, y = y_, z = z_;
+	}
+	bool operator==(const CompVPoint &other) const {
+		return x == other.x && y == other.y && z == other.z;
 	}
 	T x, y, z;
 };
@@ -434,6 +444,22 @@ typedef std::vector<CompVPointFloat64, CompVAllocatorNoDefaultConstruct<CompVPoi
 typedef std::vector<CompVPointInt32, CompVAllocatorNoDefaultConstruct<CompVPointInt32> > CompVPointInt32Vector;
 typedef std::vector<CompVPointInt, CompVAllocatorNoDefaultConstruct<CompVPointInt> > CompVPointIntVector;
 
+template <typename T>
+struct CompVSize {
+public:
+	CompVSize(T width_ = 0, T height_ = 0) {
+		width = width_, height = height_;
+	}
+	bool operator==(const CompVSize &other) const {
+		return width == other.width && height == other.height;
+	}
+	T width, height;
+};
+typedef CompVSize<compv_float32_t> CompVSizeFloat32;
+typedef CompVSize<compv_float64_t> CompVSizeFloat64;
+typedef CompVSize<int32_t> CompVSizeInt32;
+typedef CompVSize<int> CompVSizeInt;
+typedef CompVSize<size_t> CompVSizeSz;
 
 template <typename T>
 struct CompVLine {

@@ -13,7 +13,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-CompVImageScalePyramid::CompVImageScalePyramid(float fScaleFactor COMPV_DEFAULT(0.83f), size_t nLevels COMPV_DEFAULT(8), COMPV_SCALE_TYPE eScaleType COMPV_DEFAULT(COMPV_SCALE_TYPE_BILINEAR))
+CompVImageScalePyramid::CompVImageScalePyramid(float fScaleFactor COMPV_DEFAULT(0.83f), size_t nLevels COMPV_DEFAULT(8), COMPV_INTERPOLATION_TYPE eScaleType COMPV_DEFAULT(COMPV_INTERPOLATION_TYPE_BILINEAR))
 	: m_bValid(false)
 	, m_fScaleFactor(fScaleFactor)
 	, m_fScaleFactorsSum(1.f)
@@ -167,7 +167,7 @@ COMPV_ERROR_CODE CompVImageScalePyramid::processLevel(const CompVMatPtr& inImage
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVImageScalePyramid::newObj(CompVImageScalePyramidPtrPtr pyramid, float fScaleFactor COMPV_DEFAULT(0.83f), size_t nLevels COMPV_DEFAULT(8), COMPV_SCALE_TYPE eScaleType COMPV_DEFAULT(COMPV_SCALE_TYPE_BILINEAR))
+COMPV_ERROR_CODE CompVImageScalePyramid::newObj(CompVImageScalePyramidPtrPtr pyramid, float fScaleFactor COMPV_DEFAULT(0.83f), size_t nLevels COMPV_DEFAULT(8), COMPV_INTERPOLATION_TYPE eScaleType COMPV_DEFAULT(COMPV_INTERPOLATION_TYPE_BILINEAR))
 {
 	COMPV_CHECK_CODE_RETURN(CompVBase::init());
 	COMPV_CHECK_EXP_RETURN(pyramid == NULL || nLevels <= 0 || fScaleFactor <= 0, COMPV_ERROR_CODE_E_INVALID_PARAMETER);

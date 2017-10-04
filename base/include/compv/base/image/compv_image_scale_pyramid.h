@@ -22,7 +22,7 @@ COMPV_OBJECT_DECLARE_PTRS(ImageScalePyramid)
 class COMPV_BASE_API CompVImageScalePyramid : public CompVObj
 {
 protected:
-	CompVImageScalePyramid(float fScaleFactor = 0.83f, size_t nLevels = 8, COMPV_SCALE_TYPE eScaleType = COMPV_SCALE_TYPE_BILINEAR);
+	CompVImageScalePyramid(float fScaleFactor = 0.83f, size_t nLevels = 8, COMPV_INTERPOLATION_TYPE eScaleType = COMPV_INTERPOLATION_TYPE_BILINEAR);
 public:
 	virtual ~CompVImageScalePyramid();
 	COMPV_OBJECT_GET_ID(CompVImageScalePyramid);
@@ -32,7 +32,7 @@ public:
 	COMPV_INLINE float scaleFactorsSum() {
 		return m_fScaleFactorsSum;
 	}
-	COMPV_INLINE COMPV_SCALE_TYPE scaleType() {
+	COMPV_INLINE COMPV_INTERPOLATION_TYPE scaleType() {
 		return m_eScaleType;
 	}
 	COMPV_INLINE float scaleFactorFirst() {
@@ -42,7 +42,7 @@ public:
 	COMPV_ERROR_CODE process(const CompVMatPtr& inImage, size_t level = COMPV_PYRAMID_LEVEL_ALL);
 	COMPV_ERROR_CODE image(size_t level, CompVMatPtrPtr image);
 
-	static COMPV_ERROR_CODE newObj(CompVImageScalePyramidPtrPtr pyramid, float fScaleFactor = 0.83f, size_t nLevels = 8, COMPV_SCALE_TYPE eScaleType = COMPV_SCALE_TYPE_BILINEAR);
+	static COMPV_ERROR_CODE newObj(CompVImageScalePyramidPtrPtr pyramid, float fScaleFactor = 0.83f, size_t nLevels = 8, COMPV_INTERPOLATION_TYPE eScaleType = COMPV_INTERPOLATION_TYPE_BILINEAR);
 
 private:
 	COMPV_ERROR_CODE processLevel(const CompVMatPtr& inImage, size_t level);
@@ -52,7 +52,7 @@ private:
 	float m_fScaleFactor;
 	float m_fScaleFactorsSum; // Sum of all scale factors (all levels added)
 	size_t m_nLevels;
-	COMPV_SCALE_TYPE m_eScaleType;
+	COMPV_INTERPOLATION_TYPE m_eScaleType;
 	CompVMatPtrPtr m_pImages;
 	float *m_pScaleFactors;
 	

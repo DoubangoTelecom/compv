@@ -29,6 +29,7 @@
 
 #include <compv/base/image/compv_image.h>
 #include <compv/base/image/compv_image_decoder.h>
+#include <compv/base/image/compv_image_remap.h>
 #include <compv/base/image/compv_image_scale_pyramid.h>
 
 #include <compv/base/math/compv_math.h>

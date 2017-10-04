@@ -514,8 +514,7 @@ COMPV_ERROR_CODE CompVCpu::init()
 
 const char* CompVCpu::flagsAsString(uint64_t uFlags)
 {
-    static std::string _flags;
-    struct {
+    static const struct {
         uint64_t f;
         const char* name;
     } flags[] = {
@@ -570,7 +569,7 @@ const char* CompVCpu::flagsAsString(uint64_t uFlags)
         { kCpuFlagMIPS_DSPR2, "mips_dspr2" },
     };
 
-    _flags = "";
+    std::string _flags = "";
     for (size_t i = 0; i < sizeof(flags) / sizeof(flags[0]); ++i) {
         if ((flags[i].f & uFlags) == flags[i].f) {
             _flags += std::string(flags[i].name) + ";";

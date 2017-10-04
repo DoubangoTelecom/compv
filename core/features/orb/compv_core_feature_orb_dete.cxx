@@ -41,7 +41,7 @@ float COMPV_FEATURE_DETE_ORB_PYRAMID_SF = 0.83f; // scale factor
 int COMPV_FEATURE_DETE_ORB_PATCH_DIAMETER = 31;
 int COMPV_FEATURE_DETE_ORB_PATCH_BITS = 256;
 #define COMPV_FEATURE_DETE_ORB_MIN_FEATUES_PER_LEVEL 10
-COMPV_SCALE_TYPE COMPV_FEATURE_DETE_ORB_PYRAMID_SCALE_TYPE = COMPV_SCALE_TYPE_BILINEAR;
+COMPV_INTERPOLATION_TYPE COMPV_FEATURE_DETE_ORB_PYRAMID_SCALE_TYPE = COMPV_INTERPOLATION_TYPE_BILINEAR;
 
 CompVCornerDeteORB::CompVCornerDeteORB()
 	: CompVCornerDete(COMPV_ORB_ID)
@@ -112,7 +112,7 @@ COMPV_ERROR_CODE CompVCornerDeteORB::set(int id, const void* valuePtr, size_t va
 		}
 		else if (id == COMPV_ORB_SET_INT_PYRAMID_SCALE_TYPE) {
 			COMPV_CHECK_EXP_RETURN(valueSize != sizeof(int), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-			COMPV_SCALE_TYPE eScaleType = static_cast<COMPV_SCALE_TYPE>(*reinterpret_cast<const int*>(valuePtr));
+			COMPV_INTERPOLATION_TYPE eScaleType = static_cast<COMPV_INTERPOLATION_TYPE>(*reinterpret_cast<const int*>(valuePtr));
 			if (m_pyramid->scaleType() != eScaleType) {
 				return CompVImageScalePyramid::newObj(&m_pyramid, m_pyramid->scaleFactor(), m_pyramid->levels(), eScaleType);
 			}
