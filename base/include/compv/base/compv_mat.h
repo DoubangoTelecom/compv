@@ -258,9 +258,9 @@ public:
 	}
 
 	// returned object doesn't have ownership on the internal memory and depends on its creator
-	template<typename elmType>
+	template<class elmType = uint8_t, COMPV_MAT_TYPE dataType = COMPV_MAT_TYPE_RAW, COMPV_SUBTYPE dataSubType = COMPV_SUBTYPE_RAW_OPAQUE>
 	COMPV_ERROR_CODE shrink(CompVMatPtrPtr mat, size_t newRows, size_t newCols) const {
-		COMPV_CHECK_EXP_RETURN(newCols > m_nCols || newRows > m_nRows || sizeof(elmType) != m_nElmtInBytes, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		COMPV_CHECK_EXP_RETURN(!mat || newCols > m_nCols || newRows > m_nRows || sizeof(elmType) != m_nElmtInBytes || m_eType != dataType || m_eSubType != dataSubType, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 		COMPV_CHECK_CODE_RETURN(CompVMat::newObj<elmType>(mat, 0, 0, m_nAlignV));
 		(*mat)->m_nCols = newCols;
 		(*mat)->m_nRows = newRows;
@@ -280,6 +280,67 @@ public:
 			(*mat)->m_nPlaneStrideInElts[p] = m_nPlaneStrideInElts[p];
 			(*mat)->m_bPlaneStrideInEltsIsIntegral[p] = m_bPlaneStrideInEltsIsIntegral[p];
 		}
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
+	// returned object doesn't have ownership on the internal memory and depends on its creator
+	COMPV_ERROR_CODE bind(CompVMatPtrPtr mat, const CompVRectFloat32& roi) const {
+		COMPV_CHECK_EXP_RETURN(!mat, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		const size_t colStart = static_cast<size_t>(roi.left);
+		COMPV_CHECK_EXP_RETURN(colStart > m_nCols, COMPV_ERROR_CODE_E_OUT_OF_BOUND);
+		const size_t colEnd = static_cast<size_t>(roi.right);
+		COMPV_CHECK_EXP_RETURN(colEnd > m_nCols || colStart >= colEnd, COMPV_ERROR_CODE_E_OUT_OF_BOUND);
+		const size_t colCount = (colEnd - colStart);
+
+		const size_t rowStart = static_cast<size_t>(roi.top);
+		COMPV_CHECK_EXP_RETURN(rowStart > m_nRows, COMPV_ERROR_CODE_E_OUT_OF_BOUND);
+		const size_t rowEnd = static_cast<size_t>(roi.bottom);
+		COMPV_CHECK_EXP_RETURN(rowEnd > m_nRows || rowStart >= rowEnd, COMPV_ERROR_CODE_E_OUT_OF_BOUND);
+		const size_t rowCount = (rowEnd - rowStart);
+
+		CompVMatPtr mat_;
+		mat_ = new CompVMat();
+		COMPV_CHECK_EXP_RETURN(!mat_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+		COMPV_CHECK_CODE_RETURN(mat_->__alloc_priv(0, 0, m_nAlignV, m_nStrideInElts, m_nElmtInBytes, m_eType, m_eSubType));
+
+		// Set bound size
+		mat_->m_nCols = colCount;
+		mat_->m_nRows = rowCount;
+
+		// Set stride (same, doesn't change regardless the bound size)
+		mat_->m_nStrideInBytes = m_nStrideInBytes;
+		mat_->m_nStrideInElts = m_nStrideInElts;
+
+		if (m_eType == COMPV_MAT_TYPE_RAW || m_eType == COMPV_MAT_TYPE_STRUCT) {
+			mat_->m_nPlaneCols[0] = colCount;
+			mat_->m_nPlaneRows[0] = rowCount;
+			mat_->m_pCompPtr[0] = this->ptr<const void>(rowStart, colStart, 0);
+			mat_->m_nPlaneSizeInBytes[0] = m_nPlaneStrideInBytes[0] * rowCount;
+			mat_->m_nPlaneStrideInBytes[0] = m_nPlaneStrideInBytes[0];
+			mat_->m_nPlaneStrideInElts[0] = m_nPlaneStrideInElts[0];
+		}
+		else if (m_eType == COMPV_MAT_TYPE_PIXELS) {
+			const COMPV_SUBTYPE pixelFormat = m_eSubType;
+			size_t rowStartInPlane, colStartInPlane;
+			size_t rowEndInPlane, colEndInPlane;
+			for (int planeId = 0; planeId < m_nPlaneCount; ++planeId) {
+				COMPV_CHECK_CODE_RETURN(CompVImageUtils::planeSizeForPixelFormat(pixelFormat, planeId, colStart, rowStart, &colStartInPlane, &rowStartInPlane));
+				COMPV_CHECK_CODE_RETURN(CompVImageUtils::planeSizeForPixelFormat(pixelFormat, planeId, colEnd, rowEnd, &colEndInPlane, &rowEndInPlane));
+				mat_->m_nPlaneCols[planeId] = (colEndInPlane - colStartInPlane);
+				mat_->m_nPlaneRows[planeId] = (rowEndInPlane - rowStartInPlane);
+				mat_->m_pCompPtr[planeId] = this->ptr<const void>(rowStartInPlane, colStartInPlane, planeId);
+				mat_->m_nPlaneSizeInBytes[planeId] = m_nPlaneStrideInBytes[planeId] * (mat_->m_nPlaneRows[planeId]);
+				mat_->m_nPlaneStrideInBytes[planeId] = m_nPlaneStrideInBytes[planeId];
+				mat_->m_nPlaneStrideInElts[planeId] = m_nPlaneStrideInElts[planeId];
+			}
+		}
+
+		//!\\ We don't own the memory
+		mat_->m_bOweMem = false;
+		mat_->m_pDataPtr = const_cast<void*>(mat_->m_pCompPtr[0]);
+
+		*mat = mat_;
+
 		return COMPV_ERROR_CODE_S_OK;
 	}
 

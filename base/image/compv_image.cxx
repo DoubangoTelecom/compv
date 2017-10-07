@@ -132,7 +132,7 @@ COMPV_ERROR_CODE CompVImage::crop(const CompVMatPtr& imageIn, const CompVRectFlo
 	COMPV_CHECK_EXP_RETURN(rowStart > imageIn->rows(), COMPV_ERROR_CODE_E_OUT_OF_BOUND);
 	const size_t rowEnd = static_cast<size_t>(roi.bottom);
 	COMPV_CHECK_EXP_RETURN(rowEnd > imageIn->rows() || rowStart >= rowEnd, COMPV_ERROR_CODE_E_OUT_OF_BOUND);
-	const size_t rowCount = (rowEnd - rowStart) & -2;
+	const size_t rowCount = (rowEnd - rowStart) /*& -2*/;
 	
 	CompVMatPtr imageOut_ = (*imageOut == imageIn) ? nullptr : *imageOut;
 	COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&imageOut_, imageIn->subType(), colCount, rowCount, imageIn->stride())); //!\\ must use same stride because we're using memcpy instead of row by row copy
