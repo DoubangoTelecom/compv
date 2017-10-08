@@ -90,6 +90,7 @@ private:
 	COMPV_ERROR_CODE peaks_Section3_4_VotesCountAndClearVisitedMap(CompVHoughKhtVotes& votes, const size_t theta_index_start, const size_t theta_index_end);
 	COMPV_ERROR_CODE peaks_Section3_4_VotesSort(CompVHoughKhtVotes& votes);
 	COMPV_ERROR_CODE peaks_Section3_4_Lines(CompVHoughLineVector& lines, const CompVHoughKhtVotes& votes);
+	COMPV_ERROR_CODE toCartesian(const size_t imageWidth, const size_t imageHeight, CompVHoughLineVector::const_iterator polar_begin, CompVHoughLineVector::const_iterator polar_end, CompVLineFloat32Vector& cartesian);
 
 private:
 	KHT_TYP m_dRho;

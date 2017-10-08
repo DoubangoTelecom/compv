@@ -270,7 +270,7 @@ COMPV_ERROR_CODE CompVHoughSht::toCartesian(const size_t imageWidth, const size_
 
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
 	const size_t maxThreads = (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
-	const size_t threadsCount = CompVThreadDispatcher::guessNumThreadsDividingAcrossY(1, polar.size(), maxThreads, COMPV_FEATURE_HOUGHSHT_TO_CARTESIAN_SAMPLES_PER_THREAD);
+	const size_t threadsCount = COMPV_MATH_CLIP3(1, maxThreads, polar.size() / COMPV_FEATURE_HOUGHSHT_TO_CARTESIAN_SAMPLES_PER_THREAD);
 	if (threadsCount > 1) {
 		CompVAsyncTaskIds taskIds;
 		const size_t countAny = (polar.size() / threadsCount);

@@ -26,6 +26,7 @@
 #define COMPV_FEATURE_HOUGHKHT_VOTES_COUNT_MIN_SAMPLES_PER_THREAD (40)
 #define COMPV_FEATURE_HOUGHKHT_CLUSTERS_FIND_MIN_SAMPLES_PER_THREAD (40 * 1)
 #define COMPV_FEATURE_HOUGHKHT_PEAKS_VOTES_MIN_SAMPLES_PER_THREAD (40 * 1)
+#define COMPV_FEATURE_HOUGHKHT_TO_CARTESIAN_SAMPLES_PER_THREAD	(1*40)
 
 // Documentation:
 //	- http://www2.ic.uff.br/~laffernandes/projects/kht/
@@ -446,38 +447,41 @@ COMPV_ERROR_CODE CompVHoughKht::process(const CompVMatPtr& edges, CompVHoughLine
 COMPV_ERROR_CODE CompVHoughKht::toCartesian(const size_t imageWidth, const size_t imageHeight, const CompVHoughLineVector& polar, CompVLineFloat32Vector& cartesian)
 {
 	COMPV_CHECK_EXP_RETURN(!imageWidth || !imageHeight, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation could be found");
+
 	cartesian.clear();
 	if (polar.empty()) {
 		return COMPV_ERROR_CODE_S_OK;
 	}
-	cartesian.resize(polar.size());
-	const compv_float32_t widthF = static_cast<compv_float32_t>(imageWidth);
-	const compv_float32_t heightF = static_cast<compv_float32_t>(imageHeight);
-	const compv_float32_t r = std::sqrt((widthF*widthF) + (heightF*heightF));
-	const compv_float32_t rminus = -r;
-	const compv_float32_t half_widthF = widthF * 0.5f;
-	const compv_float32_t half_heightF = heightF * 0.5f;
-	compv_float32_t a, b, theta, rho;
-	CompVHoughLineVector::const_iterator i;
-	size_t k;
-	for (i = polar.begin(), k = 0; i < polar.end(); ++i, ++k) {
-		rho = i->rho;
-		theta = i->theta;
-		CompVLineFloat32& cline = cartesian[k];
-		if (theta == 0.f) { // perfect vt line?
-			cline.a.x = cline.b.x = (rho + half_widthF);
-			cline.a.y = r;
-			cline.b.y = rminus;
+
+	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
+	const size_t maxThreads = (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
+	const size_t threadsCount = COMPV_MATH_CLIP3(1, maxThreads, polar.size() / COMPV_FEATURE_HOUGHKHT_TO_CARTESIAN_SAMPLES_PER_THREAD);
+	if (threadsCount > 1) {
+		CompVAsyncTaskIds taskIds;
+		const size_t countAny = (polar.size() / threadsCount);
+		const size_t countLast = countAny + (polar.size() % threadsCount);
+		std::vector<CompVLineFloat32Vector > cartesian_mt;
+		cartesian_mt.resize(threadsCount - 1);
+		CompVHoughLineVector::const_iterator polar_begin = polar.begin();
+		size_t threadIdx;
+		auto funcPtr = [&](size_t index, CompVHoughLineVector::const_iterator polar_begin_mt, CompVHoughLineVector::const_iterator polar_end_mt) -> COMPV_ERROR_CODE {
+			COMPV_CHECK_CODE_RETURN(toCartesian(imageWidth, imageHeight, polar_begin_mt, polar_end_mt, index ? cartesian_mt[index - 1] : cartesian));
+			return COMPV_ERROR_CODE_S_OK;
+		};
+
+		for (threadIdx = 0; threadIdx < threadsCount - 1; ++threadIdx, polar_begin += countAny) {
+			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, threadIdx, polar_begin, (polar_begin + countAny)), taskIds));
 		}
-		else {
-			a = (std::cos(theta) * half_widthF), b = (1.f / std::sin(theta));
-			cline.a.x = 0;
-			cline.a.y = ((rho + a) * b) + half_heightF;
-			cline.b.x = widthF;
-			cline.b.y = ((rho - a) * b) + half_heightF;
+		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, (threadsCount - 1), polar_begin, (polar_begin + countLast)), taskIds));
+		for (threadIdx = 0; threadIdx < threadsCount; ++threadIdx) {
+			COMPV_CHECK_CODE_RETURN(threadDisp->waitOne(taskIds[threadIdx]));
+			if (threadIdx) {
+				cartesian.insert(cartesian.end(), cartesian_mt[threadIdx - 1].begin(), cartesian_mt[threadIdx - 1].end());
+			}
 		}
-		cline.a.z = cline.b.z = 1.f;
+	}
+	else {
+		COMPV_CHECK_CODE_RETURN(toCartesian(imageWidth, imageHeight, polar.begin(), polar.end(), cartesian));
 	}
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -1233,6 +1237,39 @@ COMPV_ERROR_CODE CompVHoughKht::peaks_Section3_4_Lines(CompVHoughLineVector& lin
 		}
 		*pvisited = 0xff;
 	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVHoughKht::toCartesian(const size_t imageWidth, const size_t imageHeight, CompVHoughLineVector::const_iterator polar_begin, CompVHoughLineVector::const_iterator polar_end, CompVLineFloat32Vector& cartesian)
+{
+	cartesian.resize((polar_end - polar_begin));
+	const compv_float32_t widthF = static_cast<compv_float32_t>(imageWidth);
+	const compv_float32_t heightF = static_cast<compv_float32_t>(imageHeight);
+	const compv_float32_t r = std::sqrt((widthF*widthF) + (heightF*heightF));
+	const compv_float32_t rminus = -r;
+	const compv_float32_t half_widthF = widthF * 0.5f;
+	const compv_float32_t half_heightF = heightF * 0.5f;
+	compv_float32_t a, b, theta, rho;
+	CompVHoughLineVector::const_iterator i;
+	CompVLineFloat32Vector::iterator j;
+	for (i = polar_begin, j = cartesian.begin(); i < polar_end; ++i, ++j) {
+		rho = i->rho;
+		theta = i->theta;
+		if (theta == 0.f) { // perfect vt line?
+			j->a.x = j->b.x = (rho + half_widthF);
+			j->a.y = r;
+			j->b.y = rminus;
+		}
+		else {
+			a = (std::cos(theta) * half_widthF), b = (1.f / std::sin(theta));
+			j->a.x = 0;
+			j->a.y = ((rho + a) * b) + half_heightF;
+			j->b.x = widthF;
+			j->b.y = ((rho - a) * b) + half_heightF;
+		}
+		j->a.z = j->b.z = 1.f;
+	}
+
 	return COMPV_ERROR_CODE_S_OK;
 }
 
