@@ -114,7 +114,7 @@ public:
     static uint64_t flagsEnabled() {
         return s_uFlagsEnabled;
     }
-    static const char* flagsAsString(uint64_t uFlags);
+    static const std::string flagsAsString(uint64_t uFlags);
     static bool isEnabled(uint64_t flag) {
         return (s_uFlagsEnabled & flag) == flag;
     }

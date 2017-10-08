@@ -190,7 +190,7 @@ COMPV_ERROR_CODE CompVBase::init(int32_t numThreads COMPV_DEFAULT(-1))
 
     /* CPU features initialization */
     COMPV_CHECK_CODE_BAIL(err_ = CompVCpu::init());
-    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "CPU features: %s", CompVCpu::flagsAsString(CompVCpu::getFlags()));
+    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "CPU features: %s", CompVCpu::flagsAsString(CompVCpu::getFlags()).c_str());
     COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "CPU cores: #%d", CompVCpu::coresCount());
     COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "CPU cache1: line size: #%dB, size :#%dKB", CompVCpu::cache1LineSize(), CompVCpu::cache1Size() >> 10);
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "CPU endianness: %s", CompVCpu::isBigEndian() ? "BIG" : "LITTLE");

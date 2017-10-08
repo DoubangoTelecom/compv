@@ -466,7 +466,7 @@ COMPV_ERROR_CODE CompVHoughKht::toCartesian(const size_t imageWidth, const size_
 		theta = i->theta;
 		CompVLineFloat32& cline = cartesian[k];
 		if (theta == 0.f) { // perfect vt line?
-			cline.a.x = cline.b.x = rho;
+			cline.a.x = cline.b.x = (rho + half_widthF);
 			cline.a.y = r;
 			cline.b.y = rminus;
 		}

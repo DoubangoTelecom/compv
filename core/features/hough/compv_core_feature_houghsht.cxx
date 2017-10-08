@@ -299,46 +299,6 @@ COMPV_ERROR_CODE CompVHoughSht::toCartesian(const size_t imageWidth, const size_
 		COMPV_CHECK_CODE_RETURN(toCartesian(imageWidth, imageHeight, polar.begin(), polar.end(), cartesian));
 	}
 	return COMPV_ERROR_CODE_S_OK;
-
-
-	cartesian.resize(polar.size());
-	const compv_float32_t widthF = static_cast<compv_float32_t>(imageWidth);
-	const compv_float32_t heightF = static_cast<compv_float32_t>(imageHeight);
-	const compv_float32_t r = std::sqrt((widthF*widthF) + (heightF*heightF));
-	const compv_float32_t rminus = -r;
-	compv_float32_t a, b, theta, rho;
-	size_t k;
-	CompVHoughLineVector::const_iterator i;
-	for (i = polar.begin(), k = 0; i < polar.end(); ++i, ++k) {
-		CompVLineFloat32& cline = cartesian[k];
-		theta = i->theta;
-		rho = i->rho;
-#if 1
-		if (theta == 0.f) { // perfect vt line?
-			cline.a.x = cline.b.x = rho;
-			cline.a.y = r;
-			cline.b.y = rminus;
-		}
-		else {
-			a = std::cos(theta), b = (1.f / std::sin(theta));
-			cline.a.x = 0.f;
-			cline.a.y = (rho * b); // equal to "((rho + (cline.a.x * a)) * b)"
-			cline.b.x = widthF;
-			cline.b.y = ((rho - (cline.b.x * a)) * b);
-		}
-		cline.a.z = cline.b.z = 1.f;
-#else
-		a = std::cos(theta), b = std::sin(theta);
-		const compv_float32_t x0 = a * rho, y0 = b * rho;
-		cline.a.x = (x0 - rsquare * b);
-		cline.a.y = (y0 + rsquare * a);
-		cline.a.z = 1.f;
-		cline.b.x = (x0 + rsquare * b);
-		cline.b.y = (y0 - rsquare * a);
-		cline.b.z = 1.f;
-#endif
-	}
-	return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVHoughSht::newObj(CompVHoughPtrPtr hough, float rho COMPV_DEFAULT(1.f), float theta COMPV_DEFAULT(kfMathTrigPiOver180), size_t threshold COMPV_DEFAULT(1))

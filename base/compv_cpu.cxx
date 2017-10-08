@@ -512,7 +512,7 @@ COMPV_ERROR_CODE CompVCpu::init()
     return COMPV_ERROR_CODE_S_OK;
 }
 
-const char* CompVCpu::flagsAsString(uint64_t uFlags)
+const std::string CompVCpu::flagsAsString(uint64_t uFlags)
 {
     static const struct {
         uint64_t f;
@@ -575,7 +575,7 @@ const char* CompVCpu::flagsAsString(uint64_t uFlags)
             _flags += std::string(flags[i].name) + ";";
         }
     }
-    return _flags.empty() ? "none" : _flags.c_str();
+    return _flags.empty() ? "none" : _flags;
 }
 
 
@@ -633,19 +633,19 @@ uint64_t CompVCpu::timeProcess()
 
 COMPV_ERROR_CODE CompVCpu::flagsDisable(uint64_t flags)
 {
-    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Disabled CPU flags: %s", flagsAsString(flags));
+    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Disabled CPU flags: %s", flagsAsString(flags).c_str());
     CompVCpu::s_uFlagsDisabled = flags;
     CompVCpu::s_uFlagsEnabled = (CompVCpu::s_uFlags & ~CompVCpu::s_uFlagsDisabled);
-    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Enabled CPU flags: %s", flagsAsString(CompVCpu::s_uFlagsEnabled));
+    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Enabled CPU flags: %s", flagsAsString(CompVCpu::s_uFlagsEnabled).c_str());
     return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVCpu::flagsEnable(uint64_t flags)
 {
-    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Enabled CPU flags: %s", flagsAsString(flags));
+    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Enabled CPU flags: %s", flagsAsString(flags).c_str());
     s_uFlagsDisabled &= ~flags;
     CompVCpu::s_uFlagsEnabled = (CompVCpu::s_uFlags & ~CompVCpu::s_uFlagsDisabled);
-    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Enabled CPU flags: %s", flagsAsString(CompVCpu::s_uFlagsEnabled));
+    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Enabled CPU flags: %s", flagsAsString(CompVCpu::s_uFlagsEnabled).c_str());
     return COMPV_ERROR_CODE_S_OK;
 }
 
