@@ -102,7 +102,7 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::process(const CompVMatPtr& imageIn, COMPV
 	case COMPV_SUBTYPE_PIXELS_RGB24:
 		if (imageIn->subType() == rgbxFormat) {
 			COMPV_CHECK_CODE_RETURN(CompVImage::clone(imageIn, &imageOut));
-			return COMPV_ERROR_CODE_S_OK;
+			break;
 		}
 		else {
 			COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "%s -> %s not supported", CompVGetSubtypeString(imageIn->subType()), CompVGetSubtypeString(rgbxFormat));
