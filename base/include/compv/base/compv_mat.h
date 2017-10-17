@@ -288,15 +288,17 @@ public:
 		COMPV_CHECK_EXP_RETURN(!mat, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 		const size_t colStart = static_cast<size_t>(roi.left);
 		COMPV_CHECK_EXP_RETURN(colStart > m_nCols, COMPV_ERROR_CODE_E_OUT_OF_BOUND);
-		const size_t colEnd = static_cast<size_t>(roi.right);
-		COMPV_CHECK_EXP_RETURN(colEnd > m_nCols || colStart >= colEnd, COMPV_ERROR_CODE_E_OUT_OF_BOUND);
-		const size_t colCount = (colEnd - colStart);
+		size_t colEnd = static_cast<size_t>(roi.right);
+		colEnd = std::min(colEnd, (m_nCols - 1)); // roi is up right which means 'roi.right' have to be included
+		COMPV_CHECK_EXP_RETURN(colStart >= colEnd, COMPV_ERROR_CODE_E_OUT_OF_BOUND);
+		const size_t colCount = (colEnd - colStart) + 1; // +1 because it's from 'colStart' up to 'colEnd'
 
 		const size_t rowStart = static_cast<size_t>(roi.top);
 		COMPV_CHECK_EXP_RETURN(rowStart > m_nRows, COMPV_ERROR_CODE_E_OUT_OF_BOUND);
-		const size_t rowEnd = static_cast<size_t>(roi.bottom);
-		COMPV_CHECK_EXP_RETURN(rowEnd > m_nRows || rowStart >= rowEnd, COMPV_ERROR_CODE_E_OUT_OF_BOUND);
-		const size_t rowCount = (rowEnd - rowStart);
+		size_t rowEnd = static_cast<size_t>(roi.bottom);
+		rowEnd = std::min(rowEnd, (m_nRows - 1)); // roi is up bottom which means 'roi.bottom' have to be included
+		COMPV_CHECK_EXP_RETURN(rowStart >= rowEnd, COMPV_ERROR_CODE_E_OUT_OF_BOUND);
+		const size_t rowCount = (rowEnd - rowStart) + 1; // +1 because it's from 'rowStart' up to 'rowEnd'
 
 		CompVMatPtr mat_;
 		mat_ = new CompVMat();
@@ -326,8 +328,8 @@ public:
 			for (int planeId = 0; planeId < m_nPlaneCount; ++planeId) {
 				COMPV_CHECK_CODE_RETURN(CompVImageUtils::planeSizeForPixelFormat(pixelFormat, planeId, colStart, rowStart, &colStartInPlane, &rowStartInPlane));
 				COMPV_CHECK_CODE_RETURN(CompVImageUtils::planeSizeForPixelFormat(pixelFormat, planeId, colEnd, rowEnd, &colEndInPlane, &rowEndInPlane));
-				mat_->m_nPlaneCols[planeId] = (colEndInPlane - colStartInPlane);
-				mat_->m_nPlaneRows[planeId] = (rowEndInPlane - rowStartInPlane);
+				mat_->m_nPlaneCols[planeId] = (colEndInPlane - colStartInPlane) + 1; // +1 because it's from 'colStart' up to 'colEnd'
+				mat_->m_nPlaneRows[planeId] = (rowEndInPlane - rowStartInPlane) + 1; // +1 because it's from 'rowStart' up to 'rowEnd'
 				mat_->m_pCompPtr[planeId] = this->ptr<const void>(rowStartInPlane, colStartInPlane, planeId);
 				mat_->m_nPlaneSizeInBytes[planeId] = m_nPlaneStrideInBytes[planeId] * (mat_->m_nPlaneRows[planeId]);
 				mat_->m_nPlaneStrideInBytes[planeId] = m_nPlaneStrideInBytes[planeId];
