@@ -72,11 +72,11 @@ private:
 			CompVAsyncTaskIds taskIds;
 			taskIds.reserve(threadsCount);
 			const size_t heights = (outputHeight / threadsCount);
-			size_t YStart = 0, YEnd = heights;
+			size_t YStart = 0, YEnd;
 			for (size_t threadIdx = 0; threadIdx < threadsCount; ++threadIdx) {
+				YEnd = (threadIdx == (threadsCount - 1)) ? outputHeight : (YStart + heights);
 				COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, YStart, YEnd), taskIds), "Dispatching task failed");
 				YStart += heights;
-				YEnd = (threadIdx == (threadsCount - 1)) ? outputHeight : (YEnd + heights);
 			}
 			COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds), "Failed to wait for tasks execution");
 		}
@@ -117,6 +117,7 @@ private:
 			T x, y;
 			int x1, x2, y1, y2;
 			T xfractpart, one_minus_xfractpart, yfractpart, one_minus_yfractpart;
+			const uint8_t *inputY1, *inputY2;
 			for (j = ystart, k = (ystart * outputWidth); j < yend; ++j) {
 				for (i = 0; i < outputWidth; ++i, ++k) {
 					x = mapXPtr[k];
@@ -133,25 +134,28 @@ private:
 						y2 = static_cast<int>(y + 1.f);
 						yfractpart = y - y1;
 						one_minus_yfractpart = 1.f - yfractpart;
-						outputPtr[i] = static_cast<uint8_t>((*input->ptr<const uint8_t>(y1, x1) * one_minus_yfractpart * one_minus_xfractpart)
-							+ (*input->ptr<const uint8_t>(y1, x2) * one_minus_yfractpart * xfractpart)
-							+ (*input->ptr<const uint8_t>(y2, x1) * yfractpart * one_minus_xfractpart)
-							+ (*input->ptr<const uint8_t>(y2, x2) * yfractpart * xfractpart));
+						inputY1 = input->ptr<const uint8_t>(y1);
+						inputY2 = input->ptr<const uint8_t>(y2);
+						outputPtr[i] = static_cast<uint8_t>(
+							(inputY1[x1] * one_minus_yfractpart * one_minus_xfractpart)
+							+ (inputY1[x2] * one_minus_yfractpart * xfractpart)
+							+ (inputY2[x1] * yfractpart * one_minus_xfractpart)
+							+ (inputY2[x2] * yfractpart * xfractpart)
+						);
 					}
 				}
 				outputPtr += outputStride;
 			}
 		};
-
 		if (threadsCount > 1) {
 			CompVAsyncTaskIds taskIds;
 			taskIds.reserve(threadsCount);
 			const size_t heights = (outputHeight / threadsCount);
-			size_t YStart = 0, YEnd = heights;
+			size_t YStart = 0, YEnd;
 			for (size_t threadIdx = 0; threadIdx < threadsCount; ++threadIdx) {
+				YEnd = (threadIdx == (threadsCount - 1)) ? outputHeight : (YStart + heights);
 				COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, YStart, YEnd), taskIds), "Dispatching task failed");
 				YStart += heights;
-				YEnd = (threadIdx == (threadsCount - 1)) ? outputHeight : (YEnd + heights);
 			}
 			COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds), "Failed to wait for tasks execution");
 		}
@@ -185,19 +189,15 @@ public:
 			mapROI_.right = COMPV_MATH_CLIP3(mapROI_.left, static_cast<compv_float32_t>(inputWidth - 1), mapROI_.right);
 			mapROI_.top = COMPV_MATH_CLIP3(0.f, static_cast<compv_float32_t>(inputHeight - 1), mapROI_.top);;
 			mapROI_.bottom = COMPV_MATH_CLIP3(mapROI_.top, static_cast<compv_float32_t>(inputHeight - 1), mapROI_.bottom);
-
-			outputSize_.width = static_cast<size_t>(mapROI_.right - mapROI_.left);
-			outputSize_.height = static_cast<size_t>(mapROI_.bottom - mapROI_.top);
 		}
 		else {
 			mapROI_.left = 0.f;
 			mapROI_.right = static_cast<compv_float32_t>(inputWidth - 1);
 			mapROI_.top = 0.f;
 			mapROI_.bottom = static_cast<compv_float32_t>(inputHeight - 1);
-
-			outputSize_.width = inputWidth;
-			outputSize_.height = inputHeight;
 		}
+		outputSize_.width = static_cast<size_t>(mapROI_.right - mapROI_.left) + 1;
+		outputSize_.height = static_cast<size_t>(mapROI_.bottom - mapROI_.top) + 1;
 
 		// map must contain at leat #2 rows (x, y) or (x, y, z) and with exactly n elements (n = (outSize.w*outSize.h)
 		const size_t outputElmtCount = (outputSize_.width * outputSize_.height);

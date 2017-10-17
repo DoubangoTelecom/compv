@@ -34,44 +34,6 @@ public:
 		COMPV_CHECK_EXP_RETURN(K->rows() != 3 || K->cols() != 3, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "K must be (3x3) matrix");
 		COMPV_CHECK_EXP_RETURN(d->rows() < 2 || d->cols() != 1, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "d must be (1x4+) vector");
 
-		/* [2] 5.1 Removing lens distortion */
-
-		COMPV_DEBUG_INFO_CODE_TODO("Kinv must be pre-computed and K must be image-size invariant");
-
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("K-inverse can be computed without calling invA3x3, see [2] 5.1");
-
-		CompVMatPtr kinv;
-		COMPV_CHECK_CODE_RETURN(CompVMatrix::invA3x3(K, &kinv));
-
-		const size_t img_width = imageSize.width;
-		const size_t img_height = imageSize.height;
-
-		/* Build coordinates */
-		CompVMatPtr coords;
-		const size_t coords_num = (img_width * img_height);
-		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<T>(&coords, 3, coords_num));
-		const size_t coords_stride = coords->stride();
-		T* coordsX = coords->ptr<T>(0);
-		T* coordsY = coords->ptr<T>(1);
-		T* coordsZ = coords->ptr<T>(2);
-
-		for (size_t j = 0, k = 0; j < img_height; ++j) {
-			for (size_t i = 0; i < img_width; ++i, ++k) {
-				coordsX[k] = static_cast<T>(i);
-				coordsY[k] = static_cast<T>(j);
-				coordsZ[k] = static_cast<T>(1);
-			}
-		}
-
-		/* [2] 5.1 step 1 */
-		CompVMatPtr normalized;
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("mulAB will transpose and do very slow stuff, just compute kinv and make mul yourself (ignore last row: 0 0 1)");
-		COMPV_CHECK_CODE_RETURN(CompVMatrix::mulAB(kinv, coords, map));
-		T* mapX = (*map)->ptr<T>(0);
-		T* mapY = (*map)->ptr<T>(1);
-		T* mapZ = (*map)->ptr<T>(2); // FIXME(dmi): Always 1, could be ignored
-		T x, y, z, x2, y2, r2, r4, a1, a2, a3, rdist;
-
 		// Camera matrix
 		const T fx = *K->ptr<const T>(0, 0); // alpha
 		const T fy = *K->ptr<const T>(1, 1); // beta
@@ -85,39 +47,68 @@ public:
 		const T p1 = d->rows() > 2 ? *d->ptr<const T>(2, 0) : static_cast<T>(0);
 		const T p2 = d->rows() > 3 ? *d->ptr<const T>(3, 0) : static_cast<T>(0);
 
-		for (size_t i = 0; i < coords_num; ++i) {
-			/* [2] 5.1 step 2: Applying distorsion */
-			x = mapX[i];
-			y = mapY[i];
-			z = mapZ[i];
+		const size_t img_width = imageSize.width;
+		const size_t img_height = imageSize.height;
+		const size_t coords_num = (img_width * img_height);
 
+		/* Compute K-inv */
+		T detKinv = (fx * fy);
+		COMPV_CHECK_EXP_RETURN(!detKinv, COMPV_ERROR_CODE_E_INVALID_CALL, "Camera matrix is singular");
+		detKinv = (1 / detKinv);
+		const T kinv11 = (fy * detKinv);
+		const T kinv21 = -(skew * detKinv);
+		const T kinv31 = ((skew * cy) - (fy * cx)) * detKinv;
+		const T kinv22 = (fx * detKinv);
+		const T kinv32 = -(cy * fx * detKinv);
+
+		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<T>(map, 3, coords_num));
+		T* mapX = (*map)->ptr<T>(0);
+		T* mapY = (*map)->ptr<T>(1);
+		T* mapZ = (*map)->ptr<T>(2); // always 1
+
+		// TODO(dmi): the next loop isn't optimized but this isn't an issue because this function should
+		// be called once
+		
+		T x, y, x2, y2, r2, r4, a1, a2, a3, rdist;
+		for (size_t j = 0, k = 0; j < img_height; ++j) {
+			for (size_t i = 0; i < img_width; ++i, ++k) {
+				/* [2] 5.1 step 1: map = mul(Kinv, indices) */
+				x = static_cast<T>(i);
+				y = static_cast<T>(j);
+				x = (kinv11 * x) + (kinv21 * y) + kinv31;
+				y = (kinv22 * y) + kinv32;
+
+				/* [2] 5.1 step 2: Applying distorsion */
+#if 0 // z, always equal to 1 last row for kinv is "0, 0, 1"
 			// https://youtu.be/Ou9Uj75DJX0?t=25m34s (1)
-			COMPV_DEBUG_INFO_CODE_TODO("Kinv last line should be 0 0 1 which means z is always equal 1, remove next code");
-			z = z ? (static_cast<T>(1) / z) : static_cast<T>(1);
-			x *= z;
-			y *= z;
+				COMPV_DEBUG_INFO_CODE_TODO("Kinv last line should be 0 0 1 which means z is always equal 1, remove next code");
+				z = z ? (static_cast<T>(1) / z) : static_cast<T>(1);
+				x *= z;
+				y *= z;
+#endif
 
-			// https://youtu.be/Ou9Uj75DJX0?t=25m34s (2) or general form: https://en.wikipedia.org/wiki/Distortion_(optics)#Software_correction
-			x2 = (x * x);
-			y2 = (y * y);
-			r2 = x2 + y2;
-			r4 = r2 * r2;
-			a1 = 2 * (x * y);
-			a2 = r2 + (2 * x2);
-			a3 = r2 + (2 * y2);
-			// add radial distortion
-			rdist = 1 + k1 * r2 + k2 * r4;
-			x *= rdist;
-			y *= rdist;
-			// add tangential distortion
-			x += p1 * a1 + p2 * a2;
-			y += p1 * a3 + p2 * a1;
+				// https://youtu.be/Ou9Uj75DJX0?t=25m34s (2) or general form: https://en.wikipedia.org/wiki/Distortion_(optics)#Software_correction
+				x2 = (x * x);
+				y2 = (y * y);
+				r2 = x2 + y2;
+				r4 = r2 * r2;
+				a1 = 2 * (x * y);
+				a2 = r2 + (2 * x2);
+				a3 = r2 + (2 * y2);
+				// add radial distortion
+				rdist = 1 + k1 * r2 + k2 * r4;
+				x *= rdist;
+				y *= rdist;
+				// add tangential distortion
+				x += p1 * a1 + p2 * a2;
+				y += p1 * a3 + p2 * a1;
 
-			// https://youtu.be/Ou9Uj75DJX0?t=25m34s (3)
-			/* [2] 5.1 step 3: normalized = mul(K, normalized) */
-			mapX[i] = (x * fx) + (skew * y) + cx;
-			mapY[i] = (y * fy) + cy;
-			mapZ[i] = static_cast<T>(1);
+				// https://youtu.be/Ou9Uj75DJX0?t=25m34s (3)
+				/* [2] 5.1 step 3: normalized = mul(K, normalized) */
+				mapX[k] = (x * fx) + (skew * y) + cx;
+				mapY[k] = (y * fy) + cy;
+				mapZ[k] = static_cast<T>(1);
+			}
 		}
 		return COMPV_ERROR_CODE_S_OK;
 	}
@@ -330,14 +321,30 @@ COMPV_ERROR_CODE CompVCalibUtils::initUndistMap(const CompVSizeSz& imageSize, co
 	return COMPV_ERROR_CODE_S_OK;
 }
 
+// Function not optimized, should call the overrided one with a mapping indices as parameter
 COMPV_ERROR_CODE CompVCalibUtils::undist2DImage(const CompVMatPtr& imageIn, const CompVMatPtr& K, const CompVMatPtr& d, CompVMatPtrPtr imageOut, COMPV_INTERPOLATION_TYPE interpType COMPV_DEFAULT(COMPV_INTERPOLATION_TYPE_BILINEAR))
 {
+	// Other parameters will be checked in the generic function
+	COMPV_CHECK_EXP_RETURN(!imageIn || imageIn->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
 	// This function isn't optimized but there is an overrided one which is optimized (see below)
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("This function isn't optimized because it generate the map indices for each call.\n You should call CompVCalibUtils::initUndistMap then CompVImageRemap::process(map).");
 
 	CompVMatPtr map;
 	COMPV_CHECK_CODE_RETURN(CompVCalibUtils::initUndistMap(CompVSizeSz(imageIn->cols(), imageIn->rows()), K, d, &map));
 	COMPV_CHECK_CODE_RETURN(CompVImageRemap::process(imageIn, imageOut, map, interpType));
+
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// map -> must be generated using CompVCalibUtils::initUndistMap
+COMPV_ERROR_CODE CompVCalibUtils::undist2DImage(const CompVMatPtr& imageIn, const CompVMatPtr& map, CompVMatPtrPtr imageOut, COMPV_INTERPOLATION_TYPE interpType COMPV_DEFAULT(COMPV_INTERPOLATION_TYPE_BILINEAR), const CompVRectFloat32* mapROI COMPV_DEFAULT(nullptr))
+{
+	// Other parameters will be checked in the generic function
+	COMPV_CHECK_EXP_RETURN(!imageIn || imageIn->isEmpty() || !map, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+	// Do not check that map and imageIn have the same size, this will be done in CompVImageRemap::process
+	COMPV_CHECK_CODE_RETURN(CompVImageRemap::process(imageIn, imageOut, map, interpType, mapROI));
 
 	return COMPV_ERROR_CODE_S_OK;
 }
