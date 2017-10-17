@@ -17,8 +17,9 @@
 #define TEST_CALIB_HOMOGRAPHY_BUILD_MATRIX	0
 #define TEST_CALIB_HOMOGRAPHY				0
 #define TEST_CALIB_CAMERA					0
+#define TEST_CALIB_UNDIST					1
 #define TEST_DISTANCE_HAMMING				0
-#define TEST_HISTOGRAM						1
+#define TEST_HISTOGRAM						0
 
 
 /* Entry point function */
@@ -89,6 +90,10 @@ compv_main()
 #if TEST_CALIB_CAMERA
 		extern COMPV_ERROR_CODE calib_camera();
 		COMPV_CHECK_CODE_BAIL(err = calib_camera(), TAG_TEST "Math camera calibration test failed");
+#endif
+#if TEST_CALIB_UNDIST
+		extern COMPV_ERROR_CODE calib_undist();
+		COMPV_CHECK_CODE_BAIL(err = calib_undist(), TAG_TEST "Math calibration undist");
 #endif
 
 #if TEST_DISTANCE_HAMMING

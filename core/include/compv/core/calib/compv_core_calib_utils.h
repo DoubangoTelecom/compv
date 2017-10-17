@@ -19,7 +19,9 @@ public:
 	static COMPV_ERROR_CODE proj2DError(const CompVMatPtr& aPoints, const CompVMatPtr& bPoints, compv_float64_t& error);
 	static COMPV_ERROR_CODE proj2DError(const CompVCalibContex& context, compv_float64_t& error);
 	static COMPV_ERROR_CODE proj2DError(const CompVCalibCameraPlanVector& planes, const CompVMatPtr& K, const CompVMatPtr& d, const std::vector<CompVMatPtr>& R, const std::vector<CompVMatPtr>& t, compv_float64_t& error);
-	static COMPV_ERROR_CODE undist2DImage(const CompVMatPtr& imageIn, const CompVMatPtr& K, const CompVMatPtr& d, CompVMatPtrPtr imageOut);
+	static COMPV_ERROR_CODE initUndistMap(const CompVSizeSz& imageSize, const CompVMatPtr& K, const CompVMatPtr& d, CompVMatPtrPtr map);
+	static COMPV_ERROR_CODE undist2DImage(const CompVMatPtr& imageIn, const CompVMatPtr& K, const CompVMatPtr& d, CompVMatPtrPtr imageOut, COMPV_INTERPOLATION_TYPE interpType = COMPV_INTERPOLATION_TYPE_BILINEAR);
+
 };
 
 COMPV_NAMESPACE_END()

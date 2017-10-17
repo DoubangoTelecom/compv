@@ -13,6 +13,7 @@
  * Homepage:  apps.jcns.fz-juelich.de/lmfit
  */
 
+#include "compv/base/math/lmfit-6.1/lmcurve_tyd.h"
 #include "compv/base/math/lmfit-6.1/lmmin.h"
 
 typedef struct {

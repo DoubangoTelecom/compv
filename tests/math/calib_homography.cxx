@@ -100,10 +100,10 @@ COMPV_ERROR_CODE homography()
 		// z[i] = 1; // required, but already set after mul(H, input)
 	}
 
-	h = NULL;
+	h = nullptr;
 	uint64_t timeStart = CompVTime::nowMillis();
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
-		COMPV_CHECK_CODE_RETURN(CompVHomography<TYP>::find(&h, input, output, MODE_EST)); // NONE to make sure we'll always have the same result (ransac is nondeterministic)
+		COMPV_CHECK_CODE_RETURN(CompVHomography<TYP>::find(input, output, &h, nullptr, MODE_EST)); // NONE to make sure we'll always have the same result (ransac is nondeterministic)
 	}
 	uint64_t timeEnd = CompVTime::nowMillis();
 

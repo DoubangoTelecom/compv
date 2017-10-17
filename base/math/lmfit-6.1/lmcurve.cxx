@@ -19,6 +19,7 @@
  * needs, like we have done in lmcurve_tyd.c.
  */
 
+#include "compv/base/math/lmfit-6.1/lmcurve.h"
 #include "compv/base/math/lmfit-6.1/lmmin.h"
 
 typedef struct {

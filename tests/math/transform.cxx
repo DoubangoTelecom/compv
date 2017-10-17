@@ -51,7 +51,7 @@ COMPV_ERROR_CODE homogeneousToCartesian2D()
 	CompVMatPtr dst;
 	uint64_t timeStart = CompVTime::nowMillis();
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
-		COMPV_CHECK_CODE_RETURN(CompVMathTransform<TYP>::homogeneousToCartesian2D(&dst, src));
+		COMPV_CHECK_CODE_RETURN(CompVMathTransform::homogeneousToCartesian2D(src, &dst));
 	}
 	uint64_t timeEnd = CompVTime::nowMillis();
 
