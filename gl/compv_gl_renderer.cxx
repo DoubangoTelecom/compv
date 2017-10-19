@@ -558,7 +558,9 @@ COMPV_ERROR_CODE CompVGLRenderer::newObj(CompVGLRendererPtrPtr glRenderer, COMPV
 		&& ePixelFormat != COMPV_SUBTYPE_PIXELS_RGB565LE
 		&& ePixelFormat != COMPV_SUBTYPE_PIXELS_RGB565BE
 		&& ePixelFormat != COMPV_SUBTYPE_PIXELS_BGR565LE
-		&& ePixelFormat != COMPV_SUBTYPE_PIXELS_BGR565BE,
+		&& ePixelFormat != COMPV_SUBTYPE_PIXELS_BGR565BE
+		&& ePixelFormat != COMPV_SUBTYPE_PIXELS_HSV
+		&& ePixelFormat != COMPV_SUBTYPE_PIXELS_HSL,
         COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
     CompVGLRendererPtr glRenderer_ = new CompVGLRenderer(ePixelFormat);
@@ -624,6 +626,10 @@ COMPV_ERROR_CODE CompVGLRenderer::newObj(CompVGLRendererPtrPtr glRenderer, COMPV
 		break;
 	case COMPV_SUBTYPE_PIXELS_BGR565BE:
 		glRenderer_->m_strPrgFragData = CompVCpu::isBigEndian() ? kProgramFragmentDataBGR565Native : kProgramFragmentDataBGR565BE;
+		break;
+	case COMPV_SUBTYPE_PIXELS_HSV:
+	case COMPV_SUBTYPE_PIXELS_HSL:
+		glRenderer_->m_strPrgFragData = kProgramFragmentDataRGB24;
 		break;
 	default:
 		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
@@ -695,6 +701,11 @@ COMPV_ERROR_CODE CompVGLRenderer::newObj(CompVGLRendererPtrPtr glRenderer, COMPV
 	case COMPV_SUBTYPE_PIXELS_ABGR32:
 	case COMPV_SUBTYPE_PIXELS_ARGB32:
 		glRenderer_->m_pSamplerNames[0] = "SamplerRGBA", glRenderer_->m_eFormats[0] = COMPV_GL_FORMAT_RGBA;
+		glRenderer_->m_ePixelDataType = GL_UNSIGNED_BYTE;
+		break;
+	case COMPV_SUBTYPE_PIXELS_HSV:
+	case COMPV_SUBTYPE_PIXELS_HSL:
+		glRenderer_->m_pSamplerNames[0] = "SamplerRGB", glRenderer_->m_eFormats[0] = COMPV_GL_FORMAT_RGB;
 		glRenderer_->m_ePixelDataType = GL_UNSIGNED_BYTE;
 		break;
 	default:

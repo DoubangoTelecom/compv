@@ -316,7 +316,8 @@ enum COMPV_SUBTYPE {
 	COMPV_SUBTYPE_PIXELS_RGB565BE,		// RGB565BE
 	COMPV_SUBTYPE_PIXELS_BGR565LE,		// BGR565LE
 	COMPV_SUBTYPE_PIXELS_BGR565BE,		// BGR565BE
-	COMPV_SUBTYPE_PIXELS_HSV,			// HSV aka HSL: Hue Saturation Value/Lightness/Brightness
+	COMPV_SUBTYPE_PIXELS_HSV,			// HSV/HSB: Hue Saturation Value/Brightness: http://codeitdown.com/hsl-hsb-hsv-color/
+	COMPV_SUBTYPE_PIXELS_HSL,			// HSL: Hue Saturation Lightness: http://codeitdown.com/hsl-hsb-hsv-color/
     COMPV_SUBTYPE_PIXELS_Y,				// Y-only: Grayscale
 	COMPV_SUBTYPE_PIXELS_NV12,			// Microsoft: NV12, iOS camera, Android camera, Semi-Planar, Info: https://www.fourcc.org/pixel-format/yuv-nv12/
 	COMPV_SUBTYPE_PIXELS_NV21,			// Microsoft: NV21, Android camera, Semi-Planar, Info: https://www.fourcc.org/pixel-format/yuv-nv21/
@@ -339,7 +340,7 @@ enum COMPV_SUBTYPE {
 	COMPV_SUBTYPE_PIXELS_Y422 = COMPV_SUBTYPE_PIXELS_UYVY,
 	COMPV_SUBTYPE_PIXELS_Y420SP = COMPV_SUBTYPE_PIXELS_NV21,
 	COMPV_SUBTYPE_PIXELS_GRAY = COMPV_SUBTYPE_PIXELS_Y,
-	COMPV_SUBTYPE_PIXELS_HSL = COMPV_SUBTYPE_PIXELS_HSV,
+	COMPV_SUBTYPE_PIXELS_HSB = COMPV_SUBTYPE_PIXELS_HSV,
 };
 extern COMPV_BASE_API const char* CompVGetSubtypeString(COMPV_NAMESPACE::COMPV_SUBTYPE subtype);
 
@@ -389,31 +390,6 @@ public:
     CompVVec3f(compv_float32_t x_, compv_float32_t y_, compv_float32_t z_) : x(x_), y(y_), z(z_) { }
 };
 
-template <typename T>
-struct CompVRect {
-public:
-	T left;
-	T top;
-	T right;
-	T bottom;
-    CompVRect(T left_ = 0, T top_ = 0, T right_ = 0, T bottom_ = 0) : left(left_), top(top_), right(right_), bottom(bottom_) {  }
-	bool operator==(const CompVRect &other) const {
-		return left == other.left && top == other.top && right == other.right && bottom == other.bottom;
-	}
-    static CompVRect makeFromWidthHeight(T x, T y, T width, T height) {
-        return CompVRect(x, y, x + width, y + height);
-    }
-	COMPV_INLINE bool isEmpty()const { return (left == right) && (top == bottom); }
-};
-typedef CompVRect<compv_float32_t> CompVRectFloat32;
-typedef CompVRect<compv_float64_t> CompVRectFloat64;
-typedef CompVRect<int32_t> CompVRectInt32;
-typedef CompVRect<int> CompVRectInt;
-typedef std::vector<CompVRectFloat32, CompVAllocatorNoDefaultConstruct<CompVRectFloat32> > CompVRectFloat32Vector;
-typedef std::vector<CompVRectFloat32, CompVAllocatorNoDefaultConstruct<CompVRectFloat32> > CompVRectFloat32Vector;
-typedef std::vector<CompVRectInt32, CompVAllocatorNoDefaultConstruct<CompVRectInt32> > CompVRectInt32Vector;
-typedef std::vector<CompVRectInt, CompVAllocatorNoDefaultConstruct<CompVRectInt> > CompVRectIntVector;
-
 struct CompVRatio {
 public:
     int numerator;
@@ -445,6 +421,42 @@ typedef std::vector<CompVPointFloat64, CompVAllocatorNoDefaultConstruct<CompVPoi
 typedef std::vector<CompVPointInt32, CompVAllocatorNoDefaultConstruct<CompVPointInt32> > CompVPointInt32Vector;
 typedef std::vector<CompVPointInt, CompVAllocatorNoDefaultConstruct<CompVPointInt> > CompVPointIntVector;
 typedef std::vector<CompVPointSz, CompVAllocatorNoDefaultConstruct<CompVPointInt> > CompVPointSzVector;
+
+template <typename T>
+struct CompVRect {
+public:
+	T left;
+	T top;
+	T right;
+	T bottom;
+	CompVRect(T left_ = 0, T top_ = 0, T right_ = 0, T bottom_ = 0) : left(left_), top(top_), right(right_), bottom(bottom_) {  }
+	bool operator==(const CompVRect &other) const {
+		return left == other.left && top == other.top && right == other.right && bottom == other.bottom;
+	}
+	static CompVRect makeFromWidthHeight(T x, T y, T width, T height) {
+		return CompVRect(x, y, x + width, y + height);
+	}
+	COMPV_INLINE bool isEmpty()const { return (left == right) && (top == bottom); }
+};
+typedef CompVRect<compv_float32_t> CompVRectFloat32;
+typedef CompVRect<compv_float64_t> CompVRectFloat64;
+typedef CompVRect<int32_t> CompVRectInt32;
+typedef CompVRect<int> CompVRectInt;
+typedef std::vector<CompVRectFloat32, CompVAllocatorNoDefaultConstruct<CompVRectFloat32> > CompVRectFloat32Vector;
+typedef std::vector<CompVRectFloat32, CompVAllocatorNoDefaultConstruct<CompVRectFloat32> > CompVRectFloat32Vector;
+typedef std::vector<CompVRectInt32, CompVAllocatorNoDefaultConstruct<CompVRectInt32> > CompVRectInt32Vector;
+typedef std::vector<CompVRectInt, CompVAllocatorNoDefaultConstruct<CompVRectInt> > CompVRectIntVector;
+
+typedef CompVPointFloat32 CompVQuadrilateralFloat32[4];
+typedef CompVPointFloat64 CompVQuadrilateralFloat64[4];
+typedef CompVPointInt32 CompVQuadrilateralInt32[4];
+typedef CompVPointInt CompVQuadrilateralInt[4];
+typedef CompVPointSz CompVQuadrilateralSz[4];
+typedef std::vector<CompVQuadrilateralFloat32, CompVAllocatorNoDefaultConstruct<CompVQuadrilateralFloat32> > CompVQuadrilateralFloat32Vector;
+typedef std::vector<CompVQuadrilateralFloat64, CompVAllocatorNoDefaultConstruct<CompVQuadrilateralFloat64> > CompVQuadrilateralFloat64Vector;
+typedef std::vector<CompVQuadrilateralInt32, CompVAllocatorNoDefaultConstruct<CompVQuadrilateralInt32> > CompVQuadrilateralInt32Vector;
+typedef std::vector<CompVQuadrilateralInt, CompVAllocatorNoDefaultConstruct<CompVQuadrilateralInt> > CompVQuadrilateralIntVector;
+typedef std::vector<CompVQuadrilateralSz, CompVAllocatorNoDefaultConstruct<CompVQuadrilateralSz> > CompVQuadrilateralSzVector;
 
 template <typename T>
 struct CompVSize {
