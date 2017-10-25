@@ -244,7 +244,7 @@ COMPV_ERROR_CODE CompVGLDrawTexts::freeTypeAddChar(unsigned long charcode)
 		return COMPV_ERROR_CODE_E_FREETYPE;
 	}
 
-	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASS_NAME, "Adding new charcode to the cache: %ld", charcode);
+	COMPV_DEBUG_VERBOSE_EX(COMPV_THIS_CLASS_NAME, "Adding new charcode to the cache: %ld", charcode);
 	void* memory = CompVMem::malloc(ft_g->bitmap.rows * ft_g->bitmap.width);
 	COMPV_CHECK_EXP_RETURN(!memory, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 	CompVFreeTypeChar& fchar = m_freeTypeCache[charcode] = CompVFreeTypeChar();
@@ -429,7 +429,7 @@ COMPV_ERROR_CODE CompVGLDrawTexts::freeTypeFillAtlas(const bool bUtf8, const Com
 
 			// Do not write partial chars
 			if ((xi + cache_char->width) >= fboWidth || (yi + cache_char->height) >= fboHeight) {
-				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASS_NAME, "Trying to write outside the screen domain (partial char): skip");
+				COMPV_DEBUG_VERBOSE_EX(COMPV_THIS_CLASS_NAME, "Trying to write outside the screen domain (partial char): skip");
 				break; // end the string
 			}
 

@@ -12,11 +12,13 @@
 
 #if COMPV_OS_ANDROID
 #	include <android/log.h>
+#	define _COMPV_PRINT_VERBOSE(FMT, ...) __android_log_print(ANDROID_LOG_VERBOSE, "org.doubango.compv", "*[COMPV VERBOSE]: " FMT "\n", ##__VA_ARGS__)
 #	define _COMPV_PRINT_INFO(FMT, ...) __android_log_print(ANDROID_LOG_INFO, "org.doubango.compv", "*[COMPV INFO]: " FMT "\n", ##__VA_ARGS__)
 #	define _COMPV_PRINT_WARN(FMT, ...) __android_log_print(ANDROID_LOG_WARN, "org.doubango.compv", "**[COMPV WARN]: function: \"%s()\" \nfile: \"%s\" \nline: \"%u\" \nmessage: " FMT "\n", __FUNCTION__,  __FILE__, __LINE__, ##__VA_ARGS__)
 #	define _COMPV_PRINT_ERROR(FMT, ...) __android_log_print(ANDROID_LOG_ERROR, "org.doubango.compv", "***[COMPV ERROR]: function: \"%s()\" \nfile: \"%s\" \nline: \"%u\" \nmessage: " FMT "\n", __FUNCTION__,  __FILE__, __LINE__, ##__VA_ARGS__)
 #	define _COMPV_PRINT_FATAL(FMT, ...) __android_log_print(ANDROID_LOG_FATAL, "org.doubango.compv", "****[COMPV FATAL]: function: \"%s()\" \nfile: \"%s\" \nline: \"%u\" \nmessage: " FMT "\n", __FUNCTION__,  __FILE__, __LINE__, ##__VA_ARGS__)
 #else
+#	define _COMPV_PRINT_VERBOSE(FMT, ...) fprintf(stderr, "*[COMPV VERBOSE]: " FMT "\n", ##__VA_ARGS__)
 #	define _COMPV_PRINT_INFO(FMT, ...) fprintf(stderr, "*[COMPV INFO]: " FMT "\n", ##__VA_ARGS__)
 #	define _COMPV_PRINT_WARN(FMT, ...) fprintf(stderr, "**[COMPV WARN]: function: \"%s()\" \nfile: \"%s\" \nline: \"%u\" \nmessage: " FMT "\n", __FUNCTION__,  __FILE__, __LINE__, ##__VA_ARGS__)
 #	define _COMPV_PRINT_ERROR(FMT, ...) fprintf(stderr, "***[COMPV ERROR]: function: \"%s()\" \nfile: \"%s\" \nline: \"%u\" \nmessage: " FMT "\n", __FUNCTION__,  __FILE__, __LINE__, ##__VA_ARGS__)
@@ -57,6 +59,13 @@ private:
     static COMPV_DEBUG_LEVEL s_eLevel;
 };
 
+/* VERBOSE */
+#define COMPV_DEBUG_VERBOSE(FMT, ...)		\
+	if (COMPV_NAMESPACE::CompVDebugMgr::getLevel() >= COMPV_NAMESPACE::COMPV_DEBUG_LEVEL_VERBOSE) { \
+		if (COMPV_NAMESPACE::CompVDebugMgr::getInfoFuncPtr()) COMPV_NAMESPACE::CompVDebugMgr::getInfoFuncPtr()(COMPV_NAMESPACE::CompVDebugMgr::getArgData(), "*[COMPV VERBOSE]: " FMT "\n", ##__VA_ARGS__); \
+		else _COMPV_PRINT_VERBOSE(FMT, ##__VA_ARGS__); \
+	}
+
 /* INFO */
 #define COMPV_DEBUG_INFO(FMT, ...)		\
 	if (COMPV_NAMESPACE::CompVDebugMgr::getLevel() >= COMPV_NAMESPACE::COMPV_DEBUG_LEVEL_INFO) { \
@@ -87,7 +96,7 @@ private:
 		else _COMPV_PRINT_FATAL(FMT, ##__VA_ARGS__); \
 	}
 
-
+#define COMPV_DEBUG_VERBOSE_EX(MODULE, FMT, ...) COMPV_DEBUG_VERBOSE("[" MODULE "] " FMT, ##__VA_ARGS__)
 #define COMPV_DEBUG_INFO_EX(MODULE, FMT, ...) COMPV_DEBUG_INFO("[" MODULE "] " FMT, ##__VA_ARGS__)
 #define COMPV_DEBUG_WARN_EX(MODULE, FMT, ...) COMPV_DEBUG_WARN("[" MODULE "] " FMT, ##__VA_ARGS__)
 #define COMPV_DEBUG_ERROR_EX(MODULE, FMT, ...) COMPV_DEBUG_ERROR("[" MODULE "] " FMT, ##__VA_ARGS__)

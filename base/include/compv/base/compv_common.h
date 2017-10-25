@@ -190,6 +190,7 @@ typedef uint8_t compv_uint8x4_t[4];
 typedef std::vector<std::string> CompVStringVector;
 
 enum COMPV_DEBUG_LEVEL {
+	COMPV_DEBUG_LEVEL_VERBOSE = 5,
     COMPV_DEBUG_LEVEL_INFO = 4,
     COMPV_DEBUG_LEVEL_WARN = 3,
     COMPV_DEBUG_LEVEL_ERROR = 2,
