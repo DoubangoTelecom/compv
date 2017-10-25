@@ -173,18 +173,37 @@ private:
 
 	template <typename InputType = uint8_t, typename KernelType = compv_float32_t, typename OutputType = uint8_t>
 	static void convlt1Hz_private(const InputType* inPtr, OutputType* outPtr, size_t width, size_t height, size_t stride, const KernelType* hzKernPtr, size_t kernSize, bool resetBorders = true, bool fixedPoint = false) {
-		size_t ker_size_div2 = (kernSize >> 1);
-		size_t imgpad = ((stride - width) + ker_size_div2 + ker_size_div2);
+		const size_t ker_size_div2 = (kernSize >> 1);
+		const size_t imgpad = ((stride - width) + ker_size_div2 + ker_size_div2);
 		// Set hz borders to zero
 		// We must not accept garbage in the border (could be used by the calling function -e.g to find the max value for normalization)
 		if (resetBorders) {
 			OutputType *outPtr0 = outPtr, *outPtr1 = outPtr + (width - ker_size_div2);
-			for (size_t row = 0; row < height; ++row) {
-				for (size_t col = 0; col < ker_size_div2; ++col) {
-					outPtr0[col] = 0, outPtr1[col] = 0;
+			switch (ker_size_div2) { // 1 and 2 (kernel sizes 3 and 5 are very common)
+				case 1: {
+					const size_t kmax = (stride * height);
+					for (size_t k = 0; k < kmax; k += stride) {
+						outPtr0[k] = 0, outPtr1[k] = 0;
+					}
+					break;
 				}
-				outPtr0 += stride;
-				outPtr1 += stride;
+				case 2: {
+					const size_t kmax = (stride * height);
+					for (size_t k = 0; k < kmax; k += stride) {
+						outPtr0[k] = outPtr0[k + 1] = 0, outPtr1[k] = outPtr1[k + 1] = 0;
+					}
+					break;
+				}
+				default: {
+					for (size_t row = 0; row < height; ++row) {
+						for (size_t col = 0; col < ker_size_div2; ++col) {
+							outPtr0[col] = 0, outPtr1[col] = 0;
+						}
+						outPtr0 += stride;
+						outPtr1 += stride;
+					}
+					break;
+				}
 			}
 		}
 		// Perform horizontal convolution
@@ -197,7 +216,7 @@ private:
 		size_t imgpad = (stride - width);
 		// Set top and bottom vert borders to zero
 		// We must not accept garbage in the border (coul be used by the calling function -e.g to find the max value for normalization)
-		const size_t bSize = (ker_size_div2 * stride) * sizeof(OutputType);
+		const size_t bSize = (ker_size_div2 * width) * sizeof(OutputType);
 		if (resetTopBorder) {
 			CompVMem::zero(outPtr, bSize);
 		}
