@@ -421,7 +421,7 @@ typedef std::vector<CompVPointFloat32, CompVAllocatorNoDefaultConstruct<CompVPoi
 typedef std::vector<CompVPointFloat64, CompVAllocatorNoDefaultConstruct<CompVPointFloat64> > CompVPointFloat64Vector;
 typedef std::vector<CompVPointInt32, CompVAllocatorNoDefaultConstruct<CompVPointInt32> > CompVPointInt32Vector;
 typedef std::vector<CompVPointInt, CompVAllocatorNoDefaultConstruct<CompVPointInt> > CompVPointIntVector;
-typedef std::vector<CompVPointSz, CompVAllocatorNoDefaultConstruct<CompVPointInt> > CompVPointSzVector;
+typedef std::vector<CompVPointSz, CompVAllocatorNoDefaultConstruct<CompVPointSz> > CompVPointSzVector;
 
 template <typename T>
 struct CompVRect {

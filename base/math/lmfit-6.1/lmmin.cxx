@@ -125,7 +125,7 @@ void lmmin(const int n, double* x, const int m, const void* data,
            const lm_control_struct* C, lm_status_struct* S)
 {
     int j, i;
-    double actred, dirder, fnorm, fnorm1, gnorm, pnorm, prered, ratio, step,
+    double actred, dirder, fnorm, fnorm1, scale_fnorm, gnorm, pnorm, prered, ratio, step, scale_step,
         sum, temp, temp1, temp2, temp3;
 
     /***  Initialize internal variables.  ***/
@@ -250,6 +250,7 @@ void lmmin(const int n, double* x, const int m, const void* data,
         S->outcome = 0; /* sum of squares almost zero, nothing to do */
         goto terminate;
     }
+	scale_fnorm = 1.0 / fnorm;
 
     /***  The outer loop: compute gradient, then descend.  ***/
 
@@ -259,13 +260,14 @@ void lmmin(const int n, double* x, const int m, const void* data,
         for (j = 0; j < n; j++) {
             temp = x[j];
             step = MAX(eps * eps, eps * fabs(temp));
+			scale_step = 1.0 / step;
             x[j] += step; /* replace temporarily */
             (*evaluate)(x, m, data, wf, &(S->userbreak));
             ++(S->nfev);
             if (S->userbreak)
                 goto terminate;
             for (i = 0; i < m; i++)
-                fjac[j*m+i] = (wf[i] - fvec[i]) / step;
+                fjac[j*m+i] = (wf[i] - fvec[i]) * scale_step;
             x[j] = temp; /* restore */
         }
         if (C->verbosity >= 10) {
@@ -330,7 +332,7 @@ void lmmin(const int n, double* x, const int m, const void* data,
             sum = 0;
             for (i = 0; i <= j; i++)
                 sum += fjac[j*m+i] * qtf[i];
-            gnorm = MAX(gnorm, fabs(sum / wa2[Pivot[j]] / fnorm));
+            gnorm = MAX(gnorm, fabs(sum / wa2[Pivot[j]] * scale_fnorm));
         }
 
         if (gnorm <= C->gtol) {
@@ -396,13 +398,13 @@ void lmmin(const int n, double* x, const int m, const void* data,
                 S->outcome = 12; /* nan */
                 goto terminate;
             }
-            temp2 = lmpar * SQR(pnorm / fnorm);
+            temp2 = lmpar * SQR(pnorm * scale_fnorm);
             for (j = 0; j < n; j++) {
                 wa3[j] = 0;
                 for (i = 0; i <= j; i++)
                     wa3[i] -= fjac[j*m+i] * wa1[Pivot[j]];
             }
-            temp1 = SQR(lm_enorm(n, wa3) / fnorm);
+            temp1 = SQR(lm_enorm(n, wa3) * scale_fnorm);
             if (!isfinite(temp1)) {
                 S->outcome = 12; /* nan */
                 goto terminate;
@@ -430,7 +432,7 @@ void lmmin(const int n, double* x, const int m, const void* data,
             /** Evaluate the scaled reduction. **/
 
             /* Actual scaled reduction. */
-            actred = 1 - SQR(fnorm1 / fnorm);
+            actred = 1 - SQR(fnorm1 * scale_fnorm);
 
             /* Ratio of actual to predicted reduction. */
             ratio = prered ? actred / prered : 0;
@@ -488,6 +490,7 @@ void lmmin(const int n, double* x, const int m, const void* data,
                     goto terminate;
                 }
                 fnorm = fnorm1;
+				scale_fnorm = 1.0 / fnorm;
             }
 
             /* Convergence tests. */
@@ -623,25 +626,26 @@ void lm_lmpar(const int n, double* r, const int ldr, const int* Pivot,
 {
     int i, iter, j, nsing;
     double dxnorm, fp, fp_old, gnorm, parc, parl, paru;
-    double sum, temp;
+    double sum, temp, scale_temp, *rjldr;
+	const double scale_delta = 1.0 / delta;
     static double p1 = 0.1;
 
     /*** Compute and store in x the Gauss-Newton direction. If the Jacobian
          is rank-deficient, obtain a least-squares solution. ***/
 
     nsing = n;
-    for (j = 0; j < n; j++) {
+    for (j = 0, rjldr = r; j < n; j++, rjldr += ldr) {
         aux[j] = qtb[j];
-        if (r[j*ldr+j] == 0 && nsing == n)
+        if (rjldr[j] == 0 && nsing == n)
             nsing = j;
         if (nsing < n)
             aux[j] = 0;
     }
-    for (j = nsing-1; j >= 0; j--) {
+    for (j = nsing-1, rjldr = &r[j*ldr]; j >= 0; j--, rjldr -= ldr) {
         aux[j] = aux[j] / r[j+ldr*j];
         temp = aux[j];
         for (i = 0; i < j; i++)
-            aux[i] -= r[j*ldr+i] * temp;
+            aux[i] -= rjldr[i] * temp;
     }
 
     for (j = 0; j < n; j++)
@@ -671,26 +675,27 @@ void lm_lmpar(const int n, double* r, const int ldr, const int* Pivot,
         for (j = 0; j < n; j++)
             aux[j] = diag[Pivot[j]] * xdi[Pivot[j]] / dxnorm;
 
-        for (j = 0; j < n; j++) {
+        for (j = 0, rjldr = r; j < n; j++, rjldr+= ldr) {
             sum = 0;
             for (i = 0; i < j; i++)
-                sum += r[j*ldr+i] * aux[i];
-            aux[j] = (aux[j] - sum) / r[j+ldr*j];
+                sum += rjldr[i] * aux[i];
+            aux[j] = (aux[j] - sum) / rjldr[j];
         }
         temp = lm_enorm(n, aux);
-        parl = fp / delta / temp / temp;
+		scale_temp = 1.0 / temp;
+        parl = fp * scale_delta * scale_temp * scale_temp;
     }
 
     /*** Calculate an upper bound, paru, for the zero of the function. ***/
 
-    for (j = 0; j < n; j++) {
+    for (j = 0, rjldr = r; j < n; j++, rjldr += ldr) {
         sum = 0;
         for (i = 0; i <= j; i++)
-            sum += r[j*ldr+i] * qtb[i];
+            sum += rjldr[i] * qtb[i];
         aux[j] = sum / diag[Pivot[j]];
     }
     gnorm = lm_enorm(n, aux);
-    paru = gnorm / delta;
+    paru = gnorm * scale_delta;
     if (paru == 0)
         paru = LM_DWARF / MIN(delta, p1);
 
@@ -739,13 +744,14 @@ void lm_lmpar(const int n, double* r, const int ldr, const int* Pivot,
         for (j = 0; j < n; j++)
             aux[j] = diag[Pivot[j]] * xdi[Pivot[j]] / dxnorm;
 
-        for (j = 0; j < n; j++) {
+        for (j = 0, rjldr = r; j < n; j++, rjldr+= ldr) {
             aux[j] = aux[j] / Sdiag[j];
             for (i = j+1; i < n; i++)
-                aux[i] -= r[j*ldr+i] * aux[j];
+                aux[i] -= rjldr[i] * aux[j];
         }
         temp = lm_enorm(n, aux);
-        parc = fp / delta / temp / temp;
+		scale_temp = 1.0 / temp;
+        parc = fp * scale_delta * scale_temp * scale_temp;
 
         /** Depending on the sign of the function, update parl or paru. **/
         if (fp > 0)
@@ -805,7 +811,7 @@ void lm_qrfac(const int m, const int n, double* A, int* Pivot, double* Rdiag,
  */
 {
     int i, j, k, kmax;
-    double ajnorm, sum, temp;
+    double ajnorm, scale_ajnorm, sum, temp, *Ajm;
 
 #ifdef LMFIT_DEBUG_MESSAGES
     printf("debug qrfac\n");
@@ -821,7 +827,7 @@ void lm_qrfac(const int m, const int n, double* A, int* Pivot, double* Rdiag,
     /** Loop over columns of A. **/
     assert(n <= m);
     for (j = 0; j < n; j++) {
-
+		Ajm = &A[j*m];
         /** Bring the column of largest norm into the pivot position. **/
         kmax = j;
         for (k = j+1; k < n; k++)
@@ -834,8 +840,8 @@ void lm_qrfac(const int m, const int n, double* A, int* Pivot, double* Rdiag,
             Pivot[j] = Pivot[kmax];
             Pivot[kmax] = k;
             for (i = 0; i < m; i++) {
-                temp = A[j*m+i];
-                A[j*m+i] = A[kmax*m+i];
+                temp = Ajm[i];
+				Ajm[i] = A[kmax*m+i];
                 A[kmax*m+i] = temp;
             }
             /* Half-swap: Rdiag[j], W[j] won't be needed any further. */
@@ -845,7 +851,7 @@ void lm_qrfac(const int m, const int n, double* A, int* Pivot, double* Rdiag,
 
         /** Compute the Householder reflection vector w_j to reduce the
             j-th column of A to a multiple of the j-th unit vector. **/
-        ajnorm = lm_enorm(m-j, &A[j*m+j]);
+        ajnorm = lm_enorm(m-j, &Ajm[j]);
         if (ajnorm == 0) {
             Rdiag[j] = 0;
             continue;
@@ -853,11 +859,12 @@ void lm_qrfac(const int m, const int n, double* A, int* Pivot, double* Rdiag,
 
         /* Let the partial column vector A[j][j:] contain w_j := e_j+-a_j/|a_j|,
            where the sign +- is chosen to avoid cancellation in w_jj. */
-        if (A[j*m+j] < 0)
+        if (Ajm[j] < 0)
             ajnorm = -ajnorm;
+		scale_ajnorm = 1.0 / ajnorm;
         for (i = j; i < m; i++)
-            A[j*m+i] /= ajnorm;
-        A[j*m+j] += 1;
+			Ajm[i] *= scale_ajnorm;
+		Ajm[j] += 1;
 
         /** Apply the Householder transformation U_w := 1 - 2*w_j.w_j/|w_j|^2
             to the remaining columns, and update the norms. **/
@@ -865,14 +872,14 @@ void lm_qrfac(const int m, const int n, double* A, int* Pivot, double* Rdiag,
             /* Compute scalar product w_j * a_j. */
             sum = 0;
             for (i = j; i < m; i++)
-                sum += A[j*m+i] * A[k*m+i];
+                sum += Ajm[i] * A[k*m+i];
 
             /* Normalization is simplified by the coincidence |w_j|^2=2w_jj. */
-            temp = sum / A[j*m+j];
+            temp = sum / Ajm[j];
 
             /* Carry out transform U_w_j * a_k. */
             for (i = j; i < m; i++)
-                A[k*m+i] -= temp * A[j*m+i];
+                A[k*m+i] -= temp * Ajm[i];
 
             /* No idea what happens here. */
             if (Rdiag[k] != 0) {
