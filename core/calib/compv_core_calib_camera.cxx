@@ -641,7 +641,7 @@ COMPV_ERROR_CODE CompVCalibCamera::calibrate(CompVCalibContex& context)
 		t13 *= k;
 
 		/*
-		Computing radial distorsion
+		Computing radial distortion
 		[1] 3.3 Dealing with radial distortion
 		[2] 3.5 Step 4: Estimating radial lens distortion
 		*/
@@ -667,12 +667,12 @@ COMPV_ERROR_CODE CompVCalibCamera::calibrate(CompVCalibContex& context)
 			const compv_float64_t du = (u - uc);
 			const compv_float64_t dv = (v - vc);
 
-			// Radial distorsion part (D)
+			// Radial distortion part (D)
 			DPtr0[0] = (du * r2);
 			DPtr0[1] = (du * r4);
 			DPtr1[0] = (dv * r2);
 			DPtr1[1] = (dv * r4);
-			// Tangential distorsion part (D) - probably not correct, not fully checked
+			// Tangential distortion part (D) - probably not correct, not fully checked
 			if (compute_tangential_dist) {
 				const compv_float64_t two_dudv = 2 * du * dv;
 				DPtr0[2] = two_dudv;
@@ -713,7 +713,7 @@ COMPV_ERROR_CODE CompVCalibCamera::calibrate(CompVCalibContex& context)
 	} // for (it_planes...
 
 	/*
-	Final radial distorsions (Least Square minimization):
+	Final radial distortions (Least Square minimization):
 	- [1] 3.3 Dealing with radial distortion
 	- [2] 3.5 Step 4: Estimating radial lens distortion
 	k = (Dt.D)*.Dt.d

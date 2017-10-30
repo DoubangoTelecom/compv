@@ -23,14 +23,14 @@ COMPV_NAMESPACE_BEGIN()
 template<class T>
 class CompVImageRemapGeneric {
 private:
-	static COMPV_ERROR_CODE process_nearest(const CompVMatPtr& input, CompVMatPtr& output, const CompVMatPtr& map, const CompVRectFloat32 mapROI)
+	static COMPV_ERROR_CODE process_nearest(const CompVMatPtr& input, CompVMatPtr& output, const CompVMatPtr& map, const CompVRectFloat32 inputROI)
 	{
 		// Internal function, no need to check input parameters. Up to the caller.
 
-		const T roi_left = static_cast<T>(mapROI.left);
-		const T roi_right = static_cast<T>(mapROI.right);
-		const T roi_top = static_cast<T>(mapROI.top);
-		const T roi_bottom = static_cast<T>(mapROI.bottom);
+		const T roi_left = static_cast<T>(inputROI.left);
+		const T roi_right = static_cast<T>(inputROI.right);
+		const T roi_top = static_cast<T>(inputROI.top);
+		const T roi_bottom = static_cast<T>(inputROI.bottom);
 		const T* mapXPtr = map->ptr<const T>(0);
 		const T* mapYPtr = map->ptr<const T>(1);
 		const size_t outputWidth = output->cols();
@@ -87,14 +87,14 @@ private:
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	
-	static COMPV_ERROR_CODE process_bilinear(const CompVMatPtr& input, CompVMatPtr& output, const CompVMatPtr& map, const CompVRectFloat32 mapROI)
+	static COMPV_ERROR_CODE process_bilinear(const CompVMatPtr& input, CompVMatPtr& output, const CompVMatPtr& map, const CompVRectFloat32 inputROI)
 	{
 		// Private function, no need to check input parameters. Up to the caller.
 
-		const T roi_left = static_cast<T>(mapROI.left);
-		const T roi_right = static_cast<T>(mapROI.right);
-		const T roi_top = static_cast<T>(mapROI.top);
-		const T roi_bottom = static_cast<T>(mapROI.bottom);
+		const T roi_left = static_cast<T>(inputROI.left);
+		const T roi_right = static_cast<T>(inputROI.right);
+		const T roi_top = static_cast<T>(inputROI.top);
+		const T roi_bottom = static_cast<T>(inputROI.bottom);
 		const T* mapXPtr = map->ptr<const T>(0);
 		const T* mapYPtr = map->ptr<const T>(1);
 		const size_t outputWidth = output->cols();
@@ -167,7 +167,7 @@ private:
 	}
 
 public:
-	static COMPV_ERROR_CODE process(const CompVMatPtr& input, CompVMatPtrPtr output, const CompVMatPtr& map, COMPV_INTERPOLATION_TYPE interType COMPV_DEFAULT(COMPV_INTERPOLATION_TYPE_BILINEAR), const CompVRectFloat32* mapROI COMPV_DEFAULT(nullptr))
+	static COMPV_ERROR_CODE process(const CompVMatPtr& input, CompVMatPtrPtr output, const CompVMatPtr& map, COMPV_INTERPOLATION_TYPE interType COMPV_DEFAULT(COMPV_INTERPOLATION_TYPE_BILINEAR), const CompVRectFloat32* inputROI COMPV_DEFAULT(nullptr))
 	{
 		// For now only grayscale images are supported
 		COMPV_CHECK_EXP_RETURN(!input || !output || !map || input->isEmpty() || input->elmtInBytes() != sizeof(uint8_t) || input->planeCount() != 1, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -180,24 +180,24 @@ public:
 		const size_t inputWidth = input->cols();
 		const size_t inputHeight = input->rows();
 
-		/* Set mapROI */
-		CompVRectFloat32 mapROI_;
+		/* Set inputROI */
+		CompVRectFloat32 inputROI_;
 		CompVSizeSz outputSize_;
-		if (mapROI) {
-			mapROI_ = *mapROI;
-			mapROI_.left = COMPV_MATH_CLIP3(0.f, static_cast<compv_float32_t>(inputWidth - 1), mapROI_.left);
-			mapROI_.right = COMPV_MATH_CLIP3(mapROI_.left, static_cast<compv_float32_t>(inputWidth - 1), mapROI_.right);
-			mapROI_.top = COMPV_MATH_CLIP3(0.f, static_cast<compv_float32_t>(inputHeight - 1), mapROI_.top);;
-			mapROI_.bottom = COMPV_MATH_CLIP3(mapROI_.top, static_cast<compv_float32_t>(inputHeight - 1), mapROI_.bottom);
+		if (inputROI) {
+			inputROI_ = *inputROI;
+			inputROI_.left = COMPV_MATH_CLIP3(0.f, static_cast<compv_float32_t>(inputWidth - 1), inputROI_.left);
+			inputROI_.right = COMPV_MATH_CLIP3(inputROI_.left, static_cast<compv_float32_t>(inputWidth - 1), inputROI_.right);
+			inputROI_.top = COMPV_MATH_CLIP3(0.f, static_cast<compv_float32_t>(inputHeight - 1), inputROI_.top);;
+			inputROI_.bottom = COMPV_MATH_CLIP3(inputROI_.top, static_cast<compv_float32_t>(inputHeight - 1), inputROI_.bottom);
 		}
 		else {
-			mapROI_.left = 0.f;
-			mapROI_.right = static_cast<compv_float32_t>(inputWidth - 1);
-			mapROI_.top = 0.f;
-			mapROI_.bottom = static_cast<compv_float32_t>(inputHeight - 1);
+			inputROI_.left = 0.f;
+			inputROI_.right = static_cast<compv_float32_t>(inputWidth - 1);
+			inputROI_.top = 0.f;
+			inputROI_.bottom = static_cast<compv_float32_t>(inputHeight - 1);
 		}
-		outputSize_.width = static_cast<size_t>(mapROI_.right - mapROI_.left) + 1;
-		outputSize_.height = static_cast<size_t>(mapROI_.bottom - mapROI_.top) + 1;
+		outputSize_.width = COMPV_MATH_ROUNDFU_2_NEAREST_INT(((inputROI_.right - inputROI_.left) + 1), size_t);
+		outputSize_.height = COMPV_MATH_ROUNDFU_2_NEAREST_INT(((inputROI_.bottom - inputROI_.top) + 1), size_t);
 
 		// map must contain at leat #2 rows (x, y) or (x, y, z) and with exactly n elements (n = (outSize.w*outSize.h)
 		const size_t outputElmtCount = (outputSize_.width * outputSize_.height);
@@ -209,10 +209,10 @@ public:
 		// Perform interpolation
 		switch (interType) {
 		case COMPV_INTERPOLATION_TYPE_BILINEAR:
-			COMPV_CHECK_CODE_RETURN(CompVImageRemapGeneric::process_bilinear(input, output_, map, mapROI_));
+			COMPV_CHECK_CODE_RETURN(CompVImageRemapGeneric::process_bilinear(input, output_, map, inputROI_));
 			break;
 		case COMPV_INTERPOLATION_TYPE_NEAREST:
-			COMPV_CHECK_CODE_RETURN(CompVImageRemapGeneric::process_nearest(input, output_, map, mapROI_));
+			COMPV_CHECK_CODE_RETURN(CompVImageRemapGeneric::process_nearest(input, output_, map, inputROI_));
 			break;
 		default:
 			COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Invalid interpolation type: not implemented");
@@ -229,12 +229,12 @@ public:
 //
 
 // map = (x, y) values
-COMPV_ERROR_CODE CompVImageRemap::process(const CompVMatPtr& input, CompVMatPtrPtr output, const CompVMatPtr& map, COMPV_INTERPOLATION_TYPE interType COMPV_DEFAULT(COMPV_INTERPOLATION_TYPE_BILINEAR), const CompVRectFloat32* mapROI COMPV_DEFAULT(nullptr))
+COMPV_ERROR_CODE CompVImageRemap::process(const CompVMatPtr& input, CompVMatPtrPtr output, const CompVMatPtr& map, COMPV_INTERPOLATION_TYPE interType COMPV_DEFAULT(COMPV_INTERPOLATION_TYPE_BILINEAR), const CompVRectFloat32* inputROI COMPV_DEFAULT(nullptr))
 {
 	COMPV_CHECK_EXP_RETURN(!map, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	switch (map->subType()) {
-	case COMPV_SUBTYPE_RAW_FLOAT32: COMPV_CHECK_CODE_RETURN((CompVImageRemapGeneric<compv_float32_t>::process(input, output, map, interType, mapROI))); break;
-	case COMPV_SUBTYPE_RAW_FLOAT64: COMPV_CHECK_CODE_RETURN((CompVImageRemapGeneric<compv_float64_t>::process(input, output, map, interType, mapROI))); break;
+	case COMPV_SUBTYPE_RAW_FLOAT32: COMPV_CHECK_CODE_RETURN((CompVImageRemapGeneric<compv_float32_t>::process(input, output, map, interType, inputROI))); break;
+	case COMPV_SUBTYPE_RAW_FLOAT64: COMPV_CHECK_CODE_RETURN((CompVImageRemapGeneric<compv_float64_t>::process(input, output, map, interType, inputROI))); break;
 	default: COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED, "map must constain float or double indices");  break;
 	}
 	return COMPV_ERROR_CODE_S_OK;

@@ -19,9 +19,11 @@ public:
 	static COMPV_ERROR_CODE proj2DError(const CompVMatPtr& aPoints, const CompVMatPtr& bPoints, compv_float64_t& error);
 	static COMPV_ERROR_CODE proj2DError(const CompVCalibContex& context, compv_float64_t& error);
 	static COMPV_ERROR_CODE proj2DError(const CompVCalibCameraPlanVector& planes, const CompVMatPtr& K, const CompVMatPtr& d, const std::vector<CompVMatPtr>& R, const std::vector<CompVMatPtr>& t, compv_float64_t& error);
-	static COMPV_ERROR_CODE initUndistMap(const CompVSizeSz& imageSize, const CompVMatPtr& K, const CompVMatPtr& d, CompVMatPtrPtr map);
+	static COMPV_ERROR_CODE initUndistMap(const CompVSizeSz& imageSize, const CompVMatPtr& K, const CompVMatPtr& d, CompVMatPtrPtr map, const CompVRectFloat32* imageROI = nullptr);
 	static COMPV_ERROR_CODE undist2DImage(const CompVMatPtr& imageIn, const CompVMatPtr& K, const CompVMatPtr& d, CompVMatPtrPtr imageOut, COMPV_INTERPOLATION_TYPE interpType = COMPV_INTERPOLATION_TYPE_BILINEAR);
-	static COMPV_ERROR_CODE undist2DImage(const CompVMatPtr& imageIn, const CompVMatPtr& map, CompVMatPtrPtr imageOut, COMPV_INTERPOLATION_TYPE interpType = COMPV_INTERPOLATION_TYPE_BILINEAR, const CompVRectFloat32* mapROI = nullptr);
+	static COMPV_ERROR_CODE undist2DImage(const CompVMatPtr& imageIn, const CompVMatPtr& map, CompVMatPtrPtr imageOut, COMPV_INTERPOLATION_TYPE interpType = COMPV_INTERPOLATION_TYPE_BILINEAR, const CompVRectFloat32* imageInROI = nullptr);
+	static COMPV_ERROR_CODE dist2DPoints(const CompVMatPtr& inPoints, const CompVMatPtr& K, const CompVMatPtr& d, CompVMatPtrPtr outPoints);
+	static COMPV_ERROR_CODE dist2DPoints(CompVMatPtr& inOutPoints, const CompVMatPtr& K, const CompVMatPtr& d);
 };
 
 COMPV_NAMESPACE_END()

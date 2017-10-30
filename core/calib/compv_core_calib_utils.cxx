@@ -41,7 +41,7 @@ public:
 		const T cy = *K->ptr<const T>(1, 2);
 		const T skew = *K->ptr<const T>(0, 1); // gamma
 
-		// Radial and tangential distorsion coefficients
+		// Radial and tangential distortion coefficients
 		const T k1 = *d->ptr<const T>(0, 0);
 		const T k2 = *d->ptr<const T>(1, 0);
 		const T p1 = d->rows() > 2 ? *d->ptr<const T>(2, 0) : static_cast<T>(0);
@@ -72,43 +72,49 @@ public:
 
 		// TODO(dmi): the next loop isn't optimized but this isn't an issue because this function should
 		// be called once
+
+		// The next code is the same as dist2DPoints. We're distorting the (u,v) coords and filling a map with the distorted coords.
+		// At position (u,v) the map contains (xd,yd) coords. With (xd,yd) = distorted coords.
+		// The map is applied to a distorted image:
+		//		Map function Map(u,v) = (xd, yd)
+		//		Undist function: undistortedImage(u,v) = distortedImage(Map(u,v)) = distortedImage(xd, yd)
 		
 		T x, y, x2, y2, r2, r4, a1, a2, a3, rdist;
 		for (size_t j = img_start_y, k = 0; j <= img_end_y; ++j) {
 			for (size_t i = img_start_x; i <= img_end_x; ++i, ++k) {
-				/* [2] 5.1 step 1: map = mul(Kinv, p) */
+				/* [2] 5.1 step 1: map = mul(Kinv, indices) */
 				x = static_cast<T>(i);
 				y = static_cast<T>(j);
 				x = (kinv11 * x) + (kinv21 * y) + kinv31;
 				y = (kinv22 * y) + kinv32;
 
-				/* [2] 5.1 step 2: Applying distorsion */
 #if 0 // z, always equal to 1 last row for kinv is "0, 0, 1"
-			// https://youtu.be/Ou9Uj75DJX0?t=25m34s (1)
+				// https://youtu.be/Ou9Uj75DJX0?t=25m34s (1)
 				COMPV_DEBUG_INFO_CODE_TODO("Kinv last line should be 0 0 1 which means z is always equal 1, remove next code");
 				z = z ? (static_cast<T>(1) / z) : static_cast<T>(1);
 				x *= z;
 				y *= z;
 #endif
+				/* [2] 5.1 step 2: Applying distorsion */
 
 				// https://youtu.be/Ou9Uj75DJX0?t=25m34s (2) or general form: https://en.wikipedia.org/wiki/Distortion_(optics)#Software_correction
 				x2 = (x * x);
 				y2 = (y * y);
 				r2 = x2 + y2;
 				r4 = r2 * r2;
-				a1 = 2 * (x * y);
-				a2 = r2 + (2 * x2);
-				a3 = r2 + (2 * y2);
-				// radial distortion
+				// add radial distortion
 				rdist = 1 + k1 * r2 + k2 * r4;
 				x *= rdist;
 				y *= rdist;
-				// tangential distortion
+				// add tangential distortion
+				a1 = 2 * (x * y);
+				a2 = r2 + (2 * x2);
+				a3 = r2 + (2 * y2);
 				x += p1 * a1 + p2 * a2;
 				y += p1 * a3 + p2 * a1;
 
 				// https://youtu.be/Ou9Uj75DJX0?t=25m34s (3)
-				/* [2] 5.1 step 3: map = mul(K, p) */
+				/* [2] 5.1 step 3: normalized = mul(K, normalized) */
 				mapX[k] = (x * fx) + (skew * y) + cx;
 				mapY[k] = (y * fy) + cy;
 				mapZ[k] = static_cast<T>(1);
@@ -152,7 +158,7 @@ public:
 		const T cy = *K->ptr<const T>(1, 2);
 		const T skew = *K->ptr<const T>(0, 1);
 
-		// Radial and tangential distorsion coefficients
+		// Radial and tangential distortion coefficients
 		const T k1 = *d->ptr<const T>(0, 0);
 		const T k2 = *d->ptr<const T>(1, 0);
 		const T p1 = d->rows() > 2 ? *d->ptr<const T>(2, 0) : static_cast<T>(0);
@@ -171,36 +177,37 @@ public:
 		T x, y;
 		T x2, y2, r2, r4, a1, a2, a3, rdist;
 		for (index = 0; index < numPoints; ++index) {
-			// p = mul(Kinv, p)
+			/* [2] 5.1 step 1: p = mul(Kinv, p) */
 			x = inPointsX[index];
 			y = inPointsY[index];
 			x = (kinv11 * x) + (kinv21 * y) + kinv31;
 			y = (kinv22 * y) + kinv32;
 
 #if 0 // z, always equal to 1 last row for kinv is "0, 0, 1"
+			// https://youtu.be/Ou9Uj75DJX0?t=25m34s (1)
 			COMPV_DEBUG_INFO_CODE_TODO("Kinv last line should be 0 0 1 which means z is always equal 1, remove next code");
 			z = z ? (static_cast<T>(1) / z) : static_cast<T>(1);
 			x *= z;
 			y *= z;
 #endif
 
-			// Radial and tangential distorsions
+			/* [2] 5.1 step 2: Applying distorsion */
 			x2 = (x * x);
 			y2 = (y * y);
 			r2 = x2 + y2;
 			r4 = r2 * r2;
+			// add radial distortion
+			rdist = (1 + k1 * r2 + k2 * r4);
+			x *= rdist;
+			y *= rdist;
+			// add tangential distortion
 			a1 = 2 * (x * y);
 			a2 = r2 + (2 * x2);
 			a3 = r2 + (2 * y2);
-			// radial distortion
-			rdist = 1 / (1 + k1 * r2 + k2 * r4);
-			x *= rdist; // inverse: div instead of mul
-			y *= rdist; // inverse: div instead of mul
-			// tangential distortion
-			x -= p1 * a1 + p2 * a2; // inverse: sub instead of add
-			y -= p1 * a3 + p2 * a1; // inverse: sub instead of add
+			x += p1 * a1 + p2 * a2;
+			y += p1 * a3 + p2 * a1;
 
-			// outPoints = mul(K, outPoints)
+			/* [2] 5.1 step 3: normalized = mul(K, normalized) */
 			outPointsX[index] = (x * fx) + (skew * y) + cx;
 			outPointsY[index] = (y * fy) + cy;
 		}
@@ -246,7 +253,7 @@ COMPV_ERROR_CODE CompVCalibUtils::proj2D(const CompVMatPtr& inPoints, const Comp
 	const compv_float64_t cy = *K->ptr<const compv_float64_t>(1, 2);
 	const compv_float64_t skew = *K->ptr<const compv_float64_t>(0, 1);
 
-	// Radial and tangential distorsion coefficients
+	// Radial and tangential distortion coefficients
 	const compv_float64_t k1 = *d->ptr<const compv_float64_t>(0, 0);
 	const compv_float64_t k2 = *d->ptr<const compv_float64_t>(1, 0);
 	const compv_float64_t p1 = d->rows() > 2 ? *d->ptr<const compv_float64_t>(2, 0) : 0.0;
@@ -426,7 +433,7 @@ COMPV_ERROR_CODE CompVCalibUtils::initUndistMap(const CompVSizeSz& imageSize, co
 	switch (K->subType()) {
 	case COMPV_SUBTYPE_RAW_FLOAT32: COMPV_CHECK_CODE_RETURN((CompVCalibUtilsGeneric<compv_float32_t>::initUndistMap(K, d, map, roi))); break;
 	case COMPV_SUBTYPE_RAW_FLOAT64: COMPV_CHECK_CODE_RETURN((CompVCalibUtilsGeneric<compv_float64_t>::initUndistMap(K, d, map, roi))); break;
-	default: COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED, "Camera intrinsics and distorsion coefficients must be floats (32f) or doubles (64f)");  break;
+	default: COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED, "Camera intrinsics and distortion coefficients must be floats (32f) or doubles (64f)");  break;
 	}
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -470,7 +477,7 @@ COMPV_ERROR_CODE CompVCalibUtils::dist2DPoints(const CompVMatPtr& inPoints, cons
 	switch (K->subType()) {
 	case COMPV_SUBTYPE_RAW_FLOAT32: COMPV_CHECK_CODE_RETURN((CompVCalibUtilsGeneric<compv_float32_t>::dist2DPoints(inPoints, K, d, outPoints))); break;
 	case COMPV_SUBTYPE_RAW_FLOAT64: COMPV_CHECK_CODE_RETURN((CompVCalibUtilsGeneric<compv_float64_t>::dist2DPoints(inPoints, K, d, outPoints))); break;
-	default: COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED, "Camera intrinsics and distorsion coefficients must be floats (32f) or doubles (64f)");  break;
+	default: COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED, "Camera intrinsics and distortion coefficients must be floats (32f) or doubles (64f)");  break;
 	}
 	return COMPV_ERROR_CODE_S_OK;
 }

@@ -72,7 +72,7 @@ struct CompVCalibContex {
 	int verbosity = 0;
 	bool levenberg_marquardt = true; // whether to perform non-linear levenberg marquardt optimisation after getting initial calib results
 	bool check_plans = false; // whether to check if the current and previous plans are almost the same. If they are almost the same, reject!
-	bool compute_tangential_dist = false; // whether to compute tangential distorsions (p1, p2) in addition to radial distorsions (k1, k2)
+	bool compute_tangential_dist = false; // whether to compute tangential distortions (p1, p2) in addition to radial distortions (k1, k2)
 	bool compute_skew = false; // whether to compute skew value (part of camera matrix K) or set value to 0. 99.99% cameras should have skew equal 0 and this speedup levmarq process (less params)
 	compv_float32_t check_plans_min_sad = 13.f;
 	COMPV_CALIB_CAMERA_RESULT_CODE code = COMPV_CALIB_CAMERA_RESULT_NONE;
@@ -83,7 +83,7 @@ struct CompVCalibContex {
 	compv_float64_t reproj_error = DBL_MAX; // reprojection error, should be < 0.8
 	CompVCalibCameraPlanVector planes;
 	CompVMatPtr K; // Camera matrix (3x3) matrix - intrinsic
-	CompVMatPtr d; // Radial/Tangential distorsions (4x1) vector [k1, k2, p1, p2]t - "intrinsic"
+	CompVMatPtr d; // Radial/Tangential distortions (4x1) vector [k1, k2, p1, p2]t - "intrinsic"
 public:
 	COMPV_INLINE void reset() {
 		code = COMPV_CALIB_CAMERA_RESULT_NONE;
