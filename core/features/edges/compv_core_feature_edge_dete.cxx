@@ -160,7 +160,7 @@ COMPV_ERROR_CODE CompVCornerDeteEdgeBase::process(const CompVMatPtr& image, Comp
 		// Gmax (cannot be packed in convolution+gradient threads)
 		taskIds.clear();
 		for (size_t threadIdx = 0, index = 0; threadIdx < threadsCount; ++threadIdx, index += countAnyTimesStride) {
-			COMPV_CHECK_CODE_BAIL(err = threadDisp->invoke(std::bind(funcGmax, &m_pG[index], (threadIdx == (threadsCount - 1)) ? countAny : countLast, &gmaxTmp[threadIdx]), taskIds));
+			COMPV_CHECK_CODE_BAIL(err = threadDisp->invoke(std::bind(funcGmax, &m_pG[index], (threadIdx == (threadsCount - 1)) ? countLast : countAny, &gmaxTmp[threadIdx]), taskIds));
 		}
 		for (size_t threadIdx = 0; threadIdx < threadsCount; ++threadIdx) {
 			COMPV_CHECK_CODE_BAIL(err = threadDisp->waitOne(taskIds[threadIdx]));
@@ -171,7 +171,7 @@ COMPV_ERROR_CODE CompVCornerDeteEdgeBase::process(const CompVMatPtr& image, Comp
 		scale = 255.f / compv_float32_t(gmax);
 		taskIds.clear();
 		for (size_t threadIdx = 0, index = 0; threadIdx < threadsCount; ++threadIdx, index += countAnyTimesStride) {
-			COMPV_CHECK_CODE_BAIL(err = threadDisp->invoke(std::bind(funcScaleAndClipPixel8, &m_pG[index], &edgesPtr[index], scale, (threadIdx == (threadsCount - 1)) ? countAny : countLast), taskIds));
+			COMPV_CHECK_CODE_BAIL(err = threadDisp->invoke(std::bind(funcScaleAndClipPixel8, &m_pG[index], &edgesPtr[index], scale, (threadIdx == (threadsCount - 1)) ? countLast : countAny), taskIds));
 		}
 		// wait for the execution after memory free
 	bail:
