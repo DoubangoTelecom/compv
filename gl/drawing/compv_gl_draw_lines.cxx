@@ -52,12 +52,12 @@ CompVGLDrawLines::~CompVGLDrawLines()
 
 }
 
-COMPV_ERROR_CODE CompVGLDrawLines::lines(const CompVGLPoint2D* lines, GLsizei count, const CompVDrawingOptions* options COMPV_DEFAULT(NULL))
+COMPV_ERROR_CODE CompVGLDrawLines::lines(const CompVGLPoint2D* lines, const GLsizei count, const CompVDrawingOptions* options COMPV_DEFAULT(nullptr))
 {
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	GLint fboWidth = 0, fboHeight = 0;
-	GLfloat linewidth = options ? static_cast<GLfloat>(options->lineWidth) : 2.f;
-	GLfloat pointSize = options ? static_cast<GLfloat>(options->pointSize) : 7.f;
+	const GLfloat linewidth = options ? static_cast<GLfloat>(options->lineWidth) : 2.f;
+	const GLfloat pointSize = options ? static_cast<GLfloat>(options->pointSize) : 7.f;
 	bool bFirstTimeOrChanged;
 	GLuint uName;
 

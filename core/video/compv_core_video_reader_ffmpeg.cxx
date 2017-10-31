@@ -54,6 +54,7 @@ CompVVideoReaderFFmpeg::CompVVideoReaderFFmpeg()
 	, m_pDecCtx(nullptr)
 	, m_pFrame(nullptr)
 	, m_ePixFmt(AV_PIX_FMT_NONE)
+	, m_nFrameRate(-1)
 {
 
 }
@@ -87,6 +88,7 @@ COMPV_ERROR_CODE CompVVideoReaderFFmpeg::open(const char* path)
 			return COMPV_ERROR_CODE_E_FFMPEG;
 		}
 		m_pStream = m_pFmtCtx->streams[m_nStreamIdx];
+		m_nFrameRate = m_pStream->avg_frame_rate.num / m_pStream->avg_frame_rate.den;
 
 		m_bOpened = true;
 		return COMPV_ERROR_CODE_S_OK;
@@ -122,6 +124,7 @@ COMPV_ERROR_CODE CompVVideoReaderFFmpeg::close()
 // https://blogs.gentoo.org/lu_zero/2016/03/29/new-avcodec-api/
 static int __ffmpeg_decode(AVCodecContext *avctx, AVFrame *frame, int *got_frame, AVPacket *pkt){
 #if 0
+	COMPV_DEBUG_INFO_CODE_TODO("avcodec_decode_video2 is deprecated, should be replaced");
 	return avcodec_decode_video2(avctx, frame, got_frame, pkt);
 #else
 	int ret;
@@ -208,6 +211,11 @@ COMPV_ERROR_CODE CompVVideoReaderFFmpeg::read(CompVMatPtrPtr frame)
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "End-Of-File");
 		return COMPV_ERROR_CODE_E_END_OF_FILE;
 	}
+}
+
+int CompVVideoReaderFFmpeg::frameRate()const
+{
+	return m_nFrameRate;
 }
 
 COMPV_ERROR_CODE CompVVideoReaderFFmpeg::newObj(CompVVideoReaderFFmpegPtrPtr reader)

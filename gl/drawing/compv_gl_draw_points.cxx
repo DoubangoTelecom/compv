@@ -18,8 +18,9 @@ static const std::string& kProgramVertexData =
 "	attribute vec4 color;"
 "	varying vec4 colorVarying;"
 "	uniform mat4 MVP;"
+"	uniform float pointSize;"
 "	void main() {"
-"		gl_PointSize = 7.0;"
+"		gl_PointSize = pointSize;"
 "		gl_Position = MVP * vec4(position, 1.0, 1.0);"
 "		colorVarying = color;"
 "	}";
@@ -51,11 +52,13 @@ CompVGLDrawPoints::~CompVGLDrawPoints()
 
 }
 
-COMPV_ERROR_CODE CompVGLDrawPoints::points(const CompVGLPoint2D* points, GLsizei count)
+COMPV_ERROR_CODE CompVGLDrawPoints::points(const CompVGLPoint2D* points, GLsizei count, const CompVDrawingOptions* options COMPV_DEFAULT(nullptr))
 {
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	GLint fboWidth = 0, fboHeight = 0;
 	bool bFirstTimeOrChanged;
+	const GLfloat pointSize = options ? static_cast<GLfloat>(options->pointSize) : 7.f;
+	GLuint uName;
 
 	// Bind to VAO, VBO, Program
 	COMPV_CHECK_CODE_BAIL(err = CompVGLDraw::bind());
@@ -80,6 +83,10 @@ COMPV_ERROR_CODE CompVGLDrawPoints::points(const CompVGLPoint2D* points, GLsizei
 		// Set projection
 		COMPV_CHECK_CODE_BAIL(err = CompVGLDraw::setOrtho(0, static_cast<GLfloat>(fboWidth), static_cast<GLfloat>(fboHeight), 0, -1, 1));
 	}
+
+	// Set PointSize
+	uName = COMPV_glGetUniformLocation(program()->name(), "pointSize");
+	COMPV_glUniform1f(uName, pointSize);
 
 	// Submit vertices data
 	COMPV_glBufferData(GL_ARRAY_BUFFER, sizeof(CompVGLPoint2D) * count, points, GL_STATIC_DRAW);

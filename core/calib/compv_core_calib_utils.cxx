@@ -302,14 +302,14 @@ COMPV_ERROR_CODE CompVCalibUtils::proj2D(const CompVMatPtr& inPoints, const Comp
 		y2 = (y * y);
 		r2 = x2 + y2;
 		r4 = r2 * r2;
-		a1 = 2 * (x * y);
-		a2 = r2 + (2 * x2);
-		a3 = r2 + (2 * y2);
 		// add radial distortion
 		rdist = 1 + k1 * r2 + k2 * r4;
 		x *= rdist;
 		y *= rdist;
 		// add tangential distortion
+		a1 = 2 * (x * y);
+		a2 = r2 + (2 * x2);
+		a3 = r2 + (2 * y2);
 		x += p1 * a1 + p2 * a2;
 		y += p1 * a3 + p2 * a1;
 

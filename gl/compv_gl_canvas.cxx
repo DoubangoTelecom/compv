@@ -142,7 +142,7 @@ COMPV_ERROR_CODE CompVGLCanvas::drawPoints(const CompVPointFloat32Vector& points
 	}
 
 	COMPV_CHECK_CODE_BAIL(err = m_ptrFBO->bind());
-	COMPV_CHECK_CODE_BAIL(err = m_ptrDrawPoints->points(glMemPoints->ptr<CompVGLPoint2D>(), static_cast<GLsizei>(points.size())));
+	COMPV_CHECK_CODE_BAIL(err = m_ptrDrawPoints->points(glMemPoints->ptr<CompVGLPoint2D>(), static_cast<GLsizei>(points.size()), options));
 
 bail:
 	COMPV_CHECK_CODE_NOP(m_ptrFBO->unbind());

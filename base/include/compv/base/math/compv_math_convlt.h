@@ -27,29 +27,29 @@ public:
 		return CompVMathConvlt::convlt1_private<InputType, KernelType, OutputType>(dataPtr, dataWidth, dataHeight, dataStride, vtKernPtr, hzKernPtr, kernSize, outPtr, dataBorder, false);
 	}
 
-	// no arithmetic overflow check (up to the caller to normalize the data or use any trick)
+	// no arithmetic overflow check (up to the caller to normalize the data or use any trick).
 	static COMPV_ERROR_CODE convlt1FixedPoint(const uint8_t* dataPtr, size_t dataWidth, size_t dataHeight, size_t dataStride, const uint16_t* vtKernPtr, const uint16_t* hzKernPtr, size_t kernSize, uint8_t*& outPtr, size_t dataBorder = 0) {
 		return CompVMathConvlt::convlt1_private<uint8_t, uint16_t, uint8_t>(dataPtr, dataWidth, dataHeight, dataStride, vtKernPtr, hzKernPtr, kernSize, outPtr, dataBorder, true);
 	}
 
-	// no arithmetic overflow check (up to the caller to normalize the data or use any trick)
+	// no arithmetic overflow check (up to the caller to normalize the data or use any trick).
 	template <typename InputType = uint8_t, typename KernelType = compv_float32_t, typename OutputType = uint8_t>
 	static void convlt1Hz(const InputType* inPtr, OutputType* outPtr, size_t width, size_t height, size_t stride, const KernelType* hzKernPtr, size_t kernSize, bool resetBorders = true) {
 		CompVMathConvlt::convlt1Hz_private<InputType, KernelType, OutputType>(inPtr, outPtr, width, height, stride, hzKernPtr, kernSize, resetBorders, false);
 	}
 
-	// *yes* arithmetic overflow check (up to the caller to normalize the data or use any trick)
+	// *yes* arithmetic overflow check (up to the caller to normalize the data or use any trick).
 	static void convlt1HzFixedPoint(const uint8_t* inPtr, uint8_t* outPtr, size_t width, size_t height, size_t stride, const uint16_t* hzKernPtr, size_t kernSize, bool resetBorders = true) {
 		CompVMathConvlt::convlt1Hz_private<uint8_t, uint16_t, uint8_t>(inPtr, outPtr, width, height, stride, hzKernPtr, kernSize, resetBorders, true);
 	}
 
-	// no arithmetic overflow check (up to the caller to normalize the data or use any trick)
+	// no arithmetic overflow check (up to the caller to normalize the data or use any trick).
 	template <typename InputType = uint8_t, typename KernelType = compv_float32_t, typename OutputType = uint8_t>
 	static void convlt1Vt(const InputType* inPtr, OutputType* outPtr, size_t width, size_t height, size_t stride, const KernelType* vtKernPtr, size_t kernSize, bool resetTopBorder = true, bool resetBottomBorder = true) {
 		CompVMathConvlt::convlt1Vt_private<InputType, KernelType, OutputType>(inPtr, outPtr, width, height, stride, vtKernPtr, kernSize, resetTopBorder, resetBottomBorder, false);
 	}
 
-	// no arithmetic overflow check (up to the caller to normalize the data or use any trick)
+	// no arithmetic overflow check (up to the caller to normalize the data or use any trick).
 	static void convlt1VtFixedPoint(const uint8_t* inPtr, uint8_t* outPtr, size_t width, size_t height, size_t stride, const uint16_t* vtKernPtr, size_t kernSize, bool resetTopBorder = true, bool resetBottomBorder = true) {
 		CompVMathConvlt::convlt1Vt_private<uint8_t, uint16_t, uint8_t>(inPtr, outPtr, width, height, stride, vtKernPtr, kernSize, resetTopBorder, resetBottomBorder, false);
 	}

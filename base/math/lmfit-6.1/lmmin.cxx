@@ -221,6 +221,8 @@ void lmmin(const int n, double* x, const int m, const void* data,
     int* Pivot = (int*)pws;
     pws += n * sizeof(int) / sizeof(char);
 
+	double* fjacjm;
+
     /* Initialize diag. */
     if (!C->scale_diag)
         for (j = 0; j < n; j++)
@@ -257,7 +259,7 @@ void lmmin(const int n, double* x, const int m, const void* data,
     for (int outer = 0;; ++outer) {
 
         /** Calculate the Jacobian. **/
-        for (j = 0; j < n; j++) {
+        for (j = 0, fjacjm = fjac; j < n; j++, fjacjm += m) {
             temp = x[j];
             step = MAX(eps * eps, eps * fabs(temp));
 			scale_step = 1.0 / step;
@@ -267,7 +269,7 @@ void lmmin(const int n, double* x, const int m, const void* data,
             if (S->userbreak)
                 goto terminate;
             for (i = 0; i < m; i++)
-                fjac[j*m+i] = (wf[i] - fvec[i]) * scale_step;
+				fjacjm[i] = (wf[i] - fvec[i]) * scale_step;
             x[j] = temp; /* restore */
         }
         if (C->verbosity >= 10) {
@@ -310,28 +312,28 @@ void lmmin(const int n, double* x, const int m, const void* data,
         for (i = 0; i < m; i++)
             wf[i] = fvec[i];
 
-        for (j = 0; j < n; j++) {
-            temp3 = fjac[j*m+j];
+        for (j = 0, fjacjm = fjac; j < n; j++, fjacjm += m) {
+            temp3 = fjacjm[j];
             if (temp3 != 0) {
                 sum = 0;
                 for (i = j; i < m; i++)
-                    sum += fjac[j*m+i] * wf[i];
+                    sum += fjacjm[i] * wf[i];
                 temp = -sum / temp3;
                 for (i = j; i < m; i++)
-                    wf[i] += fjac[j*m+i] * temp;
+                    wf[i] += fjacjm[i] * temp;
             }
-            fjac[j*m+j] = wa1[j];
+			fjacjm[j] = wa1[j];
             qtf[j] = wf[j];
         }
 
         /**  Compute norm of scaled gradient and detect degeneracy. **/
         gnorm = 0;
-        for (j = 0; j < n; j++) {
+        for (j = 0, fjacjm = fjac; j < n; j++, fjacjm += m) {
             if (wa2[Pivot[j]] == 0)
                 continue;
             sum = 0;
             for (i = 0; i <= j; i++)
-                sum += fjac[j*m+i] * qtf[i];
+                sum += fjacjm[i] * qtf[i];
             gnorm = MAX(gnorm, fabs(sum / wa2[Pivot[j]] * scale_fnorm));
         }
 
@@ -399,10 +401,10 @@ void lmmin(const int n, double* x, const int m, const void* data,
                 goto terminate;
             }
             temp2 = lmpar * SQR(pnorm * scale_fnorm);
-            for (j = 0; j < n; j++) {
+            for (j = 0, fjacjm = fjac; j < n; j++, fjacjm += m) {
                 wa3[j] = 0;
                 for (i = 0; i <= j; i++)
-                    wa3[i] -= fjac[j*m+i] * wa1[Pivot[j]];
+                    wa3[i] -= fjacjm[i] * wa1[Pivot[j]];
             }
             temp1 = SQR(lm_enorm(n, wa3) * scale_fnorm);
             if (!isfinite(temp1)) {

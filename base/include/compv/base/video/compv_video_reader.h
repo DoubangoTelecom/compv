@@ -26,6 +26,7 @@ public:
 	virtual bool isOpen()const = 0;
 	virtual COMPV_ERROR_CODE close() = 0;
 	virtual COMPV_ERROR_CODE read(CompVMatPtrPtr frame) = 0;
+	virtual int frameRate()const { return -1; }
 
 	static COMPV_ERROR_CODE newObj(CompVVideoReaderPtrPtr reader);
 };

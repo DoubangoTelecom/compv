@@ -29,7 +29,7 @@ public:
 	virtual ~CompVGLDrawPoints();
 	COMPV_OBJECT_GET_ID(CompVGLDrawPoints);
 
-	COMPV_ERROR_CODE points(const CompVGLPoint2D* points, GLsizei count);
+	COMPV_ERROR_CODE points(const CompVGLPoint2D* points, const GLsizei count, const CompVDrawingOptions* options = nullptr);
 
 	static COMPV_ERROR_CODE newObj(CompVGLDrawPointsPtrPtr drawPoints);
 
