@@ -35,8 +35,9 @@ public:
 
     virtual COMPV_ERROR_CODE addSurface(CompVSurfacePtrPtr surface, size_t width, size_t height, bool activate = true) override /*Overrides(CompVMultiSurfaceLayer)*/;
 	virtual COMPV_ERROR_CODE removeSurface(const CompVSurfacePtr surface) override /*Overrides(CompVMultiSurfaceLayer)*/;
-
-	virtual COMPV_ERROR_CODE blit() override /*Overrides(CompVMultiSurfaceLayer)*/;
+	
+	virtual CompVSurfacePtr cover() override /*Overrides(CompVSurfaceLayer)*/;
+	virtual COMPV_ERROR_CODE blit() override /*Overrides(CompVSurfaceLayer)*/;
 
     COMPV_ERROR_CODE updateSize(size_t newWidth, size_t newHeight);
     COMPV_ERROR_CODE close();

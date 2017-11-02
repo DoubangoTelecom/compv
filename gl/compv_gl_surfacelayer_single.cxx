@@ -20,8 +20,8 @@ CompVGLSingleSurfaceLayer::~CompVGLSingleSurfaceLayer()
 
 }
 
-// Overrides(CompVSingleSurfaceLayer)
-CompVSurfacePtr CompVGLSingleSurfaceLayer::surface()
+// Overrides(CompVSurfaceLayer)
+CompVSurfacePtr CompVGLSingleSurfaceLayer::cover()
 {
     return *m_ptrSurfaceGL;
 }
@@ -30,8 +30,26 @@ CompVSurfacePtr CompVGLSingleSurfaceLayer::surface()
 COMPV_ERROR_CODE CompVGLSingleSurfaceLayer::blit()
 {
     COMPV_CHECK_EXP_RETURN(!m_ptrSurfaceGL, COMPV_ERROR_CODE_E_INVALID_STATE);
-    if (m_ptrSurfaceGL->isActive() && m_ptrSurfaceGL->renderer()) {
-        COMPV_CHECK_CODE_RETURN(m_ptrSurfaceGL->blitRenderer(kCompVGLPtrSystemFrameBuffer));
+    if (m_ptrSurfaceGL->isActive()) {
+		// Blitters
+		CompVGLBlitterPtr blitterRenderer = (m_ptrSurfaceGL->renderer() && m_ptrSurfaceGL->rendererGL())
+			? m_ptrSurfaceGL->rendererGL()->blitter()
+			: nullptr;
+		CompVGLBlitterPtr blitterCover = m_ptrSurfaceGL->blitter();
+		// FBOs
+		CompVGLFboPtr fboRenderer = blitterRenderer
+			? blitterRenderer->fbo()
+			: nullptr;
+		CompVGLFboPtr fboCover = blitterCover
+			? blitterCover->fbo()
+			: nullptr;
+		// Blit()
+		if (fboRenderer) {
+			COMPV_CHECK_CODE_RETURN(m_ptrSurfaceGL->blit(fboRenderer, kCompVGLPtrSystemFrameBuffer));
+		}
+		if (fboCover) {
+			COMPV_CHECK_CODE_RETURN(m_ptrSurfaceGL->blit(fboCover, kCompVGLPtrSystemFrameBuffer));
+		}
     }
     return COMPV_ERROR_CODE_S_OK;
 }

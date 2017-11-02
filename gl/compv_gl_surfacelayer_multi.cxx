@@ -43,18 +43,44 @@ COMPV_ERROR_CODE CompVGLMultiSurfaceLayer::removeSurface(const CompVSurfacePtr s
 }
 
 // Public API
-COMPV_ERROR_CODE CompVGLMultiSurfaceLayer::blit() /* Overrides(CompVMultiSurfaceLayer) */
+CompVSurfacePtr CompVGLMultiSurfaceLayer::cover() /*Overrides(CompVSurfaceLayer)*/
 {
-    COMPV_CHECK_EXP_RETURN(!m_ptrCoverSurfaceGL, COMPV_ERROR_CODE_E_INVALID_STATE);
-    COMPV_CHECK_CODE_RETURN(m_ptrCoverSurfaceGL->blitter()->requestFBO(m_ptrCoverSurfaceGL->width(), m_ptrCoverSurfaceGL->height()));
-    CompVGLFboPtr fboCover = m_ptrCoverSurfaceGL->blitter()->fbo();
+	return *m_ptrCoverSurfaceGL;
+}
+
+// Public API
+COMPV_ERROR_CODE CompVGLMultiSurfaceLayer::blit() /* Overrides(CompVSurfaceLayer) */
+{
+    COMPV_CHECK_EXP_RETURN(!m_ptrCoverSurfaceGL, COMPV_ERROR_CODE_E_INVALID_STATE);    
     for (std::map<compv_surface_id_t, CompVGLSurfacePtr>::iterator it = m_mapSurfaces.begin(); it != m_mapSurfaces.end(); ++it) {
         if (it->second->isActive()) {
-			COMPV_CHECK_CODE_RETURN(it->second->blitRenderer(fboCover), "Cannot blit renderer for the current surface. Maybe it's active but not initialized.");
+			CompVGLSurfacePtr surfaceGL = it->second;
+			// Blitters
+			CompVGLBlitterPtr blitterRenderer = (surfaceGL->renderer() && surfaceGL->rendererGL())
+				? surfaceGL->rendererGL()->blitter()
+				: nullptr;
+			CompVGLBlitterPtr blitterCover = surfaceGL->blitter();
+			// FBOs
+			CompVGLFboPtr fboRenderer = blitterRenderer
+				? blitterRenderer->fbo()
+				: nullptr;
+			CompVGLFboPtr fboCover = blitterCover
+				? blitterCover->fbo()
+				: nullptr;
+			// Blit()
+			if (fboRenderer) {
+				COMPV_CHECK_CODE_RETURN(surfaceGL->blit(fboRenderer, kCompVGLPtrSystemFrameBuffer));
+			}
+			if (fboCover) {
+				COMPV_CHECK_CODE_RETURN(surfaceGL->blit(fboCover, kCompVGLPtrSystemFrameBuffer));
+			}
         }
     }
     if (m_ptrCoverSurfaceGL->isActive()) {
-        COMPV_CHECK_CODE_RETURN(m_ptrCoverSurfaceGL->blit(fboCover, kCompVGLPtrSystemFrameBuffer));
+		CompVGLFboPtr fboCover = m_ptrCoverSurfaceGL->blitter()->fbo();
+		if (fboCover) {
+			COMPV_CHECK_CODE_RETURN(m_ptrCoverSurfaceGL->blit(fboCover, kCompVGLPtrSystemFrameBuffer));
+		}
     }
     return COMPV_ERROR_CODE_S_OK;
 }

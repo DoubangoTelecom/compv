@@ -31,10 +31,8 @@ public:
     virtual ~CompVGLSingleSurfaceLayer();
     COMPV_OBJECT_GET_ID(CompVGLSingleSurfaceLayer);
 
-    // Overrides(CompVSingleSurfaceLayer)
-    virtual CompVSurfacePtr surface() override;
-
     // Overrides(CompSurfaceLayer)
+	virtual CompVSurfacePtr cover() override;
     virtual COMPV_ERROR_CODE blit() override;
 
     COMPV_ERROR_CODE updateSize(size_t newWidth, size_t newHeight);

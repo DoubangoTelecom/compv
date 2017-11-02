@@ -33,6 +33,7 @@ public:
 	virtual CompVSurfacePtr surface() override /*Overrides(CompVMatchingSurfaceLayer)*/;
 	virtual CompVSurfacePtr surfaceTrain() override /*Overrides(CompVMatchingSurfaceLayer)*/;
 	virtual CompVSurfacePtr surfaceQuery() override /*Overrides(CompVMatchingSurfaceLayer)*/;
+	virtual CompVSurfacePtr cover() override /*Overries(CompVSurfaceLayer)*/;
 	virtual COMPV_ERROR_CODE blit() override /*Overries(CompVSurfaceLayer)*/;
 
     COMPV_ERROR_CODE updateSize(size_t newWidth, size_t newHeight);

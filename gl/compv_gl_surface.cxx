@@ -49,14 +49,12 @@ CompVGLSurface::~CompVGLSurface()
 
 CompVGLCanvasPtr CompVGLSurface::canvasGL()
 {
-    if (!m_ptrCanvas) {
-        COMPV_CHECK_EXP_BAIL(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
-        COMPV_CHECK_CODE_BAIL(init());
-        COMPV_CHECK_EXP_BAIL(!m_ptrBlitter->isInitialized(), COMPV_ERROR_CODE_E_INVALID_STATE);
-        COMPV_CHECK_CODE_BAIL(CompVGLCanvas::newObj(&m_ptrCanvas, m_ptrBlitter->fbo()));
-    }
-bail:
-    return m_ptrCanvas;
+	return m_ptrCanvas;
+}
+
+CompVGLRendererPtr CompVGLSurface::rendererGL()
+{
+	return m_ptrRenderer;
 }
 
 COMPV_ERROR_CODE CompVGLSurface::setMVP(CompVMVPPtr mvp) /*Overrides(CompVSurface)*/
@@ -70,16 +68,27 @@ CompVRendererPtr CompVGLSurface::renderer() /*Overrides(CompVSurface)*/
     if (m_ptrRenderer) {
         return *m_ptrRenderer;
     }
-    return NULL;
+    return nullptr;
 }
 
 CompVCanvasPtr CompVGLSurface::canvas() /*Overrides(CompVSurface)*/
 {
-    CompVGLCanvasPtr canvas_ = canvasGL();
-    if (canvas_) {
-        return *canvas_;
-    }
-    return NULL;
+	return *m_ptrCanvas;
+}
+
+CompVCanvasPtr CompVGLSurface::requestCanvas() /*Overrides(CompVSurface)*/
+{
+	if (!m_ptrCanvas) {
+		COMPV_CHECK_EXP_BAIL(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+		COMPV_CHECK_CODE_BAIL(init());
+		COMPV_CHECK_EXP_BAIL(!m_ptrBlitter->isInitialized(), COMPV_ERROR_CODE_E_INVALID_STATE);
+		if (!m_ptrBlitter->fbo()) {
+			COMPV_CHECK_CODE_BAIL(m_ptrBlitter->requestFBO(m_ptrBlitter->width(), m_ptrBlitter->height()));
+		}
+		COMPV_CHECK_CODE_BAIL(CompVGLCanvas::newObj(&m_ptrCanvas, m_ptrBlitter->fbo()));
+	}
+bail:
+	return *m_ptrCanvas;
 }
 
 COMPV_ERROR_CODE CompVGLSurface::drawImage(const CompVMatPtr& mat, const CompVViewportPtr& viewport COMPV_DEFAULT(nullptr)) /*Overrides(CompVSurface)*/

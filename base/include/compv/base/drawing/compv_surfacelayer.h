@@ -27,6 +27,7 @@ public:
         return m_nId;
     }
 
+	virtual CompVSurfacePtr cover() = 0;
     virtual COMPV_ERROR_CODE blit() = 0;
 
 private:

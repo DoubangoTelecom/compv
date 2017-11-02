@@ -33,7 +33,7 @@ compv_main()
 		// Init the modules
 		COMPV_CHECK_CODE_BAIL(err = CompVInit());
 
-		// Create "Hello world!" window and add a surface for drawing
+		// Create window and add a surface for drawing
 		COMPV_CHECK_CODE_BAIL(err = CompVWindow::newObj(&window, WINDOW_WIDTH, WINDOW_HEIGHT, TAG_SAMPLE));
 		COMPV_CHECK_CODE_BAIL(err = window->addSingleLayerSurface(&singleSurfaceLayer));
 
@@ -64,7 +64,7 @@ compv_main()
 				COMPV_CHECK_CODE_RETURN(CompVImage::convertGrayscale(image, &imageGray));
 				COMPV_CHECK_CODE_RETURN(ptrSobel->process(imageGray, &edges));
 				COMPV_CHECK_CODE_BAIL(err = window->beginDraw());
-				COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->surface()->drawImage(edges));
+				COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->cover()->drawImage(edges));
 				COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->blit());
 			bail:
 				COMPV_CHECK_CODE_NOP(err = window->endDraw()); // Make sure 'endDraw()' will be called regardless the result

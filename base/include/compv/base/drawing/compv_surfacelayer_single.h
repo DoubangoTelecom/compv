@@ -22,9 +22,6 @@ protected:
 public:
     virtual ~CompVSingleSurfaceLayer();
 
-    // FIXME: cannot drawText to surface(), requires renderer -> rename 'CompVSingleSurfaceLayer' and create a multiSurface
-    virtual CompVSurfacePtr surface() = 0;
-
 private:
     COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
 

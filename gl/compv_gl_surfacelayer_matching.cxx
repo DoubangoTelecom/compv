@@ -162,7 +162,11 @@ bail:
 	return err;
 }
 
-
+CompVSurfacePtr CompVGLMatchingSurfaceLayer::cover() /*Overries(CompVSurfaceLayer)*/
+{
+	return *m_ptrCoverSurfaceGL;
+}
+										 
 COMPV_ERROR_CODE CompVGLMatchingSurfaceLayer::blit() /*Overries(CompVSurfaceLayer)*/
 {
     if (m_ptrCoverSurfaceGL && m_ptrCoverSurfaceGL->isActive()) {
