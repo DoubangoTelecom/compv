@@ -7,6 +7,7 @@
 #include "compv/gl/compv_gl_canvas.h"
 #include "compv/gl/compv_gl_headers.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
+#include "compv/gl/compv_gl_func.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -21,6 +22,26 @@ CompVGLCanvas::CompVGLCanvas(CompVGLFboPtr ptrFBO)
 CompVGLCanvas::~CompVGLCanvas()
 {
 
+}
+
+COMPV_ERROR_CODE CompVGLCanvas::clear(const CompVDrawingOptions* options COMPV_DEFAULT(nullptr)) /*Overrides(CompVCanvas)*/
+{
+	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
+	COMPV_CHECK_CODE_BAIL(err = m_ptrFBO->bind());
+
+	if (options) {
+		COMPV_glClearColor(options->color[0], options->color[1], options->color[2], options->color[3]);
+	}
+	else {
+		COMPV_glClearColor(0.f, 0.f, 0.f, 1.f);
+	}
+	COMPV_glClearStencil(0);
+	COMPV_glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+bail:
+	COMPV_CHECK_CODE_NOP(m_ptrFBO->unbind());
+	unMakeEmpty();
+	return err;
 }
 
 // Public override
@@ -53,7 +74,7 @@ COMPV_ERROR_CODE CompVGLCanvas::drawLines(const CompVLineFloat32Vector& lines, c
 	CompVMatPtr glPoints2D;
 	COMPV_CHECK_CODE_RETURN(linesBuild(&glPoints2D, lines));
 	COMPV_CHECK_CODE_RETURN(linesApplyOptions(glPoints2D, options));
-	COMPV_CHECK_CODE_RETURN(drawLines(glPoints2D->ptr<const CompVGLPoint2D>(), glPoints2D->cols(), options));
+	COMPV_CHECK_CODE_RETURN(drawLinesGL(glPoints2D->ptr<const CompVGLPoint2D>(), glPoints2D->cols(), options));
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -72,7 +93,7 @@ COMPV_ERROR_CODE CompVGLCanvas::drawRectangles(const CompVRectFloat32Vector& rec
 		const compv_float32_t y0[4] = { roi.top, roi.top, roi.bottom, roi.bottom };
 		const compv_float32_t x1[4] = { roi.right, roi.right, roi.left, roi.left };
 		const compv_float32_t y1[4] = { roi.top, roi.bottom, roi.bottom, roi.top };
-		COMPV_CHECK_CODE_RETURN(drawLines(x0, y0, x1, y1, 4, options));
+		COMPV_CHECK_CODE_RETURN(drawLinesGL(x0, y0, x1, y1, 4, options));
 	}
 	else {
 		const size_t countLines = (countRects << 2);
@@ -88,7 +109,7 @@ COMPV_ERROR_CODE CompVGLCanvas::drawRectangles(const CompVRectFloat32Vector& rec
 			px1[0] = rect->right, px1[1] = rect->right, px1[2] = rect->left, px1[3] = rect->left, px1 += 4;
 			py1[0] = rect->top, py1[1] = rect->bottom, py1[2] = rect->bottom, py1[3] = rect->top, py1 += 4;
 		}
-		COMPV_CHECK_CODE_RETURN(drawLines(
+		COMPV_CHECK_CODE_RETURN(drawLinesGL(
 			points->ptr<const compv_float32_t>(0), points->ptr<const compv_float32_t>(1),
 			points->ptr<const compv_float32_t>(2), points->ptr<const compv_float32_t>(3),
 			countLines, options
@@ -169,19 +190,19 @@ COMPV_ERROR_CODE CompVGLCanvas::drawInterestPoints(const CompVInterestPointVecto
 }
 
 // Internal implementation
-COMPV_ERROR_CODE CompVGLCanvas::drawLines(const compv_float32_t* x0, const compv_float32_t* y0, const compv_float32_t* x1, const compv_float32_t* y1, const size_t count, const CompVDrawingOptions* options COMPV_DEFAULT(nullptr))
+COMPV_ERROR_CODE CompVGLCanvas::drawLinesGL(const compv_float32_t* x0, const compv_float32_t* y0, const compv_float32_t* x1, const compv_float32_t* y1, const size_t count, const CompVDrawingOptions* options COMPV_DEFAULT(nullptr))
 {
 	COMPV_CHECK_EXP_RETURN(!x0 || !y0 || !x1 || !y1 || !count, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
 	CompVMatPtr glPoints2D;
 	COMPV_CHECK_CODE_RETURN(linesBuild(&glPoints2D, x0, y0, x1, y1, count));
 	COMPV_CHECK_CODE_RETURN(linesApplyOptions(glPoints2D, options));
-	COMPV_CHECK_CODE_RETURN(drawLines(glPoints2D->ptr<const CompVGLPoint2D>(), glPoints2D->cols(), options));
+	COMPV_CHECK_CODE_RETURN(drawLinesGL(glPoints2D->ptr<const CompVGLPoint2D>(), glPoints2D->cols(), options));
 	return COMPV_ERROR_CODE_S_OK;
 }
 
 // Internal implemenation
-COMPV_ERROR_CODE CompVGLCanvas::drawLines(const CompVGLPoint2D* lines, const size_t count, const CompVDrawingOptions* options COMPV_DEFAULT(nullptr))
+COMPV_ERROR_CODE CompVGLCanvas::drawLinesGL(const CompVGLPoint2D* lines, const size_t count, const CompVDrawingOptions* options COMPV_DEFAULT(nullptr))
 {
 	COMPV_CHECK_EXP_RETURN(!lines || !count, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
