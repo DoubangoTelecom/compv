@@ -235,7 +235,7 @@ COMPV_ERROR_CODE CompVImageRemap::process(const CompVMatPtr& input, CompVMatPtrP
 	switch (map->subType()) {
 	case COMPV_SUBTYPE_RAW_FLOAT32: COMPV_CHECK_CODE_RETURN((CompVImageRemapGeneric<compv_float32_t>::process(input, output, map, interType, inputROI))); break;
 	case COMPV_SUBTYPE_RAW_FLOAT64: COMPV_CHECK_CODE_RETURN((CompVImageRemapGeneric<compv_float64_t>::process(input, output, map, interType, inputROI))); break;
-	default: COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED, "map must constain float or double indices");  break;
+	default: COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED, "map must constain float32 or float64 indices");  break;
 	}
 	return COMPV_ERROR_CODE_S_OK;
 }

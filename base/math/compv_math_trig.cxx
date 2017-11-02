@@ -18,8 +18,7 @@ COMPV_NAMESPACE_BEGIN()
 template<class T>
 class CompVMathTrigGeneric
 {
-	friend class CompVMathTrig;
-
+public:
 	// (1x3) -> (3x3)
 	static COMPV_ERROR_CODE rodriguesVectorToMatrix(const T(&vector)[3], CompVMatPtrPtr matrix)
 	{

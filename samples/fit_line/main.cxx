@@ -21,7 +21,7 @@ static const compv_float32x4_t __color_blue = { 0.f, 0.f, 1.f, 1.f };
 
 #define TAG_SAMPLE	"Fit line"
 
-static void __build_random_points(
+static COMPV_ERROR_CODE __build_random_points(
 	const  compv_float32_t window_width, const  compv_float32_t window_height, 
 	const compv_float32_t rho, const compv_float32_t theta_deg,
 	CompVLineFloat32& linePerfect,
@@ -75,6 +75,38 @@ static void __build_random_points(
 		i->x += static_cast<compv_float32_t>((rand() % window_width_int) * ((rand() & 1) ? -1 : 1));
 		i->y += static_cast<compv_float32_t>((rand() % window_height_int) * ((rand() & 1) ? -1 : 1));
 	}
+
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+static COMPV_ERROR_CODE __fit_line(
+	const  compv_float32_t window_width, const  compv_float32_t window_height,
+	const CompVPointFloat32Vector& pointsNoisy,
+	CompVLineFloat32& lineFitted
+)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Converting from vector to MatPtr maybe change ransac to accept vector");
+	CompVMatPtr ptr32fPointsNoisy;
+	const size_t count = pointsNoisy.size();
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float32_t>(&ptr32fPointsNoisy, 2, count));
+	compv_float32_t* ptr32fPointsNoisyXPtr = ptr32fPointsNoisy->ptr<compv_float32_t>(0);
+	compv_float32_t* ptr32fPointsNoisyYPtr = ptr32fPointsNoisy->ptr<compv_float32_t>(1);
+	size_t i = 0;
+	CompVPointFloat32Vector::const_iterator j = pointsNoisy.begin();
+	for (; i < count; ++i, ++j) {
+		ptr32fPointsNoisyXPtr[i] = j->x;
+		ptr32fPointsNoisyYPtr[i] = j->y;
+	}
+	CompVMatPtr ptr32fParams;
+	COMPV_CHECK_CODE_RETURN(CompVMathStatsFit::line(ptr32fPointsNoisy, &ptr32fParams));
+	const compv_float32_t slope = *ptr32fParams->ptr<const compv_float32_t>(0, 0);
+	const compv_float32_t intercept = *ptr32fParams->ptr<const compv_float32_t>(0, 1);
+	lineFitted.a.x = 0;
+	lineFitted.a.y = (slope * lineFitted.a.x) + intercept;
+	lineFitted.b.x = window_width;
+	lineFitted.b.y = (slope * lineFitted.b.x) + intercept;
+
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 /* Entry point function */
@@ -114,13 +146,18 @@ compv_main()
 			compv_float32_t theta = 0.f;
 			compv_float32_t rho = 0.f;
 			while (CompVDrawing::isLoopRunning()) {
-				__build_random_points(
+				COMPV_CHECK_CODE_BAIL(__build_random_points(
 					static_cast<compv_float32_t>(window->width()), static_cast<compv_float32_t>(window->height()),
-					std::fmodf((rho += 0.5f), static_cast<compv_float32_t>(window->width())) * ((rand() & 1) ? -1.f : 1.f), 
+					std::fmodf((rho += 0.5f), static_cast<compv_float32_t>(window->width())) * ((rand() & 1) ? -1.f : 1.f),
 					std::fmodf((theta += 0.1f), 360.f) * ((rand() & 1) ? -1.f : 1.f),
 					linesPerfect[0],
 					pointsNoisy
-				);
+				));
+				COMPV_CHECK_CODE_BAIL(__fit_line(
+					static_cast<compv_float32_t>(window->width()), static_cast<compv_float32_t>(window->height()),
+					pointsNoisy,
+					linesFitted[0]
+				));
 				COMPV_CHECK_CODE_BAIL(window->beginDraw());
 				COMPV_CHECK_EXP_BAIL(!(canvas = singleSurfaceLayer->cover()->requestCanvas()), COMPV_ERROR_CODE_E_INVALID_CALL, "Cannot create a canvas for the cover");
 				drawingOptions.setColor(__color_background);

@@ -42,6 +42,8 @@
 #include <compv/base/math/compv_math_transform.h>
 #include <compv/base/math/compv_math_trig.h>
 #include <compv/base/math/compv_math_stats.h>
+#include <compv/base/math/compv_math_stats_fit.h>
+#include <compv/base/math/compv_math_stats_ransac.h>
 #include <compv/base/math/compv_math_utils.h>
 
 #include <compv/base/parallel/compv_condvar.h>

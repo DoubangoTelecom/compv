@@ -531,6 +531,12 @@
     <ClInclude Include="include\compv\base\image\compv_image_remap.h">
       <Filter>include\image</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\math\compv_math_stats_ransac.h">
+      <Filter>include\math</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\math\compv_math_stats_fit.h">
+      <Filter>include\math</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx">
@@ -895,6 +901,12 @@
     </ClCompile>
     <ClCompile Include="image\compv_image_remap.cxx">
       <Filter>source\image</Filter>
+    </ClCompile>
+    <ClCompile Include="math\compv_math_stats_ransac.cxx">
+      <Filter>source\math</Filter>
+    </ClCompile>
+    <ClCompile Include="math\compv_math_stats_fit.cxx">
+      <Filter>source\math</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
