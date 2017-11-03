@@ -42,10 +42,26 @@ public:
 		CompVMathStatsRansacControl<FloatType> control(threshold, points->cols(), kMinModelPoints, &opaque);
 		control.maxIter = COMPV_MATH_MAX_3(control.maxIter, points->cols(), 1000);
 		CompVMathStatsRansacStatus<FloatType> status;
-		COMPV_CHECK_CODE_RETURN(CompVMathStatsRansac::process(
-			&control, &status,
-			lineBuildModelParams, lineBuildResiduals
-		));
+
+		if (points->cols() == 2) {
+			status.reset();
+			CompVMathStatsRansacModelIndices modelIndices(2);
+			modelIndices[0] = 0;
+			modelIndices[1] = 1;
+			bool userReject = false;
+			COMPV_CHECK_CODE_RETURN(lineBuildModelParams(
+				&control, modelIndices, 
+				status.modelParamsBest, userReject
+			));
+			status.numIter = 1;
+			status.numInliers = userReject ? 0 : 2;
+		}
+		else {
+			COMPV_CHECK_CODE_RETURN(CompVMathStatsRansac::process(
+				&control, &status,
+				lineBuildModelParams, lineBuildResiduals
+			));
+		}
 		if (status.numInliers >= kMinModelPoints) {
 			COMPV_CHECK_EXP_RETURN(status.modelParamsBest.size() != kNumParamsLine, COMPV_ERROR_CODE_E_INVALID_STATE, "Ransac for line fitting must return exactly #3 params (A, B, C)");
 			COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<FloatType>(params, 1, kNumParamsLine));
@@ -61,6 +77,7 @@ public:
 			*(*params)->ptr<FloatType>(0, 2) = 0;
 			// calling user can check params validity by making sure A and B aren't both zero
 		}
+		
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
