@@ -34,6 +34,7 @@ public:
 		CompVMathStatsFitGenericOpaque opaque(points);
 		static const size_t minModelPoints = 2;
 		CompVMathStatsRansacControl<FloatType> control(4, points->cols(), minModelPoints, &opaque);
+		control.maxIter = COMPV_MATH_MAX_3(control.maxIter, points->cols(), 1000);
 		CompVMathStatsRansacStatus<FloatType> status;
 		COMPV_CHECK_CODE_RETURN(CompVMathStatsRansac::process(
 			&control, &status,

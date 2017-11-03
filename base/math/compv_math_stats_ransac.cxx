@@ -41,9 +41,19 @@ public:
 		const size_t maxIter = control->maxIter;
 		const size_t minModelPoints = control->minModelPoints;
 		const size_t totalPoints = control->totalPoints;
-
+		const FloatType probInliersOnly = control->probInliersOnly;
+		
+		const size_t minInliersToStopIter = static_cast<size_t>(probInliersOnly * totalPoints); // minimum number of inliers to stop the iteration
+		const FloatType totalPointsFloat = static_cast<FloatType>(totalPoints);
+		const FloatType totalPointsFloatScale = 1 / totalPointsFloat;
+		const FloatType minModelPointsFloat = static_cast<FloatType>(minModelPoints);
 		size_t numIter = 0;
-		int bestNumInliers = 0;
+		size_t bestNumInliers = 0;
+		size_t newMaxIter = maxIter;
+
+		static const FloatType eps = std::numeric_limits<FloatType>::epsilon();
+		const FloatType numerator = std::log(std::max(1 - probInliersOnly, eps));
+		FloatType denominator, w;
 
 		/* Create residual */
 		CompVMatPtr residual;
@@ -93,30 +103,48 @@ public:
 				numInliers += (residualPtr[i] < threshold);
 			}
 			if (numInliers > bestNumInliers) {
-				bestNumInliers = numInliers;
+				bestNumInliers = static_cast<size_t>(numInliers);
 				modelParamsBest = params;
 			}
 
-		} while (numIter++ < maxIter);
+			/* Update RANSAC loop control data */
+			w = (totalPointsFloat - numInliers) * totalPointsFloatScale;
+			denominator = 1 - std::pow((1 - w), minModelPointsFloat);
+			if (denominator < eps) {
+				// Happens when number of inliners close to number of points
+				COMPV_DEBUG_VERBOSE_EX(COMPV_THIS_CLASSNAME, "Good news: denominator < eps");
+				newMaxIter = 0;
+			}
+			else {
+				denominator = std::log(denominator);
+				if (denominator < 0 && numerator > (newMaxIter * denominator)) {
+					newMaxIter = COMPV_MATH_ROUNDFU_2_NEAREST_INT(numerator / denominator, size_t);
+				}
+			}
+		} while (numIter++ < newMaxIter && bestNumInliers < minInliersToStopIter);
+
+		COMPV_DEBUG_VERBOSE_EX(COMPV_THIS_CLASSNAME, "RANSAC numIter/maxIter = %zu/%zu, bestNumInliers=%zu,", 
+			numIter, maxIter,
+			bestNumInliers
+		);
 
 		/* Build inliers and make a final estimation of the parameters */
-		const size_t szBestNumInliers = static_cast<size_t>(bestNumInliers);
-		if (szBestNumInliers >= minModelPoints) { // always true because at least one set of random points will be matched as inliers
-			/* Build residual */
+		if (bestNumInliers >= minModelPoints) { // always true because at least one set of random points will be matched as inliers
+			/* Build residual using best params selected in ransac loop */
 			bool userBreak = false;
 			COMPV_CHECK_CODE_RETURN(buildResiduals(
 				control, modelParamsBest, residualPtr, userBreak
 			));
-			/* Re-compute inliers indices */
+			/* Re-compute inliers indices using the residual from best params */
 			CompVMathStatsRansacModelIndices indices(bestNumInliers);
 			size_t i, k;
-			for (i = 0, k = 0; i < totalPoints && k < szBestNumInliers; ++i) {
+			for (i = 0, k = 0; i < totalPoints && k < bestNumInliers; ++i) {
 				if (residualPtr[i] < threshold) {
 					indices[k++] = i;
 				}
 			}
-			COMPV_CHECK_EXP_RETURN(k != szBestNumInliers, COMPV_ERROR_CODE_E_INVALID_CALL, "Second check for number of inliers returned different result");
-			/* Build model params */
+			COMPV_CHECK_EXP_RETURN(k != bestNumInliers, COMPV_ERROR_CODE_E_INVALID_CALL, "Second check for number of inliers returned different result");
+			/* Build model params (will update modelParamsBest) using inliers only */
 			bool userReject = false;
 			COMPV_CHECK_CODE_RETURN(buildModelParams(
 				control, indices, modelParamsBest, userReject

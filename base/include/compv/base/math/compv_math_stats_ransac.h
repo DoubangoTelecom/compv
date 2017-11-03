@@ -29,8 +29,10 @@ struct CompVMathStatsRansacControl {
 	FloatType threshold;
 	// k – maximum number of iterations allowed in the algorithm
 	size_t maxIter = 2000;
-	// n – minimum number of data points required to fit the model
+	// n – minimum number of data points required to fit the model. #2 for line, #3 for plane, #4 for homography, #8 for essential matrix...
 	size_t minModelPoints;
+	// p – the probability that the RANSAC algorithm in some iteration selects only inliers from the input data set when it chooses the n points from which the model parameters are estimated.
+	FloatType probInliersOnly = static_cast<FloatType>(0.95);
 	CompVMathStatsRansacControl(const FloatType threshold_, const size_t totalPoints_, size_t minModelPoints_, const void* opaque_ = nullptr) {
 		threshold = threshold_;
 		totalPoints = totalPoints_;
@@ -39,7 +41,8 @@ struct CompVMathStatsRansacControl {
 	}
 	COMPV_INLINE const bool isValid()const {
 		return minModelPoints && totalPoints && maxIter &&
-			(minModelPoints <= totalPoints);
+			(minModelPoints <= totalPoints) &&
+			(probInliersOnly > 0 && probInliersOnly <= 1);
 	}
 };
 typedef CompVMathStatsRansacControl<compv_float32_t> CompVMathStatsRansacControlFloat32;

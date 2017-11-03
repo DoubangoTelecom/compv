@@ -41,7 +41,7 @@ static COMPV_ERROR_CODE __build_random_points(
 	const compv_float32_t intercept = linePerfect.a.y - (slope * linePerfect.a.x);
 	const compv_float32_t slope_scale = 1.f / slope;
 
-	COMPV_DEBUG_INFO_EX(TAG_SAMPLE, "linePerfect = (%f, %f)", slope, intercept);
+	COMPV_DEBUG_VERBOSE_EX(TAG_SAMPLE, "linePerfect = (%f, %f)", slope, intercept);
 
 	// Perfect points
 	pointsNoisy.resize(NUM_NOISY_POINTS + NUM_OUTLIERS);
@@ -92,7 +92,7 @@ static COMPV_ERROR_CODE __fit_line(
 	const compv_float32_t slope = *ptr32fParams->ptr<const compv_float32_t>(0, 0);
 	const compv_float32_t scale = 1.f / slope;
 	const compv_float32_t intercept = *ptr32fParams->ptr<const compv_float32_t>(0, 1);
-	COMPV_DEBUG_INFO_EX(TAG_SAMPLE, "lineFitted = (%f, %f)", slope, intercept);
+	COMPV_DEBUG_VERBOSE_EX(TAG_SAMPLE, "lineFitted = (%f, %f)", slope, intercept);
 
 	lineFitted.a.y = 0.f;
 	lineFitted.a.x = (lineFitted.a.y - intercept) * scale;
@@ -119,7 +119,7 @@ compv_main()
 		CompVLineFloat32Vector linesFitted(1);
 
 		// Change debug level to INFO before starting
-		CompVDebugMgr::setLevel(COMPV_DEBUG_LEVEL_INFO);
+		CompVDebugMgr::setLevel(COMPV_DEBUG_LEVEL_VERBOSE);
 
 		// Init the modules
 		COMPV_CHECK_CODE_BAIL(err = CompVInit());
@@ -164,7 +164,7 @@ compv_main()
 				COMPV_CHECK_CODE_NOP(window->endDraw()); // Make sure 'endDraw()' will be called regardless the result
 				COMPV_DEBUG_INFO_CODE_FOR_TESTING("Remove the sleep function");
 				//CompVThread::sleep(1000); // FIXME(dmi): remove
-				getchar();
+				//getchar();
 			}
 			return COMPV_ERROR_CODE_S_OK;
 		};
