@@ -31,7 +31,8 @@ public:
 		COMPV_CHECK_EXP_RETURN(!control || !status || !control->isValid() || !buildModelParams || !buildResiduals,
 			COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
-		COMPV_DEBUG_INFO_CODE_TODO("Add TieBreaker");
+		COMPV_DEBUG_INFO_CODE_TODO("Add TieBreaker"); // TieBreaker callback function: when number of inliers are equal then, compare variances
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation could be found");
 
 		CompVMathStatsRansacModelParamsFloatType& modelParamsBest = status->modelParamsBest;
 		modelParamsBest.clear();
@@ -55,6 +56,12 @@ public:
 		const FloatType numerator = std::log(std::max(1 - probInliersOnly, eps));
 		FloatType denominator, w;
 
+		std::random_device rand_device;
+		std::mt19937 prng{ rand_device() }; // TODO(dmi): one random device per thread
+		std::uniform_int_distribution<size_t> unif_dist{ 0, static_cast<size_t>(totalPoints - 1) };
+		size_t indice;
+		CompVMathStatsRansacModelIndices indices;
+
 		/* Create residual */
 		CompVMatPtr residual;
 		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<FloatType>(&residual, 1, totalPoints));
@@ -62,11 +69,7 @@ public:
 
 		do {
 			/* Build random indices for the model */
-			CompVMathStatsRansacModelIndices indices;
-			size_t indice;
-			std::random_device rand_device;
-			std::mt19937 prng{ rand_device() }; // TODO(dmi): one random device per thread
-			std::uniform_int_distribution<size_t> unif_dist{ 0, static_cast<size_t>(totalPoints - 1) };
+			indices.clear();
 			while (indices.size() < minModelPoints) {
 				indice = unif_dist(prng);
 				CompVMathStatsRansacModelIndices::const_iterator i;
@@ -128,8 +131,12 @@ public:
 			bestNumInliers
 		);
 
-		/* Build inliers and make a final estimation of the parameters */
-		if (bestNumInliers >= minModelPoints) { // always true because at least one set of random points will be matched as inliers
+		/* 
+			Build inliers and make a final estimation of the parameters
+			The condition "bestNumInliers >= minModelPoints" is always true because at least one set of random points will be matched as inliers
+			unless the input data is incorrect (e.g. contains 'inf' or 'nan' values).
+		*/
+		if (bestNumInliers >= minModelPoints) { 
 			/* Build residual using best params selected in ransac loop */
 			bool userBreak = false;
 			COMPV_CHECK_CODE_RETURN(buildResiduals(
