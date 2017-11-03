@@ -19,9 +19,31 @@ typedef std::vector<compv_float64_t> CompVMathStatsRansacModelParamsFloat64;
 
 typedef std::vector<size_t> CompVMathStatsRansacModelIndices;
 
+template <typename FloatType>
 struct CompVMathStatsRansacControl {
-
+	// userdata - could be anything
+	const void* opaque = nullptr;
+	// nd - total number of data points
+	size_t totalPoints;
+	// t - threshold value to determine when a data point fits a model
+	FloatType threshold;
+	// k – maximum number of iterations allowed in the algorithm
+	size_t maxIter = 2000;
+	// n – minimum number of data points required to fit the model
+	size_t minModelPoints;
+	CompVMathStatsRansacControl(const FloatType threshold_, const size_t totalPoints_, size_t minModelPoints_, const void* opaque_ = nullptr) {
+		threshold = threshold_;
+		totalPoints = totalPoints_;
+		minModelPoints = minModelPoints_;
+		opaque = opaque_;
+	}
+	COMPV_INLINE const bool isValid()const {
+		return minModelPoints && totalPoints && maxIter &&
+			(minModelPoints <= totalPoints);
+	}
 };
+typedef CompVMathStatsRansacControl<compv_float32_t> CompVMathStatsRansacControlFloat32;
+typedef CompVMathStatsRansacControl<compv_float64_t> CompVMathStatsRansacControlFloat64;
 
 template <typename FloatType>
 struct CompVMathStatsRansacStatus {
@@ -35,24 +57,21 @@ class COMPV_BASE_API CompVMathStatsRansac
 public:
 	template <typename FloatType = compv_float32_t>
 	static COMPV_ERROR_CODE process(
-		const void* opaque, const size_t dataCount, const size_t modelDataCount,
-		COMPV_ERROR_CODE(*buildModelParams)(const void* opaque, const CompVMathStatsRansacModelIndices& modelIndices, CompVMathStatsRansacModelParamsFloatType& modelParams, bool& userReject),
-		COMPV_ERROR_CODE(*evalModelParams)(const void* opaque, const CompVMathStatsRansacModelParamsFloatType& modelParams, FloatType* residualPtr, bool& userbreak),
-		const CompVMathStatsRansacControl* control, CompVMathStatsRansacStatus<FloatType>* status
+		const CompVMathStatsRansacControl<FloatType>* control, CompVMathStatsRansacStatus<FloatType>* status,
+		COMPV_ERROR_CODE(*buildModelParams)(const CompVMathStatsRansacControl<FloatType>* control, const CompVMathStatsRansacModelIndices& modelIndices, CompVMathStatsRansacModelParamsFloatType& modelParams, bool& userReject),
+		COMPV_ERROR_CODE(*buildResiduals)(const CompVMathStatsRansacControl<FloatType>* control, const CompVMathStatsRansacModelParamsFloatType& modelParams, FloatType* residualPtr, bool& userbreak)
 	);
 };
 
 COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathStatsRansac::process(
-	const void* opaque, const size_t dataCount, const size_t modelDataCount,
-	COMPV_ERROR_CODE(*buildModelParams)(const void* opaque, const CompVMathStatsRansacModelIndices& modelIndices, CompVMathStatsRansacModelParamsFloat32& modelParams, bool& userReject),
-	COMPV_ERROR_CODE(*evalModelParams)(const void* opaque, const CompVMathStatsRansacModelParamsFloat32& modelParams, compv_float32_t* residualPtr, bool& userbreak),
-	const CompVMathStatsRansacControl* control, CompVMathStatsRansacStatusFloat32* status
+	const CompVMathStatsRansacControlFloat32* control, CompVMathStatsRansacStatusFloat32* status,
+	COMPV_ERROR_CODE(*buildModelParams)(const CompVMathStatsRansacControlFloat32* control, const CompVMathStatsRansacModelIndices& modelIndices, CompVMathStatsRansacModelParamsFloat32& modelParams, bool& userReject),
+	COMPV_ERROR_CODE(*buildResiduals)(const CompVMathStatsRansacControlFloat32* control, const CompVMathStatsRansacModelParamsFloat32& modelParams, compv_float32_t* residualPtr, bool& userbreak)
 );
 COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathStatsRansac::process(
-	const void* opaque, const size_t dataCount, const size_t modelDataCount,
-	COMPV_ERROR_CODE(*buildModelParams)(const void* opaque, const CompVMathStatsRansacModelIndices& modelIndices, CompVMathStatsRansacModelParamsFloat64& modelParams, bool& userReject),
-	COMPV_ERROR_CODE(*evalModelParams)(const void* opaque, const CompVMathStatsRansacModelParamsFloat64& modelParams, compv_float64_t* residualPtr, bool& userbreak),
-	const CompVMathStatsRansacControl* control, CompVMathStatsRansacStatusFloat64* status
+	const CompVMathStatsRansacControlFloat64* control, CompVMathStatsRansacStatusFloat64* status,
+	COMPV_ERROR_CODE(*buildModelParams)(const CompVMathStatsRansacControlFloat64* control, const CompVMathStatsRansacModelIndices& modelIndices, CompVMathStatsRansacModelParamsFloat64& modelParams, bool& userReject),
+	COMPV_ERROR_CODE(*buildResiduals)(const CompVMathStatsRansacControlFloat64* control, const CompVMathStatsRansacModelParamsFloat64& modelParams, compv_float64_t* residualPtr, bool& userbreak)
 );
 
 COMPV_NAMESPACE_END()

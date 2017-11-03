@@ -23,26 +23,17 @@ static const compv_float32x4_t __color_blue = { 0.f, 0.f, 1.f, 1.f };
 
 static COMPV_ERROR_CODE __build_random_points(
 	const  compv_float32_t window_width, const  compv_float32_t window_height, 
-	const compv_float32_t rho, const compv_float32_t theta_deg,
 	CompVLineFloat32& linePerfect,
 	CompVPointFloat32Vector& pointsNoisy
 ) 
 {
-	const compv_float32_t theta_rad = COMPV_MATH_DEGREE_TO_RADIAN_FLOAT(theta_deg);
-	if (theta_rad == 0.f) {
-		linePerfect.a.x = 0;
-		linePerfect.a.y = rho;
-		linePerfect.b.x = window_width;
-		linePerfect.b.y = -rho;
-	}
-	else {
-		const compv_float32_t a = (std::cos(theta_rad) * window_width);
-		const compv_float32_t b = (1.f / std::sin(theta_rad));
-		linePerfect.a.x = 0;
-		linePerfect.a.y = ((rho + a) * b) + window_height;
-		linePerfect.b.x = window_width;
-		linePerfect.b.y = ((rho - a) * b) + window_height;
-	}
+	const int window_height_int = static_cast<int>(window_height);
+	const int window_width_int = static_cast<int>(window_width);
+	
+	linePerfect.a.x = static_cast<compv_float32_t>(rand() % window_width_int);
+	linePerfect.a.y = static_cast<compv_float32_t>(rand() % window_width_int);
+	linePerfect.b.x = static_cast<compv_float32_t>(rand() % window_width_int);
+	linePerfect.b.y = static_cast<compv_float32_t>(rand() % window_width_int);
 
 	pointsNoisy.clear();
 
@@ -50,8 +41,7 @@ static COMPV_ERROR_CODE __build_random_points(
 	const compv_float32_t intercept = linePerfect.a.y - (slope * linePerfect.a.x);
 	const compv_float32_t slope_scale = 1.f / slope;
 
-	const int window_height_int = static_cast<int>(window_height);
-	const int window_width_int = static_cast<int>(window_width);
+	COMPV_DEBUG_INFO_EX(TAG_SAMPLE, "linePerfect = (%f, %f)", slope, intercept);
 
 	// Perfect points
 	pointsNoisy.resize(NUM_NOISY_POINTS + NUM_OUTLIERS);
@@ -100,11 +90,14 @@ static COMPV_ERROR_CODE __fit_line(
 	CompVMatPtr ptr32fParams;
 	COMPV_CHECK_CODE_RETURN(CompVMathStatsFit::line(ptr32fPointsNoisy, &ptr32fParams));
 	const compv_float32_t slope = *ptr32fParams->ptr<const compv_float32_t>(0, 0);
+	const compv_float32_t scale = 1.f / slope;
 	const compv_float32_t intercept = *ptr32fParams->ptr<const compv_float32_t>(0, 1);
-	lineFitted.a.x = 0;
-	lineFitted.a.y = (slope * lineFitted.a.x) + intercept;
-	lineFitted.b.x = window_width;
-	lineFitted.b.y = (slope * lineFitted.b.x) + intercept;
+	COMPV_DEBUG_INFO_EX(TAG_SAMPLE, "lineFitted = (%f, %f)", slope, intercept);
+
+	lineFitted.a.y = 0.f;
+	lineFitted.a.x = (lineFitted.a.y - intercept) * scale;
+	lineFitted.b.y = window_height - 1.f;
+	lineFitted.b.x = (lineFitted.b.y - intercept) * scale;
 
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -143,13 +136,11 @@ compv_main()
 
 		// Create Runnable and execute the task (lane detection)
 		onRunning = [&]() -> COMPV_ERROR_CODE {
-			compv_float32_t theta = 0.f;
-			compv_float32_t rho = 0.f;
+			COMPV_DEBUG_INFO_CODE_TODO("Uncomment srand");
+			//--srand(static_cast<unsigned int>(CompVTime::nowMillis()));
 			while (CompVDrawing::isLoopRunning()) {
 				COMPV_CHECK_CODE_BAIL(__build_random_points(
 					static_cast<compv_float32_t>(window->width()), static_cast<compv_float32_t>(window->height()),
-					std::fmodf((rho += 0.5f), static_cast<compv_float32_t>(window->width())) * ((rand() & 1) ? -1.f : 1.f),
-					std::fmodf((theta += 0.1f), 360.f) * ((rand() & 1) ? -1.f : 1.f),
 					linesPerfect[0],
 					pointsNoisy
 				));
@@ -172,7 +163,8 @@ compv_main()
 			bail:
 				COMPV_CHECK_CODE_NOP(window->endDraw()); // Make sure 'endDraw()' will be called regardless the result
 				COMPV_DEBUG_INFO_CODE_FOR_TESTING("Remove the sleep function");
-				CompVThread::sleep(100); // FIXME(dmi): remove
+				//CompVThread::sleep(1000); // FIXME(dmi): remove
+				getchar();
 			}
 			return COMPV_ERROR_CODE_S_OK;
 		};

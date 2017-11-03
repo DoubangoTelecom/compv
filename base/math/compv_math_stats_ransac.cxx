@@ -23,25 +23,31 @@ class CompVMathStatsRansacGeneric
 public:
 	template <typename FloatType>
 	static COMPV_ERROR_CODE process(
-		const void* opaque, const size_t dataCount, const size_t modelDataCount,
-		COMPV_ERROR_CODE(*buildModelParams)(const void* opaque, const CompVMathStatsRansacModelIndices& modelIndices, CompVMathStatsRansacModelParamsFloatType& modelParams, bool& userReject),
-		COMPV_ERROR_CODE(*evalModelParams)(const void* opaque, const CompVMathStatsRansacModelParamsFloatType& modelParams, FloatType* residualPtr, bool& userbreak),
-		const CompVMathStatsRansacControl* control, CompVMathStatsRansacStatus<FloatType>* status
+		const CompVMathStatsRansacControl<FloatType>* control, CompVMathStatsRansacStatus<FloatType>* status,
+		COMPV_ERROR_CODE(*buildModelParams)(const CompVMathStatsRansacControl<FloatType>* control, const CompVMathStatsRansacModelIndices& modelIndices, CompVMathStatsRansacModelParamsFloatType& modelParams, bool& userReject),
+		COMPV_ERROR_CODE(*buildResiduals)(const CompVMathStatsRansacControl<FloatType>* control, const CompVMathStatsRansacModelParamsFloatType& modelParams, FloatType* residualPtr, bool& userbreak)
 	)
 	{
-		COMPV_CHECK_EXP_RETURN(!dataCount || !modelDataCount || dataCount < modelDataCount || !control || !status || !buildModelParams || !evalModelParams,
+		COMPV_CHECK_EXP_RETURN(!control || !status || !control->isValid() || !buildModelParams || !buildResiduals,
 			COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+		COMPV_DEBUG_INFO_CODE_TODO("Add TieBreaker");
 
 		CompVMathStatsRansacModelParamsFloatType& modelParamsBest = status->modelParamsBest;
 		modelParamsBest.clear();
-		
-		FloatType residualMin = std::numeric_limits<FloatType>().max();
-		int maxTries = 1000;
-		int numTries = 0;
+
+		// Save control values to make sure won't change while we're doing ransac processing
+		const FloatType threshold = control->threshold;
+		const size_t maxIter = control->maxIter;
+		const size_t minModelPoints = control->minModelPoints;
+		const size_t totalPoints = control->totalPoints;
+
+		size_t numIter = 0;
+		int bestNumInliers = 0;
 
 		/* Create residual */
 		CompVMatPtr residual;
-		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<FloatType>(&residual, 1, dataCount));
+		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<FloatType>(&residual, 1, totalPoints));
 		FloatType* residualPtr = residual->ptr<FloatType>();
 
 		do {
@@ -50,8 +56,8 @@ public:
 			size_t indice;
 			std::random_device rand_device;
 			std::mt19937 prng{ rand_device() }; // TODO(dmi): one random device per thread
-			std::uniform_int_distribution<size_t> unif_dist{ 0, static_cast<size_t>(dataCount - 1) };
-			while (indices.size() < modelDataCount) {
+			std::uniform_int_distribution<size_t> unif_dist{ 0, static_cast<size_t>(totalPoints - 1) };
+			while (indices.size() < minModelPoints) {
 				indice = unif_dist(prng);
 				CompVMathStatsRansacModelIndices::const_iterator i;
 				for (i = indices.begin(); i < indices.end(); ++i) {
@@ -68,32 +74,54 @@ public:
 			bool userReject = false;
 			CompVMathStatsRansacModelParamsFloatType params;
 			COMPV_CHECK_CODE_RETURN(buildModelParams(
-				opaque, indices, params, userReject
+				control, indices, params, userReject
 			));
 			if (userReject) {
-				// got while, increment(numTries) then try again
+				// got while, increment(numIter) then try again
 				continue;
 			}
 
-			/* Eval model params */
+			/* Eval model params: build residual (must be >= 0) */
 			bool userBreak = false;
-			COMPV_CHECK_CODE_RETURN(evalModelParams(
-				opaque, params, residualPtr, userBreak
+			COMPV_CHECK_CODE_RETURN(buildResiduals(
+				control, params, residualPtr, userBreak
 			));
 
 			/* Check residual */
-			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation for CompVMatUtils::sumSquare");
-			FloatType residual_sum = 0.f;
-			for (size_t i = 0; i < dataCount; ++i) {
-				// FIXME(dmi): require residual to be positive
-				residual_sum += (residualPtr[i] * residualPtr[i]); // square to make sure residual will be positive
+			int numInliers = 0;
+			for (size_t i = 0; i < totalPoints; ++i) {
+				numInliers += (residualPtr[i] < threshold);
 			}
-			if (residual_sum < residualMin) {
-				residualMin = residual_sum;
+			if (numInliers > bestNumInliers) {
+				bestNumInliers = numInliers;
 				modelParamsBest = params;
 			}
 
-		} while (numTries++ < maxTries);
+		} while (numIter++ < maxIter);
+
+		/* Build inliers and make a final estimation of the parameters */
+		const size_t szBestNumInliers = static_cast<size_t>(bestNumInliers);
+		if (szBestNumInliers >= minModelPoints) { // always true because at least one set of random points will be matched as inliers
+			/* Build residual */
+			bool userBreak = false;
+			COMPV_CHECK_CODE_RETURN(buildResiduals(
+				control, modelParamsBest, residualPtr, userBreak
+			));
+			/* Re-compute inliers indices */
+			CompVMathStatsRansacModelIndices indices(bestNumInliers);
+			size_t i, k;
+			for (i = 0, k = 0; i < totalPoints && k < szBestNumInliers; ++i) {
+				if (residualPtr[i] < threshold) {
+					indices[k++] = i;
+				}
+			}
+			COMPV_CHECK_EXP_RETURN(k != szBestNumInliers, COMPV_ERROR_CODE_E_INVALID_CALL, "Second check for number of inliers returned different result");
+			/* Build model params */
+			bool userReject = false;
+			COMPV_CHECK_CODE_RETURN(buildModelParams(
+				control, indices, modelParamsBest, userReject
+			));
+		}
 
 		return COMPV_ERROR_CODE_S_OK;
 	}
@@ -106,33 +134,29 @@ public:
 
 
 template<> COMPV_BASE_API COMPV_ERROR_CODE CompVMathStatsRansac::process(
-	const void* opaque, const size_t dataCount, const size_t modelDataCount,
-	COMPV_ERROR_CODE(*buildModelParams)(const void* opaque, const CompVMathStatsRansacModelIndices& modelIndices, CompVMathStatsRansacModelParamsFloat32& modelParams, bool& userReject),
-	COMPV_ERROR_CODE(*evalModelParams)(const void* opaque, const CompVMathStatsRansacModelParamsFloat32& modelParams, compv_float32_t* residualPtr, bool& userbreak),
-	const CompVMathStatsRansacControl* control, CompVMathStatsRansacStatusFloat32* status
+	const CompVMathStatsRansacControlFloat32* control, CompVMathStatsRansacStatusFloat32* status,
+	COMPV_ERROR_CODE(*buildModelParams)(const CompVMathStatsRansacControlFloat32* control, const CompVMathStatsRansacModelIndices& modelIndices, CompVMathStatsRansacModelParamsFloat32& modelParams, bool& userReject),
+	COMPV_ERROR_CODE(*buildResiduals)(const CompVMathStatsRansacControlFloat32* control, const CompVMathStatsRansacModelParamsFloat32& modelParams, compv_float32_t* residualPtr, bool& userbreak)
 )
 {
 	COMPV_CHECK_CODE_RETURN(CompVMathStatsRansacGeneric::process<compv_float32_t>(
-		opaque, dataCount, modelDataCount,
+		control, status,
 		buildModelParams,
-		evalModelParams,
-		control, status
+		buildResiduals
 	));
 	return COMPV_ERROR_CODE_S_OK;
 }
 
 template<> COMPV_BASE_API COMPV_ERROR_CODE CompVMathStatsRansac::process(
-	const void* opaque, const size_t dataCount, const size_t modelDataCount,
-	COMPV_ERROR_CODE(*buildModelParams)(const void* opaque, const CompVMathStatsRansacModelIndices& modelIndices, CompVMathStatsRansacModelParamsFloat64& modelParams, bool& userReject),
-	COMPV_ERROR_CODE(*evalModelParams)(const void* opaque, const CompVMathStatsRansacModelParamsFloat64& modelParams, compv_float64_t* residualPtr, bool& userbreak),
-	const CompVMathStatsRansacControl* control, CompVMathStatsRansacStatusFloat64* status
+	const CompVMathStatsRansacControlFloat64* control, CompVMathStatsRansacStatusFloat64* status,
+	COMPV_ERROR_CODE(*buildModelParams)(const CompVMathStatsRansacControlFloat64* control, const CompVMathStatsRansacModelIndices& modelIndices, CompVMathStatsRansacModelParamsFloat64& modelParams, bool& userReject),
+	COMPV_ERROR_CODE(*buildResiduals)(const CompVMathStatsRansacControlFloat64* control, const CompVMathStatsRansacModelParamsFloat64& modelParams, compv_float64_t* residualPtr, bool& userbreak)
 )
 {
 	COMPV_CHECK_CODE_RETURN(CompVMathStatsRansacGeneric::process<compv_float64_t>(
-		opaque, dataCount, modelDataCount,
+		control, status,
 		buildModelParams,
-		evalModelParams,
-		control, status
+		buildResiduals
 		));
 	return COMPV_ERROR_CODE_S_OK;
 }
