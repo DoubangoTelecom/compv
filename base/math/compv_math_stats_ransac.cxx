@@ -34,8 +34,8 @@ public:
 		COMPV_DEBUG_INFO_CODE_TODO("Add TieBreaker"); // TieBreaker callback function: when number of inliers are equal then, compare variances
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation could be found");
 
+		status->reset();
 		CompVMathStatsRansacModelParamsFloatType& modelParamsBest = status->modelParamsBest;
-		modelParamsBest.clear();
 
 		// Save control values to make sure won't change while we're doing ransac processing
 		const FloatType threshold = control->threshold;
@@ -62,6 +62,9 @@ public:
 		size_t indice;
 		CompVMathStatsRansacModelIndices indices;
 
+		int numInliers;
+		bool userBreak, userReject;
+
 		/* Create residual */
 		CompVMatPtr residual;
 		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<FloatType>(&residual, 1, totalPoints));
@@ -84,24 +87,24 @@ public:
 			}
 
 			/* Build model params */
-			bool userReject = false;
+			userReject = false;
 			CompVMathStatsRansacModelParamsFloatType params;
 			COMPV_CHECK_CODE_RETURN(buildModelParams(
 				control, indices, params, userReject
 			));
 			if (userReject) {
-				// got while, increment(numIter) then try again
+				// goto while, increment(numIter) then try again
 				continue;
 			}
 
 			/* Eval model params: build residual (must be >= 0) */
-			bool userBreak = false;
+			userBreak = false;
 			COMPV_CHECK_CODE_RETURN(buildResiduals(
 				control, params, residualPtr, userBreak
 			));
 
-			/* Check residual */
-			int numInliers = 0;
+			/* Check residual and compute number of inliers */
+			numInliers = 0;
 			for (size_t i = 0; i < totalPoints; ++i) {
 				numInliers += (residualPtr[i] < threshold);
 			}
@@ -126,19 +129,23 @@ public:
 			}
 		} while (numIter++ < newMaxIter && bestNumInliers < minInliersToStopIter);
 
-		COMPV_DEBUG_VERBOSE_EX(COMPV_THIS_CLASSNAME, "RANSAC numIter/maxIter = %zu/%zu, bestNumInliers=%zu,", 
-			numIter, maxIter,
-			bestNumInliers
+		/* Update status */
+		status->numInliers = bestNumInliers;
+		status->maxIter = maxIter;
+		status->numIter = numIter;
+
+		COMPV_DEBUG_VERBOSE_EX(COMPV_THIS_CLASSNAME, "RANSAC status: numInliers=%zu, totalPoints=%zu, numIter=%zu, maxIter=%zu",
+			status->numInliers, totalPoints, status->numIter, status->maxIter
 		);
 
 		/* 
 			Build inliers and make a final estimation of the parameters
 			The condition "bestNumInliers >= minModelPoints" is always true because at least one set of random points will be matched as inliers
-			unless the input data is incorrect (e.g. contains 'inf' or 'nan' values).
+			unless the input data is incorrect (e.g. contains 'inf' or 'nan' values or points are the same).
 		*/
 		if (bestNumInliers >= minModelPoints) { 
 			/* Build residual using best params selected in ransac loop */
-			bool userBreak = false;
+			userBreak = false;
 			COMPV_CHECK_CODE_RETURN(buildResiduals(
 				control, modelParamsBest, residualPtr, userBreak
 			));
@@ -152,7 +159,7 @@ public:
 			}
 			COMPV_CHECK_EXP_RETURN(k != bestNumInliers, COMPV_ERROR_CODE_E_INVALID_CALL, "Second check for number of inliers returned different result");
 			/* Build model params (will update modelParamsBest) using inliers only */
-			bool userReject = false;
+			userReject = false;
 			COMPV_CHECK_CODE_RETURN(buildModelParams(
 				control, indices, modelParamsBest, userReject
 			));

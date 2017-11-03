@@ -39,9 +39,16 @@ static COMPV_ERROR_CODE __build_random_points(
 	linePerfect.a.y = static_cast<compv_float32_t>(rand() % window_height_int);
 	linePerfect.b.x = static_cast<compv_float32_t>(rand() % window_width_int);
 	linePerfect.b.y = static_cast<compv_float32_t>(rand() % window_height_int);
+#elif 0
+	// To test hz lines
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING("To test hz lines");
+	linePerfect.a.y = 428.000000f;
+	linePerfect.a.x = 312.000000f;
+	linePerfect.b.y = 428.000000f;
+	linePerfect.b.x = 309.000000f;
 #else
-	// To test vertical lines
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING("To test vertical lines");
+	// To test vt lines
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING("To test vt lines");
 	linePerfect.a.x = 428.000000f;
 	linePerfect.a.y = 312.000000f;
 	linePerfect.b.x = 428.000000f;
@@ -120,9 +127,9 @@ static COMPV_ERROR_CODE __fit_line(
 	}
 	CompVMatPtr ptr32fParams;
 	COMPV_CHECK_CODE_RETURN(CompVMathStatsFit::line(ptr32fPointsNoisy, ZERO_MEAN_STDEV, &ptr32fParams));
-	const compv_float32_t A = *ptr32fParams->ptr<const compv_float32_t>(0, 0);
-	const compv_float32_t B = *ptr32fParams->ptr<const compv_float32_t>(0, 1);
-	const compv_float32_t C = *ptr32fParams->ptr<const compv_float32_t>(0, 2);
+	const compv_float32_t& A = *ptr32fParams->ptr<const compv_float32_t>(0, 0);
+	const compv_float32_t& B = *ptr32fParams->ptr<const compv_float32_t>(0, 1);
+	const compv_float32_t& C = *ptr32fParams->ptr<const compv_float32_t>(0, 2);
 	// Equation Ax + By + C = 0 -> x = -(By + C) / A
 	// "A == 0" -> line is horizontal
 	// "B == 0" -> line is vertical

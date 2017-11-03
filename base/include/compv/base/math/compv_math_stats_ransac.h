@@ -51,6 +51,16 @@ typedef CompVMathStatsRansacControl<compv_float64_t> CompVMathStatsRansacControl
 template <typename FloatType>
 struct CompVMathStatsRansacStatus {
 	CompVMathStatsRansacModelParamsFloatType modelParamsBest;
+	size_t numInliers = 0;
+	size_t maxIter = 0;
+	size_t numIter = 0;
+
+	void reset() {
+		modelParamsBest.clear();
+		numInliers = 0;
+		maxIter = 0;
+		numIter = 0;
+	}
 };
 typedef CompVMathStatsRansacStatus<compv_float32_t> CompVMathStatsRansacStatusFloat32;
 typedef CompVMathStatsRansacStatus<compv_float64_t> CompVMathStatsRansacStatusFloat64;

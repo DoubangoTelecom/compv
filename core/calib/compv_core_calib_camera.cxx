@@ -889,6 +889,12 @@ COMPV_ERROR_CODE CompVCalibCamera::lineBestFit(const CompVLineFloat32Vector& poi
 	COMPV_CHECK_EXP_RETURN(points_cartesian.size() < 2, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Need at least #2 points");
 	COMPV_CHECK_EXP_RETURN(points_cartesian.size() != points_hough.size(), COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Must have same number of points for polar and cartesian points");
 
+#if 0
+	// This function doesn't work for 'almost-perfect' vertical and horizontal lines. Use Total Least Squares
+	// as done in compv_math_stats_fit.cxx
+	COMPV_DEBUG_INFO_CODE_TODO("Use Total Least Squares. See CompVMathStatsFitGeneric::buildModelParamsLine");
+#endif
+
 	// Implementing "Least Square Method" (https://www.varsitytutors.com/hotmath/hotmath_help/topics/line-of-best-fit)
 	// while ignoring the x-component for the simple reason that they are always constant
 	// when using CompV's KHT and SHT implementations (a.x = 0 and b.x = image_width)
