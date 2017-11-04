@@ -190,7 +190,7 @@ private:
 
 		/* Distance from a point to a line: https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line#Line_defined_by_an_equation */
 
-		if (A == 0 && B != 0) {
+		if (A == 0) { // A and B cannot be equal to zero at the same time (otherwise it's a point instead of line)
 			// Horizontal line. No need for SIMD, not common case.
 			COMPV_DEBUG_VERBOSE_EX(COMPV_THIS_CLASSNAME, "lineBuildResiduals(): Residual for horizontal line");
 			const FloatType scale = 1 / std::abs(B);

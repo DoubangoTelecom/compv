@@ -72,9 +72,20 @@ COMPV_ERROR_CODE CompVGLCanvas::drawLines(const CompVLineFloat32Vector& lines, c
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	CompVMatPtr glPoints2D;
-	COMPV_CHECK_CODE_RETURN(linesBuild(&glPoints2D, lines));
-	COMPV_CHECK_CODE_RETURN(linesApplyOptions(glPoints2D, options));
+	COMPV_CHECK_CODE_RETURN(CompVGLCanvas::linesBuild(&glPoints2D, lines));
+	COMPV_CHECK_CODE_RETURN(CompVGLCanvas::linesApplyOptions(glPoints2D, options));
 	COMPV_CHECK_CODE_RETURN(drawLinesGL(glPoints2D->ptr<const CompVGLPoint2D>(), glPoints2D->cols(), options));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVGLCanvas::drawLines(const CompVPointFloat32Vector& points, const CompVDrawingOptions* options COMPV_DEFAULT(nullptr)) /*Overrides(CompVCanvas)*/
+{
+	if (points.empty()) {
+		return COMPV_ERROR_CODE_S_OK;
+	}
+	CompVMatPtr glMemPoints;
+	COMPV_CHECK_CODE_RETURN(CompVGLCanvas::pointsBuild(&glMemPoints, points, options));
+	COMPV_CHECK_CODE_RETURN(drawLinesGL(glMemPoints->ptr<const CompVGLPoint2D>(), glMemPoints->cols(), options, true));
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -127,41 +138,11 @@ COMPV_ERROR_CODE CompVGLCanvas::drawPoints(const CompVPointFloat32Vector& points
 	if (!m_ptrDrawPoints) {
 		COMPV_CHECK_CODE_RETURN(CompVGLDrawPoints::newObj(&m_ptrDrawPoints));
 	}
-	CompVGLPoint2D* glMemPoint_;
-	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
-	const GLfloat(*color)[3];
 
 	CompVMatPtr glMemPoints;
-	COMPV_CHECK_CODE_RETURN((CompVMat::newObj<CompVGLPoint2D, COMPV_MAT_TYPE_STRUCT>(&glMemPoints, 1, points.size(), 1)));
+	COMPV_CHECK_CODE_RETURN(CompVGLCanvas::pointsBuild(&glMemPoints, points, options));
 
-	CompVPointFloat32Vector::const_iterator it;
-	bool randomColors = (!options || options->colorType == COMPV_DRAWING_COLOR_TYPE_RANDOM);
-	if (randomColors) {
-		for (it = points.begin(), glMemPoint_ = glMemPoints->ptr<CompVGLPoint2D>(); it != points.end(); ++it, ++glMemPoint_) {
-			// x, y
-			glMemPoint_->position[0] = static_cast<GLfloat>((*it).x);
-			glMemPoint_->position[1] = static_cast<GLfloat>((*it).y);
-			// r, g, b
-			color = &kCompVGLRandomColors[rand() % kCompVGLRandomColorsCount];
-			glMemPoint_->color[0] = (*color)[0];
-			glMemPoint_->color[1] = (*color)[1];
-			glMemPoint_->color[2] = (*color)[2];
-			glMemPoint_->color[3] = 1.f; // alpha
-		}
-	}
-	else {
-		for (it = points.begin(), glMemPoint_ = glMemPoints->ptr<CompVGLPoint2D>(); it != points.end(); ++it, ++glMemPoint_) {
-			// x, y
-			glMemPoint_->position[0] = static_cast<GLfloat>((*it).x);
-			glMemPoint_->position[1] = static_cast<GLfloat>((*it).y);
-			// r, g, b
-			glMemPoint_->color[0] = options->color[0];
-			glMemPoint_->color[1] = options->color[1];
-			glMemPoint_->color[2] = options->color[2];
-			glMemPoint_->color[3] = options->color[3];
-		}
-	}
-
+	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	COMPV_CHECK_CODE_BAIL(err = m_ptrFBO->bind());
 	COMPV_CHECK_CODE_BAIL(err = m_ptrDrawPoints->points(glMemPoints->ptr<CompVGLPoint2D>(), static_cast<GLsizei>(points.size()), options));
 
@@ -190,19 +171,19 @@ COMPV_ERROR_CODE CompVGLCanvas::drawInterestPoints(const CompVInterestPointVecto
 }
 
 // Internal implementation
-COMPV_ERROR_CODE CompVGLCanvas::drawLinesGL(const compv_float32_t* x0, const compv_float32_t* y0, const compv_float32_t* x1, const compv_float32_t* y1, const size_t count, const CompVDrawingOptions* options COMPV_DEFAULT(nullptr))
+COMPV_ERROR_CODE CompVGLCanvas::drawLinesGL(const compv_float32_t* x0, const compv_float32_t* y0, const compv_float32_t* x1, const compv_float32_t* y1, const size_t count, const CompVDrawingOptions* options COMPV_DEFAULT(nullptr), bool connected COMPV_DEFAULT(false))
 {
 	COMPV_CHECK_EXP_RETURN(!x0 || !y0 || !x1 || !y1 || !count, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
 	CompVMatPtr glPoints2D;
-	COMPV_CHECK_CODE_RETURN(linesBuild(&glPoints2D, x0, y0, x1, y1, count));
-	COMPV_CHECK_CODE_RETURN(linesApplyOptions(glPoints2D, options));
-	COMPV_CHECK_CODE_RETURN(drawLinesGL(glPoints2D->ptr<const CompVGLPoint2D>(), glPoints2D->cols(), options));
+	COMPV_CHECK_CODE_RETURN(CompVGLCanvas::linesBuild(&glPoints2D, x0, y0, x1, y1, count));
+	COMPV_CHECK_CODE_RETURN(CompVGLCanvas::linesApplyOptions(glPoints2D, options));
+	COMPV_CHECK_CODE_RETURN(drawLinesGL(glPoints2D->ptr<const CompVGLPoint2D>(), glPoints2D->cols(), options, connected));
 	return COMPV_ERROR_CODE_S_OK;
 }
 
 // Internal implemenation
-COMPV_ERROR_CODE CompVGLCanvas::drawLinesGL(const CompVGLPoint2D* lines, const size_t count, const CompVDrawingOptions* options COMPV_DEFAULT(nullptr))
+COMPV_ERROR_CODE CompVGLCanvas::drawLinesGL(const CompVGLPoint2D* lines, const size_t count, const CompVDrawingOptions* options COMPV_DEFAULT(nullptr), bool loop COMPV_DEFAULT(false))
 {
 	COMPV_CHECK_EXP_RETURN(!lines || !count, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
@@ -211,7 +192,7 @@ COMPV_ERROR_CODE CompVGLCanvas::drawLinesGL(const CompVGLPoint2D* lines, const s
 	}
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	COMPV_CHECK_CODE_BAIL(err = m_ptrFBO->bind());
-	COMPV_CHECK_CODE_BAIL(err = m_ptrDrawLines->lines(lines, static_cast<GLsizei>(count), options));
+	COMPV_CHECK_CODE_BAIL(err = m_ptrDrawLines->lines(lines, static_cast<GLsizei>(count), options, loop));
 
 bail:
 	COMPV_CHECK_CODE_NOP(m_ptrFBO->unbind());
@@ -301,6 +282,45 @@ COMPV_ERROR_CODE CompVGLCanvas::linesApplyOptions(CompVMatPtr& glPoints2D, const
 		}
 	}
 
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVGLCanvas::pointsBuild(CompVMatPtrPtr glPoints2D, const CompVPointFloat32Vector& points, const CompVDrawingOptions* options COMPV_DEFAULT(nullptr))
+{
+	COMPV_CHECK_EXP_RETURN(!glPoints2D || points.empty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	CompVGLPoint2D* glMemPoint_;
+	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
+	const GLfloat(*color)[3];
+
+	COMPV_CHECK_CODE_RETURN((CompVMat::newObj<CompVGLPoint2D, COMPV_MAT_TYPE_STRUCT>(glPoints2D, 1, points.size(), 1)));
+
+	CompVPointFloat32Vector::const_iterator it;
+	bool randomColors = (!options || options->colorType == COMPV_DRAWING_COLOR_TYPE_RANDOM);
+	if (randomColors) {
+		for (it = points.begin(), glMemPoint_ = (*glPoints2D)->ptr<CompVGLPoint2D>(); it != points.end(); ++it, ++glMemPoint_) {
+			// x, y
+			glMemPoint_->position[0] = static_cast<GLfloat>((*it).x);
+			glMemPoint_->position[1] = static_cast<GLfloat>((*it).y);
+			// r, g, b
+			color = &kCompVGLRandomColors[rand() % kCompVGLRandomColorsCount];
+			glMemPoint_->color[0] = (*color)[0];
+			glMemPoint_->color[1] = (*color)[1];
+			glMemPoint_->color[2] = (*color)[2];
+			glMemPoint_->color[3] = 1.f; // alpha
+		}
+	}
+	else {
+		for (it = points.begin(), glMemPoint_ = (*glPoints2D)->ptr<CompVGLPoint2D>(); it != points.end(); ++it, ++glMemPoint_) {
+			// x, y
+			glMemPoint_->position[0] = static_cast<GLfloat>((*it).x);
+			glMemPoint_->position[1] = static_cast<GLfloat>((*it).y);
+			// r, g, b
+			glMemPoint_->color[0] = options->color[0];
+			glMemPoint_->color[1] = options->color[1];
+			glMemPoint_->color[2] = options->color[2];
+			glMemPoint_->color[3] = options->color[3];
+		}
+	}
 	return COMPV_ERROR_CODE_S_OK;
 }
 

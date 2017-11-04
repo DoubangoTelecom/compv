@@ -38,22 +38,24 @@ public:
 	virtual COMPV_ERROR_CODE clear(const CompVDrawingOptions* options = nullptr) override /*Overrides(CompVCanvas)*/;
     virtual COMPV_ERROR_CODE drawTexts(const CompVStringVector& texts, const CompVPointFloat32Vector& positions, const CompVDrawingOptions* options = nullptr) override /*Overrides(CompVCanvas)*/;
 	virtual COMPV_ERROR_CODE drawLines(const CompVLineFloat32Vector& lines, const CompVDrawingOptions* options = nullptr) override /*Overrides(CompVCanvas)*/;
+	virtual COMPV_ERROR_CODE drawLines(const CompVPointFloat32Vector& points, const CompVDrawingOptions* options = nullptr) override /*Overrides(CompVCanvas)*/;
 	virtual COMPV_ERROR_CODE drawRectangles(const CompVRectFloat32Vector& rects, const CompVDrawingOptions* options = nullptr) override /*Overrides(CompVCanvas)*/;
 	virtual COMPV_ERROR_CODE drawPoints(const CompVPointFloat32Vector& points, const CompVDrawingOptions* options = nullptr) override /*Overrides(CompVCanvas)*/;
 	virtual COMPV_ERROR_CODE drawInterestPoints(const CompVInterestPointVector& interestPoints, const CompVDrawingOptions* options = nullptr) override /*Overrides(CompVCanvas)*/;
 	virtual bool haveDrawTexts()const override /*Overrides(CompVCanvas)*/;
 
-	COMPV_ERROR_CODE drawLinesGL(const compv_float32_t* x0, const compv_float32_t* y0, const compv_float32_t* x1, const compv_float32_t* y1, const size_t count, const CompVDrawingOptions* options = nullptr); // internal function
-	COMPV_ERROR_CODE drawLinesGL(const CompVGLPoint2D* lines, const size_t count, const CompVDrawingOptions* options = nullptr); // internal function
+	COMPV_ERROR_CODE drawLinesGL(const compv_float32_t* x0, const compv_float32_t* y0, const compv_float32_t* x1, const compv_float32_t* y1, const size_t count, const CompVDrawingOptions* options = nullptr, bool connected = false); // internal function
+	COMPV_ERROR_CODE drawLinesGL(const CompVGLPoint2D* lines, const size_t count, const CompVDrawingOptions* options = nullptr, bool connected = false); // internal function
 
 	COMPV_ERROR_CODE close();
 
     static COMPV_ERROR_CODE newObj(CompVGLCanvasPtrPtr canvas, CompVGLFboPtr ptrFBO);
 
 private:
-	COMPV_ERROR_CODE linesBuild(CompVMatPtrPtr glPoints2D, const CompVLineFloat32Vector& lines);
-	COMPV_ERROR_CODE linesBuild(CompVMatPtrPtr glPoints2D, const compv_float32_t* x0, const compv_float32_t* y0, const compv_float32_t* x1, const compv_float32_t* y1, size_t count);
-	COMPV_ERROR_CODE linesApplyOptions(CompVMatPtr& glPoints2D, const CompVDrawingOptions* options = nullptr);
+	static COMPV_ERROR_CODE linesBuild(CompVMatPtrPtr glPoints2D, const CompVLineFloat32Vector& lines);
+	static COMPV_ERROR_CODE linesBuild(CompVMatPtrPtr glPoints2D, const compv_float32_t* x0, const compv_float32_t* y0, const compv_float32_t* x1, const compv_float32_t* y1, size_t count);
+	static COMPV_ERROR_CODE linesApplyOptions(CompVMatPtr& glPoints2D, const CompVDrawingOptions* options = nullptr);
+	static COMPV_ERROR_CODE pointsBuild(CompVMatPtrPtr glPoints2D, const CompVPointFloat32Vector& points, const CompVDrawingOptions* options = nullptr);
 
     COMPV_INLINE void makeEmpty() {
         m_bEmpty = true;

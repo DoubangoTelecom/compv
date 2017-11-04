@@ -60,5 +60,8 @@
     <ClCompile Include="calib_undist.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="stats_ransac.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

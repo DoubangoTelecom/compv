@@ -52,12 +52,13 @@ CompVGLDrawLines::~CompVGLDrawLines()
 
 }
 
-COMPV_ERROR_CODE CompVGLDrawLines::lines(const CompVGLPoint2D* lines, const GLsizei count, const CompVDrawingOptions* options COMPV_DEFAULT(nullptr))
+COMPV_ERROR_CODE CompVGLDrawLines::lines(const CompVGLPoint2D* lines, const GLsizei count, const CompVDrawingOptions* options COMPV_DEFAULT(nullptr), bool connected COMPV_DEFAULT(false))
 {
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	GLint fboWidth = 0, fboHeight = 0;
 	const GLfloat linewidth = options ? static_cast<GLfloat>(options->lineWidth) : 2.f;
 	const GLfloat pointSize = options ? static_cast<GLfloat>(options->pointSize) : 7.f;
+	const bool loop = options ? options->lineLoop : false; // GL_LINE_LOOP or GL_LINE_STRIP
 	bool bFirstTimeOrChanged;
 	GLuint uName;
 
@@ -94,8 +95,8 @@ COMPV_ERROR_CODE CompVGLDrawLines::lines(const CompVGLPoint2D* lines, const GLsi
 
 	// Draw points
 	COMPV_glLineWidth(linewidth);
-	COMPV_glViewport(0, 0, static_cast<GLsizei>(fboWidth), static_cast<GLsizei>(fboHeight));
-	COMPV_glDrawArrays(GL_LINES, 0, count);
+	COMPV_glViewport(0, 0, static_cast<GLsizei>(fboWidth), static_cast<GLsizei>(fboHeight)); 
+	COMPV_glDrawArrays(connected ? (loop ? GL_LINE_LOOP : GL_LINE_STRIP) : GL_LINES, 0, count);
 	if (options && options->lineType == COMPV_DRAWING_LINE_TYPE_MATCH) {
 		COMPV_glDrawArrays(GL_POINTS, 0, count);
 	}
