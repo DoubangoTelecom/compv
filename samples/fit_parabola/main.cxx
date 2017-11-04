@@ -59,6 +59,7 @@ static COMPV_ERROR_CODE __build_random_points(
 	params_perfect[0] = A;
 	params_perfect[1] = B;
 	params_perfect[2] = C;
+	COMPV_DEBUG_VERBOSE_EX(TAG_SAMPLE, "Perfect parabola: %f, %f, %f", A, B, C);
 
 	pointsNoisy.resize(NUM_NOISY_POINTS + NUM_OUTLIERS);
 	for (CompVPointFloat32Vector::iterator i = pointsNoisy.begin(); i < pointsNoisy.end(); ++i) {
@@ -108,9 +109,28 @@ static COMPV_ERROR_CODE __draw_parabola(
 
 static COMPV_ERROR_CODE __fit_parabola(
 	const size_t window_width, const size_t window_height,
-	const CompVPointFloat32Vector& pointsNoisy
+	const CompVPointFloat32Vector& pointsNoisy,
+	compv_float32_t(&params_fitted)[3]
 )
 {
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Converting from vector to MatPtr maybe change ransac to accept vector");
+	CompVMatPtr ptr32fPointsNoisy;
+	const size_t count = pointsNoisy.size();
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float32_t>(&ptr32fPointsNoisy, 2, count));
+	compv_float32_t* ptr32fPointsNoisyXPtr = ptr32fPointsNoisy->ptr<compv_float32_t>(0);
+	compv_float32_t* ptr32fPointsNoisyYPtr = ptr32fPointsNoisy->ptr<compv_float32_t>(1);
+	size_t i = 0;
+	CompVPointFloat32Vector::const_iterator j = pointsNoisy.begin();
+	for (; i < count; ++i, ++j) {
+		ptr32fPointsNoisyXPtr[i] = j->x;
+		ptr32fPointsNoisyYPtr[i] = j->y;
+	}
+	CompVMatPtr ptr32fParams;
+	COMPV_CHECK_CODE_RETURN(CompVMathStatsFit::parabola(ptr32fPointsNoisy, ZERO_MEAN_STDEV, &ptr32fParams));
+	params_fitted[0] = *ptr32fParams->ptr<const compv_float32_t>(0, 0);
+	params_fitted[1] = *ptr32fParams->ptr<const compv_float32_t>(0, 1);
+	params_fitted[2] = *ptr32fParams->ptr<const compv_float32_t>(0, 2);
+	COMPV_DEBUG_VERBOSE_EX(TAG_SAMPLE, "Fitted parabola: %f, %f, %f", params_fitted[0], params_fitted[1], params_fitted[2]);
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -128,7 +148,7 @@ compv_main()
 		CompVCanvasPtr canvas;
 		CompVPointFloat32Vector pointsNoisy;
 		CompVPointFloat32Vector pointsAnchor;
-		compv_float32_t params_perfect[3];
+		compv_float32_t params_perfect[3], params_fitted[3];
 		CompVStringVector textFrameNum(1);
 		CompVPointFloat32Vector pointFrameNum(1);
 
@@ -165,7 +185,8 @@ compv_main()
 				));
 				COMPV_CHECK_CODE_BAIL(__fit_parabola(
 					window->width(), window->height(),
-					pointsNoisy
+					pointsNoisy,
+					params_fitted
 				));
 				COMPV_CHECK_CODE_BAIL(window->beginDraw());
 				COMPV_CHECK_EXP_BAIL(!(canvas = singleSurfaceLayer->cover()->requestCanvas()), COMPV_ERROR_CODE_E_INVALID_CALL, "Cannot create a canvas for the cover");
@@ -183,8 +204,13 @@ compv_main()
 					&drawingOptions,
 					canvas
 				));
-				//drawingOptions.setColor(__color_line_fitted);
-				//COMPV_CHECK_CODE_BAIL(canvas->drawLines(linesFitted, &drawingOptions));
+				drawingOptions.setColor(__color_parabola_fitted);
+				COMPV_CHECK_CODE_BAIL(__draw_parabola(
+					window->width(), window->height(),
+					params_fitted,
+					&drawingOptions,
+					canvas
+				));
 				drawingOptions.pointSize = 2.f;
 				drawingOptions.setColor(__color_points_noisy);
 				COMPV_CHECK_CODE_BAIL(canvas->drawPoints(pointsNoisy, &drawingOptions));
@@ -197,7 +223,7 @@ compv_main()
 				COMPV_DEBUG_INFO_CODE_FOR_TESTING("Remove the sleep function and getchar");
 				//CompVThread::sleep(1000); // FIXME(dmi): remove
 				if (nFrameNum >= 0) {
-					getchar();
+					//getchar();
 				}
 				++nFrameNum;
 			}

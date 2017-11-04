@@ -25,7 +25,7 @@ public:
 	static COMPV_ERROR_CODE process(
 		const CompVMathStatsRansacControl<FloatType>* control, CompVMathStatsRansacStatus<FloatType>* status,
 		COMPV_ERROR_CODE(*buildModelParams)(const CompVMathStatsRansacControl<FloatType>* control, const CompVMathStatsRansacModelIndices& modelIndices, CompVMathStatsRansacModelParamsFloatType& modelParams, bool& userReject),
-		COMPV_ERROR_CODE(*buildResiduals)(const CompVMathStatsRansacControl<FloatType>* control, const CompVMathStatsRansacModelParamsFloatType& modelParams, FloatType* residualPtr, bool& userbreak)
+		COMPV_ERROR_CODE(*buildResiduals)(const CompVMathStatsRansacControl<FloatType>* control, const CompVMathStatsRansacModelParamsFloatType& modelParams, CompVMatPtr residual, bool& userbreak)
 	)
 	{
 		COMPV_CHECK_EXP_RETURN(!control || !status || !control->isValid() || !buildModelParams || !buildResiduals,
@@ -100,11 +100,12 @@ public:
 			/* Eval model params: build residual (must be >= 0) */
 			userBreak = false;
 			COMPV_CHECK_CODE_RETURN(buildResiduals(
-				control, params, residualPtr, userBreak
+				control, params, residual, userBreak
 			));
 
 			/* Check residual and compute number of inliers */
 			numInliers = 0;
+			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found"); // Tested with vtune and CPU intensive
 			for (size_t i = 0; i < totalPoints; ++i) {
 				numInliers += (residualPtr[i] < threshold);
 			}
@@ -147,7 +148,7 @@ public:
 			/* Build residual using best params selected in ransac loop */
 			userBreak = false;
 			COMPV_CHECK_CODE_RETURN(buildResiduals(
-				control, modelParamsBest, residualPtr, userBreak
+				control, modelParamsBest, residual, userBreak
 			));
 			/* Re-compute inliers indices using the residual from best params */
 			CompVMathStatsRansacModelIndices indices(bestNumInliers);
@@ -161,7 +162,7 @@ public:
 			/* Build model params (will update modelParamsBest) using inliers only */
 			userReject = false;
 			COMPV_CHECK_CODE_RETURN(buildModelParams(
-				control, indices, modelParamsBest, userReject
+				control, indices, modelParamsBest, userReject //!\\ Use 'modelParamsBest' as input to allow callback function to start with a good guess
 			));
 		}
 
@@ -178,7 +179,7 @@ public:
 template<> COMPV_BASE_API COMPV_ERROR_CODE CompVMathStatsRansac::process(
 	const CompVMathStatsRansacControlFloat32* control, CompVMathStatsRansacStatusFloat32* status,
 	COMPV_ERROR_CODE(*buildModelParams)(const CompVMathStatsRansacControlFloat32* control, const CompVMathStatsRansacModelIndices& modelIndices, CompVMathStatsRansacModelParamsFloat32& modelParams, bool& userReject),
-	COMPV_ERROR_CODE(*buildResiduals)(const CompVMathStatsRansacControlFloat32* control, const CompVMathStatsRansacModelParamsFloat32& modelParams, compv_float32_t* residualPtr, bool& userbreak)
+	COMPV_ERROR_CODE(*buildResiduals)(const CompVMathStatsRansacControlFloat32* control, const CompVMathStatsRansacModelParamsFloat32& modelParams, CompVMatPtr residual, bool& userbreak)
 )
 {
 	COMPV_CHECK_CODE_RETURN(CompVMathStatsRansacGeneric::process<compv_float32_t>(
@@ -192,7 +193,7 @@ template<> COMPV_BASE_API COMPV_ERROR_CODE CompVMathStatsRansac::process(
 template<> COMPV_BASE_API COMPV_ERROR_CODE CompVMathStatsRansac::process(
 	const CompVMathStatsRansacControlFloat64* control, CompVMathStatsRansacStatusFloat64* status,
 	COMPV_ERROR_CODE(*buildModelParams)(const CompVMathStatsRansacControlFloat64* control, const CompVMathStatsRansacModelIndices& modelIndices, CompVMathStatsRansacModelParamsFloat64& modelParams, bool& userReject),
-	COMPV_ERROR_CODE(*buildResiduals)(const CompVMathStatsRansacControlFloat64* control, const CompVMathStatsRansacModelParamsFloat64& modelParams, compv_float64_t* residualPtr, bool& userbreak)
+	COMPV_ERROR_CODE(*buildResiduals)(const CompVMathStatsRansacControlFloat64* control, const CompVMathStatsRansacModelParamsFloat64& modelParams, CompVMatPtr residual, bool& userbreak)
 )
 {
 	COMPV_CHECK_CODE_RETURN(CompVMathStatsRansacGeneric::process<compv_float64_t>(

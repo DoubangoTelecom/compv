@@ -22,7 +22,7 @@ class COMPV_BASE_API CompVMathStatsFit
 {
 public:
 	static COMPV_ERROR_CODE line(const CompVMatPtr& points, const double threshold, CompVMatPtrPtr params);
-	static COMPV_ERROR_CODE parabola(const CompVMatPtr& points, CompVMatPtrPtr params, COMPV_MATH_PARABOLA_TYPE type = COMPV_MATH_PARABOLA_TYPE_REGULAR);
+	static COMPV_ERROR_CODE parabola(const CompVMatPtr& points, const double threshold, CompVMatPtrPtr params, const COMPV_MATH_PARABOLA_TYPE type = COMPV_MATH_PARABOLA_TYPE_REGULAR);
 };
 
 COMPV_NAMESPACE_END()
