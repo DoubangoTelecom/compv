@@ -119,7 +119,6 @@ public:
 			denominator = 1 - std::pow((1 - w), minModelPointsFloat);
 			if (denominator < eps) {
 				// Happens when number of inliners close to number of points
-				COMPV_DEBUG_VERBOSE_EX(COMPV_THIS_CLASSNAME, "Good news: denominator < eps");
 				newMaxIter = 0;
 			}
 			else {
