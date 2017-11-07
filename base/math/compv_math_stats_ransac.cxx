@@ -42,9 +42,10 @@ public:
 		const size_t maxIter = control->maxIter;
 		const size_t minModelPoints = control->minModelPoints;
 		const size_t totalPoints = control->totalPoints;
-		const FloatType probInliersOnly = control->probInliersOnly;
+		const FloatType probInliersOnly = COMPV_MATH_CLIP3(0, 1, control->probInliersOnly);
 		
 		const size_t minInliersToStopIter = static_cast<size_t>(probInliersOnly * totalPoints); // minimum number of inliers to stop the iteration
+		const size_t minIterBeforeUpdatingMaxIter = static_cast<size_t>(maxIter * (1 - probInliersOnly));  // minimum number of iters before starting to update the iter values using percent of outliers
 		const FloatType totalPointsFloat = static_cast<FloatType>(totalPoints);
 		const FloatType totalPointsFloatScale = 1 / totalPointsFloat;
 		const FloatType minModelPointsFloat = static_cast<FloatType>(minModelPoints);
@@ -54,7 +55,7 @@ public:
 
 		static const FloatType eps = std::numeric_limits<FloatType>::epsilon();
 		const FloatType numerator = std::log(std::max(1 - probInliersOnly, eps));
-		FloatType denominator, w;
+		FloatType denominator, e;
 
 		std::random_device rand_device;
 		std::mt19937 prng{ rand_device() }; // TODO(dmi): one random device per thread
@@ -63,7 +64,7 @@ public:
 		CompVMathStatsRansacModelIndices indices;
 
 		int numInliers;
-		bool userBreak, userReject;
+		bool userBreak, userReject, bestUpdate;
 
 		/* Create residual */
 		CompVMatPtr residual;
@@ -109,19 +110,20 @@ public:
 			for (size_t i = 0; i < totalPoints; ++i) {
 				numInliers += (residualPtr[i] < threshold);
 			}
-			if (numInliers > bestNumInliers) {
+			bestUpdate = (numInliers > bestNumInliers);
+			if (bestUpdate) {
 				bestNumInliers = static_cast<size_t>(numInliers);
 				modelParamsBest = params;
 			}
 
 			/* Update RANSAC loop control data */
-			w = (totalPointsFloat - numInliers) * totalPointsFloatScale;
-			denominator = 1 - std::pow((1 - w), minModelPointsFloat);
+			e = (totalPointsFloat - numInliers) * totalPointsFloatScale; // outliers percentage
+			denominator = 1 - std::pow((1 - e), minModelPointsFloat);
 			if (denominator < eps) {
 				// Happens when number of inliners close to number of points
 				newMaxIter = 0;
 			}
-			else {
+			else if (bestUpdate && numIter > minIterBeforeUpdatingMaxIter) {
 				denominator = std::log(denominator);
 				if (denominator < 0 && numerator > (newMaxIter * denominator)) {
 					newMaxIter = COMPV_MATH_ROUNDFU_2_NEAREST_INT(numerator / denominator, size_t);
