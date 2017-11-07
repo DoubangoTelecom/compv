@@ -47,7 +47,6 @@ public:
 		
 		CompVMathStatsFitGenericOpaque opaque(points);
 		CompVMathStatsRansacControl<FloatType> control(threshold, points->cols(), kMinModelPoints, &opaque);
-		control.maxIter = COMPV_MATH_MAX_3(control.maxIter, points->cols(), 1000);
 		CompVMathStatsRansacStatus<FloatType> status;
 
 		if (points->cols() == 2) {
@@ -96,7 +95,6 @@ public:
 
 		CompVMathStatsFitGenericOpaque opaque(points, type);
 		CompVMathStatsRansacControl<FloatType> control(threshold, points->cols(), kMinModelPoints, &opaque);
-		control.maxIter = COMPV_MATH_MAX_3(control.maxIter, points->cols(), 1000);
 		CompVMathStatsRansacStatus<FloatType> status;
 
 		if (points->cols() == 3) {

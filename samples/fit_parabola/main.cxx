@@ -153,7 +153,7 @@ compv_main()
 		CompVPointFloat32Vector pointFrameNum(1);
 
 		// Change debug level to INFO before starting
-		CompVDebugMgr::setLevel(COMPV_DEBUG_LEVEL_VERBOSE);
+		CompVDebugMgr::setLevel(COMPV_DEBUG_LEVEL_INFO);
 
 		// Init the modules
 		COMPV_CHECK_CODE_BAIL(err = CompVInit());
@@ -173,8 +173,7 @@ compv_main()
 
 		// Create Runnable and execute the task (lane detection)
 		onRunning = [&]() -> COMPV_ERROR_CODE {
-			COMPV_DEBUG_INFO_CODE_TODO("Uncomment srand");
-			//srand(static_cast<unsigned int>(CompVTime::nowMillis()));
+			srand(static_cast<unsigned int>(CompVTime::nowMillis()));
 			size_t nFrameNum = 0;
 			while (CompVDrawing::isLoopRunning()) {
 				COMPV_CHECK_CODE_BAIL(__build_random_points(
@@ -223,7 +222,7 @@ compv_main()
 				COMPV_DEBUG_INFO_CODE_FOR_TESTING("Remove the sleep function and getchar");
 				//CompVThread::sleep(1000); // FIXME(dmi): remove
 				if (nFrameNum >= 0) {
-					//getchar();
+					getchar();
 				}
 				++nFrameNum;
 			}
