@@ -59,6 +59,7 @@ public:
 		/* Processing */
 		bool anotherThreadFoundInliers = false;
 		CompVMathStatsRansacGenericThreadData<FloatType> bestThreadData;
+		COMPV_DEBUG_INFO_CODE_TODO("MT disabled");
 		if (threadsCount > 1) {
 			CompVAsyncTaskIds taskIds;
 			std::vector<CompVMathStatsRansacGenericThreadData<FloatType> > vecThreadData(threadsCount);
@@ -186,7 +187,6 @@ public:
 			std::random_device rand_device;
 			std::mt19937 prng{ rand_device() };
 			std::uniform_int_distribution<size_t> unif_dist{ 0, static_cast<size_t>(totalPoints - 1) };
-			size_t indice;
 			CompVMathStatsRansacModelIndices indices;
 
 			int numInliers;
@@ -198,18 +198,17 @@ public:
 			FloatType* residualPtr = residual->ptr<FloatType>();
 
 			do {
-				/* Build random indices for the model */
-				indices.clear();
-				while (indices.size() < minModelPoints) {
-					indice = unif_dist(prng);
-					CompVMathStatsRansacModelIndices::const_iterator i;
-					for (i = indices.begin(); i < indices.end(); ++i) {
-						if (*i == indice) {
-							break;
-						}
-					}
-					if (i == indices.end()) {
-						indices.push_back(indice);
+				/* Make sure to increment the number of iters in any case */
+				++numIter;
+
+				/* Build random UNIQUE indices for the model */
+				indices.resize(minModelPoints);
+				for (size_t i = 0; i < minModelPoints; ) {
+					const size_t indice = unif_dist(prng);
+					size_t j;
+					for (j = 0; j < i && (indices[j] != indice); ++j);
+					if (j == i) { // unique?
+						indices[i++] = indice;
 					}
 				}
 
@@ -220,7 +219,6 @@ public:
 					control, indices, params, userReject
 				));
 				if (userReject) {
-					// goto while, increment(numIter) then try again
 					continue;
 				}
 
@@ -255,7 +253,7 @@ public:
 						newMaxIter = COMPV_MATH_ROUNDFU_2_NEAREST_INT(numerator / denominator, size_t);
 					}
 				}
-			} while (!anotherThreadFoundInliers && ++numIter < newMaxIter && bestNumInliers < minInliersToStopIter);
+			} while (!anotherThreadFoundInliers && numIter < newMaxIter && bestNumInliers < minInliersToStopIter);
 
 			thread_data.numIter = numIter;
 			thread_data.maxIter = newMaxIter;
