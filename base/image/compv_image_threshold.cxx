@@ -25,19 +25,12 @@ COMPV_ERROR_CODE CompVImageThreshold::fixed(const CompVMatPtr& input, CompVMatPt
 COMPV_ERROR_CODE CompVImageThreshold::adaptive(const CompVMatPtr& input, CompVMatPtrPtr output, const size_t blockSize, const double delta, const double maxVal COMPV_DEFAULT(255), bool invert COMPV_DEFAULT(false))
 {
 	COMPV_CHECK_EXP_RETURN(!input || input->isEmpty() || !(blockSize & 1), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("This function create the kernel each time you call it, You should create the kernel once and call the overrided one");
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("This function create the kernel each time you call it, You should create the kernel once (using CompVImageThreshold::kernelMean) and call the overrided one");
 	
 	// TODO(dmi): add support for Gaussian kernels
 
-	// Create fixed point mean kernel. No need for floating point version because mean processing fxp version is largely enough.
-	CompVMatPtr ptr32fNormalizedKernl, ptr16uFxpKernl;
-	const compv_float32_t vvv = 1.f / static_cast<compv_float32_t>(blockSize);
-	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float32_t>(&ptr32fNormalizedKernl, 1, blockSize));
-	compv_float32_t* ptr32fNormalizedKernlPtr = ptr32fNormalizedKernl->ptr<compv_float32_t>();
-	for (size_t i = 0; i < blockSize; ++i) {
-		ptr32fNormalizedKernlPtr[i] = vvv;
-	}
-	COMPV_CHECK_CODE_RETURN(CompVMathConvlt::fixedPointKernel(ptr32fNormalizedKernl, &ptr16uFxpKernl));
+	CompVMatPtr ptr16uFxpKernl;
+	COMPV_CHECK_CODE_RETURN(CompVImageThreshold::kernelMean(blockSize, &ptr16uFxpKernl));
 	// Processing
 	COMPV_CHECK_CODE_RETURN(CompVImageThreshold::adaptive(input, output, ptr16uFxpKernl, delta, maxVal, invert));
 
@@ -162,5 +155,19 @@ COMPV_ERROR_CODE CompVImageThreshold::adaptive(const CompVMatPtr& input, CompVMa
 	return COMPV_ERROR_CODE_S_OK;
 }
 
+COMPV_ERROR_CODE CompVImageThreshold::kernelMean(const size_t blockSize, CompVMatPtrPtr kernel)
+{
+	COMPV_CHECK_EXP_RETURN(!kernel || !(blockSize & 1), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	CompVMatPtr ptr32fNormalizedKernl;
+	const compv_float32_t vvv = 1.f / static_cast<compv_float32_t>(blockSize);
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float32_t>(&ptr32fNormalizedKernl, 1, blockSize));
+	compv_float32_t* ptr32fNormalizedKernlPtr = ptr32fNormalizedKernl->ptr<compv_float32_t>();
+	for (size_t i = 0; i < blockSize; ++i) {
+		ptr32fNormalizedKernlPtr[i] = vvv;
+	}
+	// Create fixed point mean kernel. No need for floating point version because mean processing fxp version is largely enough.
+	COMPV_CHECK_CODE_RETURN(CompVMathConvlt::fixedPointKernel(ptr32fNormalizedKernl, kernel));
+	return COMPV_ERROR_CODE_S_OK;
+}
 
 COMPV_NAMESPACE_END()

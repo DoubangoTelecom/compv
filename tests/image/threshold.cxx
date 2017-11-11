@@ -14,7 +14,7 @@
 #define FILE_NAME_OPENGLBOOK			"opengl_programming_guide_8th_edition_200x258_gray.yuv"
 #define FILE_NAME_GRIOTS				"mandekalou_480x640_gray.yuv"
 
-#define LOOP_COUNT				10000
+#define LOOP_COUNT				1
 
 #define BLOCK_SIZE				5
 #define DELTA					8 // 8 / 21
@@ -28,13 +28,14 @@
 
 COMPV_ERROR_CODE adaptiveThreshold()
 {
-	CompVMatPtr imageIn, imageOut;
+	CompVMatPtr imageIn, imageOut, kernel;
 
 	COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 1282, 720, 1282, COMPV_TEST_PATH_TO_FILE(FILE_NAME_EQUIRECTANGULAR).c_str(), &imageIn));
+	COMPV_CHECK_CODE_RETURN(CompVImageThreshold::kernelMean(BLOCK_SIZE, &kernel));
 
 	uint64_t timeStart = CompVTime::nowMillis();
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
-		COMPV_CHECK_CODE_RETURN(CompVImageThreshold::adaptive(imageIn, &imageOut, BLOCK_SIZE, DELTA, MAXVAL, INVERT));
+		COMPV_CHECK_CODE_RETURN(CompVImageThreshold::adaptive(imageIn, &imageOut, kernel, DELTA, MAXVAL, INVERT));
 	}
 	uint64_t timeEnd = CompVTime::nowMillis();
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "Adaptive Threshold Elapsed time = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));

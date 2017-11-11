@@ -19,6 +19,7 @@ public:
 	static COMPV_ERROR_CODE fixed(const CompVMatPtr& input, CompVMatPtrPtr output, const double threshold);
 	static COMPV_ERROR_CODE adaptive(const CompVMatPtr& input, CompVMatPtrPtr output, const size_t blockSize, const double delta, const double maxVal = 255, bool invert = false);
 	static COMPV_ERROR_CODE adaptive(const CompVMatPtr& input, CompVMatPtrPtr output, const CompVMatPtr& kernel, const double delta, const double maxVal = 255, bool invert = false);
+	static COMPV_ERROR_CODE kernelMean(const size_t blockSize, CompVMatPtrPtr kernel);
 private:
 };
 
