@@ -222,7 +222,7 @@ compv_main()
 				COMPV_DEBUG_INFO_CODE_FOR_TESTING("Remove the sleep function and getchar");
 				//CompVThread::sleep(1000); // FIXME(dmi): remove
 				if (nFrameNum >= 0) {
-					getchar();
+					//getchar();
 				}
 				++nFrameNum;
 			}

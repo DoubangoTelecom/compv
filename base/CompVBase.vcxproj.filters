@@ -537,6 +537,9 @@
     <ClInclude Include="include\compv\base\math\compv_math_stats_fit.h">
       <Filter>include\math</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\image\compv_image_threshold.h">
+      <Filter>include\image</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx">
@@ -907,6 +910,9 @@
     </ClCompile>
     <ClCompile Include="math\compv_math_stats_fit.cxx">
       <Filter>source\math</Filter>
+    </ClCompile>
+    <ClCompile Include="image\compv_image_threshold.cxx">
+      <Filter>source\image</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

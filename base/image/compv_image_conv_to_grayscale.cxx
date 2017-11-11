@@ -70,7 +70,7 @@ COMPV_ERROR_CODE CompVImageConvToGrayscale::process(const CompVMatPtr& imageIn, 
 		else {
 			COMPV_CHECK_CODE_RETURN(CompVImage::wrap(COMPV_SUBTYPE_PIXELS_Y,
 				imageIn->ptr<uint8_t>(0, 0, COMPV_PLANE_Y), imageIn->cols(COMPV_PLANE_Y), imageIn->rows(COMPV_PLANE_Y), imageIn->stride(COMPV_PLANE_Y),
-				imageGray));
+				imageGray, imageIn->stride(COMPV_PLANE_Y))); // The output image *must* have same stride as the input: required by many caller
 		}
 		return COMPV_ERROR_CODE_S_OK;
 	}

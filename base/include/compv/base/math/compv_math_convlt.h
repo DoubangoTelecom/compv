@@ -216,13 +216,17 @@ private:
 		size_t imgpad = (stride - width);
 		// Set top and bottom vert borders to zero
 		// We must not accept garbage in the border (coul be used by the calling function -e.g to find the max value for normalization)
-		const size_t bSize = (ker_size_div2 * width) * sizeof(OutputType);
+
+		// Segmentation fault when the input image has an offset (e.g. bound to non-zero cols):
+		//		-> for the last row reset 'width' only instead of 'stride'.
+		const size_t bSize = (((ker_size_div2 - 1) * stride) + width) * sizeof(OutputType);
 		if (resetTopBorder) {
 			CompVMem::zero(outPtr, bSize);
 		}
 		if (resetBottomBorder) {
 			CompVMem::zero(outPtr + ((height - ker_size_div2) * stride), bSize);
 		}
+
 		// Perform vertical convolution
 		CompVMathConvlt::convlt1VtHz_private<InputType, KernelType, OutputType>(inPtr, outPtr + (ker_size_div2 * stride), width, (height - ker_size_div2 - ker_size_div2), stride, imgpad, vtKernPtr, kernSize, fixedPoint);
 	}

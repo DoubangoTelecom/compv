@@ -9,11 +9,12 @@ using namespace compv;
 #define UNITTEST_CONVOLUTION					0
 #define UNITTEST_SOBEL							0
 #define UNITTEST_CANNY							0
+#define UNITTEST_THRESHOLD						1
 #define UNITTEST_HOUGHSHT						0
 #define UNITTEST_HOUGHKHT						0
 
 #define UNITTEST_FEATURE_FAST					0
-#define UNITTEST_CHROMA_CONV					1
+#define UNITTEST_CHROMA_CONV					0
 #define UNITTEST_BRUTEFORCE						0
 
 #define UNITTEST_PATCH_MOMENTS					0
@@ -108,6 +109,10 @@ compv_main()
 #if UNITTEST_CANNY || !defined(COMPV_TEST_LOCAL)
 								extern COMPV_ERROR_CODE unittest_canny();
 								COMPV_CHECK_CODE_BAIL(err = unittest_canny(), "Canny unittest failed");
+#endif
+#if UNITTEST_THRESHOLD || !defined(COMPV_TEST_LOCAL)
+								extern COMPV_ERROR_CODE unittest_thresh();
+								COMPV_CHECK_CODE_BAIL(err = unittest_thresh(), "Tresholding unittest failed");
 #endif
 #if UNITTEST_HOUGHSHT || !defined(COMPV_TEST_LOCAL)
 								extern COMPV_ERROR_CODE unittest_houghsht();

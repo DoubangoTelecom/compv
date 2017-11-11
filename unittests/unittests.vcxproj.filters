@@ -87,5 +87,8 @@
     <ClCompile Include="math_histogram.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="threshold.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

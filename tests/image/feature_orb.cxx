@@ -38,7 +38,7 @@ COMPV_ERROR_CODE feature_orb()
 	CompVCornerDetePtr dete;
 	CompVCornerDescPtr dec;
 	CompVMatPtr image, descriptions;
-	std::vector<CompVInterestPoint> interestPoints;
+	CompVInterestPointVector interestPoints;
 	uint64_t timeStart, timeEnd;
 
 	// Read file

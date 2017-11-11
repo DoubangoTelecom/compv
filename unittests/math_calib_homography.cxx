@@ -63,6 +63,7 @@ static COMPV_ERROR_CODE __math_calib_homography(COMPV_MODELEST_TYPE estType)
 	CompVMatPtr input;
 	CompVMatPtr output;
 	CompVMatPtr h;
+	CompVHomographyResult result;
 	T *x, *y, *z;
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<T>(&input, 3, NUM_POINTS));
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<T>(&output, 3, NUM_POINTS));
@@ -101,8 +102,8 @@ static COMPV_ERROR_CODE __math_calib_homography(COMPV_MODELEST_TYPE estType)
 		// z[i] = 1; // required, but already set after mul(H, input)
 	}
 
-	h = NULL;
-	COMPV_CHECK_CODE_RETURN(CompVHomography<T>::find(&h, input, output, estType)); // NONE to make sure we'll always have the same result (ransac is nondeterministic)
+	h = nullptr;
+	COMPV_CHECK_CODE_RETURN(CompVHomography<T>::find(input, output, &h, &result, estType)); // NONE to make sure we'll always have the same result (ransac is nondeterministic)
 
 	T expected_mse = std::is_same<T, compv_float32_t>::value
 		? static_cast<T>(MSE_F32)

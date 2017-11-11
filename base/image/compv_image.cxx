@@ -92,19 +92,21 @@ COMPV_ERROR_CODE CompVImage::readPixels(COMPV_SUBTYPE ePixelFormat, size_t width
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVImage::wrap(COMPV_SUBTYPE ePixelFormat, const void* dataPtr, size_t width, size_t height, size_t stride, CompVMatPtrPtr image)
+COMPV_ERROR_CODE CompVImage::wrap(COMPV_SUBTYPE ePixelFormat, const void* dataPtr, const size_t dataWidth, const size_t dataHeight, const size_t dataStride, CompVMatPtrPtr image, const size_t imageStride COMPV_DEFAULT(0))
 {
-	COMPV_CHECK_EXP_RETURN(!dataPtr || !width || !height || stride < width || !image, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(!dataPtr || !dataWidth || !dataHeight || dataStride < dataWidth || !image, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
 	// Compute best stride
-	size_t bestStride = width;
-	COMPV_CHECK_CODE_RETURN(CompVImageUtils::bestStride(width, &bestStride));
-	COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(image, ePixelFormat, width, height, bestStride)
+	size_t bestStride = imageStride;
+	if (bestStride < dataWidth) { // Compute newStride for the wrapped image is not defined or invalid
+		COMPV_CHECK_CODE_RETURN(CompVImageUtils::bestStride(dataWidth, &bestStride));
+	}
+	COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(image, ePixelFormat, dataWidth, dataHeight, bestStride)
 		, "Failed to allocate new image");
 
 	if (dataPtr) {
 		COMPV_CHECK_CODE_RETURN(CompVImageUtils::copy(ePixelFormat,
-			dataPtr, width, height, stride,
+			dataPtr, dataWidth, dataHeight, dataStride,
 			(void*)(*image)->ptr(), (*image)->cols(), (*image)->rows(), (*image)->stride()), "Failed to copy image"); // copy data
 	}
 
@@ -114,7 +116,7 @@ COMPV_ERROR_CODE CompVImage::wrap(COMPV_SUBTYPE ePixelFormat, const void* dataPt
 COMPV_ERROR_CODE CompVImage::clone(const CompVMatPtr& imageIn, CompVMatPtrPtr imageOut)
 {
 	COMPV_CHECK_EXP_RETURN(!imageIn || imageIn->isEmpty() || !imageOut || imageIn->type() != COMPV_MAT_TYPE_PIXELS, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_CHECK_CODE_RETURN(CompVImage::wrap(imageIn->subType(), imageIn->ptr(), imageIn->cols(), imageIn->rows(), imageIn->stride(), imageOut));
+	COMPV_CHECK_CODE_RETURN(CompVImage::wrap(imageIn->subType(), imageIn->ptr(), imageIn->cols(), imageIn->rows(), imageIn->stride(), imageOut, imageIn->stride()));
 	return COMPV_ERROR_CODE_S_OK;
 }
 

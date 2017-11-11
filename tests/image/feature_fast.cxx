@@ -78,7 +78,7 @@ COMPV_ERROR_CODE feature_fast()
 {
 	CompVCornerDetePtr fast;
 	CompVMatPtr image;
-	std::vector<CompVInterestPoint> interestPoints;
+	CompVInterestPointVector interestPoints;
 	uint64_t timeStart, timeEnd;
 	const compv_unittest_feature_fast* test = NULL;
 	float sum_scores;

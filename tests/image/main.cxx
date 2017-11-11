@@ -13,11 +13,10 @@ using namespace compv;
 #define TEST_CONVLT					0
 #define TEST_SOBEL					0
 #define TEST_CANNY					0
+#define TEST_ADAPT_THRESH			1
 #define TEST_HOUGHSHT				0
-#define TEST_HOUGHKHT				1
+#define TEST_HOUGHKHT				0
 #define TEST_BRUTEFORCE				0
-#define TEST_DRAW_IMAGE				0
-#define TEST_DRAW_POINTS			0
 
 /* Entry point function */
 compv_main()
@@ -64,6 +63,10 @@ compv_main()
 		extern COMPV_ERROR_CODE canny();
 		COMPV_CHECK_CODE_BAIL(err = canny(), TAG_TEST_IMAGE "Canny Edge dete test failed");
 #endif
+#if TEST_ADAPT_THRESH
+		extern COMPV_ERROR_CODE adaptiveThreshold();
+		COMPV_CHECK_CODE_BAIL(err = adaptiveThreshold(), TAG_TEST_IMAGE "Adaptive Threshold test failed");
+#endif
 #if TEST_HOUGHSHT
 		extern COMPV_ERROR_CODE houghsht();
 		COMPV_CHECK_CODE_BAIL(err = houghsht(), TAG_TEST_IMAGE "HoughSht line dete test failed");
@@ -78,14 +81,6 @@ compv_main()
 #if TEST_BRUTEFORCE
 		extern COMPV_ERROR_CODE bruteforce();
 		COMPV_CHECK_CODE_BAIL(err = bruteforce(), TAG_TEST_IMAGE "Bruteforce test failed");
-#endif
-#if TEST_DRAW_IMAGE
-		extern COMPV_ERROR_CODE draw_image();
-		COMPV_CHECK_CODE_BAIL(err = draw_image(), TAG_TEST_IMAGE "Draw image test failed");
-#endif
-#if TEST_DRAW_POINTS
-		extern COMPV_ERROR_CODE draw_points();
-		COMPV_CHECK_CODE_BAIL(err = draw_points(), TAG_TEST_IMAGE "Draw points test failed");
 #endif
 
 	bail:

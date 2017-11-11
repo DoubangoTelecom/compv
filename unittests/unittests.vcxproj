@@ -182,6 +182,7 @@
     <ClCompile Include="pyramid.cxx" />
     <ClCompile Include="scale.cxx" />
     <ClCompile Include="sobel.cxx" />
+    <ClCompile Include="threshold.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\base\CompVBase.vcxproj">

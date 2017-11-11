@@ -20,12 +20,6 @@
     <ClCompile Include="feature_fast.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="draw_image.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="draw_points.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="scale.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -57,6 +51,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="houghsht.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="threshold.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -79,7 +79,7 @@ COMPV_ERROR_CODE unittest_feature_fast()
 {
 	CompVCornerDetePtr fast;
 	CompVMatPtr image;
-	std::vector<CompVInterestPoint> interestPoints;
+	CompVInterestPointVector interestPoints;
 	const compv_unittest_feature_fast* test;
 	float sum_scores;
 	float xf;

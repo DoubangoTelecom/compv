@@ -115,7 +115,7 @@ COMPV_ERROR_CODE CompVCornerDeteEdgeBase::process(const CompVMatPtr& image, Comp
 		// This is an issue for the convolution only because there is no way to make the writing cache-friendly.
 		// No such issue when multithreading 'CompVMathConvlt::convlt1' (perf tests done), so don't try to change the function.
 		// https://en.wikipedia.org/wiki/False_sharing
-		auto funcConvolutionAndGradient = [&](const uint8_t* ptrIn, int16_t* ptrOutGx, int16_t* ptrOutGy, uint16_t* ptrOutG, compv_float32_t* ptrGradDir, size_t h, size_t threadIdx) -> COMPV_ERROR_CODE {
+		auto funcConvolutionAndGradient = [&](const uint8_t* ptrIn, int16_t* ptrOutGx, int16_t* ptrOutGy, uint16_t* ptrOutG, compv_float32_t* ptrGradDir, const size_t h, const size_t threadIdx) -> COMPV_ERROR_CODE {
 			// Convolution
 			int16_t* imgTmp = reinterpret_cast<int16_t*>(CompVMem::malloc(CompVMathConvlt::outputSizeInBytes<int16_t>(m_nImageStride, h + rowsOverlapCount))); // local alloc to avoid false sharing
 			COMPV_CHECK_EXP_RETURN(!imgTmp, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY), "Failed to alloc imgTmp");
