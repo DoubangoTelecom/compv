@@ -204,7 +204,7 @@ public:
 		COMPV_CHECK_EXP_RETURN(map->rows() < 2 || map->cols() != outputElmtCount, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Invalid map size");
 
 		// Create output
-		COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&output_, input->subType(), outputSize_.width, outputSize_.height));
+		COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&output_, input->subType(), outputSize_.width, outputSize_.height, input->stride()));
 
 		// Perform interpolation
 		switch (interType) {
