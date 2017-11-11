@@ -122,13 +122,13 @@ COMPV_ERROR_CODE CompVCornerDeteEdgeBase::process(const CompVMatPtr& image, Comp
 			const bool first = (threadIdx == 0);
 			const bool last = (threadIdx == (threadsCount - 1));
 			const size_t padding = first ? 0 : rowsOverlapPad;
-			CompVMathConvlt::convlt1Hz<uint8_t, int16_t, int16_t>(ptrIn - padding, imgTmp, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelHz, m_nKernelSize, true);
-			CompVMathConvlt::convlt1Vt<int16_t, int16_t, int16_t>(imgTmp, ptrOutGx - padding, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelVt, m_nKernelSize, first, last);
-			CompVMathConvlt::convlt1Hz<uint8_t, int16_t, int16_t>(ptrIn - padding, imgTmp, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelVt, m_nKernelSize, true);
-			CompVMathConvlt::convlt1Vt<int16_t, int16_t, int16_t>(imgTmp, ptrOutGy - padding, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelHz, m_nKernelSize, first, last);
+			COMPV_CHECK_CODE_RETURN((CompVMathConvlt::convlt1Hz<uint8_t, int16_t, int16_t>(ptrIn - padding, imgTmp, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelHz, m_nKernelSize, true)));
+			COMPV_CHECK_CODE_RETURN((CompVMathConvlt::convlt1Vt<int16_t, int16_t, int16_t>(imgTmp, ptrOutGx - padding, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelVt, m_nKernelSize, first, last)));
+			COMPV_CHECK_CODE_RETURN((CompVMathConvlt::convlt1Hz<uint8_t, int16_t, int16_t>(ptrIn - padding, imgTmp, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelVt, m_nKernelSize, true)));
+			COMPV_CHECK_CODE_RETURN((CompVMathConvlt::convlt1Vt<int16_t, int16_t, int16_t>(imgTmp, ptrOutGy - padding, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelHz, m_nKernelSize, first, last)));
 			CompVMem::free((void**)&imgTmp);
 			// Gradient using L1 distance (abs(gx) + abs(gy))
-			COMPV_CHECK_CODE_RETURN(err = (CompVMathUtils::sumAbs<int16_t, uint16_t>(ptrOutGx - padding, ptrOutGy - padding, ptrOutG - padding, m_nImageWidth, h + rowsOverlapCount, m_nImageStride)));
+			COMPV_CHECK_CODE_RETURN((CompVMathUtils::sumAbs<int16_t, uint16_t>(ptrOutGx - padding, ptrOutGy - padding, ptrOutG - padding, m_nImageWidth, h + rowsOverlapCount, m_nImageStride)));
 			// Gradient directions
 			if (ptrGradDir) {
 				COMPV_CHECK_CODE_RETURN((CompVMathUtils::atan2<int16_t, compv_float32_t>(ptrOutGx - padding, ptrOutGy - padding, ptrGradDir - padding, m_nImageWidth, h + rowsOverlapCount, m_nImageStride)));

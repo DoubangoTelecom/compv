@@ -18,8 +18,8 @@
 
 #define COMPV_THIS_CLASSNAME	"CompVEdgeDeteCanny"
 
-#define COMPV_FEATURE_DETE_CANNY_GRAD_MIN_SAMPLES_PER_THREAD	3 // must be >= KernelSize because of the convolution ("rowsOverlapCount")
-#define COMPV_FEATURE_DETE_CANNY_NMS_MIN_SAMPLES_PER_THREAD	(20*20)
+#define COMPV_FEATURE_DETE_CANNY_GRAD_MIN_SAMPLES_PER_THREAD (30*30)
+#define COMPV_FEATURE_DETE_CANNY_NMS_MIN_SAMPLES_PER_THREAD	 (20*20)
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -156,9 +156,13 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVMatPtr& image, CompVMatP
 
 	/* Convolution + Gradient + Mean */
 	// Get Max number of threads
+	const size_t minSamplesPerThreads = COMPV_MATH_MAX(
+		COMPV_MATH_MAX(m_nImageWidth, m_nImageHeight) * m_nKernelSize,
+		COMPV_FEATURE_DETE_CANNY_GRAD_MIN_SAMPLES_PER_THREAD
+	); // width and height must be > kernel size
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
 	const size_t maxThreads = (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
-	size_t threadsCount = CompVThreadDispatcher::guessNumThreadsDividingAcrossY(m_nImageStride, m_nImageHeight, maxThreads, COMPV_MATH_MAX(m_nKernelSize, COMPV_FEATURE_DETE_CANNY_GRAD_MIN_SAMPLES_PER_THREAD));
+	size_t threadsCount = CompVThreadDispatcher::guessNumThreadsDividingAcrossY(m_nImageStride, m_nImageHeight, maxThreads, minSamplesPerThreads);
 
 	//!\\ Computing mean per thread provides different result on MT and ST, this is why we compute sum then mean.
 

@@ -40,8 +40,6 @@ COMPV_ERROR_CODE adaptiveThreshold()
 	uint64_t timeEnd = CompVTime::nowMillis();
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "Adaptive Threshold Elapsed time = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 
-	COMPV_DEBUG_INFO_EX(TAG_TEST, "MD5: %s", compv_tests_md5(imageOut).c_str());
-
 #if COMPV_OS_WINDOWS && 0
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Do not write the file to the hd");
 	COMPV_CHECK_CODE_RETURN(compv_tests_write_to_file(imageOut, "threshold.gray"));

@@ -57,7 +57,7 @@ COMPV_ERROR_CODE CompVImageThreshold::adaptive(const CompVMatPtr& input, CompVMa
 		int
 	);
 	const uint8_t maxValUInt8 = COMPV_MATH_ROUNDFU_2_NEAREST_INT(
-		COMPV_MATH_CLIP3(0xff, 255, maxVal),
+		COMPV_MATH_CLIP3(0x00, 0xff, maxVal),
 		int
 	);
 
@@ -79,8 +79,12 @@ COMPV_ERROR_CODE CompVImageThreshold::adaptive(const CompVMatPtr& input, CompVMa
 	// Get Number of threads
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
 	const size_t maxThreads = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 0;
+	const size_t minSamplesPerThreads = COMPV_MATH_MAX(
+		COMPV_MATH_MAX(width, height) * kernelSize, 
+		COMPV_IMAGE_THRESH_ADAPT_SAMPLES_PER_THREAD
+	); // width and height must be > kernel size
 	const size_t threadsCount = (threadDisp && !threadDisp->isMotherOfTheCurrentThread())
-		? CompVThreadDispatcher::guessNumThreadsDividingAcrossY(width, height, maxThreads, COMPV_IMAGE_THRESH_ADAPT_SAMPLES_PER_THREAD)
+		? CompVThreadDispatcher::guessNumThreadsDividingAcrossY(width, height, maxThreads, minSamplesPerThreads)
 		: 1;
 
 	// Check if if overlaping is small
@@ -116,9 +120,9 @@ COMPV_ERROR_CODE CompVImageThreshold::adaptive(const CompVMatPtr& input, CompVMa
 		const size_t padding = first ? 0 : rowsOverlapCount;
 		const uint8_t* mt_inputPtr = input->ptr<const uint8_t>(ystart - padding);
 		uint8_t* mt_outputPtr = output_->ptr<uint8_t>(ystart - padding);
-		uint8_t* mt_meanPtr = mean->ptr<uint8_t>(ystart - padding); // same value as 'outputPtr' when MT is enabled
-		CompVMathConvlt::convlt1HzFixedPoint(mt_inputPtr, tmpMat->ptr<uint8_t>(), width, mt_h, stride, kernelHzPtr, kernelSize, true);
-		CompVMathConvlt::convlt1VtFixedPoint(tmpMat->ptr<const uint8_t>(), mt_meanPtr, width, mt_h, stride, kernelVtPtr, kernelSize, first, last);
+		uint8_t* mt_meanPtr = mean->ptr<uint8_t>(ystart - padding); // same value as 'outputPtr' when MT is disabled
+		COMPV_CHECK_CODE_RETURN(CompVMathConvlt::convlt1HzFixedPoint(mt_inputPtr, tmpMat->ptr<uint8_t>(), width, mt_h, stride, kernelHzPtr, kernelSize, true));
+		COMPV_CHECK_CODE_RETURN(CompVMathConvlt::convlt1VtFixedPoint(tmpMat->ptr<const uint8_t>(), mt_meanPtr, width, mt_h, stride, kernelVtPtr, kernelSize, first, last));
 
 		// Thresholding
 		for (size_t j = 0; j < mt_h; ++j) {
