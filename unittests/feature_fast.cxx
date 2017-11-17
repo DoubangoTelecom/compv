@@ -98,7 +98,7 @@ COMPV_ERROR_CODE unittest_feature_fast()
 		sum_scores = 0.f;
 		xf = 0.f;
 		yf = 0.f;
-		for (std::vector<CompVInterestPoint>::iterator i = interestPoints.begin(); i != interestPoints.end(); ++i) {
+		for (CompVInterestPointVector::const_iterator i = interestPoints.begin(); i != interestPoints.end(); ++i) {
 			sum_scores += (*i).strength;
 			xf += (*i).x;
 			yf += (*i).y;

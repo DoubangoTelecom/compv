@@ -24,5 +24,6 @@
     <ClCompile Include="..\..\canny.cxx" />
     <ClCompile Include="..\..\houghkht.cxx" />
     <ClCompile Include="..\..\houghsht.cxx" />
+    <ClCompile Include="..\..\threshold.cxx" />
   </ItemGroup>
 </Project>

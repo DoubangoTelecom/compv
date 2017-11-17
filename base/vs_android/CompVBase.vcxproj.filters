@@ -534,6 +534,24 @@
     <ClInclude Include="..\include\compv\base\math\compv_math_trig.h">
       <Filter>include\math</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\compv\base\image\compv_image_remap.h">
+      <Filter>include\image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\image\compv_image_threshold.h">
+      <Filter>include\image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\image\intrin\x86\compv_image_conv_to_rgbx_intrin_ssex.h">
+      <Filter>include\image\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\image\intrin\x86\compv_image_threshold_intrin_avx2.h">
+      <Filter>include\image\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\image\intrin\x86\compv_image_threshold_intrin_sse2.h">
+      <Filter>include\image\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\image\intrin\arm\compv_image_threshold_intrin_neon.h">
+      <Filter>include\image\intrin\arm</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_base.cxx">
@@ -896,6 +914,21 @@
     <ClCompile Include="..\math\compv_math_trig.cxx">
       <Filter>source\math</Filter>
     </ClCompile>
+    <ClCompile Include="..\image\compv_image_remap.cxx">
+      <Filter>source\image</Filter>
+    </ClCompile>
+    <ClCompile Include="..\image\compv_image_threshold.cxx">
+      <Filter>source\image</Filter>
+    </ClCompile>
+    <ClCompile Include="..\image\intrin\x86\compv_image_threshold_intrin_avx2.cxx">
+      <Filter>source\image\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\image\intrin\x86\compv_image_threshold_intrin_sse2.cxx">
+      <Filter>source\image\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\image\intrin\arm\compv_image_threshold_intrin_neon.cxx">
+      <Filter>source\image\intrin\arm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\asm\x86\compv_bits_macros_x86.s">
@@ -1070,6 +1103,12 @@
     </GAS>
     <GAS Include="..\asm\arm\compv_mem_arm32_neon.S">
       <Filter>source\asm\arm</Filter>
+    </GAS>
+    <GAS Include="..\image\asm\arm\compv_image_threshold_arm32_neon.S">
+      <Filter>source\image\asm\arm</Filter>
+    </GAS>
+    <GAS Include="..\image\asm\arm\compv_image_threshold_arm64_neon.S">
+      <Filter>source\image\asm\arm</Filter>
     </GAS>
   </ItemGroup>
 </Project>

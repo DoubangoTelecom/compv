@@ -58,6 +58,7 @@
     <ClCompile Include="..\..\pyramid.cxx" />
     <ClCompile Include="..\..\scale.cxx" />
     <ClCompile Include="..\..\sobel.cxx" />
+    <ClCompile Include="..\..\threshold.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\base\vs_android\CompVBase.vcxproj">

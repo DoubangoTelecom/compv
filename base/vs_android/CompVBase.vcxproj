@@ -84,14 +84,17 @@
     <ClInclude Include="..\include\compv\base\image\compv_image_conv_to_rgbx.h" />
     <ClInclude Include="..\include\compv\base\image\compv_image_conv_to_yuv444p.h" />
     <ClInclude Include="..\include\compv\base\image\compv_image_decoder.h" />
+    <ClInclude Include="..\include\compv\base\image\compv_image_remap.h" />
     <ClInclude Include="..\include\compv\base\image\compv_image_scale_bilinear.h" />
     <ClInclude Include="..\include\compv\base\image\compv_image_scale_pyramid.h" />
+    <ClInclude Include="..\include\compv\base\image\compv_image_threshold.h" />
     <ClInclude Include="..\include\compv\base\image\compv_image_utils.h" />
     <ClInclude Include="..\include\compv\base\image\intrin\arm\compv_image_conv_grayscale_intrin_neon.h" />
     <ClInclude Include="..\include\compv\base\image\intrin\arm\compv_image_conv_hsv_intrin_neon.h" />
     <ClInclude Include="..\include\compv\base\image\intrin\arm\compv_image_conv_rgbfamily_intrin_neon.h" />
     <ClInclude Include="..\include\compv\base\image\intrin\arm\compv_image_conv_to_rgbx_intrin_neon.h" />
     <ClInclude Include="..\include\compv\base\image\intrin\arm\compv_image_scale_bilinear_intrin_neon.h" />
+    <ClInclude Include="..\include\compv\base\image\intrin\arm\compv_image_threshold_intrin_neon.h" />
     <ClInclude Include="..\include\compv\base\image\intrin\x86\compv_image_conv_grayscale_intrin_ssse3.h" />
     <ClInclude Include="..\include\compv\base\image\intrin\x86\compv_image_conv_hsv_intrin_avx2.h" />
     <ClInclude Include="..\include\compv\base\image\intrin\x86\compv_image_conv_hsv_intrin_ssse3.h" />
@@ -100,9 +103,12 @@
     <ClInclude Include="..\include\compv\base\image\intrin\x86\compv_image_conv_rgbfamily_intrin_ssse3.h" />
     <ClInclude Include="..\include\compv\base\image\intrin\x86\compv_image_conv_to_rgbx_intrin_avx2.h" />
     <ClInclude Include="..\include\compv\base\image\intrin\x86\compv_image_conv_to_rgbx_intrin_sse2.h" />
+    <ClInclude Include="..\include\compv\base\image\intrin\x86\compv_image_conv_to_rgbx_intrin_ssex.h" />
     <ClInclude Include="..\include\compv\base\image\intrin\x86\compv_image_conv_to_rgbx_intrin_ssse3.h" />
     <ClInclude Include="..\include\compv\base\image\intrin\x86\compv_image_scale_bilinear_intrin_avx2.h" />
     <ClInclude Include="..\include\compv\base\image\intrin\x86\compv_image_scale_bilinear_intrin_sse41.h" />
+    <ClInclude Include="..\include\compv\base\image\intrin\x86\compv_image_threshold_intrin_avx2.h" />
+    <ClInclude Include="..\include\compv\base\image\intrin\x86\compv_image_threshold_intrin_sse2.h" />
     <ClInclude Include="..\include\compv\base\intrin\arm\compv_intrin_neon.h" />
     <ClInclude Include="..\include\compv\base\intrin\arm\compv_mem_intrin_neon.h" />
     <ClInclude Include="..\include\compv\base\intrin\arm\compv_patch_intrin_neon.h" />
@@ -214,8 +220,10 @@
     <ClCompile Include="..\image\compv_image_conv_to_rgbx.cxx" />
     <ClCompile Include="..\image\compv_image_conv_to_yuv444p.cxx" />
     <ClCompile Include="..\image\compv_image_decoder.cxx" />
+    <ClCompile Include="..\image\compv_image_remap.cxx" />
     <ClCompile Include="..\image\compv_image_scale_bilinear.cxx" />
     <ClCompile Include="..\image\compv_image_scale_pyramid.cxx" />
+    <ClCompile Include="..\image\compv_image_threshold.cxx" />
     <ClCompile Include="..\image\compv_image_utils.cxx" />
     <ClCompile Include="..\image\intrin\arm\compv_image_conv_grayscale_intrin_neon.cxx">
       <EnableNeonCodegen Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</EnableNeonCodegen>
@@ -250,6 +258,7 @@
       <EnableNeonCodegen Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</EnableNeonCodegen>
       <EnableNeonCodegen Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</EnableNeonCodegen>
     </ClCompile>
+    <ClCompile Include="..\image\intrin\arm\compv_image_threshold_intrin_neon.cxx" />
     <ClCompile Include="..\image\intrin\x86\compv_image_conv_grayscale_intrin_ssse3.cxx" />
     <ClCompile Include="..\image\intrin\x86\compv_image_conv_hsv_intrin_avx2.cxx" />
     <ClCompile Include="..\image\intrin\x86\compv_image_conv_hsv_intrin_ssse3.cxx" />
@@ -261,6 +270,8 @@
     <ClCompile Include="..\image\intrin\x86\compv_image_conv_to_rgbx_intrin_ssse3.cxx" />
     <ClCompile Include="..\image\intrin\x86\compv_image_scale_bilinear_intrin_avx2.cxx" />
     <ClCompile Include="..\image\intrin\x86\compv_image_scale_bilinear_intrin_sse41.cxx" />
+    <ClCompile Include="..\image\intrin\x86\compv_image_threshold_intrin_avx2.cxx" />
+    <ClCompile Include="..\image\intrin\x86\compv_image_threshold_intrin_sse2.cxx" />
     <ClCompile Include="..\intrin\arm\compv_mem_intrin_neon.cxx" />
     <ClCompile Include="..\intrin\arm\compv_patch_intrin_neon.cxx" />
     <ClCompile Include="..\intrin\x86\compv_mem_intrin_avx.cxx" />
@@ -588,6 +599,30 @@
       <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ArmNeon>
     </GAS>
     <GAS Include="..\image\asm\arm\compv_image_conv_to_rgbx_arm64_neon.S">
+      <FileType>Document</FileType>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x86'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+    </GAS>
+    <GAS Include="..\image\asm\arm\compv_image_threshold_arm32_neon.S">
+      <FileType>Document</FileType>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x86'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ArmNeon>
+      <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ArmNeon>
+    </GAS>
+    <GAS Include="..\image\asm\arm\compv_image_threshold_arm64_neon.S">
       <FileType>Document</FileType>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>

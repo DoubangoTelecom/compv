@@ -289,7 +289,6 @@ COMPV_ERROR_CODE CompVGLCanvas::pointsBuild(CompVMatPtrPtr glPoints2D, const Com
 {
 	COMPV_CHECK_EXP_RETURN(!glPoints2D || points.empty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	CompVGLPoint2D* glMemPoint_;
-	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	const GLfloat(*color)[3];
 
 	COMPV_CHECK_CODE_RETURN((CompVMat::newObj<CompVGLPoint2D, COMPV_MAT_TYPE_STRUCT>(glPoints2D, 1, points.size(), 1)));

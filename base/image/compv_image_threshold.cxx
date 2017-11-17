@@ -12,6 +12,7 @@
 #include "compv/base/compv_mem.h"
 #include "compv/base/compv_cpu.h"
 
+#include "compv/base/image/intrin/arm/compv_image_threshold_intrin_neon.h"
 #include "compv/base/image/intrin/x86/compv_image_threshold_intrin_sse2.h"
 #include "compv/base/image/intrin/x86/compv_image_threshold_intrin_avx2.h"
 
@@ -28,9 +29,11 @@ COMPV_NAMESPACE_BEGIN()
 	COMPV_EXTERNC void CompVImageThresholdGlobal_8u8u_Asm_X64_AVX2(COMPV_ALIGNED(AVX) const uint8_t* inPtr, COMPV_ALIGNED(AVX) uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride, compv_uscalar_t threshold);
 #	endif /* COMPV_ARCH_X64 */
 #	if COMPV_ARCH_ARM32
+	COMPV_EXTERNC void CompVImageThresholdGlobal_8u8u_Asm_NEON32(COMPV_ALIGNED(AVX) const uint8_t* inPtr, COMPV_ALIGNED(AVX) uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride, compv_uscalar_t threshold);
 #	endif /* COMPV_ARCH_ARM32 */
 #	if COMPV_ARCH_ARM64
-#	endif /* COMPV_ARCH_ARM32 */
+	COMPV_EXTERNC void CompVImageThresholdGlobal_8u8u_Asm_NEON64(COMPV_ALIGNED(AVX) const uint8_t* inPtr, COMPV_ALIGNED(AVX) uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride, compv_uscalar_t threshold);
+#	endif /* COMPV_ARCH_ARM64 */
 #endif /* COMPV_ASM */
 
 static void CompVImageThresholdGlobal_8u8u_C(
@@ -44,6 +47,9 @@ COMPV_ERROR_CODE CompVImageThreshold::otsu(const CompVMatPtr& input, double& thr
 {
 	COMPV_CHECK_EXP_RETURN(!input || input->isEmpty() || input->planeCount() != 1 || input->elmtInBytes() != sizeof(uint8_t), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	
+	// TODO(dmi): optiz issues on ARM64 (MediaPad 2) - image size=1282x720= loops= 1k
+	//		- asm: 2774.ms, intrin: 3539
+
 	/* Histogram */
 	CompVMatPtr ptr32sHistogram;
 	COMPV_CHECK_CODE_RETURN(CompVMathHistogram::process(input, &ptr32sHistogram));
@@ -80,9 +86,8 @@ COMPV_ERROR_CODE CompVImageThreshold::otsu(const CompVMatPtr& input, double& thr
 			q1f = static_cast<compv_float32_t>(q1);
 			q2f = static_cast<compv_float32_t>(q2);
 			sumB += static_cast<compv_float32_t>(sumBa[i]);
-			const compv_float32_t m1 = sumB / q1f;
-			const compv_float32_t m2 = (sumf - sumB) / q2f;
-			const compv_float32_t varB = q1f * q2f * (m1 - m2) * (m1 - m2);
+			const compv_float32_t mf = (sumB / q1f) - ((sumf - sumB) / q2f);
+			const compv_float32_t varB = q1f * q2f * mf * mf;
 			if (varB > varMax) {
 				varMax = varB;
 				thresholdInt32 = i;
@@ -139,6 +144,9 @@ COMPV_ERROR_CODE CompVImageThreshold::global(const CompVMatPtr& input, CompVMatP
 	}
 #elif COMPV_ARCH_ARM
 	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && input->isAlignedNEON() && output_->isAlignedNEON()) {
+		COMPV_EXEC_IFDEF_INTRIN_ARM(CompVImageThresholdGlobal_8u8u = CompVImageThresholdGlobal_8u8u_Intrin_NEON);
+		COMPV_EXEC_IFDEF_ASM_ARM32(CompVImageThresholdGlobal_8u8u = CompVImageThresholdGlobal_8u8u_Asm_NEON32);
+		COMPV_EXEC_IFDEF_ASM_ARM64(CompVImageThresholdGlobal_8u8u = CompVImageThresholdGlobal_8u8u_Asm_NEON64);
 	}
 #endif
 
