@@ -65,6 +65,11 @@ CompV: 3551.ms(full optiz), 56589.ms(st, c++)
 OpenCV: 14441.ms(full optiz)
 Remarque: OpenCV uses SSE and MT for filtering but we're #4 times faster. Thanks to our hand-written avx code and smart context-switch in our threading pools.
 
+=== Otsu Thresholding (1282, 720) (#10k times) ===
+CompV: 1253.ms(full optiz), 8723.ms(st, c++)
+OpenCV: 6254.ms (full optiz)
+Remarque: OpenCV uses SSE2 and MT for global thresholding but we're #5 times faster.
+
 === BruteForce matcher (KNN = 2, crosscheck = false, norm = hamming) (200, 258) (#1k times) ===
 CompV: 260.ms(mt,asm,sse42), 370.ms(mt,c++,sse42), 837.ms(st,asm,sse42), 1108.ms(st,c++,sse42), 6060.ms (st,c++)
 OpenCV: 7384.ms(full optiz)

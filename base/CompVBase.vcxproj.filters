@@ -540,6 +540,12 @@
     <ClInclude Include="include\compv\base\image\compv_image_threshold.h">
       <Filter>include\image</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_threshold_intrin_sse2.h">
+      <Filter>include\image\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_threshold_intrin_avx2.h">
+      <Filter>include\image\intrin\x86</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx">
@@ -914,6 +920,12 @@
     <ClCompile Include="image\compv_image_threshold.cxx">
       <Filter>source\image</Filter>
     </ClCompile>
+    <ClCompile Include="image\intrin\x86\compv_image_threshold_intrin_sse2.cxx">
+      <Filter>source\image\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="image\intrin\x86\compv_image_threshold_intrin_avx2.cxx">
+      <Filter>source\image\intrin\x86</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <YASM Include="asm\x86\compv_bits_macros_x86.s">
@@ -1074,6 +1086,12 @@
     </YASM>
     <YASM Include="math\asm\x86\compv_math_histogram_x64.s">
       <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="image\asm\x86\compv_image_threshold_x64_sse.s">
+      <Filter>source\image\asm\x86</Filter>
+    </YASM>
+    <YASM Include="image\asm\x86\compv_image_threshold_x64_avx.s">
+      <Filter>source\image\asm\x86</Filter>
     </YASM>
   </ItemGroup>
   <ItemGroup>

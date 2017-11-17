@@ -9,7 +9,8 @@ using namespace compv;
 #define UNITTEST_CONVOLUTION					0
 #define UNITTEST_SOBEL							0
 #define UNITTEST_CANNY							0
-#define UNITTEST_THRESHOLD						1
+#define UNITTEST_THRESHOLD_ADAPT				0
+#define UNITTEST_THRESHOLD_OTSU					1
 #define UNITTEST_HOUGHSHT						0
 #define UNITTEST_HOUGHKHT						0
 
@@ -110,9 +111,13 @@ compv_main()
 								extern COMPV_ERROR_CODE unittest_canny();
 								COMPV_CHECK_CODE_BAIL(err = unittest_canny(), "Canny unittest failed");
 #endif
-#if UNITTEST_THRESHOLD || !defined(COMPV_TEST_LOCAL)
-								extern COMPV_ERROR_CODE unittest_thresh();
-								COMPV_CHECK_CODE_BAIL(err = unittest_thresh(), "Tresholding unittest failed");
+#if UNITTEST_THRESHOLD_ADAPT || !defined(COMPV_TEST_LOCAL)
+								extern COMPV_ERROR_CODE unittest_thresh_adapt();
+								COMPV_CHECK_CODE_BAIL(err = unittest_thresh_adapt(), "Tresholding (adaptive) unittest failed");
+#endif
+#if UNITTEST_THRESHOLD_OTSU || !defined(COMPV_TEST_LOCAL)
+								extern COMPV_ERROR_CODE unittest_thresh_otsu();
+								COMPV_CHECK_CODE_BAIL(err = unittest_thresh_otsu(), "Tresholding (otsu) unittest failed");
 #endif
 #if UNITTEST_HOUGHSHT || !defined(COMPV_TEST_LOCAL)
 								extern COMPV_ERROR_CODE unittest_houghsht();

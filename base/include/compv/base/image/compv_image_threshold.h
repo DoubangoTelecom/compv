@@ -16,7 +16,8 @@ COMPV_NAMESPACE_BEGIN()
 class COMPV_BASE_API CompVImageThreshold
 {
 public:
-	static COMPV_ERROR_CODE fixed(const CompVMatPtr& input, CompVMatPtrPtr output, const double threshold);
+	static COMPV_ERROR_CODE otsu(const CompVMatPtr& input, double& threshold, CompVMatPtrPtr output = nullptr);
+	static COMPV_ERROR_CODE global(const CompVMatPtr& input, CompVMatPtrPtr output, const double threshold);
 	static COMPV_ERROR_CODE adaptive(const CompVMatPtr& input, CompVMatPtrPtr output, const size_t blockSize, const double delta, const double maxVal = 255, bool invert = false);
 	static COMPV_ERROR_CODE adaptive(const CompVMatPtr& input, CompVMatPtrPtr output, const CompVMatPtr& kernel, const double delta, const double maxVal = 255, bool invert = false);
 	static COMPV_ERROR_CODE kernelMean(const size_t blockSize, CompVMatPtrPtr kernel);

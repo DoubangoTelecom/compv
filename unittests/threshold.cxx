@@ -43,7 +43,7 @@ static const std::string compv_unittest_thresh_adapt_to_string(const compv_unitt
 		+ std::string("filename:") + std::string(test->filename);
 }
 
-COMPV_ERROR_CODE unittest_thresh()
+COMPV_ERROR_CODE unittest_thresh_adapt()
 {
 	COMPV_ERROR_CODE err;
 	CompVMatPtr imageIn, imageOut;
@@ -58,9 +58,58 @@ COMPV_ERROR_CODE unittest_thresh()
 		COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &imageIn));
 		COMPV_CHECK_CODE_BAIL(err = CompVImageThreshold::adaptive(imageIn, &imageOut, test->blockSize, test->delta, test->maxVal, test->invert));
 		COMPV_CHECK_EXP_BAIL(std::string(test->md5).compare(compv_tests_md5(imageOut)) != 0, (err = COMPV_ERROR_CODE_E_UNITTEST_FAILED), "Adaptive thresholding MD5 mismatch");
-		imageOut = NULL; // do not reuse
+		imageOut = nullptr; // do not reuse
 		COMPV_DEBUG_INFO_EX(TAG_TEST, "** Test OK **");
 	}
 bail:
 	return err;
 }
+
+
+
+static const struct compv_unittest_thresh_otsu {
+	const char* filename;
+	size_t width;
+	size_t height;
+	size_t stride;
+	const double threshold;
+	const char* md5;
+}
+COMPV_UNITTEST_THESH_OTSU[] =
+{
+	{ FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, 119.0, "8bea4b36fb34f778f3aade94af193efa" },
+	{ FILE_NAME_OPENGLBOOK, 200, 258, 200, 115.0, "0b6344f47984f5e0b5910b5e737872fa" },
+	{ FILE_NAME_GRIOTS, 480, 640, 480, 129.0, "e6d32aba3044e4b8aee7e260ecdf403e" },
+};
+static const size_t COMPV_UNITTEST_THESH_OTSU_COUNT = sizeof(COMPV_UNITTEST_THESH_OTSU) / sizeof(COMPV_UNITTEST_THESH_OTSU[0]);
+
+static const std::string compv_unittest_thresh_otsu_to_string(const compv_unittest_thresh_otsu* test) {
+	return
+		std::string("filename:") + std::string(test->filename);
+}
+
+COMPV_ERROR_CODE unittest_thresh_otsu()
+{
+	COMPV_ERROR_CODE err;
+	CompVMatPtr imageIn, imageOut;
+	const compv_unittest_thresh_otsu* test = NULL;
+	double threshold;
+
+	COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_S_OK, "Just to avoid 'bail not referenced warning'");
+
+	// Find test
+	for (size_t i = 0; i < COMPV_UNITTEST_THESH_OTSU_COUNT; ++i) {
+		test = &COMPV_UNITTEST_THESH_OTSU[i];
+		COMPV_DEBUG_INFO_EX(TAG_TEST, "== Trying new test: Otsu thresholding -> %s ==", compv_unittest_thresh_otsu_to_string(test).c_str());
+		COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &imageIn));
+		COMPV_CHECK_CODE_BAIL(err = CompVImageThreshold::otsu(imageIn, threshold, &imageOut));
+		COMPV_CHECK_EXP_BAIL(test->threshold != threshold, (err = COMPV_ERROR_CODE_E_UNITTEST_FAILED), "Otsu thresholding value mismatch");
+		COMPV_CHECK_EXP_BAIL(std::string(test->md5).compare(compv_tests_md5(imageOut)) != 0, (err = COMPV_ERROR_CODE_E_UNITTEST_FAILED), "Otsu thresholding MD5 mismatch");
+		imageOut = nullptr; // do not reuse
+		COMPV_DEBUG_INFO_EX(TAG_TEST, "** Test OK **");
+	}
+bail:
+	return err;
+}
+
+

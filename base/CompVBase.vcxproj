@@ -89,6 +89,8 @@
     <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_conv_to_rgbx_intrin_ssse3.h" />
     <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_scale_bilinear_intrin_avx2.h" />
     <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_scale_bilinear_intrin_sse41.h" />
+    <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_threshold_intrin_avx2.h" />
+    <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_threshold_intrin_sse2.h" />
     <ClInclude Include="include\compv\base\intrin\arm\compv_intrin_neon.h" />
     <ClInclude Include="include\compv\base\intrin\x86\compv_intrin_avx.h" />
     <ClInclude Include="include\compv\base\intrin\x86\compv_intrin_sse.h" />
@@ -271,6 +273,18 @@
         _IPP_SEQUENTIAL_STATIC;%(PreprocessorDefinitions)
       ;__SSE4_1__</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">TBB_USE_THREADING_TOOLS;%(PreprocessorDefinitions);__SSE4_1__</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="image\intrin\x86\compv_image_threshold_intrin_avx2.cxx">
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+    </ClCompile>
+    <ClCompile Include="image\intrin\x86\compv_image_threshold_intrin_sse2.cxx">
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <ClCompile Include="intrin\x86\compv_mem_intrin_avx.cxx" />
     <ClCompile Include="intrin\x86\compv_mem_intrin_sse2.cxx" />
@@ -495,6 +509,20 @@
     <None Include="asm\arm\compv_common_arm32.S" />
     <None Include="asm\arm\compv_common_arm64.S" />
     <None Include="asm\arm\compv_test_arm.S" />
+    <YASM Include="image\asm\x86\compv_image_threshold_x64_avx.s">
+      <FileType>Document</FileType>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+    </YASM>
+    <YASM Include="image\asm\x86\compv_image_threshold_x64_sse.s">
+      <FileType>Document</FileType>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+    </YASM>
     <YASM Include="math\asm\x86\compv_math_histogram_x64.s">
       <FileType>Document</FileType>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>

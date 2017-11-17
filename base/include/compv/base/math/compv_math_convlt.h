@@ -23,53 +23,53 @@ public:
 	// sizeof(outPtr) should be computed using CompVMathConvlt::outputSizeInBytes()
 	// no arithmetic overflow check (up to the caller to normalize the data or use any trick)
 	template <typename InputType = uint8_t, typename KernelType = compv_float32_t, typename OutputType = uint8_t>
-	static COMPV_ERROR_CODE convlt1(const InputType* dataPtr, size_t dataWidth, size_t dataHeight, size_t dataStride, const KernelType* vtKernPtr, const KernelType* hzKernPtr, size_t kernSize, OutputType*& outPtr, size_t dataBorder = 0) {
-		return CompVMathConvlt::convlt1_private<InputType, KernelType, OutputType>(dataPtr, dataWidth, dataHeight, dataStride, vtKernPtr, hzKernPtr, kernSize, outPtr, dataBorder, false);
+	static COMPV_ERROR_CODE convlt1(const InputType* dataPtr, size_t dataWidth, size_t dataHeight, size_t dataStride, const KernelType* vtKernPtr, const KernelType* hzKernPtr, size_t kernSize, OutputType*& outPtr, COMPV_BORDER_TYPE borderType = COMPV_BORDER_TYPE_ZERO) {
+		return CompVMathConvlt::convlt1_private<InputType, KernelType, OutputType>(dataPtr, dataWidth, dataHeight, dataStride, vtKernPtr, hzKernPtr, kernSize, outPtr, borderType, false);
 	}
 
 	// no arithmetic overflow check (up to the caller to normalize the data or use any trick).
-	static COMPV_ERROR_CODE convlt1FixedPoint(const uint8_t* dataPtr, size_t dataWidth, size_t dataHeight, size_t dataStride, const uint16_t* vtKernPtr, const uint16_t* hzKernPtr, size_t kernSize, uint8_t*& outPtr, size_t dataBorder = 0) {
-		return CompVMathConvlt::convlt1_private<uint8_t, uint16_t, uint8_t>(dataPtr, dataWidth, dataHeight, dataStride, vtKernPtr, hzKernPtr, kernSize, outPtr, dataBorder, true);
+	static COMPV_ERROR_CODE convlt1FixedPoint(const uint8_t* dataPtr, size_t dataWidth, size_t dataHeight, size_t dataStride, const uint16_t* vtKernPtr, const uint16_t* hzKernPtr, size_t kernSize, uint8_t*& outPtr, COMPV_BORDER_TYPE borderType = COMPV_BORDER_TYPE_ZERO) {
+		return CompVMathConvlt::convlt1_private<uint8_t, uint16_t, uint8_t>(dataPtr, dataWidth, dataHeight, dataStride, vtKernPtr, hzKernPtr, kernSize, outPtr, borderType, true);
 	}
 
 	// no arithmetic overflow check (up to the caller to normalize the data or use any trick).
 	template <typename InputType = uint8_t, typename KernelType = compv_float32_t, typename OutputType = uint8_t>
-	static COMPV_ERROR_CODE convlt1Hz(const InputType* inPtr, OutputType* outPtr, size_t width, size_t height, size_t stride, const KernelType* hzKernPtr, size_t kernSize, bool resetBorders = true) {
-		return CompVMathConvlt::convlt1Hz_private<InputType, KernelType, OutputType>(inPtr, outPtr, width, height, stride, hzKernPtr, kernSize, resetBorders, false);
+	static COMPV_ERROR_CODE convlt1Hz(const InputType* inPtr, OutputType* outPtr, size_t width, size_t height, size_t stride, const KernelType* hzKernPtr, size_t kernSize, COMPV_BORDER_TYPE borderType = COMPV_BORDER_TYPE_ZERO) {
+		return CompVMathConvlt::convlt1Hz_private<InputType, KernelType, OutputType>(inPtr, outPtr, width, height, stride, hzKernPtr, kernSize, borderType, false);
 	}
 
 	// *yes* arithmetic overflow check (up to the caller to normalize the data or use any trick).
-	static COMPV_ERROR_CODE convlt1HzFixedPoint(const uint8_t* inPtr, uint8_t* outPtr, size_t width, size_t height, size_t stride, const uint16_t* hzKernPtr, size_t kernSize, bool resetBorders = true) {
-		return CompVMathConvlt::convlt1Hz_private<uint8_t, uint16_t, uint8_t>(inPtr, outPtr, width, height, stride, hzKernPtr, kernSize, resetBorders, true);
+	static COMPV_ERROR_CODE convlt1HzFixedPoint(const uint8_t* inPtr, uint8_t* outPtr, size_t width, size_t height, size_t stride, const uint16_t* hzKernPtr, size_t kernSize, COMPV_BORDER_TYPE borderType = COMPV_BORDER_TYPE_ZERO) {
+		return CompVMathConvlt::convlt1Hz_private<uint8_t, uint16_t, uint8_t>(inPtr, outPtr, width, height, stride, hzKernPtr, kernSize, borderType, true);
 	}
 
 	// no arithmetic overflow check (up to the caller to normalize the data or use any trick).
 	template <typename InputType = uint8_t, typename KernelType = compv_float32_t, typename OutputType = uint8_t>
-	static COMPV_ERROR_CODE convlt1Vt(const InputType* inPtr, OutputType* outPtr, size_t width, size_t height, size_t stride, const KernelType* vtKernPtr, size_t kernSize, bool resetTopBorder = true, bool resetBottomBorder = true) {
-		return CompVMathConvlt::convlt1Vt_private<InputType, KernelType, OutputType>(inPtr, outPtr, width, height, stride, vtKernPtr, kernSize, resetTopBorder, resetBottomBorder, false);
+	static COMPV_ERROR_CODE convlt1Vt(const InputType* inPtr, OutputType* outPtr, size_t width, size_t height, size_t stride, const KernelType* vtKernPtr, size_t kernSize, COMPV_BORDER_TYPE topBorderType = COMPV_BORDER_TYPE_ZERO, COMPV_BORDER_TYPE bottomBorderType = COMPV_BORDER_TYPE_ZERO) {
+		return CompVMathConvlt::convlt1Vt_private<InputType, KernelType, OutputType>(inPtr, outPtr, width, height, stride, vtKernPtr, kernSize, topBorderType, bottomBorderType, false);
 	}
 
 	// no arithmetic overflow check (up to the caller to normalize the data or use any trick).
-	static COMPV_ERROR_CODE convlt1VtFixedPoint(const uint8_t* inPtr, uint8_t* outPtr, size_t width, size_t height, size_t stride, const uint16_t* vtKernPtr, size_t kernSize, bool resetTopBorder = true, bool resetBottomBorder = true) {
-		return CompVMathConvlt::convlt1Vt_private<uint8_t, uint16_t, uint8_t>(inPtr, outPtr, width, height, stride, vtKernPtr, kernSize, resetTopBorder, resetBottomBorder, true);
+	static COMPV_ERROR_CODE convlt1VtFixedPoint(const uint8_t* inPtr, uint8_t* outPtr, size_t width, size_t height, size_t stride, const uint16_t* vtKernPtr, size_t kernSize, COMPV_BORDER_TYPE topBorderType = COMPV_BORDER_TYPE_ZERO, COMPV_BORDER_TYPE bottomBorderType = COMPV_BORDER_TYPE_ZERO) {
+		return CompVMathConvlt::convlt1Vt_private<uint8_t, uint16_t, uint8_t>(inPtr, outPtr, width, height, stride, vtKernPtr, kernSize, topBorderType, bottomBorderType, true);
 	}
 
 	// Convolution using no separable kernel
 	// sizeof(outPtr) should be at least equal to (dataHeight * dataStride)
 	// no arithmetic overflow check (up to the caller to normalize the data or use any trick)
 	template <typename InputType = uint8_t, typename KernelType = compv_float32_t, typename OutputType = uint8_t>
-	static COMPV_ERROR_CODE convlt2(const InputType* dataPtr, size_t dataWidth, size_t dataStride, size_t dataHeight, const KernelType* kernPtr, size_t kernSize, OutputType** outPtr, size_t dataBorder = 0) {
-		return CompVMathConvlt::convlt2_private<InputType, KernelType, OutputType>(dataPtr, dataWidth, dataStride, dataHeight, kernPtr, kernSize, outPtr, dataBorder, false);
+	static COMPV_ERROR_CODE convlt2(const InputType* dataPtr, size_t dataWidth, size_t dataStride, size_t dataHeight, const KernelType* kernPtr, size_t kernSize, OutputType** outPtr, COMPV_BORDER_TYPE borderType = COMPV_BORDER_TYPE_ZERO) {
+		return CompVMathConvlt::convlt2_private<InputType, KernelType, OutputType>(dataPtr, dataWidth, dataStride, dataHeight, kernPtr, kernSize, outPtr, borderType, false);
 	}
 
 	// no arithmetic overflow check (up to the caller to normalize the data or use any trick)
-	static COMPV_ERROR_CODE convlt2FixedPoint(const uint8_t* dataPtr, size_t dataWidth, size_t dataStride, size_t dataHeight, const uint16_t* kernPtr, size_t kernSize, uint8_t** outPtr, size_t dataBorder = 0) {
-		return CompVMathConvlt::convlt2_private<uint8_t, uint16_t, uint8_t>(dataPtr, dataWidth, dataStride, dataHeight, kernPtr, kernSize, outPtr, dataBorder, false);
+	static COMPV_ERROR_CODE convlt2FixedPoint(const uint8_t* dataPtr, size_t dataWidth, size_t dataStride, size_t dataHeight, const uint16_t* kernPtr, size_t kernSize, uint8_t** outPtr, COMPV_BORDER_TYPE borderType = COMPV_BORDER_TYPE_ZERO) {
+		return CompVMathConvlt::convlt2_private<uint8_t, uint16_t, uint8_t>(dataPtr, dataWidth, dataStride, dataHeight, kernPtr, kernSize, outPtr, borderType, false);
 	}
 
 	template <typename OutputType = uint8_t>
-	static size_t outputSizeInBytes(size_t dataStride, size_t dataHeight, size_t dataBorder = 0) {
-		return ((dataHeight + (dataBorder << 1)) * (dataStride + (dataBorder << 1))) * sizeof(OutputType);
+	static size_t outputSizeInBytes(size_t dataStride, size_t dataHeight) {
+		return (dataHeight * dataStride) * sizeof(OutputType);
 	}
 
 	// kernel should be normalized and must be > 0
@@ -95,14 +95,14 @@ private:
 	// Convolution using separable kernel
 	// sizeof(outPtr) must be computed using CompVMathConvlt::outputSizeInBytes()
 	template <typename InputType = uint8_t, typename KernelType = compv_float32_t, typename OutputType = uint8_t>
-	static COMPV_ERROR_CODE convlt1_private(const InputType* dataPtr, size_t dataWidth, size_t dataHeight, size_t dataStride, const KernelType* vtKernPtr, const KernelType* hzKernPtr, size_t kernSize, OutputType*& outPtr, size_t dataBorder = 0, bool fixedPoint = false) {
+	static COMPV_ERROR_CODE convlt1_private(const InputType* dataPtr, size_t dataWidth, size_t dataHeight, size_t dataStride, const KernelType* vtKernPtr, const KernelType* hzKernPtr, size_t kernSize, OutputType*& outPtr, COMPV_BORDER_TYPE borderType = COMPV_BORDER_TYPE_ZERO, bool fixedPoint = false) {
 		// Check inputs
-		COMPV_CHECK_EXP_RETURN(!dataPtr || (dataWidth < kernSize) || (dataHeight < kernSize) || (dataStride < dataWidth) || !vtKernPtr || !hzKernPtr || dataBorder < 0 || !(kernSize & 1), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		COMPV_CHECK_EXP_RETURN(!dataPtr || (dataWidth < kernSize) || (dataHeight < kernSize) || (dataStride < dataWidth) || !vtKernPtr || !hzKernPtr || !(kernSize & 1), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
 		// The realloc_aligned() implementation memcpy() old data which is slow. Prefer, free_aligned() followed by malloc_aligned()
 
 		/* Alloc memory */
-		size_t neededSize = CompVMathConvlt::outputSizeInBytes<OutputType>(dataStride, dataHeight, dataBorder);
+		size_t neededSize = CompVMathConvlt::outputSizeInBytes<OutputType>(dataStride, dataHeight);
 		bool outPtrAllocated = false;
 		if (!outPtr) {
 			outPtr = reinterpret_cast<OutputType*>(CompVMem::malloc(neededSize));
@@ -144,11 +144,11 @@ private:
 				const bool first = (threadIdx == 0);
 				const bool last = (threadIdx == (threadsCount - 1));
 				const size_t padding = first ? 0 : rowsOverlapPad;
-				COMPV_CHECK_CODE_BAIL((err = CompVMathConvlt::convlt1Hz_private<InputType, KernelType, OutputType>(ptrIn - padding, imgTmp, dataWidth, h + rowsOverlapCount, dataStride, hzKernPtr, kernSize, true, fixedPoint)));
-				COMPV_CHECK_CODE_BAIL((err = CompVMathConvlt::convlt1Vt_private<OutputType, KernelType, OutputType>(imgTmp, ptrOut - padding, dataWidth, h + rowsOverlapCount, dataStride, vtKernPtr, kernSize, first, last, fixedPoint)));
+				COMPV_CHECK_CODE_BAIL((err = CompVMathConvlt::convlt1Hz_private<InputType, KernelType, OutputType>(ptrIn - padding, imgTmp, dataWidth, h + rowsOverlapCount, dataStride, hzKernPtr, kernSize, borderType, fixedPoint)));
+				COMPV_CHECK_CODE_BAIL((err = CompVMathConvlt::convlt1Vt_private<OutputType, KernelType, OutputType>(imgTmp, ptrOut - padding, dataWidth, h + rowsOverlapCount, dataStride, vtKernPtr, kernSize, (first ? borderType : COMPV_BORDER_TYPE_IGNORE), (last ? borderType : COMPV_BORDER_TYPE_IGNORE), fixedPoint)));
 				bail:
 				CompVMem::free((void**)&imgTmp);
-				return COMPV_ERROR_CODE_S_OK;
+				return err;
 			};
 			// execute
 			for (size_t threadIdx = 0, index = 0; threadIdx < threadsCount; ++threadIdx, index += countAnyTimesStride) {
@@ -161,8 +161,8 @@ private:
 		else {
 			tmpPtr = reinterpret_cast<OutputType*>(CompVMem::malloc(neededSize));
 			COMPV_CHECK_EXP_BAIL(!tmpPtr, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY), "Failed to allocate temporary memory");
-			COMPV_CHECK_CODE_BAIL((err = CompVMathConvlt::convlt1Hz_private<InputType, KernelType, OutputType>(dataPtr, tmpPtr, dataWidth, dataHeight, dataStride, hzKernPtr, kernSize, true, fixedPoint)));
-			COMPV_CHECK_CODE_BAIL((err = CompVMathConvlt::convlt1Vt_private<OutputType, KernelType, OutputType>(tmpPtr, outPtr, dataWidth, dataHeight, dataStride, vtKernPtr, kernSize, true, true, fixedPoint)));
+			COMPV_CHECK_CODE_BAIL((err = CompVMathConvlt::convlt1Hz_private<InputType, KernelType, OutputType>(dataPtr, tmpPtr, dataWidth, dataHeight, dataStride, hzKernPtr, kernSize, borderType, fixedPoint)));
+			COMPV_CHECK_CODE_BAIL((err = CompVMathConvlt::convlt1Vt_private<OutputType, KernelType, OutputType>(tmpPtr, outPtr, dataWidth, dataHeight, dataStride, vtKernPtr, kernSize, borderType, borderType, fixedPoint)));
 		}
 
 	bail:
@@ -174,12 +174,12 @@ private:
 	}
 
 	template <typename InputType = uint8_t, typename KernelType = compv_float32_t, typename OutputType = uint8_t>
-	static COMPV_ERROR_CODE convlt1Hz_private(const InputType* inPtr, OutputType* outPtr, size_t width, size_t height, size_t stride, const KernelType* hzKernPtr, size_t kernSize, bool resetBorders = true, bool fixedPoint = false) {
+	static COMPV_ERROR_CODE convlt1Hz_private(const InputType* inPtr, OutputType* outPtr, size_t width, size_t height, size_t stride, const KernelType* hzKernPtr, size_t kernSize, COMPV_BORDER_TYPE borderType = COMPV_BORDER_TYPE_ZERO, bool fixedPoint = false) {
 		const size_t ker_size_div2 = (kernSize >> 1);
 		const size_t imgpad = ((stride - width) + ker_size_div2 + ker_size_div2);
 		// Set hz borders to zero
 		// We must not accept garbage in the border (could be used by the calling function -e.g to find the max value for normalization)
-		if (resetBorders) {
+		if (borderType == COMPV_BORDER_TYPE_ZERO) {
 			OutputType *outPtr0 = outPtr, *outPtr1 = outPtr + (width - ker_size_div2);
 			switch (ker_size_div2) { // 1 and 2 (kernel sizes 3 and 5 are very common)
 				case 1: {
@@ -208,12 +208,29 @@ private:
 				}
 			}
 		}
+		else if (borderType == COMPV_BORDER_TYPE_REPLICATE) {
+			const InputType *inPtr0 = inPtr, *inPtr1 = inPtr + (width - ker_size_div2);
+			OutputType *outPtr0 = outPtr, *outPtr1 = outPtr + (width - ker_size_div2);
+			for (size_t row = 0; row < height; ++row) {
+				for (size_t col = 0; col < ker_size_div2; ++col) {
+					outPtr0[col] = static_cast<OutputType>(inPtr0[col]), outPtr1[col] = static_cast<OutputType>(inPtr1[col]);
+				}
+				outPtr0 += stride;
+				outPtr1 += stride;
+				inPtr0 += stride;
+				inPtr1 += stride;
+			}
+		}
+		else if (borderType != COMPV_BORDER_TYPE_IGNORE) {
+			COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
+		}
+		
 		// Perform horizontal convolution
 		return CompVMathConvlt::convlt1VtHz_private<InputType, KernelType, OutputType>(inPtr, outPtr + ker_size_div2, static_cast<size_t>(width - ker_size_div2 - ker_size_div2), height, 1, imgpad, hzKernPtr, kernSize, fixedPoint);
 	}
 
 	template <typename InputType = uint8_t, typename KernelType = compv_float32_t, typename OutputType = uint8_t>
-	static COMPV_ERROR_CODE convlt1Vt_private(const InputType* inPtr, OutputType* outPtr, size_t width, size_t height, size_t stride, const KernelType* vtKernPtr, size_t kernSize, bool resetTopBorder = true, bool resetBottomBorder = true, bool fixedPoint = false) {
+	static COMPV_ERROR_CODE convlt1Vt_private(const InputType* inPtr, OutputType* outPtr, size_t width, size_t height, size_t stride, const KernelType* vtKernPtr, size_t kernSize, COMPV_BORDER_TYPE topBorderType = COMPV_BORDER_TYPE_ZERO, COMPV_BORDER_TYPE bottomBorderType = COMPV_BORDER_TYPE_ZERO, bool fixedPoint = false) {
 		size_t ker_size_div2 = (kernSize >> 1);
 		size_t imgpad = (stride - width);
 		// Set top and bottom vert borders to zero
@@ -221,12 +238,48 @@ private:
 
 		// Segmentation fault when the input image has an offset (e.g. bound to non-zero cols):
 		//		-> for the last row reset 'width' only instead of 'stride'.
-		const size_t bSize = (((ker_size_div2 - 1) * stride) + width) * sizeof(OutputType);
-		if (resetTopBorder) {
-			CompVMem::zero(outPtr, bSize);
+		const size_t bSizeInSamples = (((ker_size_div2 - 1) * stride) + width);
+
+		// Top
+		if (topBorderType == COMPV_BORDER_TYPE_ZERO) {
+			CompVMem::zero(outPtr, bSizeInSamples * sizeof(OutputType));
 		}
-		if (resetBottomBorder) {
-			CompVMem::zero(outPtr + ((height - ker_size_div2) * stride), bSize);
+		else if (topBorderType == COMPV_BORDER_TYPE_REPLICATE) {
+			const InputType* inPtr_ = inPtr;
+			OutputType* outPtr_ = outPtr;
+			if (sizeof(InputType) == sizeof(OutputType)) {
+				memcpy(outPtr_, inPtr_, bSizeInSamples * sizeof(OutputType));
+			}
+			else {
+				for (size_t i = 0; i < bSizeInSamples; ++i) {
+					outPtr_[i] = static_cast<OutputType>(inPtr_[i]);
+				}
+			}
+		}
+		else if (topBorderType != COMPV_BORDER_TYPE_IGNORE) {
+			COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
+		}
+
+		// Bottom
+		if (bottomBorderType == COMPV_BORDER_TYPE_ZERO) {
+			const size_t offsetInSamples = ((height - ker_size_div2) * stride);
+			CompVMem::zero(outPtr + offsetInSamples, bSizeInSamples * sizeof(OutputType));
+		}
+		else if (bottomBorderType == COMPV_BORDER_TYPE_REPLICATE) {
+			const size_t offsetInSamples = ((height - ker_size_div2) * stride);
+			const InputType* inPtr_ = inPtr + offsetInSamples;
+			OutputType* outPtr_ = outPtr + offsetInSamples;
+			if (sizeof(InputType) == sizeof(OutputType)) {
+				memcpy(outPtr_, inPtr_, bSizeInSamples * sizeof(OutputType));
+			}
+			else {
+				for (size_t i = 0; i < bSizeInSamples; ++i) {
+					outPtr_[i] = static_cast<OutputType>(inPtr_[i]);
+				}
+			}
+		}
+		else if (bottomBorderType != COMPV_BORDER_TYPE_IGNORE) {
+			COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
 		}
 
 		// Perform vertical convolution
@@ -236,7 +289,7 @@ private:
 	// Convolution using no separable kernel
 	// sizeof(outPtr) must be at least equal to (dataHeight * dataStride)
 	template <typename InputType = uint8_t, typename KernelType = compv_float32_t, typename OutputType = uint8_t>
-	static COMPV_ERROR_CODE convlt2_private(const InputType* dataPtr, size_t dataWidth, size_t dataStride, size_t dataHeight, const KernelType* kernPtr, size_t kernSize, OutputType** outPtr, size_t dataBorder = 0, bool fixedPoint = false) {
+	static COMPV_ERROR_CODE convlt2_private(const InputType* dataPtr, size_t dataWidth, size_t dataStride, size_t dataHeight, const KernelType* kernPtr, size_t kernSize, OutputType** outPtr, COMPV_BORDER_TYPE borderType = COMPV_BORDER_TYPE_ZERO, bool fixedPoint = false) {
 		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED); // see deprecated code
 		return COMPV_ERROR_CODE_S_OK;
 	}

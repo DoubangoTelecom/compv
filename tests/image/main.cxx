@@ -13,7 +13,8 @@ using namespace compv;
 #define TEST_CONVLT					0
 #define TEST_SOBEL					0
 #define TEST_CANNY					0
-#define TEST_ADAPT_THRESH			1
+#define TEST_ADAPT_THRESH			0
+#define TEST_OTSU_THRESH			1
 #define TEST_HOUGHSHT				0
 #define TEST_HOUGHKHT				0
 #define TEST_BRUTEFORCE				0
@@ -66,6 +67,10 @@ compv_main()
 #if TEST_ADAPT_THRESH
 		extern COMPV_ERROR_CODE adaptiveThreshold();
 		COMPV_CHECK_CODE_BAIL(err = adaptiveThreshold(), TAG_TEST_IMAGE "Adaptive Threshold test failed");
+#endif
+#if TEST_OTSU_THRESH
+		extern COMPV_ERROR_CODE otsuThreshold();
+		COMPV_CHECK_CODE_BAIL(err = otsuThreshold(), TAG_TEST_IMAGE "Otsu Threshold test failed");
 #endif
 #if TEST_HOUGHSHT
 		extern COMPV_ERROR_CODE houghsht();
