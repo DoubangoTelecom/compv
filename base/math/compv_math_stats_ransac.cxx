@@ -157,7 +157,6 @@ public:
 
 			// Get current thread's data
 			const CompVMathStatsRansacControl<FloatType>* control = thread_data.control;
-			const CompVMathStatsRansacStatus<FloatType>* status = thread_data.status;
 			CompVMathStatsRansacModelParamsFloatType& modelParamsBest = thread_data.modelParamsBest;
 			COMPV_ERROR_CODE(*buildModelParams)(const CompVMathStatsRansacControl<FloatType>* control, const CompVMathStatsRansacModelIndices& modelIndices, CompVMathStatsRansacModelParamsFloatType& modelParams, bool& userReject)
 				= thread_data.buildModelParams;

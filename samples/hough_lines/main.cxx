@@ -107,8 +107,8 @@ compv_main()
 
 				// Drawing
 				COMPV_CHECK_CODE_BAIL(err = window->beginDraw());
-				COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->surface()->drawImage(edges));
-				COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->surface()->renderer()->canvas()->drawLines(linesCartesian, &drawingOptions));
+				COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->cover()->drawImage(edges));
+				COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->cover()->renderer()->canvas()->drawLines(linesCartesian, &drawingOptions));
 				COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->blit());
 			bail:
 				COMPV_CHECK_CODE_NOP(err = window->endDraw()); // Make sure 'endDraw()' will be called regardless the result

@@ -26,8 +26,8 @@ template<class FloatType>
 class CompVMathStatsFitGeneric
 {
 	struct CompVMathStatsFitGenericOpaque  {
-		COMPV_MATH_PARABOLA_TYPE parabolaType;
 		const CompVMatPtr& points;
+		COMPV_MATH_PARABOLA_TYPE parabolaType;
 		CompVMathStatsFitGenericOpaque(const CompVMatPtr& points_, const COMPV_MATH_PARABOLA_TYPE parabolaType_ = COMPV_MATH_PARABOLA_TYPE_REGULAR)
 			: points(points_), parabolaType(parabolaType_) {}
 	};
