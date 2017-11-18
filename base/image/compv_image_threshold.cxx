@@ -37,9 +37,9 @@ COMPV_NAMESPACE_BEGIN()
 #endif /* COMPV_ASM */
 
 static void CompVImageThresholdGlobal_8u8u_C(
-	COMPV_ALIGNED(SSE) const uint8_t* inPtr,
-	COMPV_ALIGNED(SSE) uint8_t* outPtr,
-	compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride,
+	const uint8_t* inPtr,
+	uint8_t* outPtr,
+	compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride,
 	compv_uscalar_t threshold
 );
 
@@ -47,7 +47,7 @@ COMPV_ERROR_CODE CompVImageThreshold::otsu(const CompVMatPtr& input, double& thr
 {
 	COMPV_CHECK_EXP_RETURN(!input || input->isEmpty() || input->planeCount() != 1 || input->elmtInBytes() != sizeof(uint8_t), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	
-	// TODO(dmi): optiz issues on ARM64 (MediaPad 2) - image size=1282x720= loops= 1k
+	// TODO(dmi): optiz issues on ARM64 (MediaPad 2) - image size=1282x720, loops=1k, threads=1
 	//		- asm: 2774.ms, intrin: 3539
 
 	/* Histogram */
@@ -342,9 +342,9 @@ COMPV_ERROR_CODE CompVImageThreshold::kernelMean(const size_t blockSize, CompVMa
 
 template <typename InputType, typename OutputType>
 static void CompVImageThresholdGlobal_Generic_C(
-	COMPV_ALIGNED(SSE) const InputType* inPtr,
-	COMPV_ALIGNED(SSE) OutputType* outPtr,
-	compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride,
+	const InputType* inPtr,
+	OutputType* outPtr,
+	compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride,
 	const double threshold, const double maxVal = 255.0
 )
 {
@@ -361,9 +361,9 @@ static void CompVImageThresholdGlobal_Generic_C(
 }
 
 static void CompVImageThresholdGlobal_8u8u_C(
-	COMPV_ALIGNED(SSE) const uint8_t* inPtr,
-	COMPV_ALIGNED(SSE) uint8_t* outPtr,
-	compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride,
+	const uint8_t* inPtr,
+	uint8_t* outPtr,
+	compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride,
 	compv_uscalar_t threshold
 )
 {
