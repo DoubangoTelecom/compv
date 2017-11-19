@@ -109,6 +109,7 @@
     <ClInclude Include="..\include\compv\base\image\intrin\x86\compv_image_scale_bilinear_intrin_sse41.h" />
     <ClInclude Include="..\include\compv\base\image\intrin\x86\compv_image_threshold_intrin_avx2.h" />
     <ClInclude Include="..\include\compv\base\image\intrin\x86\compv_image_threshold_intrin_sse2.h" />
+    <ClInclude Include="..\include\compv\base\image\intrin\x86\compv_image_threshold_intrin_sse41.h" />
     <ClInclude Include="..\include\compv\base\intrin\arm\compv_intrin_neon.h" />
     <ClInclude Include="..\include\compv\base\intrin\arm\compv_mem_intrin_neon.h" />
     <ClInclude Include="..\include\compv\base\intrin\arm\compv_patch_intrin_neon.h" />
@@ -274,6 +275,7 @@
     <ClCompile Include="..\image\intrin\x86\compv_image_scale_bilinear_intrin_sse41.cxx" />
     <ClCompile Include="..\image\intrin\x86\compv_image_threshold_intrin_avx2.cxx" />
     <ClCompile Include="..\image\intrin\x86\compv_image_threshold_intrin_sse2.cxx" />
+    <ClCompile Include="..\image\intrin\x86\compv_image_threshold_intrin_sse41.cxx" />
     <ClCompile Include="..\intrin\arm\compv_mem_intrin_neon.cxx" />
     <ClCompile Include="..\intrin\arm\compv_patch_intrin_neon.cxx" />
     <ClCompile Include="..\intrin\x86\compv_mem_intrin_avx.cxx" />

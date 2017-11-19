@@ -14,6 +14,7 @@
 
 #include "compv/base/image/intrin/arm/compv_image_threshold_intrin_neon.h"
 #include "compv/base/image/intrin/x86/compv_image_threshold_intrin_sse2.h"
+#include "compv/base/image/intrin/x86/compv_image_threshold_intrin_sse41.h"
 #include "compv/base/image/intrin/x86/compv_image_threshold_intrin_avx2.h"
 
 #define COMPV_IMAGE_THRESH_ADAPT_SAMPLES_PER_THREAD (40 * 40)
@@ -27,12 +28,15 @@ COMPV_NAMESPACE_BEGIN()
 #	if COMPV_ARCH_X64
 	COMPV_EXTERNC void CompVImageThresholdGlobal_8u8u_Asm_X64_SSE2(COMPV_ALIGNED(SSE) const uint8_t* inPtr, COMPV_ALIGNED(SSE) uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride, compv_uscalar_t threshold);
 	COMPV_EXTERNC void CompVImageThresholdGlobal_8u8u_Asm_X64_AVX2(COMPV_ALIGNED(AVX) const uint8_t* inPtr, COMPV_ALIGNED(AVX) uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride, compv_uscalar_t threshold);
+	COMPV_EXTERNC void CompVImageThresholdOtsuSum_32s32s_Asm_X86_SSE41(COMPV_ALIGNED(SSE) const uint32_t* ptr32uHistogram, COMPV_ALIGNED(SSE) uint32_t* sumA256, uint32_t* sumB1);
 #	endif /* COMPV_ARCH_X64 */
 #	if COMPV_ARCH_ARM32
-	COMPV_EXTERNC void CompVImageThresholdGlobal_8u8u_Asm_NEON32(COMPV_ALIGNED(AVX) const uint8_t* inPtr, COMPV_ALIGNED(AVX) uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride, compv_uscalar_t threshold);
+	COMPV_EXTERNC void CompVImageThresholdGlobal_8u8u_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* inPtr, COMPV_ALIGNED(NEON) uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, compv_uscalar_t threshold);
+	COMPV_EXTERNC void CompVImageThresholdOtsuSum_32s32s_Asm_NEON32(COMPV_ALIGNED(NEON) const uint32_t* ptr32uHistogram, COMPV_ALIGNED(NEON) uint32_t* sumA256, uint32_t* sumB1);
 #	endif /* COMPV_ARCH_ARM32 */
 #	if COMPV_ARCH_ARM64
-	COMPV_EXTERNC void CompVImageThresholdGlobal_8u8u_Asm_NEON64(COMPV_ALIGNED(AVX) const uint8_t* inPtr, COMPV_ALIGNED(AVX) uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride, compv_uscalar_t threshold);
+	COMPV_EXTERNC void CompVImageThresholdGlobal_8u8u_Asm_NEON64(COMPV_ALIGNED(NEON) const uint8_t* inPtr, COMPV_ALIGNED(AVX) uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, compv_uscalar_t threshold);
+	COMPV_EXTERNC void CompVImageThresholdOtsuSum_32s32s_Asm_NEON64(COMPV_ALIGNED(NEON) const uint32_t* ptr32uHistogram, COMPV_ALIGNED(NEON) uint32_t* sumA256, uint32_t* sumB1);
 #	endif /* COMPV_ARCH_ARM64 */
 #endif /* COMPV_ASM */
 
@@ -42,6 +46,7 @@ static void CompVImageThresholdGlobal_8u8u_C(
 	compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride,
 	compv_uscalar_t threshold
 );
+static void CompVImageThresholdOtsuSum_32s32s_C(const uint32_t* ptr32uHistogram, uint32_t* sumA256, uint32_t* sumB1);
 
 COMPV_ERROR_CODE CompVImageThreshold::otsu(const CompVMatPtr& input, double& threshold, CompVMatPtrPtr output COMPV_DEFAULT(nullptr))
 {
@@ -55,28 +60,31 @@ COMPV_ERROR_CODE CompVImageThreshold::otsu(const CompVMatPtr& input, double& thr
 	COMPV_CHECK_CODE_RETURN(CompVMathHistogram::process(input, &ptr32sHistogram));
 
 	/* Otsu */
-	int32_t sum32s = 0;
-	int32_t sumBa[256];
-	const int32_t* ptr32sHistogramPtr = ptr32sHistogram->ptr<const int32_t>();
-	for (int32_t i = 0; i < 256; i += 8) {
-		sumBa[i] = (i * ptr32sHistogramPtr[i]);
-		sumBa[i + 1] = ((i + 1) * ptr32sHistogramPtr[i + 1]);
-		sumBa[i + 2] = ((i + 2) * ptr32sHistogramPtr[i + 2]);
-		sumBa[i + 3] = ((i + 3) * ptr32sHistogramPtr[i + 3]);
-		sumBa[i + 4] = ((i + 4) * ptr32sHistogramPtr[i + 4]);
-		sumBa[i + 5] = ((i + 5) * ptr32sHistogramPtr[i + 5]);
-		sumBa[i + 6] = ((i + 6) * ptr32sHistogramPtr[i + 6]);
-		sumBa[i + 7] = ((i + 7) * ptr32sHistogramPtr[i + 7]);
-		sum32s += sumBa[i] + sumBa[i + 1] + sumBa[i + 2] + sumBa[i + 3]
-			+ sumBa[i + 4] + sumBa[i + 5] + sumBa[i + 6] + sumBa[i + 7];
+	uint32_t sum32s = 0;
+	COMPV_ALIGN(16) uint32_t sumA256[256];
+	const uint32_t* ptr32sHistogramPtr = ptr32sHistogram->ptr<const uint32_t>();
+	void(*CompVImageThresholdOtsuSum_32s32s)(const uint32_t* ptr32uHistogram, uint32_t* sumA256, uint32_t* sumB1)
+		= CompVImageThresholdOtsuSum_32s32s_C;
+#if COMPV_ARCH_X86
+	if (CompVCpu::isEnabled(kCpuFlagSSE41) && ptr32sHistogram->isAlignedSSE() && COMPV_IS_ALIGNED_SSE(sumA256)) {
+		COMPV_EXEC_IFDEF_INTRIN_X86(CompVImageThresholdOtsuSum_32s32s = CompVImageThresholdOtsuSum_32s32s_Intrin_SSE41);
+		COMPV_EXEC_IFDEF_ASM_X64(CompVImageThresholdOtsuSum_32s32s = CompVImageThresholdOtsuSum_32s32s_Asm_X86_SSE41);
 	}
+#elif COMPV_ARCH_ARM
+	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && ptr32sHistogram->isAlignedNEON() && COMPV_IS_ALIGNED_NEON(sumA256)) {
+		COMPV_EXEC_IFDEF_INTRIN_ARM(CompVImageThresholdOtsuSum_32s32s = CompVImageThresholdOtsuSum_32s32s_Intrin_NEON);
+		COMPV_EXEC_IFDEF_ASM_ARM32(CompVImageThresholdOtsuSum_32s32s = CompVImageThresholdOtsuSum_32s32s_Asm_NEON32);
+		COMPV_EXEC_IFDEF_ASM_ARM64(CompVImageThresholdOtsuSum_32s32s = CompVImageThresholdOtsuSum_32s32s_Asm_NEON64);
+	}
+#endif
+	CompVImageThresholdOtsuSum_32s32s(ptr32sHistogramPtr, sumA256, &sum32s);
 	const compv_float32_t sumf = static_cast<compv_float32_t>(sum32s);
 
-	const int32_t N = static_cast<int32_t>(input->cols() * input->rows());
+	const int N = static_cast<int>(input->cols() * input->rows());
 	compv_float32_t sumB = 0;
-	int32_t q1 = 0, q2 = 0, thresholdInt32 = 0;
+	int q1 = 0, q2 = 0, thresholdInt = 0;
 	compv_float32_t varMax = 0, q1f, q2f;
-	for (int32_t i = 0; i < 256; i++) {
+	for (int i = 0; i < 256; i++) {
 		q1 += ptr32sHistogramPtr[i];
 		if (q1) {
 			q2 = N - q1;
@@ -85,18 +93,18 @@ COMPV_ERROR_CODE CompVImageThreshold::otsu(const CompVMatPtr& input, double& thr
 			}
 			q1f = static_cast<compv_float32_t>(q1);
 			q2f = static_cast<compv_float32_t>(q2);
-			sumB += static_cast<compv_float32_t>(sumBa[i]);
+			sumB += static_cast<compv_float32_t>(sumA256[i]);
 			const compv_float32_t mf = (sumB / q1f) - ((sumf - sumB) / q2f);
 			const compv_float32_t varB = q1f * q2f * mf * mf;
 			if (varB > varMax) {
 				varMax = varB;
-				thresholdInt32 = i;
+				thresholdInt = i;
 			}
 		}
 	}
 
 	/* Set return value */
-	threshold = static_cast<double>(thresholdInt32);
+	threshold = static_cast<double>(thresholdInt);
 
 	/* Thresholding if asked */
 	if (output) {
@@ -244,11 +252,11 @@ COMPV_ERROR_CODE CompVImageThreshold::adaptive(const CompVMatPtr& input, CompVMa
 
 	// Get Number of threads
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
-	const size_t maxThreads = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 0;
+	const size_t maxThreads = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
 	const size_t minSamplesPerThreads = COMPV_MATH_MAX(
-		COMPV_MATH_MAX(width, height) * kernelSize, 
+		(kernelSize * stride),
 		COMPV_IMAGE_THRESH_ADAPT_SAMPLES_PER_THREAD
-	); // width and height must be > kernel size
+	); // num rows per threads must be >= kernel size
 	const size_t threadsCount = (threadDisp && !threadDisp->isMotherOfTheCurrentThread())
 		? CompVThreadDispatcher::guessNumThreadsDividingAcrossY(width, height, maxThreads, minSamplesPerThreads)
 		: 1;
@@ -272,7 +280,6 @@ COMPV_ERROR_CODE CompVImageThreshold::adaptive(const CompVMatPtr& input, CompVMa
 	}
 		
 	auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
-		COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 		const size_t h = (yend - ystart);
 		const size_t rowsOverlapCount = ((kernelSize >> 1) << 1); // (kernelRadius times 2)
 		const size_t mt_rowsOverlapCount = mtEnabled ? rowsOverlapCount : 0; // no overlap when there is no MT
@@ -300,7 +307,7 @@ COMPV_ERROR_CODE CompVImageThreshold::adaptive(const CompVMatPtr& input, CompVMa
 			mt_meanPtr += stride;
 		}
 		
-		return err;
+		return COMPV_ERROR_CODE_S_OK;
 	};
 	
 	// Processing
@@ -368,6 +375,24 @@ static void CompVImageThresholdGlobal_8u8u_C(
 )
 {
 	CompVImageThresholdGlobal_Generic_C(inPtr, outPtr, width, height, stride, static_cast<double>(threshold), 0xff);
+}
+
+static void CompVImageThresholdOtsuSum_32s32s_C(const uint32_t* ptr32uHistogram, uint32_t* sumA256, uint32_t* sumB1)
+{
+	uint32_t sumB = 0;
+	for (uint32_t i = 0; i < 256; i += 8) {
+		sumA256[i] = (i * ptr32uHistogram[i]);
+		sumA256[i + 1] = ((i + 1) * ptr32uHistogram[i + 1]);
+		sumA256[i + 2] = ((i + 2) * ptr32uHistogram[i + 2]);
+		sumA256[i + 3] = ((i + 3) * ptr32uHistogram[i + 3]);
+		sumA256[i + 4] = ((i + 4) * ptr32uHistogram[i + 4]);
+		sumA256[i + 5] = ((i + 5) * ptr32uHistogram[i + 5]);
+		sumA256[i + 6] = ((i + 6) * ptr32uHistogram[i + 6]);
+		sumA256[i + 7] = ((i + 7) * ptr32uHistogram[i + 7]);
+		sumB += sumA256[i] + sumA256[i + 1] + sumA256[i + 2] + sumA256[i + 3]
+			+ sumA256[i + 4] + sumA256[i + 5] + sumA256[i + 6] + sumA256[i + 7];
+	}
+	*sumB1 = sumB;
 }
 
 COMPV_NAMESPACE_END()

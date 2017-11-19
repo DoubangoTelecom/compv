@@ -55,6 +55,10 @@ public:
 		return m_nDataSize;
 	}
 
+	COMPV_ALWAYS_INLINE bool isMemoryOwed()const {
+		return m_bOweMem;
+	}
+
     template<class ptrType = const void>
     COMPV_ALWAYS_INLINE ptrType* ptr(size_t row = 0, size_t col = 0, int planeId = -1)const {
 		const int planeId_ = planeId < 0 ? 0 : planeId;

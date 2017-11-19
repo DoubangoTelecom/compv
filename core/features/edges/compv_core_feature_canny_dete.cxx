@@ -157,9 +157,9 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVMatPtr& image, CompVMatP
 	/* Convolution + Gradient + Mean */
 	// Get Max number of threads
 	const size_t minSamplesPerThreads = COMPV_MATH_MAX(
-		COMPV_MATH_MAX(m_nImageWidth, m_nImageHeight) * m_nKernelSize,
+		(m_nKernelSize * m_nImageStride),
 		COMPV_FEATURE_DETE_CANNY_GRAD_MIN_SAMPLES_PER_THREAD
-	); // width and height must be > kernel size
+	); // num rows per threads must be >= kernel size
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
 	const size_t maxThreads = (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
 	size_t threadsCount = CompVThreadDispatcher::guessNumThreadsDividingAcrossY(m_nImageStride, m_nImageHeight, maxThreads, minSamplesPerThreads);

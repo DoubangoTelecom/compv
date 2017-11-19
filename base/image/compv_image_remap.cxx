@@ -37,16 +37,14 @@ private:
 		const size_t outputHeight = output->rows();
 		const size_t  outputStride = output->stride();
 
-		size_t threadsCount;
-		CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
-		size_t maxThreads = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 0;
-
 		// Compute number of threads
-		threadsCount = (threadDisp && !threadDisp->isMotherOfTheCurrentThread())
+		CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
+		const size_t maxThreads = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
+		const size_t threadsCount = (threadDisp && !threadDisp->isMotherOfTheCurrentThread())
 			? CompVThreadDispatcher::guessNumThreadsDividingAcrossY(outputWidth, outputHeight, maxThreads, COMPV_IMAGE_REMAP_NEAREST_SAMPLES_PER_THREAD)
 			: 1;
 
-		auto funcPtr = [&](size_t ystart, size_t yend) -> void {
+		auto funcPtr = [&](const size_t ystart, const size_t yend) -> void {
 			uint8_t* outputPtr = output->ptr<uint8_t>(ystart);
 			size_t i, j, k;
 			T x, y;
@@ -101,16 +99,14 @@ private:
 		const size_t outputHeight = output->rows();
 		const size_t  outputStride = output->stride();
 
-		size_t threadsCount;
-		CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
-		size_t maxThreads = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 0;
-
 		// Compute number of threads
-		threadsCount = (threadDisp && !threadDisp->isMotherOfTheCurrentThread())
+		CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
+		const size_t maxThreads = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
+		const size_t threadsCount = (threadDisp && !threadDisp->isMotherOfTheCurrentThread())
 			? CompVThreadDispatcher::guessNumThreadsDividingAcrossY(outputWidth, outputHeight, maxThreads, COMPV_IMAGE_REMAP_BILINEAR_SAMPLES_PER_THREAD)
 			: 1;
 
-		auto funcPtr = [&](size_t ystart, size_t yend) -> void {
+		auto funcPtr = [&](const size_t ystart, const size_t yend) -> void {
 			// Bilinear filtering: https://en.wikipedia.org/wiki/Bilinear_interpolation#Unit_square
 			uint8_t* outputPtr = output->ptr<uint8_t>(ystart);
 			size_t i, j, k;

@@ -44,6 +44,59 @@ void CompVImageThresholdGlobal_8u8u_Intrin_NEON(
 	}
 }
 
+void CompVImageThresholdOtsuSum_32s32s_Intrin_NEON(COMPV_ALIGNED(NEON) const uint32_t* ptr32uHistogram, COMPV_ALIGNED(NEON) uint32_t* sumA256, uint32_t* sumB1)
+{
+	COMPV_DEBUG_INFO_CHECK_NEON();
+
+	const uint32x4_t vecIndicesInc = vdupq_n_u32(16);
+	static const uint32_t data[4] = { 0, 1, 2, 3 };
+	static const uint32x4_t vec4 = vdupq_n_u32(4);
+	uint32x4_t vecIndices0 = vld1q_u32(data);
+	uint32x4_t vecIndices1 = vaddq_u32(vecIndices0, vec4);
+	uint32x4_t vecIndices2 = vaddq_u32(vecIndices1, vec4);
+	uint32x4_t vecIndices3 = vaddq_u32(vecIndices2, vec4);
+	uint32x4_t vec0, vec1, vec2, vec3, vecSumB0, vecSumB1, vecSumB2, vecSumB3;
+
+	vecSumB0 = vdupq_n_u32(0);
+	vecSumB1 = vdupq_n_u32(0);
+	vecSumB2 = vdupq_n_u32(0);
+	vecSumB3 = vdupq_n_u32(0);
+
+	for (size_t i = 0; i < 256; i += 16) {
+		vec0 = vld1q_u32(&ptr32uHistogram[i]);
+		vec1 = vld1q_u32(&ptr32uHistogram[i + 4]);
+		vec2 = vld1q_u32(&ptr32uHistogram[i + 8]);
+		vec3 = vld1q_u32(&ptr32uHistogram[i + 12]);
+
+		vec0 = vmulq_u32(vecIndices0, vec0);
+		vec1 = vmulq_u32(vecIndices1, vec1);
+		vec2 = vmulq_u32(vecIndices2, vec2);
+		vec3 = vmulq_u32(vecIndices3, vec3);
+
+		vecIndices0 = vaddq_u32(vecIndices0, vecIndicesInc);
+		vecIndices1 = vaddq_u32(vecIndices1, vecIndicesInc);
+		vecIndices2 = vaddq_u32(vecIndices2, vecIndicesInc);
+		vecIndices3 = vaddq_u32(vecIndices3, vecIndicesInc);
+
+		vecSumB0 = vaddq_u32(vecSumB0, vec0);
+		vecSumB1 = vaddq_u32(vecSumB1, vec1);
+		vecSumB2 = vaddq_u32(vecSumB2, vec2);
+		vecSumB3 = vaddq_u32(vecSumB3, vec3);
+
+		vst1q_u32(&sumA256[i], vec0);
+		vst1q_u32(&sumA256[i + 4], vec1);
+		vst1q_u32(&sumA256[i + 8], vec2);
+		vst1q_u32(&sumA256[i + 12], vec3);
+	}
+
+	vecSumB0 = vaddq_u32(vecSumB0, vecSumB1);
+	vecSumB2 = vaddq_u32(vecSumB2, vecSumB3);
+	vecSumB0 = vaddq_u32(vecSumB0, vecSumB2);
+
+	uint32x2_t vecSumB0n = vadd_u32(vget_low_u32(vecSumB0), vget_high_u32(vecSumB0));
+	*sumB1 = vget_lane_u32(vecSumB0n, 0) + vget_lane_u32(vecSumB0n, 1);
+}
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_ARM && COMPV_INTRINSIC */

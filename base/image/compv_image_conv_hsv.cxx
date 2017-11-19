@@ -47,8 +47,15 @@ COMPV_ERROR_CODE CompVImageConvToHSV::process(const CompVMatPtr& imageIn, CompVM
 
 	CompVMatPtr imageRGBx;
 
+	const size_t width = imageIn->cols();
+	const size_t height = imageIn->rows();
+	const size_t stride = imageIn->stride();
+
+	// Create new output only if doesn't match the required format
 	CompVMatPtr imageOut = (*imageHSV == imageIn) ? nullptr : *imageHSV;
-	COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&imageOut, COMPV_SUBTYPE_PIXELS_HSV, imageIn->cols(), imageIn->rows(), imageIn->stride()));
+	if (!imageOut || imageOut->subType() != COMPV_SUBTYPE_PIXELS_HSV || imageOut->cols() != width || imageOut->rows() != height || imageOut->stride() != stride) {
+		COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&imageOut, COMPV_SUBTYPE_PIXELS_HSV, width, height, stride));
+	}
 
 	// Convert to RGBA32 or RGB24
 	switch (imageIn->subType()) {
@@ -61,17 +68,21 @@ COMPV_ERROR_CODE CompVImageConvToHSV::process(const CompVMatPtr& imageIn, CompVM
 		// On ARM: "RGB24 -> HSV" is faster than "RGBA32 -> HSV" because less data and more cache-friendly. No (de-)interleaving issues, thanks to vld3.u8 and vst3.u8.
 		// Another good reason to use RGB24: "input === output" -> Cache-friendly
 		// Another good reason to use RGB24: there is very faaast ASM code for NEON, SSSE3 and AVX2
+		if (imageOut->isMemoryOwed()) {
+			COMPV_CHECK_CODE_RETURN(CompVImageConvToRGBx::process(imageIn, COMPV_SUBTYPE_PIXELS_RGB24, &imageOut));
+			// Call 'newObj8u' to change the subtype, no memory will be allocated as HSV and RGB24 have the same size.
+			const void* oldPtr = imageOut->ptr<const void*>();
+			COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&imageOut, COMPV_SUBTYPE_PIXELS_HSV, width, height, stride));
+			COMPV_CHECK_EXP_RETURN(oldPtr != imageOut->ptr<const void*>(), COMPV_ERROR_CODE_E_INVALID_CALL, "Data reallocation not expected to change the pointer address");
+			imageRGBx = imageOut;
+		}
+		else { // This is a bound memory -> do not loose it
 #if COMPV_ARCH_ARM || 1
-		COMPV_CHECK_CODE_RETURN(CompVImageConvToRGBx::process(imageIn, COMPV_SUBTYPE_PIXELS_RGB24, &imageOut));
-		// Call 'newObj8u' to change the subtype, no memory will be allocated as HSV and RGB24 have the same size.
-		const void* oldPtr = imageOut->ptr<const void*>();
-		COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&imageOut, COMPV_SUBTYPE_PIXELS_HSV, imageIn->cols(), imageIn->rows(), imageIn->stride()));
-		COMPV_CHECK_EXP_RETURN(oldPtr != imageOut->ptr<const void*>(), COMPV_ERROR_CODE_E_INVALID_CALL, "Data reallocation not expected to change the pointer address");
-		imageRGBx = imageOut;
+			COMPV_CHECK_CODE_RETURN(CompVImageConvToRGBx::process(imageIn, COMPV_SUBTYPE_PIXELS_RGB24, &imageRGBx));
 #else
-		COMPV_DEBUG_INFO_CODE_FOR_TESTING("Using RGBA32 as pivot to convert to HSV should not be called on final code");
-		COMPV_CHECK_CODE_RETURN(CompVImageConvToRGBx::process(imageIn, COMPV_SUBTYPE_PIXELS_RGBA32, &imageRGBx));
+			COMPV_CHECK_CODE_RETURN(CompVImageConvToRGBx::process(imageIn, COMPV_SUBTYPE_PIXELS_RGBA32, &imageRGBx));
 #endif
+		}
 		break;
 	}
 

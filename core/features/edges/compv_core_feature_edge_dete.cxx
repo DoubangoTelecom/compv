@@ -94,7 +94,11 @@ COMPV_ERROR_CODE CompVCornerDeteEdgeBase::process(const CompVMatPtr& image, Comp
 	// Get Max number of threads
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
 	const size_t maxThreads = (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
-	const size_t threadsCount = CompVThreadDispatcher::guessNumThreadsDividingAcrossY(m_nImageStride, m_nImageHeight, maxThreads, COMPV_MATH_MAX(m_nKernelSize, COMPV_FEATURE_DETE_EDGES_GRAD_MIN_SAMPLES_PER_THREAD));
+	const size_t minSamplesPerThreads = COMPV_MATH_MAX(
+		(m_nKernelSize * m_nImageStride),
+		COMPV_FEATURE_DETE_EDGES_GRAD_MIN_SAMPLES_PER_THREAD
+	); // num rows per threads must be >= kernel size
+	const size_t threadsCount = CompVThreadDispatcher::guessNumThreadsDividingAcrossY(m_nImageStride, m_nImageHeight, maxThreads, minSamplesPerThreads);
 
 	// Convolution + Gradient
 	if (threadsCount > 1) {

@@ -24,6 +24,8 @@ void CompVImageThresholdGlobal_8u8u_Intrin_NEON(
 	compv_uscalar_t threshold
 );
 
+void CompVImageThresholdOtsuSum_32s32s_Intrin_NEON(COMPV_ALIGNED(NEON) const uint32_t* ptr32uHistogram, COMPV_ALIGNED(NEON) uint32_t* sumA256, uint32_t* sumB1);
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_ARM && COMPV_INTRINSIC */

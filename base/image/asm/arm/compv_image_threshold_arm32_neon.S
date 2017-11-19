@@ -9,7 +9,9 @@
 .include "compv_common_arm32.S"
 
 .data
- 
+ .align 4
+data0123: .word 0x0, 0x1, 0x2, 0x3
+
 .text
 
 
@@ -106,5 +108,102 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageThresholdGlobal_8u8u_Asm_NEON32
 	COMPV_GAS_FUNCTION_EPILOG
 	COMPV_GAS_FUNCTION_RETURN
 
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@ arg(1) -> CCOMPV_ALIGNED(NEON) const uint32_t* ptr32uHistogram
+@ arg(2) -> CCOMPV_ALIGNED(NEON) uint32_t* sumA256
+@ arg(3) -> Cuint32_t* sumB1
+COMPV_GAS_FUNCTION_DECLARE CompVImageThresholdOtsuSum_32s32s_Asm_NEON32
+	COMPV_GAS_FUNCTION_PROLOG
+	COMPV_GAS_SAVE_NEON_REGS
+
+	ptr32uHistogram .req r0
+	sumA256 .req r1
+	sumB1 .req r2
+	i .req r3
+	vecIndicesInc .req q0
+	vecIndices0 .req q1
+	vecIndices1 .req q2
+	vecIndices2 .req q3
+	vecIndices3 .req q4
+	vec0 .req q5
+	vec1 .req q6
+	vec2 .req q7
+	vec3 .req q8
+	vecSumB0 .req q9 @ must be q9 (used later)
+	vecSumB1 .req q10
+	vecSumB2 .req q11
+	vecSumB3 .req q12
+
+	mov r4, #16
+	vdup.u32 vecIndicesInc, r4
+
+	mov r4, #4
+	ldr r5, =data0123
+	vdup.u32 q14, r4
+	vld1.u32 {vecIndices0}, [r5]
+	vadd.u32 vecIndices1, vecIndices0, q14
+	vadd.u32 vecIndices2, vecIndices1, q14
+	vadd.u32 vecIndices3, vecIndices2, q14
+
+	veor.u32 vecSumB0, vecSumB0, vecSumB0
+	veor.u32 vecSumB1, vecSumB1, vecSumB1
+	veor.u32 vecSumB2, vecSumB2, vecSumB2
+	veor.u32 vecSumB3, vecSumB3, vecSumB3
+
+	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	@ for (size_t i = 0; i < 256; i += 16)
+	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	mov i, #256
+	LoopWidth_CompVImageThresholdOtsuSum_32s32s_Asm_NEON32:
+		vld1.u32 {vec0,vec1}, [ptr32uHistogram: 128]!
+		vld1.u32 {vec2,vec3}, [ptr32uHistogram: 128]!
+		vmul.u32 vec0, vec0, vecIndices0
+		vmul.u32 vec1, vec1, vecIndices1
+		vmul.u32 vec2, vec2, vecIndices2
+		vmul.u32 vec3, vec3, vecIndices3
+		vadd.u32 vecIndices0, vecIndices0, vecIndicesInc
+		vadd.u32 vecIndices1, vecIndices1, vecIndicesInc
+		vadd.u32 vecIndices2, vecIndices2, vecIndicesInc
+		vadd.u32 vecIndices3, vecIndices3, vecIndicesInc
+		vadd.u32 vecSumB0, vecSumB0, vec0
+		vadd.u32 vecSumB1, vecSumB1, vec1
+		vadd.u32 vecSumB2, vecSumB2, vec2
+		vadd.u32 vecSumB3, vecSumB3, vec3
+		vst1.u8 {vec0,vec1}, [sumA256: 128]!
+		vst1.u8 {vec2,vec3}, [sumA256: 128]!
+		subs i, i, #16
+		bne LoopWidth_CompVImageThresholdOtsuSum_32s32s_Asm_NEON32
+	EndOf_LoopWidth_CompVImageThresholdOtsuSum_32s32s_Asm_NEON32:
+
+	vadd.u32 vecSumB0, vecSumB0, vecSumB1
+	vadd.u32 vecSumB2, vecSumB2, vecSumB3
+	vadd.u32 vecSumB0, vecSumB0, vecSumB2
+	vadd.u32 q9x, q9x, q9y
+	vmov r4, q9x[0]
+	vmov r5, q9x[1]
+	add r4, r4, r5
+	str r4, [sumB1]
+
+	.unreq ptr32uHistogram
+	.unreq sumA256
+	.unreq sumB1
+	.unreq i
+	.unreq vecIndicesInc
+	.unreq vecIndices0
+	.unreq vecIndices1
+	.unreq vecIndices2
+	.unreq vecIndices3
+	.unreq vec0
+	.unreq vec1
+	.unreq vec2
+	.unreq vec3
+	.unreq vecSumB0
+	.unreq vecSumB1
+	.unreq vecSumB2
+	.unreq vecSumB3
+
+	COMPV_GAS_RESTORE_NEON_REGS
+	COMPV_GAS_FUNCTION_EPILOG
+	COMPV_GAS_FUNCTION_RETURN
 
 #endif /* defined(__arm__) && !defined(__aarch64__) */

@@ -112,7 +112,7 @@ COMPV_ERROR_CODE otsuThreshold()
 	uint64_t timeEnd = CompVTime::nowMillis();
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "Otsu Threshold Elapsed time = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 
-#if COMPV_OS_WINDOWS && 1
+#if COMPV_OS_WINDOWS && 0
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Do not write the file to the hd");
 	COMPV_CHECK_CODE_RETURN(compv_tests_write_to_file(imageOut, "threshold.gray"));
 #endif

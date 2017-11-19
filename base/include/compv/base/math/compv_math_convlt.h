@@ -315,10 +315,7 @@ private:
 
 	template <typename InputType, typename KernelType, typename OutputType>
 	static COMPV_ERROR_CODE convlt1VtHz_private_fxp_false(const InputType* inPtr, OutputType* outPtr, size_t width, size_t height, size_t step, size_t pad, const KernelType* vthzKernPtr, size_t kernSize) {
-		if ((std::is_same<KernelType, compv_float32_t>::value || std::is_same<KernelType, compv_float64_t>::value)
-			&& (std::is_same<InputType, int32_t>::value || std::is_same<InputType, uint32_t>::value || std::is_same<InputType, int16_t>::value || std::is_same<InputType, uint16_t>::value || std::is_same<InputType, int8_t>::value || std::is_same<InputType, uint8_t>::value)
-			&& (std::is_same<OutputType, int32_t>::value || std::is_same<OutputType, uint32_t>::value || std::is_same<OutputType, int16_t>::value || std::is_same<OutputType, uint16_t>::value || std::is_same<OutputType, int8_t>::value || std::is_same<OutputType, uint8_t>::value))
-		{
+		if (std::is_same<KernelType, compv_float32_t>::value || std::is_same<KernelType, compv_float64_t>::value) {
 			COMPV_CHECK_CODE_RETURN((CompVMathConvlt::convlt1VtHzKernelFloat_C<InputType, KernelType, OutputType>(inPtr, outPtr, width, height, step, pad, vthzKernPtr, kernSize)));
 		}
 		else {
@@ -348,8 +345,8 @@ private:
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
-	// inPtr = (u)int8_t / (u)int16_t / (u)int32_t
-	// outPtr = (u)int8_t / (u)int16_t / (u)int32_t
+	// inPtr = any
+	// outPtr = any
 	// KernelType = float / double
 	template <typename InputType, typename KernelType, typename OutputType>
 	static COMPV_ERROR_CODE convlt1VtHzKernelFloat_C(const InputType* inPtr, OutputType* outPtr, size_t width, size_t height, size_t step, size_t pad, const KernelType* vthzKernPtr, size_t kernSize) {
