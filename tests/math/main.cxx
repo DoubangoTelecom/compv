@@ -17,9 +17,10 @@
 #define TEST_CALIB_HOMOGRAPHY_BUILD_MATRIX	0
 #define TEST_CALIB_HOMOGRAPHY				0
 #define TEST_CALIB_CAMERA					0
-#define TEST_CALIB_UNDIST					1
+#define TEST_CALIB_UNDIST					0
 #define TEST_DISTANCE_HAMMING				0
-#define TEST_HISTOGRAM						0
+#define TEST_HISTOGRAM_BUILD				0
+#define TEST_HISTOGRAM_EQUALIZ				1
 
 
 /* Entry point function */
@@ -101,9 +102,13 @@ compv_main()
 		COMPV_CHECK_CODE_BAIL(err = hamming(), TAG_TEST "Math hamming distance test failed");
 #endif
 
-#if TEST_HISTOGRAM
-		extern COMPV_ERROR_CODE histogram();
-		COMPV_CHECK_CODE_BAIL(err = histogram(), TAG_TEST "Math histogram test failed");
+#if TEST_HISTOGRAM_BUILD
+		extern COMPV_ERROR_CODE histogram_build();
+		COMPV_CHECK_CODE_BAIL(err = histogram_build(), TAG_TEST "Math histogram build test failed");
+#endif
+#if TEST_HISTOGRAM_EQUALIZ
+		extern COMPV_ERROR_CODE histogram_equaliz();
+		COMPV_CHECK_CODE_BAIL(err = histogram_equaliz(), TAG_TEST "Math histogram equaliz test failed");
 #endif
 
 	bail:

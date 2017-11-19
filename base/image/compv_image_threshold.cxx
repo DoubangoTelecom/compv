@@ -57,7 +57,7 @@ COMPV_ERROR_CODE CompVImageThreshold::otsu(const CompVMatPtr& input, double& thr
 
 	/* Histogram */
 	CompVMatPtr ptr32sHistogram;
-	COMPV_CHECK_CODE_RETURN(CompVMathHistogram::process(input, &ptr32sHistogram));
+	COMPV_CHECK_CODE_RETURN(CompVMathHistogram::build(input, &ptr32sHistogram));
 
 	/* Otsu */
 	uint32_t sum32s = 0;

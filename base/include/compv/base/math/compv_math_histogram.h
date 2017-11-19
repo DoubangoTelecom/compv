@@ -16,7 +16,9 @@ COMPV_NAMESPACE_BEGIN()
 class COMPV_BASE_API CompVMathHistogram
 {
 public:
-	static COMPV_ERROR_CODE process(const CompVMatPtr& data, CompVMatPtrPtr histogram);
+	static COMPV_ERROR_CODE build(const CompVMatPtr& dataIn, CompVMatPtrPtr histogram);
+	static COMPV_ERROR_CODE equaliz(const CompVMatPtr& dataIn, CompVMatPtrPtr dataOut);
+	static COMPV_ERROR_CODE equaliz(const CompVMatPtr& dataIn, const CompVMatPtr& histogram, CompVMatPtrPtr dataOut);
 
 private:
 	static COMPV_ERROR_CODE process_8u32u(const uint8_t* dataPtr, size_t width, size_t height, size_t stride, uint32_t* histogramPtr);

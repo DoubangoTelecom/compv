@@ -6,9 +6,11 @@
 */
 #include "compv/base/math/compv_math_histogram.h"
 #include "compv/base/math/compv_math_utils.h"
+#include "compv/base/image/compv_image.h"
 #include "compv/base/parallel/compv_parallel.h"
 
-#define COMPV_HISTOGRAM_MIN_SAMPLES_PER_THREAD		(256 * 5)
+#define COMPV_HISTOGRAM_BUILD_MIN_SAMPLES_PER_THREAD		(256 * 5)
+#define COMPV_HISTOGRAM_EQUALIZ_MIN_SAMPLES_PER_THREAD		(256 * 4)
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -23,11 +25,11 @@ COMPV_NAMESPACE_BEGIN()
 #	endif
 #endif /* COMPV_ASM */
 
-COMPV_ERROR_CODE CompVMathHistogram::process(const CompVMatPtr& data, CompVMatPtrPtr histogram)
+COMPV_ERROR_CODE CompVMathHistogram::build(const CompVMatPtr& data, CompVMatPtrPtr histogram)
 {
 	COMPV_CHECK_EXP_RETURN(!data || data->isEmpty() || !histogram, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Input data is null or empty");
 
-	if (data->elmtInBytes() == sizeof(uint8_t)) {
+	if (data->elmtInBytes() == sizeof(uint8_t) && data->planeCount() == 1) {
 		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<uint32_t>(histogram, 1, 256));
 		COMPV_CHECK_CODE_RETURN((*histogram)->zero_rows());
 		uint32_t* histogramPtr = (*histogram)->ptr<uint32_t>();
@@ -38,8 +40,85 @@ COMPV_ERROR_CODE CompVMathHistogram::process(const CompVMatPtr& data, CompVMatPt
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
-	COMPV_DEBUG_ERROR("Input format not supported");
+	COMPV_DEBUG_ERROR("Input format not supported, we expect 8u data");
 	return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
+}
+
+static void CompVMathHistogramEqualiz_32u8u_C(const uint32_t* ptr32uHistogram, uint8_t* ptr8uLut, const compv_float32_t* scale1);
+
+COMPV_ERROR_CODE CompVMathHistogram::equaliz(const CompVMatPtr& dataIn, CompVMatPtrPtr dataOut)
+{
+	COMPV_CHECK_EXP_RETURN(!dataOut || !dataIn || dataIn->isEmpty() || dataIn->elmtInBytes() != sizeof(uint8_t) || dataIn->planeCount() != 1,
+		COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	CompVMatPtr histogram;
+	COMPV_CHECK_CODE_RETURN(CompVMathHistogram::build(dataIn, &histogram));
+	COMPV_CHECK_CODE_RETURN(CompVMathHistogram::equaliz(dataIn, histogram, dataOut));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVMathHistogram::equaliz(const CompVMatPtr& dataIn, const CompVMatPtr& histogram, CompVMatPtrPtr dataOut)
+{
+	COMPV_CHECK_EXP_RETURN(!dataOut || !dataIn || dataIn->isEmpty() || dataIn->elmtInBytes() != sizeof(uint8_t) || dataIn->planeCount() != 1
+		|| !histogram || histogram->isEmpty() || histogram->cols() != 256 || histogram->subType() != COMPV_SUBTYPE_RAW_UINT32,
+		COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+	const size_t width = dataIn->cols();
+	const size_t height = dataIn->rows();
+	const size_t stride = dataIn->stride();
+
+	// This function allows dataOut to be equal to dataIn
+	CompVMatPtr dataOut_ = *dataOut;
+	if (!dataOut_ || dataOut_->cols() != width || dataOut_->rows() != height || dataOut_->stride() != stride || dataOut_->elmtInBytes() != sizeof(uint8_t) || dataOut_->planeCount() != 1) {
+		COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&dataOut_, COMPV_SUBTYPE_PIXELS_Y, width, height, stride));
+	}
+
+	const compv_float32_t scale = 255.f / (width * height); 
+	COMPV_ALIGN(16) uint8_t lut[256];
+
+	void(*CompVMathHistogramEqualiz_32u8u)(const uint32_t* ptr32uHistogram, uint8_t* ptr8uLut, const compv_float32_t* scale1)
+		= CompVMathHistogramEqualiz_32u8u_C;
+
+	CompVMathHistogramEqualiz_32u8u(histogram->ptr<const uint32_t>(), lut, &scale);
+
+	// Get Number of threads
+	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
+	const size_t maxThreads = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 0;
+	const size_t threadsCount = (threadDisp && !threadDisp->isMotherOfTheCurrentThread())
+		? CompVThreadDispatcher::guessNumThreadsDividingAcrossY(width, height, maxThreads, COMPV_HISTOGRAM_EQUALIZ_MIN_SAMPLES_PER_THREAD)
+		: 1;
+
+	auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {		
+		const uint8_t* ptr8uDataIn = dataIn->ptr<const uint8_t>(ystart);
+		uint8_t* ptr8uDataOut_ = dataOut_->ptr<uint8_t>(ystart);
+		for (size_t j = ystart; j < yend; ++j) {
+			for (size_t i = 0; i < width; ++i) {
+				ptr8uDataOut_[i] = lut[ptr8uDataIn[i]];
+			}
+			ptr8uDataIn += stride;
+			ptr8uDataOut_ += stride;
+		}
+
+		return COMPV_ERROR_CODE_S_OK;
+	};
+
+	if (threadsCount > 1) {
+		CompVAsyncTaskIds taskIds;
+		taskIds.reserve(threadsCount);
+		const size_t heights = (height / threadsCount);
+		size_t YStart = 0, YEnd;
+		for (size_t threadIdx = 0; threadIdx < threadsCount; ++threadIdx) {
+			YEnd = (threadIdx == (threadsCount - 1)) ? height : (YStart + heights);
+			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, YStart, YEnd), taskIds), "Dispatching task failed");
+			YStart += heights;
+		}
+		COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds), "Failed to wait for tasks execution");
+	}
+	else {
+		COMPV_CHECK_CODE_RETURN(funcPtr(0, height));
+	}
+
+	*dataOut = dataOut_;
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 static void CompVMathHistogramProcess_8u32u_C(const uint8_t* dataPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, uint32_t* histogramPtr);
@@ -71,7 +150,7 @@ COMPV_ERROR_CODE CompVMathHistogram::process_8u32u(const uint8_t* dataPtr, size_
 	// Compute number of threads
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
 	const size_t maxThreads = (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
-	const size_t threadsCount = CompVThreadDispatcher::guessNumThreadsDividingAcrossY(width, height, maxThreads, COMPV_HISTOGRAM_MIN_SAMPLES_PER_THREAD);
+	const size_t threadsCount = CompVThreadDispatcher::guessNumThreadsDividingAcrossY(width, height, maxThreads, COMPV_HISTOGRAM_BUILD_MIN_SAMPLES_PER_THREAD);
 
 	if (threadsCount > 1) {
 		size_t threadIdx, padding;
@@ -117,7 +196,7 @@ COMPV_ERROR_CODE CompVMathHistogram::process_8u32u(const uint8_t* dataPtr, size_
 
 static void CompVMathHistogramProcess_8u32u_C(const uint8_t* dataPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, uint32_t* histogramPtr)
 {
-	//!\\ TODO(dmi): optiz issue -> on AArch64 MediaPad2 the asm code is almost two times faster.
+	//!\\ TODO(dmi): optiz issue -> on AArch64 MediaPad2 the asm code is almost two times faster than the intrin code.
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
 	compv_uscalar_t i, j;
 	const compv_uscalar_t maxWidthStep1 = width & -4;
@@ -137,6 +216,17 @@ static void CompVMathHistogramProcess_8u32u_C(const uint8_t* dataPtr, compv_usca
 			++histogramPtr[dataPtr[i]];
 		}
 		dataPtr += stride;
+	}
+}
+
+static void CompVMathHistogramEqualiz_32u8u_C(const uint32_t* ptr32uHistogram, uint8_t* ptr8uLut, const compv_float32_t* scale1)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
+	const compv_float32_t scale = *scale1;
+	uint32_t sum = 0;
+	for (size_t i = 0; i < 256; ++i) {
+		sum += ptr32uHistogram[i];
+		ptr8uLut[i] = static_cast<uint8_t>(sum * scale); // no need for saturation (thanks to scaling factor)
 	}
 }
 
