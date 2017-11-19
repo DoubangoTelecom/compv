@@ -67,10 +67,8 @@ COMPV_ERROR_CODE histogram_equaliz()
 	CompVMatPtr imageIn;
 	COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &imageIn));
 
-	// Otsu processing
+	// Equalization
 	CompVMatPtr imageOut;
-	double threshold = 0.0;
-
 	uint64_t timeStart = CompVTime::nowMillis();
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
 		COMPV_CHECK_CODE_RETURN(CompVMathHistogram::equaliz(imageIn, &imageOut));

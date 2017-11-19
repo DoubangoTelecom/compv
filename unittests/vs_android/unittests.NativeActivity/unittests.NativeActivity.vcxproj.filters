@@ -25,5 +25,6 @@
     <ClCompile Include="..\..\houghkht.cxx" />
     <ClCompile Include="..\..\houghsht.cxx" />
     <ClCompile Include="..\..\threshold.cxx" />
+    <ClCompile Include="..\..\math_histogram.cxx" />
   </ItemGroup>
 </Project>

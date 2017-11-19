@@ -10,7 +10,7 @@ using namespace compv;
 #define UNITTEST_SOBEL							0
 #define UNITTEST_CANNY							0
 #define UNITTEST_THRESHOLD_ADAPT				0
-#define UNITTEST_THRESHOLD_OTSU					1
+#define UNITTEST_THRESHOLD_OTSU					0
 #define UNITTEST_HOUGHSHT						0
 #define UNITTEST_HOUGHKHT						0
 
@@ -30,7 +30,8 @@ using namespace compv;
 #define UNITTEST_MATH_TRF_HOMOG_TO_CART			0 // homogeneousToCartesian2D()
 #define UNITTEST_MATH_CALIB_HOMOGRAPHY			0
 #define UNITTEST_MATH_DISTANCE_HAMMING			0
-#define UNITTEST_MATH_HISTOGRAM					0
+#define UNITTEST_MATH_HISTOGRAM_BUILD			0
+#define UNITTEST_MATH_HISTOGRAM_EQUALIZ			1
 
 #define enableSSE2()	~(kCpuFlagSSE | kCpuFlagSSE2)
 #define enableSSSE3()	~(kCpuFlagSSE3 | kCpuFlagSSSE3)
@@ -188,9 +189,13 @@ compv_main()
 								extern COMPV_ERROR_CODE unittest_math_distance_hamming();
 								COMPV_CHECK_CODE_BAIL(err = unittest_math_distance_hamming(), "Math hamming distance unittest failed");
 #endif
-#if UNITTEST_MATH_HISTOGRAM || !defined(COMPV_TEST_LOCAL)
-								extern COMPV_ERROR_CODE unittest_histogram();
-								COMPV_CHECK_CODE_BAIL(err = unittest_histogram(), "Math histogram unittest failed");
+#if UNITTEST_MATH_HISTOGRAM_BUILD || !defined(COMPV_TEST_LOCAL)
+								extern COMPV_ERROR_CODE unittest_histogram_build();
+								COMPV_CHECK_CODE_BAIL(err = unittest_histogram_build(), "Math histogram build unittest failed");
+#endif
+#if UNITTEST_MATH_HISTOGRAM_EQUALIZ || !defined(COMPV_TEST_LOCAL)
+								extern COMPV_ERROR_CODE unittest_histogram_equaliz();
+								COMPV_CHECK_CODE_BAIL(err = unittest_histogram_equaliz(), "Math histogram equaliz unittest failed");
 #endif
 							}
 						}

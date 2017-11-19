@@ -82,7 +82,7 @@ COMPV_ERROR_CODE CompVMathHistogram::equaliz(const CompVMatPtr& dataIn, const Co
 
 	// Get Number of threads
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
-	const size_t maxThreads = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 0;
+	const size_t maxThreads = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
 	const size_t threadsCount = (threadDisp && !threadDisp->isMotherOfTheCurrentThread())
 		? CompVThreadDispatcher::guessNumThreadsDividingAcrossY(width, height, maxThreads, COMPV_HISTOGRAM_EQUALIZ_MIN_SAMPLES_PER_THREAD)
 		: 1;
@@ -221,7 +221,9 @@ static void CompVMathHistogramProcess_8u32u_C(const uint8_t* dataPtr, compv_usca
 
 static void CompVMathHistogramEqualiz_32u8u_C(const uint32_t* ptr32uHistogram, uint8_t* ptr8uLut, const compv_float32_t* scale1)
 {
+#if 1 // Doesn't worth SIMD (in all cases, not used in any commercial product for now)
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
+#endif
 	const compv_float32_t scale = *scale1;
 	uint32_t sum = 0;
 	for (size_t i = 0; i < 256; ++i) {

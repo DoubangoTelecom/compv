@@ -42,9 +42,10 @@ CompV: 1073.ms(full optiz)
 OpenCV: 4114.ms(full optiz)
 
 === Histogram Equalization on grayscal 8u image (1282, 720) (#10k times) ===
-CompV: 2875.ms (full optiz)
+CompV: 2675.ms (full optiz)
 OpenCV: 4311.ms (full optiz)
-Remarque: OpenCV is MT'ing both histogram generation and equalization.
+Remarque: OpenCV is MT'ing both histogram generation and equalization. We're faster but this is not enought at all. 
+We need more optiz in CompV. For now with low prio because not used in any commercial product.
 
 === FAST9_16, Nonmax=true, threshold=20, maxfeatures=-1 (1282, 720) (#10k times) ===
 CompV: 3358.ms(mt,avx2), 4730.ms(mt,sse2), 8447(st,avx2), 11261.ms(st,sse2)
