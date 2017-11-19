@@ -216,11 +216,11 @@ sym(CompVImageThresholdOtsuSum_32s32s_Asm_X86_SSE41)
 		pmulld vec1, vecIndices1
 		pmulld vec2, vecIndices2
 		pmulld vec3, vecIndices3
+		add i, 16
 		paddd vecIndices0, vecIndicesInc
 		paddd vecIndices1, vecIndicesInc
 		paddd vecIndices2, vecIndicesInc
 		paddd vecIndices3, vecIndicesInc
-		add i, 16
 		cmp i, 256
 		paddd vecSumB0, vec0
 		paddd vecSumB1, vec1
