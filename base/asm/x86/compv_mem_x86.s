@@ -10,7 +10,7 @@
 
 COMPV_YASM_DEFAULT_REL
 
-global sym(MemSetDword_Asm_X86)
+global sym(CompVMemSetDword_Asm_X86)
 
 section .data
 
@@ -20,7 +20,7 @@ section .text
 ; arg(0) -> void* dstPtr
 ; arg(1) -> compv_scalar_t val
 ; arg(2) -> compv_uscalar_t count
-sym(MemSetDword_Asm_X86):
+sym(CompVMemSetDword_Asm_X86):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 3

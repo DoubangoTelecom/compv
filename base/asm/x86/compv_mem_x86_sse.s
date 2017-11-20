@@ -11,10 +11,10 @@
 
 COMPV_YASM_DEFAULT_REL
 
-global sym(MemSetDword_Asm_X86_SSE2)
-global sym(MemSetQword_Asm_X86_SSE2)
-global sym(MemSetDQword_Asm_X86_SSE2)
-global sym(MemCopyNTA_Asm_Aligned11_X86_SSE2)
+global sym(CompVMemSetDword_Asm_X86_SSE2)
+global sym(CompVMemSetQword_Asm_X86_SSE2)
+global sym(CompVMemSetDQword_Asm_X86_SSE2)
+global sym(CompVMemCopyNTA_Asm_Aligned11_X86_SSE2)
 
 section .data
 
@@ -45,11 +45,11 @@ section .text
 	pop rbp
 	ret
 %endmacro
-sym(MemSetDword_Asm_X86_SSE2):
+sym(CompVMemSetDword_Asm_X86_SSE2):
 	MemSet_Asm_X86_SSE2 4, movd
-sym(MemSetQword_Asm_X86_SSE2):
+sym(CompVMemSetQword_Asm_X86_SSE2):
 	MemSet_Asm_X86_SSE2 8, movq
-sym(MemSetDQword_Asm_X86_SSE2):
+sym(CompVMemSetDQword_Asm_X86_SSE2):
 	MemSet_Asm_X86_SSE2 16, movdqa
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -58,8 +58,8 @@ sym(MemSetDQword_Asm_X86_SSE2):
 ; arg(0) -> COMPV_ALIGNED(SSE) void* dataDstPtr
 ; arg(1) ->COMPV_ALIGNED(SSE) const void* dataSrcPtr
 ; arg(2) ->compv_uscalar_t size
-; void MemCopyNTA_Asm_Aligned11_X86_SSE2(COMPV_ALIGNED(SSE) void* dataDstPtr, COMPV_ALIGNED(SSE) const void* dataSrcPtr, compv_uscalar_t size)
-sym(MemCopyNTA_Asm_Aligned11_X86_SSE2):
+; void CompVMemCopyNTA_Asm_Aligned11_X86_SSE2(COMPV_ALIGNED(SSE) void* dataDstPtr, COMPV_ALIGNED(SSE) const void* dataSrcPtr, compv_uscalar_t size)
+sym(CompVMemCopyNTA_Asm_Aligned11_X86_SSE2):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 3

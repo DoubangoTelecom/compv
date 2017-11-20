@@ -561,6 +561,9 @@
     <ClInclude Include="..\include\compv\base\image\intrin\x86\compv_image_threshold_intrin_sse41.h">
       <Filter>include\image\intrin\x86</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\compv\base\intrin\x86\compv_mem_intrin_ssse3.h">
+      <Filter>include\intrin\x86</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_base.cxx">
@@ -946,6 +949,9 @@
     </ClCompile>
     <ClCompile Include="..\image\intrin\x86\compv_image_threshold_intrin_sse41.cxx">
       <Filter>source\image\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\intrin\x86\compv_mem_intrin_ssse3.cxx">
+      <Filter>source\intrin\x86</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

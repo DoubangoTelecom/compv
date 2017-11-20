@@ -117,6 +117,7 @@
     <ClInclude Include="..\include\compv\base\intrin\x86\compv_intrin_sse.h" />
     <ClInclude Include="..\include\compv\base\intrin\x86\compv_mem_intrin_avx.h" />
     <ClInclude Include="..\include\compv\base\intrin\x86\compv_mem_intrin_sse2.h" />
+    <ClInclude Include="..\include\compv\base\intrin\x86\compv_mem_intrin_ssse3.h" />
     <ClInclude Include="..\include\compv\base\intrin\x86\compv_patch_intrin_avx2.h" />
     <ClInclude Include="..\include\compv\base\intrin\x86\compv_patch_intrin_sse2.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math.h" />
@@ -280,6 +281,7 @@
     <ClCompile Include="..\intrin\arm\compv_patch_intrin_neon.cxx" />
     <ClCompile Include="..\intrin\x86\compv_mem_intrin_avx.cxx" />
     <ClCompile Include="..\intrin\x86\compv_mem_intrin_sse2.cxx" />
+    <ClCompile Include="..\intrin\x86\compv_mem_intrin_ssse3.cxx" />
     <ClCompile Include="..\intrin\x86\compv_patch_intrin_avx2.cxx" />
     <ClCompile Include="..\intrin\x86\compv_patch_intrin_sse2.cxx" />
     <ClCompile Include="..\math\compv_math.cxx" />

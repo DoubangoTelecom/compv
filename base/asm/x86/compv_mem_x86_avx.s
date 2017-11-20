@@ -11,7 +11,7 @@
 
 COMPV_YASM_DEFAULT_REL
 
-global sym(MemCopyNTA_Asm_Aligned11_X86_AVX)
+global sym(CompVMemCopyNTA_Asm_Aligned11_X86_AVX)
 
 section .data
 
@@ -23,8 +23,8 @@ section .text
 ; arg(0) -> COMPV_ALIGNED(AVX) void* dataDstPtr
 ; arg(1) ->COMPV_ALIGNED(AVX) const void* dataSrcPtr
 ; arg(2) ->compv_uscalar_t size
-; void MemCopyNTA_Asm_Aligned11_X86_SSE2(COMPV_ALIGNED(AVX) void* dataDstPtr, COMPV_ALIGNED(AVX) const void* dataSrcPtr, compv_uscalar_t size)
-sym(MemCopyNTA_Asm_Aligned11_X86_AVX):
+; void CompVMemCopyNTA_Asm_Aligned11_X86_SSE2(COMPV_ALIGNED(AVX) void* dataDstPtr, COMPV_ALIGNED(AVX) const void* dataSrcPtr, compv_uscalar_t size)
+sym(CompVMemCopyNTA_Asm_Aligned11_X86_AVX):
 	vzeroupper
 	push rbp
 	mov rbp, rsp

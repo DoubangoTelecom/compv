@@ -90,5 +90,8 @@
     <ClCompile Include="threshold.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="split.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

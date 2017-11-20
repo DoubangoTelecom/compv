@@ -16,6 +16,7 @@
     <ClCompile Include="..\..\houghkht.cxx" />
     <ClCompile Include="..\..\houghsht.cxx" />
     <ClCompile Include="..\..\threshold.cxx" />
+    <ClCompile Include="..\..\split.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\tests_common.h" />

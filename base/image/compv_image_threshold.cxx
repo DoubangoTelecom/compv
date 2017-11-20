@@ -28,7 +28,7 @@ COMPV_NAMESPACE_BEGIN()
 #	if COMPV_ARCH_X64
 	COMPV_EXTERNC void CompVImageThresholdGlobal_8u8u_Asm_X64_SSE2(COMPV_ALIGNED(SSE) const uint8_t* inPtr, COMPV_ALIGNED(SSE) uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride, compv_uscalar_t threshold);
 	COMPV_EXTERNC void CompVImageThresholdGlobal_8u8u_Asm_X64_AVX2(COMPV_ALIGNED(AVX) const uint8_t* inPtr, COMPV_ALIGNED(AVX) uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride, compv_uscalar_t threshold);
-	COMPV_EXTERNC void CompVImageThresholdOtsuSum_32s32s_Asm_X86_SSE41(COMPV_ALIGNED(SSE) const uint32_t* ptr32uHistogram, COMPV_ALIGNED(SSE) uint32_t* sumA256, uint32_t* sumB1);
+	COMPV_EXTERNC void CompVImageThresholdOtsuSum_32s32s_Asm_X64_SSE41(COMPV_ALIGNED(SSE) const uint32_t* ptr32uHistogram, COMPV_ALIGNED(SSE) uint32_t* sumA256, uint32_t* sumB1);
 #	endif /* COMPV_ARCH_X64 */
 #	if COMPV_ARCH_ARM32
 	COMPV_EXTERNC void CompVImageThresholdGlobal_8u8u_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* inPtr, COMPV_ALIGNED(NEON) uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, compv_uscalar_t threshold);
@@ -68,7 +68,7 @@ COMPV_ERROR_CODE CompVImageThreshold::otsu(const CompVMatPtr& input, double& thr
 #if COMPV_ARCH_X86
 	if (CompVCpu::isEnabled(kCpuFlagSSE41) && ptr32sHistogram->isAlignedSSE() && COMPV_IS_ALIGNED_SSE(sumA256)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86(CompVImageThresholdOtsuSum_32s32s = CompVImageThresholdOtsuSum_32s32s_Intrin_SSE41);
-		COMPV_EXEC_IFDEF_ASM_X64(CompVImageThresholdOtsuSum_32s32s = CompVImageThresholdOtsuSum_32s32s_Asm_X86_SSE41);
+		COMPV_EXEC_IFDEF_ASM_X64(CompVImageThresholdOtsuSum_32s32s = CompVImageThresholdOtsuSum_32s32s_Asm_X64_SSE41);
 	}
 #elif COMPV_ARCH_ARM
 	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && ptr32sHistogram->isAlignedNEON() && COMPV_IS_ALIGNED_NEON(sumA256)) {

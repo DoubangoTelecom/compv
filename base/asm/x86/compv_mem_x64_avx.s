@@ -12,20 +12,20 @@
 
 COMPV_YASM_DEFAULT_REL
 
-global sym(MemCopyNTA_Asm_Aligned11_X64_AVX)
+global sym(CompVMemCopyNTA_Asm_Aligned11_X64_AVX)
 
 section .data
 
 section .text
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; size must be > 32 and it's up to the caller to check it
+; size must be > 32 and it''s up to the caller to check it
 ; size should be multiple of 32, if not the remaining will be ignored
 ; arg(0) -> COMPV_ALIGNED(AVX) void* dataDstPtr
 ; arg(1) ->COMPV_ALIGNED(AVX) const void* dataSrcPtr
 ; arg(2) ->compv_uscalar_t size
-; void MemCopyNTA_Asm_Aligned11_X64_AVX(COMPV_ALIGNED(AVX) void* dataDstPtr, COMPV_ALIGNED(AVX) const void* dataSrcPtr, compv_uscalar_t size)
-sym(MemCopyNTA_Asm_Aligned11_X64_AVX):
+; void CompVMemCopyNTA_Asm_Aligned11_X64_AVX(COMPV_ALIGNED(AVX) void* dataDstPtr, COMPV_ALIGNED(AVX) const void* dataSrcPtr, compv_uscalar_t size)
+sym(CompVMemCopyNTA_Asm_Aligned11_X64_AVX):
 	vzeroupper
 	push rbp
 	mov rbp, rsp

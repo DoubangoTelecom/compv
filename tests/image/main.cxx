@@ -14,10 +14,11 @@ using namespace compv;
 #define TEST_SOBEL					0
 #define TEST_CANNY					0
 #define TEST_ADAPT_THRESH			0
-#define TEST_OTSU_THRESH			1
+#define TEST_OTSU_THRESH			0
 #define TEST_HOUGHSHT				0
 #define TEST_HOUGHKHT				0
 #define TEST_BRUTEFORCE				0
+#define TEST_SPLIT3					1
 
 /* Entry point function */
 compv_main()
@@ -86,6 +87,12 @@ compv_main()
 #if TEST_BRUTEFORCE
 		extern COMPV_ERROR_CODE bruteforce();
 		COMPV_CHECK_CODE_BAIL(err = bruteforce(), TAG_TEST_IMAGE "Bruteforce test failed");
+#endif
+
+
+#if TEST_SPLIT3
+		extern COMPV_ERROR_CODE split3();
+		COMPV_CHECK_CODE_BAIL(err = split3(), TAG_TEST_IMAGE "Split3 test failed");
 #endif
 
 	bail:

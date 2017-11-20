@@ -133,6 +133,9 @@
     <Filter Include="source\math\lmfit-6.1">
       <UniqueIdentifier>{5df9aff7-479c-404d-b68c-de946c244d60}</UniqueIdentifier>
     </Filter>
+    <Filter Include="source\intrin\arm">
+      <UniqueIdentifier>{81d54b48-9617-4544-89bf-9e8aeafee48a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\base\compv_base.h">
@@ -549,6 +552,15 @@
     <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_threshold_intrin_sse41.h">
       <Filter>include\image\intrin\x86</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\intrin\x86\compv_mem_intrin_ssse3.h">
+      <Filter>include\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\intrin\arm\compv_mem_intrin_neon.h">
+      <Filter>include\intrin\arm</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\intrin\arm\compv_patch_intrin_neon.h">
+      <Filter>include\intrin\arm</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx">
@@ -931,6 +943,15 @@
     </ClCompile>
     <ClCompile Include="image\intrin\x86\compv_image_threshold_intrin_sse41.cxx">
       <Filter>source\image\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="intrin\arm\compv_mem_intrin_neon.cxx">
+      <Filter>source\intrin\arm</Filter>
+    </ClCompile>
+    <ClCompile Include="intrin\arm\compv_patch_intrin_neon.cxx">
+      <Filter>source\intrin\arm</Filter>
+    </ClCompile>
+    <ClCompile Include="intrin\x86\compv_mem_intrin_ssse3.cxx">
+      <Filter>source\intrin\x86</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

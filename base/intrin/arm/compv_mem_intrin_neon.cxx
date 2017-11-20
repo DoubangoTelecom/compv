@@ -65,6 +65,27 @@ void CompVMemZero_Intrin_NEON(COMPV_ALIGNED(NEON) void* dstPtr, compv_uscalar_t 
 	}
 }
 
+// TODO(dmi) ASM code slightly faster on both ARM32 and ARM64 (tested on MediaPad2)
+void CompVMemCopy3_Intrin_NEON(
+	COMPV_ALIGNED(NEON) uint8_t* dstPt0, COMPV_ALIGNED(NEON) uint8_t* dstPt1, COMPV_ALIGNED(NEON) uint8_t* dstPt2,
+	COMPV_ALIGNED(NEON) const compv_uint8x3_t* srcPtr,
+	compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
+{
+	COMPV_DEBUG_INFO_CHECK_NEON();
+	for (compv_uscalar_t j = 0; j < height; ++j) {
+		for (compv_uscalar_t i = 0; i < width; i += 16) {
+			const uint8x16x3_t& v3 = vld3q_u8(reinterpret_cast<const uint8_t*>(&srcPtr[i]));
+			vst1q_u8(&dstPt0[i], v3.val[0]);
+			vst1q_u8(&dstPt1[i], v3.val[1]);
+			vst1q_u8(&dstPt2[i], v3.val[2]);
+		}
+		dstPt0 += stride;
+		dstPt1 += stride;
+		dstPt2 += stride;
+		srcPtr += stride;
+	}
+}
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */

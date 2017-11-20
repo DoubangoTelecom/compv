@@ -37,6 +37,10 @@ CompV: 3045.ms(full optiz)
 OpenCV: 32920.ms(full optiz)
 Remarque: For OpenCV you need to convert to BGR then HSV (#2 steps: COLOR_YUV2BGR_I420 then CV_BGR2HSV)
 
+=== Image Split BGR/RGB (1282, 720) (#10k times) ===
+CompV: 694.ms(full optiz)
+OpenCV: 8210.ms(full optiz)
+
 === Histogram Building on grayscal 8u image (1282 , 720) (#10k times) ===
 CompV: 1073.ms(full optiz)
 OpenCV: 4114.ms(full optiz)

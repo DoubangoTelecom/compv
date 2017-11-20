@@ -10,7 +10,7 @@
 COMPV_YASM_DEFAULT_REL
 
 global sym(CompVImageThresholdGlobal_8u8u_Asm_X64_SSE2)
-global sym(CompVImageThresholdOtsuSum_32s32s_Asm_X86_SSE41)
+global sym(CompVImageThresholdOtsuSum_32s32s_Asm_X64_SSE41)
 
 section .data
 
@@ -23,7 +23,7 @@ section .text
 ; arg(3) -> compv_uscalar_t height,
 ; arg(4) -> COMPV_ALIGNED(SSE) compv_uscalar_t stride,
 ; arg(5) -> compv_uscalar_t threshold
-sym(CompVImageThresholdGlobal_8u8u_Asm_X64_SSE2)
+sym(CompVImageThresholdGlobal_8u8u_Asm_X64_SSE2):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 6
@@ -144,7 +144,7 @@ sym(CompVImageThresholdGlobal_8u8u_Asm_X64_SSE2)
 ; arg(0) -> COMPV_ALIGNED(SSE) const uint32_t* ptr32uHistogram
 ; arg(1) -> COMPV_ALIGNED(SSE) uint32_t* sumA256
 ; arg(2) -> uint32_t* sumB1
-sym(CompVImageThresholdOtsuSum_32s32s_Asm_X86_SSE41)
+sym(CompVImageThresholdOtsuSum_32s32s_Asm_X64_SSE41):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 3

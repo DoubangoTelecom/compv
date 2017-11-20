@@ -159,9 +159,9 @@
 	%define vectmp1		%6
 	%define vectmp2		%7
 	vmovdqa vectmp2, [sym(kShuffleEpi8_Deinterleave8uL3_i32)]
-	vmovdqa vecLane0, [ptr + (0*COMPV_YASM_XMM_SZ_BYTES)]
-	vmovdqa vecLane1, [ptr + (1*COMPV_YASM_XMM_SZ_BYTES)]
-	vmovdqa vecLane2, [ptr + (2*COMPV_YASM_XMM_SZ_BYTES)]
+	vmovdqa vecLane0, [ptr + (0*COMPV_YASM_YMM_SZ_BYTES)]
+	vmovdqa vecLane1, [ptr + (1*COMPV_YASM_YMM_SZ_BYTES)]
+	vmovdqa vecLane2, [ptr + (2*COMPV_YASM_YMM_SZ_BYTES)]
 	vpshufb vecLane2, vectmp2
 	vpshufb vectmp0, vecLane0, vectmp2
 	vpshufb vectmp1, vecLane1, vectmp2
@@ -247,10 +247,10 @@
 	vpunpcklwd vectmp0, vectmp0, vectmp1
 	vpunpckhwd vecLane3, vecLane0, vecLane2
 	vpunpcklwd vecLane0, vecLane0, vecLane2
-	vmovdqa [ptr + (0*COMPV_YASM_XMM_SZ_BYTES)], vectmp0
-	vmovdqa [ptr + (1*COMPV_YASM_XMM_SZ_BYTES)], vecLane1
-	vmovdqa [ptr + (2*COMPV_YASM_XMM_SZ_BYTES)], vecLane0
-	vmovdqa [ptr + (3*COMPV_YASM_XMM_SZ_BYTES)], vecLane3
+	vmovdqa [ptr + (0*COMPV_YASM_YMM_SZ_BYTES)], vectmp0
+	vmovdqa [ptr + (1*COMPV_YASM_YMM_SZ_BYTES)], vecLane1
+	vmovdqa [ptr + (2*COMPV_YASM_YMM_SZ_BYTES)], vecLane0
+	vmovdqa [ptr + (3*COMPV_YASM_YMM_SZ_BYTES)], vecLane3
 	%undef ptr
 	%undef vecLane0
 	%undef vecLane1

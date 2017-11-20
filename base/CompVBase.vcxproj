@@ -93,10 +93,13 @@
     <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_threshold_intrin_sse2.h" />
     <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_threshold_intrin_sse41.h" />
     <ClInclude Include="include\compv\base\intrin\arm\compv_intrin_neon.h" />
+    <ClInclude Include="include\compv\base\intrin\arm\compv_mem_intrin_neon.h" />
+    <ClInclude Include="include\compv\base\intrin\arm\compv_patch_intrin_neon.h" />
     <ClInclude Include="include\compv\base\intrin\x86\compv_intrin_avx.h" />
     <ClInclude Include="include\compv\base\intrin\x86\compv_intrin_sse.h" />
     <ClInclude Include="include\compv\base\intrin\x86\compv_mem_intrin_avx.h" />
     <ClInclude Include="include\compv\base\intrin\x86\compv_mem_intrin_sse2.h" />
+    <ClInclude Include="include\compv\base\intrin\x86\compv_mem_intrin_ssse3.h" />
     <ClInclude Include="include\compv\base\intrin\x86\compv_patch_intrin_avx2.h" />
     <ClInclude Include="include\compv\base\intrin\x86\compv_patch_intrin_sse2.h" />
     <ClInclude Include="include\compv\base\math\compv_math.h" />
@@ -293,8 +296,16 @@
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
+    <ClCompile Include="intrin\arm\compv_mem_intrin_neon.cxx" />
+    <ClCompile Include="intrin\arm\compv_patch_intrin_neon.cxx" />
     <ClCompile Include="intrin\x86\compv_mem_intrin_avx.cxx" />
     <ClCompile Include="intrin\x86\compv_mem_intrin_sse2.cxx" />
+    <ClCompile Include="intrin\x86\compv_mem_intrin_ssse3.cxx">
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+    </ClCompile>
     <ClCompile Include="intrin\x86\compv_patch_intrin_avx2.cxx">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>

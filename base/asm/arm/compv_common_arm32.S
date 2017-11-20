@@ -13,6 +13,7 @@
 
 .equ prolog_bytes, (10 * COMPV_GAS_REG_SZ_BYTES)   @ push {r4-r12, lr}
 
+# r0-r11 can be used as local variables, will be saved and restored in prolog and epilog
 # Stack Base Pointer register
 bp .req r12
 

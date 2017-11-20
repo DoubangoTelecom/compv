@@ -154,4 +154,96 @@ COMPV_GAS_FUNCTION_DECLARE CompVMemZero_Asm_NEON64
 	COMPV_GAS_FUNCTION_EPILOG
 	COMPV_GAS_FUNCTION_RETURN
 
+
+#########################################################################
+# arg(0) -> COMPV_ALIGNED(NEON) uint8_t* dstPt0
+# arg(1) -> COMPV_ALIGNED(NEON) uint8_t* dstPt1
+# arg(2) -> COMPV_ALIGNED(NEON) uint8_t* dstPt2
+# arg(3) -> COMPV_ALIGNED(NEON) const compv_uint8x3_t* srcPtr
+# arg(4) -> compv_uscalar_t width
+# arg(5) -> compv_uscalar_t height
+# arg(6) -> COMPV_ALIGNED(NEON) compv_uscalar_t stride
+COMPV_GAS_FUNCTION_DECLARE CompVMemCopy3_Asm_NEON64
+	COMPV_GAS_FUNCTION_PROLOG
+	COMPV_GAS_SAVE_NEON_REGS
+
+	## Declare input arguments ##
+	dstPt0 .req r0
+	dstPt1 .req r1
+	dstPt2 .req r2
+	srcPtr .req r3
+	width .req r4
+	height .req r5
+	stride .req r6
+
+	prfm pldl1keep, [srcPtr, #(CACHE_LINE_SIZE*0)]
+	prfm pldl1keep, [srcPtr, #(CACHE_LINE_SIZE*1)]
+	prfm pldl1keep, [srcPtr, #(CACHE_LINE_SIZE*2)]
+	
+	## Declare local vectors ##
+	pad .req r7
+	pad3 .req r8
+	i .req r9
+
+	add pad, width, #15
+	and pad, pad, #-16
+	sub pad, stride, pad
+	add pad3, pad, pad, LSL #1
+
+	#################################################
+	# for (compv_uscalar_t j = 0; j < height; ++j)
+	#################################################
+	LoopHeight_CompVMemCopy3_Asm_NEON64:
+		#################################################
+		# for (compv_uscalar_t i = 0; i < width; i += 16)
+		#################################################
+		mov i, #0
+		LoopWidth_CompVMemCopy3_Asm_NEON64:
+			prfm pldl1keep, [srcPtr, #(CACHE_LINE_SIZE*4)]
+			//prfm pstl1keep, [dstPt0, #(CACHE_LINE_SIZE*4)]
+			//prfm pstl1keep, [dstPt1, #(CACHE_LINE_SIZE*4)]
+			//prfm pstl1keep, [dstPt2, #(CACHE_LINE_SIZE*4)]
+			ld3 {v0.16b, v1.16b, v2.16b}, [srcPtr], #((16*3)*COMPV_GAS_UINT8_SZ_BYTES)
+			#if 0 // MediaPad2, this code is by faaar slower (2700ms vs 2300ms)
+			st1 {v0.16b}, [dstPt0], #(1*COMPV_GAS_V_SZ_BYTES)
+			st1 {v1.16b}, [dstPt1], #(1*COMPV_GAS_V_SZ_BYTES)
+			st1 {v2.16b}, [dstPt2], #(1*COMPV_GAS_V_SZ_BYTES)
+			#else
+			str q0, [dstPt0, i]
+			str q1, [dstPt1, i]
+			str q2, [dstPt2, i]
+			#endif
+			add i, i, #16
+			cmp i, width
+			blt LoopWidth_CompVMemCopy3_Asm_NEON64
+		EndOf_LoopWidth_CompVMemCopy3_Asm_NEON64:
+		subs height, height, #1
+		#if 0 // See above
+		add dstPt0, dstPt0, pad
+		add dstPt1, dstPt1, pad
+		add dstPt2, dstPt2, pad
+		#else
+		add dstPt0, dstPt0, stride
+		add dstPt1, dstPt1, stride
+		add dstPt2, dstPt2, stride
+		#endif
+		add srcPtr, srcPtr, pad3
+		bne LoopHeight_CompVMemCopy3_Asm_NEON64
+	EndOf_LoopHeight_CompVMemCopy3_Asm_NEON64:
+
+	.unreq dstPt0
+	.unreq dstPt1
+	.unreq dstPt2
+	.unreq srcPtr
+	.unreq width
+	.unreq height
+	.unreq stride
+	.unreq pad
+	.unreq pad3
+	.unreq i
+
+	COMPV_GAS_RESTORE_NEON_REGS
+	COMPV_GAS_FUNCTION_EPILOG
+	COMPV_GAS_FUNCTION_RETURN
+
 #endif /* defined(__aarch64__) */

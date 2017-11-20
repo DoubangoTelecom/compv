@@ -4,6 +4,7 @@ using namespace compv;
 
 #define TAG_UNITTESTS "UnitTests"
 
+#define UNITTEST_SPLIT							1
 #define UNITTEST_SCALE							0
 #define UNITTEST_PYRAMID						0
 #define UNITTEST_CONVOLUTION					0
@@ -31,7 +32,7 @@ using namespace compv;
 #define UNITTEST_MATH_CALIB_HOMOGRAPHY			0
 #define UNITTEST_MATH_DISTANCE_HAMMING			0
 #define UNITTEST_MATH_HISTOGRAM_BUILD			0
-#define UNITTEST_MATH_HISTOGRAM_EQUALIZ			1
+#define UNITTEST_MATH_HISTOGRAM_EQUALIZ			0
 
 #define enableSSE2()	~(kCpuFlagSSE | kCpuFlagSSE2)
 #define enableSSSE3()	~(kCpuFlagSSE3 | kCpuFlagSSSE3)
@@ -92,6 +93,11 @@ compv_main()
 								COMPV_CHECK_CODE_BAIL(err = CompVCpu::flagsDisable(UNITTESTS_CPUFLAGS_DISABLED[e]));
 								COMPV_CHECK_CODE_BAIL(err = CompVParallel::multiThreadingSetMaxThreads(UNITTESTS_MAXTHREADS[d]));
 								COMPV_CHECK_CODE_BAIL(err = CompVGpu::setEnabled(f == 1));
+								
+#if UNITTEST_SPLIT || !defined(COMPV_TEST_LOCAL)
+								extern COMPV_ERROR_CODE unittest_split();
+								COMPV_CHECK_CODE_BAIL(err = unittest_split(), "Image split unittest failed");
+#endif
 #if UNITTEST_SCALE || !defined(COMPV_TEST_LOCAL)
 								extern COMPV_ERROR_CODE unittest_scale();
 								COMPV_CHECK_CODE_BAIL(err = unittest_scale(), "Image scale unittest failed");

@@ -21,7 +21,7 @@ section .text
 ; arg(3) -> compv_uscalar_t height,
 ; arg(4) -> COMPV_ALIGNED(AVX) compv_uscalar_t stride,
 ; arg(5) -> compv_uscalar_t threshold
-sym(CompVImageThresholdGlobal_8u8u_Asm_X64_AVX2)
+sym(CompVImageThresholdGlobal_8u8u_Asm_X64_AVX2):
 	vzeroupper
 	push rbp
 	mov rbp, rsp
