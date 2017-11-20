@@ -29,7 +29,7 @@ COMPV_ERROR_CODE CompVMathHistogram::build(const CompVMatPtr& data, CompVMatPtrP
 {
 	COMPV_CHECK_EXP_RETURN(!data || data->isEmpty() || !histogram, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Input data is null or empty");
 
-	if (data->elmtInBytes() == sizeof(uint8_t) && data->planeCount() == 1) {
+	if (data->elmtInBytes() == sizeof(uint8_t)) { // no plane count check needed
 		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<uint32_t>(histogram, 1, 256));
 		COMPV_CHECK_CODE_RETURN((*histogram)->zero_rows());
 		uint32_t* histogramPtr = (*histogram)->ptr<uint32_t>();

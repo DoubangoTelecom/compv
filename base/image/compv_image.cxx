@@ -156,6 +156,49 @@ COMPV_ERROR_CODE CompVImage::crop(const CompVMatPtr& imageIn, const CompVRectFlo
 	return COMPV_ERROR_CODE_S_OK;
 }
 
+COMPV_ERROR_CODE CompVImage::split(const CompVMatPtr& imageIn, std::vector<CompVMatPtr>& outputs)
+{
+	COMPV_CHECK_EXP_RETURN(!imageIn || imageIn->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+	switch (imageIn->subType()) {
+	case COMPV_SUBTYPE_PIXELS_HSV:
+	case COMPV_SUBTYPE_PIXELS_HSL:
+	case COMPV_SUBTYPE_PIXELS_RGB24:
+	case COMPV_SUBTYPE_PIXELS_BGR24: {
+		CompVMatPtr ptr8uImg0, ptr8uImg1, ptr8uImg2;
+		if (outputs.size() == 3) {
+			ptr8uImg0 = outputs[0];
+			ptr8uImg1 = outputs[1];
+			ptr8uImg2 = outputs[2];
+		}
+		const size_t width = imageIn->cols();
+		const size_t height = imageIn->rows();
+		const size_t stride = imageIn->stride();
+		if (!ptr8uImg0 || ptr8uImg0->cols() != width || ptr8uImg0->rows() != height || ptr8uImg0->stride() != stride || ptr8uImg0->elmtInBytes() != sizeof(uint8_t) || ptr8uImg0->planeCount() != 1) {
+			COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&ptr8uImg0, COMPV_SUBTYPE_PIXELS_Y, width, height, stride));
+		}
+		if (!ptr8uImg1 || ptr8uImg1->cols() != width || ptr8uImg1->rows() != height || ptr8uImg1->stride() != stride || ptr8uImg1->elmtInBytes() != sizeof(uint8_t) || ptr8uImg1->planeCount() != 1) {
+			COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&ptr8uImg1, COMPV_SUBTYPE_PIXELS_Y, width, height, stride));
+		}
+		if (!ptr8uImg2 || ptr8uImg2->cols() != width || ptr8uImg2->rows() != height || ptr8uImg2->stride() != stride || ptr8uImg2->elmtInBytes() != sizeof(uint8_t) || ptr8uImg2->planeCount() != 1) {
+			COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&ptr8uImg2, COMPV_SUBTYPE_PIXELS_Y, width, height, stride));
+		}
+		COMPV_CHECK_CODE_RETURN(CompVMem::copy3(ptr8uImg0->ptr<uint8_t>(), ptr8uImg1->ptr<uint8_t>(), ptr8uImg2->ptr<uint8_t>(),
+			imageIn->ptr<const compv_uint8x3_t>(), width, height, stride));
+		if (outputs.size() != 3) {
+			outputs.resize(3);
+		}
+		outputs[0] = ptr8uImg0;
+		outputs[1] = ptr8uImg1;
+		outputs[2] = ptr8uImg2;
+		return COMPV_ERROR_CODE_S_OK;
+	}
+	default:
+		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Splitting %s not supported yet", CompVGetSubtypeString(imageIn->subType()));
+		return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
+	}
+}
+
 COMPV_ERROR_CODE CompVImage::convert(const CompVMatPtr& imageIn, COMPV_SUBTYPE pixelFormatOut, CompVMatPtrPtr imageOut)
 {
 	COMPV_CHECK_EXP_RETURN(!imageIn || imageIn->isEmpty() || !imageOut || imageIn->type() != COMPV_MAT_TYPE_PIXELS, COMPV_ERROR_CODE_E_INVALID_PARAMETER);

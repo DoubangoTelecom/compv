@@ -379,6 +379,7 @@ static void CompVImageThresholdGlobal_8u8u_C(
 
 static void CompVImageThresholdOtsuSum_32s32s_C(const uint32_t* ptr32uHistogram, uint32_t* sumA256, uint32_t* sumB1)
 {
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
 	uint32_t sumB = 0;
 	for (uint32_t i = 0; i < 256; i += 8) {
 		sumA256[i] = (i * ptr32uHistogram[i]);

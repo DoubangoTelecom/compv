@@ -186,6 +186,28 @@ COMPV_ERROR_CODE CompVMem::copyNTA(void* dstPtr, const void*srcPtr, size_t size)
     return COMPV_ERROR_CODE_S_OK;
 }
 
+// like arm neon vld3
+COMPV_ERROR_CODE CompVMem::copy3(uint8_t* dstPt0, uint8_t* dstPt1, uint8_t* dstPt2, const compv_uint8x3_t* srcPtr, size_t width, size_t height, size_t stride)
+{
+	COMPV_CHECK_EXP_RETURN(!dstPt0 || !dstPt1 || !dstPt2 || !srcPtr || !width || !height || stride < width, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation could be found");
+	for (size_t j = 0; j < height; ++j) {
+		for (size_t i = 0; i < width; ++i) {
+			const compv_uint8x3_t& src = srcPtr[i];
+			dstPt0[i] = src[0];
+			dstPt1[i] = src[1];
+			dstPt2[i] = src[2];
+		}
+		dstPt0 += stride;
+		dstPt1 += stride;
+		dstPt2 += stride;
+		srcPtr += stride;
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 COMPV_ERROR_CODE CompVMem::set(void* dstPtr, compv_scalar_t val, compv_uscalar_t count, compv_uscalar_t sizeOfEltInBytes /*= 1*/)
 {
     COMPV_CHECK_EXP_RETURN(!dstPtr || !count || !sizeOfEltInBytes, COMPV_ERROR_CODE_E_INVALID_PARAMETER);

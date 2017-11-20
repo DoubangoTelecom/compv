@@ -35,8 +35,9 @@ class COMPV_BASE_API CompVMem
 public:
     static COMPV_ERROR_CODE init();
     static COMPV_ERROR_CODE deInit();
-    static COMPV_ERROR_CODE copy(void* dstPtr, const void*srcPtr, size_t size);
-    static COMPV_ERROR_CODE copyNTA(void* dstPtr, const void*srcPtr, size_t size);
+    static COMPV_ERROR_CODE copy(void* dstPtr, const void* srcPtr, size_t size);
+    static COMPV_ERROR_CODE copyNTA(void* dstPtr, const void* srcPtr, size_t size);
+	static COMPV_ERROR_CODE copy3(uint8_t* dstPt0, uint8_t* dstPt1, uint8_t* dstPt2, const compv_uint8x3_t* srcPtr, size_t width, size_t height, size_t stride);
 
     static COMPV_ERROR_CODE set(void* dstPtr, compv_scalar_t val, compv_uscalar_t count, compv_uscalar_t sizeOfEltInBytes = 1);
 
