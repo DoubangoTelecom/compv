@@ -162,7 +162,6 @@
     <ClCompile Include="bruteforce.cxx" />
     <ClCompile Include="canny.cxx" />
     <ClCompile Include="chroma_conv.cxx" />
-    <ClCompile Include="convlt.cxx" />
     <ClCompile Include="feature_fast.cxx" />
     <ClCompile Include="feature_orb.cxx" />
     <ClCompile Include="houghkht.cxx" />

@@ -8,6 +8,7 @@
 
 #if COMPV_ARCH_X86 && COMPV_INTRINSIC
 #include "compv/base/intrin/x86/compv_intrin_avx.h"
+#include "compv/base/math/compv_math.h"
 #include "compv/base/compv_simd_globals.h"
 #include "compv/base/compv_debug.h"
 
@@ -93,7 +94,8 @@ void CompVMathConvlt1VtHz_8u32f8u_Intrin_AVX2(const uint8_t* inPtr, uint8_t* out
 				vec0fn = _mm_mul_ss(vec0fn, vecCoeffn);
 				vecSum0n = _mm_add_ss(vecSum0n, vec0fn);
 			}
-			outPtr[i] = static_cast<uint8_t>(_mm_cvtt_ss2si(vecSum0n) & 0xff);
+			const int sum = _mm_cvtt_ss2si(vecSum0n);
+			outPtr[i] = static_cast<uint8_t>(COMPV_MATH_CLIP3(0, 255, sum));
 		}
 
 		inPtr += stride;
@@ -183,7 +185,7 @@ void CompVMathConvlt1VtHz_8u16s16s_Intrin_AVX2(const uint8_t* inPtr, int16_t* ou
 			for (row = 1, k = step; row < kernSize; ++row, k += step) {
 				sum += static_cast<int>(inPtr[i + k] * vthzKernPtr[row]);
 			}
-			outPtr[i] = static_cast<int16_t>(sum);
+			outPtr[i] = static_cast<int16_t>(COMPV_MATH_CLIP3(-32767, 32767, sum));
 		}
 
 		inPtr += stride;
@@ -265,7 +267,7 @@ void CompVMathConvlt1VtHz_16s16s16s_Intrin_AVX2(const int16_t* inPtr, int16_t* o
 			for (row = 1, k = step; row < kernSize; ++row, k += step) {
 				sum += static_cast<int>(inPtr[i + k] * vthzKernPtr[row]);
 			}
-			outPtr[i] = static_cast<int16_t>(sum);
+			outPtr[i] = static_cast<int16_t>(COMPV_MATH_CLIP3(-32767, 32767, sum));
 		}
 
 		inPtr += stride;

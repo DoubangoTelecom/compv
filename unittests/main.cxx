@@ -4,10 +4,9 @@ using namespace compv;
 
 #define TAG_UNITTESTS "UnitTests"
 
-#define UNITTEST_SPLIT							1
+#define UNITTEST_SPLIT							0
 #define UNITTEST_SCALE							0
 #define UNITTEST_PYRAMID						0
-#define UNITTEST_CONVOLUTION					0
 #define UNITTEST_SOBEL							0
 #define UNITTEST_CANNY							0
 #define UNITTEST_THRESHOLD_ADAPT				0
@@ -33,6 +32,7 @@ using namespace compv;
 #define UNITTEST_MATH_DISTANCE_HAMMING			0
 #define UNITTEST_MATH_HISTOGRAM_BUILD			0
 #define UNITTEST_MATH_HISTOGRAM_EQUALIZ			0
+#define UNITTEST_MATH_CONVOLUTION				1
 
 #define enableSSE2()	~(kCpuFlagSSE | kCpuFlagSSE2)
 #define enableSSSE3()	~(kCpuFlagSSE3 | kCpuFlagSSSE3)
@@ -105,10 +105,6 @@ compv_main()
 #if UNITTEST_PYRAMID || !defined(COMPV_TEST_LOCAL)
 								extern COMPV_ERROR_CODE unittest_pyramid();
 								COMPV_CHECK_CODE_BAIL(err = unittest_pyramid(), "Image pyramid unittest failed");
-#endif
-#if UNITTEST_CONVOLUTION || !defined(COMPV_TEST_LOCAL)
-								extern COMPV_ERROR_CODE unittest_convlt();
-								COMPV_CHECK_CODE_BAIL(err = unittest_convlt(), "Image convolution unittest failed");
 #endif
 #if UNITTEST_SOBEL || !defined(COMPV_TEST_LOCAL)
 								extern COMPV_ERROR_CODE unittest_sobel();
@@ -202,6 +198,10 @@ compv_main()
 #if UNITTEST_MATH_HISTOGRAM_EQUALIZ || !defined(COMPV_TEST_LOCAL)
 								extern COMPV_ERROR_CODE unittest_histogram_equaliz();
 								COMPV_CHECK_CODE_BAIL(err = unittest_histogram_equaliz(), "Math histogram equaliz unittest failed");
+#endif
+#if UNITTEST_MATH_CONVOLUTION || !defined(COMPV_TEST_LOCAL)
+								extern COMPV_ERROR_CODE unittest_math_convlt();
+								COMPV_CHECK_CODE_BAIL(err = unittest_math_convlt(), "Math convolution unittest failed");
 #endif
 							}
 						}

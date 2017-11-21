@@ -254,7 +254,7 @@ COMPV_ERROR_CODE CompVImageThreshold::adaptive(const CompVMatPtr& input, CompVMa
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
 	const size_t maxThreads = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
 	const size_t minSamplesPerThreads = COMPV_MATH_MAX(
-		(kernelSize * stride),
+		(kernelSize * width),
 		COMPV_IMAGE_THRESH_ADAPT_SAMPLES_PER_THREAD
 	); // num rows per threads must be >= kernel size
 	const size_t threadsCount = (threadDisp && !threadDisp->isMotherOfTheCurrentThread())

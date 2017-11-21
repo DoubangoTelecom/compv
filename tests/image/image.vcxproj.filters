@@ -26,9 +26,6 @@
     <ClCompile Include="pyramid.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="convlt.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\tests_common.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>

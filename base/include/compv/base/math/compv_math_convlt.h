@@ -110,12 +110,11 @@ private:
 			outPtrAllocated = true;
 		}
 		OutputType* tmpPtr = NULL;
-		size_t threadsCount;
-		CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
-		size_t maxThreads = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 0;
 
 		// Compute number of threads
-		threadsCount = (threadDisp && !threadDisp->isMotherOfTheCurrentThread())
+		CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
+		const size_t maxThreads = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
+		const size_t threadsCount = (threadDisp && !threadDisp->isMotherOfTheCurrentThread())
 			? COMPV_MATH_MIN(maxThreads, (dataHeight / (kernSize << 1))) /* at least "rowsOverlapCount" */
 			: 1;
 
@@ -251,8 +250,11 @@ private:
 				memcpy(outPtr_, inPtr_, bSizeInSamples * sizeof(OutputType));
 			}
 			else {
+				COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
+				const OutputType maxx = std::numeric_limits<OutputType>::max();
+				const OutputType minn = std::is_signed<OutputType>::value ? (OutputType)-maxx : 0;
 				for (size_t i = 0; i < bSizeInSamples; ++i) {
-					outPtr_[i] = static_cast<OutputType>(inPtr_[i]);
+					outPtr_[i] = static_cast<OutputType>(COMPV_MATH_CLIP3(minn, maxx, inPtr_[i])); // SIMD: saturation
 				}
 			}
 		}
@@ -273,8 +275,11 @@ private:
 				memcpy(outPtr_, inPtr_, bSizeInSamples * sizeof(OutputType));
 			}
 			else {
+				COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
+				const OutputType maxx = std::numeric_limits<OutputType>::max();
+				const OutputType minn = std::is_signed<OutputType>::value ? (OutputType)-maxx : 0;
 				for (size_t i = 0; i < bSizeInSamples; ++i) {
-					outPtr_[i] = static_cast<OutputType>(inPtr_[i]);
+					outPtr_[i] = static_cast<OutputType>(COMPV_MATH_CLIP3(minn, maxx, inPtr_[i])); // SIMD: saturation
 				}
 			}
 		}
@@ -328,14 +333,16 @@ private:
 	static COMPV_ERROR_CODE convlt1VtHzKernelInt_C(const InputType* inPtr, OutputType* outPtr, size_t width, size_t height, size_t step, size_t pad, const KernelType* vthzKernPtr, size_t kernSize) {
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
 		size_t i, j, k, row;
-		OutputType sum;
+		int sum; // use int to accumulate any integer types (int18, int16 and int32)
+		const OutputType maxx = std::numeric_limits<OutputType>::max();
+		const OutputType minn = std::is_signed<OutputType>::value ? (OutputType)-maxx : 0;
 		for (j = 0; j < height; ++j) {
 			for (i = 0; i < width; ++i) {
-				sum = static_cast<OutputType>(inPtr[0] * vthzKernPtr[0]);
+				sum = static_cast<int>(inPtr[0] * vthzKernPtr[0]);
 				for (row = 1, k = step; row < kernSize; ++row, k += step) {
-					sum += static_cast<OutputType>(inPtr[k] * vthzKernPtr[row]);
+					sum += static_cast<int>(inPtr[k] * vthzKernPtr[row]);
 				}
-				*outPtr = static_cast<OutputType>(sum);
+				*outPtr = static_cast<OutputType>(COMPV_MATH_CLIP3(minn, maxx, sum));
 				++inPtr;
 				++outPtr;
 			}
@@ -354,16 +361,18 @@ private:
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
 		size_t i, j, k, row;
 		KernelType sum; // use (float / double) to accumulate
+		const OutputType maxx = std::numeric_limits<OutputType>::max();
+		const OutputType minn = std::is_signed<OutputType>::value ? (OutputType)-maxx : 0;
 		for (j = 0; j < height; ++j) {
 			for (i = 0; i < width; ++i) {
 				sum = inPtr[0] * vthzKernPtr[0];
 				for (row = 1, k = step; row < kernSize; ++row, k += step) {
 					sum += inPtr[k] * vthzKernPtr[row];
 				}
-#if 0 // SIMD instruction -> out = cvtt(add(sum, 0.5f))
+#if 0
 				*outPtr = COMPV_MATH_ROUNDFU_2_NEAREST_INT(sum, OutputType);
-#else // SIMD instruction -> out = cvtt(sum)
-				*outPtr = static_cast<OutputType>(sum); // Truncation introduce very small error, not a big deal for convolution operation
+#else
+				*outPtr = static_cast<OutputType>(COMPV_MATH_CLIP3(minn, maxx, sum)); // SIMD: saturation
 #endif
 				++inPtr;
 				++outPtr;
@@ -385,7 +394,7 @@ private:
 				for (row = 1, k = step; row < kernSize; ++row, k += step) {
 					sum += static_cast<unsigned int>(inPtr[k] * vthzKernPtr[row]) >> 16;
 				}
-				*outPtr = static_cast<uint8_t>(sum);
+				*outPtr = static_cast<uint8_t>(COMPV_MATH_CLIP3(0, 255, sum)); // SIMD: saturation
 				++inPtr;
 				++outPtr;
 			}

@@ -90,9 +90,10 @@ COMPV_ERROR_CODE otsuThreshold()
 {
 	// Find test
 	const compv_unittest_thresh_otsu* test = nullptr;
-	for (size_t i = 0; i < COMPV_UNITTEST_THESH_OTSU_COUNT && !test; ++i) {
+	for (size_t i = 0; i < COMPV_UNITTEST_THESH_OTSU_COUNT; ++i) {
 		if (std::string(COMPV_UNITTEST_THESH_OTSU[i].filename).compare(OTSU_FILE) == 0) {
 			test = &COMPV_UNITTEST_THESH_OTSU[i];
+			break;
 		}
 	}
 	COMPV_ASSERT(test != nullptr);

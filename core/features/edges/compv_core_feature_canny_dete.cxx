@@ -157,20 +157,20 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVMatPtr& image, CompVMatP
 	/* Convolution + Gradient + Mean */
 	// Get Max number of threads
 	const size_t minSamplesPerThreads = COMPV_MATH_MAX(
-		(m_nKernelSize * m_nImageStride),
+		(m_nKernelSize * m_nImageWidth),
 		COMPV_FEATURE_DETE_CANNY_GRAD_MIN_SAMPLES_PER_THREAD
 	); // num rows per threads must be >= kernel size
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
 	const size_t maxThreads = (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
-	size_t threadsCount = CompVThreadDispatcher::guessNumThreadsDividingAcrossY(m_nImageStride, m_nImageHeight, maxThreads, minSamplesPerThreads);
+	size_t threadsCount = CompVThreadDispatcher::guessNumThreadsDividingAcrossY(m_nImageWidth, m_nImageHeight, maxThreads, minSamplesPerThreads);
 
 	//!\\ Computing mean per thread provides different result on MT and ST, this is why we compute sum then mean.
 
 	if (threadsCount > 1) {
 		const size_t rowsOverlapCount = ((m_nKernelSize >> 1) << 1); // (kernelRadius times 2)
 		const size_t rowsOverlapPad = rowsOverlapCount * m_nImageStride;
-		const size_t countAny = (size_t)(m_nImageHeight / threadsCount);
-		const size_t countLast = (size_t)countAny + (m_nImageHeight % threadsCount);
+		const size_t countAny = (m_nImageHeight / threadsCount);
+		const size_t countLast = countAny + (m_nImageHeight % threadsCount);
 		const size_t countAnyTimesStride = countAny * m_nImageStride;
 		const uint8_t* inPtr_ = image->ptr<const uint8_t>();
 		uint32_t* sums = reinterpret_cast<uint32_t*>(CompVMem::malloc(threadsCount * sizeof(uint32_t)));

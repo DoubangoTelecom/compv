@@ -91,14 +91,16 @@ COMPV_ERROR_CODE CompVCornerDeteEdgeBase::process(const CompVMatPtr& image, Comp
 	// Testing info: for "equirectangular_1282x720_gray" gmax should be equal to 1464
 	uint16_t gmax = 1;
 
+	COMPV_DEBUG_INFO_CODE_TODO("Do not use m_nImageStride as divider, see what is done in thresholding");
+
 	// Get Max number of threads
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
 	const size_t maxThreads = (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
 	const size_t minSamplesPerThreads = COMPV_MATH_MAX(
-		(m_nKernelSize * m_nImageStride),
+		(m_nKernelSize * m_nImageWidth),
 		COMPV_FEATURE_DETE_EDGES_GRAD_MIN_SAMPLES_PER_THREAD
 	); // num rows per threads must be >= kernel size
-	const size_t threadsCount = CompVThreadDispatcher::guessNumThreadsDividingAcrossY(m_nImageStride, m_nImageHeight, maxThreads, minSamplesPerThreads);
+	const size_t threadsCount = CompVThreadDispatcher::guessNumThreadsDividingAcrossY(m_nImageWidth, m_nImageHeight, maxThreads, minSamplesPerThreads);
 
 	// Convolution + Gradient
 	if (threadsCount > 1) {
@@ -115,7 +117,7 @@ COMPV_ERROR_CODE CompVCornerDeteEdgeBase::process(const CompVMatPtr& image, Comp
 		uint16_t* outPtrG_ = m_pG;
 		CompVAsyncTaskIds taskIds;
 		compv_float32_t scale;
-		//!\\ Important: Our tests showed (both x86 and arm)d that it's faster to alloc temp memory for each thread rather than sharing global one -> false sharing issue.
+		//!\\ Important: Our tests showed (both x86 and arm) that it's faster to alloc temp memory for each thread rather than sharing global one -> false sharing issue.
 		// This is an issue for the convolution only because there is no way to make the writing cache-friendly.
 		// No such issue when multithreading 'CompVMathConvlt::convlt1' (perf tests done), so don't try to change the function.
 		// https://en.wikipedia.org/wiki/False_sharing
