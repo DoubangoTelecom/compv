@@ -411,6 +411,15 @@ COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathConvlt::convlt1Vt
 // InputType = uint8_t, KernelType = compv_float32_t, OutputType = uint8_t, FixedPoint = false
 COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathConvlt::convlt1VtHz_private_fxp_false(const uint8_t* inPtr, uint8_t* outPtr, size_t width, size_t height, size_t step, size_t pad, const compv_float32_t* vthzKernPtr, size_t kernSize);
 
+// InputType = uint8_t, KernelType = compv_float32_t, OutputType = compv_float32_t, FixedPoint = false
+COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathConvlt::convlt1VtHz_private_fxp_false(const uint8_t* inPtr, compv_float32_t* outPtr, size_t width, size_t height, size_t step, size_t pad, const compv_float32_t* vthzKernPtr, size_t kernSize);
+
+// InputType = compv_float32_t, KernelType = compv_float32_t, OutputType = compv_float32_t, FixedPoint = false
+COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathConvlt::convlt1VtHz_private_fxp_false(const compv_float32_t* inPtr, compv_float32_t* outPtr, size_t width, size_t height, size_t step, size_t pad, const compv_float32_t* vthzKernPtr, size_t kernSize);
+
+// InputType = compv_float32_t, KernelType = compv_float32_t, OutputType = uint8_t, FixedPoint = false
+COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathConvlt::convlt1VtHz_private_fxp_false(const compv_float32_t* inPtr, uint8_t* outPtr, size_t width, size_t height, size_t step, size_t pad, const compv_float32_t* vthzKernPtr, size_t kernSize);
+
 // InputType = uint8_t, KernelType = int16_t, OutputType = int16_t, FixedPoint = false
 COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathConvlt::convlt1VtHz_private_fxp_false(const uint8_t* inPtr, int16_t* outPtr, size_t width, size_t height, size_t step, size_t pad, const int16_t* vthzKernPtr, size_t kernSize);
 

@@ -5,7 +5,7 @@
 ; Source code: https://github.com/DoubangoTelecom/compv                 ;
 ; WebSite: http://compv.org                                             ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
+%if 0 ; No longer used (deprecated), see x64 version
 %include "compv_common_x86.s"
 
 COMPV_YASM_DEFAULT_REL
@@ -1017,3 +1017,5 @@ sym(CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X86_SSE2):
 	mov rsp, rbp
 	pop rbp
 	ret
+
+%endif
