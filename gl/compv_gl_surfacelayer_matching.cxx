@@ -119,6 +119,7 @@ COMPV_ERROR_CODE CompVGLMatchingSurfaceLayer::drawMatches(const compv_float32_t*
 	}
 	
 	matchOptions.lineType = COMPV_DRAWING_LINE_TYPE_MATCH;
+	COMPV_CHECK_EXP_RETURN(!m_ptrCoverSurfaceGL->requestCanvas(), COMPV_ERROR_CODE_E_INVALID_STATE);
 	COMPV_CHECK_CODE_RETURN(m_ptrCoverSurfaceGL->canvasGL()->drawLinesGL(trainX, trainY, queryX_ ? queryX_ : queryX, queryY, count, &matchOptions));
 	
 bail:

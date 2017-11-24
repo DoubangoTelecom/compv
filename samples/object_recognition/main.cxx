@@ -182,7 +182,7 @@ compv_main()
 					// Filter the matches to get the good ones
 #if KNN == 2
 					const CompVDMatch *match1 = ptrMatches->ptr<const CompVDMatch>(0), *match2 = ptrMatches->ptr<const CompVDMatch>(1);
-					size_t count = COMPV_MATH_MIN(ptrDescriptionsQuery->rows() - 1, ptrMatches->cols());
+					const size_t count = COMPV_MATH_MIN(ptrDescriptionsQuery->rows() - 1, ptrMatches->cols());
 					for (size_t i = 0; i < count; i++) {
 						if (match1[i].distance < KNN_RATIO_TEST * match2[i].distance) {
 							vecGoodMatches.push_back(match1[i]);

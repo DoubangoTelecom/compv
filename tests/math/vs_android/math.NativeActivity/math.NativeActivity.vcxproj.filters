@@ -14,6 +14,7 @@
     <ClCompile Include="..\..\transform.cxx" />
     <ClCompile Include="..\..\..\tests_common.cxx" />
     <ClCompile Include="..\..\histogram.cxx" />
+    <ClCompile Include="..\..\convlt.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\tests_common.h" />

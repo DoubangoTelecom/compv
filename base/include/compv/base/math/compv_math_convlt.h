@@ -181,30 +181,30 @@ private:
 		if (borderType == COMPV_BORDER_TYPE_ZERO) {
 			OutputType *outPtr0 = outPtr, *outPtr1 = outPtr + (width - ker_size_div2);
 			switch (ker_size_div2) { // 1 and 2 (kernel sizes 3 and 5 are very common)
-				case 1: {
-					const size_t kmax = (stride * height);
-					for (size_t k = 0; k < kmax; k += stride) {
-						outPtr0[k] = 0, outPtr1[k] = 0;
-					}
-					break;
+			case 1: {
+				const size_t kmax = (stride * height);
+				for (size_t k = 0; k < kmax; k += stride) {
+					outPtr0[k] = 0, outPtr1[k] = 0;
 				}
-				case 2: {
-					const size_t kmax = (stride * height);
-					for (size_t k = 0; k < kmax; k += stride) {
-						outPtr0[k] = outPtr0[k + 1] = 0, outPtr1[k] = outPtr1[k + 1] = 0;
-					}
-					break;
+				break;
+			}
+			case 2: {
+				const size_t kmax = (stride * height);
+				for (size_t k = 0; k < kmax; k += stride) {
+					outPtr0[k] = outPtr0[k + 1] = 0, outPtr1[k] = outPtr1[k + 1] = 0;
 				}
-				default: {
-					for (size_t row = 0; row < height; ++row) {
-						for (size_t col = 0; col < ker_size_div2; ++col) {
-							outPtr0[col] = 0, outPtr1[col] = 0;
-						}
-						outPtr0 += stride;
-						outPtr1 += stride;
+				break;
+			}
+			default: {
+				for (size_t row = 0; row < height; ++row) {
+					for (size_t col = 0; col < ker_size_div2; ++col) {
+						outPtr0[col] = 0, outPtr1[col] = 0;
 					}
-					break;
+					outPtr0 += stride;
+					outPtr1 += stride;
 				}
+				break;
+			}
 			}
 		}
 		else if (borderType == COMPV_BORDER_TYPE_REPLICATE) {
@@ -225,7 +225,7 @@ private:
 		}
 		
 		// Perform horizontal convolution
-		return CompVMathConvlt::convlt1VtHz_private<InputType, KernelType, OutputType>(inPtr, outPtr + ker_size_div2, static_cast<size_t>(width - ker_size_div2 - ker_size_div2), height, 1, imgpad, hzKernPtr, kernSize, fixedPoint);
+		return CompVMathConvlt::convlt1VtHz_private<InputType, KernelType, OutputType>(inPtr, outPtr + ker_size_div2, static_cast<size_t>(width - kernSize), height, 1, imgpad, hzKernPtr, kernSize, fixedPoint);
 	}
 
 	template <typename InputType = uint8_t, typename KernelType = compv_float32_t, typename OutputType = uint8_t>
@@ -251,8 +251,8 @@ private:
 			}
 			else {
 				COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
+				const OutputType minn = std::is_signed<OutputType>::value ? std::numeric_limits<OutputType>::lowest() : 0;
 				const OutputType maxx = std::numeric_limits<OutputType>::max();
-				const OutputType minn = std::is_signed<OutputType>::value ? (OutputType)-maxx : 0;
 				for (size_t i = 0; i < bSizeInSamples; ++i) {
 					outPtr_[i] = static_cast<OutputType>(COMPV_MATH_CLIP3(minn, maxx, inPtr_[i])); // SIMD: saturation
 				}
@@ -276,8 +276,8 @@ private:
 			}
 			else {
 				COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
+				const OutputType minn = std::is_signed<OutputType>::value ? std::numeric_limits<OutputType>::lowest() : 0;
 				const OutputType maxx = std::numeric_limits<OutputType>::max();
-				const OutputType minn = std::is_signed<OutputType>::value ? (OutputType)-maxx : 0;
 				for (size_t i = 0; i < bSizeInSamples; ++i) {
 					outPtr_[i] = static_cast<OutputType>(COMPV_MATH_CLIP3(minn, maxx, inPtr_[i])); // SIMD: saturation
 				}
@@ -334,8 +334,8 @@ private:
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
 		size_t i, j, k, row;
 		int sum; // use int to accumulate any integer types (int18, int16 and int32)
+		const OutputType minn = std::is_signed<OutputType>::value ? std::numeric_limits<OutputType>::lowest() : 0;
 		const OutputType maxx = std::numeric_limits<OutputType>::max();
-		const OutputType minn = std::is_signed<OutputType>::value ? (OutputType)-maxx : 0;
 		for (j = 0; j < height; ++j) {
 			for (i = 0; i < width; ++i) {
 				sum = static_cast<int>(inPtr[0] * vthzKernPtr[0]);
@@ -361,8 +361,8 @@ private:
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
 		size_t i, j, k, row;
 		KernelType sum; // use (float / double) to accumulate
+		const OutputType minn = std::is_signed<OutputType>::value ? std::numeric_limits<OutputType>::lowest() : 0;
 		const OutputType maxx = std::numeric_limits<OutputType>::max();
-		const OutputType minn = std::is_signed<OutputType>::value ? (OutputType)-maxx : 0;
 		for (j = 0; j < height; ++j) {
 			for (i = 0; i < width; ++i) {
 				sum = inPtr[0] * vthzKernPtr[0];
