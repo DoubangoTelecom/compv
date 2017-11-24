@@ -22,15 +22,16 @@ void CompVMathConvlt1VtHzFixedPoint_8u16u8u_Intrin_AVX2(const uint8_t* inPtr, ui
 {
 	COMPV_DEBUG_INFO_CHECK_AVX2(); // AVX/SSE transition issues
 	_mm256_zeroupper();
-	compv_uscalar_t i, j, k, row, stride = width + pad;
+	compv_uscalar_t i, j, k, row;
+	const compv_uscalar_t stride = (width + pad);
+	const compv_uscalar_t width32 = width & -32;
 	__m256i vecInPtr, vec0, vec1, vecSum0, vecSum1, vecCoeff;
-	__m128i vecInPtrn, vec0n, vec1n, vecSum0n, vecSum1n, vecCoeffn;
 	const __m256i vecZero = _mm256_setzero_si256();
-	unsigned int sum;
+	COMPV_ALIGN_AVX() uint8_t mem[32];
 
 	for (j = 0; j < height; ++j) {
 		/* Per #32 samples */
-		for (i = 0; i < width - 31; i += 32) {
+		for (i = 0; i < width32; i += 32) {
 			vecSum0 = _mm256_setzero_si256();
 			vecSum1 = _mm256_setzero_si256();
 			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
@@ -45,58 +46,22 @@ void CompVMathConvlt1VtHzFixedPoint_8u16u8u_Intrin_AVX2(const uint8_t* inPtr, ui
 			_mm256_storeu_si256(reinterpret_cast<__m256i*>(&outPtr[i]), vec0);
 		}
 
-		/* Per #16 samples */
-		if (i < width - 15) {
-			vecSum0n = _mm_setzero_si128();
-			vecSum1n = _mm_setzero_si128();
-			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
-				vecInPtrn = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&inPtr[i + k]));
-				vecCoeffn = _mm_set1_epi16(static_cast<short>(vthzKernPtr[row]));
-				vec0n = _mm_unpacklo_epi8(vecInPtrn, _mm256_castsi256_si128(vecZero)); // epi8 -> epi16
-				vec1n = _mm_unpackhi_epi8(vecInPtrn, _mm256_castsi256_si128(vecZero)); // epi8 -> epi16
-				vecSum0n = _mm_adds_epu16(vecSum0n, _mm_mulhi_epu16(vec0n, vecCoeffn));
-				vecSum1n = _mm_adds_epu16(vecSum1n, _mm_mulhi_epu16(vec1n, vecCoeffn));
-			}
-			vec0n = _mm_packus_epi16(vecSum0n, vecSum1n);
-			_mm_storeu_si128(reinterpret_cast<__m128i*>(&outPtr[i]), vec0n);
-			i += 16;
-		}
-
-		/* Per #8 samples */
-		if (i < width - 7) {
-			vecSum0n = _mm_setzero_si128();
-			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
-				vecInPtrn = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(&inPtr[i + k]));
-				vecCoeffn = _mm_set1_epi16(static_cast<short>(vthzKernPtr[row]));
-				vec0n = _mm_unpacklo_epi8(vecInPtrn, _mm256_castsi256_si128(vecZero)); // epi8 -> epi16
-				vecSum0n = _mm_adds_epu16(vecSum0n, _mm_mulhi_epu16(vec0n, vecCoeffn));
-			}
-			vec0n = _mm_packus_epi16(vecSum0n, vecSum0n);
-			_mm_storel_epi64(reinterpret_cast<__m128i*>(&outPtr[i]), vec0n);
-			i += 8;
-		}
-
-		/* Per #4 samples */
-		if (i < width - 3) {
-			vecSum0n = _mm_setzero_si128();
-			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
-				vecInPtrn = _mm_cvtsi32_si128(*reinterpret_cast<const uint32_t*>(&inPtr[i + k]));
-				vecCoeffn = _mm_set1_epi16(static_cast<short>(vthzKernPtr[row]));
-				vec0n = _mm_unpacklo_epi8(vecInPtrn, _mm256_castsi256_si128(vecZero)); // epi8 -> epi16
-				vecSum0n = _mm_adds_epu16(vecSum0n, _mm_mulhi_epu16(vec0n, vecCoeffn));
-			}
-			vec0n = _mm_packus_epi16(vecSum0n, vecSum0n);
-			*reinterpret_cast<uint32_t*>(&outPtr[i]) = _mm_cvtsi128_si32(vec0n);
-			i += 4;
-		}
-
 		/* Per #1 samples */
-		for (; i < width; ++i) {
-			sum = static_cast<unsigned int>(inPtr[i] * vthzKernPtr[0]) >> 16;
-			for (row = 1, k = step; row < kernSize; ++row, k += step) {
-				sum += static_cast<unsigned int>(inPtr[i + k] * vthzKernPtr[row]) >> 16;
+		if (i < width) {
+			vecSum0 = _mm256_setzero_si256();
+			vecSum1 = _mm256_setzero_si256();
+			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
+				vecInPtr = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&inPtr[i + k]));
+				vecCoeff = _mm256_set1_epi16(static_cast<short>(vthzKernPtr[row]));
+				vec0 = _mm256_unpacklo_epi8(vecInPtr, vecZero); // epi8 -> epi16
+				vec1 = _mm256_unpackhi_epi8(vecInPtr, vecZero); // epi8 -> epi16
+				vecSum0 = _mm256_adds_epu16(vecSum0, _mm256_mulhi_epu16(vec0, vecCoeff));
+				vecSum1 = _mm256_adds_epu16(vecSum1, _mm256_mulhi_epu16(vec1, vecCoeff));
 			}
-			outPtr[i] = static_cast<uint8_t>(sum);
+			_mm256_store_si256(reinterpret_cast<__m256i*>(mem), _mm256_packus_epi16(vecSum0, vecSum1));
+			for (k = 0; i < width; ++i, ++k) {
+				outPtr[i] = mem[k];
+			}
 		}
 
 		inPtr += stride;
@@ -113,7 +78,10 @@ void CompVMathConvlt1VtHz_8u32f8u_Intrin_AVX2(const uint8_t* inPtr, uint8_t* out
 {
 	COMPV_DEBUG_INFO_CHECK_AVX2(); // AVX/SSE transition issues
 	_mm256_zeroupper();
-	compv_uscalar_t i, j, k, row, stride = width + pad;
+	compv_uscalar_t i, j, k, row;
+	const compv_uscalar_t stride = (width + pad);
+	const compv_uscalar_t width32 = width & -32;
+	const compv_uscalar_t width4 = width & -4;
 	__m256i vecInPtr, vec0i, vec1i, vec2i, vec3i;
 	__m256 vecCoeff, vecSum0, vecSum1, vecSum2, vecSum3, vec0f, vec1f, vec2f, vec3f;
 	const __m256i vecZero = _mm256_setzero_si256();
@@ -122,7 +90,7 @@ void CompVMathConvlt1VtHz_8u32f8u_Intrin_AVX2(const uint8_t* inPtr, uint8_t* out
 
 	for (j = 0; j < height; ++j) {
 		/* Per #32 samples */
-		for (i = 0; i < width - 31; i += 32) {
+		for (i = 0; i < width32; i += 32) {
 			vecSum0 = _mm256_setzero_ps();
 			vecSum1 = _mm256_setzero_ps();
 			vecSum2 = _mm256_setzero_ps();
@@ -159,8 +127,8 @@ void CompVMathConvlt1VtHz_8u32f8u_Intrin_AVX2(const uint8_t* inPtr, uint8_t* out
 			_mm256_storeu_si256(reinterpret_cast<__m256i*>(&outPtr[i]), vec0i);
 		}
 		
-		/* Per #8 samples */
-		for (; i < width - 7; i += 8) {
+		/* Per #4 samples */
+		for (; i < width4; i += 8) {
 			vecSum0 = _mm256_setzero_ps();
 			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
 				vecInPtr = _mm256_cvtepu8_epi32(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&inPtr[i + k])));
