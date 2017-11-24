@@ -16,7 +16,7 @@
 #define COMPV_enableTestingMode		true
 #define COMPV_enableIntelIpp		false
 #define COMPV_enableIntelTbb		false
-#define COMPV_cpuDisable			kCpuFlagFMA3
+#define COMPV_cpuDisable			kCpuFlagAVX2
 
 COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-function")
 
