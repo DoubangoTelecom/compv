@@ -125,7 +125,7 @@ private:
 		}
 
 		COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
-		
+
 		if (threadsCount > 1 && !bKernelSizeTooHighForMT) {
 			CompVAsyncTaskIds taskIds;
 			const size_t rowsOverlapCount = ((kernSize >> 1) << 1); // (kernelRadius times 2)
@@ -145,7 +145,7 @@ private:
 				const size_t padding = first ? 0 : rowsOverlapPad;
 				COMPV_CHECK_CODE_BAIL((err = CompVMathConvlt::convlt1Hz_private<InputType, KernelType, OutputType>(ptrIn - padding, imgTmp, dataWidth, h + rowsOverlapCount, dataStride, hzKernPtr, kernSize, borderType, fixedPoint)));
 				COMPV_CHECK_CODE_BAIL((err = CompVMathConvlt::convlt1Vt_private<OutputType, KernelType, OutputType>(imgTmp, ptrOut - padding, dataWidth, h + rowsOverlapCount, dataStride, vtKernPtr, kernSize, (first ? borderType : COMPV_BORDER_TYPE_IGNORE), (last ? borderType : COMPV_BORDER_TYPE_IGNORE), fixedPoint)));
-				bail:
+			bail:
 				CompVMem::free((void**)&imgTmp);
 				return err;
 			};
@@ -191,7 +191,7 @@ private:
 			case 2: {
 				const size_t kmax = (stride * height);
 				for (size_t k = 0; k < kmax; k += stride) {
-					outPtr0[k] = outPtr0[k + 1] = 0, outPtr1[k] = outPtr1[k + 1] = 0;
+					outPtr0[k] = 0, outPtr0[k + 1] = 0, outPtr1[k] = 0, outPtr1[k + 1] = 0;
 				}
 				break;
 			}
@@ -223,9 +223,9 @@ private:
 		else if (borderType != COMPV_BORDER_TYPE_IGNORE) {
 			COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
 		}
-		
+
 		// Perform horizontal convolution
-		return CompVMathConvlt::convlt1VtHz_private<InputType, KernelType, OutputType>(inPtr, outPtr + ker_size_div2, static_cast<size_t>(width - kernSize), height, 1, imgpad, hzKernPtr, kernSize, fixedPoint);
+		return CompVMathConvlt::convlt1VtHz_private<InputType, KernelType, OutputType>(inPtr, outPtr + ker_size_div2, static_cast<size_t>(width - ker_size_div2 - ker_size_div2), height, 1, imgpad, hzKernPtr, kernSize, fixedPoint);
 	}
 
 	template <typename InputType = uint8_t, typename KernelType = compv_float32_t, typename OutputType = uint8_t>
@@ -316,7 +316,7 @@ private:
 		// No need to check InputType, KernelType and OutputType
 		COMPV_CHECK_CODE_RETURN(CompVMathConvlt::convlt1VtHzFixedPoint_C(reinterpret_cast<const uint8_t*>(inPtr), reinterpret_cast<uint8_t*>(outPtr), width, height, step, pad, reinterpret_cast<const uint16_t*>(vthzKernPtr), kernSize));
 		return COMPV_ERROR_CODE_S_OK;
-	}	
+	}
 
 	template <typename InputType, typename KernelType, typename OutputType>
 	static COMPV_ERROR_CODE convlt1VtHz_private_fxp_false(const InputType* inPtr, OutputType* outPtr, size_t width, size_t height, size_t step, size_t pad, const KernelType* vthzKernPtr, size_t kernSize) {
@@ -370,7 +370,7 @@ private:
 					sum += inPtr[k] * vthzKernPtr[row];
 				}
 #if 0
-				*outPtr = COMPV_MATH_ROUNDFU_2_NEAREST_INT(sum, OutputType);
+				* outPtr = COMPV_MATH_ROUNDFU_2_NEAREST_INT(sum, OutputType);
 #else
 				*outPtr = static_cast<OutputType>(COMPV_MATH_CLIP3(minn, maxx, sum)); // SIMD: saturation
 #endif
@@ -382,7 +382,7 @@ private:
 		}
 		return COMPV_ERROR_CODE_S_OK;
 	}
-	
+
 	static COMPV_ERROR_CODE convlt1VtHzFixedPoint_C(const uint8_t* inPtr, uint8_t* outPtr, size_t width, size_t height, size_t step, size_t pad, const uint16_t* vthzKernPtr, size_t kernSize) {
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
 		size_t i, j, k, row;
