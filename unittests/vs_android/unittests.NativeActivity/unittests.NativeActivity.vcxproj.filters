@@ -6,7 +6,6 @@
     <ClCompile Include="..\..\main.cxx" />
     <ClCompile Include="..\..\scale.cxx" />
     <ClCompile Include="..\..\pyramid.cxx" />
-    <ClCompile Include="..\..\convlt.cxx" />
     <ClCompile Include="..\..\..\tests\tests_common.cxx" />
     <ClCompile Include="..\..\math_eigen.cxx" />
     <ClCompile Include="..\..\math_inverse.cxx" />
@@ -27,5 +26,6 @@
     <ClCompile Include="..\..\threshold.cxx" />
     <ClCompile Include="..\..\math_histogram.cxx" />
     <ClCompile Include="..\..\split.cxx" />
+    <ClCompile Include="..\..\math_convlt.cxx" />
   </ItemGroup>
 </Project>

@@ -286,7 +286,6 @@ void CompVMathConvlt1VtHz_8u16s16s_Intrin_SSE2(const uint8_t* inPtr, int16_t* ou
 	compv_uscalar_t i, j, k, row;
 	const compv_uscalar_t stride = width + pad;
 	const compv_uscalar_t width16 = width & -16;
-	const compv_uscalar_t width4 = width & -4;
 	__m128i vecInPtr, vec0, vec1, vec2, vec3, vecSum0, vecSum1, vecSum2, vecSum3, vecCoeff;
 	const __m128i vecZero = _mm_setzero_si128();
 	COMPV_ALIGN_SSE() int16_t mem[8*2];
