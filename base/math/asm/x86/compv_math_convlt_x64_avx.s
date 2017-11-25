@@ -53,7 +53,6 @@ sym(CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X64_AVX2):
 	%define vecSum0				ymm1
 	%define vecSum1				ymm2
 	%define vecCoeff			ymm3
-	%define vecCoeffn			xmm3
 	%define vec0				ymm4
 	%define vec1				ymm5
 
@@ -113,10 +112,9 @@ sym(CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X64_AVX2):
 			xor row, row
 			.LoopKernel:
 				vmovdqu vec1, [inPtrPlusI]
-				vmovd vecCoeffn, dword [vthzKernPtr + row*COMPV_YASM_UINT16_SZ_BYTES]
+				vpbroadcastw vecCoeff, word [vthzKernPtr + row*COMPV_YASM_UINT16_SZ_BYTES]
 				add inPtrPlusI, step
 				inc row
-				vpbroadcastw vecCoeff, vecCoeffn
 				vpunpcklbw vec0, vec1, vecZero
 				vpmulhuw vec0, vec0, vecCoeff
 				vpunpckhbw vec1, vec1, vecZero
@@ -167,7 +165,6 @@ sym(CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X64_AVX2):
 	%undef vecSum0
 	%undef vecSum1
 	%undef vecCoeff
-	%undef vecCoeffn
 	%undef vec0
 	%undef vec1
 
@@ -238,11 +235,21 @@ sym(CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X64_AVX2):
 	push r15
 	;; end prolog ;;
 
-	%define vecZero				ymm8
-	%define vecSum0				ymm9
-	%define vecSum1				ymm5
-	%define vecSum2				ymm6
-	%define vecSum3				ymm7
+	; align stack and alloc memory
+	COMPV_YASM_ALIGN_STACK 32, rax
+	sub rsp, (32*COMPV_YASM_UINT8_SZ_BYTES)
+
+	%define vecZero				ymm0
+	%define vecSum0				ymm1
+	%define vecSum1				ymm2
+	%define vecSum2				ymm3
+	%define vecSum3				ymm4
+	%define vecCoeff			ymm5
+	%define vec0				ymm6
+	%define vec1				ymm7
+	%define vec2				ymm8
+	%define vec3				ymm9
+
 	vpxor vecZero, vecZero
 
 	%define argi_inPtr			0
@@ -254,26 +261,31 @@ sym(CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X64_AVX2):
 	%define argi_vthzKernPtr	6
 	%define argi_kernSize		7	
 
+	%define mem				rsp + 0
 	%define width			rbx
 	%define step			rcx
+	%define row				rdx
 	%define j				rsi
 	%define i				rdi
+	%define	k				rax
 	%define inPtr			r8
 	%define outPtr			r9
-	%define stride			r10
-	%define widthMinus31	r11
-	%define widthMinus7		r12
-	%define octet			r13
-	%define kernSize		r14
+	%define vthzKernPtr		r10
+	%define stride			r11
+	%define width32			r12
+	%define inPtrPlusI		r13
+	%define octet			r14b
+	%define kernSize		r15
 	mov width, arg(argi_width)
 	mov step, arg(argi_step)
 	mov j, arg(argi_height)
 	mov inPtr, arg(argi_inPtr)
 	mov outPtr, arg(argi_outPtr)
+	mov vthzKernPtr, arg(argi_vthzKernPtr)
 	mov stride, arg(argi_pad)
 	lea stride, [width + stride] ; stride = width + pad
-	lea widthMinus31, [width - 31]
-	lea widthMinus7, [width - 7]
+	mov width32, width
+	and width32, -32
 	mov kernSize, arg(argi_kernSize)
 
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -281,159 +293,98 @@ sym(CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X64_AVX2):
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	.LoopHeight:
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-		; for (i = 0; i < width - 31; i += 32)
+		; for (i = 0; i < width; i += 32)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		xor i, i
-		.LoopWidth_Per32Samples:
+		.LoopWidth:
 			vxorps vecSum0, vecSum0
 			vxorps vecSum1, vecSum1
-			vxorps vecSum2, vecSum2 
+			vxorps vecSum2, vecSum2
 			vxorps vecSum3, vecSum3
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			; for (row = 0, k = 0; row < kernSize; ++row, k += step)
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-			lea rax, [inPtr + i] ; rax = &inPtr[i]
-			mov r15, arg(argi_vthzKernPtr)
-			mov rdx, kernSize
-			.LoopKernelSize_Per32Samples:
-				vmovups ymm0, [rax] ; ymm0 = vecInPtr
-				vmovss xmm4, [r15]
-				dec rdx
-				lea rax, [rax + step]
-				lea r15, [r15 + COMPV_YASM_FLOAT32_SZ_BYTES]
-				vpunpcklbw ymm1, ymm0, vecZero
-				vpunpckhbw ymm3, ymm0, vecZero
-				vpunpcklwd ymm0, ymm1, vecZero
-				vpunpckhwd ymm1, ymm1, vecZero
-				vpunpcklwd ymm2, ymm3, vecZero
-				vpunpckhwd ymm3, ymm3, vecZero
-				vcvtdq2ps ymm0, ymm0
-				vcvtdq2ps ymm1, ymm1
-				vcvtdq2ps ymm2, ymm2
-				vcvtdq2ps ymm3, ymm3
-				vbroadcastss ymm4, xmm4 ; ymm4 = vecCoeff				
-				%if %1
-					vfmadd231ps vecSum0, ymm0, ymm4
-					vfmadd231ps vecSum1, ymm1, ymm4
-					vfmadd231ps vecSum2, ymm2, ymm4
-					vfmadd231ps vecSum3, ymm3, ymm4
-				%else
-					vmulps ymm0, ymm0, ymm4
-					vmulps ymm1, ymm1, ymm4
-					vmulps ymm2, ymm2, ymm4
-					vmulps ymm3, ymm3, ymm4
-					vaddps vecSum0, vecSum0, ymm0
-					vaddps vecSum1, vecSum1, ymm1
-					vaddps vecSum2, vecSum2, ymm2
-					vaddps vecSum3, vecSum3, ymm3
-				%endif
-				jnz .LoopKernelSize_Per32Samples
-				; EndOf_LoopKernelSize_Per32Samples ;
-			
+			lea inPtrPlusI, [inPtr + i*COMPV_YASM_UINT8_SZ_BYTES]
+			xor row, row
+			.LoopKernel:
+				vmovdqu vec3, [inPtrPlusI]
+				vbroadcastss vecCoeff, dword ptr [vthzKernPtr + row*COMPV_YASM_FLOAT32_SZ_BYTES]
+				vpunpcklbw vec1, vec3, vecZero
+				vpunpckhbw vec3, vec3, vecZero
+				vpunpcklwd vec0, vec1, vecZero
+				vpunpckhwd vec1, vec1, vecZero
+				vcvtdq2ps vec0, vec0
+				vcvtdq2ps vec1, vec1
+				vpunpcklwd vec2, vec3, vecZero
+				vpunpckhwd vec3, vec3, vecZero
+				vcvtdq2ps vec2, vec2
+				vcvtdq2ps vec3, vec3
+				vmulps vec0, vecCoeff
+				vmulps vec1, vecCoeff
+				vmulps vec2, vecCoeff
+				vmulps vec3, vecCoeff
+				add inPtrPlusI, step
+				inc row
+				cmp row, kernSize
+				vaddps vecSum0, vec0
+				vaddps vecSum1, vec1
+				vaddps vecSum2, vec2
+				vaddps vecSum3, vec3
+				jl .LoopKernel
+			.EndOf_LoopKernel:
+
 			vcvttps2dq vecSum0, vecSum0
 			vcvttps2dq vecSum1, vecSum1
 			vcvttps2dq vecSum2, vecSum2
 			vcvttps2dq vecSum3, vecSum3
+			cmp i, width32
 			vpackssdw vecSum0, vecSum1
 			vpackssdw vecSum2, vecSum3
 			vpackuswb vecSum0, vecSum2
-			vmovdqu [outPtr + i], vecSum0
-			lea i, [i + 32]
-			cmp i, widthMinus31
-			jl .LoopWidth_Per32Samples
-			; EndOf_LoopWidth_Per32Samples ;
+			jge .MoreThanWidth32
+				
+			;; if (i < width32) ;;
+			.LessThanWidth32:
+				vmovdqu [outPtr + i*COMPV_YASM_UINT8_SZ_BYTES], vecSum0
+				jmp .EndOf_MoreThanWidth32
+			.EndOf_LessThanWidth32:
 
-		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-		; for (; i < width - 7; i += 8)
-		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-		cmp i, widthMinus7
-		jge .EndOf_LoopWidth_Per8Samples
-		.LoopWidth_Per8Samples:
-			vxorps ymm0, ymm0
-			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-			; for (row = 0, k = 0; row < kernSize; ++row, k += step)
-			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-			lea rax, [inPtr + i] ; rax = &inPtr[i]
-			mov r15, arg(argi_vthzKernPtr)
-			mov rdx, kernSize
-			.LoopKernelSize_Per8Samples:
-				vmovups xmm2, [rax] ; ymm2 = vecInPtr
-				vmovss xmm3, [r15]
-				lea rax, [rax + step]
-				dec rdx
-				vpmovzxbd ymm2, xmm2 ; ymm2 = vecInPtr
-				vcvtdq2ps ymm2, ymm2
-				vbroadcastss ymm3, xmm3
-				lea r15, [r15 + COMPV_YASM_FLOAT32_SZ_BYTES]
-				%if %1
-					vfmadd231ps ymm0, ymm2, ymm3
-				%else
-					vmulps ymm2, ymm3
-					vaddps ymm0, ymm2
-				%endif
-				jnz .LoopKernelSize_Per8Samples
-				; EndOf_LoopKernelSize_Per8Samples ;
+			;; if (i >= width32) ;;
+			.MoreThanWidth32:
+				vmovdqa [mem], vecSum0
+				;; for (k = 0; i < width; ++i, ++k) ;;
+				xor k, k
+				.LoopMoreThanWidth32:
+					mov octet, byte [mem + k*COMPV_YASM_UINT8_SZ_BYTES]
+					inc k
+					mov [outPtr + i*COMPV_YASM_UINT8_SZ_BYTES], byte octet
+					inc i
+					cmp i, width
+					jl .LoopMoreThanWidth32
+				.EndOf_LoopMoreThanWidth32:
+			.EndOf_MoreThanWidth32:
 			
-			vcvttps2dq ymm0, ymm0
-			lea i, [i + 8]
-			vpackssdw ymm0, ymm0
-			vpermq ymm0, ymm0, 0xD8
-			cmp i, widthMinus7
-			vpackuswb ymm0, ymm0
-			vmovq [outPtr + i - 8], xmm0
-			jl .LoopWidth_Per8Samples
-			.EndOf_LoopWidth_Per8Samples
-			; EndOf_LoopWidth_Per8Samples ;
-
-		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-		; for (; i < width; i += 1)
-		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-		cmp i, width
-		jge .EndOf_LoopWidth_Per1Samples
-		.LoopWidth_Per1Samples:
-			vxorps xmm0, xmm0
-			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-			; for (row = 0, k = 0; row < kernSize; ++row, k += step)
-			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-			lea rax, [inPtr + i] ; rax = &inPtr[i]
-			mov r15, arg(argi_vthzKernPtr)
-			mov rdx, kernSize
-			.LoopKernelSize_Per1Samples:
-				movzx octet, byte [rax]
-				vmovss xmm3, [r15] ; ymm3 = vecCoeff
-				dec rdx
-				vcvtsi2ss xmm2, octet
-				lea r15, [r15 + COMPV_YASM_FLOAT32_SZ_BYTES]
-				%if %1
-					lea rax, [rax + step]
-					vfmadd231ss xmm0, xmm2, xmm3
-				%else
-					vmulss xmm2, xmm3
-					lea rax, [rax + step]
-					vaddss xmm0, xmm2
-				%endif
-				jnz .LoopKernelSize_Per1Samples
-				; EndOf_LoopKernelSize_Per1Samples ;
-
-			inc i
-			vcvttss2si rax, xmm0
+			add i, 32
 			cmp i, width
-			mov [outPtr + i - 1], byte al
-			jl .LoopWidth_Per1Samples
-			.EndOf_LoopWidth_Per1Samples
-			; EndOf_LoopWidth_Per1Samples ;
+			jl .LoopWidth
+		.EndOf_LoopWidth:
 		
 		dec j
 		lea inPtr, [inPtr + stride]
 		lea outPtr, [outPtr + stride]
 		jnz .LoopHeight
-		; EndOf_LoopHeight ;
+	.EndOf_LoopHeight:
 
-	%undef vecZero
-	%undef vecSum0
-	%undef vecSum1
-	%undef vecSum2
-	%undef vecSum3
+	%undef vecZero				
+	%undef vecSum0				
+	%undef vecSum1				
+	%undef vecSum2				
+	%undef vecSum3				
+	%undef vecCoeff
+	%undef vec0				
+	%undef vec1				
+	%undef vec2				
+	%undef vec3				
 
 	%undef argi_inPtr
 	%undef argi_outPtr
@@ -444,16 +395,24 @@ sym(CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X64_AVX2):
 	%undef argi_vthzKernPtr
 	%undef argi_kernSize
 
+	%undef mem
 	%undef width
 	%undef step
+	%undef row
 	%undef j
 	%undef i
+	%undef k
 	%undef inPtr
 	%undef outPtr
-	%undef widthMinus31
-	%undef widthMinus7
+	%undef vthzKernPtr
+	%undef width32
+	%undef inPtrPlusI
 	%undef octet
 	%undef kernSize
+
+	; free memory and unalign stack
+	add rsp, (32*COMPV_YASM_UINT8_SZ_BYTES)
+	COMPV_YASM_UNALIGN_STACK
 
 	;; begin epilog ;;
 	pop r15
