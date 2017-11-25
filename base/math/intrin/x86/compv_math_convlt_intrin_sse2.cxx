@@ -12,7 +12,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-// TODO(dmi): ASM code is faster
+// TODO(dmi): ASM code is faster (Visual Studio 2015)
 void CompVMathConvlt1VtHzFixedPoint_8u16u8u_Intrin_SSE2(const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const uint16_t* vthzKernPtr, compv_uscalar_t kernSize)
 {
 	compv_uscalar_t i, j, k, row;

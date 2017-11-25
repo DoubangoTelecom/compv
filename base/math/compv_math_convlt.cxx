@@ -70,7 +70,7 @@ COMPV_ERROR_CODE CompVMathConvlt::convlt1VtHz_private_fxp_true(const uint8_t* in
 	}
 	if (CompVCpu::isEnabled(kCpuFlagAVX2) && width >= 32) {
 		COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathConvlt1VtHzFixedPoint_8u16u8u = CompVMathConvlt1VtHzFixedPoint_8u16u8u_Intrin_AVX2);
-		//COMPV_EXEC_IFDEF_ASM_X64(CompVMathConvlt1VtHzFixedPoint_8u16u8u = CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X64_AVX2);
+		COMPV_EXEC_IFDEF_ASM_X64(CompVMathConvlt1VtHzFixedPoint_8u16u8u = CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X64_AVX2);
 	}
 #elif COMPV_ARCH_ARM
 	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && width >= 16) {

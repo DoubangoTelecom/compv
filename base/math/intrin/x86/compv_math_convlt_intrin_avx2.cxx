@@ -14,6 +14,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+// TODO(dmi): ASM code is faster (Visual Studio 2015)
 #if defined(__INTEL_COMPILER)
 #	pragma intel optimization_parameter target_arch=avx2
 #endif
