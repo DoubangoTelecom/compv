@@ -265,6 +265,7 @@ void CompVMathConvlt1VtHz_32f32f8u_Intrin_AVX2(const compv_float32_t* inPtr, uin
 	const compv_uscalar_t width32 = width & -32;
 	__m256 vecCoeff, vec0f, vec1f, vec2f, vec3f, vecSum0, vecSum1, vecSum2, vecSum3;
 	const __m256i vecZero = _mm256_setzero_si256();
+	const __m256i vecAEBFCGDH = _mm256_load_si256(reinterpret_cast<const __m256i*>(kAVXPermutevar8x32_AEBFCGDH_i32));
 	COMPV_ALIGN_AVX() uint8_t mem[32];
 
 	for (j = 0; j < height; ++j) {
@@ -295,6 +296,7 @@ void CompVMathConvlt1VtHz_32f32f8u_Intrin_AVX2(const compv_float32_t* inPtr, uin
 			vecSum0 = _mm256_castsi256_ps(_mm256_packs_epi32(_mm256_castps_si256(vecSum0), _mm256_castps_si256(vecSum1)));
 			vecSum2 = _mm256_castsi256_ps(_mm256_packs_epi32(_mm256_castps_si256(vecSum2), _mm256_castps_si256(vecSum3)));
 			vecSum0 = _mm256_castsi256_ps(_mm256_packus_epi16(_mm256_castps_si256(vecSum0), _mm256_castps_si256(vecSum2)));
+			vecSum0 = _mm256_castsi256_ps(_mm256_permutevar8x32_epi32(_mm256_castps_si256(vecSum0), vecAEBFCGDH));
 			if (i < width32) {
 				_mm256_storeu_si256(reinterpret_cast<__m256i*>(&outPtr[i]), _mm256_castps_si256(vecSum0));
 			}
