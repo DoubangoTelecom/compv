@@ -12,6 +12,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+// TODO(dmi): ASM code is faster
 void CompVMathConvlt1VtHzFixedPoint_8u16u8u_Intrin_SSE2(const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const uint16_t* vthzKernPtr, compv_uscalar_t kernSize)
 {
 	compv_uscalar_t i, j, k, row;
@@ -33,12 +34,12 @@ void CompVMathConvlt1VtHzFixedPoint_8u16u8u_Intrin_SSE2(const uint8_t* inPtr, ui
 				vecSum0 = _mm_adds_epu16(vecSum0, _mm_mulhi_epu16(vec0, vecCoeff));
 				vecSum1 = _mm_adds_epu16(vecSum1, _mm_mulhi_epu16(vec1, vecCoeff));
 			}
-			vec0 = _mm_packus_epi16(vecSum0, vecSum1);
+			vecSum0 = _mm_packus_epi16(vecSum0, vecSum1);
 			if (i < width16) {
-				_mm_storeu_si128(reinterpret_cast<__m128i*>(&outPtr[i]), vec0);
+				_mm_storeu_si128(reinterpret_cast<__m128i*>(&outPtr[i]), vecSum0);
 			}
 			else {
-				_mm_store_si128(reinterpret_cast<__m128i*>(mem), vec0);
+				_mm_store_si128(reinterpret_cast<__m128i*>(mem), vecSum0);
 				for (k = 0; i < width; ++i, ++k) {
 					outPtr[i] = mem[k];
 				}

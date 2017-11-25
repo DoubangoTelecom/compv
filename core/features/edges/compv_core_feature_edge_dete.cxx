@@ -13,7 +13,7 @@
 
 // Sobel implementation not optiz: https://github.com/DoubangoTelecom/compv/issues/127
 
-#define COMPV_FEATURE_DETE_EDGES_GRAD_MIN_SAMPLES_PER_THREAD	3 // must be >= kernelSize because of the convolution ("rowsOverlapCount")
+#define COMPV_FEATURE_DETE_EDGES_GRAD_MIN_SAMPLES_PER_THREAD	(15 * 15)
 
 #define COMPV_THIS_CLASSNAME	"CompVCornerDeteEdgeBase"
 
@@ -90,8 +90,6 @@ COMPV_ERROR_CODE CompVCornerDeteEdgeBase::process(const CompVMatPtr& image, Comp
 
 	// Testing info: for "equirectangular_1282x720_gray" gmax should be equal to 1464
 	uint16_t gmax = 1;
-
-	COMPV_DEBUG_INFO_CODE_TODO("Do not use m_nImageStride as divider, see what is done in thresholding");
 
 	// Get Max number of threads
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
