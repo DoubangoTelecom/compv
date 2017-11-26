@@ -28,7 +28,7 @@ static const struct compv_unittest_convlt {
 };
 static const size_t COMPV_UNITTEST_CONVLT_COUNT = sizeof(COMPV_UNITTEST_CONVLT) / sizeof(COMPV_UNITTEST_CONVLT[0]);
 
-#define TEST_INDEX	1
+#define TEST_INDEX	2
 
 static COMPV_ERROR_CODE buildTest(const compv_unittest_convlt* test, CompVMatPtrPtr data, CompVMatPtrPtr kernel);
 #define convolution(inputType, KernelType, OutputType) { \

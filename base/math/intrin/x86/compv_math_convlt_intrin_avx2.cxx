@@ -59,6 +59,7 @@ void CompVMathConvlt1VtHzFixedPoint_8u16u8u_Intrin_AVX2(const uint8_t* inPtr, ui
 	_mm256_zeroupper();
 }
 
+// TODO(dmi): ASM code is faster (Visual Studio 2015)
 #if defined(__INTEL_COMPILER)
 #	pragma intel optimization_parameter target_arch=avx2
 #endif
