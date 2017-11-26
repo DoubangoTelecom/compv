@@ -2,7 +2,7 @@
 
 #define TAG_TEST								"TestImageConvlt"
 
-#define LOOP_COUNT				1000
+#define LOOP_COUNT				1
 
 static const struct compv_unittest_convlt {
 	const bool fixedPoint;

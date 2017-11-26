@@ -281,6 +281,7 @@ void CompVMathConvlt1VtHz_32f32f8u_Intrin_SSE2(const compv_float32_t* inPtr, uin
 	}
 }
 
+// TODO(dmi): ASM code which is SSE41 is 3 times faster
 void CompVMathConvlt1VtHz_8u16s16s_Intrin_SSE2(const uint8_t* inPtr, int16_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const int16_t* vthzKernPtr, compv_uscalar_t kernSize)
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
@@ -290,6 +291,8 @@ void CompVMathConvlt1VtHz_8u16s16s_Intrin_SSE2(const uint8_t* inPtr, int16_t* ou
 	__m128i vecInPtr, vec0, vec1, vec2, vec3, vecSum0, vecSum1, vecSum2, vecSum3, vecCoeff;
 	const __m128i vecZero = _mm_setzero_si128();
 	COMPV_ALIGN_SSE() int16_t mem[8*2];
+
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM code which is SSE41 is 3 times faster");
 
 	// Using int32_t as accumulator to avoid overflow
 
@@ -337,6 +340,7 @@ void CompVMathConvlt1VtHz_8u16s16s_Intrin_SSE2(const uint8_t* inPtr, int16_t* ou
 	}
 }
 
+// TODO(dmi): ASM code which is SSE41 is 3 times faster
 void CompVMathConvlt1VtHz_16s16s16s_Intrin_SSE2(const int16_t* inPtr, int16_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const int16_t* vthzKernPtr, compv_uscalar_t kernSize)
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
@@ -345,6 +349,8 @@ void CompVMathConvlt1VtHz_16s16s16s_Intrin_SSE2(const int16_t* inPtr, int16_t* o
 	const compv_uscalar_t width16 = width & -16;
 	__m128i vec0, vec1, vec2, vec3, vecSum0, vecSum1, vecSum2, vecSum3, vecCoeff;
 	COMPV_ALIGN_SSE() int16_t mem[8*2];
+
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM code which is SSE41 is 3 times faster");
 
 	// Using int32_t as accumulator to avoid overflow
 
