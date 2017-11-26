@@ -85,12 +85,12 @@ void CompVMathConvlt1VtHz_8u32f8u_Intrin_AVX2(const uint8_t* inPtr, uint8_t* out
 			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
 				vecInPtr = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&inPtr[i + k]));
 				vecCoeff = _mm256_set1_ps(vthzKernPtr[row]);
-				vec2i = _mm256_unpacklo_epi8(vecInPtr, vecZero); // epi8 -> epi16
-				vec3i = _mm256_unpackhi_epi8(vecInPtr, vecZero); // epi8 -> epi16
-				vec0i = _mm256_unpacklo_epi16(vec2i, vecZero); // epi16 -> epi32
-				vec1i = _mm256_unpackhi_epi16(vec2i, vecZero); // epi16 -> epi32
-				vec2i = _mm256_unpacklo_epi16(vec3i, vecZero); // epi16 -> epi32
-				vec3i = _mm256_unpackhi_epi16(vec3i, vecZero); // epi16 -> epi32
+				vec2i = _mm256_unpacklo_epi8(vecInPtr, vecZero); // epu8 -> epu16
+				vec3i = _mm256_unpackhi_epi8(vecInPtr, vecZero); // epu8 -> epu16
+				vec0i = _mm256_unpacklo_epi16(vec2i, vecZero); // epu16 -> epu32
+				vec1i = _mm256_unpackhi_epi16(vec2i, vecZero); // epu16 -> epu32
+				vec2i = _mm256_unpacklo_epi16(vec3i, vecZero); // epu16 -> epu32
+				vec3i = _mm256_unpackhi_epi16(vec3i, vecZero); // epu16 -> epu32
 				vec0f = _mm256_cvtepi32_ps(vec0i);
 				vec1f = _mm256_cvtepi32_ps(vec1i);
 				vec2f = _mm256_cvtepi32_ps(vec2i);
