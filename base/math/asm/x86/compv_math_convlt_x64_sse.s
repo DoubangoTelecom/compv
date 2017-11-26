@@ -153,6 +153,7 @@ sym(CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X64_SSE2):
 					cmp i, width
 					jl .LoopMoreThanWidth16
 				.EndOf_LoopMoreThanWidth16:
+				jmp .EndOf_LoopWidth
 			.EndOf_MoreThanWidth16:
 			
 			add i, 16
@@ -368,6 +369,7 @@ sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X64_SSE2):
 					cmp i, width
 					jl .LoopMoreThanWidth16
 				.EndOf_LoopMoreThanWidth16:
+				jmp .EndOf_LoopWidth
 			.EndOf_MoreThanWidth16:
 			
 			add i, 16
@@ -589,6 +591,7 @@ sym(CompVMathConvlt1VtHz_8u32f32f_Asm_X64_SSE2):
 					cmp i, width
 					jl .LoopMoreThanWidth16
 				.EndOf_LoopMoreThanWidth16:
+				jmp .EndOf_LoopWidth
 			.EndOf_MoreThanWidth16:
 			
 			add i, 16
@@ -800,6 +803,7 @@ sym(CompVMathConvlt1VtHz_32f32f32f_Asm_X64_SSE2):
 					cmp i, width
 					jl .LoopMoreThanWidth16
 				.EndOf_LoopMoreThanWidth16:
+				jmp .EndOf_LoopWidth
 			.EndOf_MoreThanWidth16:
 			
 			add i, 16

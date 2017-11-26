@@ -155,6 +155,7 @@ sym(CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X64_AVX2):
 					cmp i, width
 					jl .LoopMoreThanWidth32
 				.EndOf_LoopMoreThanWidth32:
+				jmp .EndOf_LoopWidth
 			.EndOf_MoreThanWidth32:
 			
 			add i, 32
@@ -246,7 +247,7 @@ sym(CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X64_AVX2):
 	COMPV_YASM_ALIGN_STACK 32, rax
 	sub rsp, (32*COMPV_YASM_UINT8_SZ_BYTES)
 
-	%define vecZero				ymm0
+	%define vecAEBFCGDH			ymm0
 	%define vecSum0				ymm1
 	%define vecSum1				ymm2
 	%define vecSum2				ymm3
@@ -257,7 +258,7 @@ sym(CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X64_AVX2):
 	%define vec2				ymm8
 	%define vec3				ymm9
 
-	vpxor vecZero, vecZero
+	vmovdqa vecAEBFCGDH, [sym(kAVXPermutevar8x32_AEBFCGDH_i32)]
 
 	%define argi_inPtr			0
 	%define argi_outPtr			1
@@ -313,17 +314,14 @@ sym(CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X64_AVX2):
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			lea inPtrPlusI, [inPtr + i*COMPV_YASM_UINT8_SZ_BYTES]
 			xor row, row
-			.LoopKernel:
-				vmovdqu vec3, [inPtrPlusI]
-				vbroadcastss vecCoeff, dword ptr [vthzKernPtr + row*COMPV_YASM_FLOAT32_SZ_BYTES]
-				vpunpcklbw vec1, vec3, vecZero
-				vpunpckhbw vec3, vec3, vecZero
-				vpunpcklwd vec0, vec1, vecZero
-				vpunpckhwd vec1, vec1, vecZero
+			.LoopKernel:		
+				vpmovzxbd vec0, [inPtrPlusI + 0*COMPV_YASM_UINT8_SZ_BYTES]
+				vpmovzxbd vec1, [inPtrPlusI + 8*COMPV_YASM_UINT8_SZ_BYTES]
+				vpmovzxbd vec2, [inPtrPlusI + 16*COMPV_YASM_UINT8_SZ_BYTES]
+				vpmovzxbd vec3, [inPtrPlusI + 24*COMPV_YASM_UINT8_SZ_BYTES]
+				vbroadcastss vecCoeff, dword ptr [vthzKernPtr + row*COMPV_YASM_FLOAT32_SZ_BYTES]				
 				vcvtdq2ps vec0, vec0
 				vcvtdq2ps vec1, vec1
-				vpunpcklwd vec2, vec3, vecZero
-				vpunpckhwd vec3, vec3, vecZero
 				vcvtdq2ps vec2, vec2
 				vcvtdq2ps vec3, vec3
 				%if %1 == 1
@@ -358,6 +356,7 @@ sym(CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X64_AVX2):
 			vpackssdw vecSum0, vecSum1
 			vpackssdw vecSum2, vecSum3
 			vpackuswb vecSum0, vecSum2
+			vpermd vecSum0, vecAEBFCGDH, vecSum0
 			jge .MoreThanWidth32
 				
 			;; if (i < width32) ;;
@@ -379,6 +378,7 @@ sym(CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X64_AVX2):
 					cmp i, width
 					jl .LoopMoreThanWidth32
 				.EndOf_LoopMoreThanWidth32:
+				jmp .EndOf_LoopWidth
 			.EndOf_MoreThanWidth32:
 			
 			add i, 32
@@ -392,7 +392,7 @@ sym(CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X64_AVX2):
 		jnz .LoopHeight
 	.EndOf_LoopHeight:
 
-	%undef vecZero				
+	%undef vecAEBFCGDH				
 	%undef vecSum0				
 	%undef vecSum1				
 	%undef vecSum2				
@@ -471,7 +471,7 @@ sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X64_FMA3_AVX2):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 8
-	COMPV_YASM_SAVE_YMM 9
+	COMPV_YASM_SAVE_YMM 8
 	push rsi
 	push rdi
 	push rbx
@@ -485,18 +485,15 @@ sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X64_FMA3_AVX2):
 	COMPV_YASM_ALIGN_STACK 32, rax
 	sub rsp, (32*COMPV_YASM_FLOAT32_SZ_BYTES)
 
-	%define vecZero				ymm0
-	%define vecSum0				ymm1
-	%define vecSum1				ymm2
-	%define vecSum2				ymm3
-	%define vecSum3				ymm4
-	%define vecCoeff			ymm5
-	%define vec0				ymm6
-	%define vec1				ymm7
-	%define vec2				ymm8
-	%define vec3				ymm9
-
-	vpxor vecZero, vecZero
+	%define vecSum0				ymm0
+	%define vecSum1				ymm1
+	%define vecSum2				ymm2
+	%define vecSum3				ymm3
+	%define vecCoeff			ymm4
+	%define vec0				ymm5
+	%define vec1				ymm6
+	%define vec2				ymm7
+	%define vec3				ymm8
 
 	%define argi_inPtr			0
 	%define argi_outPtr			1
@@ -553,16 +550,13 @@ sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X64_FMA3_AVX2):
 			lea inPtrPlusI, [inPtr + i*COMPV_YASM_UINT8_SZ_BYTES]
 			xor row, row
 			.LoopKernel:
-				vmovdqu vec3, [inPtrPlusI]
+				vpmovzxbd vec0, [inPtrPlusI + 0*COMPV_YASM_UINT8_SZ_BYTES]
+				vpmovzxbd vec1, [inPtrPlusI + 8*COMPV_YASM_UINT8_SZ_BYTES]
+				vpmovzxbd vec2, [inPtrPlusI + 16*COMPV_YASM_UINT8_SZ_BYTES]
+				vpmovzxbd vec3, [inPtrPlusI + 24*COMPV_YASM_UINT8_SZ_BYTES]
 				vbroadcastss vecCoeff, dword ptr [vthzKernPtr + row*COMPV_YASM_FLOAT32_SZ_BYTES]
-				vpunpcklbw vec1, vec3, vecZero
-				vpunpckhbw vec3, vec3, vecZero
-				vpunpcklwd vec0, vec1, vecZero
-				vpunpckhwd vec1, vec1, vecZero
 				vcvtdq2ps vec0, vec0
 				vcvtdq2ps vec1, vec1
-				vpunpcklwd vec2, vec3, vecZero
-				vpunpckhwd vec3, vec3, vecZero
 				vcvtdq2ps vec2, vec2
 				vcvtdq2ps vec3, vec3
 				%if %1 == 1
@@ -590,27 +584,23 @@ sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X64_FMA3_AVX2):
 			.EndOf_LoopKernel:
 
 			cmp i, width32
-			vperm2f128 vec0, vecSum0, vecSum1, 0x20
-			vperm2f128 vec1, vecSum2, vecSum3, 0x20
-			vperm2f128 vec2, vecSum0, vecSum1, 0x31
-			vperm2f128 vec3, vecSum2, vecSum3, 0x31
 			jge .MoreThanWidth32
 				
 			;; if (i < width32) ;;
 			.LessThanWidth32:
-				vmovups xmmword ptr [outPtr + (i+0)*COMPV_YASM_FLOAT32_SZ_BYTES], vec0
-				vmovups xmmword ptr [outPtr + (i+8)*COMPV_YASM_FLOAT32_SZ_BYTES], vec1
-				vmovups xmmword ptr [outPtr + (i+16)*COMPV_YASM_FLOAT32_SZ_BYTES], vec2
-				vmovups xmmword ptr [outPtr + (i+24)*COMPV_YASM_FLOAT32_SZ_BYTES], vec3
+				vmovups xmmword ptr [outPtr + (i+0)*COMPV_YASM_FLOAT32_SZ_BYTES], vecSum0
+				vmovups xmmword ptr [outPtr + (i+8)*COMPV_YASM_FLOAT32_SZ_BYTES], vecSum1
+				vmovups xmmword ptr [outPtr + (i+16)*COMPV_YASM_FLOAT32_SZ_BYTES], vecSum2
+				vmovups xmmword ptr [outPtr + (i+24)*COMPV_YASM_FLOAT32_SZ_BYTES], vecSum3
 				jmp .EndOf_MoreThanWidth32
 			.EndOf_LessThanWidth32:
 
 			;; if (i >= width32) ;;
 			.MoreThanWidth32:
-				vmovaps xmmword ptr [mem + (0)*COMPV_YASM_FLOAT32_SZ_BYTES], vec0
-				vmovaps xmmword ptr [mem + (8)*COMPV_YASM_FLOAT32_SZ_BYTES], vec1
-				vmovaps xmmword ptr [mem + (16)*COMPV_YASM_FLOAT32_SZ_BYTES], vec2
-				vmovaps xmmword ptr [mem + (24)*COMPV_YASM_FLOAT32_SZ_BYTES], vec3
+				vmovaps xmmword ptr [mem + (0)*COMPV_YASM_FLOAT32_SZ_BYTES], vecSum0
+				vmovaps xmmword ptr [mem + (8)*COMPV_YASM_FLOAT32_SZ_BYTES], vecSum1
+				vmovaps xmmword ptr [mem + (16)*COMPV_YASM_FLOAT32_SZ_BYTES], vecSum2
+				vmovaps xmmword ptr [mem + (24)*COMPV_YASM_FLOAT32_SZ_BYTES], vecSum3
 				;; for (k = 0; i < width; ++i, ++k) ;;
 				xor k, k
 				.LoopMoreThanWidth32:
@@ -635,7 +625,6 @@ sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X64_FMA3_AVX2):
 		jnz .LoopHeight
 	.EndOf_LoopHeight:
 
-	%undef vecZero				
 	%undef vecSum0				
 	%undef vecSum1				
 	%undef vecSum2				
@@ -1175,7 +1164,7 @@ sym(CompVMathConvlt1VtHz_8u16s16s_Asm_X64_AVX2):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 8
-	COMPV_YASM_SAVE_YMM 9
+	COMPV_YASM_SAVE_YMM 8
 	push rsi
 	push rdi
 	push rbx
@@ -1189,19 +1178,16 @@ sym(CompVMathConvlt1VtHz_8u16s16s_Asm_X64_AVX2):
 	COMPV_YASM_ALIGN_STACK 32, rax
 	sub rsp, (32*COMPV_YASM_INT16_SZ_BYTES)
 
-	%define vecZero				ymm0
-	%define vecSum0				ymm1
-	%define vecSum1				ymm2
-	%define vecSum2				ymm3
-	%define vecSum3				ymm4
-	%define vecCoeff			ymm5
-	%define vecCoeffn			xmm5
-	%define vec0				ymm6
-	%define vec1				ymm7
-	%define vec2				ymm8
-	%define vec3				ymm9
-
-	vpxor vecZero, vecZero
+	%define vecSum0				ymm0
+	%define vecSum1				ymm1
+	%define vecSum2				ymm2
+	%define vecSum3				ymm3
+	%define vecCoeff			ymm4
+	%define vecCoeffn			xmm4
+	%define vec0				ymm5
+	%define vec1				ymm6
+	%define vec2				ymm7
+	%define vec3				ymm8
 
 	%define argi_inPtr			0
 	%define argi_outPtr			1
@@ -1260,22 +1246,19 @@ sym(CompVMathConvlt1VtHz_8u16s16s_Asm_X64_AVX2):
 			lea inPtrPlusI, [inPtr + i*COMPV_YASM_UINT8_SZ_BYTES]
 			xor row, row
 			.LoopKernel:
-				vmovdqu vec3, [inPtrPlusI]
 				movsx int16d, word [vthzKernPtr + row*COMPV_YASM_INT16_SZ_BYTES]
-				lea inPtrPlusI, [inPtrPlusI + step*COMPV_YASM_UINT8_SZ_BYTES]
 				vmovd vecCoeffn, int16d
 				inc row
 				vpbroadcastd vecCoeff, vecCoeffn
-				vpunpcklbw vec1, vec3, vecZero
-				vpunpckhbw vec3, vec3, vecZero
-				vpunpcklwd vec0, vec1, vecZero
+				vpmovzxbd vec0, [inPtrPlusI + 0*COMPV_YASM_UINT8_SZ_BYTES]
+				vpmovzxbd vec1, [inPtrPlusI + 8*COMPV_YASM_UINT8_SZ_BYTES]
 				vpmulld vec0, vec0, vecCoeff
-				vpunpckhwd vec1, vec1, vecZero
 				vpmulld vec1, vec1, vecCoeff
-				vpunpcklwd vec2, vec3, vecZero
+				vpmovzxbd vec2, [inPtrPlusI + 16*COMPV_YASM_UINT8_SZ_BYTES]
+				vpmovzxbd vec3, [inPtrPlusI + 24*COMPV_YASM_UINT8_SZ_BYTES]
 				vpmulld vec2, vec2, vecCoeff
-				vpunpckhwd vec3, vec3, vecZero
-				vpmulld vec3, vec3, vecCoeff				
+				vpmulld vec3, vec3, vecCoeff
+				lea inPtrPlusI, [inPtrPlusI + step*COMPV_YASM_UINT8_SZ_BYTES]		
 				cmp row, kernSize
 				vpaddd vecSum0, vecSum0, vec0
 				vpaddd vecSum1, vecSum1, vec1
@@ -1287,21 +1270,21 @@ sym(CompVMathConvlt1VtHz_8u16s16s_Asm_X64_AVX2):
 			vpackssdw vecSum0, vecSum1
 			vpackssdw vecSum2, vecSum3
 			cmp i, width32
-			vperm2i128 vec0, vecSum0, vecSum2, 0x20
-			vperm2i128 vec1, vecSum0, vecSum2, 0x31
+			vpermq vecSum0, vecSum0, 0xD8
+			vpermq vecSum2, vecSum2, 0xD8
 			jge .MoreThanWidth32
 				
 			;; if (i < width32) ;;
 			.LessThanWidth32:
-				vmovdqu [outPtr + (i+0)*COMPV_YASM_INT16_SZ_BYTES], vec0
-				vmovdqu [outPtr + (i+16)*COMPV_YASM_INT16_SZ_BYTES], vec1
+				vmovdqu [outPtr + (i+0)*COMPV_YASM_INT16_SZ_BYTES], vecSum0
+				vmovdqu [outPtr + (i+16)*COMPV_YASM_INT16_SZ_BYTES], vecSum2
 				jmp .EndOf_MoreThanWidth32
 			.EndOf_LessThanWidth32:
 
 			;; if (i >= width32) ;;
 			.MoreThanWidth32:
-				vmovdqa [mem + (0)*COMPV_YASM_INT16_SZ_BYTES], vec0
-				vmovdqa [mem + (16)*COMPV_YASM_INT16_SZ_BYTES], vec1
+				vmovdqa [mem + (0)*COMPV_YASM_INT16_SZ_BYTES], vecSum0
+				vmovdqa [mem + (16)*COMPV_YASM_INT16_SZ_BYTES], vecSum2
 				;; for (k = 0; i < width; ++i, ++k) ;;
 				xor k, k
 				.LoopMoreThanWidth32:
@@ -1326,7 +1309,6 @@ sym(CompVMathConvlt1VtHz_8u16s16s_Asm_X64_AVX2):
 		jnz .LoopHeight
 	.EndOf_LoopHeight:
 
-	%undef vecZero
 	%undef vecSum0
 	%undef vecSum1
 	%undef vecSum2
