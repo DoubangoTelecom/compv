@@ -84,7 +84,7 @@ sym(CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X64_AVX2):
 	%define stride			r11
 	%define width32			r12
 	%define inPtrPlusI		r13
-	%define octet			r14b
+	%define uint8			r14b
 	%define kernSize		r15
 	mov width, arg(argi_width)
 	mov step, arg(argi_step)
@@ -145,9 +145,9 @@ sym(CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X64_AVX2):
 				;; for (k = 0; i < width; ++i, ++k) ;;
 				xor k, k
 				.LoopMoreThanWidth32:
-					mov octet, byte [mem + k*COMPV_YASM_UINT8_SZ_BYTES]
+					mov uint8, byte [mem + k*COMPV_YASM_UINT8_SZ_BYTES]
 					inc k
-					mov [outPtr + i*COMPV_YASM_UINT8_SZ_BYTES], byte octet
+					mov [outPtr + i*COMPV_YASM_UINT8_SZ_BYTES], byte uint8
 					inc i
 					cmp i, width
 					jl .LoopMoreThanWidth32
@@ -193,7 +193,7 @@ sym(CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X64_AVX2):
 	%undef vthzKernPtr
 	%undef width32
 	%undef inPtrPlusI
-	%undef octet
+	%undef uint8
 	%undef kernSize
 
 	; free memory and unalign stack
@@ -278,7 +278,7 @@ sym(CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X64_AVX2):
 	%define stride			r11
 	%define width32			r12
 	%define inPtrPlusI		r13
-	%define octet			r14b
+	%define uint8			r14b
 	%define kernSize		r15
 	mov width, arg(argi_width)
 	mov step, arg(argi_step)
@@ -359,9 +359,9 @@ sym(CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X64_AVX2):
 				;; for (k = 0; i < width; ++i, ++k) ;;
 				xor k, k
 				.LoopMoreThanWidth32:
-					mov octet, byte [mem + k*COMPV_YASM_UINT8_SZ_BYTES]
+					mov uint8, byte [mem + k*COMPV_YASM_UINT8_SZ_BYTES]
 					inc k
-					mov [outPtr + i*COMPV_YASM_UINT8_SZ_BYTES], byte octet
+					mov [outPtr + i*COMPV_YASM_UINT8_SZ_BYTES], byte uint8
 					inc i
 					cmp i, width
 					jl .LoopMoreThanWidth32
@@ -411,7 +411,7 @@ sym(CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X64_AVX2):
 	%undef vthzKernPtr
 	%undef width32
 	%undef inPtrPlusI
-	%undef octet
+	%undef uint8
 	%undef kernSize
 
 	; free memory and unalign stack
@@ -943,7 +943,7 @@ sym(CompVMathConvlt1VtHz_32f32f8u_Asm_X64_AVX2):
 	%define stride			r11
 	%define width32			r12
 	%define inPtrPlusI		r13
-	%define octet			r14b
+	%define uint8			r14b
 	%define kernSize		r15
 	mov width, arg(argi_width)
 	mov step, arg(argi_step)
@@ -1018,9 +1018,9 @@ sym(CompVMathConvlt1VtHz_32f32f8u_Asm_X64_AVX2):
 				;; for (k = 0; i < width; ++i, ++k) ;;
 				xor k, k
 				.LoopMoreThanWidth32:
-					mov octet, byte [mem + k*COMPV_YASM_UINT8_SZ_BYTES]
+					mov uint8, byte [mem + k*COMPV_YASM_UINT8_SZ_BYTES]
 					inc k
-					mov [outPtr + i*COMPV_YASM_UINT8_SZ_BYTES], byte octet
+					mov [outPtr + i*COMPV_YASM_UINT8_SZ_BYTES], byte uint8
 					inc i
 					cmp i, width
 					jl .LoopMoreThanWidth32
@@ -1072,7 +1072,7 @@ sym(CompVMathConvlt1VtHz_32f32f8u_Asm_X64_AVX2):
 	%undef vthzKernPtr
 	%undef width32
 	%undef inPtrPlusI
-	%undef octet
+	%undef uint8
 	%undef kernSize
 
 	; free memory and unalign stack
@@ -1151,7 +1151,7 @@ sym(CompVMathConvlt1VtHz_8u16s16s_Asm_X64_AVX2):
 	%define stride			r10
 	%define widthMinus31	r11
 	%define widthMinus7		r12
-	%define octet			r13
+	%define uint8			r13
 	%define kernSize		r14
 	mov width, arg(argi_width)
 	mov step, arg(argi_step)
@@ -1387,7 +1387,7 @@ sym(CompVMathConvlt1VtHz_8u16s16s_Asm_X64_AVX2):
 	%undef outPtr
 	%undef widthMinus31
 	%undef widthMinus7
-	%undef octet
+	%undef uint8
 	%undef kernSize
 
 	;; begin epilog ;;
@@ -1455,7 +1455,7 @@ sym(CompVMathConvlt1VtHz_16s16s16s_Asm_X64_AVX2):
 	%define stride			r10
 	%define widthMinus31	r11
 	%define widthMinus7		r12
-	%define octet			r13
+	%define uint8			r13
 	%define kernSize		r14
 	mov width, arg(argi_width)
 	mov step, arg(argi_step)
@@ -1676,7 +1676,7 @@ sym(CompVMathConvlt1VtHz_16s16s16s_Asm_X64_AVX2):
 	%undef outPtr
 	%undef widthMinus31
 	%undef widthMinus7
-	%undef octet
+	%undef uint8
 	%undef kernSize
 
 	;; begin epilog ;;
