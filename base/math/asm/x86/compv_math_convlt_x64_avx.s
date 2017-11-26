@@ -1416,27 +1416,23 @@ sym(CompVMathConvlt1VtHz_16s16s16s_Asm_X64_AVX2):
 			lea inPtrPlusI, [inPtr + i*COMPV_YASM_INT16_SZ_BYTES]
 			xor row, row
 			.LoopKernel:
-				vmovdqu vec1, [inPtrPlusI]
-				vmovdqu vec3, [inPtrPlusI + 16*COMPV_YASM_INT16_SZ_BYTES]
+				vpmovsxwd vec0, [inPtrPlusI + 0*COMPV_YASM_INT16_SZ_BYTES]		
+				vpmovsxwd vec1, [inPtrPlusI + 8*COMPV_YASM_INT16_SZ_BYTES]
+				vpmovsxwd vec2, [inPtrPlusI + 16*COMPV_YASM_INT16_SZ_BYTES]
+				vpmovsxwd vec3, [inPtrPlusI + 24*COMPV_YASM_INT16_SZ_BYTES]
 				movsx int16d, word [vthzKernPtr + row*COMPV_YASM_INT16_SZ_BYTES]
 				lea inPtrPlusI, [inPtrPlusI + step*COMPV_YASM_INT16_SZ_BYTES]
 				vmovd vecCoeffn, int16d
 				inc row
 				vpbroadcastd vecCoeff, vecCoeffn
-				vpmovsxwd vec0, vec1n
-				vextractf128 vec1n, vec1, 0x1			
-				vpmovsxwd vec2, vec3n
-				vextractf128 vec3n, vec3, 0x1
-				vpmovsxwd vec1, vec1n
-				vpmovsxwd vec3, vec3n				
 				vpmulld vec0, vec0, vecCoeff
-				vpmulld vec2, vec2, vecCoeff
 				vpmulld vec1, vec1, vecCoeff
+				vpmulld vec2, vec2, vecCoeff
 				vpmulld vec3, vec3, vecCoeff				
 				cmp row, kernSize
 				vpaddd vecSum0, vecSum0, vec0
-				vpaddd vecSum2, vecSum2, vec2
 				vpaddd vecSum1, vecSum1, vec1
+				vpaddd vecSum2, vecSum2, vec2
 				vpaddd vecSum3, vecSum3, vec3
 				jl .LoopKernel
 			.EndOf_LoopKernel:

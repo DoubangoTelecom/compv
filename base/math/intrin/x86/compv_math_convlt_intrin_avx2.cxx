@@ -401,13 +401,11 @@ void CompVMathConvlt1VtHz_16s16s16s_Intrin_AVX2(const int16_t* inPtr, int16_t* o
 			vecSum2 = _mm256_setzero_si256();
 			vecSum3 = _mm256_setzero_si256();
 			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
-				vec2 = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&inPtr[i + k]));
-				vec3 = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&inPtr[i + k + 16]));
 				vecCoeff = _mm256_set1_epi32(static_cast<int>(vthzKernPtr[row]));
-				vec0 = _mm256_cvtepi16_epi32(_mm256_castsi256_si128(vec2)); // epi16 -> epi32
-				vec1 = _mm256_cvtepi16_epi32(_mm256_extractf128_si256(vec2, 0x1)); // epi16 -> epi32
-				vec2 = _mm256_cvtepi16_epi32(_mm256_castsi256_si128(vec3)); // epi16 -> epi32
-				vec3 = _mm256_cvtepi16_epi32(_mm256_extractf128_si256(vec3, 0x1)); // epi16 -> epi32
+				vec0 = _mm256_cvtepi16_epi32(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&inPtr[i + k + 0]))); // epi16 -> epi32
+				vec1 = _mm256_cvtepi16_epi32(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&inPtr[i + k + 8]))); // epi16 -> epi32
+				vec2 = _mm256_cvtepi16_epi32(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&inPtr[i + k + 16]))); // epi16 -> epi32
+				vec3 = _mm256_cvtepi16_epi32(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&inPtr[i + k + 24]))); // epi16 -> epi32
 				vec0 = _mm256_mullo_epi32(vec0, vecCoeff);
 				vec1 = _mm256_mullo_epi32(vec1, vecCoeff);
 				vec2 = _mm256_mullo_epi32(vec2, vecCoeff);
