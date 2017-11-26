@@ -66,6 +66,7 @@ void CompVMathConvlt1VtHzFixedPoint_8u16u8u_Intrin_AVX2(const uint8_t* inPtr, ui
 void CompVMathConvlt1VtHz_8u32f8u_Intrin_AVX2(const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const compv_float32_t* vthzKernPtr, compv_uscalar_t kernSize)
 {
 	COMPV_DEBUG_INFO_CHECK_AVX2(); // AVX/SSE transition issues
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("You should use ASM code which has support for FMA");
 	_mm256_zeroupper();
 	compv_uscalar_t i, j, k, row;
 	const compv_uscalar_t stride = (width + pad);
@@ -133,6 +134,7 @@ void CompVMathConvlt1VtHz_8u32f8u_Intrin_AVX2(const uint8_t* inPtr, uint8_t* out
 void CompVMathConvlt1VtHz_8u32f32f_Intrin_AVX2(const uint8_t* inPtr, compv_float32_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const compv_float32_t* vthzKernPtr, compv_uscalar_t kernSize)
 {
 	COMPV_DEBUG_INFO_CHECK_AVX2();
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("You should use ASM code which has support for FMA");
 	_mm256_zeroupper();
 	compv_uscalar_t i, j, k, row;
 	const compv_uscalar_t stride = (width + pad);
@@ -203,6 +205,7 @@ void CompVMathConvlt1VtHz_8u32f32f_Intrin_AVX2(const uint8_t* inPtr, compv_float
 void CompVMathConvlt1VtHz_32f32f32f_Intrin_AVX2(const compv_float32_t* inPtr, compv_float32_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const compv_float32_t* vthzKernPtr, compv_uscalar_t kernSize)
 {
 	COMPV_DEBUG_INFO_CHECK_AVX2();
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("You should use ASM code which has support for FMA");
 	_mm256_zeroupper();
 	compv_uscalar_t i, j, k, row;
 	const compv_uscalar_t stride = (width + pad);
@@ -261,6 +264,7 @@ void CompVMathConvlt1VtHz_32f32f32f_Intrin_AVX2(const compv_float32_t* inPtr, co
 void CompVMathConvlt1VtHz_32f32f8u_Intrin_AVX2(const compv_float32_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const compv_float32_t* vthzKernPtr, compv_uscalar_t kernSize)
 {
 	COMPV_DEBUG_INFO_CHECK_AVX2();
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("You should use ASM code which has support for FMA");
 	_mm256_zeroupper();
 	compv_uscalar_t i, j, k, row;
 	const compv_uscalar_t stride = (width + pad);

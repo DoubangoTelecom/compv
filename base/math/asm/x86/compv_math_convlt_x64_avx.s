@@ -16,8 +16,11 @@ global sym(CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X64_AVX2)
 global sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X64_AVX2)
 global sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X64_FMA3_AVX2)
 global sym(CompVMathConvlt1VtHz_8u32f32f_Asm_X64_AVX2)
+global sym(CompVMathConvlt1VtHz_8u32f32f_Asm_X64_FMA3_AVX2)
 global sym(CompVMathConvlt1VtHz_32f32f32f_Asm_X64_AVX2)
+global sym(CompVMathConvlt1VtHz_32f32f32f_Asm_X64_FMA3_AVX2)
 global sym(CompVMathConvlt1VtHz_32f32f8u_Asm_X64_AVX2)
+global sym(CompVMathConvlt1VtHz_32f32f8u_Asm_X64_FMA3_AVX2)
 global sym(CompVMathConvlt1VtHz_8u16s16s_Asm_X64_AVX2)
 global sym(CompVMathConvlt1VtHz_16s16s16s_Asm_X64_AVX2)
 
@@ -323,17 +326,27 @@ sym(CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X64_AVX2):
 				vpunpckhwd vec3, vec3, vecZero
 				vcvtdq2ps vec2, vec2
 				vcvtdq2ps vec3, vec3
-				vmulps vec0, vecCoeff
-				vmulps vec1, vecCoeff
-				vmulps vec2, vecCoeff
-				vmulps vec3, vecCoeff
-				lea inPtrPlusI, [inPtrPlusI + step*COMPV_YASM_UINT8_SZ_BYTES]
-				inc row
-				cmp row, kernSize
-				vaddps vecSum0, vec0
-				vaddps vecSum1, vec1
-				vaddps vecSum2, vec2
-				vaddps vecSum3, vec3
+				%if %1 == 1
+					lea inPtrPlusI, [inPtrPlusI + step*COMPV_YASM_UINT8_SZ_BYTES]
+					inc row
+					cmp row, kernSize
+					vfmadd231ps vecSum0, vec0, vecCoeff
+					vfmadd231ps vecSum1, vec1, vecCoeff
+					vfmadd231ps vecSum2, vec2, vecCoeff
+					vfmadd231ps vecSum3, vec3, vecCoeff
+				%else
+					vmulps vec0, vecCoeff
+					vmulps vec1, vecCoeff
+					vmulps vec2, vecCoeff
+					vmulps vec3, vecCoeff
+					lea inPtrPlusI, [inPtrPlusI + step*COMPV_YASM_UINT8_SZ_BYTES]
+					inc row
+					cmp row, kernSize
+					vaddps vecSum0, vec0
+					vaddps vecSum1, vec1
+					vaddps vecSum2, vec2
+					vaddps vecSum3, vec3
+				%endif
 				jl .LoopKernel
 			.EndOf_LoopKernel:
 
@@ -452,7 +465,8 @@ sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X64_FMA3_AVX2):
 ; arg(5) -> compv_uscalar_t pad
 ; arg(6) -> const compv_float32_t* vthzKernPtr
 ; arg(7) -> compv_uscalar_t kernSize
-sym(CompVMathConvlt1VtHz_8u32f32f_Asm_X64_AVX2):
+; %1 -> 1: FMA3 enabled, 0: FMA3 disabled
+%macro CompVMathConvlt1VtHz_8u32f32f_Macro_X64_AVX2 1
 	vzeroupper
 	push rbp
 	mov rbp, rsp
@@ -551,17 +565,27 @@ sym(CompVMathConvlt1VtHz_8u32f32f_Asm_X64_AVX2):
 				vpunpckhwd vec3, vec3, vecZero
 				vcvtdq2ps vec2, vec2
 				vcvtdq2ps vec3, vec3
-				vmulps vec0, vecCoeff
-				vmulps vec1, vecCoeff
-				vmulps vec2, vecCoeff
-				vmulps vec3, vecCoeff
-				lea inPtrPlusI, [inPtrPlusI + step*COMPV_YASM_UINT8_SZ_BYTES]
-				inc row
-				cmp row, kernSize
-				vaddps vecSum0, vec0
-				vaddps vecSum1, vec1
-				vaddps vecSum2, vec2
-				vaddps vecSum3, vec3
+				%if %1 == 1
+					lea inPtrPlusI, [inPtrPlusI + step*COMPV_YASM_UINT8_SZ_BYTES]
+					inc row
+					cmp row, kernSize
+					vfmadd231ps vecSum0, vec0, vecCoeff
+					vfmadd231ps vecSum1, vec1, vecCoeff
+					vfmadd231ps vecSum2, vec2, vecCoeff
+					vfmadd231ps vecSum3, vec3, vecCoeff
+				%else
+					vmulps vec0, vecCoeff
+					vmulps vec1, vecCoeff
+					vmulps vec2, vecCoeff
+					vmulps vec3, vecCoeff
+					lea inPtrPlusI, [inPtrPlusI + step*COMPV_YASM_UINT8_SZ_BYTES]
+					inc row
+					cmp row, kernSize
+					vaddps vecSum0, vec0
+					vaddps vecSum1, vec1
+					vaddps vecSum2, vec2
+					vaddps vecSum3, vec3
+				%endif
 				jl .LoopKernel
 			.EndOf_LoopKernel:
 
@@ -664,6 +688,15 @@ sym(CompVMathConvlt1VtHz_8u32f32f_Asm_X64_AVX2):
 	pop rbp
 	vzeroupper
 	ret
+%endmacro
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(CompVMathConvlt1VtHz_8u32f32f_Asm_X64_AVX2):
+	CompVMathConvlt1VtHz_8u32f32f_Macro_X64_AVX2 0
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(CompVMathConvlt1VtHz_8u32f32f_Asm_X64_FMA3_AVX2):
+	CompVMathConvlt1VtHz_8u32f32f_Macro_X64_AVX2 1
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -675,7 +708,8 @@ sym(CompVMathConvlt1VtHz_8u32f32f_Asm_X64_AVX2):
 ; arg(5) -> compv_uscalar_t pad
 ; arg(6) -> const compv_float32_t* vthzKernPtr
 ; arg(7) -> compv_uscalar_t kernSize
-sym(CompVMathConvlt1VtHz_32f32f32f_Asm_X64_AVX2):
+; %1 -> 1: FMA3 enabled, 0: FMA3 disabled
+%macro CompVMathConvlt1VtHz_32f32f32f_Macro_X64_AVX2 1
 	vzeroupper
 	push rbp
 	mov rbp, rsp
@@ -767,17 +801,27 @@ sym(CompVMathConvlt1VtHz_32f32f32f_Asm_X64_AVX2):
 				vmovups xmmword ptr vec2, [inPtrPlusI + 16*COMPV_YASM_FLOAT32_SZ_BYTES]
 				vmovups xmmword ptr vec3, [inPtrPlusI + 24*COMPV_YASM_FLOAT32_SZ_BYTES]
 				vbroadcastss vecCoeff, dword ptr [vthzKernPtr + row*COMPV_YASM_FLOAT32_SZ_BYTES]
-				vmulps vec0, vecCoeff
-				vmulps vec1, vecCoeff
-				vmulps vec2, vecCoeff
-				vmulps vec3, vecCoeff
-				lea inPtrPlusI, [inPtrPlusI + step*COMPV_YASM_FLOAT32_SZ_BYTES]
-				inc row
-				cmp row, kernSize
-				vaddps vecSum0, vec0
-				vaddps vecSum1, vec1
-				vaddps vecSum2, vec2
-				vaddps vecSum3, vec3
+				%if %1 == 1
+					lea inPtrPlusI, [inPtrPlusI + step*COMPV_YASM_FLOAT32_SZ_BYTES]
+					inc row
+					cmp row, kernSize
+					vfmadd231ps vecSum0, vecCoeff, vec0
+					vfmadd231ps vecSum1, vecCoeff, vec1
+					vfmadd231ps vecSum2, vecCoeff, vec2
+					vfmadd231ps vecSum3, vecCoeff, vec3
+				%else
+					vmulps vec0, vecCoeff, vec0
+					vmulps vec1, vecCoeff, vec0
+					vmulps vec2, vecCoeff, vec0
+					vmulps vec3, vecCoeff, vec0
+					lea inPtrPlusI, [inPtrPlusI + step*COMPV_YASM_FLOAT32_SZ_BYTES]
+					inc row
+					cmp row, kernSize
+					vaddps vecSum0, vecSum0, vec0
+					vaddps vecSum1, vecSum1, vec1
+					vaddps vecSum2, vecSum2, vec2
+					vaddps vecSum3, vecSum3, vec3
+				%endif
 				jl .LoopKernel
 			.EndOf_LoopKernel:
 
@@ -876,6 +920,16 @@ sym(CompVMathConvlt1VtHz_32f32f32f_Asm_X64_AVX2):
 	pop rbp
 	vzeroupper
 	ret
+%endmacro
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(CompVMathConvlt1VtHz_32f32f32f_Asm_X64_AVX2):
+	CompVMathConvlt1VtHz_32f32f32f_Macro_X64_AVX2 0
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(CompVMathConvlt1VtHz_32f32f32f_Asm_X64_FMA3_AVX2):
+	CompVMathConvlt1VtHz_32f32f32f_Macro_X64_AVX2 1
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -887,7 +941,8 @@ sym(CompVMathConvlt1VtHz_32f32f32f_Asm_X64_AVX2):
 ; arg(5) -> compv_uscalar_t pad
 ; arg(6) -> const compv_float32_t* vthzKernPtr
 ; arg(7) -> compv_uscalar_t kernSize
-sym(CompVMathConvlt1VtHz_32f32f8u_Asm_X64_AVX2):
+; %1 -> 1: FMA3 enabled, 0: FMA3 disabled
+%macro CompVMathConvlt1VtHz_32f32f8u_Macro_X64_AVX2 1
 	vzeroupper
 	push rbp
 	mov rbp, rsp
@@ -981,17 +1036,27 @@ sym(CompVMathConvlt1VtHz_32f32f8u_Asm_X64_AVX2):
 				vmovups xmmword ptr vec2, [inPtrPlusI + 16*COMPV_YASM_FLOAT32_SZ_BYTES]
 				vmovups xmmword ptr vec3, [inPtrPlusI + 24*COMPV_YASM_FLOAT32_SZ_BYTES]
 				vbroadcastss vecCoeff, dword ptr [vthzKernPtr + row*COMPV_YASM_FLOAT32_SZ_BYTES]
-				vmulps vec0, vecCoeff
-				vmulps vec1, vecCoeff
-				vmulps vec2, vecCoeff
-				vmulps vec3, vecCoeff
-				lea inPtrPlusI, [inPtrPlusI + step*COMPV_YASM_FLOAT32_SZ_BYTES]
-				inc row
-				cmp row, kernSize
-				vaddps vecSum0, vec0
-				vaddps vecSum1, vec1
-				vaddps vecSum2, vec2
-				vaddps vecSum3, vec3
+				%if %1 == 1
+					lea inPtrPlusI, [inPtrPlusI + step*COMPV_YASM_FLOAT32_SZ_BYTES]
+					inc row
+					cmp row, kernSize
+					vfmadd231ps vecSum0, vec0, vecCoeff
+					vfmadd231ps vecSum1, vec1, vecCoeff
+					vfmadd231ps vecSum2, vec2, vecCoeff
+					vfmadd231ps vecSum3, vec3, vecCoeff
+				%else
+					vmulps vec0, vecCoeff
+					vmulps vec1, vecCoeff
+					vmulps vec2, vecCoeff
+					vmulps vec3, vecCoeff
+					lea inPtrPlusI, [inPtrPlusI + step*COMPV_YASM_FLOAT32_SZ_BYTES]
+					inc row
+					cmp row, kernSize
+					vaddps vecSum0, vec0
+					vaddps vecSum1, vec1
+					vaddps vecSum2, vec2
+					vaddps vecSum3, vec3
+				%endif
 				jl .LoopKernel
 			.EndOf_LoopKernel:
 
@@ -1093,6 +1158,15 @@ sym(CompVMathConvlt1VtHz_32f32f8u_Asm_X64_AVX2):
 	pop rbp
 	vzeroupper
 	ret
+%endmacro
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(CompVMathConvlt1VtHz_32f32f8u_Asm_X64_AVX2):
+	CompVMathConvlt1VtHz_32f32f8u_Macro_X64_AVX2 0
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(CompVMathConvlt1VtHz_32f32f8u_Asm_X64_FMA3_AVX2):
+	CompVMathConvlt1VtHz_32f32f8u_Macro_X64_AVX2 1
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
