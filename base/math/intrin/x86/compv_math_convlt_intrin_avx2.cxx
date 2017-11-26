@@ -25,8 +25,7 @@ void CompVMathConvlt1VtHzFixedPoint_8u16u8u_Intrin_AVX2(const uint8_t* inPtr, ui
 	compv_uscalar_t i, j, k, row;
 	const compv_uscalar_t stride = (width + pad);
 	const compv_uscalar_t width32 = width & -32;
-	__m256i vecInPtr, vec0, vec1, vecSum0, vecSum1, vecCoeff;
-	const __m256i vecZero = _mm256_setzero_si256();
+	__m256i vec0, vec1, vecSum0, vecSum1, vecCoeff;
 	COMPV_ALIGN_AVX() uint8_t mem[32];
 
 	for (j = 0; j < height; ++j) {
@@ -34,10 +33,9 @@ void CompVMathConvlt1VtHzFixedPoint_8u16u8u_Intrin_AVX2(const uint8_t* inPtr, ui
 			vecSum0 = _mm256_setzero_si256();
 			vecSum1 = _mm256_setzero_si256();
 			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
-				vecInPtr = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&inPtr[i + k]));
+				vec0 = _mm256_cvtepu8_epi16(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&inPtr[i + k])));
+				vec1 = _mm256_cvtepu8_epi16(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&inPtr[i + k + 16])));
 				vecCoeff = _mm256_set1_epi16(static_cast<short>(vthzKernPtr[row]));
-				vec0 = _mm256_unpacklo_epi8(vecInPtr, vecZero); // epi8 -> epi16
-				vec1 = _mm256_unpackhi_epi8(vecInPtr, vecZero); // epi8 -> epi16
 				vecSum0 = _mm256_adds_epu16(vecSum0, _mm256_mulhi_epu16(vec0, vecCoeff));
 				vecSum1 = _mm256_adds_epu16(vecSum1, _mm256_mulhi_epu16(vec1, vecCoeff));
 			}

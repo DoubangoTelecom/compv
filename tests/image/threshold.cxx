@@ -19,14 +19,14 @@
 COMPV_ERROR_CODE adaptiveThreshold()
 {
 #define BLOCK_SIZE				5
-#define DELTA					8 // 8 / 21
+#define DELTA					21 // 8 / 21
 #define MAXVAL					255
-#define INVERT					1 // true(1) / false(0)
+#define INVERT					0 // true(1) / false(0)
 
-#define MD5_DELTA8_INVERT1		"71e1624e5da860a752d87deb6d9f7e96"
-#define MD5_DELTA8_INVERT0		"4d8f0e6957567115dc096ac89456e2ae"
-#define MD5_DELTA21_INVERT1		"fcbb0c4431f80d86d25520ce5ddf71ba"
-#define MD5_DELTA21_INVERT0		"e3dab5d57f8db3763ee4a681e7e607f0"
+#define MD5_DELTA8_INVERT1		"cf4c5f88dfdc815bffc436e2f4bdb632"
+#define MD5_DELTA8_INVERT0		"ca916cf195cb2470e25849b35e3cf4cb"
+#define MD5_DELTA21_INVERT1		"0dc190a60f23f68e0d797deafd78e5f5"
+#define MD5_DELTA21_INVERT0		"ed990ecddebb113420d679808ce1810c"
 
 	CompVMatPtr imageIn, imageOut, kernel;
 

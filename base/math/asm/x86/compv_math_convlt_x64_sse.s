@@ -1096,7 +1096,7 @@ sym(CompVMathConvlt1VtHz_8u16s16s_Asm_X64_SSE41):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 8
-	COMPV_YASM_SAVE_XMM 9
+	COMPV_YASM_SAVE_XMM 8
 	push rsi
 	push rdi
 	push rbx
@@ -1110,18 +1110,15 @@ sym(CompVMathConvlt1VtHz_8u16s16s_Asm_X64_SSE41):
 	COMPV_YASM_ALIGN_STACK 16, rax
 	sub rsp, (16*COMPV_YASM_INT16_SZ_BYTES)
 
-	%define vecZero				xmm0
-	%define vecSum0				xmm1
-	%define vecSum1				xmm2
-	%define vecSum2				xmm3
-	%define vecSum3				xmm4
-	%define vecCoeff			xmm5
-	%define vec0				xmm6
-	%define vec1				xmm7
-	%define vec2				xmm8
-	%define vec3				xmm9
-
-	pxor vecZero, vecZero
+	%define vecSum0				xmm0
+	%define vecSum1				xmm1
+	%define vecSum2				xmm2
+	%define vecSum3				xmm3
+	%define vecCoeff			xmm4
+	%define vec0				xmm5
+	%define vec1				xmm6
+	%define vec2				xmm7
+	%define vec3				xmm8
 
 	%define argi_inPtr			0
 	%define argi_outPtr			1
@@ -1180,24 +1177,18 @@ sym(CompVMathConvlt1VtHz_8u16s16s_Asm_X64_SSE41):
 			lea inPtrPlusI, [inPtr + i*COMPV_YASM_UINT8_SZ_BYTES]
 			xor row, row
 			.LoopKernel:
-				movdqu vec0, [inPtrPlusI]
+				pmovzxbd vec0, [inPtrPlusI + 0*COMPV_YASM_UINT8_SZ_BYTES]
+				pmovzxbd vec1, [inPtrPlusI + 4*COMPV_YASM_UINT8_SZ_BYTES]
+				pmovzxbd vec2, [inPtrPlusI + 8*COMPV_YASM_UINT8_SZ_BYTES]
+				pmovzxbd vec3, [inPtrPlusI + 12*COMPV_YASM_UINT8_SZ_BYTES]
 				movsx int16d, word [vthzKernPtr + row*COMPV_YASM_INT16_SZ_BYTES]
 				lea inPtrPlusI, [inPtrPlusI + step*COMPV_YASM_UINT8_SZ_BYTES]
 				movd vecCoeff, int16d
 				inc row
 				pshufd vecCoeff, vecCoeff, 0x0
-				movdqa vec2, vec0
-				punpcklbw vec0, vecZero
-				punpckhbw vec2, vecZero
-				movdqa vec1, vec0
-				movdqa vec3, vec2
-				punpcklwd vec0, vecZero
 				pmulld vec0, vecCoeff
-				punpckhwd vec1, vecZero
 				pmulld vec1, vecCoeff
-				punpcklwd vec2, vecZero
 				pmulld vec2, vecCoeff
-				punpckhwd vec3, vecZero
 				pmulld vec3, vecCoeff				
 				cmp row, kernSize
 				paddd vecSum0, vec0
@@ -1247,7 +1238,6 @@ sym(CompVMathConvlt1VtHz_8u16s16s_Asm_X64_SSE41):
 		jnz .LoopHeight
 	.EndOf_LoopHeight:
 
-	%undef vecZero
 	%undef vecSum0
 	%undef vecSum1
 	%undef vecSum2
@@ -1397,24 +1387,18 @@ sym(CompVMathConvlt1VtHz_16s16s16s_Asm_X64_SSE41):
 			lea inPtrPlusI, [inPtr + i*COMPV_YASM_INT16_SZ_BYTES]
 			xor row, row
 			.LoopKernel:
-				movdqu vec0, [inPtrPlusI]
-				movdqu vec2, [inPtrPlusI + 8*COMPV_YASM_INT16_SZ_BYTES]
+				pmovsxwd vec0, [inPtrPlusI + 0*COMPV_YASM_INT16_SZ_BYTES]
+				pmovsxwd vec1, [inPtrPlusI + 4*COMPV_YASM_INT16_SZ_BYTES]
+				pmovsxwd vec2, [inPtrPlusI + 8*COMPV_YASM_INT16_SZ_BYTES]
+				pmovsxwd vec3, [inPtrPlusI + 12*COMPV_YASM_INT16_SZ_BYTES]
 				movsx int16d, word [vthzKernPtr + row*COMPV_YASM_INT16_SZ_BYTES]
 				lea inPtrPlusI, [inPtrPlusI + step*COMPV_YASM_INT16_SZ_BYTES]
 				movd vecCoeff, int16d
 				inc row
 				pshufd vecCoeff, vecCoeff, 0x0
-				movdqa vec1, vec0
-				movdqa vec3, vec2				
-				pmovsxwd vec0, vec0
-				psrldq vec1, 8
 				pmulld vec0, vecCoeff
-				pmovsxwd vec1, vec1
 				pmulld vec1, vecCoeff
-				psrldq vec3, 8
-				pmovsxwd vec2, vec2
 				pmulld vec2, vecCoeff
-				pmovsxwd vec3, vec3
 				pmulld vec3, vecCoeff				
 				cmp row, kernSize
 				paddd vecSum0, vec0

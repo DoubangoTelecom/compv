@@ -27,8 +27,6 @@ public:
 		size_t stride = static_cast<size_t>(CompVMem::alignForward(size));
 		COMPV_CHECK_CODE_RETURN((CompVMat::newObjAligned<T>(kernel, 1, size, stride)));
 
-		COMPV_DEBUG_INFO_CODE_TODO("Clean up this code (hint -> symetric) see gabor for kernelDim1ThetaEqZero for inspiration");
-
 		const size_t size_div2 = (size >> 1);
 		const T sigma2_times2 = static_cast<T>(2 * (sigma * sigma)); // 2*(sigma^2)
 		const T one_over_sqrt_pi_times_sigma2_times2 = static_cast<T>(1 / sqrt(COMPV_MATH_PI * sigma2_times2)); // 1 / sqrt(2 * pi * sigma^2)

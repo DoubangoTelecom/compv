@@ -56,14 +56,11 @@ sym(CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X64_AVX2):
 	COMPV_YASM_ALIGN_STACK 32, rax
 	sub rsp, (32*COMPV_YASM_UINT8_SZ_BYTES)
 
-	%define vecZero				ymm0
-	%define vecSum0				ymm1
-	%define vecSum1				ymm2
-	%define vecCoeff			ymm3
-	%define vec0				ymm4
-	%define vec1				ymm5
-
-	vpxor vecZero, vecZero
+	%define vecSum0				ymm0
+	%define vecSum1				ymm1
+	%define vecCoeff			ymm2
+	%define vec0				ymm3
+	%define vec1				ymm4
 
 	%define argi_inPtr			0
 	%define argi_outPtr			1
@@ -118,15 +115,14 @@ sym(CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X64_AVX2):
 			lea inPtrPlusI, [inPtr + i*COMPV_YASM_UINT8_SZ_BYTES]
 			xor row, row
 			.LoopKernel:
-				vmovdqu vec1, [inPtrPlusI]
+				vpmovzxbw vec0, [inPtrPlusI + 0*COMPV_YASM_UINT8_SZ_BYTES]
+				vpmovzxbw vec1, [inPtrPlusI + 16*COMPV_YASM_UINT8_SZ_BYTES]
 				vpbroadcastw vecCoeff, word [vthzKernPtr + row*COMPV_YASM_UINT16_SZ_BYTES]
-				lea inPtrPlusI, [inPtrPlusI + step*COMPV_YASM_UINT8_SZ_BYTES]
 				inc row
-				vpunpcklbw vec0, vec1, vecZero
 				vpmulhuw vec0, vec0, vecCoeff
-				vpunpckhbw vec1, vec1, vecZero
 				vpmulhuw vec1, vec1, vecCoeff
 				cmp row, kernSize
+				lea inPtrPlusI, [inPtrPlusI + step*COMPV_YASM_UINT8_SZ_BYTES]
 				vpaddusw vecSum0, vecSum0, vec0
 				vpaddusw vecSum1, vecSum1, vec1	
 				jl .LoopKernel
@@ -169,7 +165,6 @@ sym(CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X64_AVX2):
 		jnz .LoopHeight
 	.EndOf_LoopHeight:
 
-	%undef vecZero
 	%undef vecSum0
 	%undef vecSum1
 	%undef vecCoeff
@@ -703,7 +698,7 @@ sym(CompVMathConvlt1VtHz_8u32f32f_Asm_X64_FMA3_AVX2):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 8
-	COMPV_YASM_SAVE_YMM 9
+	COMPV_YASM_SAVE_YMM 8
 	push rsi
 	push rdi
 	push rbx
@@ -717,18 +712,15 @@ sym(CompVMathConvlt1VtHz_8u32f32f_Asm_X64_FMA3_AVX2):
 	COMPV_YASM_ALIGN_STACK 32, rax
 	sub rsp, (32*COMPV_YASM_FLOAT32_SZ_BYTES)
 
-	%define vecZero				ymm0
-	%define vecSum0				ymm1
-	%define vecSum1				ymm2
-	%define vecSum2				ymm3
-	%define vecSum3				ymm4
-	%define vecCoeff			ymm5
-	%define vec0				ymm6
-	%define vec1				ymm7
-	%define vec2				ymm8
-	%define vec3				ymm9
-
-	vpxor vecZero, vecZero
+	%define vecSum0				ymm0
+	%define vecSum1				ymm1
+	%define vecSum2				ymm2
+	%define vecSum3				ymm3
+	%define vecCoeff			ymm4
+	%define vec0				ymm5
+	%define vec1				ymm6
+	%define vec2				ymm7
+	%define vec3				ymm8
 
 	%define argi_inPtr			0
 	%define argi_outPtr			1
@@ -852,7 +844,6 @@ sym(CompVMathConvlt1VtHz_8u32f32f_Asm_X64_FMA3_AVX2):
 		jnz .LoopHeight
 	.EndOf_LoopHeight:
 
-	%undef vecZero				
 	%undef vecSum0				
 	%undef vecSum1				
 	%undef vecSum2				
@@ -932,7 +923,7 @@ sym(CompVMathConvlt1VtHz_32f32f32f_Asm_X64_FMA3_AVX2):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 8
-	COMPV_YASM_SAVE_YMM 10
+	COMPV_YASM_SAVE_YMM 9
 	push rsi
 	push rdi
 	push rbx
@@ -946,19 +937,17 @@ sym(CompVMathConvlt1VtHz_32f32f32f_Asm_X64_FMA3_AVX2):
 	COMPV_YASM_ALIGN_STACK 32, rax
 	sub rsp, (32*COMPV_YASM_UINT8_SZ_BYTES)
 
-	%define vecZero				ymm0
-	%define vecSum0				ymm1
-	%define vecSum1				ymm2
-	%define vecSum2				ymm3
-	%define vecSum3				ymm4
-	%define vecCoeff			ymm5
-	%define vec0				ymm6
-	%define vec1				ymm7
-	%define vec2				ymm8
-	%define vec3				ymm9
-	%define vecAEBFCGDH			ymm10	
+	%define vecSum0				ymm0
+	%define vecSum1				ymm1
+	%define vecSum2				ymm2
+	%define vecSum3				ymm3
+	%define vecCoeff			ymm4
+	%define vec0				ymm5
+	%define vec1				ymm6
+	%define vec2				ymm7
+	%define vec3				ymm8
+	%define vecAEBFCGDH			ymm9	
 
-	vpxor vecZero, vecZero
 	vmovdqa vecAEBFCGDH, [sym(kAVXPermutevar8x32_AEBFCGDH_i32)]
 
 	%define argi_inPtr			0
@@ -1085,7 +1074,6 @@ sym(CompVMathConvlt1VtHz_32f32f32f_Asm_X64_FMA3_AVX2):
 		jnz .LoopHeight
 	.EndOf_LoopHeight:
 
-	%undef vecZero				
 	%undef vecSum0				
 	%undef vecSum1				
 	%undef vecSum2				
@@ -1402,10 +1390,8 @@ sym(CompVMathConvlt1VtHz_16s16s16s_Asm_X64_AVX2):
 	%define vecCoeffn			xmm4
 	%define vec0				ymm5
 	%define vec1				ymm6
-	%define vec1n				xmm6
 	%define vec2				ymm7
 	%define vec3				ymm8
-	%define vec3n				xmm8
 
 	%define argi_inPtr			0
 	%define argi_outPtr			1
@@ -1535,10 +1521,8 @@ sym(CompVMathConvlt1VtHz_16s16s16s_Asm_X64_AVX2):
 	%undef vecCoeffn
 	%undef vec0
 	%undef vec1
-	%undef vec1n
 	%undef vec2
 	%undef vec3
-	%undef vec3n
 
 	%undef argi_inPtr
 	%undef argi_outPtr
