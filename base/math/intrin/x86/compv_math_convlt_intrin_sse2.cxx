@@ -364,7 +364,7 @@ void CompVMathConvlt1VtHz_16s16s16s_Intrin_SSE2(const int16_t* inPtr, int16_t* o
 				vec2 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&inPtr[i + k]));
 				vec3 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&inPtr[i + k + 8]));
 				vecCoeff = _mm_set1_epi32(static_cast<int>(vthzKernPtr[row]));
-				vec0 = _mm_cvtepi16_epi32_low_SSE2(vec2); // epi16 -> epi32: _mm_cvtepi16_epi32 is SSE41 -> asm code will be SSE41
+				vec0 = _mm_cvtepi16_epi32_low_SSE2(vec2); // epi16 -> epi32: _mm_cvtepi16_epi32 is SSE4.1 -> asm code will be SSE41
 				vec1 = _mm_cvtepi16_epi32_hi_SSE2(vec2); // epi16 -> epi32
 				vec2 = _mm_cvtepi16_epi32_low_SSE2(vec3); // epi16 -> epi32
 				vec3 = _mm_cvtepi16_epi32_hi_SSE2(vec3); // epi16 -> epi32
