@@ -16,12 +16,4 @@ COMPV_ERROR_CODE CompVMathGauss::kernelDim1FixedPoint(CompVMatPtrPtr fixedPointK
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVMathGauss::kernelDim2FixedPoint(CompVMatPtrPtr fixedPointKernel, size_t size, float sigma)
-{
-	CompVMatPtr normalizedKernel;
-	COMPV_CHECK_CODE_RETURN(CompVMathGauss::kernelDim2<compv_float32_t>(&normalizedKernel, size, sigma));
-	COMPV_CHECK_CODE_RETURN(CompVMathConvlt::fixedPointKernel(normalizedKernel, fixedPointKernel));
-	return COMPV_ERROR_CODE_S_OK;
-}
-
 COMPV_NAMESPACE_END()
