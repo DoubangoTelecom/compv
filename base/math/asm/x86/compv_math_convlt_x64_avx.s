@@ -569,22 +569,22 @@ sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X64_FMA3_AVX2):
 					lea inPtrPlusI, [inPtrPlusI + step*COMPV_YASM_UINT8_SZ_BYTES]
 					inc row
 					cmp row, kernSize
-					vfmadd231ps vecSum0, vec0, vecCoeff
-					vfmadd231ps vecSum1, vec1, vecCoeff
-					vfmadd231ps vecSum2, vec2, vecCoeff
-					vfmadd231ps vecSum3, vec3, vecCoeff
+					vfmadd231ps vecSum0, vecCoeff, vec0
+					vfmadd231ps vecSum1, vecCoeff, vec1
+					vfmadd231ps vecSum2, vecCoeff, vec2
+					vfmadd231ps vecSum3, vecCoeff, vec3
 				%else
-					vmulps vec0, vecCoeff
-					vmulps vec1, vecCoeff
-					vmulps vec2, vecCoeff
-					vmulps vec3, vecCoeff
+					vmulps vec0, vecCoeff, vec0
+					vmulps vec1, vecCoeff, vec1
+					vmulps vec2, vecCoeff, vec2
+					vmulps vec3, vecCoeff, vec3
 					lea inPtrPlusI, [inPtrPlusI + step*COMPV_YASM_UINT8_SZ_BYTES]
 					inc row
 					cmp row, kernSize
-					vaddps vecSum0, vec0
-					vaddps vecSum1, vec1
-					vaddps vecSum2, vec2
-					vaddps vecSum3, vec3
+					vaddps vecSum0, vecSum0, vec0
+					vaddps vecSum1, vecSum1, vec1
+					vaddps vecSum2, vecSum2, vec2
+					vaddps vecSum3, vecSum3, vec3
 				%endif
 				jl .LoopKernel
 			.EndOf_LoopKernel:
@@ -796,24 +796,20 @@ sym(CompVMathConvlt1VtHz_8u32f32f_Asm_X64_FMA3_AVX2):
 			lea inPtrPlusI, [inPtr + i*COMPV_YASM_FLOAT32_SZ_BYTES]
 			xor row, row
 			.LoopKernel:
-				vmovups xmmword ptr vec0, [inPtrPlusI + 0*COMPV_YASM_FLOAT32_SZ_BYTES]
-				vmovups xmmword ptr vec1, [inPtrPlusI + 8*COMPV_YASM_FLOAT32_SZ_BYTES]
-				vmovups xmmword ptr vec2, [inPtrPlusI + 16*COMPV_YASM_FLOAT32_SZ_BYTES]
-				vmovups xmmword ptr vec3, [inPtrPlusI + 24*COMPV_YASM_FLOAT32_SZ_BYTES]
 				vbroadcastss vecCoeff, dword ptr [vthzKernPtr + row*COMPV_YASM_FLOAT32_SZ_BYTES]
 				%if %1 == 1
-					lea inPtrPlusI, [inPtrPlusI + step*COMPV_YASM_FLOAT32_SZ_BYTES]
 					inc row
 					cmp row, kernSize
-					vfmadd231ps vecSum0, vecCoeff, vec0
-					vfmadd231ps vecSum1, vecCoeff, vec1
-					vfmadd231ps vecSum2, vecCoeff, vec2
-					vfmadd231ps vecSum3, vecCoeff, vec3
+					vfmadd231ps vecSum0, vecCoeff, [inPtrPlusI + 0*COMPV_YASM_FLOAT32_SZ_BYTES]
+					vfmadd231ps vecSum1, vecCoeff, [inPtrPlusI + 8*COMPV_YASM_FLOAT32_SZ_BYTES]
+					vfmadd231ps vecSum2, vecCoeff, [inPtrPlusI + 16*COMPV_YASM_FLOAT32_SZ_BYTES]
+					vfmadd231ps vecSum3, vecCoeff, [inPtrPlusI + 24*COMPV_YASM_FLOAT32_SZ_BYTES]
+					lea inPtrPlusI, [inPtrPlusI + step*COMPV_YASM_FLOAT32_SZ_BYTES]
 				%else
-					vmulps vec0, vecCoeff, vec0
-					vmulps vec1, vecCoeff, vec0
-					vmulps vec2, vecCoeff, vec0
-					vmulps vec3, vecCoeff, vec0
+					vmulps vec0, vecCoeff, [inPtrPlusI + 0*COMPV_YASM_FLOAT32_SZ_BYTES]
+					vmulps vec1, vecCoeff, [inPtrPlusI + 8*COMPV_YASM_FLOAT32_SZ_BYTES]
+					vmulps vec2, vecCoeff, [inPtrPlusI + 16*COMPV_YASM_FLOAT32_SZ_BYTES]
+					vmulps vec3, vecCoeff, [inPtrPlusI + 24*COMPV_YASM_FLOAT32_SZ_BYTES]
 					lea inPtrPlusI, [inPtrPlusI + step*COMPV_YASM_FLOAT32_SZ_BYTES]
 					inc row
 					cmp row, kernSize
@@ -1031,31 +1027,27 @@ sym(CompVMathConvlt1VtHz_32f32f32f_Asm_X64_FMA3_AVX2):
 			lea inPtrPlusI, [inPtr + i*COMPV_YASM_FLOAT32_SZ_BYTES]
 			xor row, row
 			.LoopKernel:
-				vmovups xmmword ptr vec0, [inPtrPlusI + 0*COMPV_YASM_FLOAT32_SZ_BYTES]
-				vmovups xmmword ptr vec1, [inPtrPlusI + 8*COMPV_YASM_FLOAT32_SZ_BYTES]
-				vmovups xmmword ptr vec2, [inPtrPlusI + 16*COMPV_YASM_FLOAT32_SZ_BYTES]
-				vmovups xmmword ptr vec3, [inPtrPlusI + 24*COMPV_YASM_FLOAT32_SZ_BYTES]
 				vbroadcastss vecCoeff, dword ptr [vthzKernPtr + row*COMPV_YASM_FLOAT32_SZ_BYTES]
 				%if %1 == 1
-					lea inPtrPlusI, [inPtrPlusI + step*COMPV_YASM_FLOAT32_SZ_BYTES]
 					inc row
 					cmp row, kernSize
-					vfmadd231ps vecSum0, vec0, vecCoeff
-					vfmadd231ps vecSum1, vec1, vecCoeff
-					vfmadd231ps vecSum2, vec2, vecCoeff
-					vfmadd231ps vecSum3, vec3, vecCoeff
+					vfmadd231ps vecSum0, vecCoeff, [inPtrPlusI + 0*COMPV_YASM_FLOAT32_SZ_BYTES]
+					vfmadd231ps vecSum1, vecCoeff, [inPtrPlusI + 8*COMPV_YASM_FLOAT32_SZ_BYTES]
+					vfmadd231ps vecSum2, vecCoeff, [inPtrPlusI + 16*COMPV_YASM_FLOAT32_SZ_BYTES]
+					vfmadd231ps vecSum3, vecCoeff, [inPtrPlusI + 24*COMPV_YASM_FLOAT32_SZ_BYTES]
+					lea inPtrPlusI, [inPtrPlusI + step*COMPV_YASM_FLOAT32_SZ_BYTES]
 				%else
-					vmulps vec0, vecCoeff
-					vmulps vec1, vecCoeff
-					vmulps vec2, vecCoeff
-					vmulps vec3, vecCoeff
+					vmulps vec0, vecCoeff, [inPtrPlusI + 0*COMPV_YASM_FLOAT32_SZ_BYTES]
+					vmulps vec1, vecCoeff, [inPtrPlusI + 8*COMPV_YASM_FLOAT32_SZ_BYTES]
+					vmulps vec2, vecCoeff, [inPtrPlusI + 16*COMPV_YASM_FLOAT32_SZ_BYTES]
+					vmulps vec3, vecCoeff, [inPtrPlusI + 24*COMPV_YASM_FLOAT32_SZ_BYTES]
 					lea inPtrPlusI, [inPtrPlusI + step*COMPV_YASM_FLOAT32_SZ_BYTES]
 					inc row
 					cmp row, kernSize
-					vaddps vecSum0, vec0
-					vaddps vecSum1, vec1
-					vaddps vecSum2, vec2
-					vaddps vecSum3, vec3
+					vaddps vecSum0, vecSum0, vec0
+					vaddps vecSum1, vecSum1, vec1
+					vaddps vecSum2, vecSum2, vec2
+					vaddps vecSum3, vecSum3, vec3
 				%endif
 				jl .LoopKernel
 			.EndOf_LoopKernel:
