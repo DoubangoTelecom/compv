@@ -179,8 +179,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageThresholdOtsuSum_32s32s_Asm_NEON32
 	vadd.u32 vecSumB2, vecSumB2, vecSumB3
 	vadd.u32 vecSumB0, vecSumB0, vecSumB2
 	vadd.u32 q9x, q9x, q9y
-	vmov r4, q9x[0]
-	vmov r5, q9x[1]
+	vmov.u32 r4, q9x[0]
+	vmov.u32 r5, q9x[1]
 	add r4, r4, r5
 	str r4, [sumB1]
 

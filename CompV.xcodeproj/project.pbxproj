@@ -245,6 +245,8 @@
 		15F9409F1FCB8E3E00C4E188 /* compv_core_calib_camera.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 15F9409C1FCB8E3E00C4E188 /* compv_core_calib_camera.cxx */; };
 		15F940A01FCB8E3E00C4E188 /* compv_core_calib_homography.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 15F9409D1FCB8E3E00C4E188 /* compv_core_calib_homography.cxx */; };
 		15F940A11FCB8E3E00C4E188 /* compv_core_calib_utils.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 15F9409E1FCB8E3E00C4E188 /* compv_core_calib_utils.cxx */; };
+		15F940A71FCBAE8A00C4E188 /* compv_image_threshold_arm32_neon.S in Sources */ = {isa = PBXBuildFile; fileRef = 15F940A51FCBAE8A00C4E188 /* compv_image_threshold_arm32_neon.S */; };
+		15F940A81FCBAE8A00C4E188 /* compv_image_threshold_arm64_neon.S in Sources */ = {isa = PBXBuildFile; fileRef = 15F940A61FCBAE8A00C4E188 /* compv_image_threshold_arm64_neon.S */; };
 		15FC519C1F0D15310002D2A4 /* compv_core_feature_houghkht_arm64.S in Sources */ = {isa = PBXBuildFile; fileRef = 15FC519B1F0D15310002D2A4 /* compv_core_feature_houghkht_arm64.S */; };
 /* End PBXBuildFile section */
 
@@ -760,6 +762,8 @@
 		15F940A21FCB8E5700C4E188 /* compv_core_calib_camera.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_core_calib_camera.h; sourceTree = "<group>"; };
 		15F940A31FCB8E5700C4E188 /* compv_core_calib_common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_core_calib_common.h; sourceTree = "<group>"; };
 		15F940A41FCB8E5700C4E188 /* compv_core_calib_utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_core_calib_utils.h; sourceTree = "<group>"; };
+		15F940A51FCBAE8A00C4E188 /* compv_image_threshold_arm32_neon.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = compv_image_threshold_arm32_neon.S; sourceTree = "<group>"; };
+		15F940A61FCBAE8A00C4E188 /* compv_image_threshold_arm64_neon.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = compv_image_threshold_arm64_neon.S; sourceTree = "<group>"; };
 		15FC519B1F0D15310002D2A4 /* compv_core_feature_houghkht_arm64.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = compv_core_feature_houghkht_arm64.S; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -1806,6 +1810,8 @@
 		15A3E7B01E3599D800303F7C /* arm */ = {
 			isa = PBXGroup;
 			children = (
+				15F940A51FCBAE8A00C4E188 /* compv_image_threshold_arm32_neon.S */,
+				15F940A61FCBAE8A00C4E188 /* compv_image_threshold_arm64_neon.S */,
 				15A3E7B11E3599D800303F7C /* compv_image_conv_grayscale_arm32_neon.S */,
 				15A3E7B21E3599D800303F7C /* compv_image_conv_rgbfamily_arm32_neon.S */,
 				15A3E7B31E3599D800303F7C /* compv_image_scale_bilinear_arm32_neon.S */,
@@ -2585,6 +2591,7 @@
 				15A3E8921E3599D900303F7C /* compv_common.cxx in Sources */,
 				15AEA0051E644FDB0030D908 /* compv_patch_intrin_neon.cxx in Sources */,
 				15A3E8A81E3599D900303F7C /* compv_window.cxx in Sources */,
+				15F940A81FCBAE8A00C4E188 /* compv_image_threshold_arm64_neon.S in Sources */,
 				15A3E8BA1E3599D900303F7C /* compv_image_conv_rgbfamily.cxx in Sources */,
 				157F72A31E5807BC000DE45F /* compv_math_eigen.cxx in Sources */,
 				152BA3A01F0571BC0024C7A9 /* compv_core_matcher_bruteforce.cxx in Sources */,
@@ -2662,6 +2669,7 @@
 				157F72AB1E580801000DE45F /* compv_matchers.cxx in Sources */,
 				15A3E88C1E3599D900303F7C /* compv_base.cxx in Sources */,
 				15621B7C1E6BB09000DCBBCC /* compv_math_transform_arm32_neon.S in Sources */,
+				15F940A71FCBAE8A00C4E188 /* compv_image_threshold_arm32_neon.S in Sources */,
 				15A3E8931E3599D900303F7C /* compv_cpu.cxx in Sources */,
 				157F72A51E5807BC000DE45F /* compv_math_stats.cxx in Sources */,
 				15A3E88E1E3599D900303F7C /* compv_box_interestpoint.cxx in Sources */,

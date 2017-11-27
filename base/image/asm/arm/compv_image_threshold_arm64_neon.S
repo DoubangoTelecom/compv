@@ -137,10 +137,10 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageThresholdOtsuSum_32s32s_Asm_NEON64
 	mov r6, #1
 	mov r7, #2
 	mov r8, #3
-	ins vecIndices0.4s[0], w5
-	ins vecIndices0.4s[1], w6
-	ins vecIndices0.4s[2], w7
-	ins vecIndices0.4s[3], w8
+	ins vecIndices0.s[0], w5
+	ins vecIndices0.s[1], w6
+	ins vecIndices0.s[2], w7
+	ins vecIndices0.s[3], w8
 	add vecIndices1.4s, vecIndices0.4s, v14.4s
 	add vecIndices2.4s, vecIndices1.4s, v14.4s
 	add vecIndices3.4s, vecIndices2.4s, v14.4s
