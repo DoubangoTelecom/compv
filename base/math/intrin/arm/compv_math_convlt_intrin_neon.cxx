@@ -178,7 +178,7 @@ void CompVMathConvlt1VtHz_8u32f32f_Intrin_NEON(const uint8_t* inPtr, compv_float
 	}
 }
 
-// on iOS (iPhone5, ARM32, HD image, single threaded, #1000 times), asm code: 19433.ms, intrin code: 20240.ms
+// on iOS (iPhone5, ARM32, HD image, single threaded, #1000 times) not perf gain, asm code: 19433.ms, intrin code: 20240.ms
 void CompVMathConvlt1VtHz_32f32f32f_Intrin_NEON(const compv_float32_t* inPtr, compv_float32_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const compv_float32_t* vthzKernPtr, compv_uscalar_t kernSize)
 {
 	COMPV_DEBUG_INFO_CHECK_NEON();
@@ -228,6 +228,7 @@ void CompVMathConvlt1VtHz_32f32f32f_Intrin_NEON(const compv_float32_t* inPtr, co
 	}
 }
 
+// on iOS (iPhone5, ARM32, HD image, single threaded, #1000 times) not perf gain, asm code: 13962.ms, intrin code: 14270.ms
 void CompVMathConvlt1VtHz_32f32f8u_Intrin_NEON(const compv_float32_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const compv_float32_t* vthzKernPtr, compv_uscalar_t kernSize)
 {
 	COMPV_DEBUG_INFO_CHECK_NEON();
