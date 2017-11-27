@@ -2,7 +2,7 @@
 
 #define TAG_TEST								"TestImageConvlt"
 
-#define LOOP_COUNT				1000
+#define LOOP_COUNT				1
 
 static const struct compv_unittest_convlt {
 	const bool fixedPoint;
@@ -28,7 +28,7 @@ static const struct compv_unittest_convlt {
 };
 static const size_t COMPV_UNITTEST_CONVLT_COUNT = sizeof(COMPV_UNITTEST_CONVLT) / sizeof(COMPV_UNITTEST_CONVLT[0]);
 
-#define TEST_INDEX	0
+#define TEST_INDEX	3
 
 static COMPV_ERROR_CODE buildTest(const compv_unittest_convlt* test, CompVMatPtrPtr data, CompVMatPtrPtr kernel);
 #define convolution(inputType, KernelType, OutputType) { \
