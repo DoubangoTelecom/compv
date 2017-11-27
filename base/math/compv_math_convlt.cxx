@@ -283,7 +283,7 @@ COMPV_ERROR_CODE CompVMathConvlt::convlt1VtHz_private_fxp_false(const uint8_t* i
 #elif COMPV_ARCH_ARM
 	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && width >= 16) {
 		COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMathConvlt1VtHz_8u16s16s = CompVMathConvlt1VtHz_8u16s16s_Intrin_NEON);
-		//COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathConvlt1VtHz_8u16s16s = CompVMathConvlt1VtHz_8u16s16s_Asm_NEON32);
+		COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathConvlt1VtHz_8u16s16s = CompVMathConvlt1VtHz_8u16s16s_Asm_NEON32);
 		//COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathConvlt1VtHz_8u16s16s = CompVMathConvlt1VtHz_8u16s16s_Asm_NEON64);
 	}
 #endif
@@ -319,7 +319,7 @@ COMPV_ERROR_CODE CompVMathConvlt::convlt1VtHz_private_fxp_false(const int16_t* i
 #elif COMPV_ARCH_ARM
 	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && width >= 16) {
 		COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMathConvlt1VtHz_16s16s16s = CompVMathConvlt1VtHz_16s16s16s_Intrin_NEON);
-		//COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathConvlt1VtHz_16s16s16s = CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32);
+		COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathConvlt1VtHz_16s16s16s = CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32);
 		//COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathConvlt1VtHz_16s16s16s = CompVMathConvlt1VtHz_16s16s16s_Asm_NEON64);
 	}
 #endif

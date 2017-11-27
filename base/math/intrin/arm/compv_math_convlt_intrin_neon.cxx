@@ -25,14 +25,14 @@ void CompVMathConvlt1VtHzFixedPoint_8u16u8u_Intrin_NEON(const uint8_t* inPtr, ui
 	const compv_uscalar_t stride = (width + pad);
 	const compv_uscalar_t width16 = width & -16;
 	uint8x16_t vecInPtr;
-	uint16x8_t vec0, vec1, vec2, vec3, vecSum0, vecSum1;
+	uint16x8_t vec0, vec1, vec2, vec3, vecSum0 = vdupq_n_u16(0), vecSum1;
 	uint16_t coeff;
 	COMPV_ALIGN_NEON() uint8_t mem[16];
 
 	for (j = 0; j < height; ++j) {
 		for (i = 0; i < width; i += 16) {
-			vecSum0 = vdupq_n_u16(0); // asm: use xor
-			vecSum1 = vdupq_n_u16(0);
+			vecSum0 = veorq_u16(vecSum0, vecSum0);
+			vecSum1 = veorq_u16(vecSum0, vecSum0);
 			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
 				vecInPtr = vld1q_u8(&inPtr[i + k]);
 				coeff = vthzKernPtr[row];
@@ -61,7 +61,7 @@ void CompVMathConvlt1VtHzFixedPoint_8u16u8u_Intrin_NEON(const uint8_t* inPtr, ui
 	}
 }
 
-// on iOS (iPhone5, ARM32, HD image, single threaded, #1000 times), asm code: 13049.ms, intrin code: 13316.ms
+// on iOS (iPhone5, ARM32, HD image, single threaded, no FMA, #1000 times), asm code: 13049.ms, intrin code: 13316.ms
 void CompVMathConvlt1VtHz_8u32f8u_Intrin_NEON(const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const compv_float32_t* vthzKernPtr, compv_uscalar_t kernSize)
 {
 	COMPV_DEBUG_INFO_CHECK_NEON();
@@ -69,17 +69,17 @@ void CompVMathConvlt1VtHz_8u32f8u_Intrin_NEON(const uint8_t* inPtr, uint8_t* out
 	const compv_uscalar_t stride = (width + pad);
 	const compv_uscalar_t width16 = width & -16;
 	uint8x16_t vecInPtr, vec0i, vec1i, vec2i, vec3i;
-	float32x4_t vecSum0, vecSum1, vecSum2, vecSum3, vec0f, vec1f, vec2f, vec3f;
+	float32x4_t vecSum0 = vdupq_n_f32(0.f), vecSum1, vecSum2, vecSum3, vec0f, vec1f, vec2f, vec3f;
 	compv_float32_t coeff;
 	COMPV_ALIGN_NEON() uint8_t mem[16];
 
 	for (j = 0; j < height; ++j) {
 		for (i = 0; i < width; i += 16) {
-			vecSum0 = vdupq_n_f32(0.f); // asm: use xor
-			vecSum1 = vdupq_n_f32(0.f);
-			vecSum2 = vdupq_n_f32(0.f);
-			vecSum3 = vdupq_n_f32(0.f);
-			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
+            vecSum0 = veorq_s32(vecSum0, vecSum0);
+            vecSum1 = veorq_s32(vecSum0, vecSum0);
+            vecSum2 = veorq_s32(vecSum0, vecSum0);
+            vecSum3 = veorq_s32(vecSum0, vecSum0);
+            for (row = 0, k = 0; row < kernSize; ++row, k += step) {
 				vecInPtr = vld1q_u8(&inPtr[i + k]);
 				coeff = vthzKernPtr[row];
 				vec2i = vmovl_u8(vget_low_u8(vecInPtr)); // epu8 -> epu16
@@ -120,7 +120,7 @@ void CompVMathConvlt1VtHz_8u32f8u_Intrin_NEON(const uint8_t* inPtr, uint8_t* out
 	}
 }
 
-// TODO(dmi): optiz issue -> no perf gain compared to asm impl (iPhone5, ARM32)
+// TODO(dmi): optiz issue -> no perf gain compared to asm impl (iPhone5, ARM32) - no FMA
 void CompVMathConvlt1VtHz_8u32f32f_Intrin_NEON(const uint8_t* inPtr, compv_float32_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const compv_float32_t* vthzKernPtr, compv_uscalar_t kernSize)
 {
 	COMPV_DEBUG_INFO_CHECK_NEON();
@@ -128,17 +128,17 @@ void CompVMathConvlt1VtHz_8u32f32f_Intrin_NEON(const uint8_t* inPtr, compv_float
 	const compv_uscalar_t stride = (width + pad);
 	const compv_uscalar_t width16 = width & -16;
 	uint8x16_t vecInPtr, vec0i, vec1i, vec2i, vec3i;
-	float32x4_t vecSum0, vecSum1, vecSum2, vecSum3, vec0f, vec1f, vec2f, vec3f;
+	float32x4_t vecSum0 = vdupq_n_f32(0.f), vecSum1, vecSum2, vecSum3, vec0f, vec1f, vec2f, vec3f;
 	compv_float32_t coeff;
-	COMPV_ALIGN_NEON() compv_float32_t mem[4 * 4];
+	COMPV_ALIGN_NEON() compv_float32_t mem[16];
 
 	for (j = 0; j < height; ++j) {
 		for (i = 0; i < width; i += 16) {
-			vecSum0 = vdupq_n_f32(0.f); // asm: use xor
-			vecSum1 = vdupq_n_f32(0.f);
-			vecSum2 = vdupq_n_f32(0.f);
-			vecSum3 = vdupq_n_f32(0.f);
-			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
+            vecSum0 = veorq_s32(vecSum0, vecSum0);
+            vecSum1 = veorq_s32(vecSum0, vecSum0);
+            vecSum2 = veorq_s32(vecSum0, vecSum0);
+            vecSum3 = veorq_s32(vecSum0, vecSum0);
+            for (row = 0, k = 0; row < kernSize; ++row, k += step) {
 				vecInPtr = vld1q_u8(&inPtr[i + k]);
 				coeff = vthzKernPtr[row];
 				vec2i = vmovl_u8(vget_low_u8(vecInPtr)); // epu8 -> epu16
@@ -178,24 +178,24 @@ void CompVMathConvlt1VtHz_8u32f32f_Intrin_NEON(const uint8_t* inPtr, compv_float
 	}
 }
 
-// on iOS (iPhone5, ARM32, HD image, single threaded, #1000 times) not perf gain, asm code: 19433.ms, intrin code: 20240.ms
+// on iOS (iPhone5, ARM32, HD image, single threaded, no FMA, #1000 times) small perf gain, asm code: 19433.ms, intrin code: 20240.ms
 void CompVMathConvlt1VtHz_32f32f32f_Intrin_NEON(const compv_float32_t* inPtr, compv_float32_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const compv_float32_t* vthzKernPtr, compv_uscalar_t kernSize)
 {
 	COMPV_DEBUG_INFO_CHECK_NEON();
 	compv_uscalar_t i, j, k, row;
 	const compv_uscalar_t stride = (width + pad);
 	const compv_uscalar_t width16 = width & -16;
-	float32x4_t vecSum0, vecSum1, vecSum2, vecSum3, vec0f, vec1f, vec2f, vec3f;
+	float32x4_t vecSum0 = vdupq_n_f32(0.f), vecSum1, vecSum2, vecSum3, vec0f, vec1f, vec2f, vec3f;
 	compv_float32_t coeff;
-	COMPV_ALIGN_NEON() compv_float32_t mem[4 * 4];
+	COMPV_ALIGN_NEON() compv_float32_t mem[16];
 
 	for (j = 0; j < height; ++j) {
 		for (i = 0; i < width; i += 16) {
-			vecSum0 = vdupq_n_f32(0.f); // asm: use xor
-			vecSum1 = vdupq_n_f32(0.f);
-			vecSum2 = vdupq_n_f32(0.f);
-			vecSum3 = vdupq_n_f32(0.f);
-			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
+            vecSum0 = veorq_s32(vecSum0, vecSum0);
+            vecSum1 = veorq_s32(vecSum0, vecSum0);
+            vecSum2 = veorq_s32(vecSum0, vecSum0);
+            vecSum3 = veorq_s32(vecSum0, vecSum0);
+            for (row = 0, k = 0; row < kernSize; ++row, k += step) {
 				vec0f = vld1q_f32(&inPtr[i + k]);
 				vec1f = vld1q_f32(&inPtr[i + k + 4]);
 				vec2f = vld1q_f32(&inPtr[i + k + 8]);
@@ -228,24 +228,24 @@ void CompVMathConvlt1VtHz_32f32f32f_Intrin_NEON(const compv_float32_t* inPtr, co
 	}
 }
 
-// on iOS (iPhone5, ARM32, HD image, single threaded, #1000 times) not perf gain, asm code: 13962.ms, intrin code: 14270.ms
+// on iOS (iPhone5, ARM32, HD image, single threaded, no FMA, #1000 times) small perf gain, asm code: 13962.ms, intrin code: 14270.ms
 void CompVMathConvlt1VtHz_32f32f8u_Intrin_NEON(const compv_float32_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const compv_float32_t* vthzKernPtr, compv_uscalar_t kernSize)
 {
 	COMPV_DEBUG_INFO_CHECK_NEON();
 	compv_uscalar_t i, j, k, row;
 	const compv_uscalar_t stride = (width + pad);
 	const compv_uscalar_t width16 = width & -16;
-	float32x4_t vecSum0, vecSum1, vecSum2, vecSum3, vec0f, vec1f, vec2f, vec3f;
+	float32x4_t vecSum0 = vdupq_n_f32(0.f), vecSum1, vecSum2, vecSum3, vec0f, vec1f, vec2f, vec3f;
 	compv_float32_t coeff;
 	COMPV_ALIGN_SSE() uint8_t mem[16];
 
 	for (j = 0; j < height; ++j) {
 		for (i = 0; i < width; i += 16) {
-			vecSum0 = vdupq_n_f32(0.f); // asm: use xor
-			vecSum1 = vdupq_n_f32(0.f);
-			vecSum2 = vdupq_n_f32(0.f);
-			vecSum3 = vdupq_n_f32(0.f);
-			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
+            vecSum0 = veorq_s32(vecSum0, vecSum0);
+            vecSum1 = veorq_s32(vecSum0, vecSum0);
+            vecSum2 = veorq_s32(vecSum0, vecSum0);
+            vecSum3 = veorq_s32(vecSum0, vecSum0);
+            for (row = 0, k = 0; row < kernSize; ++row, k += step) {
 				vec0f = vld1q_f32(&inPtr[i + k]);
 				vec1f = vld1q_f32(&inPtr[i + k + 4]);
 				vec2f = vld1q_f32(&inPtr[i + k + 8]);
@@ -279,26 +279,27 @@ void CompVMathConvlt1VtHz_32f32f8u_Intrin_NEON(const compv_float32_t* inPtr, uin
 	}
 }
 
+// on iOS (iPhone5, ARM32, HD image, single threaded, #1000 times) small perf gain, asm code: 11785.ms, intrin code: 12305.ms
 void CompVMathConvlt1VtHz_8u16s16s_Intrin_NEON(const uint8_t* inPtr, int16_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const int16_t* vthzKernPtr, compv_uscalar_t kernSize)
 {
 	COMPV_DEBUG_INFO_CHECK_NEON();
 	compv_uscalar_t i, j, k, row;
 	const compv_uscalar_t stride = width + pad;
 	const compv_uscalar_t width16 = width & -16;
-	int32x4_t vecSum0, vecSum1, vecSum2, vecSum3;
+	int32x4_t vecSum0 = vdupq_n_s32(0), vecSum1, vecSum2, vecSum3;
 	int16x8_t vec2, vec3;
 	uint8x16_t vecInPtr;
 	int16_t coeff;
-	COMPV_ALIGN_SSE() int16_t mem[8 * 2];
-
+	COMPV_ALIGN_SSE() int16_t mem[16];
+    
 	// Using int32_t as accumulator to avoid overflow
 
 	for (j = 0; j < height; ++j) {
 		for (i = 0; i < width; i += 16) {
-			vecSum0 = vdupq_n_s32(0); // asm: use xor
-			vecSum1 = vdupq_n_s32(0);
-			vecSum2 = vdupq_n_s32(0);
-			vecSum3 = vdupq_n_s32(0);
+			vecSum0 = veorq_s32(vecSum0, vecSum0);
+			vecSum1 = veorq_s32(vecSum0, vecSum0);
+			vecSum2 = veorq_s32(vecSum0, vecSum0);
+			vecSum3 = veorq_s32(vecSum0, vecSum0);
 			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
 				vecInPtr = vld1q_u8(&inPtr[i + k]);
 				coeff = vthzKernPtr[row];
@@ -329,26 +330,27 @@ void CompVMathConvlt1VtHz_8u16s16s_Intrin_NEON(const uint8_t* inPtr, int16_t* ou
 	}
 }
 
+// on iOS (iPhone5, ARM32, HD image, single threaded, #1000 times) small perf gain, asm code: 11801.ms, intrin code: 12328.ms
 void CompVMathConvlt1VtHz_16s16s16s_Intrin_NEON(const int16_t* inPtr, int16_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const int16_t* vthzKernPtr, compv_uscalar_t kernSize)
 {
 	COMPV_DEBUG_INFO_CHECK_NEON();
 	compv_uscalar_t i, j, k, row;
 	const compv_uscalar_t stride = width + pad;
 	const compv_uscalar_t width16 = width & -16;
-	int32x4_t vecSum0, vecSum1, vecSum2, vecSum3;
+	int32x4_t vecSum0 = vdupq_n_s32(0), vecSum1, vecSum2, vecSum3;
 	int16x8_t vec2, vec3;
 	int16_t coeff;
-	COMPV_ALIGN_SSE() int16_t mem[8 * 2];
+	COMPV_ALIGN_SSE() int16_t mem[16];
 
 	// Using int32_t as accumulator to avoid overflow
 
 	for (j = 0; j < height; ++j) {
 		for (i = 0; i < width; i += 16) {
-			vecSum0 = vdupq_n_s32(0); // asm: use xor
-			vecSum1 = vdupq_n_s32(0);
-			vecSum2 = vdupq_n_s32(0);
-			vecSum3 = vdupq_n_s32(0);
-			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
+            vecSum0 = veorq_s32(vecSum0, vecSum0);
+            vecSum1 = veorq_s32(vecSum0, vecSum0);
+            vecSum2 = veorq_s32(vecSum0, vecSum0);
+            vecSum3 = veorq_s32(vecSum0, vecSum0);
+            for (row = 0, k = 0; row < kernSize; ++row, k += step) {
 				vec2 = vld1q_s16(&inPtr[i + k]);
 				vec3 = vld1q_s16(&inPtr[i + k + 8]);
 				coeff = vthzKernPtr[row];
