@@ -150,6 +150,11 @@ sym(CompVMemCopy3_Asm_X64_SSSE3):
 	mov stride, arg(6)
 	lea stride3, [stride*3]
 
+	prefetcht0 [srcPtr + COMPV_YASM_CACHE_LINE_SIZE*0]
+	prefetcht0 [srcPtr + COMPV_YASM_CACHE_LINE_SIZE*1]
+	prefetcht0 [srcPtr + COMPV_YASM_CACHE_LINE_SIZE*2]
+	prefetcht0 [srcPtr + COMPV_YASM_CACHE_LINE_SIZE*3]
+
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	; for (compv_uscalar_t j = 0; j < height; ++j)
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -160,6 +165,7 @@ sym(CompVMemCopy3_Asm_X64_SSSE3):
 		xor i, i
 		xor k, k
 		.LoopWidth:
+			prefetcht0 [srcPtr + k + COMPV_YASM_CACHE_LINE_SIZE*4]
 			COMPV_VLD3_U8_SSSE3 srcPtr + k, xmm0, xmm1, xmm2, xmm3, xmm4, xmm5
 			movdqa [dstPt0 + (i)*COMPV_YASM_UINT8_SZ_BYTES], xmm0
 			movdqa [dstPt1 + (i)*COMPV_YASM_UINT8_SZ_BYTES], xmm1

@@ -12,12 +12,12 @@ using namespace compv;
 #define TEST_PATCH_MOMENTS			0
 #define TEST_SOBEL					0
 #define TEST_CANNY					0
-#define TEST_ADAPT_THRESH			1
+#define TEST_ADAPT_THRESH			0
 #define TEST_OTSU_THRESH			0
 #define TEST_HOUGHSHT				0
 #define TEST_HOUGHKHT				0
 #define TEST_BRUTEFORCE				0
-#define TEST_SPLIT3					0
+#define TEST_SPLIT3					1
 
 /* Entry point function */
 compv_main()
