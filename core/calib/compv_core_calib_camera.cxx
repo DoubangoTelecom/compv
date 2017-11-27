@@ -338,7 +338,7 @@ COMPV_ERROR_CODE CompVCalibCamera::process(const CompVMatPtr& image, CompVCalibC
 		// that the intersections with the (x/y)-axis are almost equidistant and going forward (increasing)
 		// !!The boxes in the checkerboard MUST BE SQUARE!!
 		if (i != lines_hz_grouped.begin()) { // not first line
-			compv_float32_t dist, dist_err, dist_approx_x, dist_err_max_x, dist_approx_y, dist_err_max_y; // not same distortion across x and y -> use different distance estimation
+			compv_float32_t dist, dist_err, dist_approx_x = 0.f, dist_err_max_x = 0.f, dist_approx_y = 0.f, dist_err_max_y = 0.f; // not same distortion across x and y -> use different distance estimation
 			CompVPointFloat32Vector::const_iterator k = plan_curr.intersections.end() - (m_nPatternLinesVt << 1); // #2 last rows
 			CompVPointFloat32Vector::const_iterator m = (k + m_nPatternLinesVt); // move to next line
 			for (size_t index = 0; index < m_nPatternLinesVt; ++k, ++m, ++index) {
