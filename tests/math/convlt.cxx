@@ -52,7 +52,7 @@ COMPV_ERROR_CODE convlt()
 	CompVMatPtr dataIn, kernel;
 	COMPV_CHECK_CODE_RETURN(buildTest(test, &dataIn, &kernel));
 
-	uint64_t timeStart, timeEnd;
+	uint64_t timeStart = 0, timeEnd = 0;
 	CompVMatPtr dataOut;
 
 	// Perform convolution

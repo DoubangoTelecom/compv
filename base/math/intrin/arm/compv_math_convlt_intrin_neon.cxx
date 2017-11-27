@@ -15,6 +15,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+// TODO(dmi): Not optiz -> on iOS (iPhone5, ARM32, HD image, single threaded, #1000 times), asm code: 11395.ms, intrin code: 12879.ms
 // TODO(dmi): Not optiz -> on iOS (iPad2 Air, ARM64, HD image, single threaded, #1000 times), asm code: 3995.ms, intrin code: 4416.ms
 // TODO(dmi): Not optiz -> on Android (Huawei MediaPad2, ARM64, HD image, single threaded, #1000 times), asm code: 8390.ms, intrin code: 9620.ms
 void CompVMathConvlt1VtHzFixedPoint_8u16u8u_Intrin_NEON(const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const uint16_t* vthzKernPtr, compv_uscalar_t kernSize)

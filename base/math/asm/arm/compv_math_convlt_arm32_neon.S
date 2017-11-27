@@ -6,7 +6,7 @@
 # WebSite: http://compv.org                                             #
 #########################################################################
 #if defined(__arm__) && !defined(__aarch64__)
-.include "compv_common_arm32.S"
+.include "compv_common_arm32.S" /*"*/
 
 #if defined(__APPLE__)
 #   define sym(funcname) _##funcname
@@ -19,6 +19,190 @@
 .extern
  
 .text
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@ arg(0) -> const uint8_t* inPtr
+@ arg(1) -> uint8_t* outPtr
+@ arg(2) -> compv_uscalar_t width
+@ arg(3) -> compv_uscalar_t height
+@ arg(4) -> compv_uscalar_t step
+@ arg(5) -> compv_uscalar_t pad
+@ arg(6) -> const uint16_t* vthzKernPtr
+@ arg(7) -> compv_uscalar_t kernSize
+COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32
+    COMPV_GAS_FUNCTION_PROLOG
+	COMPV_GAS_SHADOW_ARGS_TO_STACK 8
+	COMPV_GAS_SAVE_NEON_REGS
+    COMPV_GAS_ALIGN_STACK 16, r11
+	COMPV_GAS_MEMALLOC (16*COMPV_GAS_UINT8_SZ_BYTES)
+
+	@@ Load arguments @@
+	ldm_args r0-r7
+	inPtr .req r0
+	outPtr .req r1
+	width .req r2
+	height .req r3
+	step .req r4
+	pad .req r5
+	vthzKernPtr .req r6
+	kernSize .req r7
+
+    @@ Local variables @@
+    .equ mem		, 0
+    i .req r8
+    row .req r9
+    inPtrPlusI .req r10
+    coeff .req r11
+
+    vecSum0 .req q0
+    vecSum0x .req q0x
+    vecSum0y .req q0y
+    vecSum1 .req q1
+    vecSum1x .req q1x
+    vecSum1y .req q1y
+    vecCoeff .req q2
+    vecCoeffx .req q2x
+    vec0 .req q3
+    vec0x .req q3x
+    vec0y .req q3y
+    vec1 .req q4
+    vec2 .req q5
+    vec2x .req q5x
+    vec2y .req q5y
+    vec3 .req q6
+    vec3x .req q6x
+    vec3y .req q6y
+    vec4 .req q7
+    vec4x .req q7x
+    vec4y .req q7y
+    vec5 .req q8
+    vec5x .req q8x
+    vec5y .req q8y
+
+    @ Change step in bytes unit (for inPtrPlus)
+    lsl step, step, #COMPV_GAS_UINT8_SHIFT_BYTES
+
+    @ Change kernSize in bytes (for vthzKernPtr)
+    lsl kernSize, kernSize, #COMPV_GAS_UINT16_SHIFT_BYTES
+	
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    @ for (j = 0; j < height; ++j)
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    LoopHeight_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32:
+        @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+        @ for (i = 0; i < width16; i += 16)
+        @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+        mov i, width
+        LoopWidth_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32:
+            veor.u16 vecSum0, vecSum0, vecSum0
+            veor.u16 vecSum1, vecSum1, vecSum1
+            @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+            @ for (row = 0, k = 0; row < kernSize; ++row, k += step)
+            @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+            mov inPtrPlusI, inPtr
+            mov row, #0
+            LoopKernel_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32:
+                vld1.u8 { vec0 }, [inPtrPlusI], step
+                ldrh coeff, [vthzKernPtr, row]
+                add row, row, #COMPV_GAS_UINT16_SZ_BYTES
+                vdup.u16 vecCoeffx, coeff
+                vmovl.u8 vec2, vec0x
+                vmovl.u8 vec3, vec0y
+                vmull.u16 vec0, vec2x, vecCoeffx[0]
+                vmull.u16 vec1, vec2y, vecCoeffx[0]
+                vmull.u16 vec2, vec3x, vecCoeffx[0]
+                vmull.u16 vec3, vec3y, vecCoeffx[0]
+                vshrn.u32 vec4x, vec0, #16
+                vshrn.u32 vec4y, vec1, #16
+                vshrn.u32 vec5x, vec2, #16
+                vshrn.u32 vec5y, vec3, #16
+                vqadd.u16 vecSum0, vecSum0, vec4
+                vqadd.u16 vecSum1, vecSum1, vec5 
+                cmp row, kernSize
+                blt LoopKernel_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32
+            EndOf_LoopKernel_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32:
+            
+            vqmovn.u16 vec4x, vecSum0
+            vqmovn.u16 vec4y, vecSum1
+            subs i, i, #16
+            bmi MoreThanWidth16_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32
+
+            @@ if (i < width16) @@
+			LessThanWidth16_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32:
+				vst1.u8 {vec4}, [outPtr]!
+                add inPtr, inPtr, #(16 << COMPV_GAS_UINT8_SHIFT_BYTES)
+				b EndOf_MoreThanWidth16_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32
+			EndOf_LessThanWidth16_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32:
+
+			@@ if (i >= width16) @@
+			MoreThanWidth16_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32:
+                add coeff, sp, #mem @ coeff now contains mem address
+				vst1.u8 {vec4}, [coeff :128]
+				@@ for (; i < width; ++i, ++k) @@
+                add i, i, #16 @ was negative and now contains '(width - (width & -16))'
+                add inPtr, inPtr, i, LSL #COMPV_GAS_UINT8_SHIFT_BYTES
+				LoopMoreThanWidth16_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32:
+                    ldrb row, [coeff], #(1*COMPV_GAS_UINT8_SZ_BYTES) @ read uint8_t into row and increment
+                    strb row, [outPtr], #(1*COMPV_GAS_UINT8_SZ_BYTES) @ write uint8_t from row and increment
+					subs i, i, #1
+					bne LoopMoreThanWidth16_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32
+				EndOf_LoopMoreThanWidth16_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32:
+                b EndOf_LoopWidth_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32
+			EndOf_MoreThanWidth16_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32:
+            
+            bgt LoopWidth_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32 @ branch for far above 'subs i, i, #16' instruction
+        EndOf_LoopWidth_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32:
+
+        subs height, height, #1
+        add inPtr, inPtr, pad
+        add outPtr, outPtr, pad
+        bne LoopHeight_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32
+    EndOf_LoopHeight_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32:
+
+    .unreq inPtr
+	.unreq outPtr
+	.unreq width
+	.unreq height
+	.unreq step
+	.unreq pad
+	.unreq vthzKernPtr
+
+    .unreq i
+    .unreq row
+    .unreq inPtrPlusI
+    .unreq coeff
+
+    .unreq vecSum0
+    .unreq vecSum0x
+    .unreq vecSum0y
+    .unreq vecSum1
+    .unreq vecSum1x
+    .unreq vecSum1y
+    .unreq vecCoeff
+    .unreq vecCoeffx
+    .unreq vec0
+    .unreq vec0x
+    .unreq vec0y
+    .unreq vec1
+    .unreq vec2
+    .unreq vec2x
+    .unreq vec2y
+    .unreq vec3
+    .unreq vec3x
+    .unreq vec3y
+    .unreq vec4
+    .unreq vec4x
+    .unreq vec4y
+    .unreq vec5
+    .unreq vec5x
+    .unreq vec5y
+
+    COMPV_GAS_MEMFREE (16*COMPV_GAS_UINT8_SZ_BYTES)
+	COMPV_GAS_UNALIGN_STACK r11
+	COMPV_GAS_RESTORE_NEON_REGS
+	COMPV_GAS_UNSHADOW_ARGS 8
+	COMPV_GAS_FUNCTION_EPILOG
+	COMPV_GAS_FUNCTION_RETURN
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @ arg(0) -> const uint8_t* inPtr
@@ -310,307 +494,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHz_8u32f8u_Asm_FMA_NEON32
     CompVMathConvlt1VtHz_8u32f8u_Macro_NEON32 1
-
-
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-@ arg(0) -> const uint8_t* inPtr
-@ arg(1) -> uint8_t* outPtr
-@ arg(2) -> compv_uscalar_t width
-@ arg(3) -> compv_uscalar_t height
-@ arg(4) -> compv_uscalar_t step
-@ arg(5) -> compv_uscalar_t pad
-@ arg(6) -> const uint16_t* vthzKernPtr
-@ arg(7) -> compv_uscalar_t kernSize
-COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32
-    COMPV_GAS_FUNCTION_PROLOG
-	COMPV_GAS_SHADOW_ARGS_TO_STACK 8
-	COMPV_GAS_SAVE_NEON_REGS
-
-	@@ Load arguments @@
-	ldm_args r0-r7
-	inPtr .req r0
-	outPtr .req r1
-	width .req r2
-	height .req r3
-	step .req r4
-	pad .req r5
-	vthzKernPtr .req r6
-	kernSize .req r7
-
-    #define argi_vthzKernPtr 6
-
-    @ Change kernelSize to kernSizeInBytes = kernSize * sizeof(uint16_t)
-    kernSizeInBytes .req kernSize
-    mov kernSizeInBytes, kernSize, LSL #1 @ From samples(uint16_t) to bytes
-    .unreq kernSize
-
-    i .req r8
-    row .req r9
-    inPtr_ .req r10
-    coeff .req r11
-
-    vecSum0 .req q0
-    #define vecSum0x q0x
-    #define vecSum0y q0y
-    vecSum1 .req q1
-    #define vecSum1x q1x
-    #define vecSum1y q1y
-    vecCoeff .req q2
-    #define vecCoeffx q2x
-    #define vec0 q3
-    #define vec0x q3x
-    #define vec0y q3y
-    #define vec1 q4
-    #define vec1x q4x
-    #define vec1y q4y
-    #define vec2 q5
-    #define vec2x q5x
-    #define vec2y q5y
-    #define vec3 q6
-    #define vec3x q6x
-    #define vec3y q6y
-	
-    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    @ for (j = 0; j < height; ++j)
-    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    LoopHeight_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32:
-        @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-        @ for (i = 0; i < width - 15; i += 16)
-        @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-        and i, width, #-16 @ Align backward
-        LoopWidthPer16Samples_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32:
-            pld [inPtr, #CACHE_LINE_SIZE]
-            @pst [outPtr, #CACHE_LINE_SIZE]
-            @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-            @ for (row = 0, k = 0; row < kernSize; ++row, k += step)
-            @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-            sub row, kernSizeInBytes, #COMPV_GAS_UINT16_SZ_BYTES
-            mov inPtr_, inPtr
-            ldr_arg argi_vthzKernPtr, vthzKernPtr
-            vld1.u8 { q15 }, [inPtr_], step @ q15 = vecInPtr
-            ldrh coeff, [vthzKernPtr], #COMPV_GAS_UINT16_SZ_BYTES
-            vmovl.u8 vec2, q15x
-            vmovl.u8 vec3, q15y
-            vdup.u16 vecCoeffx, coeff
-            vmull.u16 vec0, vec2x, vecCoeffx[0]
-            vmull.u16 vec1, vec2y, vecCoeffx[0]
-            vmull.u16 vec2, vec3x, vecCoeffx[0]
-            vmull.u16 vec3, vec3y, vecCoeffx[0]
-            vshrn.u32 vecSum0x, vec0, #16
-            vshrn.u32 vecSum0y, vec1, #16
-            vshrn.u32 vecSum1x, vec2, #16
-            vshrn.u32 vecSum1y, vec3, #16
-            LoopKernelPer16Samples_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32:
-                ldrh coeff, [vthzKernPtr], #COMPV_GAS_UINT16_SZ_BYTES
-                vld1.u8 { q15 }, [inPtr_], step @ q15 = vecInPtr                
-                vdup.u16 vecCoeffx, coeff
-                vmovl.u8 vec2, q15x
-                vmovl.u8 vec3, q15y
-                vmull.u16 vec0, vec2x, vecCoeffx[0]
-                vmull.u16 vec1, vec2y, vecCoeffx[0]
-                vmull.u16 vec2, vec3x, vecCoeffx[0]
-                vmull.u16 vec3, vec3y, vecCoeffx[0]
-                vshrn.u32 q13x, vec0, #16
-                vshrn.u32 q13y, vec1, #16
-                vshrn.u32 q14x, vec2, #16
-                vshrn.u32 q14y, vec3, #16
-                vqadd.u16 vecSum0, vecSum0, q13
-                vqadd.u16 vecSum1, vecSum1, q14 
-                subs row, row, #COMPV_GAS_INT16_SZ_BYTES    
-                bne LoopKernelPer16Samples_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32
-                @@ EndOf_LoopKernelPer16Samples_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32 @@
-            
-            vmovn.u16 q13x, vecSum0
-            vmovn.u16 q13y, vecSum1
-            vst1.u8 {q13}, [outPtr]!
-            subs i, i, #16
-            add inPtr, inPtr, #16
-            bne LoopWidthPer16Samples_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32
-            @@ EndOf_LoopWidthPer16Samples_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32 @@        
-
-
-        @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-        @ if (i < width - 7)
-        @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-        and i, width, #15 @  modulo 16
-        lsrs i, i, #3 @ div 8
-        beq EndOf_IfPer8Samples_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32
-        IfPer8Samples_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32:
-            @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-            @ for (row = 0, k = 0; row < kernSize; ++row, k += step)
-            @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-            sub row, kernSizeInBytes, #COMPV_GAS_UINT16_SZ_BYTES
-            mov inPtr_, inPtr
-            ldr_arg argi_vthzKernPtr, vthzKernPtr
-            vld1.u8 { q15x }, [inPtr_], step @ q15 = vecInPtr
-            ldrh coeff, [vthzKernPtr], #COMPV_GAS_UINT16_SZ_BYTES
-            vdup.u16 vecCoeffx, coeff
-            vmovl.u8 vec1, q15x
-            vmull.u16 q12, vec1x, vecCoeffx[0]
-            vmull.u16 q13, vec1y, vecCoeffx[0]
-            vshrn.u32 vecSum0x, q12, #16
-            vshrn.u32 vecSum0y, q13, #16    
-            LoopKernelPer8Samples_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32:
-                ldrh coeff, [vthzKernPtr], #COMPV_GAS_UINT16_SZ_BYTES
-                vld1.u8 { q15x }, [inPtr_], step @ q15x = vecInPtr
-                vdup.u16 vecCoeffx, coeff
-                vmovl.u8 vec1, q15x
-                vmull.u16 q12, vec1x, vecCoeffx[0]
-                vmull.u16 q13, vec1y, vecCoeffx[0]
-                vshrn.u32 q14x, q12, #16
-                vshrn.u32 q14y, q13, #16
-                vqadd.u16 vecSum0, vecSum0, q14
-                subs row, row, #COMPV_GAS_INT16_SZ_BYTES
-                bne LoopKernelPer8Samples_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32
-                @@ EndOf_LoopKernelPer8Samples_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32 @@
-            
-            vmovn.u16 q15x, vecSum0
-            vst1.u8 {q15x}, [outPtr]!
-            add inPtr, inPtr, #8
-            EndOf_IfPer8Samples_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32:
-            @@ EndOf_IfPer8Samples_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32 @@
-
-
-        @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-        @ if (i < width - 3)
-        @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-        and i, width, #7 @  modulo 8
-        lsrs i, i, #2 @ div 4
-        beq EndOf_IfPer4Samples_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32
-        IfPer4Samples_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32:
-            @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-            @ for (row = 0, k = 0; row < kernSize; ++row, k += step)
-            @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-            sub row, kernSizeInBytes, #COMPV_GAS_UINT16_SZ_BYTES
-            mov inPtr_, inPtr
-            ldr_arg argi_vthzKernPtr, vthzKernPtr
-            vld1.u8 { q15x }, [inPtr_], step @ q15 = vecInPtr
-            ldrh coeff, [vthzKernPtr], #COMPV_GAS_UINT16_SZ_BYTES
-            vdup.u16 vecCoeffx, coeff
-            vmovl.u8 vec1, q15x
-            vmull.u16 q12, vec1x, vecCoeffx[0]                
-            vshrn.u32 vecSum0x, q12, #16
-            LoopKernelPer4Samples_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32:
-                ldrh coeff, [vthzKernPtr], #COMPV_GAS_UINT16_SZ_BYTES
-                vld1.u8 { q15x }, [inPtr_], step @ q15x = vecInPtr
-                vdup.u16 vecCoeffx, coeff
-                vmovl.u8 vec1, q15x
-                vmull.u16 q12, vec1x, vecCoeffx[0]                
-                vshrn.u32 q13x, q12, #16
-                vqadd.u16 vecSum0x, vecSum0x, q13x
-                subs row, row, #COMPV_GAS_INT16_SZ_BYTES
-                bne LoopKernelPer4Samples_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32
-                @@ EndOf_LoopKernelPer4Samples_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32 @@
-            
-            vmovn.u16 q15x, vecSum0
-            vmov.u8 row, q15x[0]
-            vmov.u8 inPtr_, q15x[1]
-            vmov.u8 coeff, q15x[2]
-            strb row, [outPtr, #0]
-            vmov.u8 row, q15x[3]
-            strb inPtr_, [outPtr, #1]
-            strb coeff, [outPtr, #2]
-            strb row, [outPtr, #3]
-            add inPtr, inPtr, #4
-            add outPtr, outPtr, #4
-            EndOf_IfPer4Samples_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32:
-            @@ EndOf_IfPer4Samples_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32 @@
-
-
-        @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-        @ if (i < width)
-        @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-        ands i, width, #3 @  modulo 4
-        beq EndOf_IfPer1Samples_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32
-        IfPer1Samples_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32:
-            @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-            @ for (row = 0, k = 0; row < kernSize; ++row, k += step)
-            @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-            sub row, kernSizeInBytes, #COMPV_GAS_UINT16_SZ_BYTES
-            mov inPtr_, inPtr
-            ldr_arg argi_vthzKernPtr, vthzKernPtr
-            vld1.u8 { q15x }, [inPtr_], step @ q15 = vecInPtr
-            ldrh coeff, [vthzKernPtr], #COMPV_GAS_UINT16_SZ_BYTES
-            vdup.u16 vecCoeffx, coeff
-            vmovl.u8 vec1, q15x
-            vmull.u16 q12, vec1x, vecCoeffx[0]     
-            vshrn.u32 vecSum0x, q12, #16
-            LoopKernelPer1Samples_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32:
-                ldrh coeff, [vthzKernPtr], #COMPV_GAS_UINT16_SZ_BYTES
-                vld1.u8 { q15x }, [inPtr_], step @ q15x = vecInPtr                
-                vdup.u16 vecCoeffx, coeff
-                vmovl.u8 vec1, q15x
-                vmull.u16 q12, vec1x, vecCoeffx[0]                
-                vshrn.u32 q13x, q12, #16
-                vqadd.u16 vecSum0x, vecSum0x, q13x
-                subs row, row, #COMPV_GAS_INT16_SZ_BYTES
-                bne LoopKernelPer1Samples_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32
-                @@ EndOf_LoopKernelPer1Samples_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32 @@
-            
-            vmovn.u16 q15x, vecSum0
-            add inPtr, inPtr, i
-            .set counter, 0
-            .rept 4
-                vmov.u8 row, q15x[counter]
-                .set counter, counter+1
-                strb row, [outPtr], #1
-                subs i, i, #1
-                beq EndOf_IfPer1Samples_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32
-            .endr
-            EndOf_IfPer1Samples_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32:
-            @@ EndOf_IfPer1Samples_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32 @@
-
-
-        subs height, height, #1
-        add inPtr, inPtr, pad
-        add outPtr, outPtr, pad
-		bne LoopHeight_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32
-        @@ EndOf_LoopHeight_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32 @@
-
-
-
-    .unreq inPtr
-	.unreq outPtr
-	.unreq width
-	.unreq height
-	.unreq step
-	.unreq pad
-	.unreq vthzKernPtr
-
-    #undef argi_vthzKernPtr
-
-    .unreq kernSizeInBytes
-
-    .unreq i
-    .unreq row
-    .unreq inPtr_
-    .unreq coeff
-
-    .unreq vecSum0
-    #undef vecSum0x
-    #undef vecSum0y
-    .unreq vecSum1
-    #undef vecSum1x
-    #undef vecSum1y
-    .unreq vecCoeff
-    #undef vecCoeffx
-    #undef vec0
-    #undef vec0x
-    #undef vec0y
-    #undef vec1
-    #undef vec1x
-    #undef vec1y
-    #undef vec2
-    #undef vec2x
-    #undef vec2y
-    #undef vec3
-    #undef vec3x
-    #undef vec3y
-
-	COMPV_GAS_RESTORE_NEON_REGS
-	COMPV_GAS_UNSHADOW_ARGS 8
-	COMPV_GAS_FUNCTION_EPILOG
-	COMPV_GAS_FUNCTION_RETURN
 
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@

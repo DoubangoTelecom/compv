@@ -12,6 +12,8 @@
 #include "compv/base/compv_mat.h"
 #include "compv/base/compv_allocators.h"
 
+#include <float.h> /* DBL_MAX */
+
 #if !defined(COMPV_CALIB_PATTERN_ROWS_COUNT)
 #	define COMPV_CALIB_PATTERN_ROWS_COUNT			10 // Number of rows
 #endif /* COMPV_CALIB_PATTERN_ROWS_COUNT */

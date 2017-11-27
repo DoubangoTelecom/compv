@@ -33,6 +33,9 @@
 		157AEB941F14EB6E00F68F36 /* calib_camera.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 157AEB821F14EB6E00F68F36 /* calib_camera.cxx */; };
 		157AEB951F14EB6E00F68F36 /* histogram.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 157AEB831F14EB6E00F68F36 /* histogram.cxx */; };
 		157F218F1F14EDA00033E012 /* equirectangular_1282x720_gray.yuv in Resources */ = {isa = PBXBuildFile; fileRef = 157F218E1F14EDA00033E012 /* equirectangular_1282x720_gray.yuv */; };
+		15F940911FCB795200C4E188 /* calib_undist.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 15F9408E1FCB795200C4E188 /* calib_undist.cxx */; };
+		15F940921FCB795200C4E188 /* convlt.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 15F9408F1FCB795200C4E188 /* convlt.cxx */; };
+		15F940931FCB795200C4E188 /* stats_ransac.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 15F940901FCB795200C4E188 /* stats_ransac.cxx */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -108,6 +111,9 @@
 		157AEB831F14EB6E00F68F36 /* histogram.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = histogram.cxx; path = ../../histogram.cxx; sourceTree = "<group>"; };
 		157F21841F14ECE50033E012 /* main.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = main.cxx; path = ../../main.cxx; sourceTree = "<group>"; };
 		157F218E1F14EDA00033E012 /* equirectangular_1282x720_gray.yuv */ = {isa = PBXFileReference; lastKnownFileType = file; name = equirectangular_1282x720_gray.yuv; path = ../../../../../data/colorspace/equirectangular_1282x720_gray.yuv; sourceTree = "<group>"; };
+		15F9408E1FCB795200C4E188 /* calib_undist.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = calib_undist.cxx; path = ../../calib_undist.cxx; sourceTree = "<group>"; };
+		15F9408F1FCB795200C4E188 /* convlt.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = convlt.cxx; path = ../../convlt.cxx; sourceTree = "<group>"; };
+		15F940901FCB795200C4E188 /* stats_ransac.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = stats_ransac.cxx; path = ../../stats_ransac.cxx; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -173,6 +179,9 @@
 		157030791E67281700F0B895 /* source */ = {
 			isa = PBXGroup;
 			children = (
+				15F9408E1FCB795200C4E188 /* calib_undist.cxx */,
+				15F9408F1FCB795200C4E188 /* convlt.cxx */,
+				15F940901FCB795200C4E188 /* stats_ransac.cxx */,
 				157F21841F14ECE50033E012 /* main.cxx */,
 				157030911E6728CF00F0B895 /* tests_common.cxx */,
 				157030921E6728CF00F0B895 /* tests_common.h */,
@@ -329,7 +338,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				15F940931FCB795200C4E188 /* stats_ransac.cxx in Sources */,
 				1570308F1E6728C000F0B895 /* svd.cxx in Sources */,
+				15F940921FCB795200C4E188 /* convlt.cxx in Sources */,
 				1570303B1E6726D400F0B895 /* ViewController.m in Sources */,
 				157030861E6728C000F0B895 /* calib_homography.cxx in Sources */,
 				157AEB941F14EB6E00F68F36 /* calib_camera.cxx in Sources */,
@@ -344,6 +355,7 @@
 				157AEB951F14EB6E00F68F36 /* histogram.cxx in Sources */,
 				1570308E1E6728C000F0B895 /* stats_variance.cxx in Sources */,
 				157030901E6728C000F0B895 /* transform.cxx in Sources */,
+				15F940911FCB795200C4E188 /* calib_undist.cxx in Sources */,
 				157030871E6728C000F0B895 /* distance.cxx in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
