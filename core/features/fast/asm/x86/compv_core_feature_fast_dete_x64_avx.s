@@ -126,15 +126,13 @@ section .text
 		vpxor vecSum1, vecSum1
 		_mm_fast_load_Darkers 0, 8, 4, 12
 		vpcmpgtb ymm4, vecSum1, vecNMinSumMinusOne
-		vpmovmskb rax, ymm4
-		test rax, rax
+		vptest ymm4, ymm4
 		jz .EndOfDarkers
 		_mm_fast_load_Darkers 1, 9, 5, 13
 		_mm_fast_load_Darkers 2, 10, 6, 14
 		_mm_fast_load_Darkers 3, 11, 7, 15
 		vpcmpgtb ymm4, vecSum1, vecNMinusOne
-		vpmovmskb rax, ymm4
-		test rax, rax
+		vptest ymm4, ymm4
 		jz .EndOfDarkers
 		_mm_fast_init_diffbinarysum %1
 		%assign strengthIdx 0
@@ -151,15 +149,13 @@ section .text
 		vpxor vecSum1, vecSum1
 		_mm_fast_load_Brighters 0, 8, 4, 12
 		vpcmpgtb ymm4, vecSum1, vecNMinSumMinusOne
-		vpmovmskb rax, ymm4
-		test rax, rax
+		vptest ymm4, ymm4
 		jz .EndOfBrighters
 		_mm_fast_load_Brighters 1, 9, 5, 13
 		_mm_fast_load_Brighters 2, 10, 6, 14
 		_mm_fast_load_Brighters 3, 11, 7, 15
 		vpcmpgtb ymm4, vecSum1, vecNMinusOne
-		vpmovmskb rax, ymm4
-		test rax, rax
+		vptest ymm4, ymm4
 		jz .EndOfBrighters
 		_mm_fast_init_diffbinarysum %1
 		%assign strengthIdx 0
@@ -274,41 +270,32 @@ sym(CompVFastNmsGather_Asm_X64_AVX2):
 			vmovdqu ymm2, [rax + r9]
 			vpcmpeqb ymm3, ymm2, ymm0
 			vpandn ymm3, ymm1
-			vpmovmskb rcx, ymm3
-			test rcx, rcx
+			vptest ymm3, ymm3
 			jz .Next
-			vmovdqu ymm4, [rax + r9 - 1] ; left
-			vmovdqu ymm5, [rax + r9 + 1] ; right
-			vmovdqu ymm6, [rax + r10 - 1] ; left-top
-			vmovdqu ymm7, [rax + r10] ; top
-			vmovdqu ymm8, [rax + r10 + 1] ; right-top
-			vmovdqu ymm9, [rax + r12 - 1] ; left-bottom
-			vmovdqu ymm10, [rax + r12] ; bottom
-			vmovdqu ymm11, [rax + r12 + 1] ; right-bottom
-			vpminub ymm4, ymm2
-			vpminub ymm5, ymm2
-			vpminub ymm6, ymm2
-			vpminub ymm7, ymm2
-			vpminub ymm8, ymm2
-			vpminub ymm9, ymm2
-			vpminub ymm10, ymm2
-			vpminub ymm11, ymm2
-			vpcmpeqb ymm4, ymm2
-			vpcmpeqb ymm5, ymm2
-			vpcmpeqb ymm6, ymm2
-			vpcmpeqb ymm7, ymm2
-			vpcmpeqb ymm8, ymm2
-			vpcmpeqb ymm9, ymm2
-			vpcmpeqb ymm10, ymm2
-			vpcmpeqb ymm11, ymm2
-			vpor ymm4, ymm5
-			vpor ymm4, ymm6
-			vpor ymm4, ymm7
-			vpor ymm4, ymm8
-			vpor ymm4, ymm9
-			vpor ymm4, ymm10
-			vpor ymm4, ymm11
-			vpand ymm4, ymm2
+			vpminub ymm4, ymm2, [rax + r9 - 1] ; left
+			vpminub ymm5, ymm2, [rax + r9 + 1] ; right
+			vpminub ymm6, ymm2, [rax + r10 - 1] ; left-top
+			vpminub ymm7, ymm2, [rax + r10] ; top
+			vpminub ymm8, ymm2, [rax + r10 + 1] ; right-top
+			vpminub ymm9, ymm2, [rax + r12 - 1] ; left-bottom
+			vpminub ymm10, ymm2, [rax + r12] ; bottom
+			vpminub ymm11, ymm2, [rax + r12 + 1] ; right-bottom
+			vpcmpeqb ymm4, ymm4, ymm2
+			vpcmpeqb ymm5, ymm5, ymm2
+			vpcmpeqb ymm6, ymm6, ymm2
+			vpcmpeqb ymm7, ymm7, ymm2
+			vpcmpeqb ymm8, ymm8, ymm2
+			vpcmpeqb ymm9, ymm9, ymm2
+			vpcmpeqb ymm10, ymm10, ymm2
+			vpcmpeqb ymm11, ymm11, ymm2
+			vpor ymm4, ymm4, ymm5
+			vpor ymm4, ymm4, ymm6
+			vpor ymm4, ymm4, ymm7
+			vpor ymm4, ymm4, ymm8
+			vpor ymm4, ymm4, ymm9
+			vpor ymm4, ymm4, ymm10
+			vpor ymm4, ymm4, ymm11
+			vpand ymm4, ymm4, ymm2
 			vmovdqu [rdx + r9], ymm4
 			.Next
 			

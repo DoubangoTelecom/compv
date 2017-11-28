@@ -131,15 +131,13 @@ section .text
 		vpxor vecSum1, vecSum1
 		_mm_fast_load_Darkers 0, 8, 4, 12
 		vpcmpgtb ymm4, vecSum1, vecNMinSumMinusOne
-		vpmovmskb rax, ymm4
-		test rax, rax
+		vptest ymm4, ymm4
 		jz .EndOfDarkers
 		_mm_fast_load_Darkers 1, 9, 5, 13
 		_mm_fast_load_Darkers 2, 10, 6, 14
 		_mm_fast_load_Darkers 3, 11, 7, 15
 		vpcmpgtb ymm4, vecSum1, vecNMinusOne
-		vpmovmskb rax, ymm4
-		test rax, rax
+		vptest ymm4, ymm4
 		jz .EndOfDarkers
 		_mm_fast_init_diffbinarysum %1
 		%assign strengthIdx 0
@@ -156,15 +154,13 @@ section .text
 		vpxor vecSum1, vecSum1
 		_mm_fast_load_Brighters 0, 8, 4, 12
 		vpcmpgtb ymm4, vecSum1, vecNMinSumMinusOne
-		vpmovmskb rax, ymm4
-		test rax, rax
+		vptest ymm4, ymm4
 		jz .EndOfBrighters
 		_mm_fast_load_Brighters 1, 9, 5, 13
 		_mm_fast_load_Brighters 2, 10, 6, 14
 		_mm_fast_load_Brighters 3, 11, 7, 15
 		vpcmpgtb ymm4, vecSum1, vecNMinusOne
-		vpmovmskb rax, ymm4
-		test rax, rax
+		vptest ymm4, ymm4
 		jz .EndOfBrighters
 		_mm_fast_init_diffbinarysum %1
 		%assign strengthIdx 0
@@ -276,8 +272,7 @@ sym(CompVFastNmsGather_Asm_X86_AVX2):
 			vmovdqu ymm2, [rax + rdi]
 			vpcmpeqb ymm3, ymm2, ymm0
 			vpandn ymm3, ymm3, ymm1
-			vpmovmskb rcx, ymm3
-			test rcx, rcx
+			vptest ymm3, ymm3
 			jz .Next
 			mov rbx, rdi
 			mov rcx, rdi
@@ -366,8 +361,8 @@ sym(CompVFastNmsApply_Asm_X86_AVX2):
 	mov rsi, arg(3)
 	lea rsi, [rsi - 3] ; rsi = j
 	mov rbx, arg(2) ; rbx = width
-	vpxor ymm0, ymm0
-	vpcmpeqb ymm1, ymm1
+	vpxor ymm0, ymm0, ymm0
+	vpcmpeqb ymm1, ymm1, ymm1
 	
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	; for (j = 3; j < heigth - 3; ++j)
@@ -379,9 +374,8 @@ sym(CompVFastNmsApply_Asm_X86_AVX2):
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		.LoopWidth
 			vpcmpeqb ymm2, ymm0, [rdx + rdi]
-			vpandn ymm2, ymm1
-			vpmovmskb rcx, ymm2
-			test rcx, rcx
+			vpandn ymm2, ymm2, ymm1
+			vptest ymm2, ymm2
 			jz .Next
 			vpandn ymm2, [rax + rdi]
 			vmovdqa [rdx + rdi], ymm0

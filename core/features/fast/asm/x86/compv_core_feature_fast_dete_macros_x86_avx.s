@@ -30,8 +30,7 @@
 		vpor ymm4, ymm4, ymm5
 		vpor ymm6, ymm6, ymm7
 		vpor ymm4, ymm4, ymm6
-		vpmovmskb rax, ymm4
-		test rax, rax
+		vptest ymm4, ymm4
 		jz .Next
 		vmovdqa [vecCircle16 + (%1*32)], ymm14
 		vmovdqa [vecCircle16 + (%2*32)], ymm15
@@ -57,8 +56,7 @@
 		vpor ymm4, ymm5
 		vpor ymm6, ymm7
 		vpor ymm4, ymm6
-		vpmovmskb rax, ymm4
-		test rax, rax
+		vptest ymm4, ymm4
 		jz .Next
 	%endif
 %endmacro
