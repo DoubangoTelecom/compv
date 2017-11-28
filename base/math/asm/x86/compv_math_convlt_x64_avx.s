@@ -130,6 +130,7 @@ sym(CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X64_AVX2):
 			
 			cmp i, width32
 			vpackuswb vecSum0, vecSum0, vecSum1
+			vpermq vecSum0, vecSum0, 0xD8
 			jge .MoreThanWidth32
 				
 			;; if (i < width32) ;;

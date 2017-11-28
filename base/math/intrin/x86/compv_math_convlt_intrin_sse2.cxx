@@ -122,7 +122,7 @@ void CompVMathConvlt1VtHz_8u32f32f_Intrin_SSE2(const uint8_t* inPtr, compv_float
 	__m128i vecInPtr, vec0i, vec1i, vec2i, vec3i;
 	__m128 vecCoeff, vecSum0, vecSum1, vecSum2, vecSum3, vec0f, vec1f, vec2f, vec3f;
 	const __m128i vecZero = _mm_setzero_si128();
-	COMPV_ALIGN_SSE() compv_float32_t mem[4*4];
+	COMPV_ALIGN_SSE() compv_float32_t mem[16];
 
 	for (j = 0; j < height; ++j) {
 		for (i = 0; i < width; i += 16) {
@@ -182,7 +182,7 @@ void CompVMathConvlt1VtHz_32f32f32f_Intrin_SSE2(const compv_float32_t* inPtr, co
 	const compv_uscalar_t width16 = width & -16;
 	__m128 vecCoeff, vecSum0, vecSum1, vecSum2, vecSum3, vec0f, vec1f, vec2f, vec3f;
 	const __m128i vecZero = _mm_setzero_si128();
-	COMPV_ALIGN_SSE() compv_float32_t mem[4*4];
+	COMPV_ALIGN_SSE() compv_float32_t mem[16];
 
 	for (j = 0; j < height; ++j) {
 		for (i = 0; i < width; i += 16) {
@@ -290,7 +290,7 @@ void CompVMathConvlt1VtHz_8u16s16s_Intrin_SSE2(const uint8_t* inPtr, int16_t* ou
 	const compv_uscalar_t width16 = width & -16;
 	__m128i vecInPtr, vec0, vec1, vec2, vec3, vecSum0, vecSum1, vecSum2, vecSum3, vecCoeff;
 	const __m128i vecZero = _mm_setzero_si128();
-	COMPV_ALIGN_SSE() int16_t mem[8*2];
+	COMPV_ALIGN_SSE() int16_t mem[16];
 
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM code which is SSE41 is 3 times faster");
 
@@ -348,7 +348,7 @@ void CompVMathConvlt1VtHz_16s16s16s_Intrin_SSE2(const int16_t* inPtr, int16_t* o
 	const compv_uscalar_t stride = width + pad;
 	const compv_uscalar_t width16 = width & -16;
 	__m128i vec0, vec1, vec2, vec3, vecSum0, vecSum1, vecSum2, vecSum3, vecCoeff;
-	COMPV_ALIGN_SSE() int16_t mem[8*2];
+	COMPV_ALIGN_SSE() int16_t mem[16];
 
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM code which is SSE41 is 3 times faster");
 

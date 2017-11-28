@@ -40,6 +40,7 @@ void CompVMathConvlt1VtHzFixedPoint_8u16u8u_Intrin_AVX2(const uint8_t* inPtr, ui
 				vecSum1 = _mm256_adds_epu16(vecSum1, _mm256_mulhi_epu16(vec1, vecCoeff));
 			}
 			vec0 = _mm256_packus_epi16(vecSum0, vecSum1);
+			vec0 = _mm256_permute4x64_epi64(vec0, 0xD8);
 			if (i < width32) {
 				_mm256_storeu_si256(reinterpret_cast<__m256i*>(&outPtr[i]), vec0);
 			}
@@ -138,7 +139,7 @@ void CompVMathConvlt1VtHz_8u32f32f_Intrin_AVX2(const uint8_t* inPtr, compv_float
 	const compv_uscalar_t width32 = width & -32;
 	__m256i vec0i, vec1i, vec2i, vec3i;
 	__m256 vecCoeff, vecSum0, vecSum1, vecSum2, vecSum3, vec0f, vec1f, vec2f, vec3f;
-	COMPV_ALIGN_AVX() compv_float32_t mem[8*4];
+	COMPV_ALIGN_AVX() compv_float32_t mem[32];
 
 	for (j = 0; j < height; ++j) {
 		for (i = 0; i < width; i += 32) {
@@ -201,7 +202,7 @@ void CompVMathConvlt1VtHz_32f32f32f_Intrin_AVX2(const compv_float32_t* inPtr, co
 	const compv_uscalar_t width32 = width & -32;
 	__m256 vecCoeff, vec0f, vec1f, vec2f, vec3f, vecSum0, vecSum1, vecSum2, vecSum3;
 	const __m256i vecZero = _mm256_setzero_si256();
-	COMPV_ALIGN_AVX() compv_float32_t mem[8 * 4];
+	COMPV_ALIGN_AVX() compv_float32_t mem[32];
 
 	for (j = 0; j < height; ++j) {
 		for (i = 0; i < width; i += 32) {
@@ -320,7 +321,7 @@ void CompVMathConvlt1VtHz_8u16s16s_Intrin_AVX2(const uint8_t* inPtr, int16_t* ou
 	const compv_uscalar_t stride = (width + pad);
 	const compv_uscalar_t width32 = width & -32;
 	__m256i vec0, vec1, vec2, vec3, vecSum0, vecSum1, vecSum2, vecSum3, vecCoeff;
-	COMPV_ALIGN_AVX() int16_t mem[16*2];
+	COMPV_ALIGN_AVX() int16_t mem[32];
 
 	// Using int32_t as accumulator to avoid overflow
 
@@ -379,7 +380,7 @@ void CompVMathConvlt1VtHz_16s16s16s_Intrin_AVX2(const int16_t* inPtr, int16_t* o
 	const compv_uscalar_t stride = (width + pad);
 	const compv_uscalar_t width32 = width & -32;
 	__m256i vec0, vec1, vec2, vec3, vecSum0, vecSum1, vecSum2, vecSum3, vecCoeff;
-	COMPV_ALIGN_AVX() int16_t mem[16 * 2];
+	COMPV_ALIGN_AVX() int16_t mem[32];
 	
 	// Using int32_t as accumulator to avoid overflow
 
