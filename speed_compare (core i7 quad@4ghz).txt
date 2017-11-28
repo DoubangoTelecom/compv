@@ -55,7 +55,7 @@ We need more optiz in CompV. For now with low prio because not used in any comme
 CompV: 3358.ms(mt,avx2), 4730.ms(mt,sse2), 8447(st,avx2), 11261.ms(st,sse2)
 OpenCV: 10270.ms(full optiz)
 Remarque: The way we write to the shared strengths buffer is slow but required to have best support for multithreading.
-This is why we are better than OpenCV by faaaaar.
+This is why we are better than OpenCV by faaaaar. OpenCV uses SSE2 and MT.
 The above numbers means we can run feature detection on HD image at 2977fps while opencv runs at 973fps.
 We're using #8 threads and with more threads (e.g. #16) we can go as high as 5000fps
 
