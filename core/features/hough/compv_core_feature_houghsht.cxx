@@ -93,7 +93,7 @@ COMPV_ERROR_CODE CompVHoughSht::set(int id, const void* valuePtr, size_t valueSi
 
 COMPV_ERROR_CODE CompVHoughSht::process(const CompVMatPtr& edges, CompVHoughLineVector& lines, const CompVMatPtr& directions COMPV_DEFAULT(NULL)) /*Overrides(CompVHough)*/
 {
-	COMPV_CHECK_EXP_RETURN(!edges || edges->isEmpty() || edges->subType() != COMPV_SUBTYPE_PIXELS_Y, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Edges null or not grayscale");
+	COMPV_CHECK_EXP_RETURN(!edges || edges->isEmpty() || edges->planeCount() != 1 || edges->elmtInBytes() != sizeof(uint8_t), COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Edges null or not 8uc1");
 
 	// Init coords (sine and cosine tables)
 	COMPV_CHECK_CODE_RETURN(initCoords(m_fRho, m_fTheta, m_nThreshold, edges->cols(), edges->rows()));

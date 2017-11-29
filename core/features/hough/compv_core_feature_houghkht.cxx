@@ -236,14 +236,15 @@ COMPV_ERROR_CODE CompVHoughKht::process(const CompVMatPtr& edges, CompVHoughLine
 			}
 			else {
 				COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("If you're not reusing the edges you should let us know");
-#if 0
-				COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Multiple memcpy");
-				COMPV_CHECK_CODE_RETURN(edges->clone(&m_edges));
-#else
-				COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&m_edges, COMPV_SUBTYPE_PIXELS_Y, edges->cols(), edges->rows(), edges->stride()));
-				COMPV_CHECK_EXP_RETURN(m_edges->dataSizeInBytes() != edges->dataSizeInBytes(), COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
-				COMPV_CHECK_CODE_RETURN(CompVMem::copy(m_edges->ptr<void>(), edges->ptr<const void*>(), edges->dataSizeInBytes()));
-#endif
+				if (edges->isMemoryOwed()) {
+					COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&m_edges, COMPV_SUBTYPE_PIXELS_Y, edges->cols(), edges->rows(), edges->stride()));
+					COMPV_CHECK_EXP_RETURN(m_edges->dataSizeInBytes() != edges->dataSizeInBytes(), COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
+					COMPV_CHECK_CODE_RETURN(CompVMem::copy(m_edges->ptr<void>(), edges->ptr<const void*>(), edges->dataSizeInBytes()));
+				}
+				else {
+					//COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Multiple memcpy");
+					COMPV_CHECK_CODE_RETURN(edges->clone(&m_edges));
+				}
 			}
 			return COMPV_ERROR_CODE_S_OK;
 		};
@@ -328,14 +329,15 @@ COMPV_ERROR_CODE CompVHoughKht::process(const CompVMatPtr& edges, CompVHoughLine
 		}
 		else {
 			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("If you're not reusing the edges you should let us know");
-#if 0
-			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Multiple memcpy");
-			COMPV_CHECK_CODE_RETURN(edges->clone(&m_edges));
-#else
-			COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&m_edges, COMPV_SUBTYPE_PIXELS_Y, edges->cols(), edges->rows(), edges->stride()));
-			COMPV_CHECK_EXP_RETURN(m_edges->dataSizeInBytes() != edges->dataSizeInBytes(), COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
-			COMPV_CHECK_CODE_RETURN(CompVMem::copy(m_edges->ptr<void>(), edges->ptr<const void*>(), edges->dataSizeInBytes()));
-#endif
+			if (edges->isMemoryOwed()) {
+				COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&m_edges, COMPV_SUBTYPE_PIXELS_Y, edges->cols(), edges->rows(), edges->stride()));
+				COMPV_CHECK_EXP_RETURN(m_edges->dataSizeInBytes() != edges->dataSizeInBytes(), COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
+				COMPV_CHECK_CODE_RETURN(CompVMem::copy(m_edges->ptr<void>(), edges->ptr<const void*>(), edges->dataSizeInBytes()));
+		}
+			else {
+				//COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Multiple memcpy");
+				COMPV_CHECK_CODE_RETURN(edges->clone(&m_edges));
+			}
 		}
 
 		/* Init coords (sine and cosine tables) */
@@ -546,7 +548,7 @@ COMPV_ERROR_CODE CompVHoughKht::linking_AppendixA(CompVMatPtr& edges, CompVHough
 	const size_t edgesHeight = edges->rows();
 	const size_t edgesStride = edges->strideInBytes();
 	const int maxi = static_cast<int>(edges->cols() - 1);
-	const int maxi64 = maxi - 8;
+	const int maxi64 = maxi & -8;
 	const int maxj = static_cast<int>(edges->rows() - 1);
 	int x_ref, y_ref; // both 'x_ref' and 'y_ref' start at 1
 
@@ -554,14 +556,17 @@ COMPV_ERROR_CODE CompVHoughKht::linking_AppendixA(CompVMatPtr& edges, CompVHough
 
 #if COMPV_INTRINSIC && COMPV_ARCH_X86 /* To avoid AVX/SSE transition issues (file not built with /AVX flag) do not add support for AVX (anyways, tested and not faster) */
 	if (edges->cols() >= 16 && CompVCpu::isEnabled(kCpuFlagSSE2) && edges->isAlignedSSE()) {
-		const int maxi128 = maxi - 15;
+		const int maxi128 = maxi & -16;
+		const __m128i vecZero = _mm_setzero_si128();
+		__m128i vecEdges;
 
 		__compv_builtin_prefetch_read(&edgesPtr[COMPV_CACHE1_LINE_SIZE * 0]);
 		__compv_builtin_prefetch_read(&edgesPtr[COMPV_CACHE1_LINE_SIZE * 1]);
 		__compv_builtin_prefetch_read(&edgesPtr[COMPV_CACHE1_LINE_SIZE * 2]);
 
 		for (y_ref = 1; y_ref < maxj; ++y_ref) {
-			if (_mm_movemask_epi8(_mm_load_si128(reinterpret_cast<const __m128i*>(&edgesPtr[0]))) & 0xfffe) { // 0xfffe to ignore index #0
+			vecEdges = _mm_load_si128(reinterpret_cast<const __m128i*>(&edgesPtr[0]));
+			if ((_mm_movemask_epi8(_mm_cmpeq_epi8(vecEdges, vecZero)) & 0xfffe) != 0xfffe) { // "0xfffe" to ignore index #0
 				/*KHT_LINK_A5(0);*/ KHT_LINK_A5(1); KHT_LINK_A5(2); KHT_LINK_A5(3);
 				KHT_LINK_A5(4); KHT_LINK_A5(5); KHT_LINK_A5(6); KHT_LINK_A5(7);
 				KHT_LINK_A5(8); KHT_LINK_A5(9); KHT_LINK_A5(10); KHT_LINK_A5(11);
@@ -569,7 +574,8 @@ COMPV_ERROR_CODE CompVHoughKht::linking_AppendixA(CompVMatPtr& edges, CompVHough
 			}
 			for (x_ref = 16; x_ref < maxi128; x_ref += 16) {
 				__compv_builtin_prefetch_read(&edgesPtr[x_ref + (COMPV_CACHE1_LINE_SIZE * 3)]);
-				if (_mm_movemask_epi8(_mm_load_si128(reinterpret_cast<const __m128i*>(&edgesPtr[x_ref])))) {
+				vecEdges = _mm_load_si128(reinterpret_cast<const __m128i*>(&edgesPtr[x_ref]));
+				if (_mm_movemask_epi8(_mm_cmpeq_epi8(vecEdges, vecZero)) != 0xffff) {
 					KHT_LINK_A5(x_ref + 0); KHT_LINK_A5(x_ref + 1); KHT_LINK_A5(x_ref + 2); KHT_LINK_A5(x_ref + 3);
 					KHT_LINK_A5(x_ref + 4); KHT_LINK_A5(x_ref + 5); KHT_LINK_A5(x_ref + 6); KHT_LINK_A5(x_ref + 7);
 					KHT_LINK_A5(x_ref + 8); KHT_LINK_A5(x_ref + 9); KHT_LINK_A5(x_ref + 10); KHT_LINK_A5(x_ref + 11);
@@ -627,10 +633,10 @@ COMPV_ERROR_CODE CompVHoughKht::linking_AppendixA(CompVMatPtr& edges, CompVHough
 
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
 
-	if (maxi64 > 8) {
+	if (maxi64) {
 		for (y_ref = 1; y_ref < maxj; ++y_ref) {
 			// Align on #64 Bytes
-			if (*reinterpret_cast<uint64_t*>(&edgesPtr[0]) << 8) { // "<<8" to ignore 'x_ref = 0' 
+			if (*reinterpret_cast<uint64_t*>(&edgesPtr[0]) >> 8) { // ">>8" to ignore 'x_ref = 0' 
 				KHT_LINK_A5(1); KHT_LINK_A5(2); KHT_LINK_A5(3); KHT_LINK_A5(4); KHT_LINK_A5(5); KHT_LINK_A5(6); KHT_LINK_A5(7);
 			}
 			for (x_ref = 8; x_ref < maxi64; x_ref += 8) {

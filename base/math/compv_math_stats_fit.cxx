@@ -162,9 +162,9 @@ private:
 				return COMPV_ERROR_CODE_S_OK;
 			}
 			// http://daniel.microdor.com/LineEquations.html
-			FloatType A = (y1 - y0);
-			FloatType B = (x0 - x1);
-			FloatType C = (x1 * y0) - (x0 * y1);
+			const FloatType A = (y1 - y0);
+			const FloatType B = (x0 - x1);
+			const FloatType C = (x1 * y0) - (x0 * y1);
 
 			// Normalization (not required)
 			// When distance is computed (https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line#Line_defined_by_an_equation) we divide by 
@@ -239,7 +239,8 @@ private:
 		const size_t count = points->cols();
 
 		/* Distance from a point to a line: https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line#Line_defined_by_an_equation */
-
+#if 0 // Same as below -> useless
+		COMPV_DEBUG_INFO_CODE_FOR_TESTING("Useless code");
 		if (A == 0) { // A and B cannot be equal to zero at the same time (otherwise it's a point instead of line)
 			// Horizontal line. No need for SIMD, not common case.
 			COMPV_DEBUG_VERBOSE_EX(COMPV_THIS_CLASSNAME, "lineBuildResiduals(): Residual for horizontal line");
@@ -264,6 +265,13 @@ private:
 				residualPtr[i] = std::abs((A * pointsXPtr[i]) + (B * pointsYPtr[i]) + C);
 			}
 		}
+#else
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
+		// No need for scaling (1/sqrt((a*a) + (b*b))), already done on A, B and C params in lineBuildModelParams
+		for (size_t i = 0; i < count; ++i) {
+			residualPtr[i] = std::abs((A * pointsXPtr[i]) + (B * pointsYPtr[i]) + C);
+		}
+#endif
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
