@@ -30,9 +30,10 @@ using namespace compv;
 #define UNITTEST_MATH_TRF_HOMOG_TO_CART			0 // homogeneousToCartesian2D()
 #define UNITTEST_MATH_CALIB_HOMOGRAPHY			0
 #define UNITTEST_MATH_DISTANCE_HAMMING			0
+#define UNITTEST_MATH_DISTANCE_LINE				1
 #define UNITTEST_MATH_HISTOGRAM_BUILD			0
 #define UNITTEST_MATH_HISTOGRAM_EQUALIZ			0
-#define UNITTEST_MATH_CONVOLUTION				1
+#define UNITTEST_MATH_CONVOLUTION				0
 
 #define enableSSE2()	~(kCpuFlagSSE | kCpuFlagSSE2)
 #define enableSSSE3()	~(kCpuFlagSSE3 | kCpuFlagSSSE3)
@@ -190,6 +191,10 @@ compv_main()
 #if UNITTEST_MATH_DISTANCE_HAMMING || !defined(COMPV_TEST_LOCAL)
 								extern COMPV_ERROR_CODE unittest_math_distance_hamming();
 								COMPV_CHECK_CODE_BAIL(err = unittest_math_distance_hamming(), "Math hamming distance unittest failed");
+#endif
+#if UNITTEST_MATH_DISTANCE_LINE  || !defined(COMPV_TEST_LOCAL)
+								extern COMPV_ERROR_CODE unittest_math_distance_line();
+								COMPV_CHECK_CODE_BAIL(err = unittest_math_distance_line(), "Math line distance unittest failed");
 #endif
 #if UNITTEST_MATH_HISTOGRAM_BUILD || !defined(COMPV_TEST_LOCAL)
 								extern COMPV_ERROR_CODE unittest_histogram_build();

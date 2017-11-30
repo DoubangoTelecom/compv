@@ -70,7 +70,8 @@ COMPV_ERROR_CODE distance_hamming()
 
 COMPV_ERROR_CODE distance_line()
 {
-#define EXPECTED_MD5_LINE	"71436528e135149d19cde751c98d80ac"
+#define EXPECTED_MD5_LINE		"71436528e135149d19cde751c98d80ac"
+#define EXPECTED_MD5_LINE_FMA	"0746fe43fb46124c78ada87d86d8e54e"
 	const double lineEq[3] = { -7.258, 45852.0, 5485.65 };
 	CompVMatPtr points, distance;
 
@@ -95,7 +96,7 @@ COMPV_ERROR_CODE distance_line()
 
 	COMPV_DEBUG_INFO("MD5: %s", compv_tests_md5(distance).c_str());
 
-	COMPV_CHECK_EXP_RETURN(std::string(EXPECTED_MD5_LINE).compare(compv_tests_md5(distance)) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Line distance: MD5 mismatch");
+	COMPV_CHECK_EXP_RETURN(std::string(compv_tests_is_fma_enabled() ? EXPECTED_MD5_LINE_FMA : EXPECTED_MD5_LINE).compare(compv_tests_md5(distance)) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Line distance: MD5 mismatch");
 
 	return COMPV_ERROR_CODE_S_OK;
 }

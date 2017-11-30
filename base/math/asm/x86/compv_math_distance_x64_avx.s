@@ -254,30 +254,25 @@ sym(CompVMathDistanceHamming32_Asm_X64_POPCNT_AVX2):
 		%if %1
 			vmovaps ymm4, [xPtr + (i+0)*COMPV_YASM_FLOAT32_SZ_BYTES]
 			vmovaps ymm5, [xPtr + (i+8)*COMPV_YASM_FLOAT32_SZ_BYTES]
-			vmovaps ymm6, [xPtr + (i+16)*COMPV_YASM_FLOAT32_SZ_BYTES]
-			vmovaps ymm7, [xPtr + (i+24)*COMPV_YASM_FLOAT32_SZ_BYTES]
-
 			vfmadd213ps ymm4, vecA, vecC
 			vfmadd213ps ymm5, vecA, vecC
+			vmovaps ymm6, [xPtr + (i+16)*COMPV_YASM_FLOAT32_SZ_BYTES]
+			vmovaps ymm7, [xPtr + (i+24)*COMPV_YASM_FLOAT32_SZ_BYTES]			
 			vfmadd213ps ymm6, vecA, vecC
 			vfmadd213ps ymm7, vecA, vecC
-
 			vfmadd231ps ymm4, vecB, [yPtr + (i+0)*COMPV_YASM_FLOAT32_SZ_BYTES]
 			vfmadd231ps ymm5, vecB, [yPtr + (i+8)*COMPV_YASM_FLOAT32_SZ_BYTES]
 			vfmadd231ps ymm6, vecB, [yPtr + (i+16)*COMPV_YASM_FLOAT32_SZ_BYTES]
 			vfmadd231ps ymm7, vecB, [yPtr + (i+24)*COMPV_YASM_FLOAT32_SZ_BYTES]
-
 		%else
 			vmulps ymm4, vecA, [xPtr + (i+0)*COMPV_YASM_FLOAT32_SZ_BYTES]
 			vmulps ymm5, vecA, [xPtr + (i+8)*COMPV_YASM_FLOAT32_SZ_BYTES]
 			vmulps ymm6, vecA, [xPtr + (i+16)*COMPV_YASM_FLOAT32_SZ_BYTES]
 			vmulps ymm7, vecA, [xPtr + (i+24)*COMPV_YASM_FLOAT32_SZ_BYTES]
-
 			vmulps ymm8, vecB, [yPtr + (i+0)*COMPV_YASM_FLOAT32_SZ_BYTES]
 			vmulps ymm9, vecB, [yPtr + (i+8)*COMPV_YASM_FLOAT32_SZ_BYTES]
 			vmulps ymm10, vecB, [yPtr + (i+16)*COMPV_YASM_FLOAT32_SZ_BYTES]
 			vmulps ymm11, vecB, [yPtr + (i+24)*COMPV_YASM_FLOAT32_SZ_BYTES]
-
 			vaddps ymm4, ymm4, vecC
 			vaddps ymm5, ymm5, vecC
 			vaddps ymm6, ymm6, vecC
@@ -292,7 +287,6 @@ sym(CompVMathDistanceHamming32_Asm_X64_POPCNT_AVX2):
 		vandps ymm5, ymm5, vecMask
 		vandps ymm6, ymm6, vecMask
 		vandps ymm7, ymm7, vecMask
-
 		vmovaps [distPtr + (i+0)*COMPV_YASM_FLOAT32_SZ_BYTES], ymm4
 		vmovaps [distPtr + (i+8)*COMPV_YASM_FLOAT32_SZ_BYTES], ymm5
 		vmovaps [distPtr + (i+16)*COMPV_YASM_FLOAT32_SZ_BYTES], ymm6
