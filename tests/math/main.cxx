@@ -19,7 +19,8 @@
 #define TEST_CALIB_CAMERA					0
 #define TEST_CALIB_UNDIST					0
 #define TEST_DISTANCE_HAMMING				0
-#define TEST_DISTANCE_LINE					1
+#define TEST_DISTANCE_LINE					0
+#define TEST_DISTANCE_PARABOLA				1
 #define TEST_HISTOGRAM_BUILD				0
 #define TEST_HISTOGRAM_EQUALIZ				0
 #define TEST_CONVLT							0
@@ -107,7 +108,10 @@ compv_main()
 		extern COMPV_ERROR_CODE distance_line();
 		COMPV_CHECK_CODE_BAIL(err = distance_line(), TAG_TEST "Math line distance test failed");
 #endif
-
+#if TEST_DISTANCE_PARABOLA
+		extern COMPV_ERROR_CODE distance_parabola();
+		COMPV_CHECK_CODE_BAIL(err = distance_parabola(), TAG_TEST "Math parabola distance test failed");
+#endif
 #if TEST_HISTOGRAM_BUILD
 		extern COMPV_ERROR_CODE histogram_build();
 		COMPV_CHECK_CODE_BAIL(err = histogram_build(), TAG_TEST "Math histogram build test failed");

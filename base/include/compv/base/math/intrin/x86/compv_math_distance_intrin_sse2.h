@@ -19,6 +19,7 @@
 COMPV_NAMESPACE_BEGIN()
 
 void CompVMathDistanceLine_32f_Intrin_SSE2(COMPV_ALIGNED(SSE) const compv_float32_t* xPtr, COMPV_ALIGNED(SSE) const compv_float32_t* yPtr, const compv_float32_t* Ascaled1, const compv_float32_t* Bscaled1, const compv_float32_t* Cscaled1, COMPV_ALIGNED(SSE) compv_float32_t* distPtr, const compv_uscalar_t count);
+void CompVMathDistanceParabola_32f_Intrin_SSE2(COMPV_ALIGNED(SSE) const compv_float32_t* xPtr, COMPV_ALIGNED(SSE) const compv_float32_t* yPtr, const compv_float32_t* A, const compv_float32_t* B, const compv_float32_t* C, COMPV_ALIGNED(SSE) compv_float32_t* distPtr, const compv_uscalar_t count);
 
 COMPV_NAMESPACE_END()
 

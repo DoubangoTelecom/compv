@@ -15,6 +15,7 @@ COMPV_YASM_DEFAULT_REL
 global sym(CompVMathDistanceHamming_Asm_X64_POPCNT_SSE42)
 global sym(CompVMathDistanceHamming32_Asm_X64_POPCNT_SSE42)
 global sym(CompVMathDistanceLine_32f_Asm_X64_SSE2)
+global sym(CompVMathDistanceParabola_32f_Asm_X64_SSE2)
 
 section .data
 
@@ -394,6 +395,146 @@ sym(CompVMathDistanceLine_32f_Asm_X64_SSE2):
 		addps xmm4, xmm8
 		andps xmm4, vecMask
 		movaps [distPtr + (i+0)*COMPV_YASM_FLOAT32_SZ_BYTES], xmm4
+		add i, 4
+		cmp i, count
+		jl .LoopCount4
+	.EndOf_LoopCount4:
+
+	%undef xPtr		
+	%undef yPtr		
+	%undef i			
+	%undef count16		
+	%undef distPtr		
+	%undef count		
+
+	%undef vecA		
+	%undef vecB		
+	%undef vecC		
+	%undef vecMask		
+
+	;; begin epilog ;;
+	COMPV_YASM_RESTORE_XMM
+	COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	ret
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> COMPV_ALIGNED(SSE) const compv_float32_t* xPtr
+; arg(1) -> COMPV_ALIGNED(SSE) const compv_float32_t* yPtr
+; arg(2) -> const compv_float32_t* A1
+; arg(3) -> const compv_float32_t* B1
+; arg(4) -> const compv_float32_t* C1
+; arg(5) -> COMPV_ALIGNED(SSE) compv_float32_t* distPtr
+; arg(6) -> const compv_uscalar_t count
+sym(CompVMathDistanceParabola_32f_Asm_X64_SSE2):
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 7
+	COMPV_YASM_SAVE_XMM 11
+	;; end prolog ;;
+
+	%define xPtr		rax
+	%define yPtr		rdx
+	%define i			rcx
+	%define count16		r8
+	%define distPtr		r9
+	%define count		r10
+
+	%define vecA		xmm0
+	%define vecB		xmm1
+	%define vecC		xmm2
+	%define vecMask		xmm3
+
+	mov rax, arg(2)
+	mov rdx, arg(3)
+	mov rcx, arg(4)
+	mov r8, 0x7fffffff
+	movss vecA, [rax]
+	movss vecB, [rdx]
+	movss vecC, [rcx]
+	movd vecMask, r8d
+	shufps vecA, vecA, 0x0
+	shufps vecB, vecB, 0x0
+	shufps vecC, vecC, 0x0
+	shufps vecMask, vecMask, 0x0
+
+	mov xPtr, arg(0)
+	mov yPtr, arg(1)
+	mov distPtr, arg(5)
+	mov count, arg(6)
+	mov count16, count
+	and count16, -16
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	; for (i = 0; i < count16; i += 16)
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	xor i, i
+	test count16, count16
+	jz .Endof_LoopCount16
+	.LoopCount16:
+		movaps xmm4, [xPtr + (i+0)*COMPV_YASM_FLOAT32_SZ_BYTES]
+		movaps xmm5, [xPtr + (i+4)*COMPV_YASM_FLOAT32_SZ_BYTES]
+		movaps xmm6, [xPtr + (i+8)*COMPV_YASM_FLOAT32_SZ_BYTES]
+		movaps xmm7, [xPtr + (i+12)*COMPV_YASM_FLOAT32_SZ_BYTES]
+		movaps xmm8, xmm4
+		movaps xmm9, xmm5
+		movaps xmm10, xmm6
+		movaps xmm11, xmm7
+		mulps xmm8, xmm8
+		mulps xmm4, vecB
+		mulps xmm9, xmm9
+		mulps xmm5, vecB
+		mulps xmm10, xmm10
+		mulps xmm6, vecB
+		mulps xmm11, xmm11		
+		mulps xmm7, vecB
+		mulps xmm8, vecA
+		mulps xmm9, vecA
+		mulps xmm10, vecA
+		mulps xmm11, vecA
+		addps xmm8, vecC
+		addps xmm9, vecC
+		addps xmm10, vecC
+		addps xmm11, vecC
+		addps xmm8, xmm4
+		addps xmm9, xmm5
+		addps xmm10, xmm6
+		addps xmm11, xmm7
+		subps xmm8, [yPtr + (i+0)*COMPV_YASM_FLOAT32_SZ_BYTES]
+		subps xmm9, [yPtr + (i+4)*COMPV_YASM_FLOAT32_SZ_BYTES]
+		subps xmm10, [yPtr + (i+8)*COMPV_YASM_FLOAT32_SZ_BYTES]
+		subps xmm11, [yPtr + (i+12)*COMPV_YASM_FLOAT32_SZ_BYTES]
+		andps xmm8, vecMask
+		andps xmm9, vecMask
+		andps xmm10, vecMask
+		andps xmm11, vecMask
+		movaps [distPtr + (i+0)*COMPV_YASM_FLOAT32_SZ_BYTES], xmm8
+		movaps [distPtr + (i+4)*COMPV_YASM_FLOAT32_SZ_BYTES], xmm9
+		movaps [distPtr + (i+8)*COMPV_YASM_FLOAT32_SZ_BYTES], xmm10
+		movaps [distPtr + (i+12)*COMPV_YASM_FLOAT32_SZ_BYTES], xmm11
+		add i, 16
+		cmp i, count16
+		jl .LoopCount16
+	.Endof_LoopCount16:
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	; for (; i < count; i += 4)
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	cmp i, count
+	jge .EndOf_LoopCount4
+	.LoopCount4:
+		movaps xmm4, [xPtr + (i+0)*COMPV_YASM_FLOAT32_SZ_BYTES]
+		movaps xmm8, xmm4
+		mulps xmm8, xmm8
+		mulps xmm4, vecB
+		mulps xmm8, vecA
+		addps xmm8, vecC
+		addps xmm8, xmm4
+		subps xmm8, [yPtr + (i+0)*COMPV_YASM_FLOAT32_SZ_BYTES]
+		andps xmm8, vecMask
+		movaps [distPtr + (i+0)*COMPV_YASM_FLOAT32_SZ_BYTES], xmm8
 		add i, 4
 		cmp i, count
 		jl .LoopCount4

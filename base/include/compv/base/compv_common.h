@@ -361,6 +361,11 @@ enum COMPV_IMAGE_FORMAT {
     COMPV_IMAGE_FORMAT_PNG
 };
 
+enum COMPV_MATH_PARABOLA_TYPE {
+	COMPV_MATH_PARABOLA_TYPE_REGULAR, // y = ax^2 + bx + c
+	COMPV_MATH_PARABOLA_TYPE_SIDEWAYS // x = ay^2 + by + c -> http://www.coolmath.com/algebra/21-advanced-graphing/05-sideways-parabolas-01
+};
+
 enum COMPV_DRAWING_COLOR_TYPE {
 	COMPV_DRAWING_COLOR_TYPE_STATIC,
 	COMPV_DRAWING_COLOR_TYPE_RANDOM

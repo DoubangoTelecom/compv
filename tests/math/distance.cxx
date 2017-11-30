@@ -5,7 +5,7 @@
 
 
 
-
+static COMPV_ERROR_CODE __buildPoints(CompVMatPtrPtr points);
 
 COMPV_ERROR_CODE distance_hamming()
 {
@@ -66,25 +66,14 @@ COMPV_ERROR_CODE distance_hamming()
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-
-
 COMPV_ERROR_CODE distance_line()
 {
 #define EXPECTED_MD5_LINE		"71436528e135149d19cde751c98d80ac"
 #define EXPECTED_MD5_LINE_FMA	"0746fe43fb46124c78ada87d86d8e54e"
 	const double lineEq[3] = { -7.258, 45852.0, 5485.65 };
+	
 	CompVMatPtr points, distance;
-
-	// Build points
-	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float32_t>(&points, 2, 1000003));
-	const size_t count = points->cols();
-	const size_t stride = points->stride();
-	compv_float32_t* pointsX = points->ptr<compv_float32_t>(0);
-	compv_float32_t* pointsY = points->ptr<compv_float32_t>(1);
-	for (size_t i = 0; i < count; ++i) {
-		pointsX[i] = static_cast<compv_float32_t>(((i * 1983.584) + (i*9.0)) * ((i & 3) ? 1 : -1));
-		pointsY[i] = static_cast<compv_float32_t>(((i * 584.1983) + (i*12.0)) * ((i & 8) ? 1 : -1));
-	}
+	COMPV_CHECK_CODE_RETURN(__buildPoints(&points));
 
 	uint64_t timeStart = CompVTime::nowMillis();
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
@@ -98,5 +87,45 @@ COMPV_ERROR_CODE distance_line()
 
 	COMPV_CHECK_EXP_RETURN(std::string(compv_tests_is_fma_enabled() ? EXPECTED_MD5_LINE_FMA : EXPECTED_MD5_LINE).compare(compv_tests_md5(distance)) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Line distance: MD5 mismatch");
 
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE distance_parabola()
+{
+#define EXPECTED_MD5_PARABOLA		"d152dac9988060c0659ae393cddfb9f0"
+#define EXPECTED_MD5_PARABOLA_FMA	"d152dac9988060c0659ae393cddfb9f0"
+	const double parabolaEq[3] = { -7.258, 45852.0, 5485.65 };
+
+	CompVMatPtr points, distance;
+	COMPV_CHECK_CODE_RETURN(__buildPoints(&points));
+
+	uint64_t timeStart = CompVTime::nowMillis();
+	for (size_t i = 0; i < LOOP_COUNT; ++i) {
+		COMPV_CHECK_CODE_RETURN(CompVMathDistance::parabola(points, parabolaEq, &distance, COMPV_MATH_PARABOLA_TYPE_SIDEWAYS));
+	}
+	uint64_t timeEnd = CompVTime::nowMillis();
+
+	COMPV_DEBUG_INFO_EX(TAG_TEST, "Elapsed time(Distance parabola) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
+
+	COMPV_DEBUG_INFO("MD5: %s", compv_tests_md5(distance).c_str());
+
+	COMPV_CHECK_EXP_RETURN(std::string(compv_tests_is_fma_enabled() ? EXPECTED_MD5_PARABOLA_FMA : EXPECTED_MD5_PARABOLA).compare(compv_tests_md5(distance)) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Line distance: MD5 mismatch");
+
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+
+
+static COMPV_ERROR_CODE __buildPoints(CompVMatPtrPtr points)
+{
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float32_t>(points, 2, 1000003));
+	const size_t count = (*points)->cols();
+	const size_t stride = (*points)->stride();
+	compv_float32_t* pointsX = (*points)->ptr<compv_float32_t>(0);
+	compv_float32_t* pointsY = (*points)->ptr<compv_float32_t>(1);
+	for (size_t i = 0; i < count; ++i) {
+		pointsX[i] = static_cast<compv_float32_t>(((i * 1983.584) + (i*9.0)) * ((i & 3) ? 1 : -1));
+		pointsY[i] = static_cast<compv_float32_t>(((i * 584.1983) + (i*12.0)) * ((i & 8) ? 1 : -1));
+	}
 	return COMPV_ERROR_CODE_S_OK;
 }

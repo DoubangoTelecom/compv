@@ -230,7 +230,6 @@ private:
 			modelParams[2] 
 		};
 		COMPV_CHECK_CODE_RETURN(CompVMathDistance::line(points, lineEq, &residual)); // won't override residual if same size
-
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
@@ -327,20 +326,13 @@ private:
 		const CompVMathStatsFitGenericOpaque* opaque_ = reinterpret_cast<const CompVMathStatsFitGenericOpaque*>(control->opaque);
 		const CompVMatPtr& points = opaque_->points;
 		COMPV_CHECK_EXP_RETURN(points->cols() != residual->cols() || points->subType() != residual->subType(), COMPV_ERROR_CODE_E_INVALID_CALL, "Residual is invalid");
-		const bool sideways = (opaque_->parabolaType == COMPV_MATH_PARABOLA_TYPE_SIDEWAYS);
-		const FloatType* pointsXPtr = points->ptr<const FloatType>(sideways ? 1 : 0);
-		const FloatType* pointsYPtr = points->ptr<const FloatType>(sideways ? 0 : 1);
-		FloatType* residualPtr = residual->ptr<FloatType>();
-		const FloatType& A = modelParams[0];
-		const FloatType& B = modelParams[1];
-		const FloatType& C = modelParams[2];
-		const size_t count = points->cols();
-
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation could be found"); // same as parabolaEvalFunc (tested with vtune and cpu intensive)
-		for (size_t i = 0; i < count; ++i) {
-			const FloatType& x = pointsXPtr[i];
-			residualPtr[i] = std::abs(((A * (x * x)) + (B * x) + C) - pointsYPtr[i]);
-		}
+		
+		const double parabolaEq[3] = {
+			modelParams[0],
+			modelParams[1],
+			modelParams[2]
+		};
+		COMPV_CHECK_CODE_RETURN(CompVMathDistance::parabola(points, parabolaEq, &residual, opaque_->parabolaType)); // won't override residual if same size
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
