@@ -344,7 +344,6 @@ COMPV_ERROR_CODE CompVMathDistance::parabola(const CompVMatPtr& points, const do
 	COMPV_CHECK_EXP_RETURN(
 		!points || points->cols() < 2 || !distances || points == *distances
 		|| (points->subType() != COMPV_SUBTYPE_RAW_FLOAT32 && points->subType() != COMPV_SUBTYPE_RAW_FLOAT64)
-		|| (!parabolaEq[0] && !parabolaEq[1]) // A and B cannot be equal to zero at the same time
 		, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
 	CompVMatPtr distances_ = *distances;
