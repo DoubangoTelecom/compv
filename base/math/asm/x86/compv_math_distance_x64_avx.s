@@ -14,6 +14,7 @@ COMPV_YASM_DEFAULT_REL
 
 global sym(CompVMathDistanceHamming32_Asm_X64_POPCNT_AVX2)
 global sym(CompVMathDistanceLine_32f_Asm_X64_AVX)
+global sym(CompVMathDistanceLine_32f_Asm_X64_FMA3_AVX)
 
 section .data
 	extern sym(kShuffleEpi8_Popcnt_i32)
@@ -198,7 +199,8 @@ sym(CompVMathDistanceHamming32_Asm_X64_POPCNT_AVX2):
 ; arg(4) -> const compv_float32_t* Cscaled1
 ; arg(5) -> COMPV_ALIGNED(AVX) compv_float32_t* distPtr
 ; arg(6) -> const compv_uscalar_t count
-sym(CompVMathDistanceLine_32f_Asm_X64_AVX):
+; %1 -> 0: FMA3 not supported, 1: FMA3 supported
+%macro CompVMathDistanceLine_32f_Macro_X64_AVX 1
 	vzeroupper
 	push rbp
 	mov rbp, rsp
@@ -249,24 +251,42 @@ sym(CompVMathDistanceLine_32f_Asm_X64_AVX):
 	test count32, count32
 	jz .Endof_LoopCount32
 	.LoopCount32:
-		vmulps ymm4, vecA, [xPtr + (i+0)*COMPV_YASM_FLOAT32_SZ_BYTES]
-		vmulps ymm5, vecA, [xPtr + (i+8)*COMPV_YASM_FLOAT32_SZ_BYTES]
-		vmulps ymm6, vecA, [xPtr + (i+16)*COMPV_YASM_FLOAT32_SZ_BYTES]
-		vmulps ymm7, vecA, [xPtr + (i+24)*COMPV_YASM_FLOAT32_SZ_BYTES]
-		vmulps ymm8, vecB, [yPtr + (i+0)*COMPV_YASM_FLOAT32_SZ_BYTES]
-		vmulps ymm9, vecB, [yPtr + (i+8)*COMPV_YASM_FLOAT32_SZ_BYTES]
-		vmulps ymm10, vecB, [yPtr + (i+16)*COMPV_YASM_FLOAT32_SZ_BYTES]
-		vmulps ymm11, vecB, [yPtr + (i+24)*COMPV_YASM_FLOAT32_SZ_BYTES]
+		%if %1
+			vmovaps ymm4, [xPtr + (i+0)*COMPV_YASM_FLOAT32_SZ_BYTES]
+			vmovaps ymm5, [xPtr + (i+8)*COMPV_YASM_FLOAT32_SZ_BYTES]
+			vmovaps ymm6, [xPtr + (i+16)*COMPV_YASM_FLOAT32_SZ_BYTES]
+			vmovaps ymm7, [xPtr + (i+24)*COMPV_YASM_FLOAT32_SZ_BYTES]
 
-		vaddps ymm4, ymm4, vecC
-		vaddps ymm5, ymm5, vecC
-		vaddps ymm6, ymm6, vecC
-		vaddps ymm7, ymm7, vecC
+			vfmadd213ps ymm4, vecA, vecC
+			vfmadd213ps ymm5, vecA, vecC
+			vfmadd213ps ymm6, vecA, vecC
+			vfmadd213ps ymm7, vecA, vecC
 
-		vaddps ymm4, ymm4, ymm8
-		vaddps ymm5, ymm5, ymm9
-		vaddps ymm6, ymm6, ymm10
-		vaddps ymm7, ymm7, ymm11
+			vfmadd231ps ymm4, vecB, [yPtr + (i+0)*COMPV_YASM_FLOAT32_SZ_BYTES]
+			vfmadd231ps ymm5, vecB, [yPtr + (i+8)*COMPV_YASM_FLOAT32_SZ_BYTES]
+			vfmadd231ps ymm6, vecB, [yPtr + (i+16)*COMPV_YASM_FLOAT32_SZ_BYTES]
+			vfmadd231ps ymm7, vecB, [yPtr + (i+24)*COMPV_YASM_FLOAT32_SZ_BYTES]
+
+		%else
+			vmulps ymm4, vecA, [xPtr + (i+0)*COMPV_YASM_FLOAT32_SZ_BYTES]
+			vmulps ymm5, vecA, [xPtr + (i+8)*COMPV_YASM_FLOAT32_SZ_BYTES]
+			vmulps ymm6, vecA, [xPtr + (i+16)*COMPV_YASM_FLOAT32_SZ_BYTES]
+			vmulps ymm7, vecA, [xPtr + (i+24)*COMPV_YASM_FLOAT32_SZ_BYTES]
+
+			vmulps ymm8, vecB, [yPtr + (i+0)*COMPV_YASM_FLOAT32_SZ_BYTES]
+			vmulps ymm9, vecB, [yPtr + (i+8)*COMPV_YASM_FLOAT32_SZ_BYTES]
+			vmulps ymm10, vecB, [yPtr + (i+16)*COMPV_YASM_FLOAT32_SZ_BYTES]
+			vmulps ymm11, vecB, [yPtr + (i+24)*COMPV_YASM_FLOAT32_SZ_BYTES]
+
+			vaddps ymm4, ymm4, vecC
+			vaddps ymm5, ymm5, vecC
+			vaddps ymm6, ymm6, vecC
+			vaddps ymm7, ymm7, vecC
+			vaddps ymm4, ymm4, ymm8
+			vaddps ymm5, ymm5, ymm9
+			vaddps ymm6, ymm6, ymm10
+			vaddps ymm7, ymm7, ymm11
+		%endif
 
 		vandps ymm4, ymm4, vecMask
 		vandps ymm5, ymm5, vecMask
@@ -288,12 +308,18 @@ sym(CompVMathDistanceLine_32f_Asm_X64_AVX):
 	cmp i, count
 	jge .EndOf_LoopCount8
 	.LoopCount8:
-		vmulps ymm4, vecA, [xPtr + (i+0)*COMPV_YASM_FLOAT32_SZ_BYTES]
-		vmulps ymm8, vecB, [yPtr + (i+0)*COMPV_YASM_FLOAT32_SZ_BYTES]
-		vaddps ymm4, ymm4, vecC
-		vaddps ymm4, ymm4, ymm8
+		%if %1
+			vmovaps ymm4, [xPtr + (i+0)*COMPV_YASM_FLOAT32_SZ_BYTES]
+			vfmadd213ps ymm4, vecA, vecC
+			vfmadd231ps ymm4, vecB, [yPtr + (i+0)*COMPV_YASM_FLOAT32_SZ_BYTES]
+		%else
+			vmulps ymm4, vecA, [xPtr + (i+0)*COMPV_YASM_FLOAT32_SZ_BYTES]
+			vmulps ymm8, vecB, [yPtr + (i+0)*COMPV_YASM_FLOAT32_SZ_BYTES]
+			vaddps ymm4, ymm4, vecC
+			vaddps ymm4, ymm4, ymm8
+		%endif
 		vandps ymm4, ymm4, vecMask
-		movaps [distPtr + (i+0)*COMPV_YASM_FLOAT32_SZ_BYTES], xmm4
+		vmovaps [distPtr + (i+0)*COMPV_YASM_FLOAT32_SZ_BYTES], ymm4
 		add i, 8
 		cmp i, count
 		jl .LoopCount8
@@ -322,6 +348,15 @@ sym(CompVMathDistanceLine_32f_Asm_X64_AVX):
 	pop rbp
 	vzeroupper
 	ret
+%endmacro
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(CompVMathDistanceLine_32f_Asm_X64_AVX):
+	CompVMathDistanceLine_32f_Macro_X64_AVX 0
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(CompVMathDistanceLine_32f_Asm_X64_FMA3_AVX):
+	CompVMathDistanceLine_32f_Macro_X64_AVX 1
 
 
 %endif ; COMPV_YASM_ABI_IS_64BIT
