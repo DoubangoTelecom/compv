@@ -12,6 +12,7 @@
 
 #include "compv/base/math/intrin/x86/compv_math_distance_intrin_sse2.h"
 #include "compv/base/math/intrin/x86/compv_math_distance_intrin_sse42.h"
+#include "compv/base/math/intrin/x86/compv_math_distance_intrin_avx.h"
 #include "compv/base/math/intrin/x86/compv_math_distance_intrin_avx2.h"
 #include "compv/base/math/intrin/arm/compv_math_distance_intrin_neon.h"
 
@@ -31,6 +32,7 @@ COMPV_NAMESPACE_BEGIN()
 	COMPV_EXTERNC void CompVMathDistanceHamming32_Asm_X64_POPCNT(COMPV_ALIGNED(SSE) const uint8_t* dataPtr, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride, COMPV_ALIGNED(SSE) const uint8_t* patch1xnPtr, int32_t* distPtr);
 	COMPV_EXTERNC void CompVMathDistanceHamming32_Asm_X64_POPCNT_AVX2(COMPV_ALIGNED(AVX) const uint8_t* dataPtr, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride, COMPV_ALIGNED(AVX) const uint8_t* patch1xnPtr, COMPV_ALIGNED(AVX) int32_t* distPtr);
 	COMPV_EXTERNC void CompVMathDistanceLine_32f_Asm_X64_SSE2(COMPV_ALIGNED(SSE) const compv_float32_t* xPtr, COMPV_ALIGNED(SSE) const compv_float32_t* yPtr, const compv_float32_t* Ascaled1, const compv_float32_t* Bscaled1, const compv_float32_t* Cscaled1, COMPV_ALIGNED(SSE) compv_float32_t* distPtr, const compv_uscalar_t count);
+	COMPV_EXTERNC void CompVMathDistanceLine_32f_Asm_X64_AVX(COMPV_ALIGNED(AVX) const compv_float32_t* xPtr, COMPV_ALIGNED(AVX) const compv_float32_t* yPtr, const compv_float32_t* Ascaled1, const compv_float32_t* Bscaled1, const compv_float32_t* Cscaled1, COMPV_ALIGNED(AVX) compv_float32_t* distPtr, const compv_uscalar_t count);
 #	endif /* COMPV_ARCH_X64 */
 #	if COMPV_ARCH_ARM32
     COMPV_EXTERNC void CompVMathDistanceHamming_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* dataPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, COMPV_ALIGNED(NEON) const uint8_t* patch1xnPtr, int32_t* distPtr);
@@ -270,11 +272,11 @@ COMPV_ERROR_CODE CompVMathDistance::line(const CompVMatPtr& points, const double
 			COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathDistanceLine_32f = CompVMathDistanceLine_32f_Intrin_SSE2);
 			COMPV_EXEC_IFDEF_ASM_X64(CompVMathDistanceLine_32f = CompVMathDistanceLine_32f_Asm_X64_SSE2);
 		} 
-		if (CompVCpu::isEnabled(kCpuFlagAVX2) && points->isAlignedAVX() && distances_->isAlignedAVX()) {
-			//COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathDistanceLine_32f = CompVMathDistanceLine_32f_Intrin_AVX2);
-			//COMPV_EXEC_IFDEF_ASM_X64(CompVMathDistanceLine_32f = CompVMathDistanceLine_32f_Asm_X64_AVX2);
+		if (CompVCpu::isEnabled(kCpuFlagAVX) && points->isAlignedAVX() && distances_->isAlignedAVX()) {
+			COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathDistanceLine_32f = CompVMathDistanceLine_32f_Intrin_AVX);
+			COMPV_EXEC_IFDEF_ASM_X64(CompVMathDistanceLine_32f = CompVMathDistanceLine_32f_Asm_X64_AVX);
 			if (CompVCpu::isEnabled(kCpuFlagFMA3)) {
-				//COMPV_EXEC_IFDEF_ASM_X64(CompVMathDistanceLine_32f = CompVMathDistanceLine_32f_Asm_X64_FMA3_AVX2);
+				//COMPV_EXEC_IFDEF_ASM_X64(CompVMathDistanceLine_32f = CompVMathDistanceLine_32f_Asm_X64_FMA3_AVX);
 			}
 		}
 #elif COMPV_ARCH_ARM

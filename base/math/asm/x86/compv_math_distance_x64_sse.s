@@ -343,45 +343,38 @@ sym(CompVMathDistanceLine_32f_Asm_X64_SSE2):
 	test count16, count16
 	jz .Endof_LoopCount16
 	.LoopCount16:
-		movaps xmm4, [xPtr + (i+0)*COMPV_YASM_FLOAT32_SZ_BYTES]
-		movaps xmm5, [xPtr + (i+4)*COMPV_YASM_FLOAT32_SZ_BYTES]
-		movaps xmm6, [xPtr + (i+8)*COMPV_YASM_FLOAT32_SZ_BYTES]
-		movaps xmm7, [xPtr + (i+12)*COMPV_YASM_FLOAT32_SZ_BYTES]
-		movaps xmm8, [yPtr + (i+0)*COMPV_YASM_FLOAT32_SZ_BYTES]
-		movaps xmm9, [yPtr + (i+4)*COMPV_YASM_FLOAT32_SZ_BYTES]
-		movaps xmm10, [yPtr + (i+8)*COMPV_YASM_FLOAT32_SZ_BYTES]
-		movaps xmm11, [yPtr + (i+12)*COMPV_YASM_FLOAT32_SZ_BYTES]
-
-		mulps xmm4, vecA
-		mulps xmm5, vecA
-		mulps xmm6, vecA
-		mulps xmm7, vecA
-
-		mulps xmm8, vecB
-		mulps xmm9, vecB
-		mulps xmm10, vecB
-		mulps xmm11, vecB
-
+		movaps xmm4, vecA
+		movaps xmm5, vecA
+		mulps xmm4, [xPtr + (i+0)*COMPV_YASM_FLOAT32_SZ_BYTES]
+		mulps xmm5, [xPtr + (i+4)*COMPV_YASM_FLOAT32_SZ_BYTES]
+		movaps xmm6, vecA
+		movaps xmm7, vecA
+		mulps xmm6, [xPtr + (i+8)*COMPV_YASM_FLOAT32_SZ_BYTES]
+		mulps xmm7, [xPtr + (i+12)*COMPV_YASM_FLOAT32_SZ_BYTES]
+		movaps xmm8, vecB
+		movaps xmm9, vecB
+		mulps xmm8, [yPtr + (i+0)*COMPV_YASM_FLOAT32_SZ_BYTES]
+		mulps xmm9, [yPtr + (i+4)*COMPV_YASM_FLOAT32_SZ_BYTES]
+		movaps xmm10, vecB
+		movaps xmm11, vecB
+		mulps xmm10, [yPtr + (i+8)*COMPV_YASM_FLOAT32_SZ_BYTES]
+		mulps xmm11, [yPtr + (i+12)*COMPV_YASM_FLOAT32_SZ_BYTES]
 		addps xmm4, vecC
 		addps xmm5, vecC
 		addps xmm6, vecC
 		addps xmm7, vecC
-
 		addps xmm4, xmm8
 		addps xmm5, xmm9
 		addps xmm6, xmm10
 		addps xmm7, xmm11
-
 		andps xmm4, vecMask
 		andps xmm5, vecMask
 		andps xmm6, vecMask
 		andps xmm7, vecMask
-
 		movaps [distPtr + (i+0)*COMPV_YASM_FLOAT32_SZ_BYTES], xmm4
 		movaps [distPtr + (i+4)*COMPV_YASM_FLOAT32_SZ_BYTES], xmm5
 		movaps [distPtr + (i+8)*COMPV_YASM_FLOAT32_SZ_BYTES], xmm6
 		movaps [distPtr + (i+12)*COMPV_YASM_FLOAT32_SZ_BYTES], xmm7
-
 		add i, 16
 		cmp i, count16
 		jl .LoopCount16
@@ -395,18 +388,12 @@ sym(CompVMathDistanceLine_32f_Asm_X64_SSE2):
 	.LoopCount4:
 		movaps xmm4, [xPtr + (i+0)*COMPV_YASM_FLOAT32_SZ_BYTES]
 		movaps xmm8, [yPtr + (i+0)*COMPV_YASM_FLOAT32_SZ_BYTES]
-
 		mulps xmm4, vecA
 		mulps xmm8, vecB
-
 		addps xmm4, vecC
-
 		addps xmm4, xmm8
-
 		andps xmm4, vecMask
-
 		movaps [distPtr + (i+0)*COMPV_YASM_FLOAT32_SZ_BYTES], xmm4
-
 		add i, 4
 		cmp i, count
 		jl .LoopCount4

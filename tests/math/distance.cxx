@@ -1,7 +1,7 @@
 #include "../tests_common.h"
 
 #define TAG_TEST			"TestDistance"
-#define LOOP_COUNT			10000
+#define LOOP_COUNT			1
 
 
 
