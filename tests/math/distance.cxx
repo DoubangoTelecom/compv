@@ -1,10 +1,13 @@
 #include "../tests_common.h"
 
 #define TAG_TEST			"TestDistance"
-#define LOOP_COUNT			1
+#define LOOP_COUNT			10000
 
 
-COMPV_ERROR_CODE hamming()
+
+
+
+COMPV_ERROR_CODE distance_hamming()
 {
 	static const  size_t width = 2005;
 	static const struct compv_unittest_hamming {
@@ -54,11 +57,45 @@ COMPV_ERROR_CODE hamming()
 	}
 	uint64_t timeEnd = CompVTime::nowMillis();
 
-	COMPV_DEBUG_INFO_EX(TAG_TEST, "Elapsed time(Hamming) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
+	COMPV_DEBUG_INFO_EX(TAG_TEST, "Elapsed time(Distance Hamming) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 
 	//COMPV_DEBUG_INFO("MD5: %s", compv_tests_md5(dist).c_str());
 
-	COMPV_CHECK_EXP_RETURN(std::string(test->md5).compare(compv_tests_md5(dist)) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Hamming: MD5 mismatch");
+	COMPV_CHECK_EXP_RETURN(std::string(test->md5).compare(compv_tests_md5(dist)) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Distance Hamming: MD5 mismatch");
+
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+
+
+COMPV_ERROR_CODE distance_line()
+{
+#define EXPECTED_MD5_LINE	"71436528e135149d19cde751c98d80ac"
+	const double lineEq[3] = { -7.258, 45852.0, 5485.65 };
+	CompVMatPtr points, distance;
+
+	// Build points
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float32_t>(&points, 2, 1000003));
+	const size_t count = points->cols();
+	const size_t stride = points->stride();
+	compv_float32_t* pointsX = points->ptr<compv_float32_t>(0);
+	compv_float32_t* pointsY = points->ptr<compv_float32_t>(1);
+	for (size_t i = 0; i < count; ++i) {
+		pointsX[i] = static_cast<compv_float32_t>(((i * 1983.584) + (i*9.0)) * ((i & 3) ? 1 : -1));
+		pointsY[i] = static_cast<compv_float32_t>(((i * 584.1983) + (i*12.0)) * ((i & 8) ? 1 : -1));
+	}
+
+	uint64_t timeStart = CompVTime::nowMillis();
+	for (size_t i = 0; i < LOOP_COUNT; ++i) {
+		COMPV_CHECK_CODE_RETURN(CompVMathDistance::line(points, lineEq, &distance));
+	}
+	uint64_t timeEnd = CompVTime::nowMillis();
+
+	COMPV_DEBUG_INFO_EX(TAG_TEST, "Elapsed time(Distance line) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
+
+	COMPV_DEBUG_INFO("MD5: %s", compv_tests_md5(distance).c_str());
+
+	COMPV_CHECK_EXP_RETURN(std::string(EXPECTED_MD5_LINE).compare(compv_tests_md5(distance)) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Line distance: MD5 mismatch");
 
 	return COMPV_ERROR_CODE_S_OK;
 }

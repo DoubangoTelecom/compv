@@ -19,9 +19,10 @@
 #define TEST_CALIB_CAMERA					0
 #define TEST_CALIB_UNDIST					0
 #define TEST_DISTANCE_HAMMING				0
+#define TEST_DISTANCE_LINE					1
 #define TEST_HISTOGRAM_BUILD				0
 #define TEST_HISTOGRAM_EQUALIZ				0
-#define TEST_CONVLT							1
+#define TEST_CONVLT							0
 
 
 /* Entry point function */
@@ -99,8 +100,12 @@ compv_main()
 #endif
 
 #if TEST_DISTANCE_HAMMING
-		extern COMPV_ERROR_CODE hamming();
-		COMPV_CHECK_CODE_BAIL(err = hamming(), TAG_TEST "Math hamming distance test failed");
+		extern COMPV_ERROR_CODE distance_hamming();
+		COMPV_CHECK_CODE_BAIL(err = distance_hamming(), TAG_TEST "Math hamming distance test failed");
+#endif
+#if TEST_DISTANCE_LINE
+		extern COMPV_ERROR_CODE distance_line();
+		COMPV_CHECK_CODE_BAIL(err = distance_line(), TAG_TEST "Math line distance test failed");
 #endif
 
 #if TEST_HISTOGRAM_BUILD

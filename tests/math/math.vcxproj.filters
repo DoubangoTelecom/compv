@@ -42,9 +42,6 @@
     <ClCompile Include="stats_variance.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="transform.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="calib_homography.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -64,6 +61,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="convlt.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="transform.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

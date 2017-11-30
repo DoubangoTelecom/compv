@@ -7,6 +7,7 @@
 #include "compv/base/math/compv_math_stats_fit.h"
 #include "compv/base/math/compv_math_stats_ransac.h"
 #include "compv/base/math/compv_math_utils.h"
+#include "compv/base/math/compv_math_distance.h"
 #include "compv/base/math/lmfit-6.1/lmmin.h"
 
 #define COMPV_THIS_CLASSNAME	"CompVMathStatsFit"
@@ -162,17 +163,9 @@ private:
 				return COMPV_ERROR_CODE_S_OK;
 			}
 			// http://daniel.microdor.com/LineEquations.html
-			const FloatType A = (y1 - y0);
-			const FloatType B = (x0 - x1);
-			const FloatType C = (x1 * y0) - (x0 * y1);
-
-			// Normalization (not required)
-			// When distance is computed (https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line#Line_defined_by_an_equation) we divide by 
-			// std::sqrt((A*A) + (B*B)) which means we can do it now and avoid it alter
-			const FloatType scale = 1 / std::sqrt((A*A) + (B*B));			
-			modelParams[0] = A * scale;
-			modelParams[1] = B * scale;
-			modelParams[2] = C * scale;
+			modelParams[0] = (y1 - y0);
+			modelParams[1] = (x0 - x1);
+			modelParams[2] = (x1 * y0) - (x0 * y1);
 		}
 		else { /* Ransac calling on probing #n>2 inliers */
 			// To avoid issues with vertical and horizontal lines as explained here at [1]
@@ -230,48 +223,14 @@ private:
 		const CompVMathStatsFitGenericOpaque* opaque_ = reinterpret_cast<const CompVMathStatsFitGenericOpaque*>(control->opaque);
 		const CompVMatPtr& points = opaque_->points;
 		COMPV_CHECK_EXP_RETURN(points->cols() != residual->cols() || points->subType() != residual->subType(), COMPV_ERROR_CODE_E_INVALID_CALL, "Residual is invalid");
-		const FloatType* pointsXPtr = points->ptr<const FloatType>(0);
-		const FloatType* pointsYPtr = points->ptr<const FloatType>(1);
-		FloatType* residualPtr = residual->ptr<FloatType>();
-		const FloatType& A = modelParams[0];
-		const FloatType& B = modelParams[1];
-		const FloatType& C = modelParams[2];
-		const size_t count = points->cols();
-
 		/* Distance from a point to a line: https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line#Line_defined_by_an_equation */
-#if 0 // Same as below -> useless
-		COMPV_DEBUG_INFO_CODE_FOR_TESTING("Useless code");
-		if (A == 0) { // A and B cannot be equal to zero at the same time (otherwise it's a point instead of line)
-			// Horizontal line. No need for SIMD, not common case.
-			COMPV_DEBUG_VERBOSE_EX(COMPV_THIS_CLASSNAME, "lineBuildResiduals(): Residual for horizontal line");
-			const FloatType scale = 1 / std::abs(B);
-			for (size_t i = 0; i < count; ++i) {
-				residualPtr[i] = std::abs((B * pointsYPtr[i]) + C) * scale;
-			}
-		}
-		else if (B == 0) {
-			// Vertical line. No need for SIMD, not common case.
-			COMPV_DEBUG_VERBOSE_EX(COMPV_THIS_CLASSNAME, "lineBuildResiduals(): Residual for vertical line");
-			const FloatType scale = 1 / std::abs(A);
-			for (size_t i = 0; i < count; ++i) {
-				residualPtr[i] = std::abs((A * pointsXPtr[i]) + C) * scale;
-			}
-		}
-		else {
-			// All other cases
-			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
-			// No need for scaling (1/sqrt((a*a) + (b*b))), already done on A, B and C params in lineBuildModelParams
-			for (size_t i = 0; i < count; ++i) {
-				residualPtr[i] = std::abs((A * pointsXPtr[i]) + (B * pointsYPtr[i]) + C);
-			}
-		}
-#else
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
-		// No need for scaling (1/sqrt((a*a) + (b*b))), already done on A, B and C params in lineBuildModelParams
-		for (size_t i = 0; i < count; ++i) {
-			residualPtr[i] = std::abs((A * pointsXPtr[i]) + (B * pointsYPtr[i]) + C);
-		}
-#endif
+		const double lineEq[3] = { 
+			modelParams[0], 
+			modelParams[1], 
+			modelParams[2] 
+		};
+		COMPV_CHECK_CODE_RETURN(CompVMathDistance::line(points, lineEq, &residual)); // won't override residual if same size
+
 		return COMPV_ERROR_CODE_S_OK;
 	}
 

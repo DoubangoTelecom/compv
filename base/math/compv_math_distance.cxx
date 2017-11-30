@@ -10,6 +10,7 @@
 #include "compv/base/compv_cpu.h"
 #include "compv/base/parallel/compv_parallel.h"
 
+#include "compv/base/math/intrin/x86/compv_math_distance_intrin_sse2.h"
 #include "compv/base/math/intrin/x86/compv_math_distance_intrin_sse42.h"
 #include "compv/base/math/intrin/x86/compv_math_distance_intrin_avx2.h"
 #include "compv/base/math/intrin/arm/compv_math_distance_intrin_neon.h"
@@ -29,6 +30,7 @@ COMPV_NAMESPACE_BEGIN()
 	COMPV_EXTERNC void CompVMathDistanceHamming32_Asm_X64_POPCNT_SSE42(COMPV_ALIGNED(SSE) const uint8_t* dataPtr, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride, COMPV_ALIGNED(SSE) const uint8_t* patch1xnPtr, int32_t* distPtr);
 	COMPV_EXTERNC void CompVMathDistanceHamming32_Asm_X64_POPCNT(COMPV_ALIGNED(SSE) const uint8_t* dataPtr, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride, COMPV_ALIGNED(SSE) const uint8_t* patch1xnPtr, int32_t* distPtr);
 	COMPV_EXTERNC void CompVMathDistanceHamming32_Asm_X64_POPCNT_AVX2(COMPV_ALIGNED(AVX) const uint8_t* dataPtr, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride, COMPV_ALIGNED(AVX) const uint8_t* patch1xnPtr, COMPV_ALIGNED(AVX) int32_t* distPtr);
+	COMPV_EXTERNC void CompVMathDistanceLine_32f_Asm_X64_SSE2(COMPV_ALIGNED(SSE) const compv_float32_t* xPtr, COMPV_ALIGNED(SSE) const compv_float32_t* yPtr, const compv_float32_t* Ascaled1, const compv_float32_t* Bscaled1, const compv_float32_t* Cscaled1, COMPV_ALIGNED(SSE) compv_float32_t* distPtr, const compv_uscalar_t count);
 #	endif /* COMPV_ARCH_X64 */
 #	if COMPV_ARCH_ARM32
     COMPV_EXTERNC void CompVMathDistanceHamming_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* dataPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, COMPV_ALIGNED(NEON) const uint8_t* patch1xnPtr, int32_t* distPtr);
@@ -211,5 +213,106 @@ static void CompVHammingDistance_POPCNT_C(const uint8_t* dataPtr, compv_uscalar_
 	}
 }
 #endif
+
+template <typename FloatType>
+static void CompVMathDistanceLine_C(const FloatType* xPtr, const FloatType* yPtr, const FloatType* Ascaled1, const FloatType* Bscaled1, const FloatType* Cscaled1, FloatType* distPtr, const compv_uscalar_t count)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
+	const FloatType& Ascaled = *Ascaled1;
+	const FloatType& Bscaled = *Bscaled1;
+	const FloatType& Cscaled = *Cscaled1;
+	for (compv_uscalar_t i = 0; i < count; ++i) {
+		// (Ax + By + C) and (Ax + C + By)  produce slithly different results but we keep using the 2nd 
+		// one to make sure this code will produce same MD5 hash when tested against SIMD (SSE, AVX or NEON)
+		distPtr[i] = std::abs((Ascaled * xPtr[i]) + Cscaled + (Bscaled * yPtr[i]));
+	}
+}
+
+// Distance = abs(Ax + By + C)/(1/sqrt(A^2 + B^2)) with A = lineEq[0], B = lineEq[1] and C = lineEq[2]
+// https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line#Line_defined_by_an_equation
+COMPV_ERROR_CODE CompVMathDistance::line(const CompVMatPtr& points, const double(&lineEq)[3], CompVMatPtrPtr distances)
+{
+	COMPV_CHECK_EXP_RETURN(
+		!points || points->cols() < 2 || !distances || points == *distances
+		|| (points->subType() != COMPV_SUBTYPE_RAW_FLOAT32 && points->subType() != COMPV_SUBTYPE_RAW_FLOAT64)
+		|| (!lineEq[0] && !lineEq[1]) // A and B cannot be equal to zero at the same time
+		, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+	CompVMatPtr distances_ = *distances;
+	const size_t count = points->cols();
+
+	// d = abs(Ax + By + C) / (1/sqrt(A^2 + B^2))
+	//	-> d = abs(Ax + By + C) * S, with S = (1/sqrt(A^2 + B^2))
+	//	-> d = abs((A*S)x + (B*S)y + (C*S))
+	//	-> d = abs((A')x + (B')y + (C'))
+	const double scale = 1.0 / std::sqrt((lineEq[0] * lineEq[0]) + (lineEq[1] * lineEq[1])); // A and B cannot be equal to zero at the same time
+	const double lineEqScaled[3] = {
+		lineEq[0] * scale,
+		lineEq[1] * scale,
+		lineEq[2] * scale,
+	};
+
+	switch (points->subType()) {
+	case COMPV_SUBTYPE_RAW_FLOAT32: {
+		// Create distance only if type mismatch
+		if (!distances_ || distances_->subType() != COMPV_SUBTYPE_RAW_FLOAT32 || distances_->cols() != count || distances_->rows() != 1) {
+			COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float32_t>(&distances_, 1, count));
+		}
+		const compv_float32_t Ascaled = static_cast<compv_float32_t>(lineEqScaled[0]);
+		const compv_float32_t Bscaled = static_cast<compv_float32_t>(lineEqScaled[1]);
+		const compv_float32_t Cscaled = static_cast<compv_float32_t>(lineEqScaled[2]);
+		void(*CompVMathDistanceLine_32f)(const compv_float32_t* xPtr, const compv_float32_t* yPtr, const compv_float32_t* A1scaled, const compv_float32_t* B1scaled, const compv_float32_t* C1scaled, compv_float32_t* distPtr, const compv_uscalar_t count)
+			= [](const compv_float32_t* xPtr, const compv_float32_t* yPtr, const compv_float32_t* A1scaled, const compv_float32_t* B1scaled, const compv_float32_t* C1scaled, compv_float32_t* distPtr, const compv_uscalar_t count) {
+			CompVMathDistanceLine_C<compv_float32_t>(xPtr, yPtr, A1scaled, B1scaled, C1scaled, distPtr, count);
+		};
+#if COMPV_ARCH_X86
+		if (CompVCpu::isEnabled(kCpuFlagSSE2) && points->isAlignedSSE() && distances_->isAlignedSSE()) {
+			COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathDistanceLine_32f = CompVMathDistanceLine_32f_Intrin_SSE2);
+			COMPV_EXEC_IFDEF_ASM_X64(CompVMathDistanceLine_32f = CompVMathDistanceLine_32f_Asm_X64_SSE2);
+		} 
+		if (CompVCpu::isEnabled(kCpuFlagAVX2) && points->isAlignedAVX() && distances_->isAlignedAVX()) {
+			//COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathDistanceLine_32f = CompVMathDistanceLine_32f_Intrin_AVX2);
+			//COMPV_EXEC_IFDEF_ASM_X64(CompVMathDistanceLine_32f = CompVMathDistanceLine_32f_Asm_X64_AVX2);
+			if (CompVCpu::isEnabled(kCpuFlagFMA3)) {
+				//COMPV_EXEC_IFDEF_ASM_X64(CompVMathDistanceLine_32f = CompVMathDistanceLine_32f_Asm_X64_FMA3_AVX2);
+			}
+		}
+#elif COMPV_ARCH_ARM
+		if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && points->isAlignedNEON() && distances_->isAlignedNEON()) {
+			//COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMathDistanceLine_32f = CompVMathDistanceLine_32f_Intrin_NEON);
+			//COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathDistanceLine_32f = CompVMathDistanceLine_32f_Asm_NEON32);
+			//COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathDistanceLine_32f = CompVMathDistanceLine_32f_Asm_NEON64);
+			if (CompVCpu::isEnabled(kCpuFlagARM_NEON_FMA)) {
+				//COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathDistanceLine_32f = CompVMathDistanceLine_32f_Asm_FMA_NEON32);
+				//COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathDistanceLine_32f = CompVMathDistanceLine_32f_Asm_FMA_NEON64);
+			}
+		}
+#endif
+		CompVMathDistanceLine_32f(points->ptr<compv_float32_t>(0), points->ptr<compv_float32_t>(1), &Ascaled, &Bscaled, &Cscaled, distances_->ptr<compv_float32_t>(), static_cast<compv_uscalar_t>(count));
+		break;
+	}
+	case COMPV_SUBTYPE_RAW_FLOAT64: {
+		// Create distance only if type mismatch
+		if (!distances_ || distances_->subType() != COMPV_SUBTYPE_RAW_FLOAT64 || distances_->cols() != count || distances_->rows() != 1) {
+			COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float64_t>(&distances_, 1, count));
+		}
+		const compv_float64_t Ascaled = lineEqScaled[0];
+		const compv_float64_t Bscaled = lineEqScaled[1];
+		const compv_float64_t Cscaled = lineEqScaled[2];
+		void(*CompVMathDistanceLine_64f)(const compv_float64_t* xPtr, const compv_float64_t* yPtr, const compv_float64_t* A1scaled, const compv_float64_t* B1scaled, const compv_float64_t* C1scaled, compv_float64_t* distPtr, const compv_uscalar_t count)
+			= [](const compv_float64_t* xPtr, const compv_float64_t* yPtr, const compv_float64_t* A1scaled, const compv_float64_t* B1scaled, const compv_float64_t* C1scaled, compv_float64_t* distPtr, const compv_uscalar_t count) {
+			CompVMathDistanceLine_C<compv_float64_t>(xPtr, yPtr, A1scaled, B1scaled, C1scaled, distPtr, count);
+		};
+		CompVMathDistanceLine_64f(points->ptr<compv_float64_t>(0), points->ptr<compv_float64_t>(1), &Ascaled, &Bscaled, &Cscaled, distances_->ptr<compv_float64_t>(), static_cast<compv_uscalar_t>(count));
+		break;
+	}
+	default:
+		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_SUBTYPE, "Points must be float32 or float64");
+		break;
+	}
+
+	*distances = distances_;
+	return COMPV_ERROR_CODE_S_OK;
+}
 
 COMPV_NAMESPACE_END()
