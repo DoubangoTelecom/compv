@@ -221,9 +221,9 @@ compv_main()
 				COMPV_CHECK_CODE_NOP(window->endDraw()); // Make sure 'endDraw()' will be called regardless the result
 				COMPV_DEBUG_INFO_CODE_FOR_TESTING("Remove the sleep function and getchar");
 				//CompVThread::sleep(1000); // FIXME(dmi): remove
-				if (nFrameNum >= 10000) {
-					exit(0);
-					//getchar();
+				if (nFrameNum >= 0) {
+					//exit(0);
+					getchar();
 				}
 				++nFrameNum;
 			}

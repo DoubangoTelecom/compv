@@ -16,6 +16,7 @@ global sym(CompVMathDistanceHamming32_Asm_X64_POPCNT_AVX2)
 global sym(CompVMathDistanceLine_32f_Asm_X64_AVX)
 global sym(CompVMathDistanceLine_32f_Asm_X64_FMA3_AVX)
 global sym(CompVMathDistanceParabola_32f_Asm_X64_AVX)
+global sym(CompVMathDistanceParabola_32f_Asm_X64_FMA3_AVX)
 
 section .data
 	extern sym(kShuffleEpi8_Popcnt_i32)
@@ -361,7 +362,8 @@ sym(CompVMathDistanceLine_32f_Asm_X64_FMA3_AVX):
 ; arg(4) -> const compv_float32_t* C1
 ; arg(5) -> COMPV_ALIGNED(SSE) compv_float32_t* distPtr
 ; arg(6) -> const compv_uscalar_t count
-sym(CompVMathDistanceParabola_32f_Asm_X64_AVX):
+; %1 -> 0: FMA3 not supported, 1: FMA3 supported
+%macro CompVMathDistanceParabola_32f_Macro_X64_AVX 1
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 7
@@ -415,42 +417,49 @@ sym(CompVMathDistanceParabola_32f_Asm_X64_AVX):
 		vmovaps ymm5, [xPtr + (i+8)*COMPV_YASM_FLOAT32_SZ_BYTES]
 		vmovaps ymm6, [xPtr + (i+16)*COMPV_YASM_FLOAT32_SZ_BYTES]
 		vmovaps ymm7, [xPtr + (i+24)*COMPV_YASM_FLOAT32_SZ_BYTES]
-
-		vmulps ymm8, ymm4, ymm4
-		vmulps ymm9, ymm5, ymm5
-		vmulps ymm10, ymm6, ymm6
-		vmulps ymm11, ymm7, ymm7
-
-		vmulps ymm4, ymm4, vecB
-		vmulps ymm5, ymm5, vecB
-		vmulps ymm6, ymm6, vecB
-		vmulps ymm7, ymm7, vecB
-
-		vmulps ymm8, ymm8, vecA
-		vmulps ymm9, ymm9, vecA
-		vmulps ymm10, ymm10, vecA
-		vmulps ymm11, ymm11, vecA
-
-		vaddps ymm8, ymm8, vecC
-		vaddps ymm9, ymm9, vecC
-		vaddps ymm10, ymm10, vecC
-		vaddps ymm11, ymm11, vecC
-
-		vaddps ymm8, ymm8, ymm4
-		vaddps ymm9, ymm9, ymm5
-		vaddps ymm10, ymm10, ymm6
-		vaddps ymm11, ymm11, ymm7
-
-		vsubps ymm8, ymm8, [yPtr + (i+0)*COMPV_YASM_FLOAT32_SZ_BYTES]
-		vsubps ymm9, ymm9, [yPtr + (i+8)*COMPV_YASM_FLOAT32_SZ_BYTES]
-		vsubps ymm10, ymm10, [yPtr + (i+16)*COMPV_YASM_FLOAT32_SZ_BYTES]
-		vsubps ymm11, ymm11, [yPtr + (i+24)*COMPV_YASM_FLOAT32_SZ_BYTES]
-
-		vandps ymm8, ymm8, vecMask
-		vandps ymm9, ymm9, vecMask
-		vandps ymm10, ymm10, vecMask
-		vandps ymm11, ymm11, vecMask
-
+		%if %1
+			vmulps ymm8, ymm4, ymm4
+			vmulps ymm9, ymm5, ymm5
+			vmulps ymm10, ymm6, ymm6
+			vmulps ymm11, ymm7, ymm7
+			vfmadd213ps ymm8, vecA, vecC
+			vfmadd213ps ymm9, vecA, vecC	
+			vfmadd213ps ymm10, vecA, vecC
+			vfmadd213ps ymm11, vecA, vecC
+			vfmadd231ps ymm8, vecB, ymm4
+			vfmadd231ps ymm9, vecB, ymm5	
+			vfmadd231ps ymm10, vecB, ymm6
+			vfmadd231ps ymm11, vecB, ymm7
+		%else
+			vmulps ymm8, ymm4, ymm4
+			vmulps ymm9, ymm5, ymm5
+			vmulps ymm10, ymm6, ymm6
+			vmulps ymm11, ymm7, ymm7
+			vmulps ymm4, vecB
+			vmulps ymm5, vecB
+			vmulps ymm6, vecB
+			vmulps ymm7, vecB
+			vmulps ymm8, vecA
+			vmulps ymm9, vecA
+			vmulps ymm10, vecA
+			vmulps ymm11, vecA
+			vaddps ymm8, vecC
+			vaddps ymm9, vecC
+			vaddps ymm10, vecC
+			vaddps ymm11, vecC
+			vaddps ymm8, ymm4
+			vaddps ymm9, ymm5
+			vaddps ymm10, ymm6
+			vaddps ymm11, ymm7
+		%endif
+		vsubps ymm8, [yPtr + (i+0)*COMPV_YASM_FLOAT32_SZ_BYTES]
+		vsubps ymm9, [yPtr + (i+8)*COMPV_YASM_FLOAT32_SZ_BYTES]
+		vsubps ymm10, [yPtr + (i+16)*COMPV_YASM_FLOAT32_SZ_BYTES]
+		vsubps ymm11, [yPtr + (i+24)*COMPV_YASM_FLOAT32_SZ_BYTES]
+		vandps ymm8, vecMask
+		vandps ymm9, vecMask
+		vandps ymm10, vecMask
+		vandps ymm11, vecMask
 		vmovaps [distPtr + (i+0)*COMPV_YASM_FLOAT32_SZ_BYTES], ymm8
 		vmovaps [distPtr + (i+8)*COMPV_YASM_FLOAT32_SZ_BYTES], ymm9
 		vmovaps [distPtr + (i+16)*COMPV_YASM_FLOAT32_SZ_BYTES], ymm10
@@ -467,23 +476,20 @@ sym(CompVMathDistanceParabola_32f_Asm_X64_AVX):
 	jge .EndOf_LoopCount8
 	.LoopCount8:
 		vmovaps ymm4, [xPtr + (i+0)*COMPV_YASM_FLOAT32_SZ_BYTES]
-
-		vmulps ymm8, ymm4, ymm4
-
-		vmulps ymm4, ymm4, vecB
-
-		vmulps ymm8, ymm8, vecA
-
-		vaddps ymm8, ymm8, vecC
-
-		vaddps ymm8, ymm8, ymm4
-
-		vsubps ymm8, ymm8, [yPtr + (i+0)*COMPV_YASM_FLOAT32_SZ_BYTES]
-
-		vandps ymm8, ymm8, vecMask
-
+		%if %1
+			vmulps ymm8, ymm4, ymm4
+			vfmadd213ps ymm8, vecA, vecC
+			vfmadd231ps ymm8, vecB, ymm4
+		%else
+			vmulps ymm8, ymm4, ymm4
+			vmulps ymm4, vecB
+			vmulps ymm8, vecA
+			vaddps ymm8, vecC
+			vaddps ymm8, ymm4
+		%endif
+		vsubps ymm8, [yPtr + (i+0)*COMPV_YASM_FLOAT32_SZ_BYTES]
+		vandps ymm8, vecMask
 		vmovaps [distPtr + (i+0)*COMPV_YASM_FLOAT32_SZ_BYTES], ymm8
-
 		add i, 8
 		cmp i, count
 		jl .LoopCount8
@@ -511,5 +517,14 @@ sym(CompVMathDistanceParabola_32f_Asm_X64_AVX):
 	mov rsp, rbp
 	pop rbp
 	ret
+%endmacro
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(CompVMathDistanceParabola_32f_Asm_X64_AVX):
+	CompVMathDistanceParabola_32f_Macro_X64_AVX 0
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(CompVMathDistanceParabola_32f_Asm_X64_FMA3_AVX):
+	CompVMathDistanceParabola_32f_Macro_X64_AVX 1
 
 %endif ; COMPV_YASM_ABI_IS_64BIT

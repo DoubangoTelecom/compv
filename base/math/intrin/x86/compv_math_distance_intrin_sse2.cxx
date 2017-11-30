@@ -45,15 +45,15 @@ void CompVMathDistanceLine_32f_Intrin_SSE2(COMPV_ALIGNED(SSE) const compv_float3
 	}
 }
 
-void CompVMathDistanceParabola_32f_Intrin_SSE2(COMPV_ALIGNED(SSE) const compv_float32_t* xPtr, COMPV_ALIGNED(SSE) const compv_float32_t* yPtr, const compv_float32_t* A, const compv_float32_t* B, const compv_float32_t* C, COMPV_ALIGNED(SSE) compv_float32_t* distPtr, const compv_uscalar_t count)
+void CompVMathDistanceParabola_32f_Intrin_SSE2(COMPV_ALIGNED(SSE) const compv_float32_t* xPtr, COMPV_ALIGNED(SSE) const compv_float32_t* yPtr, const compv_float32_t* A1, const compv_float32_t* B1, const compv_float32_t* C1, COMPV_ALIGNED(SSE) compv_float32_t* distPtr, const compv_uscalar_t count)
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
 	const compv_uscalar_t count16 = count & -16;
 	compv_uscalar_t i;
 	__m128 vec0, vec1, vec2, vec3, vec4, vec5, vec6, vec7;
-	const __m128 vecA = _mm_set1_ps(*A);
-	const __m128 vecB = _mm_set1_ps(*B);
-	const __m128 vecC = _mm_set1_ps(*C);
+	const __m128 vecA = _mm_set1_ps(*A1);
+	const __m128 vecB = _mm_set1_ps(*B1);
+	const __m128 vecC = _mm_set1_ps(*C1);
 	const __m128 vecMask = _mm_castsi128_ps(_mm_set1_epi32(0x7fffffff)); // mask used for '_mm_abs_ps'
 
 	for (i = 0; i < count16; i += 16) {

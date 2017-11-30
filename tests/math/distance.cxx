@@ -93,7 +93,7 @@ COMPV_ERROR_CODE distance_line()
 COMPV_ERROR_CODE distance_parabola()
 {
 #define EXPECTED_MD5_PARABOLA		"d152dac9988060c0659ae393cddfb9f0"
-#define EXPECTED_MD5_PARABOLA_FMA	"d152dac9988060c0659ae393cddfb9f0"
+#define EXPECTED_MD5_PARABOLA_FMA	"b8de7ba301db90fb894f14a91c6be99e"
 	const double parabolaEq[3] = { -7.258, 45852.0, 5485.65 };
 
 	CompVMatPtr points, distance;

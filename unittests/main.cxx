@@ -30,7 +30,8 @@ using namespace compv;
 #define UNITTEST_MATH_TRF_HOMOG_TO_CART			0 // homogeneousToCartesian2D()
 #define UNITTEST_MATH_CALIB_HOMOGRAPHY			0
 #define UNITTEST_MATH_DISTANCE_HAMMING			0
-#define UNITTEST_MATH_DISTANCE_LINE				1
+#define UNITTEST_MATH_DISTANCE_LINE				0
+#define UNITTEST_MATH_DISTANCE_PARABOLA			1
 #define UNITTEST_MATH_HISTOGRAM_BUILD			0
 #define UNITTEST_MATH_HISTOGRAM_EQUALIZ			0
 #define UNITTEST_MATH_CONVOLUTION				0
@@ -196,6 +197,11 @@ compv_main()
 								extern COMPV_ERROR_CODE unittest_math_distance_line();
 								COMPV_CHECK_CODE_BAIL(err = unittest_math_distance_line(), "Math line distance unittest failed");
 #endif
+#if UNITTEST_MATH_DISTANCE_PARABOLA  || !defined(COMPV_TEST_LOCAL)
+								extern COMPV_ERROR_CODE unittest_math_distance_parabola();
+								COMPV_CHECK_CODE_BAIL(err = unittest_math_distance_parabola(), "Math parabola distance unittest failed");
+#endif
+
 #if UNITTEST_MATH_HISTOGRAM_BUILD || !defined(COMPV_TEST_LOCAL)
 								extern COMPV_ERROR_CODE unittest_histogram_build();
 								COMPV_CHECK_CODE_BAIL(err = unittest_histogram_build(), "Math histogram build unittest failed");

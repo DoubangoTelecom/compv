@@ -372,10 +372,10 @@ COMPV_ERROR_CODE CompVMathDistance::parabola(const CompVMatPtr& points, const do
 			COMPV_EXEC_IFDEF_ASM_X64(CompVMathDistanceParabola_32f = CompVMathDistanceParabola_32f_Asm_X64_SSE2);
 		}
 		if (CompVCpu::isEnabled(kCpuFlagAVX) && points->isAlignedAVX() && distances_->isAlignedAVX()) {
-			//COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathDistanceParabola_32f = CompVMathDistanceParabola_32f_Intrin_AVX);
-			//COMPV_EXEC_IFDEF_ASM_X64(CompVMathDistanceParabola_32f = CompVMathDistanceParabola_32f_Asm_X64_AVX);
+			COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathDistanceParabola_32f = CompVMathDistanceParabola_32f_Intrin_AVX);
+			COMPV_EXEC_IFDEF_ASM_X64(CompVMathDistanceParabola_32f = CompVMathDistanceParabola_32f_Asm_X64_AVX);
 			if (CompVCpu::isEnabled(kCpuFlagFMA3)) {
-				//COMPV_EXEC_IFDEF_ASM_X64(CompVMathDistanceParabola_32f = CompVMathDistanceParabola_32f_Asm_X64_FMA3_AVX);
+				COMPV_EXEC_IFDEF_ASM_X64(CompVMathDistanceParabola_32f = CompVMathDistanceParabola_32f_Asm_X64_FMA3_AVX);
 			}
 		}
 #elif COMPV_ARCH_ARM
