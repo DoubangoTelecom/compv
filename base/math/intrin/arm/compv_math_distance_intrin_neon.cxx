@@ -11,6 +11,7 @@
 #include "compv/base/compv_simd_globals.h"
 #include "compv/base/math/compv_math.h"
 #include "compv/base/compv_bits.h"
+#include "compv/base/compv_cpu.h"
 #include "compv/base/compv_debug.h"
 
 #define __popcnt128(vec) vcntq_u8(vec)
@@ -246,7 +247,7 @@ void CompVMathDistanceHamming_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* dat
 
 // width = 32 (common, e.g. very common (Brief256_31))
 // TODO(dmi): not optiz, iPhone5 (ARM32), the ASM code is almost two times faster (not the case on Galaxy A6)
-// TODO(dmi): not optiz, MediaPad2 (ARM64), the ASM code is fasteeer
+// TODO(dmi): not optiz, MediaPad2 (ARM64), the ASM code is faaaaster
 void CompVMathDistanceHamming32_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* dataPtr, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, COMPV_ALIGNED(NEON) const uint8_t* patch1xnPtr, int32_t* distPtr)
 {
     COMPV_DEBUG_INFO_CHECK_NEON();
@@ -293,6 +294,45 @@ void CompVMathDistanceHamming32_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* d
         distPtr[j] = vget_lane_s32(vpadd_s32(veccntn, veccntn), 0);
 #endif
 		dataPtr += stride;
+	}
+}
+
+// TODO(dmi): not optiz -> on Android (Huawei MediaPad2, no FMA, ARM32, (1000003 points), single threaded, #1000 times), asm code: 3918.ms, intrin code: 5563.ms
+// TODO(dmi): not optiz -> on Android (Huawei MediaPad2, no FMA, ARM64, (1000003 points), single threaded, #1000 times), asm code: 3953.ms, intrin code: 5556.ms
+// TODO(dmi): not optiz -> on Android (Galaxy Tab A6, ARM32, (1000003 points), single threaded, #1000 times), asm code: 3115.ms, intrin 4365: 5563.ms
+void CompVMathDistanceLine_32f_Intrin_NEON(COMPV_ALIGNED(NEON) const compv_float32_t* xPtr, COMPV_ALIGNED(NEON) const compv_float32_t* yPtr, const compv_float32_t* Ascaled1, const compv_float32_t* Bscaled1, const compv_float32_t* Cscaled1, COMPV_ALIGNED(NEON) compv_float32_t* distPtr, const compv_uscalar_t count)
+{
+	COMPV_DEBUG_INFO_CHECK_NEON();
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM code is faster");
+	const compv_uscalar_t count16 = count & -16;
+	compv_uscalar_t i;
+	float32x4_t vec0, vec1, vec2, vec3;
+	const float32x4_t vecA = vdupq_n_f32(*Ascaled1);
+	const float32x4_t vecB = vdupq_n_f32(*Bscaled1);
+	const float32x4_t vecC = vdupq_n_f32(*Cscaled1);
+
+	// Adding '__compv_builtin_prefetch_read' doesn't help because the indice is computed instead of using the constant
+	// Adding '__compv_builtin_assume_aligned' also doesn't help even is we see that the memory is assumed to be aligned on 128b
+	//	-> should use asm code which is by faaar faster
+
+	for (i = 0; i < count16; i += 16) {
+		vec0 = vmlaq_f32(vecC, vecA, vld1q_f32(&xPtr[i]));
+		vec1 = vmlaq_f32(vecC, vecA, vld1q_f32(&xPtr[i + 4]));
+		vec2 = vmlaq_f32(vecC, vecA, vld1q_f32(&xPtr[i + 8]));
+		vec3 = vmlaq_f32(vecC, vecA, vld1q_f32(&xPtr[i + 12]));
+		vec0 = vmlaq_f32(vec0, vecB, vld1q_f32(&yPtr[i]));
+		vec1 = vmlaq_f32(vec1, vecB, vld1q_f32(&yPtr[i + 4]));
+		vec2 = vmlaq_f32(vec2, vecB, vld1q_f32(&yPtr[i + 8]));
+		vec3 = vmlaq_f32(vec3, vecB, vld1q_f32(&yPtr[i + 12]));
+		vst1q_f32(&distPtr[i], vabsq_f32(vec0));
+		vst1q_f32(&distPtr[i + 4], vabsq_f32(vec1));
+		vst1q_f32(&distPtr[i + 8], vabsq_f32(vec2));
+		vst1q_f32(&distPtr[i + 12], vabsq_f32(vec3));
+	}
+	for (; i < count; i += 4) { // can read beyond count and up to align_forward(count) - data strided
+		vec0 = vmlaq_f32(vecC, vecA, vld1q_f32(&xPtr[i]));
+		vec0 = vmlaq_f32(vec0, vecB, vld1q_f32(&yPtr[i]));
+		vst1q_f32(&distPtr[i], vabsq_f32(vec0));
 	}
 }
 

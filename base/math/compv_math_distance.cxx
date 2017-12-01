@@ -41,10 +41,14 @@ COMPV_NAMESPACE_BEGIN()
 #	if COMPV_ARCH_ARM32
     COMPV_EXTERNC void CompVMathDistanceHamming_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* dataPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, COMPV_ALIGNED(NEON) const uint8_t* patch1xnPtr, int32_t* distPtr);
     COMPV_EXTERNC void CompVMathDistanceHamming32_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* dataPtr, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, COMPV_ALIGNED(NEON) const uint8_t* patch1xnPtr, int32_t* distPtr);
+	COMPV_EXTERNC void CompVMathDistanceLine_32f_Asm_NEON32(COMPV_ALIGNED(NEON) const compv_float32_t* xPtr, COMPV_ALIGNED(NEON) const compv_float32_t* yPtr, const compv_float32_t* Ascaled1, const compv_float32_t* Bscaled1, const compv_float32_t* Cscaled1, COMPV_ALIGNED(NEON) compv_float32_t* distPtr, const compv_uscalar_t count);
+	COMPV_EXTERNC void CompVMathDistanceParabola_32f_Asm_NEON32(COMPV_ALIGNED(NEON) const compv_float32_t* xPtr, COMPV_ALIGNED(NEON) const compv_float32_t* yPtr, const compv_float32_t* A1, const compv_float32_t* B1, const compv_float32_t* C1, COMPV_ALIGNED(NEON) compv_float32_t* distPtr, const compv_uscalar_t count);
 #	endif /* COMPV_ARCH_ARM32 */
 #	if COMPV_ARCH_ARM64
     COMPV_EXTERNC void CompVMathDistanceHamming_Asm_NEON64(COMPV_ALIGNED(NEON) const uint8_t* dataPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, COMPV_ALIGNED(NEON) const uint8_t* patch1xnPtr, int32_t* distPtr);
     COMPV_EXTERNC void CompVMathDistanceHamming32_Asm_NEON64(COMPV_ALIGNED(NEON) const uint8_t* dataPtr, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, COMPV_ALIGNED(NEON) const uint8_t* patch1xnPtr, int32_t* distPtr);
+	COMPV_EXTERNC void CompVMathDistanceLine_32f_Asm_NEON64(COMPV_ALIGNED(NEON) const compv_float32_t* xPtr, COMPV_ALIGNED(NEON) const compv_float32_t* yPtr, const compv_float32_t* Ascaled1, const compv_float32_t* Bscaled1, const compv_float32_t* Cscaled1, COMPV_ALIGNED(NEON) compv_float32_t* distPtr, const compv_uscalar_t count);
+	COMPV_EXTERNC void CompVMathDistanceParabola_32f_Asm_NEON64(COMPV_ALIGNED(NEON) const compv_float32_t* xPtr, COMPV_ALIGNED(NEON) const compv_float32_t* yPtr, const compv_float32_t* A1, const compv_float32_t* B1, const compv_float32_t* C1, COMPV_ALIGNED(NEON) compv_float32_t* distPtr, const compv_uscalar_t count);
 #	endif /* COMPV_ARCH_ARM32 */
 #endif /* COMPV_ASM */
 
@@ -285,16 +289,16 @@ COMPV_ERROR_CODE CompVMathDistance::line(const CompVMatPtr& points, const double
 		}
 #elif COMPV_ARCH_ARM
 		if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && points->isAlignedNEON() && distances_->isAlignedNEON()) {
-			//COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMathDistanceLine_32f = CompVMathDistanceLine_32f_Intrin_NEON);
-			//COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathDistanceLine_32f = CompVMathDistanceLine_32f_Asm_NEON32);
-			//COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathDistanceLine_32f = CompVMathDistanceLine_32f_Asm_NEON64);
+			COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMathDistanceLine_32f = CompVMathDistanceLine_32f_Intrin_NEON);
+			COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathDistanceLine_32f = CompVMathDistanceLine_32f_Asm_NEON32);
+			COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathDistanceLine_32f = CompVMathDistanceLine_32f_Asm_NEON64);
 			if (CompVCpu::isEnabled(kCpuFlagARM_NEON_FMA)) {
 				//COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathDistanceLine_32f = CompVMathDistanceLine_32f_Asm_FMA_NEON32);
 				//COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathDistanceLine_32f = CompVMathDistanceLine_32f_Asm_FMA_NEON64);
 			}
 		}
 #endif
-		CompVMathDistanceLine_32f(points->ptr<compv_float32_t>(0), points->ptr<compv_float32_t>(1), &Ascaled, &Bscaled, &Cscaled, distances_->ptr<compv_float32_t>(), static_cast<compv_uscalar_t>(count));
+		CompVMathDistanceLine_32f(points->ptr<const compv_float32_t>(0), points->ptr<const compv_float32_t>(1), &Ascaled, &Bscaled, &Cscaled, distances_->ptr<compv_float32_t>(), static_cast<compv_uscalar_t>(count));
 		break;
 	}
 	case COMPV_SUBTYPE_RAW_FLOAT64: {
@@ -309,7 +313,7 @@ COMPV_ERROR_CODE CompVMathDistance::line(const CompVMatPtr& points, const double
 			= [](const compv_float64_t* xPtr, const compv_float64_t* yPtr, const compv_float64_t* A1scaled, const compv_float64_t* B1scaled, const compv_float64_t* C1scaled, compv_float64_t* distPtr, const compv_uscalar_t count) {
 			CompVMathDistanceLine_C<compv_float64_t>(xPtr, yPtr, A1scaled, B1scaled, C1scaled, distPtr, count);
 		};
-		CompVMathDistanceLine_64f(points->ptr<compv_float64_t>(0), points->ptr<compv_float64_t>(1), &Ascaled, &Bscaled, &Cscaled, distances_->ptr<compv_float64_t>(), static_cast<compv_uscalar_t>(count));
+		CompVMathDistanceLine_64f(points->ptr<const compv_float64_t>(0), points->ptr<const compv_float64_t>(1), &Ascaled, &Bscaled, &Cscaled, distances_->ptr<compv_float64_t>(), static_cast<compv_uscalar_t>(count));
 		break;
 	}
 	default:
@@ -388,7 +392,7 @@ COMPV_ERROR_CODE CompVMathDistance::parabola(const CompVMatPtr& points, const do
 			}
 		}
 #endif
-		CompVMathDistanceParabola_32f(points->ptr<compv_float32_t>(xIndex), points->ptr<compv_float32_t>(yIndex), &A, &B, &C, distances_->ptr<compv_float32_t>(), static_cast<compv_uscalar_t>(count));
+		CompVMathDistanceParabola_32f(points->ptr<const compv_float32_t>(xIndex), points->ptr<const compv_float32_t>(yIndex), &A, &B, &C, distances_->ptr<compv_float32_t>(), static_cast<compv_uscalar_t>(count));
 		break;
 	}
 	case COMPV_SUBTYPE_RAW_FLOAT64: {
@@ -403,7 +407,7 @@ COMPV_ERROR_CODE CompVMathDistance::parabola(const CompVMatPtr& points, const do
 			= [](const compv_float64_t* xPtr, const compv_float64_t* yPtr, const compv_float64_t* A1, const compv_float64_t* B1, const compv_float64_t* C1, compv_float64_t* distPtr, const compv_uscalar_t count) {
 			CompVMathDistanceParabola_C<compv_float64_t>(xPtr, yPtr, A1, B1, C1, distPtr, count);
 		};
-		CompVMathDistanceLine_64f(points->ptr<compv_float64_t>(xIndex), points->ptr<compv_float64_t>(yIndex), &Ascaled, &Bscaled, &Cscaled, distances_->ptr<compv_float64_t>(), static_cast<compv_uscalar_t>(count));
+		CompVMathDistanceLine_64f(points->ptr<const compv_float64_t>(xIndex), points->ptr<const compv_float64_t>(yIndex), &Ascaled, &Bscaled, &Cscaled, distances_->ptr<compv_float64_t>(), static_cast<compv_uscalar_t>(count));
 		break;
 	}
 	default:

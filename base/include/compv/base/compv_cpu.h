@@ -35,6 +35,7 @@ COMPV_NAMESPACE_BEGIN()
 // Vendor
 static const uint64_t kCpuFlagIntel = COMPV_CPU_FLAG_BIT(0);
 static const uint64_t kCpuFlagAMD = COMPV_CPU_FLAG_BIT(1);
+// [2-4] -- reserved for future vendors
 
 // These flags are only valid on ARM processors.
 static const uint64_t kCpuFlagARM = COMPV_CPU_FLAG_BIT(5);
@@ -43,7 +44,7 @@ static const uint64_t kCpuFlagARM_NEON = COMPV_CPU_FLAG_BIT(7);
 static const uint64_t kCpuFlagARM_NEON_FMA = COMPV_CPU_FLAG_BIT(8); // NEON + VFP4 (see compv_android_cpu-features.cxx)
 static const uint64_t kCpuFlagARM_VFPv3 = COMPV_CPU_FLAG_BIT(9);
 static const uint64_t kCpuFlagARM_VFPv4 = COMPV_CPU_FLAG_BIT(10);
-// -- reserved for future ARM flag.
+// [11-13] -- reserved for future ARM flag
 
 // These flags are only valid on x86/x64 processors.
 static const uint64_t kCpuFlagX86 = COMPV_CPU_FLAG_BIT(14);
@@ -77,11 +78,14 @@ static const uint64_t kCpuFlagAVX512_BW = COMPV_CPU_FLAG_BIT(41);
 static const uint64_t kCpuFlagAVX512_DQ = COMPV_CPU_FLAG_BIT(42);
 static const uint64_t kCpuFlagAVX512_IFMA = COMPV_CPU_FLAG_BIT(43);
 static const uint64_t kCpuFlagAVX512_VBMI = COMPV_CPU_FLAG_BIT(44);
+// [45-19] -- reserved for future x86/x64 flags
 
 // These flags are only valid on MIPS processors.
 static const uint64_t kCpuFlagMIPS = COMPV_CPU_FLAG_BIT(50);
 static const uint64_t kCpuFlagMIPS_DSP = COMPV_CPU_FLAG_BIT(51);
 static const uint64_t kCpuFlagMIPS_DSPR2 = COMPV_CPU_FLAG_BIT(52);
+
+// [53-63] -- reserved for future flags
 
 static const uint64_t kCpuFlagNone = ((uint64_t)0);
 static const uint64_t kCpuFlagAll = ~kCpuFlagNone;
