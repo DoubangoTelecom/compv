@@ -42,13 +42,17 @@ COMPV_NAMESPACE_BEGIN()
     COMPV_EXTERNC void CompVMathDistanceHamming_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* dataPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, COMPV_ALIGNED(NEON) const uint8_t* patch1xnPtr, int32_t* distPtr);
     COMPV_EXTERNC void CompVMathDistanceHamming32_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* dataPtr, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, COMPV_ALIGNED(NEON) const uint8_t* patch1xnPtr, int32_t* distPtr);
 	COMPV_EXTERNC void CompVMathDistanceLine_32f_Asm_NEON32(COMPV_ALIGNED(NEON) const compv_float32_t* xPtr, COMPV_ALIGNED(NEON) const compv_float32_t* yPtr, const compv_float32_t* Ascaled1, const compv_float32_t* Bscaled1, const compv_float32_t* Cscaled1, COMPV_ALIGNED(NEON) compv_float32_t* distPtr, const compv_uscalar_t count);
+	COMPV_EXTERNC void CompVMathDistanceLine_32f_Asm_FMA_NEON32(COMPV_ALIGNED(NEON) const compv_float32_t* xPtr, COMPV_ALIGNED(NEON) const compv_float32_t* yPtr, const compv_float32_t* Ascaled1, const compv_float32_t* Bscaled1, const compv_float32_t* Cscaled1, COMPV_ALIGNED(NEON) compv_float32_t* distPtr, const compv_uscalar_t count);
 	COMPV_EXTERNC void CompVMathDistanceParabola_32f_Asm_NEON32(COMPV_ALIGNED(NEON) const compv_float32_t* xPtr, COMPV_ALIGNED(NEON) const compv_float32_t* yPtr, const compv_float32_t* A1, const compv_float32_t* B1, const compv_float32_t* C1, COMPV_ALIGNED(NEON) compv_float32_t* distPtr, const compv_uscalar_t count);
+	COMPV_EXTERNC void CompVMathDistanceParabola_32f_Asm_FMA_NEON32(COMPV_ALIGNED(NEON) const compv_float32_t* xPtr, COMPV_ALIGNED(NEON) const compv_float32_t* yPtr, const compv_float32_t* A1, const compv_float32_t* B1, const compv_float32_t* C1, COMPV_ALIGNED(NEON) compv_float32_t* distPtr, const compv_uscalar_t count);
 #	endif /* COMPV_ARCH_ARM32 */
 #	if COMPV_ARCH_ARM64
     COMPV_EXTERNC void CompVMathDistanceHamming_Asm_NEON64(COMPV_ALIGNED(NEON) const uint8_t* dataPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, COMPV_ALIGNED(NEON) const uint8_t* patch1xnPtr, int32_t* distPtr);
     COMPV_EXTERNC void CompVMathDistanceHamming32_Asm_NEON64(COMPV_ALIGNED(NEON) const uint8_t* dataPtr, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, COMPV_ALIGNED(NEON) const uint8_t* patch1xnPtr, int32_t* distPtr);
 	COMPV_EXTERNC void CompVMathDistanceLine_32f_Asm_NEON64(COMPV_ALIGNED(NEON) const compv_float32_t* xPtr, COMPV_ALIGNED(NEON) const compv_float32_t* yPtr, const compv_float32_t* Ascaled1, const compv_float32_t* Bscaled1, const compv_float32_t* Cscaled1, COMPV_ALIGNED(NEON) compv_float32_t* distPtr, const compv_uscalar_t count);
+	COMPV_EXTERNC void CompVMathDistanceLine_32f_Asm_FMA_NEON64(COMPV_ALIGNED(NEON) const compv_float32_t* xPtr, COMPV_ALIGNED(NEON) const compv_float32_t* yPtr, const compv_float32_t* Ascaled1, const compv_float32_t* Bscaled1, const compv_float32_t* Cscaled1, COMPV_ALIGNED(NEON) compv_float32_t* distPtr, const compv_uscalar_t count);
 	COMPV_EXTERNC void CompVMathDistanceParabola_32f_Asm_NEON64(COMPV_ALIGNED(NEON) const compv_float32_t* xPtr, COMPV_ALIGNED(NEON) const compv_float32_t* yPtr, const compv_float32_t* A1, const compv_float32_t* B1, const compv_float32_t* C1, COMPV_ALIGNED(NEON) compv_float32_t* distPtr, const compv_uscalar_t count);
+	COMPV_EXTERNC void CompVMathDistanceParabola_32f_Asm_FMA_NEON64(COMPV_ALIGNED(NEON) const compv_float32_t* xPtr, COMPV_ALIGNED(NEON) const compv_float32_t* yPtr, const compv_float32_t* A1, const compv_float32_t* B1, const compv_float32_t* C1, COMPV_ALIGNED(NEON) compv_float32_t* distPtr, const compv_uscalar_t count);
 #	endif /* COMPV_ARCH_ARM32 */
 #endif /* COMPV_ASM */
 
@@ -293,7 +297,7 @@ COMPV_ERROR_CODE CompVMathDistance::line(const CompVMatPtr& points, const double
 			COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathDistanceLine_32f = CompVMathDistanceLine_32f_Asm_NEON32);
 			COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathDistanceLine_32f = CompVMathDistanceLine_32f_Asm_NEON64);
 			if (CompVCpu::isEnabled(kCpuFlagARM_NEON_FMA)) {
-				//COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathDistanceLine_32f = CompVMathDistanceLine_32f_Asm_FMA_NEON32);
+				COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathDistanceLine_32f = CompVMathDistanceLine_32f_Asm_FMA_NEON32);
 				//COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathDistanceLine_32f = CompVMathDistanceLine_32f_Asm_FMA_NEON64);
 			}
 		}
