@@ -298,7 +298,7 @@ COMPV_ERROR_CODE CompVMathDistance::line(const CompVMatPtr& points, const double
 			COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathDistanceLine_32f = CompVMathDistanceLine_32f_Asm_NEON64);
 			if (CompVCpu::isEnabled(kCpuFlagARM_NEON_FMA)) {
 				COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathDistanceLine_32f = CompVMathDistanceLine_32f_Asm_FMA_NEON32);
-				//COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathDistanceLine_32f = CompVMathDistanceLine_32f_Asm_FMA_NEON64);
+				COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathDistanceLine_32f = CompVMathDistanceLine_32f_Asm_FMA_NEON64);
 			}
 		}
 #endif

@@ -6,7 +6,7 @@
 # WebSite: http://compv.org                                             #
 #########################################################################
 #if defined(__aarch64__)
-.include "compv_common_arm64.S" //"
+.include "compv_common_arm64.S" //
 
 #if defined(__APPLE__)
 #   define sym(funcname) _##funcname
