@@ -694,30 +694,25 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceLine_32f_Asm_FMA_NEON32
 		vld1.f32 { q6,q7 }, [xPtr :128]!
 		pld [xPtr, #(CACHE_LINE_SIZE*4)]
 		.if \fusedMultiplyAdd
-			vmov.f32 q8, vecC
-			vmov.f32 q9, vecC
-			vmov.f32 q10, vecC
-			vmov.f32 q11, vecC
-
 			vmul.f32 q12, q4, q4
 			vmul.f32 q13, q5, q5
 			vmul.f32 q14, q6, q6
 			vmul.f32 q15, q7, q7
-
+			vmov.f32 q8, vecC
+			vmov.f32 q9, vecC
 			vfma.f32 q8, vecA, q12
 			vfma.f32 q9, vecA, q13
+			vmov.f32 q10, vecC
+			vmov.f32 q11, vecC
 			vfma.f32 q10, vecA, q14
 			vfma.f32 q11, vecA, q15
-
 			vld1.f32 { q12,q13 }, [yPtr :128]!
 			vld1.f32 { q14,q15 }, [yPtr :128]!
 			pld [yPtr, #(CACHE_LINE_SIZE*4)]
-
 			vfma.f32 q8, vecB, q4
 			vfma.f32 q9, vecB, q5
 			vfma.f32 q10, vecB, q6
-			vfma.f32 q11, vecB, q7			
-
+			vfma.f32 q11, vecB, q7
 			vsub.f32 q8, q8, q12
 			vsub.f32 q9, q9, q13
 			vsub.f32 q10, q10, q14
@@ -770,15 +765,10 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceLine_32f_Asm_FMA_NEON32
 		vld1.f32 { q4 }, [xPtr :128]!
 		.if \fusedMultiplyAdd
 			vmov.f32 q8, vecC
-
 			vmul.f32 q12, q4, q4
-
 			vfma.f32 q8, vecA, q12
-
 			vld1.f32 { q12 }, [yPtr :128]!
-
 			vfma.f32 q8, vecB, q4	
-
 			vsub.f32 q8, q8, q12
 		.else
 			vmul.f32 q8, q4, q4
