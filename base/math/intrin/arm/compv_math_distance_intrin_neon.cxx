@@ -336,6 +336,44 @@ void CompVMathDistanceLine_32f_Intrin_NEON(COMPV_ALIGNED(NEON) const compv_float
 	}
 }
 
+// TODO(dmi): not optiz -> on Android (Huawei MediaPad2, no FMA, ARM32, (1000003 points), single threaded, #1000 times), asm code: 3956.ms, intrin code: 6055.ms
+void CompVMathDistanceParabola_32f_Intrin_NEON(COMPV_ALIGNED(NEON) const compv_float32_t* xPtr, COMPV_ALIGNED(NEON) const compv_float32_t* yPtr, const compv_float32_t* A1, const compv_float32_t* B1, const compv_float32_t* C1, COMPV_ALIGNED(NEON) compv_float32_t* distPtr, const compv_uscalar_t count)
+{
+	COMPV_DEBUG_INFO_CHECK_NEON();
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM code is faster");
+	const compv_uscalar_t count16 = count & -16;
+	compv_uscalar_t i;
+	float32x4_t vec0, vec1, vec2, vec3, vec4, vec5, vec6, vec7;
+	const float32x4_t vecA = vdupq_n_f32(*A1);
+	const float32x4_t vecB = vdupq_n_f32(*B1);
+	const float32x4_t vecC = vdupq_n_f32(*C1);
+
+	for (i = 0; i < count16; i += 16) {
+		vec4 = vld1q_f32(&xPtr[i]);
+		vec5 = vld1q_f32(&xPtr[i + 4]);
+		vec6 = vld1q_f32(&xPtr[i + 8]);
+		vec7 = vld1q_f32(&xPtr[i + 12]);
+		vec0 = vmulq_f32(vecA, vmulq_f32(vec4, vec4));
+		vec1 = vmulq_f32(vecA, vmulq_f32(vec5, vec5));
+		vec2 = vmulq_f32(vecA, vmulq_f32(vec6, vec6));
+		vec3 = vmulq_f32(vecA, vmulq_f32(vec7, vec7));
+		vec0 = vaddq_f32(vaddq_f32(vec0, vecC), vmulq_f32(vecB, vec4));
+		vec1 = vaddq_f32(vaddq_f32(vec1, vecC), vmulq_f32(vecB, vec5));
+		vec2 = vaddq_f32(vaddq_f32(vec2, vecC), vmulq_f32(vecB, vec6));
+		vec3 = vaddq_f32(vaddq_f32(vec3, vecC), vmulq_f32(vecB, vec7));
+		vst1q_f32(&distPtr[i], vabsq_f32(vsubq_f32(vec0, vld1q_f32(&yPtr[i]))));
+		vst1q_f32(&distPtr[i + 4], vabsq_f32(vsubq_f32(vec1, vld1q_f32(&yPtr[i + 4]))));
+		vst1q_f32(&distPtr[i + 8], vabsq_f32(vsubq_f32(vec2, vld1q_f32(&yPtr[i + 8]))));
+		vst1q_f32(&distPtr[i + 12], vabsq_f32(vsubq_f32(vec3, vld1q_f32(&yPtr[i + 12]))));
+	}
+	for (; i < count; i += 4) { // can read beyond count and up to align_forward(count) - data strided
+		vec4 = vld1q_f32(&xPtr[i]);
+		vec0 = vmulq_f32(vecA, vmulq_f32(vec4, vec4));
+		vec0 = vaddq_f32(vaddq_f32(vec0, vecC), vmulq_f32(vecB, vec4));
+		vst1q_f32(&distPtr[i], vabsq_f32(vsubq_f32(vec0, vld1q_f32(&yPtr[i]))));
+	}
+}
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_ARM && COMPV_INTRINSIC */

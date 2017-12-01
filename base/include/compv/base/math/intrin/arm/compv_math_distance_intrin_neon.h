@@ -21,6 +21,7 @@ void CompVMathDistanceHamming_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* dat
 void CompVMathDistanceHamming32_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* dataPtr, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, COMPV_ALIGNED(NEON) const uint8_t* patch1xnPtr, int32_t* distPtr);
 
 void CompVMathDistanceLine_32f_Intrin_NEON(COMPV_ALIGNED(NEON) const compv_float32_t* xPtr, COMPV_ALIGNED(NEON) const compv_float32_t* yPtr, const compv_float32_t* Ascaled1, const compv_float32_t* Bscaled1, const compv_float32_t* Cscaled1, COMPV_ALIGNED(NEON) compv_float32_t* distPtr, const compv_uscalar_t count);
+void CompVMathDistanceParabola_32f_Intrin_NEON(COMPV_ALIGNED(NEON) const compv_float32_t* xPtr, COMPV_ALIGNED(NEON) const compv_float32_t* yPtr, const compv_float32_t* A, const compv_float32_t* B, const compv_float32_t* C, COMPV_ALIGNED(NEON) compv_float32_t* distPtr, const compv_uscalar_t count);
 
 COMPV_NAMESPACE_END()
 

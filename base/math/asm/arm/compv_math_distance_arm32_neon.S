@@ -638,4 +638,188 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceLine_32f_Asm_NEON32
 COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceLine_32f_Asm_FMA_NEON32
 	CompVMathDistanceLine_32f_Macro_NEON32 1
 
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@ arg(0) -> COMPV_ALIGNED(NEON) const compv_float32_t* xPtr, 
+@ arg(1) -> COMPV_ALIGNED(NEON) const compv_float32_t* yPtr, 
+@ arg(2) -> const compv_float32_t* A1, 
+@ arg(3) -> const compv_float32_t* B1, 
+@ arg(4) -> const compv_float32_t* C1, 
+@ arg(5) -> COMPV_ALIGNED(NEON) compv_float32_t* distPtr, 
+@ arg(6) -> const compv_uscalar_t count
+.macro CompVMathDistanceParabola_32f_Macro_NEON32 fusedMultiplyAdd
+	COMPV_GAS_FUNCTION_PROLOG
+	COMPV_GAS_SHADOW_ARGS_TO_STACK 7
+	COMPV_GAS_SAVE_NEON_REGS
+
+	@@ Load arguments @@
+	ldm_args r0-r6
+	xPtr .req r0
+	yPtr .req r1
+	A1Ptr .req r2
+	B1Ptr .req r3
+	C1Ptr .req r4
+	distPtr .req r5
+	count .req r6
+
+	pld [xPtr, #(CACHE_LINE_SIZE*0)]
+	pld [xPtr, #(CACHE_LINE_SIZE*1)]
+	pld [xPtr, #(CACHE_LINE_SIZE*2)]
+	pld [xPtr, #(CACHE_LINE_SIZE*3)]
+
+	pld [yPtr, #(CACHE_LINE_SIZE*0)]
+	pld [yPtr, #(CACHE_LINE_SIZE*1)]
+	pld [yPtr, #(CACHE_LINE_SIZE*2)]
+	pld [yPtr, #(CACHE_LINE_SIZE*3)]
+
+	@ Local variables
+	i .req r7
+	vecA .req q0
+	vecB .req q1
+	vecC .req q2
+
+	ldr r8, [A1Ptr]
+	ldr r9, [B1Ptr]
+	ldr r10, [C1Ptr]
+	vdup.f32 vecA, r8
+	vdup.f32 vecB, r9
+	vdup.f32 vecC, r10
+
+	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	@ for (i = 0; i < count16; i += 16)
+	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	ands i, count, #-16
+	beq EndOf_LoopCount16_CompVMathDistanceLine_32f_Asm_NEON32\@
+	LoopCount16_CompVMathDistanceLine_32f_Asm_NEON32\@:
+		vld1.f32 { q4,q5 }, [xPtr :128]!
+		vld1.f32 { q6,q7 }, [xPtr :128]!
+		pld [xPtr, #(CACHE_LINE_SIZE*4)]
+		.if \fusedMultiplyAdd
+			vmov.f32 q8, vecC
+			vmov.f32 q9, vecC
+			vmov.f32 q10, vecC
+			vmov.f32 q11, vecC
+
+			vmul.f32 q12, q4, q4
+			vmul.f32 q13, q5, q5
+			vmul.f32 q14, q6, q6
+			vmul.f32 q15, q7, q7
+
+			vfma.f32 q8, vecA, q12
+			vfma.f32 q9, vecA, q13
+			vfma.f32 q10, vecA, q14
+			vfma.f32 q11, vecA, q15
+
+			vld1.f32 { q12,q13 }, [yPtr :128]!
+			vld1.f32 { q14,q15 }, [yPtr :128]!
+			pld [yPtr, #(CACHE_LINE_SIZE*4)]
+
+			vfma.f32 q8, vecB, q4
+			vfma.f32 q9, vecB, q5
+			vfma.f32 q10, vecB, q6
+			vfma.f32 q11, vecB, q7			
+
+			vsub.f32 q8, q8, q12
+			vsub.f32 q9, q9, q13
+			vsub.f32 q10, q10, q14
+			vsub.f32 q11, q11, q15
+		.else
+			vmul.f32 q8, q4, q4
+			vmul.f32 q9, q5, q5
+			vmul.f32 q10, q6, q6
+			vmul.f32 q11, q7, q7
+			vmul.f32 q4, vecB, q4
+			vmul.f32 q5, vecB, q5
+			vmul.f32 q6, vecB, q6
+			vmul.f32 q7, vecB, q7
+			vmul.f32 q8, q8, vecA
+			vmul.f32 q9, q9, vecA
+			vmul.f32 q10, q10, vecA
+			vmul.f32 q11, q11, vecA
+			vld1.f32 { q12,q13 }, [yPtr :128]!
+			vld1.f32 { q14,q15 }, [yPtr :128]!
+			pld [yPtr, #(CACHE_LINE_SIZE*4)]
+			vadd.f32 q8, q8, vecC
+			vadd.f32 q9, q9, vecC
+			vadd.f32 q10, q10, vecC
+			vadd.f32 q11, q11, vecC
+			vadd.f32 q8, q8, q4
+			vadd.f32 q9, q9, q5
+			vadd.f32 q10, q10, q6
+			vadd.f32 q11, q11, q7
+			vsub.f32 q8, q8, q12
+			vsub.f32 q9, q9, q13
+			vsub.f32 q10, q10, q14
+			vsub.f32 q11, q11, q15
+		.endif
+		subs i, i, #16
+		vabs.f32 q8, q8
+		vabs.f32 q9, q9
+		vst1.f32 {q8, q9}, [distPtr :128]!
+		vabs.f32 q10, q10
+		vabs.f32 q11, q11
+		vst1.f32 {q10, q11}, [distPtr :128]!
+		bne LoopCount16_CompVMathDistanceLine_32f_Asm_NEON32\@
+	EndOf_LoopCount16_CompVMathDistanceLine_32f_Asm_NEON32\@:
+
+	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	@ for (; i < count; i += 4)
+	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	ands i, count, #15
+	beq EndOf_LoopCount4_CompVMathDistanceLine_32f_Asm_NEON32\@
+	LoopCount4_CompVMathDistanceLine_32f_Asm_NEON32\@:
+		vld1.f32 { q4 }, [xPtr :128]!
+		.if \fusedMultiplyAdd
+			vmov.f32 q8, vecC
+
+			vmul.f32 q12, q4, q4
+
+			vfma.f32 q8, vecA, q12
+
+			vld1.f32 { q12 }, [yPtr :128]!
+
+			vfma.f32 q8, vecB, q4	
+
+			vsub.f32 q8, q8, q12
+		.else
+			vmul.f32 q8, q4, q4
+			vmul.f32 q4, vecB, q4
+			vmul.f32 q8, q8, vecA
+			vld1.f32 { q12 }, [yPtr :128]!
+			vadd.f32 q8, q8, vecC
+			vadd.f32 q8, q8, q4
+			vsub.f32 q8, q8, q12
+		.endif
+		subs i, i, #4
+		vabs.f32 q8, q8
+		vst1.f32 {q8}, [distPtr :128]!		
+		bgt LoopCount4_CompVMathDistanceLine_32f_Asm_NEON32\@
+	EndOf_LoopCount4_CompVMathDistanceLine_32f_Asm_NEON32\@:
+	
+	.unreq xPtr
+	.unreq yPtr
+	.unreq A1Ptr
+	.unreq B1Ptr
+	.unreq C1Ptr
+	.unreq distPtr
+	.unreq count
+
+	.unreq i
+	.unreq vecA
+	.unreq vecB
+	.unreq vecC
+
+	COMPV_GAS_RESTORE_NEON_REGS
+	COMPV_GAS_UNSHADOW_ARGS 7
+	COMPV_GAS_FUNCTION_EPILOG
+	COMPV_GAS_FUNCTION_RETURN
+.endm
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceParabola_32f_Asm_NEON32
+	CompVMathDistanceParabola_32f_Macro_NEON32 0
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceParabola_32f_Asm_FMA_NEON32
+	CompVMathDistanceParabola_32f_Macro_NEON32 1
+
 #endif /* defined(__arm__) && !defined(__aarch64__) */
