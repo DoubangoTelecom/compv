@@ -527,21 +527,26 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceLine_32f_Asm_NEON32
 	beq EndOf_LoopCount16_CompVMathDistanceLine_32f_Asm_NEON32
 	LoopCount16_CompVMathDistanceLine_32f_Asm_NEON32:
 		vld1.f32 { q4,q5 }, [xPtr :128]!
-		vmov.f32 q8, vecC
-		vmov.f32 q9, vecC
-		vmla.f32 q8, vecA, q4
-		vmla.f32 q9, vecA, q5
 		vld1.f32 { q6,q7 }, [xPtr :128]!
-		vmov.f32 q10, vecC
-		vmov.f32 q11, vecC
-		vmla.f32 q10, vecA, q6
-		vmla.f32 q11, vecA, q7
+
+		vmul.f32 q8, vecA, q4
+		vmul.f32 q9, vecA, q5
+		
+		vmul.f32 q10, vecA, q6
+		vmul.f32 q11, vecA, q7
 
 		vld1.f32 { q12,q13 }, [yPtr :128]!
 		vld1.f32 { q14,q15 }, [yPtr :128]!
 
+		vadd.f32 q8, q8, vecC
+		vadd.f32 q9, q9, vecC
+		
 		vmla.f32 q8, vecB, q12
 		vmla.f32 q9, vecB, q13
+
+		vadd.f32 q10, q10, vecC
+		vadd.f32 q11, q11, vecC
+		
 		vmla.f32 q10, vecB, q14
 		vmla.f32 q11, vecB, q15
 
