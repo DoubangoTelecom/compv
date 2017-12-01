@@ -484,5 +484,118 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming32_Asm_NEON32
 	COMPV_GAS_FUNCTION_EPILOG
 	COMPV_GAS_FUNCTION_RETURN
 
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@ arg(0) -> COMPV_ALIGNED(NEON) const compv_float32_t* xPtr, 
+@ arg(1) -> COMPV_ALIGNED(NEON) const compv_float32_t* yPtr, 
+@ arg(2) -> const compv_float32_t* Ascaled1, 
+@ arg(3) -> const compv_float32_t* Bscaled1, 
+@ arg(4) -> const compv_float32_t* Cscaled1, 
+@ arg(5) -> COMPV_ALIGNED(NEON) compv_float32_t* distPtr, 
+@ arg(6) -> const compv_uscalar_t count
+COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceLine_32f_Asm_NEON32
+	COMPV_GAS_FUNCTION_PROLOG
+	COMPV_GAS_SHADOW_ARGS_TO_STACK 7
+	COMPV_GAS_SAVE_NEON_REGS
+
+	@@ Load arguments @@
+	ldm_args r0-r6
+	xPtr .req r0
+	yPtr .req r1
+	Ascaled1 .req r2
+	Bscaled1 .req r3
+	Cscaled1 .req r4
+	distPtr .req r5
+	count .req r6
+
+	@ Local variables
+	i .req r7
+	vecA .req q0
+	vecB .req q1
+	vecC .req q2
+
+	ldr r8, [Ascaled1]
+	ldr r9, [Bscaled1]
+	ldr r10, [Cscaled1]
+	vdup.f32 vecA, r8
+	vdup.f32 vecB, r9
+	vdup.f32 vecC, r10
+
+	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	@ for (i = 0; i < count16; i += 16)
+	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	ands i, count, #-16
+	beq EndOf_LoopCount16_CompVMathDistanceLine_32f_Asm_NEON32
+	LoopCount16_CompVMathDistanceLine_32f_Asm_NEON32:
+		vld1.f32 { q4,q5 }, [xPtr :128]!
+		vmov.f32 q8, vecC
+		vmov.f32 q9, vecC
+		vmla.f32 q8, vecA, q4
+		vmla.f32 q9, vecA, q5
+		vld1.f32 { q6,q7 }, [xPtr :128]!
+		vmov.f32 q10, vecC
+		vmov.f32 q11, vecC
+		vmla.f32 q10, vecA, q6
+		vmla.f32 q11, vecA, q7
+
+		vld1.f32 { q12,q13 }, [yPtr :128]!
+		vld1.f32 { q14,q15 }, [yPtr :128]!
+
+		vmla.f32 q8, vecB, q12
+		vmla.f32 q9, vecB, q13
+		vmla.f32 q10, vecB, q14
+		vmla.f32 q11, vecB, q15
+
+		subs i, i, #16
+		vabs.f32 q8, q8
+		vabs.f32 q9, q9
+		vst1.f32 {q8, q9}, [distPtr]!
+		vabs.f32 q10, q10
+		vabs.f32 q11, q11
+		vst1.f32 {q10, q11}, [distPtr]!
+				
+		bne LoopCount16_CompVMathDistanceLine_32f_Asm_NEON32
+	EndOf_LoopCount16_CompVMathDistanceLine_32f_Asm_NEON32:
+
+	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	@ for (; i < count; i += 4)
+	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	ands i, count, #15
+	beq EndOf_LoopCount4_CompVMathDistanceLine_32f_Asm_NEON32
+	LoopCount4_CompVMathDistanceLine_32f_Asm_NEON32:
+		vld1.f32 { q4 }, [xPtr :128]!
+		vmov.f32 q8, vecC
+		
+		vmla.f32 q8, vecA, q4
+
+		vld1.f32 { q12 }, [yPtr :128]!
+
+		vmla.f32 q8, vecB, q12
+
+		subs i, i, #4
+		vabs.f32 q8, q8
+		vst1.f32 {q8}, [distPtr]!
+		
+		bgt LoopCount4_CompVMathDistanceLine_32f_Asm_NEON32
+	EndOf_LoopCount4_CompVMathDistanceLine_32f_Asm_NEON32:
+	
+	.unreq xPtr
+	.unreq yPtr
+	.unreq Ascaled1
+	.unreq Bscaled1
+	.unreq Cscaled1
+	.unreq distPtr
+	.unreq count
+
+	.unreq i
+	.unreq vecA
+	.unreq vecB
+	.unreq vecC
+
+	COMPV_GAS_RESTORE_NEON_REGS
+	COMPV_GAS_UNSHADOW_ARGS 7
+	COMPV_GAS_FUNCTION_EPILOG
+	COMPV_GAS_FUNCTION_RETURN
+
+
 
 #endif /* defined(__arm__) && !defined(__aarch64__) */
