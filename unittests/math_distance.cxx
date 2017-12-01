@@ -97,7 +97,6 @@ static COMPV_ERROR_CODE __buildPoints(CompVMatPtrPtr points)
 {
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float32_t>(points, 2, 1000003));
 	const size_t count = (*points)->cols();
-	const size_t stride = (*points)->stride();
 	compv_float32_t* pointsX = (*points)->ptr<compv_float32_t>(0);
 	compv_float32_t* pointsY = (*points)->ptr<compv_float32_t>(1);
 	for (size_t i = 0; i < count; ++i) {

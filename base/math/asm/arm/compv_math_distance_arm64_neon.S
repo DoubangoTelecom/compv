@@ -601,4 +601,171 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceLine_32f_Asm_NEON64
 COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceLine_32f_Asm_FMA_NEON64
 	CompVMathDistanceLine_32f_Macro_NEON64 1
 
+#########################################################################
+# arg(0) -> COMPV_ALIGNED(NEON) const compv_float32_t* xPtr, 
+# arg(1) -> COMPV_ALIGNED(NEON) const compv_float32_t* yPtr, 
+# arg(2) -> const compv_float32_t* A1, 
+# arg(3) -> const compv_float32_t* B1, 
+# arg(4) -> const compv_float32_t* C1, 
+# arg(5) -> COMPV_ALIGNED(NEON) compv_float32_t* distPtr, 
+# arg(6) -> const compv_uscalar_t count
+.macro CompVMathDistanceParabola_32f_Macro_NEON64 fusedMultiplyAdd
+	COMPV_GAS_FUNCTION_PROLOG
+	COMPV_GAS_SAVE_NEON_REGS
+
+	## Load arguments ##
+	xPtr .req r0
+	yPtr .req r1
+	A1Ptr .req r2
+	B1Ptr .req r3
+	C1Ptr .req r4
+	distPtr .req r5
+	count .req r6
+
+	prfm pldl1keep, [xPtr, #(CACHE_LINE_SIZE*0)]
+	prfm pldl1keep, [xPtr, #(CACHE_LINE_SIZE*1)]
+	prfm pldl1keep, [xPtr, #(CACHE_LINE_SIZE*2)]
+	prfm pldl1keep, [xPtr, #(CACHE_LINE_SIZE*3)]
+
+	prfm pldl1keep, [yPtr, #(CACHE_LINE_SIZE*0)]
+	prfm pldl1keep, [yPtr, #(CACHE_LINE_SIZE*1)]
+	prfm pldl1keep, [yPtr, #(CACHE_LINE_SIZE*2)]
+	prfm pldl1keep, [yPtr, #(CACHE_LINE_SIZE*3)]
+
+	# Local variables
+	i .req r7
+	vecA .req v0
+	vecB .req v1
+	vecC .req v2
+
+	ldr r8w, [A1Ptr]
+	ldr r9w, [B1Ptr]
+	ldr r10w, [C1Ptr]
+	dup vecA.4s, r8w
+	dup vecB.4s, r9w
+	dup vecC.4s, r10w
+
+	########################################
+	# for (i = 0; i < count16; i += 16)
+	########################################
+	ands i, count, #-16
+	beq EndOf_LoopCount16_CompVMathDistanceParabola_32f_Asm_NEON64\@
+	LoopCount16_CompVMathDistanceParabola_32f_Asm_NEON64\@:
+		ld1 { v4.4s-v7.4s }, [xPtr], #(4*COMPV_GAS_V_SZ_BYTES)
+		prfm pldl1keep, [xPtr, #(CACHE_LINE_SIZE*4)]
+		.if \fusedMultiplyAdd
+			fmul v12.4s, v4.4s, v4.4s
+			fmul v13.4s, v5.4s, v5.4s
+			fmul v14.4s, v6.4s, v6.4s
+			fmul v15.4s, v7.4s, v7.4s
+			mov v8.16b, vecC.16b
+			mov v9.16b, vecC.16b
+			fmla v8.4s, vecA.4s, v12.4s
+			fmla v9.4s, vecA.4s, v13.4s
+			mov v10.16b, vecC.16b
+			mov v11.16b, vecC.16b
+			fmla v10.4s, vecA.4s, v14.4s
+			fmla v11.4s, vecA.4s, v15.4s
+			ld1 { v12.4s-v15.4s }, [yPtr], #(4*COMPV_GAS_V_SZ_BYTES)
+			prfm pldl1keep, [yPtr, #(CACHE_LINE_SIZE*4)]
+			fmla v8.4s, vecB.4s, v4.4s
+			fmla v9.4s, vecB.4s, v5.4s
+			fmla v10.4s, vecB.4s, v6.4s
+			fmla v11.4s, vecB.4s, v7.4s
+			fsub v8.4s, v8.4s, v12.4s
+			fsub v9.4s, v9.4s, v13.4s
+			fsub v10.4s, v10.4s, v14.4s
+			fsub v11.4s, v11.4s, v15.4s
+		.else
+			fmul v8.4s, v4.4s, v4.4s
+			fmul v9.4s, v5.4s, v5.4s
+			fmul v10.4s, v6.4s, v6.4s
+			fmul v11.4s, v7.4s, v7.4s
+			fmul v4.4s, vecB.4s, v4.4s
+			fmul v5.4s, vecB.4s, v5.4s
+			fmul v6.4s, vecB.4s, v6.4s
+			fmul v7.4s, vecB.4s, v7.4s
+			fmul v8.4s, v8.4s, vecA.4s
+			fmul v9.4s, v9.4s, vecA.4s
+			fmul v10.4s, v10.4s, vecA.4s
+			fmul v11.4s, v11.4s, vecA.4s
+			ld1 { v12.4s-v15.4s }, [yPtr], #(4*COMPV_GAS_V_SZ_BYTES)
+			prfm pldl1keep, [yPtr, #(CACHE_LINE_SIZE*4)]
+			fadd v8.4s, v8.4s, vecC.4s
+			fadd v9.4s, v9.4s, vecC.4s
+			fadd v10.4s, v10.4s, vecC.4s
+			fadd v11.4s, v11.4s, vecC.4s
+			fadd v8.4s, v8.4s, v4.4s
+			fadd v9.4s, v9.4s, v5.4s
+			fadd v10.4s, v10.4s, v6.4s
+			fadd v11.4s, v11.4s, v7.4s
+			fsub v8.4s, v8.4s, v12.4s
+			fsub v9.4s, v9.4s, v13.4s
+			fsub v10.4s, v10.4s, v14.4s
+			fsub v11.4s, v11.4s, v15.4s
+		.endif
+		subs i, i, #16
+		fabs v8.4s, v8.4s
+		fabs v9.4s, v9.4s
+		fabs v10.4s, v10.4s
+		fabs v11.4s, v11.4s
+		st1 {v8.4s-v11.4s}, [distPtr], #(4*COMPV_GAS_V_SZ_BYTES)
+		bne LoopCount16_CompVMathDistanceParabola_32f_Asm_NEON64\@
+	EndOf_LoopCount16_CompVMathDistanceParabola_32f_Asm_NEON64\@:
+
+	################################
+	# for (; i < count; i += 4)
+	################################
+	ands i, count, #15
+	beq EndOf_LoopCount4_CompVMathDistanceParabola_32f_Asm_NEON64\@
+	LoopCount4_CompVMathDistanceParabola_32f_Asm_NEON64\@:
+		ld1 { v4.4s }, [xPtr], #(1*COMPV_GAS_V_SZ_BYTES)
+		.if \fusedMultiplyAdd
+			mov v8.16b, vecC.16b
+			fmul v12.4s, v4.4s, v4.4s
+			fmla v8.4s, vecA.4s, v12.4s
+			ld1 { v12.4s }, [yPtr], #(1*COMPV_GAS_V_SZ_BYTES)
+			fmla v8.4s, vecB.4s, v4.4s
+			fsub v8.4s, v8.4s, v12.4s
+		.else
+			fmul v8.4s, v4.4s, v4.4s
+			fmul v4.4s, vecB.4s, v4.4s
+			fmul v8.4s, v8.4s, vecA.4s
+			ld1 { v12.4s }, [yPtr], #(1*COMPV_GAS_V_SZ_BYTES)
+			fadd v8.4s, v8.4s, vecC.4s
+			fadd v8.4s, v8.4s, v4.4s
+			fsub v8.4s, v8.4s, v12.4s
+		.endif
+		subs i, i, #4
+		fabs v8.4s, v8.4s
+		st1 {v8.4s}, [distPtr],	#(1*COMPV_GAS_V_SZ_BYTES)
+		bgt LoopCount4_CompVMathDistanceParabola_32f_Asm_NEON64\@
+	EndOf_LoopCount4_CompVMathDistanceParabola_32f_Asm_NEON64\@:
+	
+	.unreq xPtr
+	.unreq yPtr
+	.unreq A1Ptr
+	.unreq B1Ptr
+	.unreq C1Ptr
+	.unreq distPtr
+	.unreq count
+
+	.unreq i
+	.unreq vecA
+	.unreq vecB
+	.unreq vecC
+
+	COMPV_GAS_RESTORE_NEON_REGS
+	COMPV_GAS_FUNCTION_EPILOG
+	COMPV_GAS_FUNCTION_RETURN
+.endm
+
+#########################################################################
+COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceParabola_32f_Asm_NEON64
+	CompVMathDistanceParabola_32f_Macro_NEON64 0
+
+#########################################################################
+COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceParabola_32f_Asm_FMA_NEON64
+	CompVMathDistanceParabola_32f_Macro_NEON64 1
+
 #endif /* defined(__aarch64__) */

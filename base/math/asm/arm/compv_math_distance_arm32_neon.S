@@ -688,8 +688,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceLine_32f_Asm_FMA_NEON32
 	@ for (i = 0; i < count16; i += 16)
 	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	ands i, count, #-16
-	beq EndOf_LoopCount16_CompVMathDistanceLine_32f_Asm_NEON32\@
-	LoopCount16_CompVMathDistanceLine_32f_Asm_NEON32\@:
+	beq EndOf_LoopCount16_CompVMathDistanceParabola_32f_Asm_NEON32\@
+	LoopCount16_CompVMathDistanceParabola_32f_Asm_NEON32\@:
 		vld1.f32 { q4,q5 }, [xPtr :128]!
 		vld1.f32 { q6,q7 }, [xPtr :128]!
 		pld [xPtr, #(CACHE_LINE_SIZE*4)]
@@ -753,15 +753,15 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceLine_32f_Asm_FMA_NEON32
 		vabs.f32 q10, q10
 		vabs.f32 q11, q11
 		vst1.f32 {q10, q11}, [distPtr :128]!
-		bne LoopCount16_CompVMathDistanceLine_32f_Asm_NEON32\@
-	EndOf_LoopCount16_CompVMathDistanceLine_32f_Asm_NEON32\@:
+		bne LoopCount16_CompVMathDistanceParabola_32f_Asm_NEON32\@
+	EndOf_LoopCount16_CompVMathDistanceParabola_32f_Asm_NEON32\@:
 
 	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	@ for (; i < count; i += 4)
 	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	ands i, count, #15
-	beq EndOf_LoopCount4_CompVMathDistanceLine_32f_Asm_NEON32\@
-	LoopCount4_CompVMathDistanceLine_32f_Asm_NEON32\@:
+	beq EndOf_LoopCount4_CompVMathDistanceParabola_32f_Asm_NEON32\@
+	LoopCount4_CompVMathDistanceParabola_32f_Asm_NEON32\@:
 		vld1.f32 { q4 }, [xPtr :128]!
 		.if \fusedMultiplyAdd
 			vmov.f32 q8, vecC
@@ -782,8 +782,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceLine_32f_Asm_FMA_NEON32
 		subs i, i, #4
 		vabs.f32 q8, q8
 		vst1.f32 {q8}, [distPtr :128]!		
-		bgt LoopCount4_CompVMathDistanceLine_32f_Asm_NEON32\@
-	EndOf_LoopCount4_CompVMathDistanceLine_32f_Asm_NEON32\@:
+		bgt LoopCount4_CompVMathDistanceParabola_32f_Asm_NEON32\@
+	EndOf_LoopCount4_CompVMathDistanceParabola_32f_Asm_NEON32\@:
 	
 	.unreq xPtr
 	.unreq yPtr

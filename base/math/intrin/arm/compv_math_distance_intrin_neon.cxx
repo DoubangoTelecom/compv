@@ -299,7 +299,7 @@ void CompVMathDistanceHamming32_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* d
 
 // TODO(dmi): not optiz -> on Android (Huawei MediaPad2, no FMA, ARM32, (1000003 points), single threaded, #1000 times), asm code: 3918.ms, intrin code: 5563.ms
 // TODO(dmi): not optiz -> on Android (Huawei MediaPad2, no FMA, ARM64, (1000003 points), single threaded, #1000 times), asm code: 3953.ms, intrin code: 5556.ms
-// TODO(dmi): not optiz -> on Android (Galaxy Tab A6, ARM32, (1000003 points), single threaded, #1000 times), asm code: 3115.ms, intrin 4365: 5563.ms
+// TODO(dmi): not optiz -> on Android (Galaxy Tab A6, no FMA, ARM32, (1000003 points), single threaded, #1000 times), asm code: 3115.ms, intrin code: 4365.ms
 void CompVMathDistanceLine_32f_Intrin_NEON(COMPV_ALIGNED(NEON) const compv_float32_t* xPtr, COMPV_ALIGNED(NEON) const compv_float32_t* yPtr, const compv_float32_t* Ascaled1, const compv_float32_t* Bscaled1, const compv_float32_t* Cscaled1, COMPV_ALIGNED(NEON) compv_float32_t* distPtr, const compv_uscalar_t count)
 {
 	COMPV_DEBUG_INFO_CHECK_NEON();
@@ -337,6 +337,8 @@ void CompVMathDistanceLine_32f_Intrin_NEON(COMPV_ALIGNED(NEON) const compv_float
 }
 
 // TODO(dmi): not optiz -> on Android (Huawei MediaPad2, no FMA, ARM32, (1000003 points), single threaded, #1000 times), asm code: 3956.ms, intrin code: 6055.ms
+// TODO(dmi): not optiz -> on Android (Huawei MediaPad2, no FMA, ARM64, (1000003 points), single threaded, #1000 times), asm code: 3997.ms, intrin code: 6267.ms
+// TODO(dmi): not optiz -> on Android (Galaxy Tab A6, no FMA, ARM32, (1000003 points), single threaded, #1000 times), asm code: 3243.ms, intrin code: 5170.ms
 void CompVMathDistanceParabola_32f_Intrin_NEON(COMPV_ALIGNED(NEON) const compv_float32_t* xPtr, COMPV_ALIGNED(NEON) const compv_float32_t* yPtr, const compv_float32_t* A1, const compv_float32_t* B1, const compv_float32_t* C1, COMPV_ALIGNED(NEON) compv_float32_t* distPtr, const compv_uscalar_t count)
 {
 	COMPV_DEBUG_INFO_CHECK_NEON();
