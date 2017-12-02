@@ -89,6 +89,7 @@ Remarque: OpenCV uses SSE2 and MT for global thresholding but we're #5 times fas
 === BruteForce matcher (KNN = 2, crosscheck = false, norm = hamming) (200, 258) (#1k times) ===
 CompV: 260.ms(mt,asm,sse42), 370.ms(mt,c++,sse42), 837.ms(st,asm,sse42), 1108.ms(st,c++,sse42), 6060.ms (st,c++)
 OpenCV: 7384.ms(full optiz)
+Remarque: We're #28 times faster. Thanks to popcnt SSE42 instruction, multi-threading, cache blocking and many other optiz.
 
 === Canny edge detector (Kernel size = 3, tLow=0.80f, tHigh=tLow*2) (1282, 720) (#10k times) ===
 CompV: 17225.ms(full optiz), 168137.ms(st,c++)
@@ -100,5 +101,6 @@ The test images contains many edges and this is why it's unusually slow. Canny o
 CompV(SHT): 11222.ms(full optiz)
 CompV(KHT): 1413.ms(full optiz)
 OpenCV: 25219.ms(full optiz)
-Remarque: Test done with dense image (many non-zero pixels). In normal use case our KHT implementation should work at ~800fps while OpenCV works at ~40fps
+Remarque: We're almost #20 times faster.
+Test done with dense image (many non-zero pixels). In normal use case our KHT implementation should work at ~800fps while OpenCV works at ~40fps
 

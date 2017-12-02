@@ -7,7 +7,7 @@ using namespace compv;
 #define TEST_SCALE					0
 #define TEST_PYRAMID				0
 #define TEST_CHROMA_CONV			0
-#define TEST_FEATURE_FAST			1
+#define TEST_FEATURE_FAST			0
 #define TEST_FEATURE_ORB			0
 #define TEST_PATCH_MOMENTS			0
 #define TEST_SOBEL					0
@@ -15,7 +15,7 @@ using namespace compv;
 #define TEST_ADAPT_THRESH			0
 #define TEST_OTSU_THRESH			0
 #define TEST_HOUGHSHT				0
-#define TEST_HOUGHKHT				0
+#define TEST_HOUGHKHT				1
 #define TEST_BRUTEFORCE				0
 #define TEST_SPLIT3					0
 
