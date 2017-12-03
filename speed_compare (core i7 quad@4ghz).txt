@@ -121,7 +121,7 @@ Test done with dense image (many non-zero pixels). In normal use case our KHT im
 SHT implementation not used in comercial products for know and needs more optimizations.
 
 === MorphOp Erode (Strel: 3x3 MORPH_CROSS) (1285, 1285) (#10k times) ===
-CompV: 86144.ms(no optiz)
+CompV: 18486.ms(no optiz)
 OpenCV: 4700.ms(full optiz)
 Remarque: OpenCV's morphOps are multi-threaded and using SSE(vecOp). Used code morphologyEx(MORPH_ERODE). 
 Using Cross because it's not separable filter and requires more processing.

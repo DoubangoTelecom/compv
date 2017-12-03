@@ -17,12 +17,7 @@ class COMPV_BASE_API CompVMathMorph
 {
 public:
 	static COMPV_ERROR_CODE buildStructuringElement(CompVMatPtrPtr strel, const CompVSizeSz size, COMPV_MATH_MORPH_STREL_TYPE type = COMPV_MATH_MORPH_STREL_TYPE_RECT);
-	static COMPV_ERROR_CODE process(const CompVMatPtr& input, const CompVMatPtr& strel, CompVMatPtrPtr output, COMPV_MATH_MORPH_OP_TYPE opType, COMPV_BORDER_TYPE borderType = COMPV_BORDER_TYPE_REPLICATE);
-
-private:
-	static COMPV_ERROR_CODE buildStructuringElementInputPtrs(const CompVMatPtr& strel, const CompVMatPtr& input, CompVMatPtrPtr strelInputPtrs);
-	static COMPV_ERROR_CODE addBordersVt(const CompVMatPtr input, CompVMatPtr output, const size_t strelHeight, const COMPV_BORDER_TYPE borderTypeTop, const COMPV_BORDER_TYPE borderTypeBottom);
-	static COMPV_ERROR_CODE addBordersHz(const CompVMatPtr input, CompVMatPtr output, const size_t strelWidth, const COMPV_BORDER_TYPE borderType);
+	static COMPV_ERROR_CODE process(const CompVMatPtr& input, const CompVMatPtr& strel, CompVMatPtrPtr output, COMPV_MATH_MORPH_OP_TYPE opType, COMPV_BORDER_TYPE borderType = COMPV_BORDER_TYPE_REPLICATE);	
 };
 
 COMPV_NAMESPACE_END()
