@@ -14,6 +14,22 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+template<typename T>
+class CompVMathMorphOpMin { /* Op for Erode */
+public:
+	COMPV_ALWAYS_INLINE T operator()(const T& x, const T& y) const { return COMPV_MATH_MIN(x, y); }
+};
+
+template<typename T>
+class CompVMathMorphOpMax { /* Op for Dilate */
+public:
+	COMPV_ALWAYS_INLINE T operator()(const T& x, const T& y) const { return COMPV_MATH_MAX(x, y); }
+};
+
+template <typename T, class CompVMathMorphOp>
+static void CompVMathMorphProcess_C(const compv_uscalar_t* strelInputPtrsPtr, const compv_uscalar_t strelInputPtrsCount, T* outPtr, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride);
+
+// In the next code we use 0xff but any non-zero sample is ok
 COMPV_ERROR_CODE CompVMathMorph::buildStructuringElement(CompVMatPtrPtr strel, const CompVSizeSz size, COMPV_MATH_MORPH_STREL_TYPE type COMPV_DEFAULT(COMPV_MATH_MORPH_STREL_TYPE_RECT))
 {
 	COMPV_CHECK_EXP_RETURN(!strel || !size.width || !size.width, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -79,8 +95,7 @@ COMPV_ERROR_CODE CompVMathMorph::buildStructuringElement(CompVMatPtrPtr strel, c
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-// strel must contain 0x00 and type_max (e.g. 0xff for uint8_t) values.
-COMPV_ERROR_CODE CompVMathMorph::process(const CompVMatPtr input, const CompVMatPtr strel, CompVMatPtrPtr output, COMPV_MATH_MORPH_OP_TYPE opType, COMPV_BORDER_TYPE borderType COMPV_DEFAULT(COMPV_BORDER_TYPE_REPLICATE))
+COMPV_ERROR_CODE CompVMathMorph::process(const CompVMatPtr& input, const CompVMatPtr& strel, CompVMatPtrPtr output, COMPV_MATH_MORPH_OP_TYPE opType, COMPV_BORDER_TYPE borderType COMPV_DEFAULT(COMPV_BORDER_TYPE_REPLICATE))
 {
 	COMPV_CHECK_EXP_RETURN(
 		!input || input->isEmpty() || input->elmtInBytes() != sizeof(uint8_t) || input->planeCount() != 1 ||
@@ -90,69 +105,51 @@ COMPV_ERROR_CODE CompVMathMorph::process(const CompVMatPtr input, const CompVMat
 		COMPV_ERROR_CODE_E_INVALID_PARAMETER
 	);
 	
-	const size_t width = input->cols();
-	const size_t height = input->rows();
-	const size_t stride = input->stride();
+	const size_t input_width = input->cols();
+	const size_t input_height = input->rows();
+	const size_t input_stride = input->stride();
 
 	// output can't be equal to input
 	// create new output only if doesn't match the required format
 	CompVMatPtr output_ = *output;
-	if (!output_ || output_->planeCount() != 1 || output_->elmtInBytes() != sizeof(uint8_t) || output_->cols() != width || output_->rows() != height || output_->stride() != stride) {
-		COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&output_, COMPV_SUBTYPE_PIXELS_Y, width, height, stride));
+	if (!output_ || output_->planeCount() != 1 || output_->elmtInBytes() != sizeof(uint8_t) || output_->cols() != input_width || output_->rows() != input_height || output_->stride() != input_stride) {
+		COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&output_, COMPV_SUBTYPE_PIXELS_Y, input_width, input_height, input_stride));
 	}
 
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING("remove zero_all");
-	COMPV_CHECK_CODE_RETURN(output_->zero_all());
-
-	// Default: Dialate -> replicate, Erode -> zero (MUST be after the operation is done)
-	COMPV_DEBUG_INFO_CODE_TODO("replicate or zero borders");
-
+	/* Local variables */
 	const size_t strel_width = strel->cols();
-	const size_t strel_width_div2 = strel_width >> 1;
-
 	const size_t strel_height = strel->rows();
+	const size_t strel_width_div2 = strel_width >> 1;
 	const size_t strel_height_div2 = strel_height >> 1;
-
-	const size_t strel_stride = strel->stride();
-
-	const uint8_t* strelPtr = strel->ptr<const uint8_t>(0, 0);
-	const uint8_t* inputPtr = input->ptr<const uint8_t>(0, 0);
 	uint8_t* outPtr = output_->ptr<uint8_t>(strel_height_div2, strel_width_div2);
-	//const size_t op_pad = ((stride - width) + strel_width_div2 + strel_width_div2);
-	const compv_uscalar_t op_height = static_cast<compv_uscalar_t>(height - strel_height);
-	const compv_uscalar_t op_width = static_cast<compv_uscalar_t>(width - strel_width);
+	const compv_uscalar_t op_height = static_cast<compv_uscalar_t>(input_height - (strel_height_div2 << 1));
+	const compv_uscalar_t op_width = static_cast<compv_uscalar_t>(input_width - (strel_width_div2 << 1));
 
-	/* Build flat strel indices */
-	CompVMatPtr flattenStrel;
-	COMPV_CHECK_CODE_RETURN(CompVMathMorph::flattenStructuringElement(strel, stride, &flattenStrel));
-	const compv_uscalar_t* flattenStrelPtr = flattenStrel->ptr<const compv_uscalar_t>();
-	const compv_uscalar_t flattenStrelCount = flattenStrel->cols();
+	/* Collect strel input pointers */
+	CompVMatPtr strelInputPtrs;
+	COMPV_CHECK_CODE_RETURN(CompVMathMorph::buildStructuringElementInputPtrs(strel, input, &strelInputPtrs));
+	const compv_uscalar_t* strelInputPtrsPtr = strelInputPtrs->ptr<const compv_uscalar_t>();
+	const compv_uscalar_t strelInputPtrsCount = strelInputPtrs->cols();
 
-	for (compv_uscalar_t op_j = 0; op_j < op_height; ++op_j) {
-		for (compv_uscalar_t op_i = 0; op_i < op_width; ++op_i) {
-			uint8_t minn = inputPtr[op_i + flattenStrelPtr[0]];
-			for (compv_uscalar_t strel_i = 1; strel_i < flattenStrelCount; ++strel_i) {
-				minn = std::min(minn, inputPtr[op_i + flattenStrelPtr[strel_i]]);
-			}
-			outPtr[op_i] = minn;
-		}
-		outPtr += stride;
-		inputPtr += stride;
-	}
+	/* Process */
+	CompVMathMorphProcess_C<uint8_t, CompVMathMorphOpMin<uint8_t> >(
+		strelInputPtrsPtr, strelInputPtrsCount, 
+		outPtr, op_width, op_height, static_cast<compv_uscalar_t>(input_stride)
+	);
+
+	/* Add Borders (must be after processing and vt then Hz) */
+	COMPV_CHECK_CODE_RETURN(addBordersVt(input, output_, strel_height, borderType, borderType));
+	COMPV_CHECK_CODE_RETURN(addBordersHz(input, output_, strel_width, borderType));
 
 	*output = *output_;
 
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVMathMorph::flattenStructuringElement(const CompVMatPtr strel, const size_t inputStride, CompVMatPtrPtr flattenStrel)
+COMPV_ERROR_CODE CompVMathMorph::buildStructuringElementInputPtrs(const CompVMatPtr& strel, const CompVMatPtr& input, CompVMatPtrPtr strelInputPtrs)
 {
 	// Internal function -> minimum test for input parameters
-	COMPV_CHECK_EXP_RETURN(
-		!strel || strel->isEmpty() || strel->planeCount() != 1 || strel->elmtInBytes() != sizeof(uint8_t) ||
-		!inputStride ||
-		!flattenStrel,
-		COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(!strelInputPtrs, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
 	const compv_uscalar_t width = static_cast<compv_uscalar_t>(strel->cols());
 	const compv_uscalar_t height = static_cast<compv_uscalar_t>(strel->rows());
@@ -170,25 +167,151 @@ COMPV_ERROR_CODE CompVMathMorph::flattenStructuringElement(const CompVMatPtr str
 		strelPtr += stride;
 	}
 
-	// Fill flattened strel
+	// Collect non-zero elements
 	COMPV_CHECK_EXP_RETURN(!count, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Structured element is full of zeros");
-	CompVMatPtr strel_;
-	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_uscalar_t>(&strel_, 1, count));
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_uscalar_t>(strelInputPtrs, 1, count));
 	strelPtr = strel->ptr<const uint8_t>(0, 0);
-	compv_uscalar_t* flat_strelPtr = strel_->ptr<compv_uscalar_t>();
-	const compv_uscalar_t inputStride_ = static_cast<compv_uscalar_t>(inputStride);
+	compv_uscalar_t* strelInputPtrsPtr = (*strelInputPtrs)->ptr<compv_uscalar_t>();
 	for (compv_uscalar_t j = 0, index = 0; j < height; ++j) {
 		for (compv_uscalar_t i = 0; i < width; ++i) {
 			if (strelPtr[i]) {
-				flat_strelPtr[index++] = (j * inputStride_) + i;
+				strelInputPtrsPtr[index++] = reinterpret_cast<compv_uscalar_t>(input->ptr<const uint8_t>(j, i));
 			}
 		}
 		strelPtr += stride;
 	}
+	return COMPV_ERROR_CODE_S_OK;
+}
 
-	*flattenStrel = strel_;
+COMPV_ERROR_CODE CompVMathMorph::addBordersVt(const CompVMatPtr input, CompVMatPtr output, const size_t strelHeight, const COMPV_BORDER_TYPE borderTypeTop, const COMPV_BORDER_TYPE borderTypeBottom)
+{
+	// Internal function -> minimum test for input parameters
+	COMPV_CHECK_EXP_RETURN(
+		!input || input->isEmpty() || input->planeCount() != 1 || input->elmtInBytes() != sizeof(uint8_t) ||
+		!output || output->planeCount() != 1 || output->elmtInBytes() != sizeof(uint8_t) || 
+		output->cols() != input->cols() || output->rows() != input->rows() || output->stride() != input->stride(),
+		COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+	const size_t strelHeightDiv2 = (strelHeight >> 1);
+	const size_t width = input->cols();
+	const size_t height = input->rows();
+	const size_t stride = input->stride();
+
+	// Segmentation fault when the input image has an offset (e.g. bound to non-zero cols):
+	//		-> for the last row reset 'width' only instead of 'stride'.
+	const size_t bSizeInSamples = (((strelHeightDiv2 - 1) * stride) + width);
+	uint8_t* outPtr = output->ptr<uint8_t>();
+	const uint8_t* inPtr = input->ptr<const uint8_t>();
+
+	// Top
+	if (borderTypeTop == COMPV_BORDER_TYPE_ZERO) {
+		CompVMem::zero(outPtr, bSizeInSamples * sizeof(uint8_t));
+	}
+	else if (borderTypeTop == COMPV_BORDER_TYPE_REPLICATE) {
+		memcpy(outPtr, inPtr, bSizeInSamples * sizeof(uint8_t));
+	}
+	else if (borderTypeTop != COMPV_BORDER_TYPE_IGNORE) {
+		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
+	}
+
+	// Bottom
+	if (borderTypeBottom == COMPV_BORDER_TYPE_ZERO) {
+		const size_t offsetInSamples = ((height - strelHeightDiv2) * stride);
+		CompVMem::zero(outPtr + offsetInSamples, bSizeInSamples * sizeof(uint8_t));
+	}
+	else if (borderTypeBottom == COMPV_BORDER_TYPE_REPLICATE) {
+		const size_t offsetInSamples = ((height - strelHeightDiv2) * stride);
+		memcpy(&outPtr[offsetInSamples], &inPtr[offsetInSamples], bSizeInSamples * sizeof(uint8_t));
+	}
+	else if (borderTypeBottom != COMPV_BORDER_TYPE_IGNORE) {
+		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVMathMorph::addBordersHz(const CompVMatPtr input, CompVMatPtr output, const size_t strelWidth, const COMPV_BORDER_TYPE borderType)
+{
+	// Internal function -> minimum test for input parameters
+	COMPV_CHECK_EXP_RETURN(
+		!input || input->isEmpty() || input->planeCount() != 1 || input->elmtInBytes() != sizeof(uint8_t) ||
+		!output || output->planeCount() != 1 || output->elmtInBytes() != sizeof(uint8_t) ||
+		output->cols() != input->cols() || output->rows() != input->rows() || output->stride() != input->stride(),
+		COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+	const size_t strelWidthDiv2 = (strelWidth >> 1);
+	const size_t width = input->cols();
+	const size_t height = input->rows();
+	const size_t stride = input->stride();
+	uint8_t* outPtr = output->ptr<uint8_t>();
+	const uint8_t* inPtr = input->ptr<const uint8_t>();
+
+	// Set hz borders to zero
+	// We must not accept garbage in the border (could be used by the calling function -e.g to find the max value for normalization)
+	if (borderType == COMPV_BORDER_TYPE_ZERO) {
+		uint8_t *outPtr0 = outPtr, *outPtr1 = outPtr + (width - strelWidthDiv2);
+		switch (strelWidthDiv2) { // 1 and 2 (kernel sizes 3 and 5 are very common)
+		case 1: {
+			const size_t kmax = (stride * height);
+			for (size_t k = 0; k < kmax; k += stride) {
+				outPtr0[k] = 0, outPtr1[k] = 0;
+			}
+			break;
+		}
+		case 2: {
+			const size_t kmax = (stride * height);
+			for (size_t k = 0; k < kmax; k += stride) {
+				outPtr0[k] = 0, outPtr0[k + 1] = 0, outPtr1[k] = 0, outPtr1[k + 1] = 0;
+			}
+			break;
+		}
+		default: {
+			for (size_t row = 0; row < height; ++row) {
+				for (size_t col = 0; col < strelWidthDiv2; ++col) {
+					outPtr0[col] = 0, outPtr1[col] = 0;
+				}
+				outPtr0 += stride;
+				outPtr1 += stride;
+			}
+			break;
+		}
+		}
+	}
+	else if (borderType == COMPV_BORDER_TYPE_REPLICATE) {
+		const uint8_t *inPtr0 = inPtr, *inPtr1 = inPtr + (width - strelWidthDiv2);
+		uint8_t *outPtr0 = outPtr, *outPtr1 = outPtr + (width - strelWidthDiv2);
+		for (size_t row = 0; row < height; ++row) {
+			for (size_t col = 0; col < strelWidthDiv2; ++col) {
+				outPtr0[col] = inPtr0[col], outPtr1[col] = inPtr1[col];
+			}
+			outPtr0 += stride;
+			outPtr1 += stride;
+			inPtr0 += stride;
+			inPtr1 += stride;
+		}
+	}
+	else if (borderType != COMPV_BORDER_TYPE_IGNORE) {
+		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
+	}
 
 	return COMPV_ERROR_CODE_S_OK;
+}
+
+template <typename T, class CompVMathMorphOp>
+static void CompVMathMorphProcess_C(const compv_uscalar_t* strelInputPtrsPtr, const compv_uscalar_t strelInputPtrsCount, T* outPtr, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
+	CompVMathMorphOp Op;
+	const compv_uscalar_t strelInputPtrsPad = (stride - width);
+	for (compv_uscalar_t j = 0, k = 0; j < height; ++j, k += strelInputPtrsPad) {
+		for (compv_uscalar_t i = 0; i < width; ++i, ++k) {
+			T rr = *reinterpret_cast<const T*>(k + strelInputPtrsPtr[0]);
+			for (compv_uscalar_t v = 1; v < strelInputPtrsCount; ++v) {
+				rr = Op(rr, *reinterpret_cast<const T*>(k + strelInputPtrsPtr[v]));
+			}
+			outPtr[i] = rr;
+		}
+		outPtr += stride;
+	}
 }
 
 COMPV_NAMESPACE_END()
