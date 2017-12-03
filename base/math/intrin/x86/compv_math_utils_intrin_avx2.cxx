@@ -21,7 +21,6 @@ COMPV_NAMESPACE_BEGIN()
 void CompVMathUtilsSumAbs_16s16u_Intrin_AVX2(const COMPV_ALIGNED(AVX) int16_t* a, const COMPV_ALIGNED(AVX) int16_t* b, COMPV_ALIGNED(AVX) uint16_t* r, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride)
 {
 	COMPV_DEBUG_INFO_CHECK_AVX2();
-
     _mm256_zeroupper();
     compv_uscalar_t j;
     __m256i vec0, vec1, vec2, vec3;

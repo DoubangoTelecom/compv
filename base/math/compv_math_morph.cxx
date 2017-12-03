@@ -9,6 +9,9 @@
 #include "compv/base/parallel/compv_parallel.h"
 #include "compv/base/image/compv_image.h"
 
+#include "compv/base/math/intrin/x86/compv_math_morph_intrin_avx2.h"
+#include "compv/base/math/intrin/x86/compv_math_morph_intrin_sse2.h"
+
 // Mathematical morphology: https://en.wikipedia.org/wiki/Mathematical_morphology
 
 #define COMPV_MATH_MORPH_BASIC_OPER_SAMPLES_PER_THREAD (10 * 10)
