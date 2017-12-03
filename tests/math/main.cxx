@@ -20,10 +20,11 @@
 #define TEST_CALIB_UNDIST					0
 #define TEST_DISTANCE_HAMMING				0
 #define TEST_DISTANCE_LINE					0
-#define TEST_DISTANCE_PARABOLA				1
+#define TEST_DISTANCE_PARABOLA				0
 #define TEST_HISTOGRAM_BUILD				0
 #define TEST_HISTOGRAM_EQUALIZ				0
 #define TEST_CONVLT							0
+#define TEST_MORPH							1
 
 
 /* Entry point function */
@@ -124,6 +125,10 @@ compv_main()
 #if TEST_CONVLT
 		extern COMPV_ERROR_CODE convlt();
 		COMPV_CHECK_CODE_BAIL(err = convlt(), TAG_TEST "Math convlt test failed");
+#endif
+#if TEST_MORPH
+		extern COMPV_ERROR_CODE morph();
+		COMPV_CHECK_CODE_BAIL(err = morph(), TAG_TEST "Math morph test failed");
 #endif
 
 	bail:

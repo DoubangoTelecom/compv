@@ -1,6 +1,6 @@
 #include "../tests_common.h"
 
-#define TAG_TEST								"TestImageConvlt"
+#define TAG_TEST								"TestMathConvlt"
 
 #define LOOP_COUNT				1
 

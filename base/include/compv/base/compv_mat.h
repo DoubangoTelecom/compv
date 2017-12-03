@@ -190,6 +190,8 @@ public:
 			case COMPV_SUBTYPE_RAW_SIZE: return std::is_same<RawType, size_t>::value;
 			case COMPV_SUBTYPE_RAW_FLOAT32: return std::is_same<RawType, compv_float32_t>::value;
 			case COMPV_SUBTYPE_RAW_FLOAT64: return std::is_same<RawType, compv_float64_t>::value;
+			case COMPV_SUBTYPE_RAW_USCALAR: return std::is_same<RawType, compv_uscalar_t>::value;
+			case COMPV_SUBTYPE_RAW_SCALAR: return std::is_same<RawType, compv_scalar_t>::value;
 			default: return false;
 			}
 		}
@@ -407,6 +409,12 @@ protected:
 			}
 			else if (std::is_same<elmType, compv_float64_t>::value) {
 				dataSubType = COMPV_SUBTYPE_RAW_FLOAT64;
+			}
+			else if (std::is_same<elmType, compv_uscalar_t>::value) {
+				dataSubType = COMPV_SUBTYPE_RAW_USCALAR;
+			}
+			else if (std::is_same<elmType, compv_scalar_t>::value) {
+				dataSubType = COMPV_SUBTYPE_RAW_SCALAR;
 			}
 			else {
 				COMPV_DEBUG_ERROR_EX("CompVMat", "Cannot patch unknown type");

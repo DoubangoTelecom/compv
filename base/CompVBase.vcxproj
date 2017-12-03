@@ -110,6 +110,7 @@
     <ClInclude Include="include\compv\base\math\compv_math_histogram.h" />
     <ClInclude Include="include\compv\base\math\compv_math_lines.h" />
     <ClInclude Include="include\compv\base\math\compv_math_matrix.h" />
+    <ClInclude Include="include\compv\base\math\compv_math_morph.h" />
     <ClInclude Include="include\compv\base\math\compv_math_stats.h" />
     <ClInclude Include="include\compv\base\math\compv_math_stats_fit.h" />
     <ClInclude Include="include\compv\base\math\compv_math_stats_ransac.h" />
@@ -326,6 +327,7 @@
     <ClCompile Include="math\compv_math_histogram.cxx" />
     <ClCompile Include="math\compv_math_lines.cxx" />
     <ClCompile Include="math\compv_math_matrix.cxx" />
+    <ClCompile Include="math\compv_math_morph.cxx" />
     <ClCompile Include="math\compv_math_stats.cxx" />
     <ClCompile Include="math\compv_math_stats_fit.cxx" />
     <ClCompile Include="math\compv_math_stats_ransac.cxx" />
