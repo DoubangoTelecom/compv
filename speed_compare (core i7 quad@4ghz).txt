@@ -20,41 +20,49 @@ Shared Memory: 3810 MB
 === RGB24 -> Grayscale (1282, 720) (#10k times) ===
 CompV: 449.ms(full optiz)
 OpenCV: 3086.ms(full optiz)
-Remarque: For openCV we're using CV_RGB2GRAY
+Remarque: We're 680% (almost #7 times) faster.
+For openCV we're using CV_RGB2GRAY
 
 === YUV420P -> RGB24 (1282, 720) (#10k times) ===
 CompV: 968.ms(full optiz)
 OpenCV: 5919.ms(full optiz)
-Remarque: For openCV we're using CV_YUV2RGB_I420
+Remarque: We're 611% (#6 times) faster.
+For openCV we're using CV_YUV2RGB_I420
 
 === RGB24 -> HSV (1282, 720) (#10k times) ===
 CompV: 2137.ms(full optiz)
 OpenCV: 15709.ms(full optiz)
-Remarque: For openCV we're using CV_RGB2HSV
+Remarque: We're 735% (#7 times) faster.
+For openCV we're using CV_RGB2HSV
 
 === YUV420P -> HSV (1282, 720) (#10k times) ===
 CompV: 3045.ms(full optiz)
 OpenCV: 32920.ms(full optiz)
-Remarque: For OpenCV you need to convert to BGR then HSV (#2 steps: COLOR_YUV2BGR_I420 then CV_BGR2HSV)
+Remarque: We're 1080% (almost #11 times) faster.
+For OpenCV you need to convert to BGR then HSV (#2 steps: COLOR_YUV2BGR_I420 then CV_BGR2HSV)
 
 === Image Split BGR/RGB (1282, 720) (#10k times) ===
 CompV: 694.ms(full optiz)
 OpenCV: 8210.ms(full optiz)
+Remarque: We're 1182% (almost #12 times) faster.
 
 === Histogram Building on grayscal 8u image (1282 , 720) (#10k times) ===
 CompV: 1073.ms(full optiz)
 OpenCV: 4114.ms(full optiz)
+Remarque: We're 383% (almost #4 times) faster.
 
 === Histogram Equalization on grayscal 8u image (1282, 720) (#10k times) ===
 CompV: 2675.ms (full optiz)
 OpenCV: 4311.ms (full optiz)
-Remarque: OpenCV is MT'ing both histogram generation and equalization. We're faster but this is not enought at all. 
-We need more optiz in CompV. For now with low prio because not used in any commercial product.
+Remarque: We're 161% (almost #2 times) faster.
+OpenCV is MT'ing both histogram generation and equalization. We're faster but this is not enought at all. 
+We need more optiz in CompV. For now with low prio because not used in any comercial product.
 
 === FAST9_16, Nonmax=true, threshold=20, maxfeatures=-1 (1282, 720) (#10k times) ===
 CompV: 3358.ms(mt,avx2), 4730.ms(mt,sse2), 8447(st,avx2), 11261.ms(st,sse2)
 OpenCV: 10270.ms(full optiz)
-Remarque: The way we write to the shared strengths buffer is slow but required to have best support for multithreading.
+Remarque: We're 305% (#3 times) faster.
+The way we write to the shared strengths buffer is slow but required to have best support for multithreading.
 This is why we are better than OpenCV by faaaaar. OpenCV uses SSE2 and MT.
 The above numbers means we can run feature detection on HD image at 2977fps while opencv runs at 973fps.
 We're using #8 threads and with more threads (e.g. #16) we can go as high as 5000fps
@@ -62,45 +70,53 @@ We're using #8 threads and with more threads (e.g. #16) we can go as high as 500
 === Image scaling (Bilinear) from (1282, 720) to (1064, 597), (#10k times) ===
 CompV: 1474.ms(mt,avx2), 1866.ms(mt,sse41), 2645.ms(mt,c++), 5435.ms(st,avx2), 6708.ms(st,sse41), 9470.ms(st,c++)
 OpenCV: 4148.ms(full optiz)
-Remarque: OpenCV uses SSE2 and multithreading and we're faster even with plain c++ (without sse or avx).
+Remarque: We're 281% (almost #3 times) faster. 
+OpenCV uses SSE2 and multithreading and we're faster even with plain c++ (without sse or avx).
 
 === Gaussian Blur (kernel size = 7, Sigma = 2.0) (1282, 720) (#10k times) ===
 CompV(float): 2419.ms(mt,avx2,fma3), 2822.ms(mt,avx2), 5476.ms(mt,sse2), 7874.ms(st,avx2,fma3), 9980.ms(st,avx2), 17527.ms (st,sse2), 23004.ms(mt,c++), 79309.ms(st,c++)
 CompV(Fixed): 1367.ms(mt,avx2), 2815.ms(mt,sse2), 4736.ms(st,avx2), 8824.ms(st,sse2), 19741.ms(mt,c++), 70983.ms(st,c++)
 OpenCV(float): 16186.ms(full optiz)
-Remarque: https://github.com/DoubangoTelecom/compv/issues/118
+Remarque: We're 1184% (almost #12 times) faster when using our fixed-point implementation and 669% (almost #7 times) faster for the floating point implementation.
+https://github.com/DoubangoTelecom/compv/issues/118
 
 === Sobel3x3 (gradx, grady, scaling, adding) (1282, 720) (#10k times) ===
 CompV: 7476.ms(full optiz), 127286.ms(st, c++)
 OpenCV: 46231.ms(full optiz)
-Remarque: Sobel kernels are pre-defined (0, 1 and 2 values) which means we can compute the convolution without using multiplications (add and sub only).
+Remarque: We're 618% (#6 times) faster.
+Sobel kernels are pre-defined (0, 1 and 2 values) which means we can compute the convolution without using multiplications (add and sub only).
 For now sobel convolution not used in commercial products which means not urgent to change the implementaion.
 
 === Adaptive Thresholding (ADAPTIVE_THRESH_MEAN_C, CV_THRESH_BINARY_INV, MaxVal = 255, BlockSize = 5, C = 8) (1282, 720) (#10k times) ===
 CompV: 3551.ms(full optiz), 56589.ms(st, c++)
 OpenCV: 14441.ms(full optiz)
-Remarque: OpenCV uses SSE and MT for filtering but we're #4 times faster. Thanks to our hand-written avx code and smart context-switch in our threading pools.
+Remarque: We're 406% (#4 times) faster.
+OpenCV uses SSE and MT for filtering but we're #4 times faster. Thanks to our hand-written avx code and smart context-switch in our threading pools.
 
 === Otsu Thresholding (1282, 720) (#10k times) ===
 CompV: 1253.ms(full optiz), 8723.ms(st, c++)
 OpenCV: 6254.ms (full optiz)
-Remarque: OpenCV uses SSE2 and MT for global thresholding but we're #5 times faster.
+Remarque: We're 500% (#5 times) faster.
+OpenCV uses SSE2 and MT for global thresholding but we're #5 times faster.
 
 === BruteForce matcher (KNN = 2, crosscheck = false, norm = hamming) (200, 258) (#1k times) ===
 CompV: 260.ms(mt,asm,sse42), 370.ms(mt,c++,sse42), 837.ms(st,asm,sse42), 1108.ms(st,c++,sse42), 6060.ms (st,c++)
 OpenCV: 7384.ms(full optiz)
-Remarque: We're #28 times faster. Thanks to popcnt SSE42 instruction, multi-threading, cache blocking and many other optiz.
+Remarque: We're 2840% (#28 times) faster.
+We're #28 times faster. Thanks to popcnt SSE42 instruction, multi-threading, cache blocking and many other optiz.
 
 === Canny edge detector (Kernel size = 3, tLow=0.80f, tHigh=tLow*2) (1282, 720) (#10k times) ===
 CompV: 17225.ms(full optiz), 168137.ms(st,c++)
 OpenCV: 69368.ms(full optiz)
-Remarque: tLow and tHight values are very important for speed comparison(high values -> less time spent in hysterisis and nms)
+Remarque: We're 402% (#4 times) faster.
+tLow and tHight values are very important for speed comparison(high values -> less time spent in hysterisis and nms)
 The test images contains many edges and this is why it's unusually slow. Canny on HD image should last ~1.ms (which means ~1k fps)
 
 === HoughLines (Canny: Kernel size = 3, tLow=0.80f, tHigh=tLow*2, HoughStd: rho = 1.f, theta = Pi/180, threshold = 100) (1282, 720) (#1k times) ===
 CompV(SHT): 11222.ms(full optiz)
 CompV(KHT): 1413.ms(full optiz)
 OpenCV: 25219.ms(full optiz)
-Remarque: We're almost #20 times faster.
-Test done with dense image (many non-zero pixels). In normal use case our KHT implementation should work at ~800fps while OpenCV works at ~40fps
+Remarque: We're 1784% (almost #18 times) faster.
+Test done with dense image (many non-zero pixels). In normal use case our KHT implementation should work at ~800fps while OpenCV works at ~40fps.
+SHT implementation not used in comercial products for know and needs more optimizations.
 
