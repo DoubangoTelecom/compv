@@ -97,7 +97,7 @@ COMPV_ERROR_CODE CompVGLSurface::drawImage(const CompVMatPtr& mat, const CompVVi
 	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	COMPV_CHECK_CODE_RETURN(init());
 
-	const COMPV_SUBTYPE pixelFormat = static_cast<COMPV_SUBTYPE>(mat->subType());
+	const COMPV_SUBTYPE pixelFormat = CompVGLUtils::subType(mat);
 	if (!m_ptrRenderer || m_ptrRenderer->pixelFormat() != pixelFormat) {
 		COMPV_CHECK_CODE_RETURN(CompVGLRenderer::newObj(&m_ptrRenderer, pixelFormat));
 	}

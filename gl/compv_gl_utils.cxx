@@ -521,6 +521,17 @@ COMPV_ERROR_CODE CompVGLUtils::updateVertices(size_t width, size_t height, size_
     return COMPV_ERROR_CODE_S_OK;
 }
 
+COMPV_SUBTYPE CompVGLUtils::subType(const CompVMatPtr& image)
+{
+	if (image) {
+		if (image->planeCount() == 1 && image->subType() == COMPV_SUBTYPE_RAW_UINT8) {
+			return COMPV_SUBTYPE_PIXELS_Y;
+		}
+		return image->subType();
+	}
+	return COMPV_SUBTYPE_NONE;
+}
+
 COMPV_NAMESPACE_END()
 
 #endif /* defined(HAVE_OPENGL) || defined(HAVE_OPENGLES) */

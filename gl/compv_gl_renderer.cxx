@@ -359,7 +359,7 @@ COMPV_ERROR_CODE CompVGLRenderer::drawImage(const CompVMatPtr& mat, const CompVV
 	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 
 	// Get pixel format and make sure it's supported
-	COMPV_CHECK_EXP_RETURN(CompVRenderer::pixelFormat() != mat->subType(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(CompVRenderer::pixelFormat() != CompVGLUtils::subType(mat), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
 	// Check if format changed
 	bool bFormatChanged = m_uTexturesCount != mat->planeCount();
@@ -447,7 +447,7 @@ COMPV_ERROR_CODE CompVGLRenderer::init(const CompVMatPtr mat)
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	GLuint uNameLocation;
-	const COMPV_SUBTYPE pixelFormat = mat->subType();
+	const COMPV_SUBTYPE pixelFormat = CompVGLUtils::subType(mat);
 	GLint textureFilter;
     COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
     COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);

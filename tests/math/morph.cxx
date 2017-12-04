@@ -50,7 +50,6 @@ COMPV_ERROR_CODE morph()
 
 	uint64_t timeStart = CompVTime::nowMillis();
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
-		imageOut = nullptr;
 		COMPV_CHECK_CODE_RETURN(CompVMathMorph::process(imageIn, strel, &imageOut, test->opType, test->borderType));
 	}
 	uint64_t timeEnd = CompVTime::nowMillis();

@@ -12,6 +12,7 @@
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/gl/compv_gl_common.h"
 #include "compv/base/compv_buffer.h"
+#include "compv/base/compv_mat.h"
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
@@ -75,6 +76,8 @@ public:
     static COMPV_ERROR_CODE programUnbind(GLuint uProgram, bool checkErr = false);
 
     static COMPV_ERROR_CODE updateVertices(size_t width, size_t height, size_t stride, bool bToScreen, CompVGLVertex(*Vertices)[4]);
+
+	static COMPV_SUBTYPE subType(const CompVMatPtr& image);
 };
 
 COMPV_NAMESPACE_END()

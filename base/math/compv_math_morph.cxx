@@ -229,7 +229,10 @@ static COMPV_ERROR_CODE openCloseOper(const CompVMatPtr& input, const CompVMatPt
 	const size_t input_width = input->cols();
 	const size_t input_height = input->rows();
 	const size_t input_stride = input->stride();
+
 	const size_t strel_height = strel->rows();
+	const size_t overlap = (strel_height >> 1);
+	const size_t overlap2 = (overlap << 1);
 
 	/* output can't be equal to input */
 	// create new output only if doesn't match the required format
@@ -237,33 +240,50 @@ static COMPV_ERROR_CODE openCloseOper(const CompVMatPtr& input, const CompVMatPt
 	if (!output_ || output_->planeCount() != 1 || output_->elmtInBytes() != sizeof(T) || output_->cols() != input_width || output_->rows() != input_height || output_->stride() != input_stride) {
 		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<T>(&output_, input_height, input_width, input_stride));
 	}
-
-	/* Create temp mat */
-	CompVMatPtr temp;
-	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<T>(&temp, input_height, input_width, input_stride));
-	
+		
 	/* Function ptr to the MT process */
 	auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
-		const size_t rowsOverlapCount = ((strel_height >> 1) << 1); // (kernelRadius times 2)	
 		const bool first = (ystart == 0);
 		const bool last = (yend == input_height);
-		const size_t padding = (first ? 0 : rowsOverlapCount);
+		const size_t overlap_top2 = first ? 0 : overlap2;
+		const size_t overlap_top = first ? 0 : overlap;
+		const size_t overlap_bottom2 = last ? 0 : overlap2;
+		const size_t overlap_bottom = last ? 0 : overlap;
+		
+		// Bind to input and perform first oper
 		const CompVRectFloat32 roi = { 
 			0.f, // left
-			static_cast<compv_float32_t>(ystart - padding), // top
+			static_cast<compv_float32_t>(ystart - overlap_top2), // top
 			static_cast<compv_float32_t>(input_width - 1), // right
-			static_cast<compv_float32_t>(yend - 1 + padding) // bottom
+			static_cast<compv_float32_t>(yend + overlap_bottom2) // bottom
 		};
-		CompVMatPtr mt_input, mt_output, mt_temp;
-		COMPV_CHECK_CODE_RETURN(input->bind(&mt_input, roi));
-		COMPV_CHECK_CODE_RETURN(output_->bind(&mt_output, roi));
-		COMPV_CHECK_CODE_RETURN(temp->bind(&mt_temp, roi));
-		COMPV_CHECK_CODE_RETURN((basicOper<T, CompVMathMorphOp1>(mt_input, strel, &mt_temp,
-			borderTypeRightLeft, 
+		CompVMatPtr mt_inputBind, mt_temp;
+		COMPV_CHECK_CODE_RETURN(input->bind(&mt_inputBind, roi));
+		COMPV_CHECK_CODE_RETURN((basicOper<T, CompVMathMorphOp1>(mt_inputBind, strel, &mt_temp,
+			borderTypeRightLeft,
 			first ? borderTypeTop : COMPV_BORDER_TYPE_IGNORE,
 			last ? borderTypeBottom : COMPV_BORDER_TYPE_IGNORE
 		)));
-		COMPV_CHECK_CODE_RETURN((basicOper<T, CompVMathMorphOp2>(mt_temp, strel, &mt_output,
+		
+		// Add offset to the output and temp and perform second oper
+		CompVMatPtr mt_tempBind;
+		const CompVRectFloat32 roi_offset_temp = {
+			0.f, // left
+			static_cast<compv_float32_t>(0 + overlap_top), // top
+			static_cast<compv_float32_t>(input_width - 1), // right
+			static_cast<compv_float32_t>(mt_temp->rows() - 1 - overlap_bottom) // bottom
+		};
+		COMPV_CHECK_CODE_RETURN(mt_temp->bind(&mt_tempBind, roi_offset_temp));
+
+		CompVMatPtr mt_output;
+		const CompVRectFloat32 roi_offset_output = {
+			0.f, // left
+			static_cast<compv_float32_t>((ystart - overlap_top)), // top
+			static_cast<compv_float32_t>(input_width - 1), // right
+			static_cast<compv_float32_t>((ystart - overlap_top) + mt_tempBind->rows() - 1) // bottom
+		};
+		COMPV_CHECK_CODE_RETURN(output_->bind(&mt_output, roi_offset_output));
+		COMPV_CHECK_CODE_RETURN((basicOper<T, CompVMathMorphOp2>(mt_tempBind, strel, &mt_output,
 			borderTypeRightLeft, 
 			first ? borderTypeTop : COMPV_BORDER_TYPE_IGNORE,
 			last ? borderTypeBottom : COMPV_BORDER_TYPE_IGNORE
@@ -274,9 +294,9 @@ static COMPV_ERROR_CODE openCloseOper(const CompVMatPtr& input, const CompVMatPt
 	/* Dispatch tasks */
 	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(funcPtr, 
 		input_width, input_height, 
-		COMPV_MATH_MAX((strel_height * input_width),
+		COMPV_MATH_MAX(((strel_height << 1) * input_width),
 			COMPV_MATH_MORPH_OPEN_CLOSE_OPER_SAMPLES_PER_THREAD
-		) // num rows per threads must be >= kernel/strel height
+		) // num rows per threads should be >= (kernel/strel height) * 2
 	));
 
 	/* Save result */
