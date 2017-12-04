@@ -12,7 +12,7 @@
 
 #define FILE_NAME_DIFFRACT		"diffract_1285x1285_gray.yuv"
 
-#define LOOP_COUNT				10000
+#define LOOP_COUNT				1
 
 static const struct compv_unittest_morph {
 	const COMPV_MATH_MORPH_STREL_TYPE strelType;
@@ -33,7 +33,7 @@ static const struct compv_unittest_morph {
 };
 static const size_t COMPV_UNITTEST_MORPH_COUNT = sizeof(COMPV_UNITTEST_MORPH) / sizeof(COMPV_UNITTEST_MORPH[0]);
 
-#define TEST_INDEX	0
+#define TEST_INDEX	3
 
 COMPV_ERROR_CODE morph()
 {

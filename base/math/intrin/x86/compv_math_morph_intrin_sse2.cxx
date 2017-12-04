@@ -71,19 +71,13 @@ COMPV_NAMESPACE_BEGIN()
 	__m128i vec0, vec1, vec2, vec3;
 	COMPV_ALIGN_SSE() uint8_t mem[16];
 
-	for (v = 0; v < strelInputPtrsCount; ++v) {
-		__compv_builtin_prefetch_read(strelInputPtrsPtr[v]);
-	}
-
 	for (j = 0, k = 0; j < height; ++j) {
 		for (i = 0; i < width64; i += 64, k += 64) {
-			__compv_builtin_prefetch_read(reinterpret_cast<char const*>(strelInputPtrsPtr[0]) + COMPV_PREFETCH_DISTANCE);
 			vec0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(k + strelInputPtrsPtr[0]));
 			vec1 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(k + strelInputPtrsPtr[0]) + 1);
 			vec2 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(k + strelInputPtrsPtr[0]) + 2);
 			vec3 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(k + strelInputPtrsPtr[0]) + 3);
 			for (v = 1; v < strelInputPtrsCount; ++v) {
-				__compv_builtin_prefetch_read(reinterpret_cast<char const*>(strelInputPtrsPtr[v]) + COMPV_PREFETCH_DISTANCE);
 				vec0 = _mm_min_epu8(vec0, _mm_loadu_si128(reinterpret_cast<const __m128i*>(k + strelInputPtrsPtr[v])));
 				vec1 = _mm_min_epu8(vec1, _mm_loadu_si128(reinterpret_cast<const __m128i*>(k + strelInputPtrsPtr[v]) + 1));
 				vec2 = _mm_min_epu8(vec2, _mm_loadu_si128(reinterpret_cast<const __m128i*>(k + strelInputPtrsPtr[v]) + 2));

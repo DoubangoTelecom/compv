@@ -77,12 +77,10 @@ COMPV_ERROR_CODE CompVMathMorph::process(const CompVMatPtr& input, const CompVMa
 		break;
 	case COMPV_MATH_MORPH_OP_TYPE_OPEN:
 		// Erode then dilate
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implemention found"); // Bundle erode and dilate
 		COMPV_CHECK_CODE_RETURN((openCloseOper<CompVMathMorphT, CompVMathMorphOpErode8u, CompVMathMorphOpDilate8u>(input, strel, output, borderType, borderType, borderType)));
 		break;
 	case COMPV_MATH_MORPH_OP_TYPE_CLOSE:
 		// Dilate then erode
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implemention found"); // Bundle erode and dilate
 		COMPV_CHECK_CODE_RETURN((openCloseOper<CompVMathMorphT, CompVMathMorphOpDilate8u, CompVMathMorphOpErode8u>(input, strel, output, borderType, borderType, borderType)));
 		break;
 	default:
