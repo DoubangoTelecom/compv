@@ -93,5 +93,8 @@
     <ClCompile Include="math_convlt.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="math_morph.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
