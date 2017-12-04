@@ -18,7 +18,7 @@ CompVWindow::CompVWindow(size_t width, size_t height, const char* title /*= "Unk
     , m_strTitle(title)
     , m_nId(compv_atomic_inc(&CompVWindow::s_nWindowId))
 {
-    m_WindowCreationThreadId = CompVThread::getIdCurrent();
+    m_WindowCreationThreadId = CompVThread::idCurrent();
     COMPV_DEBUG_INFO("Creating window (%s) on thread with id = %ld", title, (long)m_WindowCreationThreadId);
 }
 

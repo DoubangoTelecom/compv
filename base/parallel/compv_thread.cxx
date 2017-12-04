@@ -169,11 +169,6 @@ bail:
     return err;
 }
 
-compv_thread_id_t CompVThread::getId() const
-{
-    return m_Id;
-}
-
 COMPV_ERROR_CODE CompVThread::setAffinity(compv_core_id_t coreId)
 {
     COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
@@ -261,7 +256,7 @@ COMPV_ERROR_CODE CompVThread::setPriorityCurrent(int32_t priority)
     return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
 }
 
-compv_thread_id_t CompVThread::getIdCurrent()
+compv_thread_id_t CompVThread::idCurrent()
 {
 #if COMPV_OS_WINDOWS
     return GetCurrentThreadId();
@@ -279,7 +274,7 @@ bool CompVThread::isEquals(compv_thread_id_t id1, compv_thread_id_t id2)
 #endif
 }
 
-compv_core_id_t CompVThread::getCoreId()
+compv_core_id_t CompVThread::coreId()
 {
 #if _WIN32_WINNT >= 0x0600
     return (int32_t)GetCurrentProcessorNumber();

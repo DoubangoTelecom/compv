@@ -30,7 +30,7 @@ CompVThreadDispatcher::~CompVThreadDispatcher()
 	
 }
 
-size_t CompVThreadDispatcher::guessNumThreadsDividingAcrossY(size_t xcount, size_t ycount, size_t maxThreads, size_t minSamplesPerThread)
+size_t CompVThreadDispatcher::guessNumThreadsDividingAcrossY(const size_t xcount, const size_t ycount, const size_t maxThreads, const size_t minSamplesPerThread)
 {
 	size_t divCount = 1;
 	for (size_t div = 2; div <= maxThreads; ++div) {
@@ -41,6 +41,35 @@ size_t CompVThreadDispatcher::guessNumThreadsDividingAcrossY(size_t xcount, size
 	}
 	return divCount;
 }
+
+#if COMPV_CPP11
+COMPV_ERROR_CODE CompVThreadDispatcher::dispatchDividingAcrossY(std::function<COMPV_ERROR_CODE(const size_t ystart, const size_t yend)> funcPtr, const size_t xcount, const size_t ycount, const size_t minSamplesPerThread)
+{
+	/* Get Number of threads */
+	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
+	const size_t maxThreads = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
+	const size_t threadsCount = (threadDisp && !threadDisp->isMotherOfTheCurrentThread())
+		? CompVThreadDispatcher::guessNumThreadsDividingAcrossY(xcount, ycount, maxThreads, minSamplesPerThread)
+		: 1;
+	/* Dispatch tasks */
+	if (threadsCount > 1) {
+		CompVAsyncTaskIds taskIds;
+		taskIds.reserve(threadsCount);
+		const size_t heights = (ycount / threadsCount);
+		size_t YStart = 0, YEnd;
+		for (size_t threadIdx = 0; threadIdx < threadsCount; ++threadIdx) {
+			YEnd = (threadIdx == (threadsCount - 1)) ? ycount : (YStart + heights);
+			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, YStart, YEnd), taskIds), "Dispatching task failed");
+			YStart += heights;
+		}
+		COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds), "Failed to wait for tasks execution");
+	}
+	else {
+		COMPV_CHECK_CODE_RETURN(funcPtr(0, ycount));
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+#endif
 
 COMPV_ERROR_CODE CompVThreadDispatcher::newObj(CompVThreadDispatcherPtrPtr disp, int32_t numThreads /*= -1*/)
 {
@@ -78,7 +107,7 @@ COMPV_ERROR_CODE CompVThreadDispatcher::newObj(CompVThreadDispatcherPtrPtr disp,
 	CompVThreadDispatcherPtr _disp;
 
 	// Create thread dispatcher using Intel TBB implementation
-#if COMPV_HAVE_INTEL_TBB
+#if COMPV_HAVE_INTEL_TBB && 0 // our native implementation is faster and always available (no external dependencies)
 	if (!_disp && CompVParallel::isIntelTbbEnabled()) {
 		CompVThreadDispatcherTbbPtr _dispTbb;
 		COMPV_CHECK_CODE_RETURN(CompVThreadDispatcherTbb::newObj(&_dispTbb, numThreads), "Failed to create TBB thread dispatcher");

@@ -186,7 +186,7 @@ COMPV_ERROR_CODE CompVAsyncTask11::stop()
     return COMPV_ERROR_CODE_S_OK;
 }
 
-uint64_t CompVAsyncTask11::getUniqueTokenId()
+uint64_t CompVAsyncTask11::uniqueTokenId()
 {
     static long uniqueId = 0;
     return compv_atomic_inc(&uniqueId);
@@ -213,7 +213,7 @@ void* COMPV_STDCALL CompVAsyncTask11::run(void *pcArg)
     CompVAsyncToken* pToken_;
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
     size_t size_;
-    compv_thread_id_t threadId = CompVThread::getIdCurrent();
+    compv_thread_id_t threadId = CompVThread::idCurrent();
 
     // Make sure the affinity is defined. This function is called in start() but after thread creation which means we could miss it if this function is called very fast
 #if COMPV_PARALLEL_THREAD_SET_AFFINITY

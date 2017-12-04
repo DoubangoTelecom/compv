@@ -233,6 +233,7 @@ enum COMPV_ERROR_CODE {
 	COMPV_ERROR_CODE_E_MEMORY_NOT_ALIGNED,
     COMPV_ERROR_CODE_E_THIRD_PARTY_LIB,
     COMPV_ERROR_CODE_E_PTHREAD,
+	COMPV_ERROR_CODE_E_RECURSIVE_CALL,
 	COMPV_ERROR_CODE_E_JNI,
     COMPV_ERROR_CODE_E_DIRECTSHOW,
     COMPV_ERROR_CODE_E_MFOUNDATION,
@@ -369,6 +370,7 @@ enum COMPV_MATH_PARABOLA_TYPE {
 };
 
 // Mathematical morphology: Structuring element type
+// https://en.wikipedia.org/wiki/Mathematical_morphology
 enum COMPV_MATH_MORPH_STREL_TYPE {
 	COMPV_MATH_MORPH_STREL_TYPE_RECT,
 	COMPV_MATH_MORPH_STREL_TYPE_DIAMOND,
@@ -376,15 +378,16 @@ enum COMPV_MATH_MORPH_STREL_TYPE {
 };
 
 // Mathematical morphology: Basic operation type
+// https://en.wikipedia.org/wiki/Mathematical_morphology
 enum COMPV_MATH_MORPH_OP_TYPE {
-	COMPV_MATH_MORPH_OP_TYPE_ERODE,
-	COMPV_MATH_MORPH_OP_TYPE_DILATE,
-	COMPV_MATH_MORPH_OP_TYPE_OPEN,
-	COMPV_MATH_MORPH_OP_TYPE_CLOSE,
-	COMPV_MATH_MORPH_OP_TYPE_GRADIENT,
-	COMPV_MATH_MORPH_OP_TYPE_TOPHAT,
+	COMPV_MATH_MORPH_OP_TYPE_ERODE, // https://en.wikipedia.org/wiki/Erosion_(morphology)
+	COMPV_MATH_MORPH_OP_TYPE_DILATE, // https://en.wikipedia.org/wiki/Dilation_(morphology)
+	COMPV_MATH_MORPH_OP_TYPE_OPEN, // https://en.wikipedia.org/wiki/Opening_(morphology)
+	COMPV_MATH_MORPH_OP_TYPE_CLOSE, // https://en.wikipedia.org/wiki/Closing_(morphology)
+	COMPV_MATH_MORPH_OP_TYPE_GRADIENT, // https://en.wikipedia.org/wiki/Morphological_gradient
+	COMPV_MATH_MORPH_OP_TYPE_TOPHAT, // https://en.wikipedia.org/wiki/Top-hat_transform
 	COMPV_MATH_MORPH_OP_TYPE_BLACKHAT,
-	COMPV_MATH_MORPH_OP_TYPE_HITMISS
+	COMPV_MATH_MORPH_OP_TYPE_HITMISS // https://en.wikipedia.org/wiki/Hit-or-miss_transform
 };
 
 enum COMPV_DRAWING_COLOR_TYPE {

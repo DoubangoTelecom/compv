@@ -59,6 +59,9 @@ COMPV_ERROR_CODE CompVThreadDispatcher11::invoke(std::function<void()> fFunc, Co
 	uint64_t tokenId_ = 0;
 	CompVAsyncTask11Ptr  asyncTask = m_ppTasks[taskId_];
 	COMPV_CHECK_EXP_RETURN(!asyncTask, COMPV_ERROR_CODE_E_INVALID_STATE);
+#if !COMPV_ASYNCTASK11_CHAIN_ENABLED
+	COMPV_CHECK_EXP_RETURN(isMotherOfTheCurrentThread(), COMPV_ERROR_CODE_E_RECURSIVE_CALL);
+#endif
 	COMPV_CHECK_CODE_RETURN(asyncTask->invoke(fFunc, &tokenId_));
 	taskIds.push_back(CompVAsyncTask11Id(taskId_, tokenId_));
 	return COMPV_ERROR_CODE_S_OK;
@@ -79,23 +82,12 @@ COMPV_ERROR_CODE CompVThreadDispatcher11::waitOne(const CompVAsyncTask11Id& task
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVThreadDispatcher11::waitAll(uint64_t u_timeout /*= 86400000 -> 1 day */)
-{
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Deadlock when mt functions are chained");
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("We check all tasks and tokens");
-	int32_t tasksCount = threadsCount();
-	for (int32_t taskId = 0; taskId < tasksCount; ++taskId) {
-		COMPV_CHECK_CODE_RETURN(m_ppTasks[taskId]->waitAll(u_timeout));
-	}
-	return COMPV_ERROR_CODE_S_OK;
-}
-
 uint32_t CompVThreadDispatcher11::threadIdxCurrent()
 {
-	compv_thread_id_t currentThreadId = CompVThread::getIdCurrent();
-	int32_t tasksCount = threadsCount();
+	const compv_thread_id_t currentThreadId = CompVThread::idCurrent();
+	const int32_t tasksCount = threadsCount();
 	for (int32_t i = 0; i < tasksCount; ++i) {
-		if (m_ppTasks[i]->getThread()->getId() == currentThreadId) {
+		if (m_ppTasks[i]->thread()->id() == currentThreadId) {
 			return (uint32_t)i;
 		}
 	}
@@ -104,10 +96,10 @@ uint32_t CompVThreadDispatcher11::threadIdxCurrent()
 
 bool CompVThreadDispatcher11::isMotherOfTheCurrentThread() /*Overrides(CompVThreadDispatcher)*/
 {
-	compv_thread_id_t currentThreadId = CompVThread::getIdCurrent();
-	int32_t tasksCount = threadsCount();
+	const compv_thread_id_t currentThreadId = CompVThread::idCurrent();
+	const int32_t tasksCount = threadsCount();
 	for (int32_t i = 0; i < tasksCount; ++i) {
-		if (m_ppTasks[i]->getThread()->getId() == currentThreadId) {
+		if (m_ppTasks[i]->thread()->id() == currentThreadId) {
 			return true;
 		}
 	}

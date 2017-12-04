@@ -107,14 +107,14 @@ public:
     COMPV_ERROR_CODE waitAll(uint64_t u_timeout = 86400000/* 1 day */);
     COMPV_ERROR_CODE waitOne(uint64_t tokenId, uint64_t u_timeout = 86400000/* 1 day */);
     COMPV_ERROR_CODE stop();
-    COMPV_INLINE CompVPtr<CompVThread* > getThread() {
+    COMPV_INLINE CompVThreadPtr thread() {
         return m_Thread;
     }
-    COMPV_INLINE compv_core_id_t getCoreId() {
+    COMPV_INLINE compv_core_id_t coreId() const {
         return m_iCoreId;
     }
 
-    static uint64_t getUniqueTokenId();
+    static uint64_t uniqueTokenId();
     static COMPV_ERROR_CODE newObj(CompVPtr<CompVAsyncTask11*>* asyncTask);
 
 private:

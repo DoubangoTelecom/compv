@@ -19,6 +19,7 @@
 COMPV_NAMESPACE_BEGIN()
 
 void CompVMathMorphProcessErode_8u_Intrin_SSE2(const compv_uscalar_t* strelInputPtrsPtr, const compv_uscalar_t strelInputPtrsCount, uint8_t* outPtr, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride);
+void CompVMathMorphProcessDilate_8u_Intrin_SSE2(const compv_uscalar_t* strelInputPtrsPtr, const compv_uscalar_t strelInputPtrsCount, uint8_t* outPtr, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride);
 
 COMPV_NAMESPACE_END()
 

@@ -45,15 +45,15 @@ public:
 
     static void sleep(uint64_t ms);
     COMPV_ERROR_CODE setPriority(int priority);
-    compv_thread_id_t getId() const;
+	COMPV_INLINE compv_thread_id_t id() const { return m_Id; }
     COMPV_ERROR_CODE setAffinity(compv_core_id_t coreId);
 
     COMPV_ERROR_CODE join();
 
     static COMPV_ERROR_CODE setPriorityCurrent(int priority);
-    static compv_thread_id_t getIdCurrent();
+    static compv_thread_id_t idCurrent();
     static bool isEquals(compv_thread_id_t id1, compv_thread_id_t id2);
-    static compv_core_id_t getCoreId();
+    static compv_core_id_t coreId();
     static COMPV_ERROR_CODE newObj(CompVThreadPtrPtr thread, void *(COMPV_STDCALL *start) (void *), void *arg = NULL);
 
 private:

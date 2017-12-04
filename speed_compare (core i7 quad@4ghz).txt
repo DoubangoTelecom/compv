@@ -121,8 +121,19 @@ Test done with dense image (many non-zero pixels). In normal use case our KHT im
 SHT implementation not used in comercial products for know and needs more optimizations.
 
 === MorphOp Erode (Strel: 3x3 MORPH_CROSS) (1285, 1285) (8u array and strel) (#10k times) ===
-CompV: 18486.ms(no optiz)
+CompV: 449.ms(full optiz)
 OpenCV: 4700.ms(full optiz)
-Remarque: OpenCV's morphOps are multi-threaded and using SSE(vecOp). Used code morphologyEx(MORPH_ERODE). 
+Remarque: We're 1046% (#10 times) faster.
+OpenCV's morphOps are multi-threaded and using SSE(vecOp). Used code morphologyEx(MORPH_ERODE).
 Using Cross because it's not separable filter and requires more processing.
+In both OpenCV and CompV we reuse the result Mat in the loop to supress cache latency. Debugging the code we can see that OpenCV reuse same memory address (Visual Studio 2013).
+https://en.wikipedia.org/wiki/Erosion_(morphology)
+
+=== MorphOp Close (Strel: 3x3 MORPH_CROSS) (1285, 1285) (8u array and strel) (#10k times) ===
+CompV: 5285.ms(no optiz)
+OpenCV: 10075.ms(full optiz)
+Remarque: OpenCV's morphOps are multi-threaded and using SSE(vecOp). Used code morphologyEx(MORPH_CLOSE). 
+Using Cross because it's not separable filter and requires more processing.
+In both OpenCV and CompV we reuse the result Mat in the loop to supress cache latency. Debugging the code we can see that OpenCV reuse same memory address (Visual Studio 2013).
+https://en.wikipedia.org/wiki/Closing_(morphology)
 

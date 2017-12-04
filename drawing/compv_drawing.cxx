@@ -207,7 +207,7 @@ COMPV_ERROR_CODE CompVDrawing::runLoop(CompVRunLoopOnNewState cbOnNewState COMPV
 #   endif /* COMPV_OS_APPLE */
     COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
     CompVDrawing::s_bLoopRunning = true;
-    compv_thread_id_t eventLoopThreadId = CompVThread::getIdCurrent();
+    compv_thread_id_t eventLoopThreadId = CompVThread::idCurrent();
 
     // http://forum.lwjgl.org/index.php?topic=5836.0
     // Context creation and using rules:

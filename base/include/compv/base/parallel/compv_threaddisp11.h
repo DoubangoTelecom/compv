@@ -33,7 +33,6 @@ public:
 	virtual COMPV_ERROR_CODE invoke(std::function<void()> fFunc, CompVAsyncTaskIds& taskIds) override /*Overrides(CompVThreadDispatcher)*/;
 	virtual COMPV_ERROR_CODE wait(const CompVAsyncTaskIds& taskIds, uint64_t u_timeout = 86400000/* 1 day */) override /*Overrides(CompVThreadDispatcher)*/;
 	virtual COMPV_ERROR_CODE waitOne(const CompVAsyncTask11Id& taskId, uint64_t u_timeout = 86400000/* 1 day */) override /*Overrides(CompVThreadDispatcher)*/;
-	virtual COMPV_ERROR_CODE waitAll(uint64_t u_timeout = 86400000/* 1 day */);
 	virtual uint32_t threadIdxCurrent();
 	virtual bool isMotherOfTheCurrentThread() override /*Overrides(CompVThreadDispatcher)*/;
 

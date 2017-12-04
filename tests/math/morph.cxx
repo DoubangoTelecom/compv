@@ -12,7 +12,7 @@
 
 #define FILE_NAME_DIFFRACT		"diffract_1285x1285_gray.yuv"
 
-#define LOOP_COUNT				1
+#define LOOP_COUNT				10000
 
 static const struct compv_unittest_morph {
 	const COMPV_MATH_MORPH_STREL_TYPE strelType;
@@ -50,12 +50,13 @@ COMPV_ERROR_CODE morph()
 
 	uint64_t timeStart = CompVTime::nowMillis();
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
+		imageOut = nullptr;
 		COMPV_CHECK_CODE_RETURN(CompVMathMorph::process(imageIn, strel, &imageOut, test->opType, test->borderType));
 	}
 	uint64_t timeEnd = CompVTime::nowMillis();
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "Morph Elapsed time = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 
-#if COMPV_OS_WINDOWS && 0
+#if COMPV_OS_WINDOWS && 1
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Do not write the file to the hd");
 	COMPV_CHECK_CODE_RETURN(compv_tests_write_to_file(imageOut, "morph.gray"));
 #endif
