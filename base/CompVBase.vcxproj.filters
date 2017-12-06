@@ -1138,8 +1138,10 @@
     <YASM Include="image\asm\x86\compv_image_threshold_x64_avx.s">
       <Filter>source\image\asm\x86</Filter>
     </YASM>
-    <YASM Include="math\asm\x86\compv_math_morph_x64_avx.s" />
     <YASM Include="math\asm\x86\compv_math_morph_x64_sse.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="math\asm\x86\compv_math_morph_x64_avx.s">
       <Filter>source\math\asm\x86</Filter>
     </YASM>
   </ItemGroup>

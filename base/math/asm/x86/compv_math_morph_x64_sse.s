@@ -12,7 +12,11 @@
 
 COMPV_YASM_DEFAULT_REL
 
+%define CompVMathMorphProcessOpErode	0
+%define CompVMathMorphProcessOpDilate	1
+
 global sym(CompVMathMorphProcessErode_8u_Asm_X64_SSE2)
+global sym(CompVMathMorphProcessDilate_8u_Asm_X64_SSE2)
 
 section .data
 
@@ -25,7 +29,8 @@ section .text
 ; arg(3) -> const compv_uscalar_t width
 ; arg(4) -> const compv_uscalar_t height
 ; arg(5) -> const compv_uscalar_t stride
-sym(CompVMathMorphProcessErode_8u_Asm_X64_SSE2):
+%macro CompVMathMorphProcessOp_8u_Macro_X64_SSE2 1
+	%define CompVMathMorphProcessOp %1
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 6
@@ -94,29 +99,38 @@ sym(CompVMathMorphProcessErode_8u_Asm_X64_SSE2):
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			; for (v = 1; v < strelInputPtrsCount; ++v)
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-			lea v, [strelInputPtrsCount - 1] ; FIXME(dmi): not cache friendly -> 0...
+			mov v, 1
 			.LoopStrel64:
 				mov strelInputPtrsPtrv, [strelInputPtrsPtr + (v*COMPV_YASM_REG_SZ_BYTES)] ; strelInputPtrsPtrv = (strelInputPtrsPtr[v])
-				movdqu xmm4, [strelInputPtrsPtrv + (k * COMPV_YASM_UINT8_SZ_BYTES) + (0*COMPV_YASM_XMM_SZ_BYTES)] ; FIXME(dmi): pack with pminub
-				movdqu xmm5, [strelInputPtrsPtrv + (k * COMPV_YASM_UINT8_SZ_BYTES) + (1*COMPV_YASM_XMM_SZ_BYTES)]
-				movdqu xmm6, [strelInputPtrsPtrv + (k * COMPV_YASM_UINT8_SZ_BYTES) + (2*COMPV_YASM_XMM_SZ_BYTES)]
-				movdqu xmm7, [strelInputPtrsPtrv + (k * COMPV_YASM_UINT8_SZ_BYTES) + (3*COMPV_YASM_XMM_SZ_BYTES)]
-				dec v
-				pminub xmm0, xmm4
-				pminub xmm1, xmm5
-				pminub xmm2, xmm6
-				pminub xmm3, xmm7
-				jnz .LoopStrel64 ; zero already counted
+				inc v
+				lea strelInputPtrsPtrv, [strelInputPtrsPtrv + (k * COMPV_YASM_UINT8_SZ_BYTES)] ; strelInputPtrsPtrv += k
+				cmp v, strelInputPtrsCount
+				movdqu xmm4, [strelInputPtrsPtrv + (0*COMPV_YASM_XMM_SZ_BYTES)]
+				movdqu xmm5, [strelInputPtrsPtrv + (1*COMPV_YASM_XMM_SZ_BYTES)]
+				movdqu xmm6, [strelInputPtrsPtrv + (2*COMPV_YASM_XMM_SZ_BYTES)]
+				movdqu xmm7, [strelInputPtrsPtrv + (3*COMPV_YASM_XMM_SZ_BYTES)]
+				%if CompVMathMorphProcessOp == CompVMathMorphProcessOpErode
+					pminub xmm0, xmm4
+					pminub xmm1, xmm5
+					pminub xmm2, xmm6
+					pminub xmm3, xmm7
+				%else
+					pmaxub xmm0, xmm4
+					pmaxub xmm1, xmm5
+					pmaxub xmm2, xmm6
+					pmaxub xmm3, xmm7
+				%endif
+				jl .LoopStrel64
 			.EndOf_LoopStrel64:
 
-			movdqu [(outPtr + (i * COMPV_YASM_UINT8_SZ_BYTES)) + (0*COMPV_YASM_XMM_SZ_BYTES)], xmm0
-			movdqu [(outPtr + (i * COMPV_YASM_UINT8_SZ_BYTES)) + (1*COMPV_YASM_XMM_SZ_BYTES)], xmm1
-			movdqu [(outPtr + (i * COMPV_YASM_UINT8_SZ_BYTES)) + (2*COMPV_YASM_XMM_SZ_BYTES)], xmm2
-			movdqu [(outPtr + (i * COMPV_YASM_UINT8_SZ_BYTES)) + (3*COMPV_YASM_XMM_SZ_BYTES)], xmm3
-						
-			add i, 64
-			cmp i, width64
+			lea v, [outPtr + (i * COMPV_YASM_UINT8_SZ_BYTES)] ; v = &outPtr[i]
+			lea i, [i + 64]
 			lea k, [k + 64]
+			cmp i, width64
+			movdqu [v + (0*COMPV_YASM_XMM_SZ_BYTES)], xmm0
+			movdqu [v + (1*COMPV_YASM_XMM_SZ_BYTES)], xmm1
+			movdqu [v + (2*COMPV_YASM_XMM_SZ_BYTES)], xmm2
+			movdqu [v + (3*COMPV_YASM_XMM_SZ_BYTES)], xmm3			
 			jl .LoopWidth64
 		.EndOf_LoopWidth64:
 
@@ -132,13 +146,18 @@ sym(CompVMathMorphProcessErode_8u_Asm_X64_SSE2):
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			; for (v = 1; v < strelInputPtrsCount; ++v)
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-			lea v, [strelInputPtrsCount - 1] ; FIXME(dmi): not cache friendly -> 0...
+			mov v, 1
 			.LoopStrel16:
 				mov strelInputPtrsPtrv, [strelInputPtrsPtr + (v*COMPV_YASM_REG_SZ_BYTES)] ; strelInputPtrsPtrv = (strelInputPtrsPtr[v])
+				inc v
 				movdqu xmm4, [strelInputPtrsPtrv + (k * COMPV_YASM_UINT8_SZ_BYTES) + (0*COMPV_YASM_XMM_SZ_BYTES)]
-				dec v
-				pminub xmm0, xmm4
-				jnz .LoopStrel16 ; zero already counted
+				cmp v, strelInputPtrsCount
+				%if CompVMathMorphProcessOp == CompVMathMorphProcessOpErode
+					pminub xmm0, xmm4
+				%else
+					pmaxub xmm0, xmm4
+				%endif
+				jl .LoopStrel16
 			.EndOf_LoopStrel16:
 			
 			cmp i, width16
@@ -165,7 +184,7 @@ sym(CompVMathMorphProcessErode_8u_Asm_X64_SSE2):
 				.EndOf_LoopMoreThanWidth16:
 			.EndOf_MoreThanWidth16:
 
-			add i, 16
+			lea i, [i + 16]
 			cmp i, width
 			lea k, [k + 16]
 			jl .LoopWidth16
@@ -210,6 +229,18 @@ sym(CompVMathMorphProcessErode_8u_Asm_X64_SSE2):
 	mov rsp, rbp
 	pop rbp
 	ret
+	%undef CompVMathMorphProcessOp
+%endmacro
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(CompVMathMorphProcessErode_8u_Asm_X64_SSE2):
+	CompVMathMorphProcessOp_8u_Macro_X64_SSE2 CompVMathMorphProcessOpErode
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(CompVMathMorphProcessDilate_8u_Asm_X64_SSE2):
+	CompVMathMorphProcessOp_8u_Macro_X64_SSE2 CompVMathMorphProcessOpDilate
+
+%undef CompVMathMorphProcessOpErode
+%undef CompVMathMorphProcessOpDilate
 
 %endif ; COMPV_YASM_ABI_IS_64BIT
