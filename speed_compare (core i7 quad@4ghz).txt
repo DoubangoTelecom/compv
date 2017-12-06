@@ -124,17 +124,17 @@ SHT implementation not used in comercial products for know and needs more optimi
 CompV: 449.ms(full optiz)
 OpenCV: 4700.ms(full optiz)
 Remarque: We're 1046% (#10 times) faster.
-OpenCV's morphOps are multi-threaded and using SSE(vecOp). Used code morphologyEx(MORPH_ERODE).
+OpenCV's morphOps are multi-threaded and using SSE(vecOp). Used code: morphologyEx(MORPH_ERODE).
 Using Cross because it's not separable filter and requires more processing.
-In both OpenCV and CompV we reuse the result Mat in the loop to supress cache latency. Debugging the code we can see that OpenCV reuse same memory address (Visual Studio 2013).
+In both OpenCV and CompV we reuse the result Mat in the loop to supress cache latency. Debugging the code we can see that OpenCV reuse same memory address (Visual Studio 2013). Same speedup factor if the result is deleted.
 https://en.wikipedia.org/wiki/Erosion_(morphology)
 
 === MorphOp Close (Strel: 3x3 MORPH_CROSS) (1285, 1285) (8u array and strel) (#10k times) ===
-CompV: 1395.ms(no optiz)
+CompV: 1395.ms(full optiz)
 OpenCV: 10075.ms(full optiz)
 Remarque: We're 722% (#7 times) faster.
-OpenCV's morphOps are multi-threaded and using SSE(vecOp). Used code morphologyEx(MORPH_CLOSE). 
+OpenCV's morphOps are multi-threaded and using SSE(vecOp). Used code: morphologyEx(MORPH_CLOSE). 
 Using Cross because it's not separable filter and requires more processing.
-In both OpenCV and CompV we reuse the result Mat in the loop to supress cache latency. Debugging the code we can see that OpenCV reuse same memory address (Visual Studio 2013).
+In both OpenCV and CompV we reuse the result Mat in the loop to supress cache latency. Debugging the code we can see that OpenCV reuse same memory address (Visual Studio 2013). Same speedup factor if the result is deleted.
 https://en.wikipedia.org/wiki/Closing_(morphology)
 

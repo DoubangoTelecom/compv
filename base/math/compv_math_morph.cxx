@@ -21,6 +21,12 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+// X64
+#if COMPV_ASM && COMPV_ARCH_X64
+COMPV_EXTERNC void CompVMathMorphProcessErode_8u_Asm_X64_SSE2(const compv_uscalar_t* strelInputPtrsPtr, const compv_uscalar_t strelInputPtrsCount, uint8_t* outPtr, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride);
+#endif /* COMPV_ASM && COMPV_ARCH_X64 */
+
+
 #define CompVMathMorphT	uint8_t // default type
 
 template<typename T>
@@ -134,7 +140,7 @@ static COMPV_ERROR_CODE basicOper(const CompVMatPtr& input, const CompVMatPtr& s
 #if COMPV_ARCH_X86
 		if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathMorphProcess_8u = isErode ? CompVMathMorphProcessErode_8u_Intrin_SSE2 : CompVMathMorphProcessDilate_8u_Intrin_SSE2);
-			//COMPV_EXEC_IFDEF_ASM_X64(CompVMathMorphProcess_8u = CompVMathMorphProcess_8u_Asm_X64_SSE2);
+			COMPV_EXEC_IFDEF_ASM_X64(CompVMathMorphProcess_8u = isErode ? CompVMathMorphProcessErode_8u_Asm_X64_SSE2 : nullptr);
 		}
 		if (CompVCpu::isEnabled(kCpuFlagAVX2)) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathMorphProcess_8u = isErode ? CompVMathMorphProcessErode_8u_Intrin_AVX2 : CompVMathMorphProcessDilate_8u_Intrin_AVX2);
