@@ -61,6 +61,21 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathMorphProcessErode_8u_Asm_NEON32
 	@ Convert strelInputPtrsCount to bytes @
 	lsl strelInputPtrsCount, strelInputPtrsCount, #(COMPV_GAS_REG_SHIFT_BYTES)
 
+	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	@ for (v = 0; v < strelInputPtrsCount; ++v)
+	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	mov v, #(0*COMPV_GAS_REG_SZ_BYTES)
+	LoopCacheLoad_CompVMathMorphProcessOp_8u_Macro_NEON32:
+		ldr strelInputPtrsPtrv, [strelInputPtrsPtr, v] @ strelInputPtrsPtrv = (strelInputPtrsPtr[v])
+		add v, v, #(1*COMPV_GAS_REG_SZ_BYTES)
+		pld [strelInputPtrsPtrv, #(CACHE_LINE_SIZE*0)]
+		pld [strelInputPtrsPtrv, #(CACHE_LINE_SIZE*1)]
+		pld [strelInputPtrsPtrv, #(CACHE_LINE_SIZE*2)]
+		pld [strelInputPtrsPtrv, #(CACHE_LINE_SIZE*3)]
+		cmp v, strelInputPtrsCount
+		blt LoopCacheLoad_CompVMathMorphProcessOp_8u_Macro_NEON32
+	EndOf_LoopCacheLoad_CompVMathMorphProcessOp_8u_Macro_NEON32:
+
 	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	@ for (j = 0, k = 0; j < height; ++j)
 	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -74,6 +89,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathMorphProcessErode_8u_Asm_NEON32
 		LoopWidth64_CompVMathMorphProcessOp_8u_Macro_NEON32:
 			ldr strelInputPtrsPtrv, [strelInputPtrsPtr, #(0*COMPV_GAS_REG_SZ_BYTES)] @ strelInputPtrsPtrv = (strelInputPtrsPtr[v=0])
 			add strelInputPtrsPtrv, strelInputPtrsPtrv, k@, LSL #(COMPV_YASM_UINT8_SHIFT_BYTES) @ strelInputPtrsPtrv += k
+			pld [strelInputPtrsPtrv, #(CACHE_LINE_SIZE*4)]
 			vld1.u8 {q0,q1}, [strelInputPtrsPtrv]!
 			vld1.u8 {q2,q3}, [strelInputPtrsPtrv]
 			@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -83,6 +99,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathMorphProcessErode_8u_Asm_NEON32
 			LoopStrel64_CompVMathMorphProcessOp_8u_Macro_NEON32:
 				ldr strelInputPtrsPtrv, [strelInputPtrsPtr, v] @ strelInputPtrsPtrv = (strelInputPtrsPtr[v])
 				add strelInputPtrsPtrv, strelInputPtrsPtrv, k@, LSL #(COMPV_YASM_UINT8_SHIFT_BYTES) @ strelInputPtrsPtrv += k
+				pld [strelInputPtrsPtrv, #(CACHE_LINE_SIZE*4)]
 				add v, v, #(1*COMPV_GAS_REG_SZ_BYTES)
 				vld1.u8 {q4,q5}, [strelInputPtrsPtrv]!
 				vld1.u8 {q6,q7}, [strelInputPtrsPtrv]
@@ -117,6 +134,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathMorphProcessErode_8u_Asm_NEON32
 		LoopWidth16_CompVMathMorphProcessOp_8u_Macro_NEON32:
 			ldr strelInputPtrsPtrv, [strelInputPtrsPtr, #(0*COMPV_GAS_REG_SZ_BYTES)] @ strelInputPtrsPtrv = (strelInputPtrsPtr[v=0])
 			add strelInputPtrsPtrv, strelInputPtrsPtrv, k@, LSL #(COMPV_YASM_UINT8_SHIFT_BYTES) @ strelInputPtrsPtrv += k
+			pld [strelInputPtrsPtrv, #(CACHE_LINE_SIZE*4)]
 			vld1.u8 {q0}, [strelInputPtrsPtrv]
 			@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 			@ for (v = 1; v < strelInputPtrsCount; ++v)
@@ -125,6 +143,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathMorphProcessErode_8u_Asm_NEON32
 			LoopStrel16_CompVMathMorphProcessOp_8u_Macro_NEON32:
 				ldr strelInputPtrsPtrv, [strelInputPtrsPtr, v] @ strelInputPtrsPtrv = (strelInputPtrsPtr[v])
 				add strelInputPtrsPtrv, strelInputPtrsPtrv, k@, LSL #(COMPV_YASM_UINT8_SHIFT_BYTES) @ strelInputPtrsPtrv += k
+				pld [strelInputPtrsPtrv, #(CACHE_LINE_SIZE*4)]
 				add v, v, #(1*COMPV_GAS_REG_SZ_BYTES)
 				vld1.u8 {q4}, [strelInputPtrsPtrv]
 				cmp v, strelInputPtrsCount
