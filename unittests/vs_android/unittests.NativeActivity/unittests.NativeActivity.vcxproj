@@ -50,6 +50,7 @@
     <ClCompile Include="..\..\math_histogram.cxx" />
     <ClCompile Include="..\..\math_inverse.cxx" />
     <ClCompile Include="..\..\math_matrix_ops.cxx" />
+    <ClCompile Include="..\..\math_morph.cxx" />
     <ClCompile Include="..\..\math_stats_mse.cxx" />
     <ClCompile Include="..\..\math_stats_normalize.cxx" />
     <ClCompile Include="..\..\math_stats_variance.cxx" />

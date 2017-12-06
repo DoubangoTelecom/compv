@@ -13,6 +13,7 @@ COMPV_NAMESPACE_BEGIN()
 
 #define CompVMathMorphProcessOp_8u_Intrin_NEON(op, strelInputPtrsPtr, strelInputPtrsCount, outPtr, width, height, stride) { \
 	COMPV_DEBUG_INFO_CHECK_NEON(); \
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM code is faster"); \
 	compv_uscalar_t i, j, k, v; \
 	const compv_uscalar_t width64 = width & -64; \
 	const compv_uscalar_t width16 = width & -16; \
@@ -56,6 +57,14 @@ COMPV_NAMESPACE_BEGIN()
 		k += strelInputPtrsPad; \
 	} \
 }
+
+/* For Close operation (Dilate+Erode): */
+// TODO(dmi): huge gain -> on Android (Huawei MediaPad2, no FMA, ARM32, (1285 x 1285), single threaded, #1000 times), asm code: 6313.ms, intrin code: 7552.ms - faster even without cache preload
+// TODO(dmi): huge gain -> on Android (Huawei MediaPad2, no FMA, ARM64, (1285 x 1285), single threaded, #1000 times), asm code: 5418.ms, intrin code: 6022.ms - faster even without cache preload
+
+/* For Erode operation: */
+// TODO(dmi): huge gain -> on Android (Huawei MediaPad2, no FMA, ARM32, (1285 x 1285), single threaded, #1000 times), asm code: 2466.ms, intrin code: 3157.ms - faster even without cache preload
+// TODO(dmi): small gain -> on Android (Huawei MediaPad2, no FMA, ARM64, (1285 x 1285), single threaded, #1000 times), asm code: 2024.ms, intrin code: 2123.ms - faster even without cache preload
 
 void CompVMathMorphProcessErode_8u_Intrin_NEON(const compv_uscalar_t* strelInputPtrsPtr, const compv_uscalar_t strelInputPtrsCount, uint8_t* outPtr, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride)
 {

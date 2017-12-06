@@ -27,5 +27,6 @@
     <ClCompile Include="..\..\math_histogram.cxx" />
     <ClCompile Include="..\..\split.cxx" />
     <ClCompile Include="..\..\math_convlt.cxx" />
+    <ClCompile Include="..\..\math_morph.cxx" />
   </ItemGroup>
 </Project>
