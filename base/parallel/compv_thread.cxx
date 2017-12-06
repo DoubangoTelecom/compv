@@ -192,7 +192,7 @@ COMPV_ERROR_CODE CompVThread::setAffinity(compv_core_id_t coreId)
 		CPU_ZERO(&cpuset);
 		CPU_SET(coreId, &cpuset);
 		COMPV_CHECK_EXP_RETURN(
-			syscall(__NR_sched_setaffinity, getId(), sizeof(cpuset), &cpuset) != 0,
+			syscall(__NR_sched_setaffinity, id(), sizeof(cpuset), &cpuset) != 0,
 			err = COMPV_ERROR_CODE_E_SYSTEM,
 			"Failed to set thread affinity");
     }

@@ -564,6 +564,21 @@
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_distance_intrin_sse2.h">
       <Filter>include\math\intrin\x86</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_morph_intrin_avx2.h">
+      <Filter>include\math\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_morph_intrin_sse2.h">
+      <Filter>include\math\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_utils_intrin_sse41.h">
+      <Filter>include\math\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\math\compv_math_morph.h">
+      <Filter>include\math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_morph_intrin_neon.h">
+      <Filter>include\math\intrin\arm</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_base.cxx">
@@ -956,6 +971,18 @@
     <ClCompile Include="..\math\intrin\x86\compv_math_utils_intrin_sse41.cxx">
       <Filter>source\math\intrin\x86</Filter>
     </ClCompile>
+    <ClCompile Include="..\math\intrin\x86\compv_math_morph_intrin_avx2.cxx">
+      <Filter>source\math\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\intrin\x86\compv_math_morph_intrin_sse2.cxx">
+      <Filter>source\math\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\compv_math_morph.cxx">
+      <Filter>source\math</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\intrin\arm\compv_math_morph_intrin_neon.cxx">
+      <Filter>source\math\intrin\arm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\asm\x86\compv_bits_macros_x86.s">
@@ -1136,6 +1163,12 @@
     </GAS>
     <GAS Include="..\image\asm\arm\compv_image_threshold_arm64_neon.S">
       <Filter>source\image\asm\arm</Filter>
+    </GAS>
+    <GAS Include="..\math\asm\arm\compv_math_morph_arm32_neon.S">
+      <Filter>source\math\asm\arm</Filter>
+    </GAS>
+    <GAS Include="..\math\asm\arm\compv_math_morph_arm64_neon.S">
+      <Filter>source\math\asm\arm</Filter>
     </GAS>
   </ItemGroup>
 </Project>

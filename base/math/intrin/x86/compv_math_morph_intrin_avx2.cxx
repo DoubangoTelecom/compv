@@ -7,7 +7,6 @@
 #include "compv/base/math/intrin/x86/compv_math_morph_intrin_avx2.h"
 
 #if COMPV_ARCH_X86 && COMPV_INTRINSIC
-#include "compv/base/compv_simd_globals.h"
 #include "compv/base/compv_debug.h"
 
 COMPV_NAMESPACE_BEGIN()

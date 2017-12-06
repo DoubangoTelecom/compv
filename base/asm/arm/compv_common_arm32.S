@@ -6,10 +6,11 @@
 # WebSite: http://compv.org                                             #
 #########################################################################
 #if defined(__arm__) && !defined(__aarch64__)
-.include "compv_common_arm.S" //"
+.include "compv_common_arm.S"
 
 #########################################################################
 .equ COMPV_GAS_REG_SZ_BYTES, 4
+.equ COMPV_GAS_REG_SHIFT_BYTES, 2
 
 .equ prolog_bytes, (10 * COMPV_GAS_REG_SZ_BYTES)   @ push {r4-r12, lr}
 

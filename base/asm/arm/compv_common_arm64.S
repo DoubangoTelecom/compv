@@ -6,10 +6,11 @@
 # WebSite: http://compv.org                                             #
 #########################################################################
 #if defined(__aarch64__)
-.include "compv_common_arm.S" //"
+.include "compv_common_arm.S"
 
 #########################################################################
 .equ COMPV_GAS_REG_SZ_BYTES, 8
+.equ COMPV_GAS_REG_SHIFT_BYTES, 3
 .equ prolog_bytes, (12 * COMPV_GAS_REG_SZ_BYTES)
 
 #X0-X7 - arguments and return value (volatile)

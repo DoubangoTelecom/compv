@@ -11,6 +11,7 @@
 
 #include "compv/base/math/intrin/x86/compv_math_morph_intrin_avx2.h"
 #include "compv/base/math/intrin/x86/compv_math_morph_intrin_sse2.h"
+#include "compv/base/math/intrin/arm/compv_math_morph_intrin_neon.h"
 
 // Mathematical morphology: https://en.wikipedia.org/wiki/Mathematical_morphology
 
@@ -27,6 +28,12 @@ COMPV_EXTERNC void CompVMathMorphProcessErode_8u_Asm_X64_SSE2(const compv_uscala
 COMPV_EXTERNC void CompVMathMorphProcessDilate_8u_Asm_X64_SSE2(const compv_uscalar_t* strelInputPtrsPtr, const compv_uscalar_t strelInputPtrsCount, uint8_t* outPtr, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride);
 COMPV_EXTERNC void CompVMathMorphProcessErode_8u_Asm_X64_AVX2(const compv_uscalar_t* strelInputPtrsPtr, const compv_uscalar_t strelInputPtrsCount, uint8_t* outPtr, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride);
 COMPV_EXTERNC void CompVMathMorphProcessDilate_8u_Asm_X64_AVX2(const compv_uscalar_t* strelInputPtrsPtr, const compv_uscalar_t strelInputPtrsCount, uint8_t* outPtr, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride);
+#endif /* COMPV_ASM && COMPV_ARCH_X64 */
+
+// ARM32
+#if COMPV_ASM && COMPV_ARCH_ARM32
+COMPV_EXTERNC void CompVMathMorphProcessErode_8u_Asm_NEON32(const compv_uscalar_t* strelInputPtrsPtr, const compv_uscalar_t strelInputPtrsCount, uint8_t* outPtr, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride);
+COMPV_EXTERNC void CompVMathMorphProcessDilate_8u_Asm_NEON32(const compv_uscalar_t* strelInputPtrsPtr, const compv_uscalar_t strelInputPtrsCount, uint8_t* outPtr, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride);
 #endif /* COMPV_ASM && COMPV_ARCH_X64 */
 
 
@@ -151,8 +158,8 @@ static COMPV_ERROR_CODE basicOper(const CompVMatPtr& input, const CompVMatPtr& s
 		}
 #elif COMPV_ARCH_ARM
 		if (CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
-			//COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMathMorphProcess_8u = CompVMathMorphProcess_8u_Intrin_NEON);
-			//COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathMorphProcess_8u = CompVMathMorphProcess_8u_Asm_NEON32);
+			COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMathMorphProcess_8u = isErode ? CompVMathMorphProcessErode_8u_Intrin_NEON : CompVMathMorphProcessDilate_8u_Intrin_NEON);
+			COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathMorphProcess_8u = isErode ? CompVMathMorphProcessErode_8u_Asm_NEON32 : nullptr);
 			//COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathMorphProcess_8u = CompVMathMorphProcess_8u_Asm_NEON64);
 		}
 #endif

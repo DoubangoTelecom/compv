@@ -64,6 +64,7 @@
     <ClCompile Include="..\..\inverse.cxx" />
     <ClCompile Include="..\..\main.cxx" />
     <ClCompile Include="..\..\matrix_ops.cxx" />
+    <ClCompile Include="..\..\morph.cxx" />
     <ClCompile Include="..\..\stats_mse.cxx" />
     <ClCompile Include="..\..\stats_normalize.cxx" />
     <ClCompile Include="..\..\stats_variance.cxx" />

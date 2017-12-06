@@ -15,6 +15,7 @@
     <ClCompile Include="..\..\..\tests_common.cxx" />
     <ClCompile Include="..\..\histogram.cxx" />
     <ClCompile Include="..\..\convlt.cxx" />
+    <ClCompile Include="..\..\morph.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\tests_common.h" />

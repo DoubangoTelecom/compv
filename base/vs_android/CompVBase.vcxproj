@@ -128,6 +128,7 @@
     <ClInclude Include="..\include\compv\base\math\compv_math_histogram.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_lines.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_matrix.h" />
+    <ClInclude Include="..\include\compv\base\math\compv_math_morph.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_stats.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_stats_fit.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_stats_ransac.h" />
@@ -137,6 +138,7 @@
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_convlt_intrin_neon.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_distance_intrin_neon.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_matrix_intrin_neon64.h" />
+    <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_morph_intrin_neon.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_stats_intrin_neon64.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_transform_intrin_neon64.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_utils_intrin_neon.h" />
@@ -149,12 +151,15 @@
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_matrix_intrin_avx.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_matrix_intrin_sse2.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_matrix_intrin_sse41.h" />
+    <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_morph_intrin_avx2.h" />
+    <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_morph_intrin_sse2.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_stats_intrin_avx.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_stats_intrin_sse2.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_transform_intrin_avx.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_transform_intrin_sse2.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_utils_intrin_avx2.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_utils_intrin_sse2.h" />
+    <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_utils_intrin_sse41.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_utils_intrin_ssse3.h" />
     <ClInclude Include="..\include\compv\base\math\lmfit-6.1\lmcurve.h" />
     <ClInclude Include="..\include\compv\base\math\lmfit-6.1\lmcurve_tyd.h" />
@@ -292,6 +297,7 @@
     <ClCompile Include="..\math\compv_math_histogram.cxx" />
     <ClCompile Include="..\math\compv_math_lines.cxx" />
     <ClCompile Include="..\math\compv_math_matrix.cxx" />
+    <ClCompile Include="..\math\compv_math_morph.cxx" />
     <ClCompile Include="..\math\compv_math_stats.cxx" />
     <ClCompile Include="..\math\compv_math_stats_fit.cxx" />
     <ClCompile Include="..\math\compv_math_stats_ransac.cxx" />
@@ -301,6 +307,7 @@
     <ClCompile Include="..\math\intrin\arm\compv_math_convlt_intrin_neon.cxx" />
     <ClCompile Include="..\math\intrin\arm\compv_math_distance_intrin_neon.cxx" />
     <ClCompile Include="..\math\intrin\arm\compv_math_matrix_intrin_neon64.cxx" />
+    <ClCompile Include="..\math\intrin\arm\compv_math_morph_intrin_neon.cxx" />
     <ClCompile Include="..\math\intrin\arm\compv_math_stats_intrin_neon64.cxx" />
     <ClCompile Include="..\math\intrin\arm\compv_math_transform_intrin_neon64.cxx" />
     <ClCompile Include="..\math\intrin\arm\compv_math_utils_intrin_neon.cxx" />
@@ -313,6 +320,8 @@
     <ClCompile Include="..\math\intrin\x86\compv_math_matrix_intrin_avx.cxx" />
     <ClCompile Include="..\math\intrin\x86\compv_math_matrix_intrin_sse2.cxx" />
     <ClCompile Include="..\math\intrin\x86\compv_math_matrix_intrin_sse41.cxx" />
+    <ClCompile Include="..\math\intrin\x86\compv_math_morph_intrin_avx2.cxx" />
+    <ClCompile Include="..\math\intrin\x86\compv_math_morph_intrin_sse2.cxx" />
     <ClCompile Include="..\math\intrin\x86\compv_math_stats_intrin_avx.cxx" />
     <ClCompile Include="..\math\intrin\x86\compv_math_stats_intrin_sse2.cxx" />
     <ClCompile Include="..\math\intrin\x86\compv_math_transform_intrin_avx.cxx" />
@@ -823,6 +832,30 @@
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
     </GAS>
     <GAS Include="..\math\asm\arm\compv_math_histogram_arm64_neon.S">
+      <FileType>Document</FileType>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x86'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+    </GAS>
+    <GAS Include="..\math\asm\arm\compv_math_morph_arm32_neon.S">
+      <FileType>Document</FileType>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x86'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ArmNeon>
+      <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ArmNeon>
+    </GAS>
+    <GAS Include="..\math\asm\arm\compv_math_morph_arm64_neon.S">
       <FileType>Document</FileType>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
