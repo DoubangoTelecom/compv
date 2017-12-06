@@ -6,6 +6,7 @@
 */
 #include "compv/base/math/compv_math_morph.h"
 #include "compv/base/math/compv_math_utils.h"
+#include "compv/base/math/compv_math_basic_ops.h"
 #include "compv/base/parallel/compv_parallel.h"
 #include "compv/base/image/compv_image.h"
 
@@ -68,6 +69,9 @@ template <typename T, class CompVMathMorphOp1, class CompVMathMorphOp2>
 static COMPV_ERROR_CODE openCloseOper(const CompVMatPtr& input, const CompVMatPtr& strel, CompVMatPtrPtr output, COMPV_BORDER_TYPE borderTypeRightLeft, COMPV_BORDER_TYPE borderTypeTop, COMPV_BORDER_TYPE borderTypeBottom);
 
 template <typename T>
+static COMPV_ERROR_CODE gradientOper(const CompVMatPtr& input, const CompVMatPtr& strel, CompVMatPtrPtr output, COMPV_BORDER_TYPE borderTypeRightLeft, COMPV_BORDER_TYPE borderTypeTop, COMPV_BORDER_TYPE borderTypeBottom);
+
+template <typename T>
 static COMPV_ERROR_CODE buildStructuringElementInputPtrs(const CompVMatPtr& strel, const CompVMatPtr& input, CompVMatPtrPtr strelInputPtrs);
 
 template <typename T>
@@ -105,6 +109,12 @@ COMPV_ERROR_CODE CompVMathMorph::process(const CompVMatPtr& input, const CompVMa
 		// Dilate then erode
 		COMPV_CHECK_CODE_RETURN((openCloseOper<CompVMathMorphT, CompVMathMorphOpDilate8u, CompVMathMorphOpErode8u>(input, strel, output, borderType, borderType, borderType)));
 		break;
+#if 0 // Gradient function is correct but disabled because "CompVMathBasicOps::subs" not optimized (one of the input params not aligned)
+	case COMPV_MATH_MORPH_OP_TYPE_GRADIENT:
+		// Dilate - Erode
+		COMPV_CHECK_CODE_RETURN((gradientOper<CompVMathMorphT>(input, strel, output, borderType, borderType, borderType)));
+		break;
+#endif
 	default:
 		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED, "Input morph op type not implemented yet");
 		break;
@@ -146,7 +156,7 @@ static COMPV_ERROR_CODE basicOper(const CompVMatPtr& input, const CompVMatPtr& s
 
 	/* Hook to processing function */
 	typedef void(*CompVMathMorphProcessFunPtr)(const compv_uscalar_t* strelInputPtrsPtr, const compv_uscalar_t strelInputPtrsCount, T* outPtr, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride);
-	CompVMathMorphProcessFunPtr CompVMathMorphProcess = [](const compv_uscalar_t* strelInputPtrsPtr, const compv_uscalar_t strelInputPtrsCount, uint8_t* outPtr, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride) {
+	CompVMathMorphProcessFunPtr CompVMathMorphProcess = [](const compv_uscalar_t* strelInputPtrsPtr, const compv_uscalar_t strelInputPtrsCount, T* outPtr, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride) {
 		CompVMathMorphProcess_C<T, CompVMathMorphOp >(strelInputPtrsPtr, strelInputPtrsCount, outPtr, width, height, stride);
 	};
 
@@ -297,15 +307,15 @@ static COMPV_ERROR_CODE openCloseOper(const CompVMatPtr& input, const CompVMatPt
 		};
 		COMPV_CHECK_CODE_RETURN(mt_temp->bind(&mt_tempBind, roi_offset_temp));
 
-		CompVMatPtr mt_output;
+		CompVMatPtr mt_outputBind;
 		const CompVRectFloat32 roi_offset_output = {
 			0.f, // left
 			static_cast<compv_float32_t>((ystart - overlap_top)), // top
 			static_cast<compv_float32_t>(input_width - 1), // right
 			static_cast<compv_float32_t>((ystart - overlap_top) + mt_tempBind->rows() - 1) // bottom
 		};
-		COMPV_CHECK_CODE_RETURN(output_->bind(&mt_output, roi_offset_output));
-		COMPV_CHECK_CODE_RETURN((basicOper<T, CompVMathMorphOp2>(mt_tempBind, strel, &mt_output,
+		COMPV_CHECK_CODE_RETURN(output_->bind(&mt_outputBind, roi_offset_output));
+		COMPV_CHECK_CODE_RETURN((basicOper<T, CompVMathMorphOp2>(mt_tempBind, strel, &mt_outputBind,
 			borderTypeRightLeft, 
 			first ? borderTypeTop : COMPV_BORDER_TYPE_IGNORE,
 			last ? borderTypeBottom : COMPV_BORDER_TYPE_IGNORE
@@ -316,6 +326,103 @@ static COMPV_ERROR_CODE openCloseOper(const CompVMatPtr& input, const CompVMatPt
 	/* Dispatch tasks */
 	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(funcPtr, 
 		input_width, input_height, 
+		COMPV_MATH_MAX(((strel_height << 1) * input_width),
+			COMPV_MATH_MORPH_OPEN_CLOSE_OPER_SAMPLES_PER_THREAD
+		) // num rows per threads should be >= (kernel/strel height) * 2
+	));
+
+	/* Save result */
+	*output = output_;
+
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+template <typename T>
+static COMPV_ERROR_CODE gradientOper(const CompVMatPtr& input, const CompVMatPtr& strel, CompVMatPtrPtr output, COMPV_BORDER_TYPE borderTypeRightLeft, COMPV_BORDER_TYPE borderTypeTop, COMPV_BORDER_TYPE borderTypeBottom)
+{
+	COMPV_CHECK_EXP_RETURN(
+		!input || input->isEmpty() || input->elmtInBytes() != sizeof(T) || input->planeCount() != 1 ||
+		!strel || strel->isEmpty() || strel->elmtInBytes() != sizeof(T) || strel->planeCount() != 1 ||
+		input->cols() < (strel->cols() >> 1) || input->rows() < (strel->rows() >> 1) ||
+		!output,
+		COMPV_ERROR_CODE_E_INVALID_PARAMETER
+	);
+
+	/* Local variables */
+	const size_t input_width = input->cols();
+	const size_t input_height = input->rows();
+	const size_t input_stride = input->stride();
+
+	const size_t strel_height = strel->rows();
+	const size_t overlap = (strel_height >> 1);
+	const size_t overlap2 = (overlap << 1);
+
+	/* output can't be equal to input */
+	// create new output only if doesn't match the required format
+	CompVMatPtr output_ = (input == *output) ? nullptr : *output;
+	if (!output_ || output_->planeCount() != 1 || output_->elmtInBytes() != sizeof(T) || output_->cols() != input_width || output_->rows() != input_height || output_->stride() != input_stride) {
+		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<T>(&output_, input_height, input_width, input_stride));
+	}
+
+	/* Function ptr to the MT process */
+	auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
+		const bool first = (ystart == 0);
+		const bool last = (yend == input_height);
+		const size_t overlap_top2 = first ? 0 : overlap2;
+		const size_t overlap_top = first ? 0 : overlap;
+		const size_t overlap_bottom2 = last ? 0 : overlap2;
+		const size_t overlap_bottom = last ? 0 : overlap;
+
+		// Bind to input and perform first oper
+		const CompVRectFloat32 roi = {
+			0.f, // left
+			static_cast<compv_float32_t>(ystart - overlap_top2), // top
+			static_cast<compv_float32_t>(input_width - 1), // right
+			static_cast<compv_float32_t>(yend + overlap_bottom2) // bottom
+		};
+		CompVMatPtr mt_inputBind, mt_temp;
+		COMPV_CHECK_CODE_RETURN(input->bind(&mt_inputBind, roi));
+		COMPV_CHECK_CODE_RETURN((basicOper<T, CompVMathMorphOpMin<T> >(mt_inputBind, strel, &mt_temp,
+			borderTypeRightLeft,
+			first ? borderTypeTop : COMPV_BORDER_TYPE_IGNORE,
+			last ? borderTypeBottom : COMPV_BORDER_TYPE_IGNORE
+			)));
+
+		// Add offset to the output and temp and perform second oper
+		CompVMatPtr mt_tempBind;
+		const CompVRectFloat32 roi_offset_temp = {
+			0.f, // left
+			static_cast<compv_float32_t>(0 + overlap_top), // top
+			static_cast<compv_float32_t>(input_width - 1), // right
+			static_cast<compv_float32_t>(mt_temp->rows() - 1 - overlap_bottom) // bottom
+		};
+		COMPV_CHECK_CODE_RETURN(mt_temp->bind(&mt_tempBind, roi_offset_temp));
+
+		CompVMatPtr mt_outputBind;
+		const CompVRectFloat32 roi_offset_output = {
+			0.f, // left
+			static_cast<compv_float32_t>((ystart - overlap_top)), // top
+			static_cast<compv_float32_t>(input_width - 1), // right
+			static_cast<compv_float32_t>((ystart - overlap_top) + mt_tempBind->rows() - 1) // bottom
+		};
+		COMPV_CHECK_CODE_RETURN(output_->bind(&mt_outputBind, roi_offset_output));
+		COMPV_CHECK_CODE_RETURN(input->bind(&mt_inputBind, roi_offset_output));
+		COMPV_CHECK_CODE_RETURN((basicOper<T, CompVMathMorphOpMax<T> >(mt_inputBind, strel, &mt_outputBind,
+			borderTypeRightLeft,
+			first ? borderTypeTop : COMPV_BORDER_TYPE_IGNORE,
+			last ? borderTypeBottom : COMPV_BORDER_TYPE_IGNORE
+			)));
+
+		COMPV_CHECK_CODE_RETURN(CompVMathBasicOps::subs(mt_outputBind, 
+			mt_tempBind, 
+			&mt_outputBind
+		));
+		return COMPV_ERROR_CODE_S_OK;
+	};
+
+	/* Dispatch tasks */
+	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(funcPtr,
+		input_width, input_height,
 		COMPV_MATH_MAX(((strel_height << 1) * input_width),
 			COMPV_MATH_MORPH_OPEN_CLOSE_OPER_SAMPLES_PER_THREAD
 		) // num rows per threads should be >= (kernel/strel height) * 2

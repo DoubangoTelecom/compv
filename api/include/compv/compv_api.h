@@ -34,6 +34,7 @@
 #include <compv/base/image/compv_image_threshold.h>
 
 #include <compv/base/math/compv_math.h>
+#include <compv/base/math/compv_math_basic_ops.h>
 #include <compv/base/math/compv_math_convlt.h>
 #include <compv/base/math/compv_math_distance.h>
 #include <compv/base/math/compv_math_eigen.h>

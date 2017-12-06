@@ -13,7 +13,7 @@ using namespace compv;
 #define WINDOW_HEIGHT		720
 
 #define MORPH_OP			COMPV_MATH_MORPH_OP_TYPE_CLOSE
-#define STREL_SIZE			CompVSizeSz(5, 5)
+#define STREL_SIZE			CompVSizeSz(3, 3)
 #define STREL_TYPE			COMPV_MATH_MORPH_STREL_TYPE_DIAMOND
 #define BORDER_TYPE			COMPV_BORDER_TYPE_REPLICATE
 

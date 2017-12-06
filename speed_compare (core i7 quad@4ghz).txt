@@ -138,3 +138,4 @@ Using Cross because it's not separable filter and requires more processing.
 In both OpenCV and CompV we reuse the result Mat in the loop to supress cache latency. Debugging the code we can see that OpenCV reuse same memory address (Visual Studio 2013). Same speedup factor if the result is deleted.
 https://en.wikipedia.org/wiki/Closing_(morphology)
 
+
