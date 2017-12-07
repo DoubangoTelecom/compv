@@ -66,9 +66,11 @@ enum {
 
 struct CompVConnectedComponentLabelingResult {
 	CompVMatPtr labels;
-	int background_label;
+	int labels_count;
+	int label_background;
 	void reset() {
 		labels = nullptr;
+		labels_count = 0;
 	}
 };
 

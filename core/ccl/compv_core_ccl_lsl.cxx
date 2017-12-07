@@ -169,11 +169,12 @@ static void step3_algo15_1st_abs_labeling(const CompVMatPtr& ERA, const CompVMat
 // EQ, the table holding the equivalence classes, before transitive closure
 // A, the associative table of ancestors
 // nea, the current number of absolute labels
-static void step4_algo6_eq_resolv(const CompVMatPtr& EQ, const int nea, CompVMatPtr A)
+// na, final number of absolute labels (background not counted)
+static void step4_algo6_eq_resolv(const CompVMatPtr& EQ, const int nea, CompVMatPtr A, int& na)
 {
 	const int* EQPtr = EQ->ptr<const int>();
 	int* APtr = A->ptr<int>();
-	int na = 0;
+	na = 0;
 
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Could be nea only instead of size");
 	for (int e = 1; e <= nea; ++e) {
@@ -202,6 +203,9 @@ static void step5_algo16_2st_abs_labeling(const CompVMatPtr& A, CompVMatPtr EA)
 	for (size_t j = 0; j < height; ++j) {
 		for (size_t i = 0; i < width; ++i) {
 			EAPtr[i] = APtr[EAPtr[i]];
+			if (EAPtr[i]) {
+				int kaka = 0;
+			}
 		}
 		EAPtr += stride;
 	}
@@ -215,7 +219,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 
 	/* Reset result */
 	result.reset();
-	result.background_label = kCompVConnectedComponentLabelingLSLBachgroundLabel;
+	result.label_background = kCompVConnectedComponentLabelingLSLBachgroundLabel;
 
 	CompVMatPtr ner; // the number of segments of ERi - black + white -
 	CompVMatPtr ER; //  an associative table of size w holding the relative labels er associated to Xi
@@ -268,7 +272,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 	/* Equivalence construction: step#2 */
 	int nea = 0; // the current number of absolute labels, update of EQ and ERAi
 	for (size_t j = 0; j < height; ++j) {
-		int* ner1 = ner->ptr<int>(0, j);
+		const int* ner1 = ner->ptr<const int>(0, j);
 		const int* ERiminus1 = j ? ER->ptr<const int>(j - 1) : nullptr;
 		const int* RLCi = RLC->ptr<const int>(j);
 		int* ERAiminus1 = j ? ERA->ptr<int>(j - 1) : nullptr;
@@ -298,10 +302,12 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 	}
 
 	/* Equivalence resolution: step#4 */
+	int na = 0; // final number of absolute labels
 	step4_algo6_eq_resolv(
 		EQ,
 		nea,
-		A
+		A,
+		na
 	);
 
 	/* Second absolute labeling: step#5 */
@@ -312,6 +318,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Directly write to result.labels");
 	result.labels = EA;
+	result.labels_count = (na + 1); // +1 for the background
 
 	return COMPV_ERROR_CODE_S_OK;
 }

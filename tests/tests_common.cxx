@@ -84,11 +84,11 @@ const std::string compv_tests_md5(const CompVMatPtr& mat)
 	if (mat && !mat->isEmpty()) {
 		CompVMd5Ptr md5;
 		COMPV_CHECK_CODE_ASSERT(CompVMd5::newObj(&md5), "Failed to create MD5 computer");
-		int32_t planes = static_cast<int32_t>(mat->planeCount());
-		for (int32_t plane = 0; plane < planes; ++plane) {
-			size_t planeHeight = mat->rows(plane);
-			size_t planeWidth = mat->rowInBytes(plane);
-			size_t planeStride = mat->strideInBytes(plane);
+		int planes = static_cast<int>(mat->planeCount());
+		for (int plane = 0; plane < planes; ++plane) {
+			const size_t planeHeight = mat->rows(plane);
+			const size_t planeWidth = mat->rowInBytes(plane);
+			const size_t planeStride = mat->strideInBytes(plane);
 			const uint8_t* planePtr = mat->ptr<const uint8_t>(0, 0, plane);
 			for (size_t i = 0; i < planeHeight; ++i) {
 				COMPV_CHECK_CODE_ASSERT(md5->update(planePtr, planeWidth));

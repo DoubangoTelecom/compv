@@ -20,14 +20,15 @@ static const struct compv_unittest_ccl {
 	size_t width;
 	size_t height;
 	size_t stride;
+	const char* md5;
 }
 COMPV_UNITTEST_CCL[] =
 {
-	{ TEST_TYPE_DIFFRACT, 1285, 1285, 1285 },
-	{ TEST_TYPE_DUMMY, 1285, 803, 1285 },
-	{ TEST_TYPE_LABYRINTH, 800, 600, 800 },
-	{ TEST_TYPE_CHECKER, 800, 600, 800 },
-	{ TEST_TYPE_SHAPE, 960, 720, 960 },
+	{ TEST_TYPE_DIFFRACT, 1285, 1285, 1285, "74b5978b6e1979eb7481983d4db0ccb0" },
+	{ TEST_TYPE_DUMMY, 1285, 803, 1285, "d7a95a99385e64a58b190334562698c4" },
+	{ TEST_TYPE_LABYRINTH, 800, 600, 800, "bd4bdfccb0ea70467421abf7d573b51d" },
+	{ TEST_TYPE_CHECKER, 800, 600, 800, "43e40b4efe74bc924fb9239d14f1387d" },
+	{ TEST_TYPE_SHAPE, 960, 720, 960, "dafbf5d4265ee4a1e1e44984e0e00e4f" },
 };
 static const size_t COMPV_UNITTEST_CCL_COUNT = sizeof(COMPV_UNITTEST_CCL) / sizeof(COMPV_UNITTEST_CCL[0]);
 
@@ -74,16 +75,13 @@ COMPV_ERROR_CODE ccl()
 
 	CompVMatPtr imageOut;
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<uint8_t>(&imageOut, height, width, stride));
-	imageOut->zero_all();
 
 	const int* labelsPtr = result.labels->ptr<const int>();
 	uint8_t* imageOutPtr = imageOut->ptr<uint8_t>();
 
 	for (size_t j = 0; j < height; ++j) {
 		for (size_t i = 0; i < width; ++i) {
-			if (labelsPtr[i] != result.background_label) {
-				imageOutPtr[i] = 0xff;
-			}
+			imageOutPtr[i] = (labelsPtr[i] != result.label_background) ? 0xff : 0x00;
 		}
 		labelsPtr += stride;
 		imageOutPtr += stride;
@@ -91,6 +89,10 @@ COMPV_ERROR_CODE ccl()
 
 	COMPV_CHECK_CODE_RETURN(compv_tests_write_to_file(imageOut, TEST_TYPE));
 #endif
+
+	COMPV_DEBUG_INFO("MD5: %s", compv_tests_md5(result.labels).c_str());
+
+	COMPV_CHECK_EXP_RETURN(std::string(test->md5).compare(compv_tests_md5(result.labels)) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "CCL MD5 mismatch");
 
 	return COMPV_ERROR_CODE_S_OK;
 }
