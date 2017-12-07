@@ -150,6 +150,12 @@
     <Filter Include="Source Files\features\orb\intrin\arm">
       <UniqueIdentifier>{11c353a8-cf64-42b6-955f-c247666755fa}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\ccl">
+      <UniqueIdentifier>{544aee36-99a3-4c01-8a28-af5f52ce78f2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ccl">
+      <UniqueIdentifier>{e501547a-6969-4255-85e1-69c00ee1821d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_core.cxx">
@@ -257,6 +263,9 @@
     <ClCompile Include="features\hough\intrin\arm\compv_core_feature_houghkht_intrin_neon.cxx">
       <Filter>Source Files\features\hough\intrin\arm</Filter>
     </ClCompile>
+    <ClCompile Include="ccl\compv_core_ccl_lsl.cxx">
+      <Filter>Source Files\ccl</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\core\compv_core.h">
@@ -360,6 +369,9 @@
     </ClInclude>
     <ClInclude Include="include\compv\core\calib\compv_core_calib_common.h">
       <Filter>Header Files\calib</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\core\ccl\compv_core_ccl_lsl.h">
+      <Filter>Header Files\ccl</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

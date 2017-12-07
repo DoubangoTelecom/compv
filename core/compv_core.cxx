@@ -13,10 +13,10 @@
 #include "compv/core/features/fast/compv_core_feature_fast_dete.h"
 #include "compv/core/features/orb/compv_core_feature_orb_dete.h"
 #include "compv/core/features/orb/compv_core_feature_orb_desc.h"
+#include "compv/core/ccl/compv_core_ccl_lsl.h"
 #include "compv/core/matchers/compv_core_matcher_bruteforce.h"
 #include "compv/core/video/compv_core_video_reader_ffmpeg.h"
 #include "compv/core/video/compv_core_video_writer_ffmpeg.h"
-#include "compv/base/compv_features.h"
 #include "compv/base/compv_matchers.h"
 #include "compv/base/compv_base.h"
 #include "compv/base/parallel/compv_mutex.h"
@@ -106,6 +106,12 @@ static const CompVMatcherFactory bruteForceFactory = {
 	CompVMatcherBruteForce::newObj
 };
 
+static const CompVConnectedComponentLabelingFactory lslFactory = {
+	COMPV_LSL_ID,
+	"LSL (Light Speed Labeling)",
+	CompVConnectedComponentLabelingLSL::newObj,
+};
+
 COMPV_ERROR_CODE CompVCore::init()
 {
 	if (s_bInitialized) {
@@ -133,7 +139,10 @@ COMPV_ERROR_CODE CompVCore::init()
 	COMPV_CHECK_CODE_RETURN(err = CompVFeature::addFactory(&houghKhtFactory), "Failed to add Hough kht line detector factory");
 
 	// Matchers
-	COMPV_CHECK_CODE_BAIL(err = CompVMatcher::addFactory(&bruteForceFactory), "Failed to bruteforce matcher factory");
+	COMPV_CHECK_CODE_BAIL(err = CompVMatcher::addFactory(&bruteForceFactory), "Failed to add bruteforce matcher factory");
+
+	// Connected Component Labeling
+	COMPV_CHECK_CODE_BAIL(err = CompVConnectedComponentLabeling::addFactory(&lslFactory), "Failed to add Light Speed Labeling factory");
 
 	// Video Readers and Writers
 #if defined(HAVE_FFMPEG)

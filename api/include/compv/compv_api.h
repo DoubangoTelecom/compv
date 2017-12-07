@@ -13,6 +13,7 @@
 #include <compv/base/compv_box.h>
 #include "compv/base/compv_box_interestpoint.h"
 #include <compv/base/compv_buffer.h>
+#include <compv/base/compv_ccl.h>
 #include <compv/base/compv_cpu.h>
 #include <compv/base/compv_debug.h>
 #include <compv/base/compv_features.h>

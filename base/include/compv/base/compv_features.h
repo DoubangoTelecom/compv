@@ -133,7 +133,7 @@ protected:
 	CompVFeatureBase(int id);
 public:
 	virtual ~CompVFeatureBase();
-	COMPV_INLINE int id() {
+	COMPV_INLINE int id()const {
 		return m_nId;
 	}
 private:

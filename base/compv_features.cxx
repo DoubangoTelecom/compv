@@ -29,7 +29,7 @@ CompVFeature::~CompVFeature()
 
 COMPV_ERROR_CODE CompVFeature::addFactory(const CompVFeatureFactory* factory)
 {
-	COMPV_CHECK_EXP_RETURN(factory == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(!factory, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	if (s_Factories.find(factory->id) != s_Factories.end()) {
 		const CompVFeatureFactory* old = s_Factories.find(factory->id)->second;
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Feature factory with id = %d already exist and will be replaced old name=%s, new name=%s", factory->id, old->name, factory->name);
@@ -43,7 +43,7 @@ const CompVFeatureFactory* CompVFeature::findFactory(int deteId)
 {
 	std::map<int, const CompVFeatureFactory*>::const_iterator it = s_Factories.find(deteId);
 	if (it == s_Factories.end()) {
-		return NULL;
+		return nullptr;
 	}
 	return it->second;
 }

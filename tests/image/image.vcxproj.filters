@@ -56,6 +56,9 @@
     <ClCompile Include="split.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ccl.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\tests_common.h">
