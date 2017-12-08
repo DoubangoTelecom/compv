@@ -20,10 +20,10 @@ Some literature about LSL:
 
 COMPV_NAMESPACE_BEGIN()
 
-static const int kCompVConnectedComponentLabelingLSLBachgroundLabel = 0; // Must be zero because of calloc()
+static const compv_ccl_indice_t kCompVConnectedComponentLabelingLSLBachgroundLabel = 0; // Must be zero because of calloc()
 
 CompVConnectedComponentLabelingLSL::CompVConnectedComponentLabelingLSL()
-	:CompVConnectedComponentLabeling(static_cast<int>(COMPV_LSL_ID))
+	:CompVConnectedComponentLabeling(static_cast<compv_ccl_indice_t>(COMPV_LSL_ID))
 {
 
 }
@@ -56,15 +56,15 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::set(int id, const void* val
 // RLCi, a table holding the run length coding of segments of the line Xi
 // ner, the number of segments of ERi – black + white
 template<typename T>
-static void step1_algo13_segment_RLC(const T* Xi, int* ERi, int* RLCi, int* ner1, const int w)
+static void step1_algo13_segment_RLC(const T* Xi, compv_ccl_indice_t* ERi, compv_ccl_indice_t* RLCi, compv_ccl_indice_t* ner1, const compv_ccl_indice_t w)
 {
-	int x1 = 0; // previous value of X
-	int f = 0; //  front detection
-	int b = 0; // right border compensation
-	int er = 0; // a relative label
-	int x0;
+	compv_ccl_indice_t x1 = 0; // previous value of X
+	compv_ccl_indice_t f = 0; //  front detection
+	compv_ccl_indice_t b = 0; // right border compensation
+	compv_ccl_indice_t er = 0; // a relative label
+	compv_ccl_indice_t x0;
 
-	for (int i = 0; i < w; ++i) {
+	for (compv_ccl_indice_t i = 0; i < w; ++i) {
 		x0 = Xi[i] & 1; // Xi must be binary (allowed values: 0x01, 0xff, 0x00)
 		f = x0 ^ x1;
 		if (f != 0) {
@@ -91,35 +91,27 @@ static void step1_algo13_segment_RLC(const T* Xi, int* ERi, int* RLCi, int* ner1
 // ERAi, an associative table holding the association between er and ea: ea = ERAi[er]
 // ner, the number of segments of ERi - black + white
 // nea the current number of absolute labels, update of EQ and ERAi
-static void step2_algo14_equivalence_build(const int* ERiminus1, const int* RLCi, const int ner, const int w, int* ERAiminus1, int* ERAi, int* EQ, int* nea1)
+static void step2_algo14_equivalence_build(const compv_ccl_indice_t* ERiminus1, const compv_ccl_indice_t* RLCi, const compv_ccl_indice_t ner, const compv_ccl_indice_t w, compv_ccl_indice_t* ERAiminus1, compv_ccl_indice_t* ERAi, compv_ccl_indice_t* EQ, compv_ccl_indice_t* nea1)
 {
-	const int wminus1 = (w - 1);
-	int nea = *nea1;
-	for (int er = 1; er < ner; er += 2) {
-		int j0 = RLCi[er - 1];
-		int j1 = RLCi[er];
+	const compv_ccl_indice_t wminus1 = (w - 1);
+	compv_ccl_indice_t nea = *nea1;
+	for (compv_ccl_indice_t er = 1; er < ner; er += 2) {
+		compv_ccl_indice_t j0 = RLCi[er - 1];
+		compv_ccl_indice_t j1 = RLCi[er];
 		// [check extension in case of 8-connect algorithm]
-		if (j0 > 0) {
-			j0 = j0 - 1;
-		}
-		if (j1 < wminus1) {
-			j1 = j1 + 1;
-		}
-		int er0 = ERiminus1 ? ERiminus1[j0] : 0;
-		int er1 = ERiminus1 ? ERiminus1[j1] : 0;
+		j0 -= (j0 > 0);		
+		j1 += (j1 < wminus1);
+		compv_ccl_indice_t er0 = ERiminus1 ? ERiminus1[j0] : 0;
+		compv_ccl_indice_t er1 = ERiminus1 ? ERiminus1[j1] : 0;
 		// [check label parity: segments are odd]
-		if (!(er0 & 1)) { // er0 is even?
-			er0 = er0 + 1;
-		}
-		if (!(er1 & 1)) { // er1 is even?
-			er1 = (er1 - 1); // sub_sat()
-		}
+		er0 += ((er0 & 1) ^ 1);
+		er1 -= ((er1 & 1) ^ 1);
 		if (er1 >= er0) {
-			int ea = ERAiminus1[er0];
-			int a = EQ[ea]; // FindRoot(ea)
-			for (int erk = er0 + 2; erk <= er1; erk += 2) { // TODO(dmi): step 1 or 2 ?
-				int eak = ERAiminus1[erk];
-				int ak = EQ[eak]; // FindRoot(eak)
+			compv_ccl_indice_t ea = ERAiminus1[er0];
+			compv_ccl_indice_t a = EQ[ea]; // FindRoot(ea)
+			for (compv_ccl_indice_t erk = er0 + 2; erk <= er1; erk += 2) {
+				const compv_ccl_indice_t eak = ERAiminus1[erk];
+				const compv_ccl_indice_t ak = EQ[eak]; // FindRoot(eak)
 				// [min extraction and propagation]
 				if (a < ak) {
 					EQ[eak] = a;
@@ -147,22 +139,19 @@ static void step2_algo14_equivalence_build(const int* ERiminus1, const int* RLCi
 // A, the associative table of ancestors
 // nea, the current number of absolute labels
 // na, final number of absolute labels (background not counted)
-static void step4_algo6_eq_resolv(const CompVMatPtr& EQ, const int nea, CompVMatPtr A, int& na)
+static void step4_algo6_eq_resolv(const CompVMatPtr& EQ, const compv_ccl_indice_t nea, CompVMatPtr A, compv_ccl_indice_t& na)
 {
-	const int* EQPtr = EQ->ptr<const int>();
-	int* APtr = A->ptr<int>();
+	const compv_ccl_indice_t* EQPtr = EQ->ptr<const compv_ccl_indice_t>();
+	compv_ccl_indice_t* APtr = A->ptr<compv_ccl_indice_t>();
 	na = 0;
 
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Could be nea only instead of size");
-	for (int e = 1; e <= nea; ++e) {
-		const int eq = EQPtr[e];
+	for (compv_ccl_indice_t e = 1; e <= nea; ++e) {
+		const compv_ccl_indice_t eq = EQPtr[e];
 		COMPV_ASSERT(eq <= nea); // FIXME(dmi): remove
-		if (eq != e) {
-			APtr[e] = APtr[eq];
-		}
-		else {
-			APtr[e] = ++na;
-		}
+		APtr[e] = (eq != e)
+			? APtr[eq]
+			: ++na;
 	}
 }
 
@@ -174,19 +163,19 @@ static COMPV_ERROR_CODE build_all_labels(const CompVMatPtr& A, const CompVMatPtr
 	const size_t ERA_stride = ERA->stride();
 
 	// Create EA using same size and stride as ER
-	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<int>(EA, ER_height, ER_width, ER_stride));
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_ccl_indice_t>(EA, ER_height, ER_width, ER_stride));
 
-	const int* APtr = A->ptr<const int>();
-	const int* ERAPtr = ERA->ptr<const int>();
-	const int* ERPtr = ER->ptr<int>();
-	int* EAPtr = (*EA)->ptr<int>();
+	const compv_ccl_indice_t* APtr = A->ptr<const compv_ccl_indice_t>();
+	const compv_ccl_indice_t* ERAPtr = ERA->ptr<const compv_ccl_indice_t>();
+	const compv_ccl_indice_t* ERPtr = ER->ptr<compv_ccl_indice_t>();
+	compv_ccl_indice_t* EAPtr = (*EA)->ptr<compv_ccl_indice_t>();
 
 	/* #3 and #5 merged */
 	// step #3: First absolute labeling
 	// step #5: Second absolute labeling
 	for (size_t j = 0; j < ER_height; ++j) {
 		for (size_t i = 0; i < ER_width; ++i) {
-			COMPV_ASSERT(A->cols() > ERAPtr[ERPtr[i]]); // FIXME(dmi): remove
+			COMPV_ASSERT(static_cast<compv_ccl_indice_t>(A->cols()) > ERAPtr[ERPtr[i]]); // FIXME(dmi): remove
 			EAPtr[i] = APtr[ERAPtr[ERPtr[i]]];
 		}
 		EAPtr += ER_stride;
@@ -220,71 +209,74 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 	const size_t stride = binar->stride();
 	const size_t __ner_max = ((width + 1) >> 1); // full dashed row
 
-	COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int>(&ER, height, width));
-	COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int>(&RLC, height, __ner_max));
-	COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int>(&ner, 1, height));
-	COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int>(&EQ, 1, (height * (width >> 2))));
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<compv_ccl_indice_t>(&ER, height, width));
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<compv_ccl_indice_t>(&RLC, height, __ner_max));
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<compv_ccl_indice_t>(&ner, 1, height));
 
 	/* Relative segment labeling: step#1 */
-	int ner_max = 0;
+	compv_ccl_indice_t ner_max = 0, ner_sum = 0;
 	for (size_t j = 0; j < height; ++j) {
 		const uint8_t* Xi = binar->ptr<const uint8_t>(j);
-		int* ERi = ER->ptr<int>(j);
-		int* RLCi = RLC->ptr<int>(j);
-		int* ner1 = ner->ptr<int>(0, j);
+		compv_ccl_indice_t* ERi = ER->ptr<compv_ccl_indice_t>(j);
+		compv_ccl_indice_t* RLCi = RLC->ptr<compv_ccl_indice_t>(j);
+		compv_ccl_indice_t* ner1 = ner->ptr<compv_ccl_indice_t>(0, j);
 		step1_algo13_segment_RLC<uint8_t>(
 			Xi,
 			ERi,
 			RLCi,
 			ner1,
-			static_cast<int>(width)
+			static_cast<compv_ccl_indice_t>(width)
 			);
 		if (ner_max < *ner1) {
 			ner_max = *ner1;
 		}
+		ner_sum += *ner1;
 	}
 	
 	/* Create ERA and init with zeros */
 	{
-		COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int>(&ERA, height, ner_max));
+		COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<compv_ccl_indice_t>(&ERA, height, ner_max));
 		COMPV_CHECK_CODE_RETURN(ERA->zero_all());
 	}
 
-	/* Init EQ with 0...n (itoa) */
+	/* Create EQ and init with 0...n (itoa) */
 	{
-		int* EQPtr = EQ->ptr<int>();
-		const int n = static_cast<int>(EQ->cols());
-		for (int i = 0; i < n; ++i) {
+		size_t EQ_count = COMPV_MATH_MIN(static_cast<size_t>(ner_sum), (height * (width >> 2)));
+		COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<compv_ccl_indice_t>(&EQ, 1, EQ_count));
+		compv_ccl_indice_t* EQPtr = EQ->ptr<compv_ccl_indice_t>();
+		const compv_ccl_indice_t n = static_cast<compv_ccl_indice_t>(EQ_count);
+		for (compv_ccl_indice_t i = 0; i < n; ++i) {
 			EQPtr[i] = i;
 		}
 	}
 
 	/* Equivalence construction: step#2 */
-	int nea = 0; // the current number of absolute labels, update of EQ and ERAi
+	compv_ccl_indice_t nea = 0; // the current number of absolute labels, update of EQ and ERAi
 	for (size_t j = 0; j < height; ++j) {
-		const int* ner1 = ner->ptr<const int>(0, j);
-		const int* ERiminus1 = j ? ER->ptr<const int>(j - 1) : nullptr;
-		const int* RLCi = RLC->ptr<const int>(j);
-		int* ERAiminus1 = j ? ERA->ptr<int>(j - 1) : nullptr;
-		int* ERAi = ERA->ptr<int>(j);
+		const compv_ccl_indice_t* ner1 = ner->ptr<const compv_ccl_indice_t>(0, j);
+		const compv_ccl_indice_t* ERiminus1 = j ? ER->ptr<const compv_ccl_indice_t>(j - 1) : nullptr;
+		const compv_ccl_indice_t* RLCi = RLC->ptr<const compv_ccl_indice_t>(j);
+		compv_ccl_indice_t* ERAiminus1 = j ? ERA->ptr<compv_ccl_indice_t>(j - 1) : nullptr;
+		compv_ccl_indice_t* ERAi = ERA->ptr<compv_ccl_indice_t>(j);
 		step2_algo14_equivalence_build(
 			ERiminus1,
 			RLCi,
 			*ner1,
-			static_cast<int>(width),
+			static_cast<compv_ccl_indice_t>(width),
 			ERAiminus1,
 			ERAi,
-			EQ->ptr<int>(),
+			EQ->ptr<compv_ccl_indice_t>(),
 			&nea
 		);
 	}
+	COMPV_ASSERT(nea < ner_sum); // FIXME(dmi): remove
 
 	/* Create A and init first element with zero (because bacground label is equal to zero) */
-	COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int>(&A, 1, (nea + 1)));
-	*A->ptr<int>(0, 0) = 0; // other values will be initialzed in step4_algo6_eq_resolv
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<compv_ccl_indice_t>(&A, 1, (nea + 1)));
+	*A->ptr<compv_ccl_indice_t>(0, 0) = 0; // other values will be initialzed in step4_algo6_eq_resolv
 
 	/* Equivalence resolution: step#4 */
-	int na = 0; // final number of absolute labels
+	compv_ccl_indice_t na = 0; // final number of absolute labels
 	step4_algo6_eq_resolv(
 		EQ,
 		nea,

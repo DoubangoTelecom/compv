@@ -76,7 +76,7 @@ COMPV_ERROR_CODE ccl()
 	CompVMatPtr imageOut;
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<uint8_t>(&imageOut, height, width, stride));
 
-	const int* labelsPtr = result.labels->ptr<const int>();
+	const compv_ccl_indice_t* labelsPtr = result.labels->ptr<const compv_ccl_indice_t>();
 	uint8_t* imageOutPtr = imageOut->ptr<uint8_t>();
 
 	for (size_t j = 0; j < height; ++j) {

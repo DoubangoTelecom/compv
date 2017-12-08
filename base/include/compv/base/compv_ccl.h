@@ -20,6 +20,8 @@ COMPV_NAMESPACE_BEGIN()
 
 COMPV_OBJECT_DECLARE_PTRS(ConnectedComponentLabeling)
 
+typedef int32_t compv_ccl_indice_t; /* use to hold max(width, height) */
+
 struct CompVConnectedComponentLabelingFactory {
 	int id;
 	const char* name;
@@ -66,8 +68,8 @@ enum {
 
 struct CompVConnectedComponentLabelingResult {
 	CompVMatPtr labels;
-	int labels_count;
-	int label_background;
+	compv_ccl_indice_t labels_count;
+	compv_ccl_indice_t label_background;
 	void reset() {
 		labels = nullptr;
 		labels_count = 0;

@@ -25,7 +25,7 @@ static COMPV_ERROR_CODE FIXME_extract_label(const CompVConnectedComponentLabelin
 	CompVMatPtr imageOut;
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<uint8_t>(image, height, width, stride));
 
-	const int* labelsPtr = ccl_result.labels->ptr<const int>();
+	const compv_ccl_indice_t* labelsPtr = ccl_result.labels->ptr<const compv_ccl_indice_t>();
 	uint8_t* imageOutPtr = (*image)->ptr<uint8_t>();
 
 	for (size_t j = 0; j < height; ++j) {
@@ -100,7 +100,7 @@ compv_main()
 				COMPV_DEBUG_INFO_EX(TAG_SAMPLE, "label = %d", __label);
 
 				COMPV_CHECK_CODE_BAIL(err = window->beginDraw());
-				COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->cover()->drawImage(blob/*imageBinar*/));
+				COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->cover()->drawImage(/*blob*/imageBinar));
 				COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->blit());
 			bail:
 				COMPV_CHECK_CODE_NOP(err = window->endDraw()); // Make sure 'endDraw()' will be called regardless the result
