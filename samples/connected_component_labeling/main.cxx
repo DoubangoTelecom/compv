@@ -93,14 +93,14 @@ compv_main()
 			if (CompVDrawing::isLoopRunning()) {
 				COMPV_CHECK_CODE_RETURN(CompVImage::convertGrayscale(image, &imageBinar));
 				COMPV_CHECK_CODE_RETURN(CompVImageThreshold::otsu(imageBinar, threshold, &imageBinar));
-				//COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 1285, 1285, 1285, "C:/Projects/GitHub/data/morpho/diffract_1285x1285_gray.yuv", &imageBinar));
+				COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 1285, 1285, 1285, "C:/Projects/GitHub/data/morpho/diffract_1285x1285_gray.yuv", &imageBinar));
 				//COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 1285, 803, 1285, "C:/Projects/GitHub/data/morpho/dummy_1285x803_gray.yuv", &imageBinar));
 				COMPV_CHECK_CODE_RETURN(ccl_obj->process(imageBinar, ccl_result));
 				COMPV_CHECK_CODE_RETURN(FIXME_extract_label(ccl_obj, ccl_result, (++__label % ccl_result.labels_count), &blob));
 				COMPV_DEBUG_INFO_EX(TAG_SAMPLE, "label = %d", __label);
 
 				COMPV_CHECK_CODE_BAIL(err = window->beginDraw());
-				COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->cover()->drawImage(/*blob*/imageBinar));
+				COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->cover()->drawImage(blob/*imageBinar*/));
 				COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->blit());
 			bail:
 				COMPV_CHECK_CODE_NOP(err = window->endDraw()); // Make sure 'endDraw()' will be called regardless the result

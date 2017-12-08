@@ -51,36 +51,31 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::set(int id, const void* val
 
 // Relative segment labeling: step#1
 // Algorithm 12: LSL segment detection STD
-// Xi: a binary line of width w
+// Xi: a binary line of width w (allowed values: 0x01, 0xff, 0x00)
 // ERi, an associative table of size w holding the relative labels er associated to Xi
 // RLCi, a table holding the run length coding of segments of the line Xi
 // ner, the number of segments of ERi – black + white
 template<typename T>
 static void step1_algo13_segment_RLC(const T* Xi, compv_ccl_indice_t* ERi, compv_ccl_indice_t* RLCi, compv_ccl_indice_t* ner1, const compv_ccl_indice_t w)
 {
-	compv_ccl_indice_t x1 = 0; // previous value of X
-	compv_ccl_indice_t f = 0; //  front detection
-	compv_ccl_indice_t b = 0; // right border compensation
-	compv_ccl_indice_t er = 0; // a relative label
-	compv_ccl_indice_t x0;
+	/* For i = 0 */
+	compv_ccl_indice_t b = Xi[0] & 1; // right border compensation
+	compv_ccl_indice_t er = b; // a relative label
+	RLCi[0] = 0;
+	ERi[0] = er;
 
-	for (compv_ccl_indice_t i = 0; i < w; ++i) {
-		x0 = Xi[i] & 1; // Xi must be binary (allowed values: 0x01, 0xff, 0x00)
-		f = x0 ^ x1;
-		if (f != 0) {
+	/* i = 1....w */
+	for (compv_ccl_indice_t i = 1; i < w; ++i) {
+		if (Xi[i] ^ Xi[i - 1]) {
 			RLCi[er] = (i - b);
-			b = b ^ 1; // b ^ f
-			er = er + 1;
+			b ^= 1; // b ^ f
+			++er;
 			COMPV_ASSERT(er < (w >> 1)); // FIXME(dmi): remove
 		}
 		ERi[i] = er;
-		x1 = x0;
 	}
-	x0 = 0;
-	f = x0 ^ x1;
 	RLCi[er] = (w - b);
-	er = er + f;
-	*ner1 = er;
+	*ner1 = er + (Xi[w - 1] & 1);
 }
 
 // 2.2 Equivalence construction: step#2
@@ -126,8 +121,7 @@ static void step2_algo14_equivalence_build(const compv_ccl_indice_t* ERiminus1, 
 		}
 		else {
 			// [new label]
-			nea = nea + 1;
-			ERAi[er] = nea;
+			ERAi[er] = ++nea;
 		}
 	}
 
