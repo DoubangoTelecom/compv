@@ -61,6 +61,7 @@ CompVEdgeDeteCanny::CompVEdgeDeteCanny(float tLow, float tHigh, size_t kernSize)
 	, m_nKernelSize(kernSize == 3 ? 3 : 5)
 	, m_fThresholdLow(tLow)
 	, m_fThresholdHigh(tHigh)
+	, m_nThresholdType(COMPV_CANNY_THRESHOLD_TYPE_COMPARE_TO_GRADIENT)
 {
 
 }
@@ -77,6 +78,13 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::set(int id, const void* valuePtr, size_t va
 {
 	COMPV_CHECK_EXP_RETURN(!valuePtr || !valueSize, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	switch (id) {
+	case COMPV_CANNY_SET_INT_THRESHOLD_TYPE: {
+		COMPV_CHECK_EXP_RETURN(valueSize != sizeof(int32_t), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		const int32_t nThresholdType = *reinterpret_cast<const int32_t*>(valuePtr);
+		COMPV_CHECK_EXP_RETURN(nThresholdType != COMPV_CANNY_THRESHOLD_TYPE_PERCENT_OF_MEAN && nThresholdType != COMPV_CANNY_THRESHOLD_TYPE_COMPARE_TO_GRADIENT, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		m_nThresholdType = nThresholdType;
+		return COMPV_ERROR_CODE_S_OK;
+	}
 	case COMPV_CANNY_SET_FLT32_THRESHOLD_LOW: {
 		COMPV_CHECK_EXP_RETURN(valueSize != sizeof(compv_float32_t) || *reinterpret_cast<const compv_float32_t*>(valuePtr) <= 0.f, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 		m_fThresholdLow = *reinterpret_cast<const compv_float32_t*>(valuePtr);
@@ -113,11 +121,12 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::set(int id, const void* valuePtr, size_t va
 
 COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVMatPtr& image, CompVMatPtrPtr edges, CompVMatPtrPtr directions COMPV_DEFAULT(NULL)) /*Overrides(CompVEdgeDete)*/
 {
-	COMPV_CHECK_EXP_RETURN(!image || image->subType() != COMPV_SUBTYPE_PIXELS_Y || !edges, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Input image is null or not in grayscale format");
+	COMPV_CHECK_EXP_RETURN(!image || image->planeCount() != 1 || image->elmtInBytes() != sizeof(uint8_t) || !edges, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Input image is null or invalid format");
 	COMPV_CHECK_EXP_RETURN(m_fThresholdLow >= m_fThresholdHigh, COMPV_ERROR_CODE_E_INVALID_STATE, "Invalid state: m_fThresholdLow >= m_fThresholdHigh");
 
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
-	CompVMatPtr gradDir = NULL;
+	CompVMatPtr gradDir = nullptr;
+	const bool bThresholdIsPercentOfMean = (m_nThresholdType == COMPV_CANNY_THRESHOLD_TYPE_PERCENT_OF_MEAN);
 
 	// Force memory realloc if image size changes
 	if (!m_pGx || !m_pGy || !m_pG || !m_pNms || image->cols() != m_nImageWidth || image->rows() != m_nImageHeight || image->stride() != m_nImageStride) {
@@ -173,7 +182,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVMatPtr& image, CompVMatP
 		const size_t countLast = countAny + (m_nImageHeight % threadsCount);
 		const size_t countAnyTimesStride = countAny * m_nImageStride;
 		const uint8_t* inPtr_ = image->ptr<const uint8_t>();
-		uint32_t* sums = reinterpret_cast<uint32_t*>(CompVMem::malloc(threadsCount * sizeof(uint32_t)));
+		uint32_t* sums = bThresholdIsPercentOfMean ? reinterpret_cast<uint32_t*>(CompVMem::malloc(threadsCount * sizeof(uint32_t))) : nullptr;
 		int16_t* outPtrGx_ = m_pGx;
 		int16_t* outPtrGy_ = m_pGy;
 		uint16_t* outPtrG_ = m_pG;
@@ -181,7 +190,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVMatPtr& image, CompVMatP
 		//!\\ Important: Our tests showed (both x86 and arm)d that it's faster to alloc temp memory for each thread rather than sharing global one -> false sharing issue.
 		// This is an issue for the convolution only because there is no way to make the writing cache-friendly.
 		// No such issue when multithreading 'CompVMathConvlt::convlt1' (perf tests done), so don't try to change the function.
-		auto funcPtr = [&](const uint8_t* ptrIn, int16_t* ptrOutGx, int16_t* ptrOutGy, uint16_t* ptrOutG, uint32_t* ptrSum, size_t h, size_t threadIdx) -> COMPV_ERROR_CODE {
+		auto funcPtr = [&](const uint8_t* ptrIn, int16_t* ptrOutGx, int16_t* ptrOutGy, uint16_t* ptrOutG, size_t h, size_t threadIdx) -> COMPV_ERROR_CODE {
 			int16_t* imgTmp = reinterpret_cast<int16_t*>(CompVMem::malloc(CompVMathConvlt::outputSizeInBytes<int16_t>(m_nImageStride, h + rowsOverlapCount))); // local alloc to avoid false sharing
 			COMPV_CHECK_EXP_RETURN(!imgTmp, COMPV_ERROR_CODE_E_OUT_OF_MEMORY, "Failed to alloc imgTmp");
 			const bool first = (threadIdx == 0);
@@ -192,29 +201,36 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVMatPtr& image, CompVMatP
 			CompVMathConvlt::convlt1Hz<uint8_t, int16_t, int16_t>(ptrIn - padding, imgTmp, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelVt, m_nKernelSize, COMPV_BORDER_TYPE_ZERO);
 			CompVMathConvlt::convlt1Vt<int16_t, int16_t, int16_t>(imgTmp, ptrOutGy - padding, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelHz, m_nKernelSize, first ? COMPV_BORDER_TYPE_ZERO : COMPV_BORDER_TYPE_IGNORE, last ? COMPV_BORDER_TYPE_ZERO : COMPV_BORDER_TYPE_IGNORE);
 			CompVMem::free((void**)&imgTmp);
-			// Gradient magnitude = (abs(gx) + abs(gy))
+			// Gradient magnitude = (abs(gx) + abs(gy)) - L1
 			COMPV_CHECK_CODE_RETURN((CompVMathUtils::sumAbs<int16_t, uint16_t>(ptrOutGx - padding, ptrOutGy - padding, ptrOutG - padding, m_nImageWidth, h + rowsOverlapCount, m_nImageStride)));
 			// Sum of G, use to compute mean
-			uint32_t sum_ = 0;
-			COMPV_CHECK_CODE_RETURN((CompVMathUtils::sum<uint8_t, uint32_t>(ptrIn, m_nImageWidth, h, m_nImageStride, sum_)));
-			*ptrSum = sum_;
+			if (bThresholdIsPercentOfMean) {
+				uint32_t sum_ = 0;
+				COMPV_CHECK_CODE_RETURN((CompVMathUtils::sum<uint8_t, uint32_t>(ptrIn, m_nImageWidth, h, m_nImageStride, sum_)));
+				sums[threadIdx] = sum_;
+			}
 			return COMPV_ERROR_CODE_S_OK;
 		};
 
-		COMPV_CHECK_EXP_BAIL(!sums, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY), "Failed to alloc sums memory");
+		COMPV_CHECK_EXP_BAIL(bThresholdIsPercentOfMean && !sums, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY), "Failed to alloc sums memory");
 		taskIds.reserve(threadsCount);
 		// convolution + gradient
 		for (size_t threadIdx = 0, index = 0; threadIdx < threadsCount; ++threadIdx, index += countAnyTimesStride) {
-			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, &inPtr_[index], &outPtrGx_[index], &outPtrGy_[index], &outPtrG_[index], &sums[threadIdx],
+			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, &inPtr_[index], &outPtrGx_[index], &outPtrGy_[index], &outPtrG_[index],
 				(threadIdx == (threadsCount - 1)) ? countLast : countAny, threadIdx),
 				taskIds));
 			;
 		}
 		// mean
-		sum = 0;
-		for (size_t threadIdx = 0; threadIdx < threadsCount; ++threadIdx) {
-			COMPV_CHECK_CODE_RETURN(threadDisp->waitOne(taskIds[threadIdx]));
-			sum += sums[threadIdx];
+		if (bThresholdIsPercentOfMean) {
+			sum = 0;
+			for (size_t threadIdx = 0; threadIdx < threadsCount; ++threadIdx) {
+				COMPV_CHECK_CODE_RETURN(threadDisp->waitOne(taskIds[threadIdx]));
+				sum += sums[threadIdx];
+			}
+		}
+		else {
+			COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
 		}
 bail:
 		CompVMem::free(reinterpret_cast<void**>(&sums));
@@ -223,16 +239,28 @@ bail:
 		// Convolution (gx and gy)
 		COMPV_CHECK_CODE_RETURN((CompVMathConvlt::convlt1<uint8_t, int16_t, int16_t>(image->ptr<const uint8_t>(), m_nImageWidth, m_nImageHeight, m_nImageStride, m_pcKernelVt, m_pcKernelHz, m_nKernelSize, m_pGx)));
 		COMPV_CHECK_CODE_RETURN((CompVMathConvlt::convlt1<uint8_t, int16_t, int16_t>(image->ptr<const uint8_t>(), m_nImageWidth, m_nImageHeight, m_nImageStride, m_pcKernelHz, m_pcKernelVt, m_nKernelSize, m_pGy)));
-		// Gradient mag using (g = abs(gx) + abs(gy))
+		// Gradient mag using (g = abs(gx) + abs(gy)) - L1
 		COMPV_CHECK_CODE_RETURN((CompVMathUtils::sumAbs<int16_t, uint16_t>(m_pGx, m_pGy, m_pG, m_nImageWidth, m_nImageHeight, m_nImageStride)));
 		// Sum of gradients used to compute mean
-		COMPV_CHECK_CODE_RETURN((CompVMathUtils::sum<uint8_t, uint32_t>(image->ptr<const uint8_t>(), m_nImageWidth, m_nImageHeight, m_nImageStride, sum)));
+		if (bThresholdIsPercentOfMean) {
+			COMPV_CHECK_CODE_RETURN((CompVMathUtils::sum<uint8_t, uint32_t>(image->ptr<const uint8_t>(), m_nImageWidth, m_nImageHeight, m_nImageStride, sum)));
+		}
 	}
 
-	uint8_t mean = static_cast<uint8_t>(sum / static_cast<uint32_t>(m_nImageWidth * m_nImageHeight));
-	mean = COMPV_MATH_CLIP3(1, 255, mean);
-	uint16_t tLow = static_cast<uint16_t>(mean * m_fThresholdLow);
-	uint16_t tHigh = static_cast<uint16_t>(mean * m_fThresholdHigh);
+	/* Compute tLow and tHigh */
+	uint16_t tLow, tHigh;
+	if (bThresholdIsPercentOfMean) { /* COMPV_CANNY_THRESHOLD_TYPE_PERCENT_OF_MEAN */
+		uint8_t mean = static_cast<uint8_t>(sum / static_cast<uint32_t>(m_nImageWidth * m_nImageHeight));
+		mean = COMPV_MATH_CLIP3(1, 255, mean);
+		tLow = static_cast<uint16_t>(mean * m_fThresholdLow);
+		tHigh = static_cast<uint16_t>(mean * m_fThresholdHigh);
+	}
+	else { /* COMPV_CANNY_THRESHOLD_TYPE_COMPARE_TO_GRADIENT */
+		// For L1 gradient use thresholds unmodified (this is the one used above to compute Gx and Gy)
+		// For L2 gradient square the thresholds
+		tLow = static_cast<uint16_t>(COMPV_MATH_CLIP3(1.f, 65535.f, m_fThresholdLow));
+		tHigh = static_cast<uint16_t>(COMPV_MATH_CLIP3(1.f, 65535.f, m_fThresholdHigh));
+	}
 	tLow = COMPV_MATH_MAX(1, tLow);
 	tHigh = COMPV_MATH_MAX(tLow + 2, tHigh);
 

@@ -2,19 +2,17 @@
 
 using namespace compv;
 
-#define CAMERA_IDX			0
-#define CAMERA_WIDTH		1280
-#define CAMERA_HEIGHT		720
-#define CAMERA_FPS			25
-#define CAMERA_SUBTYPE		COMPV_SUBTYPE_PIXELS_YUY2
-#define CAMERA_AUTOFOCUS	true
+#define CAMERA_IDX				0
+#define CAMERA_WIDTH			1280
+#define CAMERA_HEIGHT			720
+#define CAMERA_FPS				25
+#define CAMERA_SUBTYPE			COMPV_SUBTYPE_PIXELS_YUY2
+#define CAMERA_AUTOFOCUS		true
 
-#define WINDOW_WIDTH		1280
-#define WINDOW_HEIGHT		720
+#define WINDOW_WIDTH			1280
+#define WINDOW_HEIGHT			720
 
-#define CANNY_LOW			0.83f
-#define CANNY_HIGH			CANNY_LOW*2.f
-#define CANNY_KERNEL_SIZE	3
+#define CANNY_THRESHOLD_TYPE	COMPV_CANNY_THRESHOLD_TYPE_COMPARE_TO_GRADIENT
 
 #define HOUGH_ID							COMPV_HOUGHKHT_ID
 #define HOUGH_RHO							1.0f // "rho-delta" (half-pixel for more accuracy - high cpu usage)
@@ -45,6 +43,7 @@ compv_main()
 		CompVMatPtr imageGray, edges;
 		CompVHoughLineVector linesPolor;
 		CompVLineFloat32Vector linesCartesian;
+		double threshold;
 
 		// Change debug level to INFO before starting
 		CompVDebugMgr::setLevel(COMPV_DEBUG_LEVEL_INFO);
@@ -57,7 +56,8 @@ compv_main()
 		COMPV_CHECK_CODE_BAIL(err = window->addSingleLayerSurface(&singleSurfaceLayer));
 
 		// Create Canny edge detector
-		COMPV_CHECK_CODE_BAIL(err = CompVEdgeDete::newObj(&ptrCanny, COMPV_CANNY_ID, CANNY_LOW, CANNY_HIGH, CANNY_KERNEL_SIZE));
+		COMPV_CHECK_CODE_BAIL(err = CompVEdgeDete::newObj(&ptrCanny, COMPV_CANNY_ID));
+		COMPV_CHECK_CODE_BAIL(err = ptrCanny->setInt(COMPV_CANNY_SET_INT_THRESHOLD_TYPE, CANNY_THRESHOLD_TYPE));
 
 		// Create HoughLines processor and set options
 		COMPV_CHECK_CODE_BAIL(err = CompVHough::newObj(&ptrHough, HOUGH_ID,
@@ -100,6 +100,9 @@ compv_main()
 			COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 			if (CompVDrawing::isLoopRunning()) {
 				COMPV_CHECK_CODE_RETURN(CompVImage::convertGrayscale(image, &imageGray));
+				COMPV_CHECK_CODE_RETURN(CompVImageThreshold::otsu(imageGray, threshold));
+				COMPV_CHECK_CODE_RETURN(ptrCanny->setFloat32(COMPV_CANNY_SET_FLT32_THRESHOLD_LOW, static_cast<compv_float32_t>(threshold * 0.5)));
+				COMPV_CHECK_CODE_RETURN(ptrCanny->setFloat32(COMPV_CANNY_SET_FLT32_THRESHOLD_HIGH, static_cast<compv_float32_t>(threshold)));
 				COMPV_CHECK_CODE_RETURN(ptrCanny->process(imageGray, &edges));
 
 				COMPV_CHECK_CODE_RETURN(ptrHough->process(edges, linesPolor));

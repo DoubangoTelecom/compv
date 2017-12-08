@@ -51,7 +51,7 @@ private:
 	size_t m_nKernelSize;
 	float m_fThresholdLow;
 	float m_fThresholdHigh;
-	
+	int m_nThresholdType;
 };
 
 

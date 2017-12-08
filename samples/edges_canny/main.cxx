@@ -12,9 +12,7 @@ using namespace compv;
 #define WINDOW_WIDTH		1280
 #define WINDOW_HEIGHT		720
 
-#define CANNY_LOW			0.80f
-#define CANNY_HIGH			CANNY_LOW*2.f
-#define CANNY_KERNEL_SIZE	3
+#define THRESHOLD_TYPE		COMPV_CANNY_THRESHOLD_TYPE_COMPARE_TO_GRADIENT
 
 #define TAG_SAMPLE	"Canny edge detector"
 
@@ -30,6 +28,7 @@ compv_main()
 		std::string cameraId = ""; // empty string means default
 		CompVEdgeDetePtr ptrCanny;
 		CompVMatPtr imageGray, edges;
+		double threshold;
 
 		// Change debug level to INFO before starting
 		CompVDebugMgr::setLevel(COMPV_DEBUG_LEVEL_INFO);
@@ -42,7 +41,8 @@ compv_main()
 		COMPV_CHECK_CODE_BAIL(err = window->addSingleLayerSurface(&singleSurfaceLayer));
 
 		// Create Canny edge detector
-		COMPV_CHECK_CODE_BAIL(err = CompVEdgeDete::newObj(&ptrCanny, COMPV_CANNY_ID, CANNY_LOW, CANNY_HIGH, CANNY_KERNEL_SIZE));
+		COMPV_CHECK_CODE_BAIL(err = CompVEdgeDete::newObj(&ptrCanny, COMPV_CANNY_ID));
+		COMPV_CHECK_CODE_BAIL(err = ptrCanny->setInt(COMPV_CANNY_SET_INT_THRESHOLD_TYPE, THRESHOLD_TYPE));
 
 		// Create my camera and add a listener to it 
 		COMPV_CHECK_CODE_BAIL(err = CompVCamera::newObj(&camera));
@@ -66,9 +66,12 @@ compv_main()
 			COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 			if (CompVDrawing::isLoopRunning()) {
 				COMPV_CHECK_CODE_RETURN(CompVImage::convertGrayscale(image, &imageGray));
+				COMPV_CHECK_CODE_RETURN(CompVImageThreshold::otsu(imageGray, threshold));
+				COMPV_CHECK_CODE_RETURN(ptrCanny->setFloat32(COMPV_CANNY_SET_FLT32_THRESHOLD_LOW, static_cast<compv_float32_t>(threshold * 0.5)));
+				COMPV_CHECK_CODE_RETURN(ptrCanny->setFloat32(COMPV_CANNY_SET_FLT32_THRESHOLD_HIGH, static_cast<compv_float32_t>(threshold)));
 				COMPV_CHECK_CODE_RETURN(ptrCanny->process(imageGray, &edges));
 				COMPV_CHECK_CODE_BAIL(err = window->beginDraw());
-				COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->surface()->drawImage(edges));
+				COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->cover()->drawImage(edges));
 				COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->blit());
 			bail:
 				COMPV_CHECK_CODE_NOP(err = window->endDraw()); // Make sure 'endDraw()' will be called regardless the result

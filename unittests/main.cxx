@@ -8,7 +8,7 @@ using namespace compv;
 #define UNITTEST_SCALE							0
 #define UNITTEST_PYRAMID						0
 #define UNITTEST_SOBEL							0
-#define UNITTEST_CANNY							0
+#define UNITTEST_CANNY							1
 #define UNITTEST_THRESHOLD_ADAPT				0
 #define UNITTEST_THRESHOLD_OTSU					0
 #define UNITTEST_HOUGHSHT						0
@@ -35,7 +35,7 @@ using namespace compv;
 #define UNITTEST_MATH_HISTOGRAM_BUILD			0
 #define UNITTEST_MATH_HISTOGRAM_EQUALIZ			0
 #define UNITTEST_MATH_CONVOLUTION				0
-#define UNITTEST_MATH_MORPH						1
+#define UNITTEST_MATH_MORPH						0
 
 #define enableSSE2()	~(kCpuFlagSSE | kCpuFlagSSE2)
 #define enableSSSE3()	~(kCpuFlagSSE3 | kCpuFlagSSSE3)

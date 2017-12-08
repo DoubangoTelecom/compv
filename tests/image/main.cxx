@@ -10,9 +10,9 @@ using namespace compv;
 #define TEST_FEATURE_FAST			0
 #define TEST_FEATURE_ORB			0
 #define TEST_PATCH_MOMENTS			0
-#define TEST_CCL					1
+#define TEST_CCL					0
 #define TEST_SOBEL					0
-#define TEST_CANNY					0
+#define TEST_CANNY					1
 #define TEST_ADAPT_THRESH			0
 #define TEST_OTSU_THRESH			0
 #define TEST_HOUGHSHT				0

@@ -14,8 +14,9 @@
 #define FILE_NAME_OPENGLBOOK			"opengl_programming_guide_8th_edition_200x258_gray.yuv"
 #define FILE_NAME_GRIOTS				"mandekalou_480x640_gray.yuv"
 
-#define THRESHOLD_LOW	0.8f
-#define THRESHOLD_HIGH	THRESHOLD_LOW*2.f	
+#define THRESHOLD_LOW		59 // otsu*0.5
+#define THRESHOLD_HIGH		119 // otsu*1.0
+#define THRESHOLD_TYPE		COMPV_CANNY_THRESHOLD_TYPE_COMPARE_TO_GRADIENT
 
 static const struct compv_unittest_canny {
 	const char* filename;
@@ -26,9 +27,9 @@ static const struct compv_unittest_canny {
 }
 COMPV_UNITTEST_CANNY[] =
 {
-	{ FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, "01eb57ba85d4fc76dbd4527b8e8c4e14" },
-	{ FILE_NAME_OPENGLBOOK, 200, 258, 200, "03686b150106d5caf5158a6bacf9f2ff" },
-	{ FILE_NAME_GRIOTS, 480, 640, 480, "7a9b1399dcbaedd91f582a8e4b90eaec" },
+	{ FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, "29e45ba7f87a3a967ec031f1cfb7ea35" },
+	{ FILE_NAME_OPENGLBOOK, 200, 258, 200, "ea167033e8f2a8432bee4561b215bb4d" },
+	{ FILE_NAME_GRIOTS, 480, 640, 480, "b25a7e8ee9632204e90849a39bf2f68c" },
 };
 static const size_t COMPV_UNITTEST_CANNY_COUNT = sizeof(COMPV_UNITTEST_CANNY) / sizeof(COMPV_UNITTEST_CANNY[0]);
 
@@ -40,6 +41,7 @@ COMPV_ERROR_CODE unittest_canny()
 	CompVEdgeDetePtr dete;
 
 	COMPV_CHECK_CODE_RETURN(CompVEdgeDete::newObj(&dete, COMPV_CANNY_ID, THRESHOLD_LOW, THRESHOLD_HIGH));
+	COMPV_CHECK_CODE_RETURN(dete->setInt(COMPV_CANNY_SET_INT_THRESHOLD_TYPE, THRESHOLD_TYPE));
 
 	COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_S_OK, "Just to avoid 'bail not referenced warning'");
 
