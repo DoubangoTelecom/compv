@@ -56,7 +56,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::set(int id, const void* val
 // RLCi, a table holding the run length coding of segments of the line Xi
 // ner, the number of segments of ERi – black + white
 template<typename T>
-static void step1_algo12_segment_STD(const T* Xi, int* ERi, int* RLCi, int* ner1, const int w)
+static void step1_algo13_segment_RLC(const T* Xi, int* ERi, int* RLCi, int* ner1, const int w)
 {
 	int x1 = 0; // previous value of X
 	int f = 0; //  front detection
@@ -67,9 +67,12 @@ static void step1_algo12_segment_STD(const T* Xi, int* ERi, int* RLCi, int* ner1
 	for (int i = 0; i < w; ++i) {
 		x0 = Xi[i] & 1; // Xi must be binary (allowed values: 0x01, 0xff, 0x00)
 		f = x0 ^ x1;
-		RLCi[er] = (i - b);
-		b = b ^ f;
-		er = er + f;
+		if (f != 0) {
+			RLCi[er] = (i - b);
+			b = b ^ 1; // b ^ f
+			er = er + 1;
+			COMPV_ASSERT(er < (w >> 1)); // FIXME(dmi): remove
+		}
 		ERi[i] = er;
 		x1 = x0;
 	}
@@ -139,32 +142,6 @@ static void step2_algo14_equivalence_build(const int* ERiminus1, const int* RLCi
 	*nea1 = nea;
 }
 
-// 2.3 First absolute labeling: step#3
-// EA, an image of size h × w of absolute labels ea before equivalence resolution
-// ERA, an associative table holding the association between er and ea: ea = ERAi[er]
-// ER,  an associative table of size w holding the relative labels er associated to Xi
-static void step3_algo15_1st_abs_labeling(const CompVMatPtr& ERA, const CompVMatPtr& ER, CompVMatPtr EA)
-{
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Can be included in step #2");
-
-	const size_t width = ERA->cols();
-	const size_t height = ERA->rows();
-	const size_t stride = ERA->stride();
-
-	const int* ERAPtr = ERA->ptr<const int>();
-	const int* ERPtr = ER->ptr<int>();
-	int* EAPtr = EA->ptr<int>();
-
-	for (size_t j = 0; j < height; ++j) {
-		for (size_t i = 0; i < width; ++i) {
-			EAPtr[i] = ERAPtr[ERPtr[i]];
-		}
-		EAPtr += stride;
-		ERAPtr += stride;
-		ERPtr += stride;
-	}
-}
-
 // 2.4 Equivalence resolution: step#4
 // EQ, the table holding the equivalence classes, before transitive closure
 // A, the associative table of ancestors
@@ -193,22 +170,47 @@ static void step4_algo6_eq_resolv(const CompVMatPtr& EQ, const int nea, CompVMat
 // A, the associative table of ancestors
 static void step5_algo16_2st_abs_labeling(const CompVMatPtr& A, CompVMatPtr EA)
 {
-	const size_t width = EA->cols();
-	const size_t height = EA->rows();
-	const size_t stride = EA->stride();
+	const size_t EA_width = EA->cols();
+	const size_t EA_height = EA->rows();
+	const size_t EA_stride = EA->stride();
 
 	const int* APtr = A->ptr<const int>();
 	int* EAPtr = EA->ptr<int>();
 
-	for (size_t j = 0; j < height; ++j) {
-		for (size_t i = 0; i < width; ++i) {
+	for (size_t j = 0; j < EA_height; ++j) {
+		for (size_t i = 0; i < EA_width; ++i) {
 			EAPtr[i] = APtr[EAPtr[i]];
-			if (EAPtr[i]) {
-				int kaka = 0;
-			}
 		}
-		EAPtr += stride;
+		EAPtr += EA_stride;
 	}
+}
+
+static COMPV_ERROR_CODE build_all_labels(const CompVMatPtr& A, const CompVMatPtr& ERA, const CompVMatPtr& ER, CompVMatPtrPtr EA)
+{
+	const size_t ER_width = ER->cols();
+	const size_t ER_height = ER->rows();
+	const size_t ER_stride = ER->stride();
+	const size_t ERA_stride = ERA->stride();
+
+	// Create EA using same size and stride as ER
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<int>(EA, ER_height, ER_width, ER_stride));
+
+	const int* APtr = A->ptr<const int>();
+	const int* ERAPtr = ERA->ptr<const int>();
+	const int* ERPtr = ER->ptr<int>();
+	int* EAPtr = (*EA)->ptr<int>();
+
+	// step #3: First absolute labeling
+	for (size_t j = 0; j < ER_height; ++j) {
+		for (size_t i = 0; i < ER_width; ++i) {
+			EAPtr[i] = APtr[ERAPtr[ERPtr[i]]];
+		}
+		EAPtr += ER_stride;
+		ERPtr += ER_stride;
+		ERAPtr += ERA_stride;
+	}
+
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 // VERY important: binar must be binary image (allowed values: 0x01, 0xff, 0x00)
@@ -223,7 +225,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 
 	CompVMatPtr ner; // the number of segments of ERi - black + white -
 	CompVMatPtr ER; //  an associative table of size w holding the relative labels er associated to Xi
-	CompVMatPtr RLC; // , a table holding the run length coding of segments of the line Xi, RLCi-1 is the similar memorization of the previous line.
+	CompVMatPtr RLC; // a table holding the run length coding of segments of the line Xi, RLCi-1 is the similar memorization of the previous line.
 	CompVMatPtr ERA; // an associative table holding the association between er and ea: ea = ERAi[er]
 	CompVMatPtr EQ; // the table holding the equivalence classes, before transitive closure
 	CompVMatPtr EA; // an image of size h × w of absolute labels ea before equivalence resolution
@@ -232,28 +234,30 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 	const size_t width = binar->cols();
 	const size_t height = binar->rows();
 	const size_t stride = binar->stride();
+	const size_t __ner_max = ((width + 1) >> 1); // full dashed row
 
-	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<int>(&ER, height, width, stride));
-	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<int>(&RLC, height, width, stride));
-	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<int>(&ner, 1, height));
-	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<int>(&ERA, height, width, stride));
-	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<int>(&EA, height, width, stride));
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int>(&ER, height, width));
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int>(&RLC, height, __ner_max));
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int>(&ner, 1, height));
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int>(&EQ, 1, (height * (width >> 2))));
-	COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int>(&A, EQ->rows(), EQ->cols()));
 
 	/* Relative segment labeling: step#1 */
+	int ner_max = 0;
 	for (size_t j = 0; j < height; ++j) {
 		const uint8_t* Xi = binar->ptr<const uint8_t>(j);
 		int* ERi = ER->ptr<int>(j);
 		int* RLCi = RLC->ptr<int>(j);
 		int* ner1 = ner->ptr<int>(0, j);
-		step1_algo12_segment_STD<uint8_t>(
+		step1_algo13_segment_RLC<uint8_t>(
 			Xi,
 			ERi,
 			RLCi,
 			ner1,
 			static_cast<int>(width)
 			);
+		if (ner_max < *ner1) {
+			ner_max = *ner1;
+		}
 	}
 
 	/* Init EQ with 0...n (itoa) */
@@ -264,8 +268,9 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 			EQPtr[i] = i;
 		}
 	}
-	/* Init ERA with zeros */
+	/* Create ERA and init with zeros */
 	{
+		COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int>(&ERA, height, ner_max));
 		COMPV_CHECK_CODE_RETURN(ERA->zero_all());
 	}
 
@@ -289,15 +294,9 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 		);
 	}
 
-	/* First absolute labeling: step#3 */
-	step3_algo15_1st_abs_labeling(
-		ERA,
-		ER,
-		EA
-	);
-
-	/* Init A with zeros (because bacground label is equal to zero) */
+	/* Create A and init with zeros (because bacground label is equal to zero) */
 	{
+		COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int>(&A, EQ->rows(), EQ->cols()));
 		COMPV_CHECK_CODE_RETURN(A->zero_all());
 	}
 
@@ -310,11 +309,8 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 		na
 	);
 
-	/* Second absolute labeling: step#5 */
-	step5_algo16_2st_abs_labeling(
-		A,
-		EA
-	);
+	/* For testing */
+	build_all_labels(A, ERA, ER, &EA);
 
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Directly write to result.labels");
 	result.labels = EA;
