@@ -116,7 +116,7 @@ static void step2_algo14_equivalence_build(const int* ERiminus1, const int* RLCi
 		}
 		if (er1 >= er0) {
 			int ea = ERAiminus1[er0];
-			int a = EQ[ea]; // FindRoot(ea) // EQ must be initialized with zeros
+			int a = EQ[ea]; // FindRoot(ea)
 			for (int erk = er0 + 2; erk <= er1; erk += 2) { // TODO(dmi): step 1 or 2 ?
 				int eak = ERAiminus1[erk];
 				int ak = EQ[eak]; // FindRoot(eak)
@@ -156,32 +156,13 @@ static void step4_algo6_eq_resolv(const CompVMatPtr& EQ, const int nea, CompVMat
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Could be nea only instead of size");
 	for (int e = 1; e <= nea; ++e) {
 		const int eq = EQPtr[e];
+		COMPV_ASSERT(eq <= nea); // FIXME(dmi): remove
 		if (eq != e) {
 			APtr[e] = APtr[eq];
 		}
 		else {
 			APtr[e] = ++na;
 		}
-	}
-}
-
-// Second absolute labeling: step#5
-// EA, an image of size h × w of absolute labels ea before equivalence resolution
-// A, the associative table of ancestors
-static void step5_algo16_2st_abs_labeling(const CompVMatPtr& A, CompVMatPtr EA)
-{
-	const size_t EA_width = EA->cols();
-	const size_t EA_height = EA->rows();
-	const size_t EA_stride = EA->stride();
-
-	const int* APtr = A->ptr<const int>();
-	int* EAPtr = EA->ptr<int>();
-
-	for (size_t j = 0; j < EA_height; ++j) {
-		for (size_t i = 0; i < EA_width; ++i) {
-			EAPtr[i] = APtr[EAPtr[i]];
-		}
-		EAPtr += EA_stride;
 	}
 }
 
@@ -200,9 +181,12 @@ static COMPV_ERROR_CODE build_all_labels(const CompVMatPtr& A, const CompVMatPtr
 	const int* ERPtr = ER->ptr<int>();
 	int* EAPtr = (*EA)->ptr<int>();
 
+	/* #3 and #5 merged */
 	// step #3: First absolute labeling
+	// step #5: Second absolute labeling
 	for (size_t j = 0; j < ER_height; ++j) {
 		for (size_t i = 0; i < ER_width; ++i) {
+			COMPV_ASSERT(A->cols() > ERAPtr[ERPtr[i]]); // FIXME(dmi): remove
 			EAPtr[i] = APtr[ERAPtr[ERPtr[i]]];
 		}
 		EAPtr += ER_stride;
@@ -259,6 +243,12 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 			ner_max = *ner1;
 		}
 	}
+	
+	/* Create ERA and init with zeros */
+	{
+		COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int>(&ERA, height, ner_max));
+		COMPV_CHECK_CODE_RETURN(ERA->zero_all());
+	}
 
 	/* Init EQ with 0...n (itoa) */
 	{
@@ -267,11 +257,6 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 		for (int i = 0; i < n; ++i) {
 			EQPtr[i] = i;
 		}
-	}
-	/* Create ERA and init with zeros */
-	{
-		COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int>(&ERA, height, ner_max));
-		COMPV_CHECK_CODE_RETURN(ERA->zero_all());
 	}
 
 	/* Equivalence construction: step#2 */
@@ -294,11 +279,9 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 		);
 	}
 
-	/* Create A and init with zeros (because bacground label is equal to zero) */
-	{
-		COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int>(&A, EQ->rows(), EQ->cols()));
-		COMPV_CHECK_CODE_RETURN(A->zero_all());
-	}
+	/* Create A and init first element with zero (because bacground label is equal to zero) */
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int>(&A, 1, (nea + 1)));
+	*A->ptr<int>(0, 0) = 0; // other values will be initialzed in step4_algo6_eq_resolv
 
 	/* Equivalence resolution: step#4 */
 	int na = 0; // final number of absolute labels
