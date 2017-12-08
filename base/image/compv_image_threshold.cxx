@@ -160,7 +160,7 @@ COMPV_ERROR_CODE CompVImageThreshold::global(const CompVMatPtr& input, CompVMatP
 
 	// Get Number of threads
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
-	const size_t maxThreads = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 0;
+	const size_t maxThreads = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
 	const size_t threadsCount = (threadDisp && !threadDisp->isMotherOfTheCurrentThread())
 		? CompVThreadDispatcher::guessNumThreadsDividingAcrossY(width, height, maxThreads, COMPV_IMAGE_THRESH_GLOBAL_SAMPLES_PER_THREAD)
 		: 1;
