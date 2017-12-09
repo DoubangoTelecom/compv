@@ -72,7 +72,7 @@ static void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_C(
 	int16_t* ner, int16_t* ner_max1, compv_ccl_indice_t* ner_sum1,
 	const compv_uscalar_t width, const compv_uscalar_t height)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("You should ASM code which is faster");
 #define SET_RLC_1(mm, ii) \
 		if ((mm)) { \
 			RLCi[er] = ((ii) - b); \
@@ -190,6 +190,43 @@ static void step1_algo13_segment_RLE(const CompVMatPtr& X, CompVMatPtr ER, CompV
 	);
 }
 
+static void CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_C(
+	const int16_t* RLCi, const compv_uscalar_t RLCi_stride,
+	compv_ccl_indice_t* ERAi, const compv_uscalar_t ERAi_stride,
+	const int16_t* ERi, const compv_uscalar_t ERi_stride,
+	const int16_t* ner,
+	const compv_uscalar_t width, const compv_uscalar_t height)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("You should ASM code which is faster");
+
+	const int16_t wminus1 = static_cast<int16_t>(width - 1);
+	const int16_t* ERiminus1 = ERi - ERi_stride;
+	int16_t er, er0, er1, j0, j1, nerj;
+
+	for (compv_uscalar_t j = 0; j < height; ++j) {
+		nerj = ner[j];
+		for (er = 1; er < nerj; er += 2) {
+			j0 = RLCi[er - 1];
+			j1 = RLCi[er];
+			// [check extension in case of 8-connect algorithm]
+			j0 -= (j0 > 0);
+			j1 += (j1 < wminus1);
+			er0 = ERiminus1[j0];
+			er1 = ERiminus1[j1];
+			// [check label parity: segments are odd]
+			er0 += ((er0 & 1) ^ 1);
+			er1 -= ((er1 & 1) ^ 1);
+			ERAi[er] = (er1 >= er0)
+				? (er0 | er1 << 16)
+				: 0;
+		}
+		ERi += ERi_stride;
+		ERiminus1 += ERi_stride;
+		RLCi += RLCi_stride;
+		ERAi += ERAi_stride;
+	}
+}
+
 // 2.2 Equivalence construction: step#2.0 (MT friendly)
 // Algorithm 14: LSL equivalence construction
 // ERi, an associative table of size w holding the relative labels er associated to Xi
@@ -209,13 +246,57 @@ static void step20_algo14_equivalence_build(const CompVMatPtr& ER, const CompVMa
 	const int16_t* ERi = ER->ptr<const int16_t>(jstart);
 	const int16_t* ERiminus1 = ER->ptr<const int16_t>(jstart - 1);
 	const int16_t* RLCi = RLC->ptr<const int16_t>(jstart);
-	const int16_t* ner0 = ner->ptr<const int16_t>(0);
+	const int16_t* ner0 = ner->ptr<const int16_t>(0, jstart);
 	compv_ccl_indice_t* ERAi = ERA->ptr<compv_ccl_indice_t>(jstart);
-	const compv_ccl_indice_t wminus1 = (w - 1);
 	const size_t ER_stride = ER->stride();
 	const size_t RLC_stride = RLC->stride();
 	const size_t ERA_stride = ERA->stride();
+
+	typedef void(*FunPtr)(const int16_t* RLCi, const compv_uscalar_t RLCi_stride,
+		compv_ccl_indice_t* ERAi, const compv_uscalar_t ERAi_stride,
+		const int16_t* ERi, const compv_uscalar_t ERi_stride,
+		const int16_t* ner,
+		const compv_uscalar_t width, const compv_uscalar_t height);
+	FunPtr funPtr = [](const int16_t* RLCi, const compv_uscalar_t RLCi_stride,
+		compv_ccl_indice_t* ERAi, const compv_uscalar_t ERAi_stride,
+		const int16_t* ERi, const compv_uscalar_t ERi_stride,
+		const int16_t* ner,
+		const compv_uscalar_t width, const compv_uscalar_t height) {
+		CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_C(
+			RLCi, RLCi_stride,
+			ERAi, ERAi_stride,
+			ERi,  ERi_stride,
+			ner,
+			width, height);
+	};
+
+	if (std::is_same<int32_t, compv_ccl_indice_t>::value) {
+		void(*funPtr_16s32s)(const int16_t* RLCi, const compv_uscalar_t RLCi_stride,
+			int32_t* ERAi, const compv_uscalar_t ERAi_stride,
+			const int16_t* ERi, const compv_uscalar_t ERi_stride,
+			const int16_t* ner,
+			const compv_uscalar_t width, const compv_uscalar_t height)
+			= nullptr;
+#if COMPV_ARCH_X86
+		//COMPV_EXEC_IFDEF_ASM_X64(funPtr_16s32s = CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_16s32s_Asm_X64_CMOV);
+#elif COMPV_ARCH_ARM
+		//COMPV_EXEC_IFDEF_ASM_ARM32(funPtr_16s32s = CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_16s32s_Asm_X64_ARM32);
+		//COMPV_EXEC_IFDEF_ASM_ARM64(funPtr_16s32s = CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_16s32s_Asm_X64_ARM64);
+#endif
+		if (funPtr_16s32s) {
+			funPtr = reinterpret_cast<FunPtr>(funPtr_16s32s);
+		}
+	}
+
+	funPtr(
+		RLCi, RLC_stride,
+		ERAi, ERA_stride,
+		ERi, ER_stride,
+		ner0,
+		static_cast<compv_uscalar_t>(w), static_cast<compv_uscalar_t>(end - jstart)
+	);
 	
+#if 0
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No ASM implementation found: cmov");
 	for (compv_ccl_indice_t j = jstart; j < end; ++j) {
 		const int16_t ner0j = ner0[j];
@@ -239,6 +320,7 @@ static void step20_algo14_equivalence_build(const CompVMatPtr& ER, const CompVMa
 		RLCi += RLC_stride;
 		ERAi += ERA_stride;
 	}
+#endif
 }
 
 // 2.2 Equivalence construction: step#2.1 (not MT friendly)
