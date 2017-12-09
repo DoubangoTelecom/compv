@@ -42,6 +42,7 @@ COMPV_NAMESPACE_BEGIN()
 		SET_RLC_ZERO_1_SSE2(ii, 8); SET_RLC_ZERO_1_SSE2(ii, 9); SET_RLC_ZERO_1_SSE2(ii, 10); SET_RLC_ZERO_1_SSE2(ii, 11); \
 		SET_RLC_ZERO_1_SSE2(ii, 12); SET_RLC_ZERO_1_SSE2(ii, 13); SET_RLC_ZERO_1_SSE2(ii, 14); SET_RLC_ZERO_1_SSE2(ii, 15)
 
+// TODO(dmi): Function not used -> remove
 void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_8u32s_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* Xi, int32_t* RLCi, int32_t* ERi, int32_t* b1, int32_t* er1, const int32_t width)
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
