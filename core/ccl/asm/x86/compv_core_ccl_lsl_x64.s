@@ -23,14 +23,14 @@ section .text
 %macro SET_RLC_1	4
 	%define reg		%1
 	%define regb	%2
-	%define regbd	%3
+	%define regd	%3
 	%define ii		%4
 	xor regb, byte [Xi + (ii)*COMPV_YASM_UINT8_SZ_BYTES]
 	jz .%%XorIsEqualToZero
 		lea reg, [(ii)]
 		sub reg, b
 		xor b, 1
-		mov [RLCi + er*COMPV_YASM_INT32_SZ_BYTES], dword regbd
+		mov [RLCi + er*COMPV_YASM_INT32_SZ_BYTES], dword regd
 		inc er
 
 	.%%XorIsEqualToZero:
@@ -97,7 +97,7 @@ sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_8u32s_Asm_X64_CMOV)
 		SET_RLC_1 r11, r11b, r11d, (i + 1)
 		SET_RLC_1 r12, r12b, r12d, (i + 2)
 		SET_RLC_1 r13, r13b, r13d, (i + 3)
-		lea i, [i + 4]
+		add i, 4
 		cmp i, width
 		jl .LoopWidth4
 	.EndOf_LoopWidth4:
