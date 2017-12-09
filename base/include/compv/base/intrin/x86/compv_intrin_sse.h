@@ -46,6 +46,7 @@ COMPV_NAMESPACE_BEGIN()
 // algorithm: return (vecX[i] != vecY[i]) ? vecPlaceholder[i] : 0x00; 
 // e.g. to test vec not zero: _mm_cmpnot_epu8_SSE2(vec, 0x00, 0xff) - mask is used to set value
 #define _mm_cmpnot_epu8_SSE2(vecX, vecY, vecPlaceholder) _mm_andnot_si128(_mm_cmpeq_epi8(vecX, vecY), vecPlaceholder)
+#define _mm_cmpnot_epi32_SSE2(vecX, vecY, vecPlaceholder) _mm_andnot_si128(_mm_cmpeq_epi32(vecX, vecY), vecPlaceholder)
 // algorithm: return (vecX[i] > vecY[i]) ? vecPlaceholder[i] : 0x00; 
 #define _mm_cmpgt_epu8_SSE2(vecX, vecY, vecZero, vecPlaceholder) _mm_cmpnot_epu8_SSE2(_mm_subs_epu8(vecX, vecY), vecZero, vecPlaceholder)
 #define _mm_cmplt_epu8_SSE2(vecX, vecY, vecZero, vecPlaceholder) _mm_cmpgt_epu8_SSE2(vecY, vecX, vecZero, vecPlaceholder)

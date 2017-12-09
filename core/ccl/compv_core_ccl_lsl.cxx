@@ -15,6 +15,9 @@ Some literature about LSL:
 #include "compv/core/ccl/compv_core_ccl_lsl.h"
 #include "compv/core/compv_core.h"
 #include "compv/base/parallel/compv_parallel.h"
+#include "compv/base/compv_cpu.h"
+
+#include "compv/core/ccl/intrin/x86/compv_core_ccl_lsl_intrin_sse2.h"
 
 #define COMPV_CCL_LSL_STEP1_MIN_SAMPLES_PER_THREAD	(20*20)
 #define COMPV_CCL_LSL_STEP20_MIN_SAMPLES_PER_THREAD	(30*30)
@@ -52,6 +55,26 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::set(int id, const void* val
 	}
 }
 
+template<typename T>
+static void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_C(const T* Xi, compv_ccl_indice_t* RLCi, compv_ccl_indice_t* ERi, compv_ccl_indice_t* b1, compv_ccl_indice_t* er1, const compv_ccl_indice_t width)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
+#define SET_RLC_1(mm, ii) \
+		if ((mm)) { \
+			RLCi[er] = ((ii) - b); \
+			b ^= 1;  \
+			++er; \
+		} \
+		ERi[(ii)] = er
+
+	int32_t b = *b1, er = *er1;
+	for (int32_t i = 1; i < width; ++i) {
+		SET_RLC_1(Xi[i - 1] ^ Xi[i], i);
+	}
+	*b1 = b;
+	*er1 = er;
+}
+
 // Relative segment labeling: step#1
 // Algorithm 12: LSL segment detection STD
 // Xi: a binary line of width w (allowed values: 0x01, 0xff, 0x00)
@@ -61,9 +84,6 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::set(int id, const void* val
 template<typename T>
 static void step1_algo13_segment_RLE(const CompVMatPtr& X, CompVMatPtr ER, CompVMatPtr RLC, CompVMatPtr ner, compv_ccl_indice_t* ner_max1, compv_ccl_indice_t* ner_sum1, const compv_ccl_indice_t w, const compv_ccl_indice_t start, const compv_ccl_indice_t end)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No ASM implementation found");
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No unroll implementation found");
-
 	const T* Xi = X->ptr<T>(start);
 	compv_ccl_indice_t* ERi = ER->ptr<compv_ccl_indice_t>(start);
 	compv_ccl_indice_t* RLCi = RLC->ptr<compv_ccl_indice_t>(start);
@@ -76,6 +96,33 @@ static void step1_algo13_segment_RLE(const CompVMatPtr& X, CompVMatPtr ER, CompV
 	compv_ccl_indice_t ner_max = 0;
 	compv_ccl_indice_t ner_sum = 0;
 
+	/* Hook to processing function */
+	typedef void(*FunPtr)(const T* Xi, compv_ccl_indice_t* RLCi, compv_ccl_indice_t* ERi, compv_ccl_indice_t* b1, compv_ccl_indice_t* er1, const compv_ccl_indice_t width);
+	FunPtr funPtr = [](const T* Xi, compv_ccl_indice_t* RLCi, compv_ccl_indice_t* ERi, compv_ccl_indice_t* b1, compv_ccl_indice_t* er1, const compv_ccl_indice_t width) {
+		CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_C<T >(Xi, RLCi, ERi, b1, er1, width);
+	};
+
+	if (std::is_same<T, uint8_t>::value && std::is_same<compv_ccl_indice_t, int32_t>::value) {
+		void(*funPtr_8u_32s)(const uint8_t* Xi, int32_t* RLCi, int32_t* ERi, int32_t* b1, int32_t* er1, const int32_t width)
+			= nullptr;
+#if COMPV_ARCH_X86
+		if (CompVCpu::isEnabled(kCpuFlagSSE2) && X->isAlignedSSE()) {
+			COMPV_EXEC_IFDEF_INTRIN_X86(funPtr_8u_32s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_8u32s_Intrin_SSE2);
+			//COMPV_EXEC_IFDEF_ASM_X64(funPtr_8u_32s = nullptr);
+		}
+#elif COMPV_ARCH_ARM
+		if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && X->isAlignedNEON()) {
+			//COMPV_EXEC_IFDEF_INTRIN_ARM(FunPtr_8u_32s = nullptr);
+			//COMPV_EXEC_IFDEF_ASM_ARM32(FunPtr_8u_32s = nullptr);
+			//COMPV_EXEC_IFDEF_ASM_ARM64(FunPtr_8u_32s = nullptr);
+		}
+#endif
+		if (funPtr_8u_32s) {
+			funPtr = reinterpret_cast<FunPtr>(funPtr_8u_32s);
+		}
+	}
+
+	/* Loop through the rows */
 	for (compv_ccl_indice_t j = start; j < end; ++j) {
 		/* For i = 0 */
 		compv_ccl_indice_t b = Xi[0] & 1; // right border compensation
@@ -83,15 +130,8 @@ static void step1_algo13_segment_RLE(const CompVMatPtr& X, CompVMatPtr ER, CompV
 		RLCi[0] = 0;
 		ERi[0] = er;
 		/* i = 1....w */
-		for (compv_ccl_indice_t i = 1; i < w; ++i) {
-			if (Xi[i - 1] ^ Xi[i]) {
-				RLCi[er] = (i - b);
-				b ^= 1; // b ^ f
-				++er;
-				COMPV_ASSERT(er < (w >> 1)); // FIXME(dmi): remove
-			}
-			ERi[i] = er;
-		}
+		funPtr(Xi, RLCi, ERi, &b, &er, w);
+		/* update las RLCi and ner */
 		RLCi[er] = (w - b);
 		const compv_ccl_indice_t ner0j = er + (Xi[w - 1] & 1);
 		ner0[j] = ner0j;
@@ -423,7 +463,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 	);
 
 	/* For testing */
-	build_all_labels(A, ERA, ER, &EA);
+	//build_all_labels(A, ERA, ER, &EA);
 
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Directly write to result.labels");
 	result.labels = EA;

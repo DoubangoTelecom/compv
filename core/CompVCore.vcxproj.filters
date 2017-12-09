@@ -156,6 +156,21 @@
     <Filter Include="Source Files\ccl">
       <UniqueIdentifier>{e501547a-6969-4255-85e1-69c00ee1821d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\features\edges\intrin\arm">
+      <UniqueIdentifier>{15421333-670b-4183-a7ec-ee02e39128f5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ccl\intrin">
+      <UniqueIdentifier>{4fe42c45-0030-4af5-983e-636231d776fe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ccl\intrin\x86">
+      <UniqueIdentifier>{e09ee208-26ac-43f7-bcd9-7374288f6a66}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ccl\intrin">
+      <UniqueIdentifier>{5edf3f77-9ebd-4aa9-9abc-02b20f3cffd1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ccl\intrin\x86">
+      <UniqueIdentifier>{a37dafed-bea9-45a0-be3b-b0a201edf1b7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_core.cxx">
@@ -266,6 +281,9 @@
     <ClCompile Include="ccl\compv_core_ccl_lsl.cxx">
       <Filter>Source Files\ccl</Filter>
     </ClCompile>
+    <ClCompile Include="ccl\intrin\x86\compv_core_ccl_lsl_intrin_sse2.cxx">
+      <Filter>Source Files\ccl\intrin\x86</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\core\compv_core.h">
@@ -372,6 +390,12 @@
     </ClInclude>
     <ClInclude Include="include\compv\core\ccl\compv_core_ccl_lsl.h">
       <Filter>Header Files\ccl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\core\features\edges\intrin\arm\compv_core_feature_canny_dete_intrin_neon.h">
+      <Filter>Header Files\features\edges\intrin\arm</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\core\ccl\intrin\x86\compv_core_ccl_lsl_intrin_sse2.h">
+      <Filter>Header Files\ccl\intrin\x86</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
