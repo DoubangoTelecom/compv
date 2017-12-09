@@ -28,7 +28,7 @@ COMPV_NAMESPACE_BEGIN()
 
 // X64
 #if COMPV_ASM && COMPV_ARCH_X64
-COMPV_EXTERNC void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_8u32s_Asm_X64_CMOV(const uint8_t* Xi, int32_t* RLCi, int32_t* ERi, int32_t* b1, int32_t* er1, const int32_t width);
+COMPV_EXTERNC void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_8u16s_Asm_X64(const uint8_t* Xi, int16_t* RLCi, int16_t* ERi, int16_t* b1, int16_t* er1, const compv_uscalar_t width);
 #endif /* COMPV_ASM && COMPV_ARCH_X64 */
 
 static const compv_ccl_indice_t kCompVConnectedComponentLabelingLSLBachgroundLabel = 0; // Must be zero because of calloc()
@@ -61,7 +61,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::set(int id, const void* val
 }
 
 template<typename T>
-static void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_C(const T* Xi, compv_ccl_indice_t* RLCi, int16_t* ERi, int16_t* b1, int16_t* er1, const compv_ccl_indice_t width)
+static void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_C(const T* Xi, int16_t* RLCi, int16_t* ERi, int16_t* b1, int16_t* er1, const compv_uscalar_t width)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
 #define SET_RLC_1(mm, ii) \
@@ -72,9 +72,9 @@ static void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_C(const T* 
 		} \
 		ERi[(ii)] = er
 
-	compv_ccl_indice_t i;
+	int16_t i;
 	int16_t b = *b1, er = *er1;
-	const compv_ccl_indice_t width4 = width & -4;
+	const int16_t width4 = width & -4;
 	for (i = 1; i < width4; i += 4) {
 		SET_RLC_1(Xi[i - 1] ^ Xi[i], i);
 		SET_RLC_1(Xi[i] ^ Xi[i + 1], i + 1);
@@ -99,7 +99,7 @@ static void step1_algo13_segment_RLE(const CompVMatPtr& X, CompVMatPtr ER, CompV
 {
 	const T* Xi = X->ptr<T>(start);
 	int16_t* ERi = ER->ptr<int16_t>(start);
-	compv_ccl_indice_t* RLCi = RLC->ptr<compv_ccl_indice_t>(start);
+	int16_t* RLCi = RLC->ptr<int16_t>(start);
 	int16_t* ner0 = ner->ptr<int16_t>(0);
 
 	const size_t X_stride = X->stride();
@@ -110,30 +110,26 @@ static void step1_algo13_segment_RLE(const CompVMatPtr& X, CompVMatPtr ER, CompV
 	compv_ccl_indice_t ner_sum = 0;
 
 	/* Hook to processing function */
-	typedef void(*FunPtr)(const T* Xi, compv_ccl_indice_t* RLCi, int16_t* ERi, int16_t* b1, int16_t* er1, const compv_ccl_indice_t width);
-	FunPtr funPtr = [](const T* Xi, compv_ccl_indice_t* RLCi, int16_t* ERi, int16_t* b1, int16_t* er1, const compv_ccl_indice_t width) {
+	typedef void(*FunPtr)(const T* Xi, int16_t* RLCi, int16_t* ERi, int16_t* b1, int16_t* er1, const compv_uscalar_t width);
+	FunPtr funPtr = [](const T* Xi, int16_t* RLCi, int16_t* ERi, int16_t* b1, int16_t* er1, const compv_uscalar_t width) {
 		CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_C<T >(Xi, RLCi, ERi, b1, er1, width);
 	};
 
-	if (std::is_same<T, uint8_t>::value && std::is_same<compv_ccl_indice_t, int32_t>::value) {
-		void(*funPtr_8u_32s)(const uint8_t* Xi, int32_t* RLCi, int16_t* ERi, int16_t* b1, int16_t* er1, const int32_t width)
+	if (std::is_same<T, uint8_t>::value) {
+		void(*funPtr_8u_16s)(const uint8_t* Xi, int16_t* RLCi, int16_t* ERi, int16_t* b1, int16_t* er1, const compv_uscalar_t width)
 			= nullptr;
 #if COMPV_ARCH_X86
-		if (CompVCpu::isEnabled(kCpuFlagSSE2) && X->isAlignedSSE()) {
-			//COMPV_EXEC_IFDEF_INTRIN_X86(funPtr_8u_32s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_8u32s_Intrin_SSE2);
-			//COMPV_EXEC_IFDEF_ASM_X64(funPtr_8u_32s = nullptr);
-		}
+		//COMPV_EXEC_IFDEF_ASM_X64(funPtr_8u_32s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_8u16s_Asm_X64);
 #elif COMPV_ARCH_ARM
-		if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && X->isAlignedNEON()) {
-			//COMPV_EXEC_IFDEF_INTRIN_ARM(FunPtr_8u_32s = nullptr);
-			//COMPV_EXEC_IFDEF_ASM_ARM32(FunPtr_8u_32s = nullptr);
-			//COMPV_EXEC_IFDEF_ASM_ARM64(FunPtr_8u_32s = nullptr);
-		}
+		//COMPV_EXEC_IFDEF_ASM_ARM32(funPtr_8u_32s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_8u16s_Asm_NEON32);
+		//COMPV_EXEC_IFDEF_ASM_ARM64(funPtr_8u_32s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_8u16s_Asm_NEON64);
 #endif
-		if (funPtr_8u_32s) {
-			funPtr = reinterpret_cast<FunPtr>(funPtr_8u_32s);
+		if (funPtr_8u_16s) {
+			funPtr = reinterpret_cast<FunPtr>(funPtr_8u_16s);
 		}
 	}
+
+	const compv_uscalar_t ws = static_cast<compv_uscalar_t>(w);
 
 	/* Loop through the rows */
 	for (compv_ccl_indice_t j = start; j < end; ++j) {
@@ -143,9 +139,9 @@ static void step1_algo13_segment_RLE(const CompVMatPtr& X, CompVMatPtr ER, CompV
 		RLCi[0] = 0;
 		ERi[0] = er;
 		/* i = 1....w */
-#if 0
+#if 1
 		//FIXME(dmi): for testing
-		CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_8u32s_Asm_X64_CMOV(Xi, RLCi, ERi, &b, &er, w);
+		CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_8u16s_Asm_X64(Xi, RLCi, ERi, &b, &er, w);
 #else
 		funPtr(Xi, RLCi, ERi, &b, &er, w);
 #endif
@@ -185,7 +181,7 @@ static void step20_algo14_equivalence_build(const CompVMatPtr& ER, const CompVMa
 
 	const int16_t* ERi = ER->ptr<const int16_t>(jstart);
 	const int16_t* ERiminus1 = ER->ptr<const int16_t>(jstart - 1);
-	const compv_ccl_indice_t* RLCi = RLC->ptr<const compv_ccl_indice_t>(jstart);
+	const int16_t* RLCi = RLC->ptr<const int16_t>(jstart);
 	const int16_t* ner0 = ner->ptr<const int16_t>(0);
 	compv_ccl_indice_t* ERAi = ERA->ptr<compv_ccl_indice_t>(jstart);
 	const compv_ccl_indice_t wminus1 = (w - 1);
@@ -197,8 +193,8 @@ static void step20_algo14_equivalence_build(const CompVMatPtr& ER, const CompVMa
 	for (compv_ccl_indice_t j = jstart; j < end; ++j) {
 		const int16_t ner0j = ner0[j];
 		for (int16_t er = 1; er < ner0j; er += 2) {
-			compv_ccl_indice_t j0 = RLCi[er - 1];
-			compv_ccl_indice_t j1 = RLCi[er];
+			int16_t j0 = RLCi[er - 1];
+			int16_t j1 = RLCi[er];
 			// [check extension in case of 8-connect algorithm]
 			j0 -= (j0 > 0);
 			j1 += (j1 < wminus1);
@@ -369,7 +365,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 	const size_t __ner_max = ((width + 1) >> 1); // full dashed row
 
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int16_t>(&ER, height, width));
-	COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<compv_ccl_indice_t>(&RLC, height, __ner_max));
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int16_t>(&RLC, height, __ner_max));
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int16_t>(&ner, 1, height));
 
 	/* Multi-threading dispatcher */
