@@ -28,7 +28,11 @@ COMPV_NAMESPACE_BEGIN()
 
 // X64
 #if COMPV_ASM && COMPV_ARCH_X64
-COMPV_EXTERNC void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_8u16s32s_Asm_X64(const uint8_t* Xi, int16_t* RLCi, int16_t* ERi, int16_t* b1, int16_t* er1, const compv_uscalar_t width);
+COMPV_EXTERNC void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_8u16s32s_Asm_X64_CMOV(const uint8_t* Xi, const compv_uscalar_t Xi_stride,
+	int16_t* RLCi, const compv_uscalar_t RLCi_stride,
+	int16_t* ERi, const compv_uscalar_t ERi_stride,
+	int16_t* ner, int16_t* ner_max1, int32_t* ner_sum1,
+	const compv_uscalar_t width, const compv_uscalar_t height);
 #endif /* COMPV_ASM && COMPV_ARCH_X64 */
 
 static const compv_ccl_indice_t kCompVConnectedComponentLabelingLSLBachgroundLabel = 0; // Must be zero because of calloc()
@@ -165,7 +169,9 @@ static void step1_algo13_segment_RLE(const CompVMatPtr& X, CompVMatPtr ER, CompV
 			const compv_uscalar_t width, const compv_uscalar_t height)
 			= nullptr;
 #if COMPV_ARCH_X86
-		//COMPV_EXEC_IFDEF_ASM_X64(funPtr_8u16s32s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_8u16s32s_Asm_X64);
+		if (CompVCpu::isEnabled(kCpuFlagCMOV)) { // All X64 archs support CMOVcc but we want to allow disabling it
+			COMPV_EXEC_IFDEF_ASM_X64(funPtr_8u16s32s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_8u16s32s_Asm_X64_CMOV);
+		}
 #elif COMPV_ARCH_ARM
 		//COMPV_EXEC_IFDEF_ASM_ARM32(funPtr_8u16s32s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_8u16s_Asm_NEON32);
 		//COMPV_EXEC_IFDEF_ASM_ARM64(funPtr_8u16s32s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_8u16s_Asm_NEON64);
