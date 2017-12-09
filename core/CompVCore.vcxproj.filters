@@ -171,6 +171,12 @@
     <Filter Include="Header Files\ccl\intrin\x86">
       <UniqueIdentifier>{a37dafed-bea9-45a0-be3b-b0a201edf1b7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\ccl\asm">
+      <UniqueIdentifier>{545b7f68-643c-416b-8ff2-7a42efa48adc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ccl\asm\x86">
+      <UniqueIdentifier>{2ecf519d-d78a-4966-94ea-43062f2ce7f4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_core.cxx">
@@ -463,6 +469,9 @@
     </None>
     <None Include="features\fast\asm\arm\compv_core_feature_fast_dete_macros_neon.S">
       <Filter>Source Files\features\fast\asm\arm</Filter>
+    </None>
+    <None Include="ccl\asm\x86\compv_core_ccl_lsl_x64.s">
+      <Filter>Source Files\ccl\asm\x86</Filter>
     </None>
   </ItemGroup>
 </Project>

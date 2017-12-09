@@ -26,6 +26,11 @@ Some literature about LSL:
 
 COMPV_NAMESPACE_BEGIN()
 
+// X64
+#if COMPV_ASM && COMPV_ARCH_X64
+COMPV_EXTERNC void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_8u32s_Asm_X64_CMOV(const uint8_t* Xi, int32_t* RLCi, int32_t* ERi, int32_t* b1, int32_t* er1, const int32_t width);
+#endif /* COMPV_ASM && COMPV_ARCH_X64 */
+
 static const compv_ccl_indice_t kCompVConnectedComponentLabelingLSLBachgroundLabel = 0; // Must be zero because of calloc()
 
 CompVConnectedComponentLabelingLSL::CompVConnectedComponentLabelingLSL()
@@ -67,8 +72,15 @@ static void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_C(const T* 
 		} \
 		ERi[(ii)] = er
 
-	int32_t b = *b1, er = *er1;
-	for (int32_t i = 1; i < width; ++i) {
+	compv_ccl_indice_t i, b = *b1, er = *er1;
+	const compv_ccl_indice_t width4 = width & -4;
+	for (i = 1; i < width4; i += 4) {
+		SET_RLC_1(Xi[i - 1] ^ Xi[i], i);
+		SET_RLC_1(Xi[i] ^ Xi[i + 1], i + 1);
+		SET_RLC_1(Xi[i + 1] ^ Xi[i + 2], i + 2);
+		SET_RLC_1(Xi[i + 2] ^ Xi[i + 3], i + 3);
+	}
+	for (; i < width; ++i) {
 		SET_RLC_1(Xi[i - 1] ^ Xi[i], i);
 	}
 	*b1 = b;
@@ -130,7 +142,12 @@ static void step1_algo13_segment_RLE(const CompVMatPtr& X, CompVMatPtr ER, CompV
 		RLCi[0] = 0;
 		ERi[0] = er;
 		/* i = 1....w */
+#if 1
+		//FIXME(dmi): for testing
+		CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_8u32s_Asm_X64_CMOV(Xi, RLCi, ERi, &b, &er, w);
+#else
 		funPtr(Xi, RLCi, ERi, &b, &er, w);
+#endif
 		/* update las RLCi and ner */
 		RLCi[er] = (w - b);
 		const compv_ccl_indice_t ner0j = er + (Xi[w - 1] & 1);
@@ -463,7 +480,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 	);
 
 	/* For testing */
-	//build_all_labels(A, ERA, ER, &EA);
+	build_all_labels(A, ERA, ER, &EA);
 
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Directly write to result.labels");
 	result.labels = EA;

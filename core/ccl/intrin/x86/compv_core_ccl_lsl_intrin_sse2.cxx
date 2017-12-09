@@ -45,7 +45,7 @@ COMPV_NAMESPACE_BEGIN()
 void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_8u32s_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* Xi, int32_t* RLCi, int32_t* ERi, int32_t* b1, int32_t* er1, const int32_t width)
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No ASM implementation could be found");
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Not faster than serial code");
 	static const __m128i vecZero = _mm_setzero_si128();
 	static const __m128i vecFF = _mm_cmpeq_epi8(vecZero, vecZero);
 	const int32_t w64 = width & -64;
