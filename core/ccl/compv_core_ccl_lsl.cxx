@@ -28,7 +28,7 @@ COMPV_NAMESPACE_BEGIN()
 
 // X64
 #if COMPV_ASM && COMPV_ARCH_X64
-COMPV_EXTERNC void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_8u16s_Asm_X64(const uint8_t* Xi, int16_t* RLCi, int16_t* ERi, int16_t* b1, int16_t* er1, const compv_uscalar_t width);
+COMPV_EXTERNC void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_8u16s32s_Asm_X64(const uint8_t* Xi, int16_t* RLCi, int16_t* ERi, int16_t* b1, int16_t* er1, const compv_uscalar_t width);
 #endif /* COMPV_ASM && COMPV_ARCH_X64 */
 
 static const compv_ccl_indice_t kCompVConnectedComponentLabelingLSLBachgroundLabel = 0; // Must be zero because of calloc()
@@ -61,7 +61,12 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::set(int id, const void* val
 }
 
 template<typename T>
-static void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_C(const T* Xi, int16_t* RLCi, int16_t* ERi, int16_t* b1, int16_t* er1, const compv_uscalar_t width)
+static void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_C(
+	const T* Xi, const compv_uscalar_t Xi_stride,
+	int16_t* RLCi, const compv_uscalar_t RLCi_stride,
+	int16_t* ERi, const compv_uscalar_t ERi_stride,
+	int16_t* ner, int16_t* ner_max1, compv_ccl_indice_t* ner_sum1,
+	const compv_uscalar_t width, const compv_uscalar_t height)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
 #define SET_RLC_1(mm, ii) \
@@ -72,20 +77,45 @@ static void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_C(const T* 
 		} \
 		ERi[(ii)] = er
 
-	int16_t i;
-	int16_t b = *b1, er = *er1;
-	const int16_t width4 = width & -4;
-	for (i = 1; i < width4; i += 4) {
-		SET_RLC_1(Xi[i - 1] ^ Xi[i], i);
-		SET_RLC_1(Xi[i] ^ Xi[i + 1], i + 1);
-		SET_RLC_1(Xi[i + 1] ^ Xi[i + 2], i + 2);
-		SET_RLC_1(Xi[i + 2] ^ Xi[i + 3], i + 3);
+	int16_t i, b, er;
+	const int16_t width4 = width & -4, width1 = static_cast<int16_t>(width);
+	int16_t ner_max = 0;
+	compv_ccl_indice_t ner_sum = 0;
+
+	for (compv_uscalar_t j = 0; j < height; ++j) {
+		/* For i = 0 */
+		b = Xi[0] & 1; // right border compensation
+		er = b; // a relative label
+		RLCi[0] = 0;
+		ERi[0] = er;
+		/* i = 1....w */
+		{
+			for (i = 1; i < width4; i += 4) {
+				SET_RLC_1(Xi[i - 1] ^ Xi[i], i);
+				SET_RLC_1(Xi[i] ^ Xi[i + 1], i + 1);
+				SET_RLC_1(Xi[i + 1] ^ Xi[i + 2], i + 2);
+				SET_RLC_1(Xi[i + 2] ^ Xi[i + 3], i + 3);
+			}
+			for (; i < width1; ++i) {
+				SET_RLC_1(Xi[i - 1] ^ Xi[i], i);
+			}
+		}
+		/* update las RLCi and ner */
+		RLCi[er] = (width1 - b);
+		const int16_t nerj = er + (Xi[width1 - 1] & 1);
+		ner[j] = nerj;
+		ner_sum += nerj;
+		if (ner_max < nerj) { // TODO(dmi): asm use cmovgt
+			ner_max = nerj;
+		}
+		/* next */
+		Xi += Xi_stride;
+		ERi += ERi_stride;
+		RLCi += RLCi_stride;
 	}
-	for (; i < width; ++i) {
-		SET_RLC_1(Xi[i - 1] ^ Xi[i], i);
-	}
-	*b1 = b;
-	*er1 = er;
+
+	*ner_max1 = ner_max;
+	*ner_sum1 = ner_sum;
 }
 
 // Relative segment labeling: step#1
@@ -95,72 +125,63 @@ static void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_C(const T* 
 // RLCi, a table holding the run length coding of segments of the line Xi
 // ner, the number of segments of ERi – black + white
 template<typename T>
-static void step1_algo13_segment_RLE(const CompVMatPtr& X, CompVMatPtr ER, CompVMatPtr RLC, CompVMatPtr ner, compv_ccl_indice_t* ner_max1, compv_ccl_indice_t* ner_sum1, const compv_ccl_indice_t w, const compv_ccl_indice_t start, const compv_ccl_indice_t end)
+static void step1_algo13_segment_RLE(const CompVMatPtr& X, CompVMatPtr ER, CompVMatPtr RLC, CompVMatPtr ner, int16_t* ner_max1, compv_ccl_indice_t* ner_sum1, const compv_ccl_indice_t w, const compv_ccl_indice_t start, const compv_ccl_indice_t end)
 {
 	const T* Xi = X->ptr<T>(start);
 	int16_t* ERi = ER->ptr<int16_t>(start);
 	int16_t* RLCi = RLC->ptr<int16_t>(start);
-	int16_t* ner0 = ner->ptr<int16_t>(0);
+	int16_t* ner0 = ner->ptr<int16_t>(0, start);
 
 	const size_t X_stride = X->stride();
 	const size_t ER_stride = ER->stride();
 	const size_t RLC_stride = RLC->stride();
 
-	compv_ccl_indice_t ner_max = 0;
-	compv_ccl_indice_t ner_sum = 0;
-
 	/* Hook to processing function */
-	typedef void(*FunPtr)(const T* Xi, int16_t* RLCi, int16_t* ERi, int16_t* b1, int16_t* er1, const compv_uscalar_t width);
-	FunPtr funPtr = [](const T* Xi, int16_t* RLCi, int16_t* ERi, int16_t* b1, int16_t* er1, const compv_uscalar_t width) {
-		CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_C<T >(Xi, RLCi, ERi, b1, er1, width);
+	typedef void(*FunPtr)(const T* Xi, const compv_uscalar_t Xi_stride,
+		int16_t* RLCi, const compv_uscalar_t RLCi_stride,
+		int16_t* ERi, const compv_uscalar_t ERi_stride,
+		int16_t* ner, int16_t* ner_max1, compv_ccl_indice_t* ner_sum1,
+		const compv_uscalar_t width, const compv_uscalar_t height);
+	FunPtr funPtr = [](const T* Xi, const compv_uscalar_t Xi_stride,
+		int16_t* RLCi, const compv_uscalar_t RLCi_stride,
+		int16_t* ERi, const compv_uscalar_t ERi_stride,
+		int16_t* ner, int16_t* ner_max1, compv_ccl_indice_t* ner_sum1,
+		const compv_uscalar_t width, const compv_uscalar_t height)  {
+		CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_C<T >(
+			Xi, Xi_stride,
+			RLCi, RLCi_stride,
+			ERi, ERi_stride,
+			ner,
+			ner_max1,
+			ner_sum1,
+			width, height);
 	};
 
-	if (std::is_same<T, uint8_t>::value) {
-		void(*funPtr_8u_16s)(const uint8_t* Xi, int16_t* RLCi, int16_t* ERi, int16_t* b1, int16_t* er1, const compv_uscalar_t width)
+	if (std::is_same<T, uint8_t>::value && std::is_same<int32_t, compv_ccl_indice_t>::value) {
+		void(*funPtr_8u16s32s)(const uint8_t* Xi, const compv_uscalar_t Xi_stride,
+			int16_t* RLCi, const compv_uscalar_t RLCi_stride,
+			int16_t* ERi, const compv_uscalar_t ERi_stride,
+			int16_t* ner, int16_t* ner_max1, int32_t* ner_sum1,
+			const compv_uscalar_t width, const compv_uscalar_t height)
 			= nullptr;
 #if COMPV_ARCH_X86
-		//COMPV_EXEC_IFDEF_ASM_X64(funPtr_8u_32s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_8u16s_Asm_X64);
+		//COMPV_EXEC_IFDEF_ASM_X64(funPtr_8u16s32s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_8u16s32s_Asm_X64);
 #elif COMPV_ARCH_ARM
-		//COMPV_EXEC_IFDEF_ASM_ARM32(funPtr_8u_32s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_8u16s_Asm_NEON32);
-		//COMPV_EXEC_IFDEF_ASM_ARM64(funPtr_8u_32s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_8u16s_Asm_NEON64);
+		//COMPV_EXEC_IFDEF_ASM_ARM32(funPtr_8u16s32s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_8u16s_Asm_NEON32);
+		//COMPV_EXEC_IFDEF_ASM_ARM64(funPtr_8u16s32s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_8u16s_Asm_NEON64);
 #endif
-		if (funPtr_8u_16s) {
-			funPtr = reinterpret_cast<FunPtr>(funPtr_8u_16s);
+		if (funPtr_8u16s32s) {
+			funPtr = reinterpret_cast<FunPtr>(funPtr_8u16s32s);
 		}
 	}
 
-	const compv_uscalar_t ws = static_cast<compv_uscalar_t>(w);
-
-	/* Loop through the rows */
-	for (compv_ccl_indice_t j = start; j < end; ++j) {
-		/* For i = 0 */
-		int16_t b = Xi[0] & 1; // right border compensation
-		int16_t er = b; // a relative label
-		RLCi[0] = 0;
-		ERi[0] = er;
-		/* i = 1....w */
-#if 1
-		//FIXME(dmi): for testing
-		CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_8u16s_Asm_X64(Xi, RLCi, ERi, &b, &er, w);
-#else
-		funPtr(Xi, RLCi, ERi, &b, &er, w);
-#endif
-		/* update las RLCi and ner */
-		RLCi[er] = (w - b);
-		const int16_t ner0j = er + (Xi[w - 1] & 1);
-		ner0[j] = ner0j;
-		ner_sum += ner0j;
-		if (ner_max < ner0j) {
-			ner_max = ner0j;
-		}
-		/* next */
-		Xi += X_stride;
-		ERi += ER_stride;
-		RLCi += RLC_stride;
-	}
-
-	*ner_max1 = ner_max;
-	*ner_sum1 = ner_sum;
+	funPtr(
+		Xi, X_stride,
+		RLCi, RLC_stride,
+		ERi, ER_stride,
+		ner0, ner_max1, ner_sum1,
+		static_cast<compv_uscalar_t>(w), static_cast<compv_uscalar_t>(end - start)
+	);
 }
 
 // 2.2 Equivalence construction: step#2.0 (MT friendly)
@@ -373,11 +394,12 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 	const size_t maxThreads = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
 
 	/* Relative segment labeling: step#1 */
-	compv_ccl_indice_t ner_max, ner_sum;
+	int16_t ner_max;
+	compv_ccl_indice_t ner_sum;
 	const size_t threadsCountStep1 = (threadDisp && !threadDisp->isMotherOfTheCurrentThread())
 		? CompVThreadDispatcher::guessNumThreadsDividingAcrossY(width, height, maxThreads, COMPV_CCL_LSL_STEP1_MIN_SAMPLES_PER_THREAD)
 		: 1;
-	auto funcPtrStep1 = [&](const compv_ccl_indice_t mt_start, const compv_ccl_indice_t mt_end, compv_ccl_indice_t* mt_ner_max, compv_ccl_indice_t* mt_ner_sum) -> COMPV_ERROR_CODE {
+	auto funcPtrStep1 = [&](const compv_ccl_indice_t mt_start, const compv_ccl_indice_t mt_end, int16_t* mt_ner_max, compv_ccl_indice_t* mt_ner_sum) -> COMPV_ERROR_CODE {
 		step1_algo13_segment_RLE<uint8_t>(
 			binar,
 			ER,
@@ -394,7 +416,8 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 	if (threadsCountStep1 > 1) {
 		CompVAsyncTaskIds taskIds;
 		taskIds.reserve(threadsCountStep1);
-		std::vector<compv_ccl_indice_t> mt_ner_max(threadsCountStep1), mt_ner_sum(threadsCountStep1);
+		std::vector<int16_t> mt_ner_max(threadsCountStep1);
+		std::vector<compv_ccl_indice_t> mt_ner_sum(threadsCountStep1);
 		const size_t heights = (height / threadsCountStep1);
 		size_t YStart = 0, YEnd;
 		for (size_t threadIdx = 0; threadIdx < threadsCountStep1; ++threadIdx) {

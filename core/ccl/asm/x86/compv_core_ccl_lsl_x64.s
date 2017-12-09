@@ -12,7 +12,7 @@
 
 COMPV_YASM_DEFAULT_REL
 
-global sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_8u16s_Asm_X64)
+global sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_8u16s32s_Asm_X64)
 
 section .data
 
@@ -48,7 +48,7 @@ section .text
 ; arg(3) -> int16_t* b1
 ; arg(4) -> int16_t* er1
 ; arg(5) -> const compv_uscalar_t width
-sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_8u16s_Asm_X64):
+sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_8u16s32s_Asm_X64):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 6
