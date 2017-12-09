@@ -119,7 +119,7 @@ static void step1_algo13_segment_RLE(const CompVMatPtr& X, CompVMatPtr ER, CompV
 			= nullptr;
 #if COMPV_ARCH_X86
 		if (CompVCpu::isEnabled(kCpuFlagSSE2) && X->isAlignedSSE()) {
-			COMPV_EXEC_IFDEF_INTRIN_X86(funPtr_8u_32s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_8u32s_Intrin_SSE2);
+			//COMPV_EXEC_IFDEF_INTRIN_X86(funPtr_8u_32s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_8u32s_Intrin_SSE2);
 			//COMPV_EXEC_IFDEF_ASM_X64(funPtr_8u_32s = nullptr);
 		}
 #elif COMPV_ARCH_ARM
@@ -142,7 +142,7 @@ static void step1_algo13_segment_RLE(const CompVMatPtr& X, CompVMatPtr ER, CompV
 		RLCi[0] = 0;
 		ERi[0] = er;
 		/* i = 1....w */
-#if 1
+#if 0
 		//FIXME(dmi): for testing
 		CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_8u32s_Asm_X64_CMOV(Xi, RLCi, ERi, &b, &er, w);
 #else
