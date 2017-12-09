@@ -153,10 +153,6 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVMatPtr& image, CompVMatP
 	}
 #endif
 
-	// Create edges buffer
-	// edges must have same stride than m_pG (required by scaleAndClip) and image (required by gaussian blur)
-	COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(edges, COMPV_SUBTYPE_PIXELS_Y, m_nImageWidth, m_nImageHeight, m_nImageStride));
-
 	// Compute mean and get tLow and tMin
 	// TODO(dmi): add support for otsu and median
 	uint32_t sum = 0; // sum used to compute mean
@@ -247,6 +243,10 @@ bail:
 		}
 	}
 
+	// Create edges buffer (could be equal to input and this is it's here after computing the gradient)
+	// edges must have same stride than m_pG (required by scaleAndClip) and image (required by gaussian blur)
+	COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(edges, COMPV_SUBTYPE_PIXELS_Y, m_nImageWidth, m_nImageHeight, m_nImageStride));
+
 	/* Compute tLow and tHigh */
 	uint16_t tLow, tHigh;
 	if (bThresholdIsPercentOfMean) { /* COMPV_CANNY_THRESHOLD_TYPE_PERCENT_OF_MEAN */
@@ -330,7 +330,7 @@ bail:
 }
 
 // NonMaximaSuppression
-COMPV_ERROR_CODE CompVEdgeDeteCanny::nms_gather(CompVMatPtr& edges, uint16_t tLow, size_t rowStart, size_t rowCount)
+COMPV_ERROR_CODE CompVEdgeDeteCanny::nms_gather(CompVMatPtr edges, uint16_t tLow, size_t rowStart, size_t rowCount)
 {
 	// Private function -> do not check input parameters
 	size_t maxRows = rowStart + rowCount;
@@ -458,7 +458,7 @@ void CompVEdgeDeteCanny::nms_apply()
 	}
 }
 
-COMPV_ERROR_CODE CompVEdgeDeteCanny::hysteresis(CompVMatPtr& edges, uint16_t tLow, uint16_t tHigh, size_t rowStart, size_t rowCount)
+COMPV_ERROR_CODE CompVEdgeDeteCanny::hysteresis(CompVMatPtr edges, uint16_t tLow, uint16_t tHigh, size_t rowStart, size_t rowCount)
 {
 	// Private function -> do not check input parameters
 	size_t rowEnd = rowStart + rowCount;

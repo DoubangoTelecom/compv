@@ -33,9 +33,9 @@ public:
 	static COMPV_ERROR_CODE newObj(CompVEdgeDetePtrPtr dete, float tLow, float tHigh, size_t kernSize = 3);
 
 private:
-	COMPV_ERROR_CODE nms_gather(CompVMatPtr& edges, uint16_t tLow, size_t rowStart, size_t rowCount);
+	COMPV_ERROR_CODE nms_gather(CompVMatPtr edges, uint16_t tLow, size_t rowStart, size_t rowCount);
 	void nms_apply();
-	COMPV_ERROR_CODE hysteresis(CompVMatPtr& edges, uint16_t tLow, uint16_t tHigh, size_t rowStart, size_t rowCount);
+	COMPV_ERROR_CODE hysteresis(CompVMatPtr edges, uint16_t tLow, uint16_t tHigh, size_t rowStart, size_t rowCount);
 	COMPV_ERROR_CODE direction(const CompVMatPtr& edges, CompVMatPtr& dirs, size_t rowStart, size_t rowCount);
 
 private:
