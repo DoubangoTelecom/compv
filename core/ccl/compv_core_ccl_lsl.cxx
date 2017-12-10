@@ -508,7 +508,6 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 	/* Create ERA and init with zeros (FIXME(use calloc) */
 	{
 		COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<compv_ccl_indice_t>(&ERA, height, ner_max));
-		COMPV_CHECK_CODE_RETURN(ERA->zero_all());
 	}
 
 	/* Equivalence construction: step#2.0 (MT-friendly) */
