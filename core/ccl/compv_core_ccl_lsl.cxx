@@ -507,19 +507,8 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 
 	/* Create ERA and init with zeros (FIXME(use calloc) */
 	{
-		//COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<compv_ccl_indice_t>(&ERA, height, ner_max));
-		//T left;
-		//T top;
-		//T right;
-		//T bottom;
-		const CompVRectFloat32 roi = { 0.f, 0.f, static_cast<compv_float32_t>(RLC->cols()), static_cast<compv_float32_t>(RLC->rows() - 1) };
-		CompVMatPtr RLC_bind;
-		COMPV_CHECK_CODE_RETURN(RLC->bind(&RLC_bind, roi));
-		ERA = RLC;
-		COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<compv_ccl_indice_t>(&ERA, height, ner_max)); // no memory allocation if size smaller (always the case)
-		RLC = RLC_bind;
-
-		//COMPV_CHECK_CODE_RETURN(ERA->zero_all());
+		COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<compv_ccl_indice_t>(&ERA, height, ner_max));
+		COMPV_CHECK_CODE_RETURN(ERA->zero_all());
 	}
 
 	/* Equivalence construction: step#2.0 (MT-friendly) */
@@ -574,7 +563,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 	);
 
 	/* For testing */
-	//build_all_labels(A, ERA, ER, &result.labels);
+	build_all_labels(A, ERA, ER, &result.labels);
 	result.labels_count = (na + 1); // +1 for the background
 
 	return COMPV_ERROR_CODE_S_OK;
