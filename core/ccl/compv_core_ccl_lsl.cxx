@@ -440,13 +440,13 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 	result.reset();
 	result.label_background = kCompVConnectedComponentLabelingLSLBachgroundLabel;
 
-	static CompVMatPtr ner; // the number of segments of ERi - black + white -
-	static CompVMatPtr ER; //  an associative table of size w holding the relative labels er associated to Xi
-	static CompVMatPtr ERA; // an associative table holding the association between er and ea: ea = ERAi[er]
-	static CompVMatPtr EA; // an image of size h × w of absolute labels ea before equivalence resolution
-	static CompVMatPtr A; // the associative table of ancestors
-	static std::vector<compv_ccl_indice_t> EQ; // the table holding the equivalence classes, before transitive closure
+	CompVMatPtr ner; // the number of segments of ERi - black + white -
+	CompVMatPtr ER; //  an associative table of size w holding the relative labels er associated to Xi
+	CompVMatPtr ERA; // an associative table holding the association between er and ea: ea = ERAi[er]
+	CompVMatPtr A; // the associative table of ancestors
+	std::vector<compv_ccl_indice_t> EQ; // the table holding the equivalence classes, before transitive closure
 	compv_ccl_indice_t nea = 0; // the current number of absolute labels, update of EQ and ERAi
+	compv_ccl_indice_t na = 0; // final number of absolute labels
 
 	const size_t width = binar->cols();
 	const size_t height = binar->rows();
@@ -661,20 +661,6 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 	//COMPV_DEBUG_INFO("MD5-ERA=%s", CompVMd5::compute2(ERA->ptr(), ERA->dataSizeInBytes()).c_str());
 
 	COMPV_ASSERT(ner_max < __ner_max_per_row); // FIXME(dmi): remove
-
-#if 0
-	/* Build EQ */
-	EQ.resize(ner_sum);
-	std::iota(EQ.begin(), EQ.end(), 0);
-
-	/* Equivalence construction: step#2.1 (not MT-friendly) */
-	step21_algo14_equivalence_build(
-		ner,
-		ERA,
-		EQ,
-		&nea
-	);
-#endif
 	COMPV_ASSERT(nea < ner_sum); // FIXME(dmi): remove
 
 	/* Create A and init first element with zero (because bacground label is equal to zero) */
@@ -682,7 +668,6 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 	*A->ptr<compv_ccl_indice_t>(0, 0) = 0; // other values will be initialzed in step4_algo6_eq_resolv
 
 	/* Equivalence resolution: step#4 */
-	compv_ccl_indice_t na = 0; // final number of absolute labels
 	step4_algo6_eq_resolv(
 		EQ,
 		nea,
@@ -691,10 +676,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 	);
 
 	/* For testing */
-	//build_all_labels(A, ERA, ER, &EA);
-
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Directly write to result.labels");
-	result.labels = EA;
+	build_all_labels(A, ERA, ER, &result.labels);
 	result.labels_count = (na + 1); // +1 for the background
 
 	return COMPV_ERROR_CODE_S_OK;
