@@ -16,6 +16,7 @@ Some literature about LSL:
 #include "compv/core/compv_core.h"
 #include "compv/base/parallel/compv_parallel.h"
 #include "compv/base/compv_cpu.h"
+#include "compv/base/compv_memz.h"
 
 #include "compv/core/ccl/intrin/x86/compv_core_ccl_lsl_intrin_sse2.h"
 
@@ -42,6 +43,8 @@ COMPV_EXTERNC void CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBui
 #endif /* COMPV_ASM && COMPV_ARCH_X64 */
 
 static const compv_ccl_indice_t kCompVConnectedComponentLabelingLSLBachgroundLabel = 0; // Must be zero because of calloc()
+typedef CompVMemZero<compv_ccl_indice_t > CompVMemZeroCclIndice;
+typedef CompVPtr<CompVMemZeroCclIndice *> CompVMemZeroCclIndicePtr;
 
 CompVConnectedComponentLabelingLSL::CompVConnectedComponentLabelingLSL()
 	:CompVConnectedComponentLabeling(static_cast<compv_ccl_indice_t>(COMPV_LSL_ID))
@@ -227,10 +230,6 @@ static void CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_C(
 				? (er0 | er1 << 16)
 				: 0;
 		}
-		// [set even segments values to 0 (background label)]
-		for (er = 0; er < 48; er += 2) {
-			ERAi[er] = 0;
-		}
 		ERiminus1 += ERi_stride;
 		RLCi += RLCi_stride;
 		ERAi += ERAi_stride;
@@ -242,13 +241,13 @@ static void CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_C(
 // ERi, an associative table of size w holding the relative labels er associated to Xi
 // RLCi, a table holding the run length coding of segments of the line Xi
 // ERAi, an associative table holding the association between er and ea: ea = ERAi[er]
-static void step20_algo14_equivalence_build(const CompVMatPtr& ER, const CompVMatPtr& RLC, const CompVMatPtr& ner, CompVMatPtr ERA, const compv_ccl_indice_t w, const compv_ccl_indice_t start, const compv_ccl_indice_t end)
+static void step20_algo14_equivalence_build(const CompVMatPtr& ER, const CompVMatPtr& RLC, const CompVMatPtr& ner, CompVMemZeroCclIndicePtr ERA, const compv_ccl_indice_t w, const compv_ccl_indice_t start, const compv_ccl_indice_t end)
 {
 	const compv_ccl_indice_t jstart = !start ? 1 : start;
 	const int16_t* ERiminus1 = ER->ptr<const int16_t>(jstart - 1);
 	const int16_t* RLCi = RLC->ptr<const int16_t>(jstart);
 	const int16_t* ner0 = ner->ptr<const int16_t>(0, jstart);
-	compv_ccl_indice_t* ERAi = ERA->ptr<compv_ccl_indice_t>(jstart);
+	compv_ccl_indice_t* ERAi = ERA->ptr(jstart);
 	const size_t ER_stride = ER->stride();
 	const size_t RLC_stride = RLC->stride();
 	const size_t ERA_stride = ERA->stride();
@@ -296,10 +295,6 @@ static void step20_algo14_equivalence_build(const CompVMatPtr& ER, const CompVMa
 		ner0,
 		static_cast<compv_uscalar_t>(w), static_cast<compv_uscalar_t>(end - jstart)
 	);
-
-	if (!start) {
-		ERA->zero_row(0);
-	}
 }
 
 // 2.2 Equivalence construction: step#2.1 (not MT friendly)
@@ -308,18 +303,18 @@ static void step20_algo14_equivalence_build(const CompVMatPtr& ER, const CompVMa
 // ERAi, an associative table holding the association between er and ea: ea = ERAi[er]
 // ner, the number of segments of ERi - black + white
 // nea the current number of absolute labels, update of EQ and ERAi
-static void step21_algo14_equivalence_build(const CompVMatPtr ner, CompVMatPtr ERA, CompVMatPtr EQ, compv_ccl_indice_t* nea1)
+static void step21_algo14_equivalence_build(const CompVMatPtr ner, CompVMemZeroCclIndicePtr ERA, CompVMatPtr EQ, compv_ccl_indice_t* nea1)
 {
 	const int16_t ner00 = *ner->ptr<int16_t>(0, 0);
-	compv_ccl_indice_t* ERA0 = ERA->ptr<compv_ccl_indice_t>(0);
+	compv_ccl_indice_t* ERA0 = ERA->ptr(0);
 	compv_ccl_indice_t nea = 0;
 	for (int16_t er = 1; er < ner00; er += 2) {
 		ERA0[er] = ++nea; // [new label]
 	}
 
 	const size_t rows = ERA->rows();
-	compv_ccl_indice_t* ERAi = ERA->ptr<compv_ccl_indice_t>(1);
-	const compv_ccl_indice_t* ERAiminus1 = ERA->ptr<compv_ccl_indice_t>(0);
+	compv_ccl_indice_t* ERAi = ERA->ptr(1);
+	const compv_ccl_indice_t* ERAiminus1 = ERA->ptr(0);
 	compv_ccl_indice_t* EQ0 = EQ->ptr<compv_ccl_indice_t>(0, 0);
 	int16_t* ner0 = ner->ptr<int16_t>(0, 0);
 	const size_t ERA_stride = ERA->stride();
@@ -396,7 +391,7 @@ static COMPV_ERROR_CODE build_EQ(const size_t ner_sum, CompVMatPtrPtr EQ)
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-static COMPV_ERROR_CODE build_all_labels(const CompVMatPtr& A, const CompVMatPtr& ERA, const CompVMatPtr& ER, CompVMatPtrPtr EA)
+static COMPV_ERROR_CODE build_all_labels(const CompVMatPtr& A, const CompVMemZeroCclIndicePtr& ERA, const CompVMatPtr& ER, CompVMatPtrPtr EA)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
 	const size_t ER_width = ER->cols();
@@ -408,7 +403,7 @@ static COMPV_ERROR_CODE build_all_labels(const CompVMatPtr& A, const CompVMatPtr
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_ccl_indice_t>(EA, ER_height, ER_width, ER_stride));
 
 	const compv_ccl_indice_t* APtr = A->ptr<const compv_ccl_indice_t>();
-	const compv_ccl_indice_t* ERAPtr = ERA->ptr<const compv_ccl_indice_t>();
+	const compv_ccl_indice_t* ERAPtr = ERA->ptr();
 	const int16_t* ERPtr = ER->ptr<int16_t>();
 	compv_ccl_indice_t* EAPtr = (*EA)->ptr<compv_ccl_indice_t>();
 
@@ -441,7 +436,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 	CompVMatPtr ner; // the number of segments of ERi - black + white -
 	CompVMatPtr ER; //  an associative table of size w holding the relative labels er associated to Xi
 	CompVMatPtr RLC; // a table holding the run length coding of segments of the line Xi, RLCi-1 is the similar memorization of the previous line.
-	CompVMatPtr ERA; // an associative table holding the association between er and ea: ea = ERAi[er]
+	CompVMemZeroCclIndicePtr ERA; // an associative table holding the association between er and ea: ea = ERAi[er]
 	CompVMatPtr EQ; // the table holding the equivalence classes, before transitive closure
 	CompVMatPtr A; // the associative table of ancestors
 
@@ -505,10 +500,8 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 		COMPV_CHECK_CODE_RETURN(funcPtrStep1(0, static_cast<compv_ccl_indice_t>(height), &ner_max, &ner_sum));
 	}
 
-	/* Create ERA and init with zeros (FIXME(use calloc) */
-	{
-		COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<compv_ccl_indice_t>(&ERA, height, ner_max));
-	}
+	/* Create ERA and init with zeros */
+	COMPV_CHECK_CODE_RETURN(CompVMemZeroCclIndice::newObj(&ERA, height, ner_max));
 
 	/* Equivalence construction: step#2.0 (MT-friendly) */
 	const size_t minSamplePerThreadStep20 = std::max(
@@ -562,7 +555,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 	);
 
 	/* For testing */
-	build_all_labels(A, ERA, ER, &result.labels);
+	//build_all_labels(A, ERA, ER, &result.labels);
 	result.labels_count = (na + 1); // +1 for the background
 
 	return COMPV_ERROR_CODE_S_OK;
