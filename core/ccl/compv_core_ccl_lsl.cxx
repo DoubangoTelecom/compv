@@ -16,6 +16,7 @@ Some literature about LSL:
 #include "compv/core/compv_core.h"
 #include "compv/base/parallel/compv_parallel.h"
 #include "compv/base/compv_cpu.h"
+#include "compv/base/compv_md5.h" // FIXME(dmi): remove
 
 #include "compv/core/ccl/intrin/x86/compv_core_ccl_lsl_intrin_sse2.h"
 
@@ -249,9 +250,9 @@ static void step20_algo14_equivalence_build(const CompVMatPtr& ER, const CompVMa
 	}
 
 	const int16_t* ERiminus1 = ER->ptr<const int16_t>(jstart - 1);
-	const int16_t* RLCi = RLC->ptr<const int16_t>(0); // zero-based (per thread)
+	const int16_t* RLCi = RLC->ptr<const int16_t>((jstart - start)); // zero-based (per thread)
 	const int16_t* ner0 = ner->ptr<const int16_t>(0, jstart); // zero-based (per row)
-	compv_ccl_indice_t* ERAi = ERA->ptr<compv_ccl_indice_t>(jstart);
+	compv_ccl_indice_t* ERAi = ERA->ptr<compv_ccl_indice_t>((jstart - start)); // zero-based (per thread)
 	const size_t ER_stride = ER->stride();
 	const size_t RLC_stride = RLC->stride();
 	const size_t ERA_stride = ERA->stride();
@@ -545,6 +546,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 	/* Create ERA and init with zeros (FIXME(use calloc) */
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No need to keep having ERA, use it as local then destroy or just create one per thread");
 	{
+		COMPV_DEBUG_INFO_CODE_FOR_TESTING("ner_max hard-coded");
 		COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<compv_ccl_indice_t>(&ERA, height, __ner_max_per_row));
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Do not call zero_all on ERA but use calloc");
 		COMPV_CHECK_CODE_RETURN(ERA->zero_all());
@@ -554,7 +556,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 
 	/* Step #1 and #20  function pointer */	
 	auto funcPtrStep1and20 = [&](const size_t mt_start, const size_t mt_end, int16_t* mt_ner_max, compv_ccl_indice_t* mt_ner_sum) -> COMPV_ERROR_CODE {
-		CompVMatPtr RLC;		
+		CompVMatPtr RLC, ERA_bind, RLC_bind;
 		/* Relative segment labeling: step#1 */
 		// Step #20 needs RLCi-1 (RLC[start - 1]) which may cross thread bundaries. This is 
 		// why in #1 compute [clip(0, start-1), end] range.
@@ -574,11 +576,26 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 			);
 
 		/* Equivalence construction: step#2.0 (MT-friendly) */
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Here is where to create ERA with cols = *mt_ner_max");
+		const CompVRectFloat32 roi_ERA = {
+			0.f, // left
+			static_cast<compv_float32_t>(mt_start), // top
+			static_cast<compv_float32_t>(ERA->cols() - 1), // right
+			static_cast<compv_float32_t>(mt_end - 1)// bottom
+		};
+		const CompVRectFloat32 roi_RLC = {
+			0.f, // left
+			static_cast<compv_float32_t>(mt_start ? 1 : 0), // top
+			static_cast<compv_float32_t>(RLC->cols() - 1), // right
+			static_cast<compv_float32_t>(RLC->rows() - 1)// bottom
+		};
+		COMPV_CHECK_CODE_RETURN(ERA->bind(&ERA_bind, roi_ERA));
+		COMPV_CHECK_CODE_RETURN(RLC->bind(&RLC_bind, roi_RLC)); // zero-based RLC
 		step20_algo14_equivalence_build(
 			ER,
-			RLC,
+			RLC_bind,
 			ner,
-			ERA,
+			ERA_bind,
 			static_cast<compv_ccl_indice_t>(width),
 			static_cast<compv_ccl_indice_t>(mt_start),
 			static_cast<compv_ccl_indice_t>(mt_end)
@@ -621,6 +638,11 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 	else {
 		COMPV_CHECK_CODE_RETURN(funcPtrStep1and20(0, static_cast<compv_ccl_indice_t>(height), &ner_max, &ner_sum));
 	}
+
+	//COMPV_DEBUG_INFO("MD5-ER=%s", CompVMd5::compute2(ER->ptr(), ER->dataSizeInBytes()).c_str());
+	//COMPV_DEBUG_INFO("MD5-ner=%s", CompVMd5::compute2(ner->ptr(), ner->dataSizeInBytes()).c_str());
+	//COMPV_DEBUG_INFO("MD5-ERA=%s", CompVMd5::compute2(ERA->ptr(), ERA->dataSizeInBytes()).c_str());
+
 	COMPV_ASSERT(ner_max < __ner_max_per_row); // FIXME(dmi): remove
 
 	/* Build EQ */
@@ -650,7 +672,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 	);
 
 	/* For testing */
-	build_all_labels(A, ERA, ER, &EA);
+	//build_all_labels(A, ERA, ER, &EA);
 
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Directly write to result.labels");
 	result.labels = EA;
