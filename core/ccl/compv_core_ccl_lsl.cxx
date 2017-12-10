@@ -208,6 +208,8 @@ static void CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_C(
 	const int16_t wminus1 = static_cast<int16_t>(width - 1);
 	int16_t er, er0, er1, j0, j1, nerj;
 
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING("ERA.cols = 48 hard-coded");
+
 	for (compv_uscalar_t j = 0; j < height; ++j) {
 		nerj = ner[j];
 		for (er = 1; er < nerj; er += 2) {
@@ -224,6 +226,10 @@ static void CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_C(
 			ERAi[er] = (er1 >= er0)
 				? (er0 | er1 << 16)
 				: 0;
+		}
+		// [set even segments values to 0 (background label)]
+		for (er = 0; er < 48; er += 2) {
+			ERAi[er] = 0;
 		}
 		ERiminus1 += ERi_stride;
 		RLCi += RLCi_stride;
@@ -290,6 +296,10 @@ static void step20_algo14_equivalence_build(const CompVMatPtr& ER, const CompVMa
 		ner0,
 		static_cast<compv_uscalar_t>(w), static_cast<compv_uscalar_t>(end - jstart)
 	);
+
+	if (!start) {
+		ERA->zero_row(0);
+	}
 }
 
 // 2.2 Equivalence construction: step#2.1 (not MT friendly)
@@ -440,7 +450,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 	const size_t __ner_max = ((width + 1) >> 1); // full dashed row
 
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int16_t>(&ER, height, width));
-	COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int16_t>(&RLC, height, __ner_max));
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int16_t>(&RLC, height, __ner_max)); // FIXME(dmi): __ner_max enough for ERA(int32)?
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int16_t>(&ner, 1, height));
 
 	/* Multi-threading dispatcher */
@@ -497,8 +507,19 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 
 	/* Create ERA and init with zeros (FIXME(use calloc) */
 	{
-		COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<compv_ccl_indice_t>(&ERA, height, ner_max));
-		COMPV_CHECK_CODE_RETURN(ERA->zero_all());
+		//COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<compv_ccl_indice_t>(&ERA, height, ner_max));
+		//T left;
+		//T top;
+		//T right;
+		//T bottom;
+		const CompVRectFloat32 roi = { 0.f, 0.f, static_cast<compv_float32_t>(RLC->cols()), static_cast<compv_float32_t>(RLC->rows() - 1) };
+		CompVMatPtr RLC_bind;
+		COMPV_CHECK_CODE_RETURN(RLC->bind(&RLC_bind, roi));
+		ERA = RLC;
+		COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<compv_ccl_indice_t>(&ERA, height, ner_max)); // no memory allocation if size smaller (always the case)
+		RLC = RLC_bind;
+
+		//COMPV_CHECK_CODE_RETURN(ERA->zero_all());
 	}
 
 	/* Equivalence construction: step#2.0 (MT-friendly) */
@@ -553,7 +574,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 	);
 
 	/* For testing */
-	build_all_labels(A, ERA, ER, &result.labels);
+	//build_all_labels(A, ERA, ER, &result.labels);
 	result.labels_count = (na + 1); // +1 for the background
 
 	return COMPV_ERROR_CODE_S_OK;
