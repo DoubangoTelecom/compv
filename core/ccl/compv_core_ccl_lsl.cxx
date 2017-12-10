@@ -239,14 +239,6 @@ static void CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_C(
 static void step20_algo14_equivalence_build(const CompVMatPtr& ER, const CompVMatPtr& RLC, const CompVMatPtr& ner, CompVMatPtr ERA, const compv_ccl_indice_t w, const compv_ccl_indice_t start, const compv_ccl_indice_t end)
 {
 	const compv_ccl_indice_t jstart = !start ? 1 : start;
-	if (!start) {
-		const int16_t ner0 = *ner->ptr<const int16_t>(0);
-		compv_ccl_indice_t* ERA0 = ERA->ptr<compv_ccl_indice_t>(0);
-		for (int16_t er = 1; er < ner0; er += 2) {
-			ERA0[er] = 0;
-		}
-	}
-
 	const int16_t* ERiminus1 = ER->ptr<const int16_t>(jstart - 1);
 	const int16_t* RLCi = RLC->ptr<const int16_t>(jstart);
 	const int16_t* ner0 = ner->ptr<const int16_t>(0, jstart);
