@@ -29,7 +29,7 @@ COMPV_NAMESPACE_BEGIN()
 
 // X64
 #if COMPV_ASM && COMPV_ARCH_X64
-COMPV_EXTERNC void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_8u16s32s_Asm_X64_CMOV(const uint8_t* Xi, const compv_uscalar_t Xi_stride,
+COMPV_EXTERNC void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_8u16s32s_Asm_X64_CMOV(const uint8_t* Xi, const compv_uscalar_t Xi_stride,
 	int16_t* RLCi, const compv_uscalar_t RLCi_stride,
 	int16_t* ERi, const compv_uscalar_t ERi_stride,
 	int16_t* ner, int16_t* ner_max1, int32_t* ner_sum1,
@@ -74,7 +74,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::set(int id, const void* val
 }
 
 template<typename T>
-static void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_C(
+static void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_C(
 	const T* Xi, const compv_uscalar_t Xi_stride,
 	int16_t* RLCi, const compv_uscalar_t RLCi_stride,
 	int16_t* ERi, const compv_uscalar_t ERi_stride,
@@ -82,6 +82,41 @@ static void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_C(
 	const compv_uscalar_t width, const compv_uscalar_t height)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("You should ASM code which is faster");
+	COMPV_DEBUG_INFO_CODE_TODO("ASM code not aligned at all");
+	int16_t i, er;
+	const int16_t width1 = static_cast<int16_t>(width);
+	int16_t ner_max = 0;
+	compv_ccl_indice_t ner_sum = 0;
+
+	for (compv_uscalar_t j = 0; j < height; ++j) {
+		er = (Xi[0] & 1);
+		ERi[0] = er;
+		RLCi[0] = 0;
+		for (i = 1; i < width1; ++i) {
+			RLCi[er] = i;
+			er += ((Xi[i - 1] ^ Xi[i]) & 1);
+			ERi[i] = er;
+		}
+		const int16_t x1 = (Xi[width1 - 1] & 1);
+		if (x1 != 0) {
+			RLCi[er] = width1;
+		}
+		er += x1;
+		ner[j] = er;
+		ner_sum += er;
+		if (ner_max < er) { // TODO(dmi): asm use cmovgt
+			ner_max = er;
+		}
+		/* next */
+		Xi += Xi_stride;
+		ERi += ERi_stride;
+		RLCi += RLCi_stride;
+	}
+
+	*ner_max1 = ner_max;
+	*ner_sum1 = ner_sum;
+
+#if 0
 #define SET_RLC_1(mm, ii) \
 		if ((mm)) { \
 			RLCi[er] = ((ii) - b); \
@@ -129,6 +164,7 @@ static void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_C(
 
 	*ner_max1 = ner_max;
 	*ner_sum1 = ner_sum;
+#endif
 }
 
 // Relative segment labeling: step#1
@@ -160,7 +196,7 @@ static void step1_algo13_segment_RLE(const CompVMatPtr& X, CompVMatPtr ER, CompV
 		int16_t* ERi, const compv_uscalar_t ERi_stride,
 		int16_t* ner, int16_t* ner_max1, compv_ccl_indice_t* ner_sum1,
 		const compv_uscalar_t width, const compv_uscalar_t height) {
-		CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_C<T >(
+		CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_C<T >(
 			Xi, Xi_stride,
 			RLCi, RLCi_stride,
 			ERi, ERi_stride,
@@ -179,11 +215,11 @@ static void step1_algo13_segment_RLE(const CompVMatPtr& X, CompVMatPtr ER, CompV
 			= nullptr;
 #if COMPV_ARCH_X86
 		if (CompVCpu::isEnabled(kCpuFlagCMOV)) { // All X64 archs support CMOVcc but we want to allow disabling it
-			COMPV_EXEC_IFDEF_ASM_X64(funPtr_8u16s32s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_8u16s32s_Asm_X64_CMOV);
+			COMPV_EXEC_IFDEF_ASM_X64(funPtr_8u16s32s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_8u16s32s_Asm_X64_CMOV);
 		}
 #elif COMPV_ARCH_ARM
-		//COMPV_EXEC_IFDEF_ASM_ARM32(funPtr_8u16s32s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_8u16s_Asm_NEON32);
-		//COMPV_EXEC_IFDEF_ASM_ARM64(funPtr_8u16s32s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_8u16s_Asm_NEON64);
+		//COMPV_EXEC_IFDEF_ASM_ARM32(funPtr_8u16s32s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_8u16s_Asm_NEON32);
+		//COMPV_EXEC_IFDEF_ASM_ARM64(funPtr_8u16s32s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_8u16s_Asm_NEON64);
 #endif
 		if (funPtr_8u16s32s) {
 			funPtr = reinterpret_cast<FunPtr>(funPtr_8u16s32s);
@@ -211,13 +247,13 @@ static void CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_C(
 	const int16_t wminus1 = static_cast<int16_t>(width - 1);
 	int16_t er, er0, er1, j0, j1, nerj;
 
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING("ERA.cols = 48 hard-coded");
+	COMPV_DEBUG_INFO_CODE_TODO("ASM code not aligned: change single line: setting j1=RLCi[er] - 1");
 
 	for (compv_uscalar_t j = 0; j < height; ++j) {
 		nerj = ner[j];
 		for (er = 1; er < nerj; er += 2) {
+			j1 = RLCi[er] - 1;
 			j0 = RLCi[er - 1];
-			j1 = RLCi[er];
 			// [check extension in case of 8-connect algorithm]
 			j0 -= (j0 > 0);
 			j1 += (j1 < wminus1);
