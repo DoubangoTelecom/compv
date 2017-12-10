@@ -98,7 +98,7 @@ sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_8u16s32s_Asm_X64_CM
 	mov ner, arg(6)
 	mov width, arg(9)
 
-	mov width4, width
+	lea width4, [width - 1]
 	xor ner_sum, ner_sum
 	and width4, -4
 	xor ner_max, ner_max
@@ -133,7 +133,7 @@ sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_8u16s32s_Asm_X64_CM
 			movzx X, byte [Xi + (i+2)*COMPV_YASM_UINT8_SZ_BYTES]
 			SET_RLC_1 X, Xb, Xw, (i + 3)
 			add i, 4
-			cmp i, width
+			cmp i, width4
 			jl .LoopWidth4
 		.EndOf_LoopWidth4:
 
