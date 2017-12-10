@@ -158,13 +158,6 @@ COMPV_ERROR_CODE CompVImageThreshold::global(const CompVMatPtr& input, CompVMatP
 	}
 #endif
 
-	// Get Number of threads
-	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
-	const size_t maxThreads = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
-	const size_t threadsCount = (threadDisp && !threadDisp->isMotherOfTheCurrentThread())
-		? CompVThreadDispatcher::guessNumThreadsDividingAcrossY(width, height, maxThreads, COMPV_IMAGE_THRESH_GLOBAL_SAMPLES_PER_THREAD)
-		: 1;
-
 	auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
 		const uint8_t* ptr8uInput = input->ptr<const uint8_t>(ystart);
 		uint8_t* ptr8uOutput = output_->ptr<uint8_t>(ystart);
@@ -175,21 +168,12 @@ COMPV_ERROR_CODE CompVImageThreshold::global(const CompVMatPtr& input, CompVMatP
 		return COMPV_ERROR_CODE_S_OK;
 	};
 
-	if (threadsCount > 1) {
-		CompVAsyncTaskIds taskIds;
-		taskIds.reserve(threadsCount);
-		const size_t heights = (height / threadsCount);
-		size_t YStart = 0, YEnd;
-		for (size_t threadIdx = 0; threadIdx < threadsCount; ++threadIdx) {
-			YEnd = (threadIdx == (threadsCount - 1)) ? height : (YStart + heights);
-			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, YStart, YEnd), taskIds), "Dispatching task failed");
-			YStart += heights;
-		}
-		COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds), "Failed to wait for tasks execution");
-	}
-	else {
-		COMPV_CHECK_CODE_RETURN(funcPtr(0, height));
-	}
+	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+		funcPtr,
+		width,
+		height,
+		COMPV_IMAGE_THRESH_GLOBAL_SAMPLES_PER_THREAD
+	));
 
 	*output = output_;
 	return COMPV_ERROR_CODE_S_OK;
