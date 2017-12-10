@@ -19,8 +19,9 @@ Some literature about LSL:
 
 #include "compv/core/ccl/intrin/x86/compv_core_ccl_lsl_intrin_sse2.h"
 
-#define COMPV_CCL_LSL_STEP1_MIN_SAMPLES_PER_THREAD	(20*20)
-#define COMPV_CCL_LSL_STEP20_MIN_SAMPLES_PER_THREAD	(30*30)
+#define COMPV_CCL_LSL_STEP1_MIN_SAMPLES_PER_THREAD				(20*20)
+#define COMPV_CCL_LSL_STEP20_MIN_SAMPLES_PER_THREAD				(30*30)
+#define COMPV_CCL_LSL_STEP1_AND_STEP20_MIN_SAMPLES_PER_THREAD	(1*1) // Step1 and step20 bundled (very cpu intensive)
 
 #define COMPV_THIS_CLASSNAME	"CompVConnectedComponentLabelingLSL"
 
@@ -139,8 +140,8 @@ static void step1_algo13_segment_RLE(const CompVMatPtr& X, CompVMatPtr ER, CompV
 {
 	const T* Xi = X->ptr<T>(start);
 	int16_t* ERi = ER->ptr<int16_t>(start);
-	int16_t* RLCi = RLC->ptr<int16_t>(start);
-	int16_t* ner0 = ner->ptr<int16_t>(0, start);
+	int16_t* RLCi = RLC->ptr<int16_t>(0); // zero-based (per thread)
+	int16_t* ner0 = ner->ptr<int16_t>(0, start); // zero-based (per row)
 
 	const size_t X_stride = X->stride();
 	const size_t ER_stride = ER->stride();
@@ -248,8 +249,8 @@ static void step20_algo14_equivalence_build(const CompVMatPtr& ER, const CompVMa
 	}
 
 	const int16_t* ERiminus1 = ER->ptr<const int16_t>(jstart - 1);
-	const int16_t* RLCi = RLC->ptr<const int16_t>(jstart);
-	const int16_t* ner0 = ner->ptr<const int16_t>(0, jstart);
+	const int16_t* RLCi = RLC->ptr<const int16_t>(0); // zero-based (per thread)
+	const int16_t* ner0 = ner->ptr<const int16_t>(0, jstart); // zero-based (per row)
 	compv_ccl_indice_t* ERAi = ERA->ptr<compv_ccl_indice_t>(jstart);
 	const size_t ER_stride = ER->stride();
 	const size_t RLC_stride = RLC->stride();
@@ -381,16 +382,14 @@ static void step4_algo6_eq_resolv(const CompVMatPtr& EQ, const compv_ccl_indice_
 	}
 }
 
-static COMPV_ERROR_CODE build_EQ(const size_t ner_sum, const size_t width, const size_t height, CompVMatPtrPtr EQ)
+static COMPV_ERROR_CODE build_EQ(const compv_ccl_indice_t ner_sum, const size_t width, const size_t height, CompVMatPtrPtr EQ)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
 	/* Create EQ and init with 0...n (itoa) */
-	const size_t EQ_count = COMPV_MATH_MIN(static_cast<size_t>(ner_sum), (height * (width >> 2)));
-	COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<compv_ccl_indice_t>(EQ, 1, EQ_count));
-	compv_ccl_indice_t* EQPtr = (*EQ)->ptr<compv_ccl_indice_t>();
-	const compv_ccl_indice_t n = static_cast<compv_ccl_indice_t>(EQ_count);
-	for (compv_ccl_indice_t i = 0; i < n; ++i) {
-		EQPtr[i] = i;
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<compv_ccl_indice_t>(EQ, 1, static_cast<size_t>(ner_sum)));
+	compv_ccl_indice_t *EQPtr = (*EQ)->ptr<compv_ccl_indice_t>();
+	for (compv_ccl_indice_t eq = 0; eq < ner_sum; ) {
+		EQPtr[eq] = eq++;
 	}
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -439,7 +438,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 
 	CompVMatPtr ner; // the number of segments of ERi - black + white -
 	CompVMatPtr ER; //  an associative table of size w holding the relative labels er associated to Xi
-	CompVMatPtr RLC; // a table holding the run length coding of segments of the line Xi, RLCi-1 is the similar memorization of the previous line.
+	//CompVMatPtr RLC; // a table holding the run length coding of segments of the line Xi, RLCi-1 is the similar memorization of the previous line.
 	CompVMatPtr ERA; // an associative table holding the association between er and ea: ea = ERAi[er]
 	CompVMatPtr EQ; // the table holding the equivalence classes, before transitive closure
 	CompVMatPtr EA; // an image of size h × w of absolute labels ea before equivalence resolution
@@ -448,19 +447,21 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 	const size_t width = binar->cols();
 	const size_t height = binar->rows();
 	const size_t stride = binar->stride();
-	const size_t __ner_max = ((width + 1) >> 1); // full dashed row
+	const size_t __ner_max_per_row = ((width + 1) >> 1); // full dashed row
+
+	int16_t ner_max;
+	compv_ccl_indice_t ner_sum;
 
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int16_t>(&ER, height, width));
-	COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int16_t>(&RLC, height, __ner_max));
+	//COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int16_t>(&RLC, height, __ner_max));
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int16_t>(&ner, 1, height));
 
 	/* Multi-threading dispatcher */
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
 	const size_t maxThreads = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
 
+#if 0
 	/* Relative segment labeling: step#1 */
-	int16_t ner_max;
-	compv_ccl_indice_t ner_sum;
 	const size_t threadsCountStep1 = (threadDisp && !threadDisp->isMotherOfTheCurrentThread())
 		? CompVThreadDispatcher::guessNumThreadsDividingAcrossY(width, height, maxThreads, COMPV_CCL_LSL_STEP1_MIN_SAMPLES_PER_THREAD)
 		: 1;
@@ -539,7 +540,91 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 		height,
 		minSamplePerThreadStep20
 	));
-	
+#endif
+
+	/* Create ERA and init with zeros (FIXME(use calloc) */
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No need to keep having ERA, use it as local then destroy or just create one per thread");
+	{
+		COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<compv_ccl_indice_t>(&ERA, height, __ner_max_per_row));
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Do not call zero_all on ERA but use calloc");
+		COMPV_CHECK_CODE_RETURN(ERA->zero_all());
+	}
+
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Remove RLC creation");
+
+	/* Step #1 and #20  function pointer */	
+	auto funcPtrStep1and20 = [&](const size_t mt_start, const size_t mt_end, int16_t* mt_ner_max, compv_ccl_indice_t* mt_ner_sum) -> COMPV_ERROR_CODE {
+		CompVMatPtr RLC;		
+		/* Relative segment labeling: step#1 */
+		// Step #20 needs RLCi-1 (RLC[start - 1]) which may cross thread bundaries. This is 
+		// why in #1 compute [clip(0, start-1), end] range.
+		const size_t mt_step1_start = (mt_start ? (mt_start - 1) : mt_start);
+		const size_t mt_step1_end = mt_end;
+		COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int16_t>(&RLC, (mt_step1_end - mt_step1_start), __ner_max_per_row));
+		step1_algo13_segment_RLE<uint8_t>(
+			binar,
+			ER,
+			RLC,
+			ner,
+			mt_ner_max,
+			mt_ner_sum,
+			static_cast<compv_ccl_indice_t>(width),
+			static_cast<compv_ccl_indice_t>(mt_step1_start),
+			static_cast<compv_ccl_indice_t>(mt_step1_end)
+			);
+
+		/* Equivalence construction: step#2.0 (MT-friendly) */
+		step20_algo14_equivalence_build(
+			ER,
+			RLC,
+			ner,
+			ERA,
+			static_cast<compv_ccl_indice_t>(width),
+			static_cast<compv_ccl_indice_t>(mt_start),
+			static_cast<compv_ccl_indice_t>(mt_end)
+		);
+		return COMPV_ERROR_CODE_S_OK;
+	};
+
+	/* Step #1 and #20 calling process */
+	const size_t minSamplePerThreadStep1and20 = std::max(
+		static_cast<size_t>(COMPV_CCL_LSL_STEP1_AND_STEP20_MIN_SAMPLES_PER_THREAD),
+		(width << 1) // At least #2 rows (because of ERiminus1)
+	);
+	const size_t threadsCountStep1and20 = (threadDisp && !threadDisp->isMotherOfTheCurrentThread())
+		? CompVThreadDispatcher::guessNumThreadsDividingAcrossY(width, height, maxThreads, minSamplePerThreadStep1and20)
+		: 1;
+	if (threadsCountStep1and20 > 1) {
+		CompVAsyncTaskIds taskIds;
+		taskIds.reserve(threadsCountStep1and20);
+		std::vector<int16_t> mt_ner_max(threadsCountStep1and20);
+		std::vector<compv_ccl_indice_t> mt_ner_sum(threadsCountStep1and20);
+		const size_t heights = (height / threadsCountStep1and20);
+		size_t YStart = 0, YEnd;
+		for (size_t threadIdx = 0; threadIdx < threadsCountStep1and20; ++threadIdx) {
+			YEnd = (threadIdx == (threadsCountStep1and20 - 1)) ? height : (YStart + heights);
+			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrStep1and20, static_cast<compv_ccl_indice_t>(YStart), static_cast<compv_ccl_indice_t>(YEnd), &mt_ner_max[threadIdx], &mt_ner_sum[threadIdx]),
+				taskIds), "Dispatching task failed");
+			YStart += heights;
+		}
+		COMPV_CHECK_CODE_RETURN(threadDisp->waitOne(taskIds[0]));
+		ner_max = mt_ner_max[0];
+		ner_sum = mt_ner_sum[0];
+		for (size_t threadIdx = 1; threadIdx < threadsCountStep1and20; ++threadIdx) {
+			COMPV_CHECK_CODE_RETURN(threadDisp->waitOne(taskIds[threadIdx]));
+			if (ner_max < mt_ner_max[threadIdx]) {
+				ner_max = mt_ner_max[threadIdx];
+			}
+			ner_sum += mt_ner_sum[threadIdx];
+		}
+	}
+	else {
+		COMPV_CHECK_CODE_RETURN(funcPtrStep1and20(0, static_cast<compv_ccl_indice_t>(height), &ner_max, &ner_sum));
+	}
+	COMPV_ASSERT(ner_max < __ner_max_per_row); // FIXME(dmi): remove
+
+	/* Build EQ */
+	COMPV_CHECK_CODE_RETURN(build_EQ(ner_sum, width, height, &EQ));
 
 	/* Equivalence construction: step#2.1 (not MT-friendly) */
 	compv_ccl_indice_t nea; // the current number of absolute labels, update of EQ and ERAi
