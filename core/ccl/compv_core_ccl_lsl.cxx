@@ -311,39 +311,42 @@ static void step20_algo14_equivalence_build(const CompVMatPtr& ER, const CompVMa
 // ERAi, an associative table holding the association between er and ea: ea = ERAi[er]
 // ner, the number of segments of ERi - black + white
 // nea the current number of absolute labels, update of EQ and ERAi
-static void step21_algo14_equivalence_build(const CompVMatPtr ner, CompVMatPtr ERA, std::vector<compv_ccl_indice_t>& EQ, compv_ccl_indice_t* nea1, const size_t start, const size_t end)
+// ERi, an associative table of size w holding the relative labels er associated to Xi
+// ER_overrided, ERAPtr[ERPtr[i]]
+static void step21_algo14_equivalence_build(const CompVMatPtr ner, CompVMatPtr ERA, CompVMatPtr ER_overrided, std::vector<compv_ccl_indice_t>& EQ, compv_ccl_indice_t* nea1, const size_t start, const size_t end)
 {
+	const size_t ER_overrided_width = ER_overrided->cols();
+	const size_t ER_overrided_stride = ER_overrided->stride();
+
 	const size_t jstart = !start ? 1 : start;
 	compv_ccl_indice_t nea = *nea1;
 	if (!start) {
 		const int16_t ner00 = *ner->ptr<int16_t>(0, 0);
+		int16_t* ER_overrided00 = ER_overrided->ptr<int16_t>(0, 0);
 		compv_ccl_indice_t* ERA0 = ERA->ptr<compv_ccl_indice_t>(0);
 		for (int16_t er = 1; er < ner00; er += 2) {
 			ERA0[er] = ++nea; // [new label]
+		}
+		for (size_t i = 0; i < ER_overrided_width; ++i) {
+			ER_overrided00[i] = ERA0[ER_overrided00[i]];
 		}
 	}
 	
 	const size_t ERA_stride = ERA->stride();
 	const size_t rows = ERA->rows();
 	compv_ccl_indice_t* ERAi = ERA->ptr<compv_ccl_indice_t>((jstart - start)); // zero-based (per thread)
+	int16_t* ER_overridedi = ER_overrided->ptr<int16_t>((jstart - start)); // zero-based (per thread)
 	const compv_ccl_indice_t* ERAiminus1 = ERAi - ERA_stride;
 	int16_t* ner0 = ner->ptr<int16_t>(0, 0); // zero-based (per row)
 
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No ASM implementation found");
 	for (size_t j = jstart; j < end; ++j) {
-		if (j == 159 || j == 160) {
-			int kaka = 0;
-		}
 		const int16_t ner0j = ner0[j];
 		for (int16_t er = 1; er < ner0j; er += 2) {
 			if (ERAi[er]) {
 				const compv_ccl_indice_t er0 = ERAi[er] & 0xffff;
 				const compv_ccl_indice_t er1 = (ERAi[er] >> 16) & 0xffff;
 				compv_ccl_indice_t ea = ERAiminus1[er0];
-				// FIXME(dmi): remove
-				if (ea > 100) {
-					int kaka = 0;
-				}
 				compv_ccl_indice_t a = EQ[ea];
 				for (compv_ccl_indice_t erk = er0 + 2; erk <= er1; erk += 2) {
 					const compv_ccl_indice_t eak = ERAiminus1[erk];
@@ -358,18 +361,18 @@ static void step21_algo14_equivalence_build(const CompVMatPtr ner, CompVMatPtr E
 						ea = eak;
 					}
 				}
-				// FIXME(dmi)
-				if (a > 100) {
-					int kaka = 0;
-				}
 				ERAi[er] = a; // [global min]
 			}
 			else {
 				ERAi[er] = ++nea; // [new label]
 			}
 		}
+		for (size_t i = 0; i < ER_overrided_width; ++i) {
+			ER_overridedi[i] = ERAi[ER_overridedi[i]];
+		}
 		ERAiminus1 = ERAi;
 		ERAi += ERA_stride;
+		ER_overridedi += ER_overrided_stride;
 	}
 
 	*nea1 = nea;
@@ -398,19 +401,17 @@ static void step4_algo6_eq_resolv(const std::vector<compv_ccl_indice_t>& EQ, con
 	}
 }
 
-static COMPV_ERROR_CODE build_all_labels(const CompVMatPtr& A, const CompVMatPtr& ERA, const CompVMatPtr& ER, CompVMatPtrPtr EA)
+static COMPV_ERROR_CODE build_all_labels(const CompVMatPtr& A, const CompVMatPtr& ER, CompVMatPtrPtr EA)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
 	const size_t ER_width = ER->cols();
 	const size_t ER_height = ER->rows();
 	const size_t ER_stride = ER->stride();
-	const size_t ERA_stride = ERA->stride();
 
 	// Create EA using same size and stride as ER
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_ccl_indice_t>(EA, ER_height, ER_width, ER_stride));
 
 	const compv_ccl_indice_t* APtr = A->ptr<const compv_ccl_indice_t>();
-	const compv_ccl_indice_t* ERAPtr = ERA->ptr<const compv_ccl_indice_t>();
 	const int16_t* ERPtr = ER->ptr<int16_t>();
 	compv_ccl_indice_t* EAPtr = (*EA)->ptr<compv_ccl_indice_t>();
 
@@ -419,12 +420,10 @@ static COMPV_ERROR_CODE build_all_labels(const CompVMatPtr& A, const CompVMatPtr
 	// step #5: Second absolute labeling
 	for (size_t j = 0; j < ER_height; ++j) {
 		for (size_t i = 0; i < ER_width; ++i) {
-			COMPV_ASSERT(static_cast<compv_ccl_indice_t>(A->cols()) > ERAPtr[ERPtr[i]]); // FIXME(dmi): remove
-			EAPtr[i] = APtr[ERAPtr[ERPtr[i]]];
+			EAPtr[i] = APtr[ERPtr[i]];
 		}
 		EAPtr += ER_stride;
 		ERPtr += ER_stride;
-		ERAPtr += ERA_stride;
 	}
 
 	return COMPV_ERROR_CODE_S_OK;
@@ -577,9 +576,18 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 					EQ.insert(EQ.end(), mt_EQ.begin(), mt_EQ.end());
 				}
 				/* Equivalence construction: step#2.1 (not MT-friendly) */
+				CompVMatPtr mt_ER_bind;
+				const CompVRectFloat32 roi_ER = {
+					0.f, // left
+					static_cast<compv_float32_t>(mt_start), // top
+					static_cast<compv_float32_t>(ER->cols() - 1), // right
+					static_cast<compv_float32_t>(mt_end - 1)// bottom
+				};
+				COMPV_CHECK_CODE_RETURN(ER->bind(&mt_ER_bind, roi_ER));
 				step21_algo14_equivalence_build(
 					ner,
 					mt_ERA,
+					mt_ER_bind,
 					EQ,
 					&nea,
 					mt_start,
@@ -648,6 +656,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 		step21_algo14_equivalence_build(
 			ner,
 			ERA,
+			ER,
 			EQ,
 			&nea,
 			0,
@@ -676,7 +685,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 	);
 
 	/* For testing */
-	build_all_labels(A, ERA, ER, &result.labels);
+	build_all_labels(A, ER, &result.labels);
 	result.labels_count = (na + 1); // +1 for the background
 
 	return COMPV_ERROR_CODE_S_OK;
