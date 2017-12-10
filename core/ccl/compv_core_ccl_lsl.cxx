@@ -381,12 +381,12 @@ static void step4_algo6_eq_resolv(const CompVMatPtr& EQ, const compv_ccl_indice_
 static COMPV_ERROR_CODE build_EQ(const size_t ner_sum, CompVMatPtrPtr EQ)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
-	/* Create EQ and init with 0...n (itoa) */
+	/* Create EQ and init with 0...n */
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<compv_ccl_indice_t>(EQ, 1, ner_sum));
 	compv_ccl_indice_t* EQPtr = (*EQ)->ptr<compv_ccl_indice_t>();
 	const compv_ccl_indice_t n = static_cast<compv_ccl_indice_t>(ner_sum);
-	for (compv_ccl_indice_t i = 0; i < n; ) {
-		EQPtr[i] = ++i;
+	for (compv_ccl_indice_t i = 0; i < n; ++i) {
+		EQPtr[i] = i;
 	}
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -555,7 +555,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 	);
 
 	/* For testing */
-	//build_all_labels(A, ERA, ER, &result.labels);
+	build_all_labels(A, ERA, ER, &result.labels);
 	result.labels_count = (na + 1); // +1 for the background
 
 	return COMPV_ERROR_CODE_S_OK;
