@@ -76,13 +76,14 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::set(int id, const void* val
 template<typename T>
 static void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_C(
 	const T* Xi, const compv_uscalar_t Xi_stride,
-	int16_t* RLCi, const compv_uscalar_t RLCi_stride,
 	int16_t* ERi, const compv_uscalar_t ERi_stride,
 	int16_t* ner, int16_t* ner_max1, compv_ccl_indice_t* ner_sum1,
 	const compv_uscalar_t width, const compv_uscalar_t height)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("You should ASM code which is faster");
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
 	COMPV_DEBUG_INFO_CODE_TODO("ASM code not aligned at all");
+	COMPV_DEBUG_INFO_CODE_TODO("Unroll loop");
 	int16_t i, er;
 	const int16_t width1 = static_cast<int16_t>(width);
 	int16_t ner_max = 0;
@@ -91,17 +92,11 @@ static void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_C(
 	for (compv_uscalar_t j = 0; j < height; ++j) {
 		er = (Xi[0] & 1);
 		ERi[0] = er;
-		RLCi[0] = 0;
 		for (i = 1; i < width1; ++i) {
-			RLCi[er] = i;
 			er += ((Xi[i - 1] ^ Xi[i]) & 1);
 			ERi[i] = er;
 		}
-		const int16_t x1 = (Xi[width1 - 1] & 1);
-		if (x1 != 0) {
-			RLCi[er] = width1;
-		}
-		er += x1;
+		er += (Xi[width1 - 1] & 1);
 		ner[j] = er;
 		ner_sum += er;
 		if (ner_max < er) { // TODO(dmi): asm use cmovgt
@@ -110,61 +105,10 @@ static void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_C(
 		/* next */
 		Xi += Xi_stride;
 		ERi += ERi_stride;
-		RLCi += RLCi_stride;
 	}
-
+	
 	*ner_max1 = ner_max;
 	*ner_sum1 = ner_sum;
-
-#if 0
-#define SET_RLC_1(mm, ii) \
-		if ((mm)) { \
-			RLCi[er] = ((ii) - b); \
-			b ^= 1;  \
-			++er; \
-		} \
-		ERi[(ii)] = er
-
-	int16_t i, b, er;
-	const int16_t width4 = (width -1) & -4, width1 = static_cast<int16_t>(width);
-	int16_t ner_max = 0;
-	compv_ccl_indice_t ner_sum = 0;
-
-	for (compv_uscalar_t j = 0; j < height; ++j) {
-		/* For i = 0 */
-		b = Xi[0] & 1; // right border compensation
-		er = b; // a relative label
-		RLCi[0] = 0;
-		ERi[0] = er;
-		/* i = 1....w */
-		{
-			for (i = 1; i < width4; i += 4) {
-				SET_RLC_1(Xi[i - 1] ^ Xi[i], i);
-				SET_RLC_1(Xi[i] ^ Xi[i + 1], i + 1);
-				SET_RLC_1(Xi[i + 1] ^ Xi[i + 2], i + 2);
-				SET_RLC_1(Xi[i + 2] ^ Xi[i + 3], i + 3);
-			}
-			for (; i < width1; ++i) {
-				SET_RLC_1(Xi[i - 1] ^ Xi[i], i);
-			}
-		}
-		/* update las RLCi and ner */
-		RLCi[er] = (width1 - b);
-		const int16_t nerj = er + (Xi[width1 - 1] & 1);
-		ner[j] = nerj;
-		ner_sum += nerj;
-		if (ner_max < nerj) { // TODO(dmi): asm use cmovgt
-			ner_max = nerj;
-		}
-		/* next */
-		Xi += Xi_stride;
-		ERi += ERi_stride;
-		RLCi += RLCi_stride;
-	}
-
-	*ner_max1 = ner_max;
-	*ner_sum1 = ner_sum;
-#endif
 }
 
 // Relative segment labeling: step#1
@@ -174,7 +118,7 @@ static void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_C(
 // RLCi, a table holding the run length coding of segments of the line Xi
 // ner, the number of segments of ERi – black + white
 template<typename T>
-static void step1_algo13_segment_RLE(const CompVMatPtr& X, CompVMatPtr ER, CompVMatPtr RLC, CompVMatPtr ner, int16_t* ner_max1, compv_ccl_indice_t* ner_sum1, const compv_ccl_indice_t w, const compv_ccl_indice_t start, const compv_ccl_indice_t end)
+static void step1_algo13_segment_STDZ(const CompVMatPtr& X, CompVMatPtr ER, CompVMatPtr RLC, CompVMatPtr ner, int16_t* ner_max1, compv_ccl_indice_t* ner_sum1, const compv_ccl_indice_t w, const compv_ccl_indice_t start, const compv_ccl_indice_t end)
 {
 	const T* Xi = X->ptr<T>(start);
 	int16_t* ERi = ER->ptr<int16_t>(start);
@@ -187,18 +131,15 @@ static void step1_algo13_segment_RLE(const CompVMatPtr& X, CompVMatPtr ER, CompV
 
 	/* Hook to processing function */
 	typedef void(*FunPtr)(const T* Xi, const compv_uscalar_t Xi_stride,
-		int16_t* RLCi, const compv_uscalar_t RLCi_stride,
 		int16_t* ERi, const compv_uscalar_t ERi_stride,
 		int16_t* ner, int16_t* ner_max1, compv_ccl_indice_t* ner_sum1,
 		const compv_uscalar_t width, const compv_uscalar_t height);
 	FunPtr funPtr = [](const T* Xi, const compv_uscalar_t Xi_stride,
-		int16_t* RLCi, const compv_uscalar_t RLCi_stride,
 		int16_t* ERi, const compv_uscalar_t ERi_stride,
 		int16_t* ner, int16_t* ner_max1, compv_ccl_indice_t* ner_sum1,
 		const compv_uscalar_t width, const compv_uscalar_t height) {
 		CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_C<T >(
 			Xi, Xi_stride,
-			RLCi, RLCi_stride,
 			ERi, ERi_stride,
 			ner,
 			ner_max1,
@@ -208,14 +149,13 @@ static void step1_algo13_segment_RLE(const CompVMatPtr& X, CompVMatPtr ER, CompV
 
 	if (std::is_same<T, uint8_t>::value && std::is_same<int32_t, compv_ccl_indice_t>::value) {
 		void(*funPtr_8u16s32s)(const uint8_t* Xi, const compv_uscalar_t Xi_stride,
-			int16_t* RLCi, const compv_uscalar_t RLCi_stride,
 			int16_t* ERi, const compv_uscalar_t ERi_stride,
 			int16_t* ner, int16_t* ner_max1, int32_t* ner_sum1,
 			const compv_uscalar_t width, const compv_uscalar_t height)
 			= nullptr;
 #if COMPV_ARCH_X86
 		if (CompVCpu::isEnabled(kCpuFlagCMOV)) { // All X64 archs support CMOVcc but we want to allow disabling it
-			COMPV_EXEC_IFDEF_ASM_X64(funPtr_8u16s32s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_8u16s32s_Asm_X64_CMOV);
+			//COMPV_EXEC_IFDEF_ASM_X64(funPtr_8u16s32s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_8u16s32s_Asm_X64_CMOV);
 		}
 #elif COMPV_ARCH_ARM
 		//COMPV_EXEC_IFDEF_ASM_ARM32(funPtr_8u16s32s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_8u16s_Asm_NEON32);
@@ -228,11 +168,30 @@ static void step1_algo13_segment_RLE(const CompVMatPtr& X, CompVMatPtr ER, CompV
 
 	funPtr(
 		Xi, X_stride,
-		RLCi, RLC_stride,
 		ERi, ER_stride,
 		ner0, ner_max1, ner_sum1,
 		static_cast<compv_uscalar_t>(w), static_cast<compv_uscalar_t>(end - start)
 	);
+
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Add SIMD/ASM code to the next code?");
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Unroll loop");
+	const int16_t width1 = static_cast<int16_t>(w);
+	int16_t er, i;
+	for (compv_ccl_indice_t j = start; j < end; ++j) {
+		er = (Xi[0] & 1);
+		RLCi[0] = 0;
+		for (i = 1; i < width1; ++i) {
+			if (ERi[i - 1] != ERi[i]) {
+				RLCi[er++] = i;
+			}
+		}
+		RLCi[er] = width1 - ((Xi[width1 - 1] & 1) ^ 1);
+
+		/* next */
+		Xi += X_stride;
+		RLCi += RLC_stride;
+		ERi += ER_stride;
+	}
 }
 
 static void CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_C(
@@ -243,6 +202,7 @@ static void CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_C(
 	const compv_uscalar_t width, const compv_uscalar_t height)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("You should ASM code which is faster");
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation could be found");
 
 	const int16_t wminus1 = static_cast<int16_t>(width - 1);
 	int16_t er, er0, er1, j0, j1, nerj;
@@ -495,7 +455,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 		? CompVThreadDispatcher::guessNumThreadsDividingAcrossY(width, height, maxThreads, COMPV_CCL_LSL_STEP1_MIN_SAMPLES_PER_THREAD)
 		: 1;
 	auto funcPtrStep1 = [&](const compv_ccl_indice_t mt_start, const compv_ccl_indice_t mt_end, int16_t* mt_ner_max, compv_ccl_indice_t* mt_ner_sum) -> COMPV_ERROR_CODE {
-		step1_algo13_segment_RLE<uint8_t>(
+		step1_algo13_segment_STDZ<uint8_t>(
 			binar,
 			ER,
 			RLC,

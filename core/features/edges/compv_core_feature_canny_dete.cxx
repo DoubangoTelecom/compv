@@ -119,6 +119,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::set(int id, const void* valuePtr, size_t va
 // TODO(dmi): combine with mean instead of gaussian blur to remove noise
 // https://github.com/DoubangoTelecom/compv/issues/130
 
+// (image == edges) -> cache friendly as we can write in-place
 COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVMatPtr& image, CompVMatPtrPtr edges, CompVMatPtrPtr directions COMPV_DEFAULT(NULL)) /*Overrides(CompVEdgeDete)*/
 {
 	COMPV_CHECK_EXP_RETURN(!image || image->planeCount() != 1 || image->elmtInBytes() != sizeof(uint8_t) || !edges, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Input image is null or invalid format");

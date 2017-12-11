@@ -22,7 +22,8 @@ class CompVMemZero : public CompVObj
 protected:
 	CompVMemZero(size_t rows, size_t cols, size_t stride = 0) : m_nCols(cols), m_nRows(rows) {
 		size_t strideInBytes = stride ? (stride * sizeof(T)) : CompVMem::alignForward(cols * sizeof(T));
-		m_pMem = static_cast<uint8_t*>(::calloc(((strideInBytes * rows)) + CompVMem::bestAlignment(), sizeof(uint8_t)));
+		m_nDataSize = ((strideInBytes * rows)) + CompVMem::bestAlignment();
+		m_pMem = static_cast<uint8_t*>(::calloc(m_nDataSize, sizeof(uint8_t)));
 		m_pPtr = reinterpret_cast<T*>(CompVMem::alignForward(reinterpret_cast<uintptr_t>(m_pMem)));
 		m_nStride = strideInBytes / sizeof(T);
 	}
@@ -45,6 +46,9 @@ public:
 	COMPV_INLINE size_t stride() {
 		return m_nStride;
 	}
+	COMPV_INLINE size_t dataSize() {
+		return m_nDataSize;
+	}
 	static COMPV_ERROR_CODE newObj(CompVPtr<CompVMemZero<T> *>* memz, size_t rows, size_t cols, size_t stride = 0) {
 		COMPV_CHECK_EXP_RETURN(!memz || !rows || !cols, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 		CompVPtr<CompVMemZero<T> *> memz_ = new CompVMemZero<T>(rows, cols, stride);
@@ -59,6 +63,7 @@ private:
 	size_t m_nCols;
 	size_t m_nRows;
 	size_t m_nStride;
+	size_t m_nDataSize;
 	uint8_t* m_pMem;
 };
 

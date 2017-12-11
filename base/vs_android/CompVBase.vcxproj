@@ -47,6 +47,7 @@
     <ClInclude Include="..\include\compv\base\compv_box_interestpoint.h" />
     <ClInclude Include="..\include\compv\base\compv_buffer.h" />
     <ClInclude Include="..\include\compv\base\compv_caps.h" />
+    <ClInclude Include="..\include\compv\base\compv_ccl.h" />
     <ClInclude Include="..\include\compv\base\compv_common.h" />
     <ClInclude Include="..\include\compv\base\compv_config.h" />
     <ClInclude Include="..\include\compv\base\compv_cpu.h" />
@@ -195,6 +196,7 @@
     <ClCompile Include="..\compv_box_interestpoint.cxx" />
     <ClCompile Include="..\compv_buffer.cxx" />
     <ClCompile Include="..\compv_caps.cxx" />
+    <ClCompile Include="..\compv_ccl.cxx" />
     <ClCompile Include="..\compv_common.cxx" />
     <ClCompile Include="..\compv_cpu.cxx" />
     <ClCompile Include="..\compv_debug.cxx" />

@@ -6,7 +6,6 @@
     <ClCompile Include="..\..\feature_fast.cxx" />
     <ClCompile Include="..\..\scale.cxx" />
     <ClCompile Include="..\..\pyramid.cxx" />
-    <ClCompile Include="..\..\convlt.cxx" />
     <ClCompile Include="..\..\..\tests_common.cxx" />
     <ClCompile Include="..\..\bruteforce.cxx" />
     <ClCompile Include="..\..\feature_orb.cxx" />
@@ -17,6 +16,7 @@
     <ClCompile Include="..\..\houghsht.cxx" />
     <ClCompile Include="..\..\threshold.cxx" />
     <ClCompile Include="..\..\split.cxx" />
+    <ClCompile Include="..\..\ccl.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\tests_common.h" />

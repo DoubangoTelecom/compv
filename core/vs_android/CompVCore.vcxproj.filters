@@ -151,6 +151,24 @@
     <Filter Include="source\features\hough\asm\arm">
       <UniqueIdentifier>{89eb1ce1-29b7-4c58-80c4-4255d2cbd9aa}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\ccl">
+      <UniqueIdentifier>{d08e1a9f-2bb2-4718-a3e4-fc26e93471c0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\ccl\intrin">
+      <UniqueIdentifier>{88d661e7-e9f9-4a5b-af1c-2fad4f2d8ed9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\ccl\intrin\x86">
+      <UniqueIdentifier>{048df02a-6133-407c-aba3-12f7e51be390}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\ccl">
+      <UniqueIdentifier>{752d4c9c-3468-413c-af1e-d870bb94a1d1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\ccl\intrin">
+      <UniqueIdentifier>{01bc07f0-4cb5-4618-bdae-862fd5e6cf56}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\ccl\intrin\x86">
+      <UniqueIdentifier>{0d4ad6c4-e183-4673-a357-3175bc39cde4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\compv\core\compv_core.h">
@@ -258,6 +276,12 @@
     <ClInclude Include="..\include\compv\core\calib\compv_core_calib_utils.h">
       <Filter>include\calib</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\compv\core\ccl\compv_core_ccl_lsl.h">
+      <Filter>include\ccl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\core\ccl\intrin\x86\compv_core_ccl_lsl_intrin_sse2.h">
+      <Filter>include\ccl\intrin\x86</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_core.cxx">
@@ -358,6 +382,12 @@
     </ClCompile>
     <ClCompile Include="..\calib\compv_core_calib_utils.cxx">
       <Filter>source\calib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ccl\compv_core_ccl_lsl.cxx">
+      <Filter>source\ccl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ccl\intrin\x86\compv_core_ccl_lsl_intrin_sse2.cxx">
+      <Filter>source\ccl\intrin\x86</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

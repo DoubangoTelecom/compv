@@ -14,6 +14,7 @@
 #define TEST_TYPE_LABYRINTH		"labyrinth_800x600_gray.yuv"
 #define TEST_TYPE_CHECKER		"checker_800x600_gray.yuv"
 #define TEST_TYPE_SHAPE			"shape_960x720_gray.yuv"
+#define TEST_TYPE_TEXT			"text_1122x1182_gray.yuv"
 
 static const struct compv_unittest_ccl {
 	const char* filename;
@@ -29,6 +30,7 @@ COMPV_UNITTEST_CCL[] =
 	{ TEST_TYPE_LABYRINTH, 800, 600, 800, "bd4bdfccb0ea70467421abf7d573b51d" },
 	{ TEST_TYPE_CHECKER, 800, 600, 800, "43e40b4efe74bc924fb9239d14f1387d" },
 	{ TEST_TYPE_SHAPE, 960, 720, 960, "dafbf5d4265ee4a1e1e44984e0e00e4f" },
+	{ TEST_TYPE_TEXT, 1122, 1182, 1122, "a8ee46de9728e8d2178d8f2081b87dab"}
 };
 static const size_t COMPV_UNITTEST_CCL_COUNT = sizeof(COMPV_UNITTEST_CCL) / sizeof(COMPV_UNITTEST_CCL[0]);
 
@@ -57,7 +59,7 @@ COMPV_ERROR_CODE ccl()
 	CompVConnectedComponentLabelingPtr ccl_obj;
 	COMPV_CHECK_CODE_RETURN(CompVConnectedComponentLabeling::newObj(&ccl_obj, COMPV_LSL_ID));
 	COMPV_CHECK_CODE_RETURN(ccl_obj->setInt(COMPV_LSL_SET_INT_TYPE, COMPV_LSL_TYPE_STD));
-	
+
 	const uint64_t timeStart = CompVTime::nowMillis();
 	CompVConnectedComponentLabelingResult result;
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
@@ -66,28 +68,29 @@ COMPV_ERROR_CODE ccl()
 	const uint64_t timeEnd = CompVTime::nowMillis();
 	COMPV_DEBUG_INFO("Elapsed time (TestConnectedComponentLabeling) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 
-#if COMPV_OS_WINDOWS && 0
+#if COMPV_OS_WINDOWS && 1
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Do not write the file to the hd");
+	if (result.labels) {
+		const size_t width = result.labels->cols();
+		const size_t height = result.labels->rows();
+		const size_t stride = result.labels->stride();
 
-	const size_t width = result.labels->cols();
-	const size_t height = result.labels->rows();
-	const size_t stride = result.labels->stride();
+		CompVMatPtr imageOut;
+		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<uint8_t>(&imageOut, height, width, stride));
 
-	CompVMatPtr imageOut;
-	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<uint8_t>(&imageOut, height, width, stride));
+		const compv_ccl_indice_t* labelsPtr = result.labels->ptr<const compv_ccl_indice_t>();
+		uint8_t* imageOutPtr = imageOut->ptr<uint8_t>();
 
-	const compv_ccl_indice_t* labelsPtr = result.labels->ptr<const compv_ccl_indice_t>();
-	uint8_t* imageOutPtr = imageOut->ptr<uint8_t>();
-
-	for (size_t j = 0; j < height; ++j) {
-		for (size_t i = 0; i < width; ++i) {
-			imageOutPtr[i] = (labelsPtr[i] != result.label_background) ? 0xff : 0x00;
+		for (size_t j = 0; j < height; ++j) {
+			for (size_t i = 0; i < width; ++i) {
+				imageOutPtr[i] = (labelsPtr[i] != result.label_background) ? 0xff : 0x00;
+			}
+			labelsPtr += stride;
+			imageOutPtr += stride;
 		}
-		labelsPtr += stride;
-		imageOutPtr += stride;
-	}
 
-	COMPV_CHECK_CODE_RETURN(compv_tests_write_to_file(imageOut, TEST_TYPE));
+		COMPV_CHECK_CODE_RETURN(compv_tests_write_to_file(imageOut, TEST_TYPE));
+	}
 #endif
 
 	COMPV_DEBUG_INFO("MD5: %s", compv_tests_md5(result.labels).c_str());

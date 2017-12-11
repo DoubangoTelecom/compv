@@ -27,7 +27,7 @@ compv_main()
 		CompVCameraDeviceInfoList devices;
 		std::string cameraId = ""; // empty string means default
 		CompVEdgeDetePtr ptrCanny;
-		CompVMatPtr imageGray, edges;
+		CompVMatPtr mat;
 		double threshold;
 
 		// Change debug level to INFO before starting
@@ -65,13 +65,13 @@ compv_main()
 		COMPV_CHECK_CODE_BAIL(err = camera->setCallbackOnNewFrame([&](const CompVMatPtr& image) -> COMPV_ERROR_CODE {
 			COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 			if (CompVDrawing::isLoopRunning()) {
-				COMPV_CHECK_CODE_RETURN(CompVImage::convertGrayscale(image, &imageGray));
-				COMPV_CHECK_CODE_RETURN(CompVImageThreshold::otsu(imageGray, threshold));
+				COMPV_CHECK_CODE_RETURN(CompVImage::convertGrayscale(image, &mat));
+				COMPV_CHECK_CODE_RETURN(CompVImageThreshold::otsu(mat, threshold));
 				COMPV_CHECK_CODE_RETURN(ptrCanny->setFloat32(COMPV_CANNY_SET_FLT32_THRESHOLD_LOW, static_cast<compv_float32_t>(threshold * 0.5)));
 				COMPV_CHECK_CODE_RETURN(ptrCanny->setFloat32(COMPV_CANNY_SET_FLT32_THRESHOLD_HIGH, static_cast<compv_float32_t>(threshold)));
-				COMPV_CHECK_CODE_RETURN(ptrCanny->process(imageGray, &edges));
+				COMPV_CHECK_CODE_RETURN(ptrCanny->process(mat, &mat));
 				COMPV_CHECK_CODE_BAIL(err = window->beginDraw());
-				COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->cover()->drawImage(edges));
+				COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->cover()->drawImage(mat));
 				COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->blit());
 			bail:
 				COMPV_CHECK_CODE_NOP(err = window->endDraw()); // Make sure 'endDraw()' will be called regardless the result

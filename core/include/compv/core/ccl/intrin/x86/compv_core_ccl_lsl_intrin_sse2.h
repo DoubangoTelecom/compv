@@ -18,7 +18,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentRLE_8u32s_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* Xi, int32_t* RLCi, int32_t* ERi, int32_t* b1, int32_t* er1, const int32_t width);
+void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_8u32s_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* Xi, int32_t* RLCi, int32_t* ERi, int32_t* b1, int32_t* er1, const int32_t width);
 
 COMPV_NAMESPACE_END()
 
