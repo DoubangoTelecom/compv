@@ -31,10 +31,10 @@ void CompVMathStatsNormalize2DHartley_64f_Intrin_AVX(const COMPV_ALIGNED(AVX) co
 	__m256d vecMagnitude = _mm256_setzero_pd();
 	const __m256d vecOneOverNumPoints = _mm256_div_pd(_mm256_set1_pd(1.), _mm256_set1_pd(static_cast<compv_float64_t>(numPoints)));
 	const __m256d vecSqrt2 = _mm256_set1_pd(COMPV_MATH_SQRT_2);
-	const __m256i vecMaskToExtractFirst64Bits = _mm256_load_si256(reinterpret_cast<const __m256i*>(kAVXMaskstore_0_u64)); // not need for asm
-	const __m256i vecMaskToExtractFirst128Bits = _mm256_load_si256(reinterpret_cast<const __m256i*>(kAVXMaskstore_0_1_u64)); // not need for asm
-	const __m256d vecMaskToHideLast128Bits = _mm256_load_pd(reinterpret_cast<const compv_float64_t*>(kAVXMaskzero_2_3_u64)); // not need for asm
-	const __m256d vecMaskToHideLast192Bits = _mm256_load_pd(reinterpret_cast<const compv_float64_t*>(kAVXMaskzero_1_2_3_u64)); // not need for asm
+	const __m256i vecMaskToExtractFirst64Bits = _mm256_load_si256(reinterpret_cast<const __m256i*>(kAVXMaskstore_0_64u)); // not need for asm
+	const __m256i vecMaskToExtractFirst128Bits = _mm256_load_si256(reinterpret_cast<const __m256i*>(kAVXMaskstore_0_1_64u)); // not need for asm
+	const __m256d vecMaskToHideLast128Bits = _mm256_load_pd(reinterpret_cast<const compv_float64_t*>(kAVXMaskzero_2_3_64u)); // not need for asm
+	const __m256d vecMaskToHideLast192Bits = _mm256_load_pd(reinterpret_cast<const compv_float64_t*>(kAVXMaskzero_1_2_3_64u)); // not need for asm
 
 	/* TX and TY */
 
@@ -130,7 +130,7 @@ void CompVMathStatsNormalize2DHartley_4_64f_Intrin_AVX(const COMPV_ALIGNED(AVX) 
 	_mm256_zeroupper();
 	const __m256d vecOneOverNumPoints = _mm256_div_pd(_mm256_set1_pd(1.), _mm256_set1_pd(static_cast<compv_float64_t>(numPoints)));
 	const __m256d vecSqrt2 = _mm256_set1_pd(COMPV_MATH_SQRT_2);
-	const __m256i vecMaskToExtractFirst64Bits = _mm256_load_si256(reinterpret_cast<const __m256i*>(kAVXMaskstore_0_u64)); // not need for asm
+	const __m256i vecMaskToExtractFirst64Bits = _mm256_load_si256(reinterpret_cast<const __m256i*>(kAVXMaskstore_0_64u)); // not need for asm
 
 	__m256d vecX = _mm256_load_pd(&x[0]);
 	__m256d vecY = _mm256_load_pd(&y[0]);
@@ -204,15 +204,15 @@ void CompVMathStatsVariance_64f_Intrin_AVX(const COMPV_ALIGNED(AVX) compv_float6
 		compv_scalar_t remain = (countSigned - i);
 		vecDev = _mm256_sub_pd(_mm256_load_pd(&data[i]), vecMean); // data is aligned on AVX which means we can read beyond the bounds and up to the stride
 		if (remain == 3) {
-			const __m256d vecMaskToHideLast64Bits = _mm256_load_pd(reinterpret_cast<const compv_float64_t*>(kAVXMaskzero_3_u64)); // not need for asm
+			const __m256d vecMaskToHideLast64Bits = _mm256_load_pd(reinterpret_cast<const compv_float64_t*>(kAVXMaskzero_3_64u)); // not need for asm
 			vecDev = _mm256_and_pd(vecDev, vecMaskToHideLast64Bits);
 		}
 		else if (remain == 2) {
-			const __m256d vecMaskToHideLast128Bits = _mm256_load_pd(reinterpret_cast<const compv_float64_t*>(kAVXMaskzero_2_3_u64)); // not need for asm
+			const __m256d vecMaskToHideLast128Bits = _mm256_load_pd(reinterpret_cast<const compv_float64_t*>(kAVXMaskzero_2_3_64u)); // not need for asm
 			vecDev = _mm256_and_pd(vecDev, vecMaskToHideLast128Bits);
 		}
 		else {
-			const __m256d vecMaskToHideLast192Bits = _mm256_load_pd(reinterpret_cast<const compv_float64_t*>(kAVXMaskzero_1_2_3_u64)); // not need for asm
+			const __m256d vecMaskToHideLast192Bits = _mm256_load_pd(reinterpret_cast<const compv_float64_t*>(kAVXMaskzero_1_2_3_64u)); // not need for asm
 			vecDev = _mm256_and_pd(vecDev, vecMaskToHideLast192Bits);
 		}
 		vecVar = _mm256_add_pd(vecVar, _mm256_mul_pd(vecDev, vecDev));
@@ -220,7 +220,7 @@ void CompVMathStatsVariance_64f_Intrin_AVX(const COMPV_ALIGNED(AVX) compv_float6
 	vecVar = _mm256_hadd_pd(vecVar, vecVar);
 	vecVar = _mm256_add_pd(vecVar, _mm256_permute2f128_pd(vecVar, vecVar, 0x11)); // hadd and result in first double
 	vecVar = _mm256_div_pd(vecVar, vecCountMinus1); // asm: vdivsd
-	_mm256_maskstore_pd(var1, _mm256_load_si256(reinterpret_cast<const __m256i*>(kAVXMaskstore_0_u64)), vecVar); // asm: vmovsd
+	_mm256_maskstore_pd(var1, _mm256_load_si256(reinterpret_cast<const __m256i*>(kAVXMaskstore_0_64u)), vecVar); // asm: vmovsd
 
 	_mm256_zeroupper();
 }

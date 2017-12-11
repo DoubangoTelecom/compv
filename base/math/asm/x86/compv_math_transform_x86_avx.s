@@ -13,7 +13,7 @@ COMPV_YASM_DEFAULT_REL
 global sym(CompVMathTransformHomogeneousToCartesian2D_4_64f_Asm_X86_AVX)
 
 section .data
-	extern sym(k1_f64)
+	extern sym(k1_64f)
 
 section .text
 
@@ -34,7 +34,7 @@ sym(CompVMathTransformHomogeneousToCartesian2D_4_64f_Asm_X86_AVX):
 	;; end prolog ;;
 
 	mov rdx, arg(2) ; srcZ
-	vmovapd ymm0, [sym(k1_f64)]
+	vmovapd ymm0, [sym(k1_64f)]
 	vdivpd ymm0, ymm0, [rdx]
 	mov rax, arg(0) ; srcX
 	mov rcx, arg(1) ; srcY

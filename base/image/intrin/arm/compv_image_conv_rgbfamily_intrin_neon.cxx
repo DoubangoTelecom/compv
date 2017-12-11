@@ -174,7 +174,7 @@ void CompVImageConvRgb24family_to_uv_planar_11_Intrin_NEON(COMPV_ALIGNED(NEON) c
 	uint8x8x3_t vec0RGB, vec1RGB; // contains [R, G and B] samples each component on its own lane
 	int16x8_t vec0, vec1, vec0U, vec1U, vec0V, vec1V;
 
-	const uint16x8_t vec128 = vld1q_u16(reinterpret_cast<const uint16_t*>(k128_i16));
+	const uint16x8_t vec128 = vld1q_u16(reinterpret_cast<const uint16_t*>(k128_16s));
 	// The order in which the coeffs appears depends on the format (RGB, BGR, GRB...)
 	const int8x8x4_t vecCoeffsU = vld4_s8(reinterpret_cast<int8_t const *>(kRGBfamilyToYUV_UCoeffs8));
 	const int8x8x4_t vecCoeffsV = vld4_s8(reinterpret_cast<int8_t const *>(kRGBfamilyToYUV_VCoeffs8));
@@ -244,7 +244,7 @@ void CompVImageConvRgb24family_to_uv_planar_11_Intrin_NEON(COMPV_ALIGNED(NEON) c
 	compv_uscalar_t i, j, maxI = ((width + 15) & -16), padUV = (stride - maxI), padRGB = padUV << 1; \
 	int16x8_t vec0R, vec1R, vec0G, vec1G, vec0B, vec1B; \
 	int16x8_t vec0, vec1, vec0U, vec1U, vec0V, vec1V; \
-	const uint16x8_t vec128 = vld1q_u16(reinterpret_cast<const uint16_t*>(k128_i16)); \
+	const uint16x8_t vec128 = vld1q_u16(reinterpret_cast<const uint16_t*>(k128_16s)); \
 	/* The order in which the coeffs appears depends on the format (RGB, BGR, GRB...) */ \
 	const int8x8x4_t vecCoeffsU = vld4_s8(reinterpret_cast<int8_t const *>(kRGBfamilyToYUV_UCoeffs8)); \
 	const int8x8x4_t vecCoeffsV = vld4_s8(reinterpret_cast<int8_t const *>(kRGBfamilyToYUV_VCoeffs8)); \
@@ -331,7 +331,7 @@ void CompVImageConvRgb32family_to_uv_planar_11_Intrin_NEON(COMPV_ALIGNED(NEON) c
 	uint8x8x4_t vec0RGBA, vec1RGBA; // contains [R, G, B and A] samples each component on its own lane
 	int16x8_t vec0, vec1, vec0U, vec1U, vec0V, vec1V;
 
-	const uint16x8_t vec128 = vld1q_u16(reinterpret_cast<const uint16_t*>(k128_i16));
+	const uint16x8_t vec128 = vld1q_u16(reinterpret_cast<const uint16_t*>(k128_16s));
 	// The order in which the coeffs appears depends on the format (RGBA, BGRA, ARGB...)
 	const int8x8x4_t vecCoeffsU = vld4_s8(reinterpret_cast<int8_t const *>(kRGBAfamilyToYUV_UCoeffs8));
 	const int8x8x4_t vecCoeffsV = vld4_s8(reinterpret_cast<int8_t const *>(kRGBAfamilyToYUV_VCoeffs8));

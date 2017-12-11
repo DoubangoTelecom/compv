@@ -25,11 +25,11 @@ COMPV_NAMESPACE_BEGIN()
 	__m128i vec0, vec1, vec2, vec3, vec4, vec5, vec6, vec7, vec8, vec9; \
 	__m128 vec0f, vec1f, vec2f, vec3f; \
 	static const __m128i vecZero = _mm_setzero_si128(); \
-	static const __m128i vec85 = _mm_load_si128(reinterpret_cast<const __m128i*>(k85_i8)); \
-	static const __m128i vec171 = _mm_load_si128(reinterpret_cast<const __m128i*>(k171_u8)); \
+	static const __m128i vec85 = _mm_load_si128(reinterpret_cast<const __m128i*>(k85_8s)); \
+	static const __m128i vec171 = _mm_load_si128(reinterpret_cast<const __m128i*>(k171_8u)); \
 	static const __m128i vecFF = _mm_cmpeq_epi8(vec85, vec85); \
-	static const __m128 vec43f = _mm_load_ps(k43_f32); \
-	static const __m128 vec255f = _mm_load_ps(k255_f32); \
+	static const __m128 vec43f = _mm_load_ps(k43_32f); \
+	static const __m128 vec255f = _mm_load_ps(k255_32f); \
 	strideRGBx = stride * rgbxn; /* from samples to bytes (width * 3) for RGB24 and (width * 4) for RGBA32 */ \
 	width += (width << 1); /* from samples to bytes (width * 3)*/ \
 	stride += (stride << 1); /* from samples to bytes (stride * 3) */ \

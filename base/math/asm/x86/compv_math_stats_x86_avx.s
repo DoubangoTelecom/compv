@@ -15,13 +15,13 @@ global sym(CompVMathStatsNormalize2DHartley_4_64f_Asm_X86_AVX)
 global sym(CompVMathStatsVariance_64f_Asm_X86_AVX)
 
 section .data
-	extern sym(ksqrt2_f64)
-	extern sym(k1_f64)
-	extern sym(kAVXMaskstore_0_u64)
-	extern sym(kAVXMaskstore_0_1_u64)
-	extern sym(kAVXMaskzero_2_3_u64)
-	extern sym(kAVXMaskzero_1_2_3_u64)
-	extern sym(kAVXMaskzero_3_u64)
+	extern sym(ksqrt2_64f)
+	extern sym(k1_64f)
+	extern sym(kAVXMaskstore_0_64u)
+	extern sym(kAVXMaskstore_0_1_64u)
+	extern sym(kAVXMaskzero_2_3_64u)
+	extern sym(kAVXMaskzero_1_2_3_64u)
+	extern sym(kAVXMaskzero_3_64u)
 
 section .text
 
@@ -61,7 +61,7 @@ sym(CompVMathStatsNormalize2DHartley_64f_Asm_X86_AVX):
 
 	vmovd xmm2, eax
 	vpshufd xmm2, xmm2, 0x0
-	vmovapd ymm6, [sym(k1_f64)]
+	vmovapd ymm6, [sym(k1_64f)]
 	vcvtdq2pd ymm2, xmm2
 	vdivpd ymm6, ymm6, ymm2 ; ymm6 = vecOneOverNumPoints
 
@@ -247,7 +247,7 @@ sym(CompVMathStatsNormalize2DHartley_64f_Asm_X86_AVX):
 	.EndOfMoreThanOneMagnitudeRemains:
 	
 	vhaddpd ymm7, ymm7, ymm7
-	vmovapd ymm3, [sym(ksqrt2_f64)] ; ymm3 = vecSqrt2
+	vmovapd ymm3, [sym(ksqrt2_64f)] ; ymm3 = vecSqrt2
 	vperm2f128 ymm4, ymm7, ymm7, 0x11
 	vaddpd ymm7, ymm7, ymm4
 	mov rax, arg(3) ; tx1
@@ -293,11 +293,11 @@ sym(CompVMathStatsNormalize2DHartley_4_64f_Asm_X86_AVX):
 
 	vmovd xmm2, eax
 	vpshufd xmm2, xmm2, 0x0
-	vmovapd ymm7, [sym(k1_f64)]
+	vmovapd ymm7, [sym(k1_64f)]
 	vcvtdq2pd ymm2, xmm2
 	vmovapd ymm0, [rcx]
 	vmovapd ymm1, [rdx]
-	vmovapd ymm6, [sym(ksqrt2_f64)] ; ymm6 = vecSqrt2
+	vmovapd ymm6, [sym(ksqrt2_64f)] ; ymm6 = vecSqrt2
 	vdivpd ymm7, ymm7, ymm2 ; ymm7 = vecOneOverNumPoints
 	vhaddpd ymm2, ymm0, ymm0
 	vhaddpd ymm3, ymm1, ymm1
@@ -401,13 +401,13 @@ sym(CompVMathStatsVariance_64f_Asm_X86_AVX):
 		jmp .OneRemains
 
 		.ThreeRemains:
-			vandpd ymm2, ymm2, [sym(kAVXMaskzero_3_u64)]
+			vandpd ymm2, ymm2, [sym(kAVXMaskzero_3_64u)]
 			jmp .MaskApplied
 		.TwoRemains:
-			vandpd ymm2, ymm2, [sym(kAVXMaskzero_2_3_u64)]
+			vandpd ymm2, ymm2, [sym(kAVXMaskzero_2_3_64u)]
 			jmp .MaskApplied
 		.OneRemains:
-			vandpd ymm2, ymm2, [sym(kAVXMaskzero_1_2_3_u64)]
+			vandpd ymm2, ymm2, [sym(kAVXMaskzero_1_2_3_64u)]
 
 		.MaskApplied:
 			%if 0 ; FMA3

@@ -46,7 +46,11 @@ COMPV_NAMESPACE_BEGIN()
 // algorithm: return (vecX[i] != vecY[i]) ? vecPlaceholder[i] : 0x00; 
 // e.g. to test vec not zero: _mm_cmpnot_epu8_SSE2(vec, 0x00, 0xff) - mask is used to set value
 #define _mm_cmpnot_epu8_SSE2(vecX, vecY, vecPlaceholder) _mm_andnot_si128(_mm_cmpeq_epi8(vecX, vecY), vecPlaceholder)
+#define _mm_cmpnot_epi8_SSE2 _mm_cmpnot_epu8_SSE2
+#define _mm_cmpnot_epi16_SSE2(vecX, vecY, vecPlaceholder) _mm_andnot_si128(_mm_cmpeq_epi16(vecX, vecY), vecPlaceholder)
+#define _mm_cmpnot_epu16_SSE2 _mm_cmpnot_epi16_SSE2
 #define _mm_cmpnot_epi32_SSE2(vecX, vecY, vecPlaceholder) _mm_andnot_si128(_mm_cmpeq_epi32(vecX, vecY), vecPlaceholder)
+#define _mm_cmpnot_epu32_SSE2 _mm_cmpnot_epi32_SSE2
 // algorithm: return (vecX[i] > vecY[i]) ? vecPlaceholder[i] : 0x00; 
 #define _mm_cmpgt_epu8_SSE2(vecX, vecY, vecZero, vecPlaceholder) _mm_cmpnot_epu8_SSE2(_mm_subs_epu8(vecX, vecY), vecZero, vecPlaceholder)
 #define _mm_cmplt_epu8_SSE2(vecX, vecY, vecZero, vecPlaceholder) _mm_cmpgt_epu8_SSE2(vecY, vecX, vecZero, vecPlaceholder)
@@ -76,7 +80,7 @@ static COMPV_INLINE __m128i _mm_mullo_epi32_SSE2(const __m128i &a, const __m128i
 // e.g. RGBRGBRGB -> [RRRR], [GGGG], [BBBB]
 //!\\ You should not need to use this function -> FASTER: convert to RGBX then process (more info: see RGB24 -> YUV)
 #define COMPV_VLD3_I8_SSSE3(ptr, vecLane0, vecLane1, vecLane2, vectmp0, vectmp1) { \
-		static const __m128i vecMask = _mm_load_si128(reinterpret_cast<const __m128i*>(kShuffleEpi8_Deinterleave8uL3_i32)); \
+		static const __m128i vecMask = _mm_load_si128(reinterpret_cast<const __m128i*>(kShuffleEpi8_Deinterleave8uL3_32s)); \
 		vecLane0 = _mm_load_si128(reinterpret_cast<const __m128i*>((ptr))); \
 		vecLane1 = _mm_load_si128(reinterpret_cast<const __m128i*>((ptr)) + 1); \
 		vecLane2 = _mm_load_si128(reinterpret_cast<const __m128i*>((ptr)) + 2); \
@@ -102,9 +106,9 @@ static COMPV_INLINE __m128i _mm_mullo_epi32_SSE2(const __m128i &a, const __m128i
 // !!! "vecLane0", "vecLane1" and "vecLane3" ARE modified !!!
 // e.g. [RRRR], [GGGG], [BBBB] -> RGBRGBRGB
 #define COMPV_VST3_I8_SSSE3(ptr, vecLane0, vecLane1, vecLane2, vectmp0, vectmp1) { \
-		static const __m128i vecMask0 = _mm_load_si128(reinterpret_cast<const __m128i*>(kShuffleEpi8_Interleave8uL3_Step0_i32)); \
-		static const __m128i vecMask1 = _mm_load_si128(reinterpret_cast<const __m128i*>(kShuffleEpi8_Interleave8uL3_Step1_i32)); \
-		static const __m128i vecMask2 = _mm_load_si128(reinterpret_cast<const __m128i*>(kShuffleEpi8_Interleave8uL3_Step2_i32)); \
+		static const __m128i vecMask0 = _mm_load_si128(reinterpret_cast<const __m128i*>(kShuffleEpi8_Interleave8uL3_Step0_s32)); \
+		static const __m128i vecMask1 = _mm_load_si128(reinterpret_cast<const __m128i*>(kShuffleEpi8_Interleave8uL3_Step1_s32)); \
+		static const __m128i vecMask2 = _mm_load_si128(reinterpret_cast<const __m128i*>(kShuffleEpi8_Interleave8uL3_Step2_s32)); \
 		vectmp0 = _mm_unpacklo_epi8(vecLane0, vecLane1); /* RG RG RG...*/ \
 		vectmp1 = _mm_unpackhi_epi8(vecLane0, vecLane1); /* RG RG RG... */ \
 		/* First = vecLane0 */ \
@@ -133,7 +137,7 @@ static COMPV_INLINE __m128i _mm_mullo_epi32_SSE2(const __m128i &a, const __m128i
 // e.g. RGBARGBARGBA -> [RRRR], [GGGG], [BBBB], [AAAA]
 //!\\ You should not need to use this function -> FASTER: convert to RGBX then process (more info: see RGB24 -> YUV)
 #define COMPV_VLD4_I8_SSSE3(ptr, vecLane0, vecLane1, vecLane2, vecLane3, vectmp0, vectmp1) { \
-		static const __m128i vecMask = _mm_load_si128(reinterpret_cast<const __m128i*>(kShuffleEpi8_Deinterleave8uL4_i32)); \
+		static const __m128i vecMask = _mm_load_si128(reinterpret_cast<const __m128i*>(kShuffleEpi8_Deinterleave8uL4_32s)); \
 		vecLane0 = _mm_load_si128(reinterpret_cast<const __m128i*>((ptr))); /* RGBA RGBA RGBA RGBA */ \
 		vecLane1 = _mm_load_si128(reinterpret_cast<const __m128i*>((ptr)) + 1); /* RGBA RGBA RGBA RGBA */ \
 		vecLane2 = _mm_load_si128(reinterpret_cast<const __m128i*>((ptr)) + 2); /* RGBA RGBA RGBA RGBA */ \

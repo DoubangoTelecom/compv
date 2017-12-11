@@ -20,7 +20,7 @@ void CompVMathTransformHomogeneousToCartesian2D_4_64f_Intrin_AVX(const COMPV_ALI
 	COMPV_DEBUG_INFO_CHECK_AVX();
 
 	_mm256_zeroupper();
-	const __m256d vec0 = _mm256_div_pd(_mm256_load_pd(k1_f64), _mm256_load_pd(&srcZ[0]));
+	const __m256d vec0 = _mm256_div_pd(_mm256_load_pd(k1_64f), _mm256_load_pd(&srcZ[0]));
 	_mm256_store_pd(dstX, _mm256_mul_pd(_mm256_load_pd(srcX), vec0));
 	_mm256_store_pd(dstY, _mm256_mul_pd(_mm256_load_pd(srcY), vec0));
 	_mm256_zeroupper();

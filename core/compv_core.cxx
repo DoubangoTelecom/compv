@@ -107,8 +107,8 @@ static const CompVMatcherFactory bruteForceFactory = {
 };
 
 static const CompVConnectedComponentLabelingFactory lslFactory = {
-	COMPV_LSL_ID,
-	"LSL (Light Speed Labeling)",
+	COMPV_PLSL_ID,
+	"PLSL (Parallel Light Speed Labeling)",
 	CompVConnectedComponentLabelingLSL::newObj,
 };
 
@@ -142,7 +142,7 @@ COMPV_ERROR_CODE CompVCore::init()
 	COMPV_CHECK_CODE_BAIL(err = CompVMatcher::addFactory(&bruteForceFactory), "Failed to add bruteforce matcher factory");
 
 	// Connected Component Labeling
-	COMPV_CHECK_CODE_BAIL(err = CompVConnectedComponentLabeling::addFactory(&lslFactory), "Failed to add Light Speed Labeling factory");
+	COMPV_CHECK_CODE_BAIL(err = CompVConnectedComponentLabeling::addFactory(&lslFactory), "Failed to add Parallel Light Speed Labeling factory");
 
 	// Video Readers and Writers
 #if defined(HAVE_FFMPEG)

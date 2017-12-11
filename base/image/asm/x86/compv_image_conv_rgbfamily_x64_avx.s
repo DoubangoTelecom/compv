@@ -28,10 +28,10 @@ global sym(CompVImageConvRgb565lefamily_to_uv_Asm_X64_AVX2)
 global sym(CompVImageConvRgb565befamily_to_uv_Asm_X64_AVX2)
 
 section .data
-	extern sym(k16_i16)
-	extern sym(k128_i16)
-	extern sym(kAVXPermutevar8x32_ABCDDEFG_i32)
-	extern sym(kAVXPermutevar8x32_AEBFCGDH_i32)
+	extern sym(k16_16s)
+	extern sym(k128_16s)
+	extern sym(kAVXPermutevar8x32_ABCDDEFG_32s)
+	extern sym(kAVXPermutevar8x32_AEBFCGDH_32s)
 	extern sym(kShuffleEpi8_RgbToRgba_i32)
 	extern sym(kRGB565ToYUV_RMask_u16)
 	extern sym(kRGB565ToYUV_GMask_u16)
@@ -77,10 +77,10 @@ section .text
 
 	mov r8, arg(5)
 	vmovdqa ymm0, [r8] ; ymmYCoeffs
-	vmovdqa ymm1, [sym(k16_i16)] ; ymm16
-	vmovdqa ymm6, [sym(kAVXPermutevar8x32_AEBFCGDH_i32)] ; ymmAEBFCGDH
+	vmovdqa ymm1, [sym(k16_16s)] ; ymm16
+	vmovdqa ymm6, [sym(kAVXPermutevar8x32_AEBFCGDH_32s)] ; ymmAEBFCGDH
 	vmovdqa ymm7, [sym(kShuffleEpi8_RgbToRgba_i32)] ; ymmMaskRgbToRgba
-	vmovdqa ymm8, [sym(kAVXPermutevar8x32_ABCDDEFG_i32)] ; ymmABCDDEFG
+	vmovdqa ymm8, [sym(kAVXPermutevar8x32_ABCDDEFG_32s)] ; ymmABCDDEFG
 	
 	mov r8, arg(3) ; height
 	mov r10, arg(1) ; outYPtr
@@ -190,7 +190,7 @@ sym(CompVImageConvRgb32family_to_y_Asm_X64_AVX2)
 	mov r10, arg(1) ; r10 = outYPtr
 	mov r11, arg(2) ; r11 = width
 
-	vmovdqa ymm15, [sym(k16_i16)]
+	vmovdqa ymm15, [sym(k16_16s)]
 	
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	; for (j = 0; j < height; ++j)
@@ -327,10 +327,10 @@ sym(CompVImageConvRgb565befamily_to_y_Asm_X64_AVX2):
 	mov r8, arg(7)
 	vmovdqa ymm9, [r8] ; ymm9 = ymmVCoeffs
 
-	vmovdqa ymm10, [sym(kAVXPermutevar8x32_AEBFCGDH_i32)] ; ymmAEBFCGDH
+	vmovdqa ymm10, [sym(kAVXPermutevar8x32_AEBFCGDH_32s)] ; ymmAEBFCGDH
 	vmovdqa ymm11, [sym(kShuffleEpi8_RgbToRgba_i32)] ; ymmMaskRgbToRgba
-	vmovdqa ymm12, [sym(kAVXPermutevar8x32_ABCDDEFG_i32)] ; ymmABCDDEFG
-	vmovdqa ymm13, [sym(k128_i16)] ; ymm128
+	vmovdqa ymm12, [sym(kAVXPermutevar8x32_ABCDDEFG_32s)] ; ymmABCDDEFG
+	vmovdqa ymm13, [sym(k128_16s)] ; ymm128
 	
 	mov r8, arg(4) ; r8 = height
 	mov r10, arg(1) ; r10 = outUPtr
@@ -562,10 +562,10 @@ sym(CompVImageConvRgb32family_to_uv_planar_11_Asm_X64_AVX2)
 			vpsraw ymm1, ymm1, 8
 			vpsraw ymm6, ymm6, 8
 			vpsraw ymm7, ymm7, 8
-			vpaddw ymm0, ymm0, [sym(k128_i16)]			
-			vpaddw ymm1, ymm1, [sym(k128_i16)]
-			vpaddw ymm6, ymm6, [sym(k128_i16)]			
-			vpaddw ymm7, ymm7, [sym(k128_i16)]
+			vpaddw ymm0, ymm0, [sym(k128_16s)]			
+			vpaddw ymm1, ymm1, [sym(k128_16s)]
+			vpaddw ymm6, ymm6, [sym(k128_16s)]			
+			vpaddw ymm7, ymm7, [sym(k128_16s)]
 			vpackuswb ymm0, ymm0, ymm1
 			vpackuswb ymm6, ymm6, ymm7
 			vpermq ymm0, ymm0, 0xD8

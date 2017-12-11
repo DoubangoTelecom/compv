@@ -28,11 +28,11 @@ COMPV_NAMESPACE_BEGIN()
 	__m128i vec0n, vec1n, vec2n, vec3n, vec4n, vec5n; \
 	__m256 vec0f, vec1f, vec2f, vec3f; \
 	static const __m256i vecZero = _mm256_setzero_si256(); \
-	static const __m256i vec85 = _mm256_load_si256(reinterpret_cast<const __m256i*>(k85_i8)); \
-	static const __m256i vec171 = _mm256_load_si256(reinterpret_cast<const __m256i*>(k171_u8)); \
+	static const __m256i vec85 = _mm256_load_si256(reinterpret_cast<const __m256i*>(k85_8s)); \
+	static const __m256i vec171 = _mm256_load_si256(reinterpret_cast<const __m256i*>(k171_8u)); \
 	static const __m256i vecFF = _mm256_cmpeq_epi8(vec85, vec85); \
-	static const __m256 vec43f = _mm256_load_ps(k43_f32); \
-	static const __m256 vec255f = _mm256_load_ps(k255_f32); \
+	static const __m256 vec43f = _mm256_load_ps(k43_32f); \
+	static const __m256 vec255f = _mm256_load_ps(k255_32f); \
 	\
 	strideRGBx = stride * rgbxn; /* from samples to bytes (width * 3) for RGB24 and (width * 4) for RGBA32 */ \
 	width += (width << 1); /* from samples to bytes (width * 3) */ \

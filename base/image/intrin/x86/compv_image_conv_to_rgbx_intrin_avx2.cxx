@@ -150,9 +150,9 @@ COMPV_NAMESPACE_BEGIN()
 	static const __m256i vec51 = _mm256_set1_epi16(51); \
 	static const __m256i vec65 = _mm256_set1_epi16(65); \
 	static const __m256i vec127 = _mm256_set1_epi16(127); \
-	static const __m256i vec13_26 = _mm256_load_si256(reinterpret_cast<const __m256i*>(k13_26_i16)); /* 13, 26, 13, 26 ...*/ \
+	static const __m256i vec13_26 = _mm256_load_si256(reinterpret_cast<const __m256i*>(k13_26_16s)); /* 13, 26, 13, 26 ...*/ \
 	static const __m256i vecA = _mm256_cmpeq_epi8(vec127, vec127); /* 255, 255, 255, 255 */ \
-	static const __m256i vecDeinterleaveUV = _mm256_load_si256(reinterpret_cast<const __m256i*>(kShuffleEpi8_Deinterleave8uL2_i32)); \
+	static const __m256i vecDeinterleaveUV = _mm256_load_si256(reinterpret_cast<const __m256i*>(kShuffleEpi8_Deinterleave8uL2_32s)); \
 	 \
 	for (j = 0; j < height; ++j) { \
 		for (i = 0, k = 0, l = 0; i < width; i += 32, k += nameRgbx##_step, l += nameYuv##_uv_step) { \
@@ -323,7 +323,7 @@ void CompVImageConvNv21_to_Rgb24_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t* y
 	static const __m256i vec51 = _mm256_set1_epi16(51); \
 	static const __m256i vec65 = _mm256_set1_epi16(65); \
 	static const __m256i vec127 = _mm256_set1_epi16(127); \
-	static const __m256i vec13_26 = _mm256_load_si256(reinterpret_cast<const __m256i*>(k13_26_i16)); /* 13, 26, 13, 26 ...*/ \
+	static const __m256i vec13_26 = _mm256_load_si256(reinterpret_cast<const __m256i*>(k13_26_16s)); /* 13, 26, 13, 26 ...*/ \
 	static const __m256i vecA = _mm256_cmpeq_epi8(vec127, vec127); /* 255, 255, 255, 255 */ \
 	compv_uscalar_t i, j, k; \
 	const compv_uscalar_t strideRGBx = (stride * nameRgbx##_bytes_per_sample); \

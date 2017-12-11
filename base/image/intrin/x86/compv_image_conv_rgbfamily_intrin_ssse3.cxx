@@ -64,7 +64,7 @@ void CompVImageConvRgb24family_to_y_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_
 	compv_uscalar_t i, j, maxI = ((width + 15) & -16), padY = (stride - maxI), padRGB = padY * 3;
 
 	xmmMaskRgbToRgba = _mm_load_si128(reinterpret_cast<const __m128i*>(kShuffleEpi8_RgbToRgba_i32));
-	xmm16 = _mm_load_si128(reinterpret_cast<const __m128i*>(k16_i16));
+	xmm16 = _mm_load_si128(reinterpret_cast<const __m128i*>(k16_16s));
 	xmmYCoeffs = _mm_load_si128(reinterpret_cast<const __m128i*>(kRGBfamilyToYUV_YCoeffs8)); // RGBA coeffs
 
 	// Y = (((33 * R) + (65 * G) + (13 * B))) >> 7 + 16
@@ -89,7 +89,7 @@ void CompVImageConvRgb32family_to_y_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_
 	__m128i xmm0RGBA, xmm1RGBA, xmm2RGBA, xmm3RGBA, xmmYCoeffs, xmm16;
 	compv_uscalar_t i, j, maxI = ((width + 15) & -16), padY = (stride - maxI), padRGBA = padY << 2;
 
-	xmm16 = _mm_load_si128(reinterpret_cast<const __m128i*>(k16_i16));
+	xmm16 = _mm_load_si128(reinterpret_cast<const __m128i*>(k16_16s));
 	xmmYCoeffs = _mm_load_si128(reinterpret_cast<const __m128i*>(kRGBAfamilyToYUV_YCoeffs8)); // RGBA coeffs
 
 	// Y = (((33 * R) + (65 * G) + (13 * B))) >> 7 + 16
@@ -118,7 +118,7 @@ void CompVImageConvRgb24family_to_uv_planar_11_Intrin_SSSE3(COMPV_ALIGNED(SSE) c
 	xmmMaskRgbToRgba = _mm_load_si128(reinterpret_cast<const __m128i*>(kShuffleEpi8_RgbToRgba_i32));
 	xmmUCoeffs = _mm_load_si128(reinterpret_cast<const __m128i*>(kRGBfamilyToYUV_UCoeffs8));
 	xmmVCoeffs = _mm_load_si128(reinterpret_cast<const __m128i*>(kRGBfamilyToYUV_VCoeffs8));
-	xmm128 = _mm_load_si128(reinterpret_cast<const __m128i*>(k128_i16));
+	xmm128 = _mm_load_si128(reinterpret_cast<const __m128i*>(k128_16s));
 
 	// U = (((-38 * R) + (-74 * G) + (112 * B))) >> 8 + 128
 	// V = (((112 * R) + (-94 * G) + (-18 * B))) >> 8 + 128
@@ -148,7 +148,7 @@ void CompVImageConvRgb32family_to_uv_planar_11_Intrin_SSSE3(COMPV_ALIGNED(SSE) c
 
 	xmmUCoeffs = _mm_load_si128(reinterpret_cast<const __m128i*>(kRGBAfamilyToYUV_UCoeffs8));
 	xmmVCoeffs = _mm_load_si128(reinterpret_cast<const __m128i*>(kRGBAfamilyToYUV_VCoeffs8));
-	xmm128 = _mm_load_si128(reinterpret_cast<const __m128i*>(k128_i16));
+	xmm128 = _mm_load_si128(reinterpret_cast<const __m128i*>(k128_16s));
 
 	// U = (((-38 * R) + (-74 * G) + (112 * B))) >> 8 + 128
 	// V = (((112 * R) + (-94 * G) + (-18 * B))) >> 8 + 128

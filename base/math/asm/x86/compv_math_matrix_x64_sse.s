@@ -18,8 +18,8 @@ global sym(CompVMathMatrixBuildHomographyEqMatrix_64f_Asm_X64_SSE2)
 
 section .data
 	extern sym(kAVXFloat64MaskAbs)
-	extern sym(km1_f64)
-	extern sym(km1_0_f64)
+	extern sym(km1_64f)
+	extern sym(km1_0_64f)
 	extern sym(kAVXFloat64MaskNegate)
 	
 
@@ -421,9 +421,9 @@ sym(CompVMathMatrixBuildHomographyEqMatrix_64f_Asm_X64_SSE2):
 	mov r10, arg(6) ; r10 = numPoints
 
 	xorpd xmm9, xmm9 ; xmm7 = vecZero
-	movapd xmm10, [sym(km1_0_f64)] ; xmm10 = vecMinusOneZero
+	movapd xmm10, [sym(km1_0_64f)] ; xmm10 = vecMinusOneZero
 	movapd xmm11, [sym(kAVXFloat64MaskNegate)] ; xmm11 = vecMaskNegate
-	movapd xmm12, [sym(km1_f64)]
+	movapd xmm12, [sym(km1_64f)]
 
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	; for (size_t i = 0; i < numPoints; ++i)

@@ -21,15 +21,15 @@ global sym(CompVImageConvRgb24ToHsv_Asm_X64_SSSE3)
 global sym(CompVImageConvRgba32ToHsv_Asm_X64_SSSE3)
 
 section .data
-	extern sym(k85_i8)
-	extern sym(k171_u8)
-	extern sym(k43_f32)
-	extern sym(k255_f32)
-	extern sym(kShuffleEpi8_Deinterleave8uL3_i32)
-	extern sym(kShuffleEpi8_Interleave8uL3_Step0_i32)
-	extern sym(kShuffleEpi8_Interleave8uL3_Step1_i32)
-	extern sym(kShuffleEpi8_Interleave8uL3_Step2_i32)
-	extern sym(kShuffleEpi8_Deinterleave8uL4_i32)
+	extern sym(k85_8s)
+	extern sym(k171_8u)
+	extern sym(k43_32f)
+	extern sym(k255_32f)
+	extern sym(kShuffleEpi8_Deinterleave8uL3_32s)
+	extern sym(kShuffleEpi8_Interleave8uL3_Step0_s32)
+	extern sym(kShuffleEpi8_Interleave8uL3_Step1_s32)
+	extern sym(kShuffleEpi8_Interleave8uL3_Step2_s32)
+	extern sym(kShuffleEpi8_Deinterleave8uL4_32s)
 
 section .text
 
@@ -83,7 +83,7 @@ section .text
 	%define vec255f		xmm15
 
 	pxor vecZero, vecZero
-	movdqa vec255f, [sym(k255_f32)]
+	movdqa vec255f, [sym(k255_32f)]
 
 	mov rgbxPtr, arg(0)
 	mov hsvPtr, arg(1)
@@ -213,7 +213,7 @@ section .text
 			pandn vec1, vec1f
 			pandn vec2, vec2f
 			pandn vec3, vec3f
-			movaps vec8, [sym(k43_f32)]
+			movaps vec8, [sym(k43_32f)]
 			mulps vec0, vec8
 			mulps vec1, vec8
 			mulps vec2, vec8
@@ -243,8 +243,8 @@ section .text
 			cvtps2dq vec1f, vec1f
 			cvtps2dq vec2f, vec2f
 			cvtps2dq vec3f, vec3f
-			pand vec6, [sym(k85_i8)] ; (85 & m1)
-			pand vec7, [sym(k171_u8)] ; (171 & m2)
+			pand vec6, [sym(k85_8s)] ; (85 & m1)
+			pand vec7, [sym(k171_8u)] ; (171 & m2)
 			por vec6, vec7 ; (85 & m1) | (171 & m2)
 			packssdw vec8, vec1f
 			packssdw vec2f, vec3f

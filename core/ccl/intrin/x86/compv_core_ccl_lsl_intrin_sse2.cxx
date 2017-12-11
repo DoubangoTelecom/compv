@@ -8,98 +8,70 @@
 
 #if COMPV_ARCH_X86 && COMPV_INTRINSIC
 #include "compv/base/intrin/x86/compv_intrin_sse.h"
+#include "compv/base/compv_simd_globals.h"
 #include "compv/base/compv_debug.h"
 
 COMPV_NAMESPACE_BEGIN()
 
-#define SET_RLC_1(mm, ii) \
-		if ((mm)) { \
-			RLCi[er] = ((ii) - b); \
-			b ^= 1;  \
-			++er; \
-		} \
-		ERi[(ii)] = er
-
-#define SET_RLC_1_SSE2(mm, ii, offset) \
-		if ((mm & (1 << offset))) { \
-			RLCi[er] = (((ii) + offset) - b); \
-			b ^= 1;  \
-			++er; \
-		} \
-		ERi[((ii) + offset)] = er
-
-#define SET_RLC_16_SSE2(mm, ii) \
-		SET_RLC_1_SSE2(mm, ii, 0); SET_RLC_1_SSE2(mm, ii, 1); SET_RLC_1_SSE2(mm, ii, 2); SET_RLC_1_SSE2(mm, ii, 3); \
-		SET_RLC_1_SSE2(mm, ii, 4); SET_RLC_1_SSE2(mm, ii, 5); SET_RLC_1_SSE2(mm, ii, 6); SET_RLC_1_SSE2(mm, ii, 7); \
-		SET_RLC_1_SSE2(mm, ii, 8); SET_RLC_1_SSE2(mm, ii, 9); SET_RLC_1_SSE2(mm, ii, 10); SET_RLC_1_SSE2(mm, ii, 11); \
-		SET_RLC_1_SSE2(mm, ii, 12); SET_RLC_1_SSE2(mm, ii, 13); SET_RLC_1_SSE2(mm, ii, 14); SET_RLC_1_SSE2(mm, ii, 15)
-
-#define SET_RLC_ZERO_1_SSE2(ii, offset) ERi[((ii) + offset)] = er
-
-#define SET_RLC_ZERO_16_SSE2(ii) \
-		SET_RLC_ZERO_1_SSE2(ii, 0); SET_RLC_ZERO_1_SSE2(ii, 1); SET_RLC_ZERO_1_SSE2(ii, 2); SET_RLC_ZERO_1_SSE2(ii, 3); \
-		SET_RLC_ZERO_1_SSE2(ii, 4); SET_RLC_ZERO_1_SSE2(ii, 5); SET_RLC_ZERO_1_SSE2(ii, 6); SET_RLC_ZERO_1_SSE2(ii, 7); \
-		SET_RLC_ZERO_1_SSE2(ii, 8); SET_RLC_ZERO_1_SSE2(ii, 9); SET_RLC_ZERO_1_SSE2(ii, 10); SET_RLC_ZERO_1_SSE2(ii, 11); \
-		SET_RLC_ZERO_1_SSE2(ii, 12); SET_RLC_ZERO_1_SSE2(ii, 13); SET_RLC_ZERO_1_SSE2(ii, 14); SET_RLC_ZERO_1_SSE2(ii, 15)
-
-// TODO(dmi): Function not used -> remove
-void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_8u32s_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* Xi, int32_t* RLCi, int32_t* ERi, int32_t* b1, int32_t* er1, const int32_t width)
+// Function requires width > 16 (not ">=" but ">")
+void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Intrin_SSE2(
+	const uint8_t* Xi, const compv_uscalar_t Xi_stride,
+	int16_t* ERi, const compv_uscalar_t ERi_stride,
+	int16_t* RLCi, const compv_uscalar_t RLCi_stride,
+	const compv_uscalar_t width, const compv_uscalar_t height
+)
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Not faster than serial code");
-	static const __m128i vecZero = _mm_setzero_si128();
-	static const __m128i vecFF = _mm_cmpeq_epi8(vecZero, vecZero);
-	const int32_t w64 = width & -64;
-	int32_t b = *b1, er = *er1;
-	int32_t i;
-	int mask0, mask1, mask2, mask3;
-	for (i = 1; i < w64; i += 64) {
-		mask0 = _mm_movemask_epi8(_mm_cmpnot_epu8_SSE2(
-			_mm_xor_si128(
-				_mm_load_si128(reinterpret_cast<const __m128i*>(&Xi[i - 1])),
-				_mm_loadu_si128(reinterpret_cast<const __m128i*>(&Xi[i]))
-			),
-			vecZero, vecFF)
-		);
-		mask1 = _mm_movemask_epi8(_mm_cmpnot_epu8_SSE2(
-			_mm_xor_si128(
-				_mm_load_si128(reinterpret_cast<const __m128i*>(&Xi[i + 15])),
-				_mm_loadu_si128(reinterpret_cast<const __m128i*>(&Xi[i + 16]))
-			),
-			vecZero, vecFF)
-		);
-		mask2 = _mm_movemask_epi8(_mm_cmpnot_epu8_SSE2(
-			_mm_xor_si128(
-				_mm_load_si128(reinterpret_cast<const __m128i*>(&Xi[i + 31])),
-				_mm_loadu_si128(reinterpret_cast<const __m128i*>(&Xi[i + 32]))
-			),
-			vecZero, vecFF)
-		);
-		mask3 = _mm_movemask_epi8(_mm_cmpnot_epu8_SSE2(
-			_mm_xor_si128(
-				_mm_load_si128(reinterpret_cast<const __m128i*>(&Xi[i + 47])),
-				_mm_loadu_si128(reinterpret_cast<const __m128i*>(&Xi[i + 48]))
-			),
-			vecZero, vecFF)
-		);
 
-		if (mask0) { SET_RLC_16_SSE2(mask0, (i + 0)); }
-		else { SET_RLC_ZERO_16_SSE2((i + 0)); }
+	const int16_t width1 = static_cast<int16_t>(width);
+	const int16_t width16 = (width1 - 1) & -16; // width > 16 (at least 17) which means never equal to zero
+	int16_t er, i;
+	__m128i vec0, vec1;
+	int mask, m;
+	const __m128i vecFF = _mm_set1_epi16((int16_t)0xffff); // asm: _mm_cmpeq_epi8(vec0, vec0)
 
-		if (mask1) { SET_RLC_16_SSE2(mask1, (i + 16)); }
-		else { SET_RLC_ZERO_16_SSE2((i + 16)); }
+	for (compv_uscalar_t j = 0; j < height; ++j) {
+		er = (Xi[0] & 1);
+		RLCi[0] = 0;
 
-		if (mask2) { SET_RLC_16_SSE2(mask2, (i + 32)); }
-		else { SET_RLC_ZERO_16_SSE2((i + 32)); }
+		// In asm code, no need to test "width16 != 0" because "width1" > 16 (at least 17)
+		for (i = 1; i < width16; i += 16) {
+			vec0 = _mm_cmpnot_epi16_SSE2(
+				_mm_loadu_si128(reinterpret_cast<const __m128i*>(&ERi[i - 1])),
+				_mm_loadu_si128(reinterpret_cast<const __m128i*>(&ERi[i])),
+				vecFF
+			);
+			vec1 = _mm_cmpnot_epi16_SSE2(
+				_mm_loadu_si128(reinterpret_cast<const __m128i*>(&ERi[i + 7])),
+				_mm_loadu_si128(reinterpret_cast<const __m128i*>(&ERi[i + 8])),
+				vecFF
+			);
+			vec0 = _mm_packs_epi16(vec0, vec1);
+			mask = _mm_movemask_epi8(vec0);
+			if (mask) {
+				m = 0;
+				do {
+					if (mask & 1) {
+						RLCi[er++] = i + m;
+					}
+					++m;
+				} while (mask >>= 1);
+			}
+		}
 
-		if (mask3) { SET_RLC_16_SSE2(mask3, (i + 48)); }
-		else { SET_RLC_ZERO_16_SSE2((i + 48)); }
+		for (; i < width1; ++i) {
+			if (ERi[i - 1] != ERi[i]) {
+				RLCi[er++] = i;
+			}
+		}
+
+		RLCi[er] = width1 - ((Xi[width1 - 1] & 1) ^ 1);
+
+		/* next */
+		Xi += Xi_stride;
+		RLCi += RLCi_stride;
+		ERi += ERi_stride;
 	}
-	for (; i < width; ++i) {
-		SET_RLC_1(Xi[i - 1] ^ Xi[i], i);
-	}
-	*b1 = b;
-	*er1 = er;
 }
 
 COMPV_NAMESPACE_END()

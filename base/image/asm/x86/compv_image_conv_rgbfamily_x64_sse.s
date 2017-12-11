@@ -25,8 +25,8 @@ global sym(CompVImageConvRgb565lefamily_to_uv_Asm_X64_SSE2)
 global sym(CompVImageConvRgb565befamily_to_uv_Asm_X64_SSE2)
 
 section .data
-	extern sym(k16_i16)
-	extern sym(k128_i16)
+	extern sym(k16_16s)
+	extern sym(k128_16s)
 	extern sym(kShuffleEpi8_RgbToRgba_i32)
 	extern sym(kRGB565ToYUV_RMask_u16)
 	extern sym(kRGB565ToYUV_GMask_u16)
@@ -81,7 +81,7 @@ section .text
 	mov r10, arg(1) ; r10 = outYPtr
 	mov r11, arg(2) ; r11 = width
 
-	movdqa xmm15, [sym(k16_i16)]
+	movdqa xmm15, [sym(k16_16s)]
 	
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	; for (j = 0; j < height; ++j)
@@ -227,7 +227,7 @@ sym(CompVImageConvRgb565befamily_to_y_Asm_X64_SSE2):
 	mov r8, arg(7)
 	movdqa xmm10, [r8] ; xmm10 = xmmVCoeffs
 	movdqa xmm8, [sym(kShuffleEpi8_RgbToRgba_i32)] ; xmm8 = xmmRgbToRgbaMask
-	movdqa xmm9, [sym(k128_i16)] ; xmm9 = xmm128
+	movdqa xmm9, [sym(k128_16s)] ; xmm9 = xmm128
 	
 	mov r8, arg(4) ; r8 = height
 	mov r10, arg(1) ; r10 = outUPtr
@@ -484,10 +484,10 @@ sym(CompVImageConvRgb32family_to_uv_planar_11_Asm_X64_SSSE3)
 			psraw xmm1, 8
 			psraw xmm6, 8
 			psraw xmm7, 8
-			paddw xmm0, [sym(k128_i16)]			
-			paddw xmm1, [sym(k128_i16)]
-			paddw xmm6, [sym(k128_i16)]			
-			paddw xmm7, [sym(k128_i16)]
+			paddw xmm0, [sym(k128_16s)]			
+			paddw xmm1, [sym(k128_16s)]
+			paddw xmm6, [sym(k128_16s)]			
+			paddw xmm7, [sym(k128_16s)]
 			packuswb xmm0, xmm1
 			packuswb xmm6, xmm7
 			movdqa [r10], xmm0

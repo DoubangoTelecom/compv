@@ -17,7 +17,7 @@ global sym(CompVMemCopyNTA_Asm_Aligned11_X64_SSE2)
 global sym(CompVMemCopy3_Asm_X64_SSSE3)
 
 section .data
-	extern sym(kShuffleEpi8_Deinterleave8uL3_i32)
+	extern sym(kShuffleEpi8_Deinterleave8uL3_32s)
 
 section .text
 

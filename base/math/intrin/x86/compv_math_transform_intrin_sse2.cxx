@@ -63,7 +63,7 @@ void CompVMathTransformHomogeneousToCartesian2D_64f_Intrin_SSE2(const COMPV_ALIG
 void CompVMathTransformHomogeneousToCartesian2D_4_64f_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* srcX, const COMPV_ALIGNED(SSE) compv_float64_t* srcY, const COMPV_ALIGNED(SSE) compv_float64_t* srcZ, COMPV_ALIGNED(SSE) compv_float64_t* dstX, COMPV_ALIGNED(SSE) compv_float64_t* dstY, compv_uscalar_t numPoints)
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
-	const __m128d vecOne = _mm_load_pd(k1_f64);
+	const __m128d vecOne = _mm_load_pd(k1_64f);
 	const __m128d vec0 = _mm_div_pd(vecOne, _mm_load_pd(&srcZ[0]));
 	const __m128d vec1 = _mm_div_pd(vecOne, _mm_load_pd(&srcZ[2]));
 	_mm_store_pd(&dstX[0], _mm_mul_pd(_mm_load_pd(&srcX[0]), vec0));

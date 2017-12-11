@@ -25,7 +25,7 @@ global sym(CompVMathConvlt1VtHz_8u16s16s_Asm_X64_AVX2)
 global sym(CompVMathConvlt1VtHz_16s16s16s_Asm_X64_AVX2)
 
 section .data
-	extern sym(kAVXPermutevar8x32_AEBFCGDH_i32)
+	extern sym(kAVXPermutevar8x32_AEBFCGDH_32s)
 
 section .text
 
@@ -254,7 +254,7 @@ sym(CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X64_AVX2):
 	%define vec2				ymm8
 	%define vec3				ymm9
 
-	vmovdqa vecAEBFCGDH, [sym(kAVXPermutevar8x32_AEBFCGDH_i32)]
+	vmovdqa vecAEBFCGDH, [sym(kAVXPermutevar8x32_AEBFCGDH_32s)]
 
 	%define argi_inPtr			0
 	%define argi_outPtr			1
@@ -949,7 +949,7 @@ sym(CompVMathConvlt1VtHz_32f32f32f_Asm_X64_FMA3_AVX2):
 	%define vec3				ymm8
 	%define vecAEBFCGDH			ymm9	
 
-	vmovdqa vecAEBFCGDH, [sym(kAVXPermutevar8x32_AEBFCGDH_i32)]
+	vmovdqa vecAEBFCGDH, [sym(kAVXPermutevar8x32_AEBFCGDH_32s)]
 
 	%define argi_inPtr			0
 	%define argi_outPtr			1

@@ -57,8 +57,8 @@ COMPV_ERROR_CODE ccl()
 
 	// Create the LSL ccl and set default settings
 	CompVConnectedComponentLabelingPtr ccl_obj;
-	COMPV_CHECK_CODE_RETURN(CompVConnectedComponentLabeling::newObj(&ccl_obj, COMPV_LSL_ID));
-	COMPV_CHECK_CODE_RETURN(ccl_obj->setInt(COMPV_LSL_SET_INT_TYPE, COMPV_LSL_TYPE_STD));
+	COMPV_CHECK_CODE_RETURN(CompVConnectedComponentLabeling::newObj(&ccl_obj, COMPV_PLSL_ID));
+	COMPV_CHECK_CODE_RETURN(ccl_obj->setInt(COMPV_PLSL_SET_INT_TYPE, COMPV_PLSL_TYPE_STD));
 
 	const uint64_t timeStart = CompVTime::nowMillis();
 	CompVConnectedComponentLabelingResult result;

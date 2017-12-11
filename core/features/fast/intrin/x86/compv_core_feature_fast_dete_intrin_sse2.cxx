@@ -88,7 +88,7 @@ void CompVFastDataRow_Intrin_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_us
 	const __m128i vecThreshold = _mm_set1_epi8(static_cast<int8_t>(threshold));
 	const __m128i vecNMinSumMinusOne = _mm_set1_epi8(static_cast<int8_t>(minsum - 1)); // no '_mm_cmpge_epu8'
 	const __m128i vecNMinusOne = _mm_set1_epi8(static_cast<int8_t>(NminusOne)); // no '_mm_cmpge_epu8'
-	static const __m128i vecOne = _mm_load_si128(reinterpret_cast<const __m128i*>(k1_i8));
+	static const __m128i vecOne = _mm_load_si128(reinterpret_cast<const __m128i*>(k1_8s));
 	static const __m128i vecZero = _mm_setzero_si128();
 	static const __m128i vec0xFF = _mm_cmpeq_epi8(vecZero, vecZero); // 0xFF
 	__m128i vec0, vec1, vecSum1, vecStrengths, vecBrighter1, vecDarker1, vecDiffBinary16[16], vecDiff16[16], vecCircle16[16];

@@ -89,7 +89,7 @@ void CompVFastDataRow_Intrin_AVX2(const uint8_t* IP, COMPV_ALIGNED(AVX) compv_us
 	const __m256i vecThreshold = _mm256_set1_epi8(static_cast<int8_t>(threshold));
 	const __m256i vecNMinSumMinusOne = _mm256_set1_epi8(static_cast<int8_t>(minsum - 1)); // no '_mm256_cmpge_epu8'
 	const __m256i vecNMinusOne = _mm256_set1_epi8(static_cast<int8_t>(NminusOne)); // no '_mm256_cmpge_epu8'
-	static const __m256i vecOne = _mm256_load_si256(reinterpret_cast<const __m256i*>(k1_i8));
+	static const __m256i vecOne = _mm256_load_si256(reinterpret_cast<const __m256i*>(k1_8s));
 	static const __m256i vecZero = _mm256_setzero_si256();
 	static const __m256i vec0xFF = _mm256_cmpeq_epi8(vecZero, vecZero); // 0xFF
 	__m256i vec0, vec1, vecSum1, vecStrengths, vecBrighter1, vecDarker1, vecDiffBinary16[16], vecDiff16[16], vecCircle16[16];

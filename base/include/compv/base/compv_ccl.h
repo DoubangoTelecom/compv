@@ -33,13 +33,13 @@ enum {
 	/* Common to all features */
 
 	
-	/* Light Speed Labeling */
-	COMPV_LSL_ID,
-	COMPV_LSL_SET_INT_TYPE,
-	COMPV_LSL_TYPE_STD,
-	COMPV_LSL_TYPE_RLC,
-	COMPV_LSL_TYPE_XRLC,
-	COMPV_LSL_TYPE_RLE,
+	/* Parallel Light Speed Labeling */
+	COMPV_PLSL_ID,
+	COMPV_PLSL_SET_INT_TYPE,
+	COMPV_PLSL_TYPE_STD,
+	COMPV_PLSL_TYPE_RLC,
+	COMPV_PLSL_TYPE_XRLC,
+	COMPV_PLSL_TYPE_RLE,
 
 	/* Contour Tracing approach by Fu Chang et al */
 	COMPV_CT_ID,

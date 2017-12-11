@@ -39,16 +39,16 @@ global sym(CompVImageConvUyvy422_to_Rgb24_Asm_X64_SSSE3)
 global sym(CompVImageConvUyvy422_to_Rgba32_Asm_X64_SSSE3)
 
 section .data
-	extern sym(k16_i16)
-	extern sym(k37_i16)
-	extern sym(k51_i16)
-	extern sym(k65_i16)
-	extern sym(k127_i16)
-	extern sym(k13_26_i16)
-	extern sym(kShuffleEpi8_Interleave8uL3_Step0_i32)
-	extern sym(kShuffleEpi8_Interleave8uL3_Step1_i32)
-	extern sym(kShuffleEpi8_Interleave8uL3_Step2_i32)
-	extern sym(kShuffleEpi8_Deinterleave8uL2_i32)
+	extern sym(k16_16s)
+	extern sym(k37_16s)
+	extern sym(k51_16s)
+	extern sym(k65_16s)
+	extern sym(k127_16s)
+	extern sym(k13_26_16s)
+	extern sym(kShuffleEpi8_Interleave8uL3_Step0_s32)
+	extern sym(kShuffleEpi8_Interleave8uL3_Step1_s32)
+	extern sym(kShuffleEpi8_Interleave8uL3_Step2_s32)
+	extern sym(kShuffleEpi8_Deinterleave8uL2_32s)
 	extern sym(kShuffleEpi8_Yuyv422ToYuv_i32)
 	extern sym(kShuffleEpi8_Uyvy422ToYuv_i32)
 
@@ -212,12 +212,12 @@ section .text
 	%endif
 
 	pxor vecZero, vecZero
-	movdqa vec16, [sym(k16_i16)]
-	movdqa vec37, [sym(k37_i16)]
-	movdqa vec51, [sym(k51_i16)]
-	movdqa vec65, [sym(k65_i16)]
-	movdqa vec127, [sym(k127_i16)]
-	movdqa vec13_26, [sym(k13_26_i16)]
+	movdqa vec16, [sym(k16_16s)]
+	movdqa vec37, [sym(k37_16s)]
+	movdqa vec51, [sym(k51_16s)]
+	movdqa vec65, [sym(k65_16s)]
+	movdqa vec127, [sym(k127_16s)]
+	movdqa vec13_26, [sym(k13_26_16s)]
 
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	; for (j = 0; j < height; ++j)
@@ -249,10 +249,10 @@ section .text
 				movq vecV, [vPtr + l*COMPV_YASM_UINT8_SZ_BYTES]
 			%elif yuvFamily == nv12Family
 				movdqa vecU, [uvPtr + l*COMPV_YASM_UINT8_SZ_BYTES]
-				pshufb vecU, [sym(kShuffleEpi8_Deinterleave8uL2_i32)]
+				pshufb vecU, [sym(kShuffleEpi8_Deinterleave8uL2_32s)]
 			%elif yuvFamily == nv21Family
 				movdqa vecV, [uvPtr + l*COMPV_YASM_UINT8_SZ_BYTES]
-				pshufb vecV, [sym(kShuffleEpi8_Deinterleave8uL2_i32)]
+				pshufb vecV, [sym(kShuffleEpi8_Deinterleave8uL2_32s)]
 			%elif yuvFamily == yuyv422Family || yuvFamily == uyvy422Family
 				movdqa vecV, [yPtr + (i*COMPV_YASM_UINT8_SZ_BYTES) + 0]
 				movdqa vec1, [yPtr + (i*COMPV_YASM_UINT8_SZ_BYTES) + COMPV_YASM_XMM_SZ_BYTES]

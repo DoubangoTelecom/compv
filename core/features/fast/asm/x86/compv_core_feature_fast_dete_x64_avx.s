@@ -18,7 +18,7 @@ global sym(CompVFast12DataRow_Asm_X64_AVX2)
 global sym(CompVFastNmsGather_Asm_X64_AVX2)
 
 section .data
-	extern COMPV_YASM_DLLIMPORT_DECL(k1_i8)
+	extern COMPV_YASM_DLLIMPORT_DECL(k1_8s)
 	
 section .text
 
@@ -76,7 +76,7 @@ section .text
 	vpbroadcastb ymm8, xmm8
 	vpbroadcastb ymm9, xmm9
 	vpbroadcastb ymm10, xmm10
-	COMPV_YASM_DLLIMPORT_LOAD vmovdqa, vecOne, k1_i8, rax
+	COMPV_YASM_DLLIMPORT_LOAD vmovdqa, vecOne, k1_8s, rax
 	vpcmpeqb vec0xFF, vec0xFF
 	vpxor vecZero, vecZero
 

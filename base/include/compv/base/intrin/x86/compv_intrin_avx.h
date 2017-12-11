@@ -35,7 +35,7 @@ The next macros change the behavior to consider the AVX registers as a single 25
 #define compv_avx2_packs_epi16(ymm0_, ymm1_)		_mm256_permute4x64_epi64(_mm256_packs_epi16(ymm0_, ymm1_), COMPV_MM_SHUFFLE(3, 1, 2, 0))
 #define compv_avx2_unpacklo_epi16(ymm0_, ymm1_)		_mm256_unpacklo_epi16(_mm256_permute4x64_epi64(ymm0_, COMPV_MM_SHUFFLE(3, 1, 2, 0)), _mm256_permute4x64_epi64(ymm1_, COMPV_MM_SHUFFLE(3, 1, 2, 0)))
 #define compv_avx2_unpackhi_epi16(ymm0_, ymm1_)		_mm256_unpackhi_epi16(_mm256_permute4x64_epi64(ymm0_, COMPV_MM_SHUFFLE(3, 1, 2, 0)), _mm256_permute4x64_epi64(ymm1_, COMPV_MM_SHUFFLE(3, 1, 2, 0)))
-#define compv_avx2_shuffle_epi8(ymm0_, ymm1_)		_mm256_shuffle_epi8(_mm256_permutevar8x32_epi32(ymm0_, kAVXPermutevar8x32_ABCDDEFG_i32), ymm1_) // Intentionally not correct to avoid performance issues, load 'kAVXPermutevar8x32_ABCDDEFG_i32' yourself *once*
+#define compv_avx2_shuffle_epi8(ymm0_, ymm1_)		_mm256_shuffle_epi8(_mm256_permutevar8x32_epi32(ymm0_, kAVXPermutevar8x32_ABCDDEFG_32s), ymm1_) // Intentionally not correct to avoid performance issues, load 'kAVXPermutevar8x32_ABCDDEFG_32s' yourself *once*
 
 
 // algorithm: return (vecX[i] != vecY[i]) ? vecPlaceholder[i] : 0x00; 

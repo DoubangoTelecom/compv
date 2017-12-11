@@ -15,7 +15,7 @@
 
 .data
 
-.extern k16_i16
+.extern k16_16s
 
 .text
 

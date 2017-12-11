@@ -24,7 +24,7 @@
 	COMPV_DEBUG_INFO_CHECK_SSE2(); \
 	__m128i xmmR0, xmmG0, xmmB0, xmmR1, xmmG1, xmmB1, xmm0, xmm1; \
 	compv_uscalar_t i, j, maxI = ((width + 15) & -16), padY = (stride - maxI), padRGB = padY << 1; \
-	const __m128i xmm16 = _mm_load_si128(reinterpret_cast<const __m128i*>(k16_i16)); \
+	const __m128i xmm16 = _mm_load_si128(reinterpret_cast<const __m128i*>(k16_16s)); \
 	const __m128i xmmMaskR = _mm_load_si128(reinterpret_cast<const __m128i*>(kRGB565ToYUV_RMask_u16)); \
 	const __m128i xmmMaskG = _mm_load_si128(reinterpret_cast<const __m128i*>(kRGB565ToYUV_GMask_u16)); \
 	const __m128i xmmMaskB = _mm_load_si128(reinterpret_cast<const __m128i*>(kRGB565ToYUV_BMask_u16)); \
@@ -69,7 +69,7 @@
 	COMPV_DEBUG_INFO_CHECK_SSE2(); \
 	__m128i xmmR0, xmmG0, xmmB0, xmmR1, xmmG1, xmmB1, xmm0, xmm1, xmm2, xmm3, xmm4, xmm5; \
 	compv_uscalar_t i, j, maxI = ((width + 15) & -16), padUV = (stride - maxI), padRGB = padUV << 1; \
-	const __m128i xmm128 = _mm_load_si128(reinterpret_cast<const __m128i*>(k128_i16)); \
+	const __m128i xmm128 = _mm_load_si128(reinterpret_cast<const __m128i*>(k128_16s)); \
 	const __m128i xmmMaskR = _mm_load_si128(reinterpret_cast<const __m128i*>(kRGB565ToYUV_RMask_u16)); \
 	const __m128i xmmMaskG = _mm_load_si128(reinterpret_cast<const __m128i*>(kRGB565ToYUV_GMask_u16)); \
 	const __m128i xmmMaskB = _mm_load_si128(reinterpret_cast<const __m128i*>(kRGB565ToYUV_BMask_u16)); \

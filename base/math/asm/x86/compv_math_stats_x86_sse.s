@@ -17,8 +17,8 @@ global sym(CompVMathStatsMSE2DHomogeneous_4_64f_Asm_X86_SSE2)
 global sym(CompVMathStatsVariance_64f_Asm_X86_SSE2)
 
 section .data
-	extern sym(ksqrt2_f64)
-	extern sym(k1_f64)
+	extern sym(ksqrt2_64f)
+	extern sym(k1_64f)
 
 section .text
 
@@ -57,7 +57,7 @@ sym(CompVMathStatsNormalize2DHartley_64f_Asm_X86_SSE2):
 
 	movd xmm2, rax
 	pshufd xmm2, xmm2, 0x0
-	movapd xmm6, [sym(k1_f64)]
+	movapd xmm6, [sym(k1_64f)]
 	cvtdq2pd xmm2, xmm2
 	divpd xmm6, xmm2 ; xmm6 = xmmOneOverNumPoints
 
@@ -204,7 +204,7 @@ sym(CompVMathStatsNormalize2DHartley_64f_Asm_X86_SSE2):
 	.EndOfMoreThanOneMagnitudeRemains
 
 	movapd xmm2, xmm7
-	movapd xmm3, [sym(ksqrt2_f64)] ; xmm3 = vecSqrt2
+	movapd xmm3, [sym(ksqrt2_64f)] ; xmm3 = vecSqrt2
 	shufpd xmm2, xmm2, 0x01
 	addsd xmm7, xmm2
 	mov rax, arg(3) ; tx1
@@ -246,7 +246,7 @@ sym(CompVMathStatsNormalize2DHartley_4_64f_Asm_X86_SSE2):
 
 	movd xmm2, arg(2)
 	pshufd xmm2, xmm2, 0x0
-	movapd xmm6, [sym(k1_f64)]
+	movapd xmm6, [sym(k1_64f)]
 	cvtdq2pd xmm2, xmm2
 	
 	movapd xmm0, [rcx + 0*COMPV_YASM_FLOAT64_SZ_BYTES]
@@ -278,7 +278,7 @@ sym(CompVMathStatsNormalize2DHartley_4_64f_Asm_X86_SSE2):
 	mulpd xmm5, xmm5
 	addpd xmm2, xmm4
 	addpd xmm3, xmm5
-	movapd xmm4, [sym(ksqrt2_f64)] ; xmm4 = vecSqrt2
+	movapd xmm4, [sym(ksqrt2_64f)] ; xmm4 = vecSqrt2
 	sqrtpd xmm7, xmm2
 	sqrtpd xmm3, xmm3
 	mov rax, arg(3)
@@ -344,8 +344,8 @@ sym(CompVMathStatsMSE2DHomogeneous_64f_Asm_X86_SSE2):
 	cmp rcx, [numPointsMinus3]
 	jge .EndOfLoop4
 	.Loop4:
-		movapd xmm0, [sym(k1_f64)]
-		movapd xmm1, [sym(k1_f64)]
+		movapd xmm0, [sym(k1_64f)]
+		movapd xmm1, [sym(k1_64f)]
 		divpd xmm0, [rax + rcx*COMPV_YASM_FLOAT64_SZ_BYTES + 0*COMPV_YASM_FLOAT64_SZ_BYTES]
 		divpd xmm1, [rax + rcx*COMPV_YASM_FLOAT64_SZ_BYTES + 2*COMPV_YASM_FLOAT64_SZ_BYTES]
 		mov rax, arg(5) ; mse
@@ -385,7 +385,7 @@ sym(CompVMathStatsMSE2DHomogeneous_64f_Asm_X86_SSE2):
 	cmp rcx, [numPointsMinus1]
 	jge .EndOfMoreThanTwoRemains
 	.MoreThanTwoRemains
-		movapd xmm0, [sym(k1_f64)]
+		movapd xmm0, [sym(k1_64f)]
 		divpd xmm0, [rax + rcx*COMPV_YASM_FLOAT64_SZ_BYTES]
 		mov rax, arg(5) ; mse
 		movapd xmm1, [rsi + rcx*COMPV_YASM_FLOAT64_SZ_BYTES]
@@ -408,7 +408,7 @@ sym(CompVMathStatsMSE2DHomogeneous_64f_Asm_X86_SSE2):
 	cmp rcx, arg(6)
 	jge .EndOfMoreThanOneRemains
 	.MoreThanOneRemains
-		movsd xmm0, [sym(k1_f64)]
+		movsd xmm0, [sym(k1_64f)]
 		divsd xmm0, [rax + rcx*COMPV_YASM_FLOAT64_SZ_BYTES]
 		mov rax, arg(5) ; mse
 		movsd xmm1, [rsi + rcx*COMPV_YASM_FLOAT64_SZ_BYTES]
@@ -457,8 +457,8 @@ sym(CompVMathStatsMSE2DHomogeneous_4_64f_Asm_X86_SSE2):
 	push rbx
 	;; end prolog ;;
 	
-	movapd xmm0, [sym(k1_f64)]
-	movapd xmm1, [sym(k1_f64)]
+	movapd xmm0, [sym(k1_64f)]
+	movapd xmm1, [sym(k1_64f)]
 	mov rax, arg(2) ; aZ_h	
 	divpd xmm0, [rax + 0*COMPV_YASM_FLOAT64_SZ_BYTES]
 	divpd xmm1, [rax + 2*COMPV_YASM_FLOAT64_SZ_BYTES]

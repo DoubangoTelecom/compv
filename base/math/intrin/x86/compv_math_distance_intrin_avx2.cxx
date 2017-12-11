@@ -39,8 +39,8 @@ void CompVMathDistanceHamming32_Intrin_POPCNT_AVX2(COMPV_ALIGNED(AVX) const uint
 	__m128i vec0n, vec1n;
 	__m256i popcnt1, popcnt2;
 	const __m256i vecPatch = _mm256_load_si256(reinterpret_cast<const __m256i*>(patch1xnPtr));
-	const __m256i vecLookup = _mm256_load_si256(reinterpret_cast<const __m256i*>(kShuffleEpi8_Popcnt_i32));
-	const __m256i vecMaskLow = _mm256_load_si256(reinterpret_cast<const __m256i*>(k15_i8));
+	const __m256i vecLookup = _mm256_load_si256(reinterpret_cast<const __m256i*>(kShuffleEpi8_Popcnt_32s));
+	const __m256i vecMaskLow = _mm256_load_si256(reinterpret_cast<const __m256i*>(k15_8s));
 
 	j = 0;
 

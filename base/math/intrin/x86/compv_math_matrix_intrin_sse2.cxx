@@ -120,8 +120,8 @@ void CompVMathMatrixBuildHomographyEqMatrix_64f_Intrin_SSE2(const COMPV_ALIGNED(
 	compv_float64_t* M1_ptr = reinterpret_cast<compv_float64_t*>(reinterpret_cast<uint8_t*>(M0_ptr) + M_strideInBytes);
 	const size_t M_strideInBytesTimes2 = M_strideInBytes << 1;
 	const __m128d vecZero = _mm_setzero_pd();
-	const __m128d vecMinusOne = _mm_load_pd(reinterpret_cast<const compv_float64_t*>(km1_f64));
-	const __m128d vecMinusOneZero = _mm_load_pd(reinterpret_cast<const compv_float64_t*>(km1_0_f64));
+	const __m128d vecMinusOne = _mm_load_pd(reinterpret_cast<const compv_float64_t*>(km1_64f));
+	const __m128d vecMinusOneZero = _mm_load_pd(reinterpret_cast<const compv_float64_t*>(km1_0_64f));
 	const __m128d vecMaskNegate = _mm_load_pd(reinterpret_cast<const compv_float64_t*>(kAVXFloat64MaskNegate));
 	__m128d vecSrcXY, vecDstX, vecDstY;
 	__m128d vecMinusXMinusY;

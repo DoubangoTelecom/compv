@@ -287,6 +287,12 @@
     <ClCompile Include="ccl\compv_core_ccl_lsl.cxx">
       <Filter>Source Files\ccl</Filter>
     </ClCompile>
+    <ClCompile Include="ccl\intrin\x86\compv_core_ccl_lsl_intrin_ssse3.cxx">
+      <Filter>Source Files\ccl\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="ccl\intrin\x86\compv_core_ccl_lsl_intrin_avx2.cxx">
+      <Filter>Source Files\ccl\intrin\x86</Filter>
+    </ClCompile>
     <ClCompile Include="ccl\intrin\x86\compv_core_ccl_lsl_intrin_sse2.cxx">
       <Filter>Source Files\ccl\intrin\x86</Filter>
     </ClCompile>
@@ -399,6 +405,12 @@
     </ClInclude>
     <ClInclude Include="include\compv\core\features\edges\intrin\arm\compv_core_feature_canny_dete_intrin_neon.h">
       <Filter>Header Files\features\edges\intrin\arm</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\core\ccl\intrin\x86\compv_core_ccl_lsl_intrin_ssse3.h">
+      <Filter>Header Files\ccl\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\core\ccl\intrin\x86\compv_core_ccl_lsl_intrin_avx2.h">
+      <Filter>Header Files\ccl\intrin\x86</Filter>
     </ClInclude>
     <ClInclude Include="include\compv\core\ccl\intrin\x86\compv_core_ccl_lsl_intrin_sse2.h">
       <Filter>Header Files\ccl\intrin\x86</Filter>

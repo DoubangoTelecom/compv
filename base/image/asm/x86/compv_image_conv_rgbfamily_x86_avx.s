@@ -26,10 +26,10 @@ global sym(CompVImageConvRgb565lefamily_to_uv_Asm_X86_AVX2)
 global sym(CompVImageConvRgb565befamily_to_uv_Asm_X86_AVX2)
 
 section .data
-	extern sym(k16_i16)
-	extern sym(k128_i16)
-	extern sym(kAVXPermutevar8x32_ABCDDEFG_i32)
-	extern sym(kAVXPermutevar8x32_AEBFCGDH_i32)
+	extern sym(k16_16s)
+	extern sym(k128_16s)
+	extern sym(kAVXPermutevar8x32_ABCDDEFG_32s)
+	extern sym(kAVXPermutevar8x32_AEBFCGDH_32s)
 	extern sym(kShuffleEpi8_RgbToRgba_i32)
 	extern sym(kRGB565ToYUV_RMask_u16)
 	extern sym(kRGB565ToYUV_GMask_u16)
@@ -78,9 +78,9 @@ section .text
 
 	mov rsi, arg(5)
 	vmovdqa ymm0, [rsi] ; ymmYCoeffs
-	vmovdqa ymm1, [sym(k16_i16)] ; ymm16
-	vmovdqa ymm6, [sym(kAVXPermutevar8x32_AEBFCGDH_i32)] ; ymmAEBFCGDH
-	vmovdqa ymm7, [sym(kAVXPermutevar8x32_ABCDDEFG_i32)] ; ymmABCDDEFG
+	vmovdqa ymm1, [sym(k16_16s)] ; ymm16
+	vmovdqa ymm6, [sym(kAVXPermutevar8x32_AEBFCGDH_32s)] ; ymmAEBFCGDH
+	vmovdqa ymm7, [sym(kAVXPermutevar8x32_ABCDDEFG_32s)] ; ymmABCDDEFG
 	
 	mov rsi, arg(3) ; height
 	mov rbx, arg(1) ; outYPtr
@@ -262,8 +262,8 @@ sym(CompVImageConvRgb32family_to_y_Asm_X86_AVX2)
 			vpaddw ymm1, ymm1, ymm5
 			vpsrlw ymm0, ymm0, 7
 			vpsrlw ymm1, ymm1, 7
-			vpaddw ymm0, ymm0, [sym(k16_i16)]		
-			vpaddw ymm1, ymm1, [sym(k16_i16)]
+			vpaddw ymm0, ymm0, [sym(k16_16s)]		
+			vpaddw ymm1, ymm1, [sym(k16_16s)]
 			vpackuswb ymm0, ymm1
 			vpermq ymm0, ymm0, 0xD8
 			vmovdqa [rbx], ymm0
@@ -374,7 +374,7 @@ sym(CompVImageConvRgb565befamily_to_y_Asm_X86_AVX2):
 				lea rax, [rax + 128] ; rgb32Ptr += 128
 			%elif %1 == rgb24Family
 				; Convert RGB24 -> RGBA32, alpha channel contains zeros
-				vmovdqa ymm4, [sym(kAVXPermutevar8x32_ABCDDEFG_i32)] ; ymmABCDDEFG
+				vmovdqa ymm4, [sym(kAVXPermutevar8x32_ABCDDEFG_32s)] ; ymmABCDDEFG
 				COMPV_32xRGB_TO_32xRGBA_AVX2 rax, ymm0, ymm1, ymm2, ymm3, ymm4, [sym(kShuffleEpi8_RgbToRgba_i32)]
 				lea rax, [rax + 96] ; rgb24Ptr += 96
 			%else
@@ -389,8 +389,8 @@ sym(CompVImageConvRgb565befamily_to_y_Asm_X86_AVX2):
 			vphaddw ymm0, ymm0, ymm1
 			vpsraw ymm4, ymm4, 8
 			vpsraw ymm0, ymm0, 8
-			vpaddw ymm4, ymm4, [sym(k128_i16)]
-			vpaddw ymm0, ymm0, [sym(k128_i16)]
+			vpaddw ymm4, ymm4, [sym(k128_16s)]
+			vpaddw ymm0, ymm0, [sym(k128_16s)]
 			cmp rdi, arg(3) ; (i < width)?
 			vpmaddubsw ymm1, ymm2, ymm6
 			vpmaddubsw ymm5, ymm3, ymm6
@@ -398,11 +398,11 @@ sym(CompVImageConvRgb565befamily_to_y_Asm_X86_AVX2):
 			vpmaddubsw ymm3, ymm3, ymm7
 			vphaddw ymm1, ymm1, ymm5
 			vphaddw ymm2, ymm2, ymm3
-			vmovdqa ymm5, [sym(kAVXPermutevar8x32_AEBFCGDH_i32)]
+			vmovdqa ymm5, [sym(kAVXPermutevar8x32_AEBFCGDH_32s)]
 			vpsraw ymm1, ymm1, 8
 			vpsraw ymm2, ymm2, 8
-			vpaddw ymm1, ymm1, [sym(k128_i16)]
-			vpaddw ymm2, ymm2, [sym(k128_i16)]
+			vpaddw ymm1, ymm1, [sym(k128_16s)]
+			vpaddw ymm2, ymm2, [sym(k128_16s)]
 			vpackuswb ymm4, ymm4, ymm1
 			vpackuswb ymm0, ymm0, ymm2
 			vpermd ymm0, ymm5, ymm0
@@ -593,8 +593,8 @@ sym(CompVImageConvRgb32family_to_uv_planar_11_Asm_X86_AVX2)
 			vpaddw ymm1, ymm1, ymm5
 			vpsraw ymm0, ymm0, 8
 			vpsraw ymm1, ymm1, 8
-			vpaddw ymm0, ymm0, [sym(k128_i16)]			
-			vpaddw ymm1, ymm1, [sym(k128_i16)]
+			vpaddw ymm0, ymm0, [sym(k128_16s)]			
+			vpaddw ymm1, ymm1, [sym(k128_16s)]
 			vpackuswb ymm0, ymm0, ymm1
 			vpermq ymm5, ymm0, 0xD8
 			vmovdqa ymm0, ymm0Saved
@@ -613,8 +613,8 @@ sym(CompVImageConvRgb32family_to_uv_planar_11_Asm_X86_AVX2)
 			vpaddw ymm1, ymm1, ymm7
 			vpsraw ymm0, ymm0, 8
 			vpsraw ymm1, ymm1, 8
-			vpaddw ymm0, ymm0, [sym(k128_i16)]			
-			vpaddw ymm1, ymm1, [sym(k128_i16)]
+			vpaddw ymm0, ymm0, [sym(k128_16s)]			
+			vpaddw ymm1, ymm1, [sym(k128_16s)]
 			vpackuswb ymm0, ymm1
 			vpermq ymm0, ymm0, 0xD8
 			vmovdqa [rbx], ymm5

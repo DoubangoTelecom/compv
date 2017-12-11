@@ -117,14 +117,14 @@ COMPV_NAMESPACE_BEGIN()
 	__m128i vecYlo, vecYhi, vecUlo, vecUhi, vecVlo, vecVhi, vecR, vecG, vecB; \
 	__m128i vec0lo, vec0hi, vec1lo, vec1hi; \
 	static const __m128i vecZero = _mm_setzero_si128(); \
-	static const __m128i vec16 = _mm_load_si128(reinterpret_cast<const __m128i*>(k16_i16)); \
-	static const __m128i vec37 = _mm_load_si128(reinterpret_cast<const __m128i*>(k37_i16)); \
-	static const __m128i vec51 = _mm_load_si128(reinterpret_cast<const __m128i*>(k51_i16)); \
-	static const __m128i vec65 = _mm_load_si128(reinterpret_cast<const __m128i*>(k65_i16)); \
-	static const __m128i vec127 = _mm_load_si128(reinterpret_cast<const __m128i*>(k127_i16)); \
-	static const __m128i vec13_26 = _mm_load_si128(reinterpret_cast<const __m128i*>(k13_26_i16)); /* 13, 26, 13, 26 ... */ \
+	static const __m128i vec16 = _mm_load_si128(reinterpret_cast<const __m128i*>(k16_16s)); \
+	static const __m128i vec37 = _mm_load_si128(reinterpret_cast<const __m128i*>(k37_16s)); \
+	static const __m128i vec51 = _mm_load_si128(reinterpret_cast<const __m128i*>(k51_16s)); \
+	static const __m128i vec65 = _mm_load_si128(reinterpret_cast<const __m128i*>(k65_16s)); \
+	static const __m128i vec127 = _mm_load_si128(reinterpret_cast<const __m128i*>(k127_16s)); \
+	static const __m128i vec13_26 = _mm_load_si128(reinterpret_cast<const __m128i*>(k13_26_16s)); /* 13, 26, 13, 26 ... */ \
 	static const __m128i vecA = _mm_cmpeq_epi8(vecZero, vecZero); /* FF FF FF FF... */ \
-	static const __m128i vecDeinterleaveUV = _mm_load_si128(reinterpret_cast<const __m128i*>(kShuffleEpi8_Deinterleave8uL2_i32)); \
+	static const __m128i vecDeinterleaveUV = _mm_load_si128(reinterpret_cast<const __m128i*>(kShuffleEpi8_Deinterleave8uL2_32s)); \
 	 \
 	for (j = 0; j < height; ++j) { \
 		for (i = 0, k = 0, l = 0; i < width; i += 16, k += nameRgbx##_step, l += nameYuv##_uv_step) { \
@@ -205,12 +205,12 @@ COMPV_NAMESPACE_BEGIN()
 	__m128i vecYlo, vecYhi, vecU, vecV, vecR, vecG, vecB; \
 	__m128i vec0, vec1; \
 	static const __m128i vecZero = _mm_setzero_si128(); \
-	static const __m128i vec16 = _mm_load_si128(reinterpret_cast<const __m128i*>(k16_i16)); \
-	static const __m128i vec37 = _mm_load_si128(reinterpret_cast<const __m128i*>(k37_i16)); \
-	static const __m128i vec51 = _mm_load_si128(reinterpret_cast<const __m128i*>(k51_i16)); \
-	static const __m128i vec65 = _mm_load_si128(reinterpret_cast<const __m128i*>(k65_i16)); \
-	static const __m128i vec127 = _mm_load_si128(reinterpret_cast<const __m128i*>(k127_i16)); \
-	static const __m128i vec13_26 = _mm_load_si128(reinterpret_cast<const __m128i*>(k13_26_i16)); /* 13, 26, 13, 26 ... */ \
+	static const __m128i vec16 = _mm_load_si128(reinterpret_cast<const __m128i*>(k16_16s)); \
+	static const __m128i vec37 = _mm_load_si128(reinterpret_cast<const __m128i*>(k37_16s)); \
+	static const __m128i vec51 = _mm_load_si128(reinterpret_cast<const __m128i*>(k51_16s)); \
+	static const __m128i vec65 = _mm_load_si128(reinterpret_cast<const __m128i*>(k65_16s)); \
+	static const __m128i vec127 = _mm_load_si128(reinterpret_cast<const __m128i*>(k127_16s)); \
+	static const __m128i vec13_26 = _mm_load_si128(reinterpret_cast<const __m128i*>(k13_26_16s)); /* 13, 26, 13, 26 ... */ \
 	static const __m128i vecA = _mm_cmpeq_epi8(vecZero, vecZero); /* FF FF FF FF... */ \
 	compv_uscalar_t i, j, k; \
 	const compv_uscalar_t strideRGBx = (stride * nameRgbx##_bytes_per_sample); \

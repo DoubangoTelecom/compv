@@ -17,9 +17,9 @@ global sym(CompVMathMatrixInvA3x3_64f_Asm_X86_SSE2)
 
 section .data
 	extern sym(kAVXFloat64MaskAbs)
-	extern sym(k1_f64)
-	extern sym(km1_f64)
-	extern sym(km1_0_f64)
+	extern sym(k1_64f)
+	extern sym(km1_64f)
+	extern sym(km1_0_64f)
 	extern sym(kAVXFloat64MaskNegate)
 
 section .text
@@ -408,7 +408,7 @@ sym(CompVMathMatrixBuildHomographyEqMatrix_64f_Asm_X86_SSE2):
 	mov rbx, arg(2) ; dstX
 
 	xorpd xmm7, xmm7 ; xmm7 = vecZero
-	movapd xmm6, [sym(km1_0_f64)] ; xmm6 = vecMinusOneZero
+	movapd xmm6, [sym(km1_0_64f)] ; xmm6 = vecMinusOneZero
 	movapd xmm5, [sym(kAVXFloat64MaskNegate)] ; xmm5 = vecMaskNegate
 
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -434,7 +434,7 @@ sym(CompVMathMatrixBuildHomographyEqMatrix_64f_Asm_X86_SSE2):
 		xorpd xmm4, xmm5
 		movapd [rsi + 0*COMPV_YASM_FLOAT64_SZ_BYTES], xmm4	
 		unpcklpd xmm1, xmm4
-		unpckhpd xmm4, [sym(km1_f64)]
+		unpckhpd xmm4, [sym(km1_64f)]
 		inc rcx	
 		movapd [rsi + 2*COMPV_YASM_FLOAT64_SZ_BYTES], xmm6
 		movapd [rsi + 4*COMPV_YASM_FLOAT64_SZ_BYTES], xmm7
@@ -537,7 +537,7 @@ sym(CompVMathMatrixInvA3x3_64f_Asm_X86_SSE2):
 
 	;; detA not zero ;;
 
-	movsd xmm7, [sym(k1_f64)]
+	movsd xmm7, [sym(k1_64f)]
 	divsd xmm7, xmm0
 	movsd xmm0, [a1 + 1*COMPV_YASM_FLOAT64_SZ_BYTES]
 	movsd xmm5, [a1 + 2*COMPV_YASM_FLOAT64_SZ_BYTES]

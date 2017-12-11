@@ -16,7 +16,7 @@
 
 .data
 
-.extern sym(k16_i16), sym(k128_i16)
+.extern sym(k16_16s), sym(k128_16s)
  
 .text
 
@@ -361,7 +361,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb565befamily_to_y_Asm_NEON32
 	vecCoeffV2 .req q6
 	vecCoeffV3 .req q7
 
-	ldr r10, =sym(k128_i16)
+	ldr r10, =sym(k128_16s)
 	vld1.u16 {q15x, q15y}, [r10 :128]
 	vec128 .req q15
 
@@ -532,7 +532,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgba32family_to_uv_planar_11_Asm_NEON32
 	vecCoeffV1 .req q4
 	vecCoeffV2 .req q5
 
-	ldr r10, =sym(k128_i16)
+	ldr r10, =sym(k128_16s)
 	vld1.u16 {q6x, q6y}, [r10 :128]
 	vec128 .req q6
 

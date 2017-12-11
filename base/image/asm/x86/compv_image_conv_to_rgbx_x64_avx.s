@@ -39,16 +39,16 @@ global sym(CompVImageConvUyvy422_to_Rgb24_Asm_X64_AVX2)
 global sym(CompVImageConvUyvy422_to_Rgba32_Asm_X64_AVX2)
 
 section .data
-	extern sym(k16_i16)
-	extern sym(k37_i16)
-	extern sym(k51_i16)
-	extern sym(k65_i16)
-	extern sym(k127_i16)
-	extern sym(k13_26_i16)
-	extern sym(kShuffleEpi8_Interleave8uL3_Step0_i32)
-	extern sym(kShuffleEpi8_Interleave8uL3_Step1_i32)
-	extern sym(kShuffleEpi8_Interleave8uL3_Step2_i32)
-	extern sym(kShuffleEpi8_Deinterleave8uL2_i32)
+	extern sym(k16_16s)
+	extern sym(k37_16s)
+	extern sym(k51_16s)
+	extern sym(k65_16s)
+	extern sym(k127_16s)
+	extern sym(k13_26_16s)
+	extern sym(kShuffleEpi8_Interleave8uL3_Step0_s32)
+	extern sym(kShuffleEpi8_Interleave8uL3_Step1_s32)
+	extern sym(kShuffleEpi8_Interleave8uL3_Step2_s32)
+	extern sym(kShuffleEpi8_Deinterleave8uL2_32s)
 	extern sym(kShuffleEpi8_Yuyv422ToYuv_i32)
 	extern sym(kShuffleEpi8_Uyvy422ToYuv_i32)
 
@@ -222,12 +222,12 @@ section .text
 	%endif
 
 	vpxor vecZero, vecZero
-	vmovdqa vec16, [sym(k16_i16)]
-	vmovdqa vec37, [sym(k37_i16)]
-	vmovdqa vec51, [sym(k51_i16)]
-	vmovdqa vec65, [sym(k65_i16)]
-	vmovdqa vec127, [sym(k127_i16)]
-	vmovdqa vec13_26, [sym(k13_26_i16)]
+	vmovdqa vec16, [sym(k16_16s)]
+	vmovdqa vec37, [sym(k37_16s)]
+	vmovdqa vec51, [sym(k51_16s)]
+	vmovdqa vec65, [sym(k65_16s)]
+	vmovdqa vec127, [sym(k127_16s)]
+	vmovdqa vec13_26, [sym(k13_26_16s)]
 
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	; for (j = 0; j < height; ++j)
@@ -259,10 +259,10 @@ section .text
 				vmovdqa vecVn, [vPtr + l*COMPV_YASM_UINT8_SZ_BYTES]
 			%elif yuvFamily == nv12Family
 				vmovdqa vecU, [uvPtr + l*COMPV_YASM_UINT8_SZ_BYTES]
-				vpshufb vecU, [sym(kShuffleEpi8_Deinterleave8uL2_i32)]
+				vpshufb vecU, [sym(kShuffleEpi8_Deinterleave8uL2_32s)]
 			%elif yuvFamily == nv21Family
 				vmovdqa vecV, [uvPtr + l*COMPV_YASM_UINT8_SZ_BYTES]
-				vpshufb vecV, [sym(kShuffleEpi8_Deinterleave8uL2_i32)]
+				vpshufb vecV, [sym(kShuffleEpi8_Deinterleave8uL2_32s)]
 			%elif yuvFamily == yuyv422Family || yuvFamily == uyvy422Family
 				vmovdqa vecV, [yPtr + (i*COMPV_YASM_UINT8_SZ_BYTES) + 0]
 				vmovdqa vec1, [yPtr + (i*COMPV_YASM_UINT8_SZ_BYTES) + COMPV_YASM_YMM_SZ_BYTES]

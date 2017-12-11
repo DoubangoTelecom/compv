@@ -19,8 +19,8 @@ global sym(CompVMathDistanceParabola_32f_Asm_X64_AVX)
 global sym(CompVMathDistanceParabola_32f_Asm_X64_FMA3_AVX)
 
 section .data
-	extern sym(kShuffleEpi8_Popcnt_i32)
-	extern sym(k15_i8)
+	extern sym(kShuffleEpi8_Popcnt_32s)
+	extern sym(k15_8s)
 
 section .text
 
@@ -63,8 +63,8 @@ sym(CompVMathDistanceHamming32_Asm_X64_POPCNT_AVX2):
 
 	mov rax, arg(3)
 	vpxor vecZero, vecZero
-	vmovdqa vecLookup, [sym(kShuffleEpi8_Popcnt_i32)]
-	vmovdqa vecMaskLow, [sym(k15_i8)]
+	vmovdqa vecLookup, [sym(kShuffleEpi8_Popcnt_32s)]
+	vmovdqa vecMaskLow, [sym(k15_8s)]
 	vmovdqa vecPatch, [rax]
 
 	mov height, arg(1)

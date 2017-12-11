@@ -4,8 +4,8 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#if !defined(_COMPV_CORE_CCL_LSL_INTRIN_SSSE2_H_)
-#define _COMPV_CORE_CCL_LSL_INTRIN_SSSE2_H_
+#if !defined(_COMPV_CORE_CCL_LSL_INTRIN_SSSE3_H_)
+#define _COMPV_CORE_CCL_LSL_INTRIN_SSSE3_H_
 
 #include "compv/base/compv_config.h"
 #include "compv/base/compv_common.h"
@@ -18,10 +18,10 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Intrin_SSE2(
-	const uint8_t* Xi, const compv_uscalar_t Xi_stride,
+void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Intrin_SSSE3(
+	COMPV_ALIGNED(SSE) const uint8_t* Xi, const compv_uscalar_t Xi_stride,
 	int16_t* ERi, const compv_uscalar_t ERi_stride,
-	int16_t* RLCi, const compv_uscalar_t RLCi_stride,
+	int16_t* ner, int16_t* ner_max1, int32_t* ner_sum1,
 	const compv_uscalar_t width, const compv_uscalar_t height
 );
 
@@ -29,4 +29,4 @@ COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */
 
-#endif /* _COMPV_CORE_CCL_LSL_INTRIN_SSSE2_H_ */
+#endif /* _COMPV_CORE_CCL_LSL_INTRIN_SSSE3_H_ */

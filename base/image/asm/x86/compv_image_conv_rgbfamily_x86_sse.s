@@ -25,8 +25,8 @@ global sym(CompVImageConvRgb565lefamily_to_uv_Asm_X86_SSE2)
 global sym(CompVImageConvRgb565befamily_to_uv_Asm_X86_SSE2)
 
 section .data
-	extern sym(k16_i16)
-	extern sym(k128_i16)
+	extern sym(k16_16s)
+	extern sym(k128_16s)
 	extern sym(kShuffleEpi8_RgbToRgba_i32)
 	extern sym(kRGB565ToYUV_RMask_u16)
 	extern sym(kRGB565ToYUV_GMask_u16)
@@ -76,7 +76,7 @@ section .text
 
 	mov rsi, arg(5)
 	movdqa xmm0, [rsi] ; xmm0 = xmmYCoeffs
-	movdqa xmm1, [sym(k16_i16)] ; xmm1 = xmm16
+	movdqa xmm1, [sym(k16_16s)] ; xmm1 = xmm16
 	%if %1 == rgb24Family
 		movdqa xmm6, [sym(kShuffleEpi8_RgbToRgba_i32)] ; xmm6 = xmmRgbToRgbaMask
 	%endif
@@ -283,8 +283,8 @@ sym(CompVImageConvRgb32family_to_y_Asm_X86_SSSE3)
 			paddw xmm1, xmm5
 			psrlw xmm0, 7
 			psrlw xmm1, 7
-			paddw xmm0, [sym(k16_i16)]			
-			paddw xmm1, [sym(k16_i16)]
+			paddw xmm0, [sym(k16_16s)]			
+			paddw xmm1, [sym(k16_16s)]
 			packuswb xmm0, xmm1
 			movdqa [rbx], xmm0
 			lea rbx, [rbx + 16] ; outYPtr += 16
@@ -410,8 +410,8 @@ sym(CompVImageConvRgb565befamily_to_y_Asm_X86_SSE2):
 			movdqa xmm5, xmm3
 			psraw xmm0, 8
 			psraw xmm4, 8
-			paddw xmm0, [sym(k128_i16)]
-			paddw xmm4, [sym(k128_i16)]
+			paddw xmm0, [sym(k128_16s)]
+			paddw xmm4, [sym(k128_16s)]
 			cmp rdi, arg(3) ; (i < width)?		
 			pmaddubsw xmm2, xmm7
 			pmaddubsw xmm3, xmm7
@@ -421,8 +421,8 @@ sym(CompVImageConvRgb565befamily_to_y_Asm_X86_SSE2):
 			phaddw xmm1, xmm5
 			psraw xmm2, 8
 			psraw xmm1, 8
-			paddw xmm2, [sym(k128_i16)]
-			paddw xmm1, [sym(k128_i16)]
+			paddw xmm2, [sym(k128_16s)]
+			paddw xmm1, [sym(k128_16s)]
 			packuswb xmm0, xmm2
 			packuswb xmm4, xmm1
 			movdqa [rbx], xmm0
@@ -627,8 +627,8 @@ sym(CompVImageConvRgb32family_to_uv_planar_11_Asm_X86_SSSE3)
 			paddw xmm1, xmm5
 			psraw xmm0, 8
 			psraw xmm1, 8
-			paddw xmm0, [sym(k128_i16)]			
-			paddw xmm1, [sym(k128_i16)]
+			paddw xmm0, [sym(k128_16s)]			
+			paddw xmm1, [sym(k128_16s)]
 			packuswb xmm0, xmm1
 			movdqa [rbx], xmm0
 			lea rbx, [rbx + 16] ; outUPtr += 16
@@ -648,8 +648,8 @@ sym(CompVImageConvRgb32family_to_uv_planar_11_Asm_X86_SSSE3)
 			paddw xmm1, xmm7
 			psraw xmm0, 8
 			psraw xmm1, 8
-			paddw xmm0, [sym(k128_i16)]			
-			paddw xmm1, [sym(k128_i16)]
+			paddw xmm0, [sym(k128_16s)]			
+			paddw xmm1, [sym(k128_16s)]
 			packuswb xmm0, xmm1
 			movdqa [rdx], xmm0
 			lea rdx, [rdx + 16] ; outVPtr += 16

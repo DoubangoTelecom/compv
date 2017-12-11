@@ -63,7 +63,7 @@ void CompVMathTransformHomogeneousToCartesian2D_64f_Intrin_NEON64(const COMPV_AL
 void CompVMathTransformHomogeneousToCartesian2D_4_64f_Intrin_NEON64(const COMPV_ALIGNED(SSE) compv_float64_t* srcX, const COMPV_ALIGNED(SSE) compv_float64_t* srcY, const COMPV_ALIGNED(SSE) compv_float64_t* srcZ, COMPV_ALIGNED(SSE) compv_float64_t* dstX, COMPV_ALIGNED(SSE) compv_float64_t* dstY, compv_uscalar_t numPoints)
 {
 	COMPV_DEBUG_INFO_CHECK_NEON();
-	const float64x2_t vecOne = vld1q_f64(k1_f64);
+	const float64x2_t vecOne = vld1q_f64(k1_64f);
 	const float64x2_t vec0 = vdivq_f64(vecOne, vld1q_f64(&srcZ[0]));
 	const float64x2_t vec1 = vdivq_f64(vecOne, vld1q_f64(&srcZ[2]));
 	vst1q_f64(&dstX[0], vmulq_f64(vld1q_f64(&srcX[0]), vec0));

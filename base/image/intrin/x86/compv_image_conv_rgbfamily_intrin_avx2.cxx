@@ -29,7 +29,7 @@ The aplha channel will contain zeros instead of 0xff because this macro is used 
 // Next version not optimized as we load the masks for each call, use above version and load masks once
 #define COMPV_32xRGB_TO_32xRGBA_AVX2_SLOW(rgb32Ptr_, ymm0RGBA_, ymm1RGBA_, ymm2RGBA_, ymm3RGBA_) \
 	COMPV_32xRGB_TO_32xRGBA_AVX2_FAST(rgb32Ptr_, ymm0RGBA_, ymm1RGBA_, ymm2RGBA_, ymm3RGBA_, \
-		_mm256_load_si256(reinterpret_cast<const __m256i*>(kAVXPermutevar8x32_ABCDDEFG_i32)), \
+		_mm256_load_si256(reinterpret_cast<const __m256i*>(kAVXPermutevar8x32_ABCDDEFG_32s)), \
 		_mm256_load_si256(reinterpret_cast<const __m256i*>(kShuffleEpi8_RgbToRgba_i32)) \
 	)
 
@@ -70,7 +70,7 @@ The aplha channel will contain zeros instead of 0xff because this macro is used 
 	_mm256_zeroupper(); \
 	__m256i ymmR0, ymmG0, ymmB0, ymmR1, ymmG1, ymmB1, ymm0, ymm1; \
 	compv_uscalar_t i, j, maxI = ((width + 31) & -32), padY = (stride - maxI), padRGB = padY << 1; \
-	const __m256i ymm16 = _mm256_load_si256(reinterpret_cast<const __m256i*>(k16_i16)); \
+	const __m256i ymm16 = _mm256_load_si256(reinterpret_cast<const __m256i*>(k16_16s)); \
 	const __m256i ymmMaskR = _mm256_load_si256(reinterpret_cast<const __m256i*>(kRGB565ToYUV_RMask_u16)); \
 	const __m256i ymmMaskG = _mm256_load_si256(reinterpret_cast<const __m256i*>(kRGB565ToYUV_GMask_u16)); \
 	const __m256i ymmMaskB = _mm256_load_si256(reinterpret_cast<const __m256i*>(kRGB565ToYUV_BMask_u16)); \
@@ -118,7 +118,7 @@ The aplha channel will contain zeros instead of 0xff because this macro is used 
 	_mm256_zeroupper(); \
 	__m256i ymmR0, ymmG0, ymmB0, ymmR1, ymmG1, ymmB1, ymm0, ymm1, ymm2, ymm3, ymm4, ymm5; \
 	compv_uscalar_t i, j, maxI = ((width + 31) & -32), padUV = (stride - maxI), padRGB = padUV << 1; \
-	const __m256i ymm128 = _mm256_load_si256(reinterpret_cast<const __m256i*>(k128_i16)); \
+	const __m256i ymm128 = _mm256_load_si256(reinterpret_cast<const __m256i*>(k128_16s)); \
 	const __m256i ymmMaskR = _mm256_load_si256(reinterpret_cast<const __m256i*>(kRGB565ToYUV_RMask_u16)); \
 	const __m256i ymmMaskG = _mm256_load_si256(reinterpret_cast<const __m256i*>(kRGB565ToYUV_GMask_u16)); \
 	const __m256i ymmMaskB = _mm256_load_si256(reinterpret_cast<const __m256i*>(kRGB565ToYUV_BMask_u16)); \
@@ -190,9 +190,9 @@ void CompVImageConvRgb24family_to_y_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t
 
 	ymmMaskRgbToRgba = _mm256_load_si256(reinterpret_cast<const __m256i*>(kShuffleEpi8_RgbToRgba_i32));
 	ymmYCoeffs = _mm256_load_si256(reinterpret_cast<const __m256i*>(kRGBfamilyToYUV_YCoeffs8));
-	ymm16 = _mm256_load_si256(reinterpret_cast<const __m256i*>(k16_i16));
-	ymmAEBFCGDH = _mm256_load_si256(reinterpret_cast<const __m256i*>(kAVXPermutevar8x32_AEBFCGDH_i32));
-	ymmABCDDEFG = _mm256_load_si256(reinterpret_cast<const __m256i*>(kAVXPermutevar8x32_ABCDDEFG_i32));
+	ymm16 = _mm256_load_si256(reinterpret_cast<const __m256i*>(k16_16s));
+	ymmAEBFCGDH = _mm256_load_si256(reinterpret_cast<const __m256i*>(kAVXPermutevar8x32_AEBFCGDH_32s));
+	ymmABCDDEFG = _mm256_load_si256(reinterpret_cast<const __m256i*>(kAVXPermutevar8x32_ABCDDEFG_32s));
 
 	// Y = (((33 * R) + (65 * G) + (13 * B))) >> 7 + 16
 	for (j = 0; j < height; ++j) {
@@ -222,8 +222,8 @@ void CompVImageConvRgb32family_to_y_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t
 	compv_uscalar_t i, j, maxI = ((width + 31) & -32), padY = (stride - maxI), padRGBA = padY << 2;
 
 	ymmYCoeffs = _mm256_load_si256(reinterpret_cast<const __m256i*>(kRGBAfamilyToYUV_YCoeffs8));
-	ymm16 = _mm256_load_si256(reinterpret_cast<const __m256i*>(k16_i16));
-	ymmAEBFCGDH = _mm256_load_si256(reinterpret_cast<const __m256i*>(kAVXPermutevar8x32_AEBFCGDH_i32));
+	ymm16 = _mm256_load_si256(reinterpret_cast<const __m256i*>(k16_16s));
+	ymmAEBFCGDH = _mm256_load_si256(reinterpret_cast<const __m256i*>(kAVXPermutevar8x32_AEBFCGDH_32s));
 
 	// Y = (((33 * R) + (65 * G) + (13 * B))) >> 7 + 16
 	for (j = 0; j < height; ++j) {
@@ -274,10 +274,10 @@ void CompVImageConvRgb24family_to_uv_planar_11_Intrin_AVX2(COMPV_ALIGNED(AVX) co
 
 	ymmUCoeffs = _mm256_load_si256(reinterpret_cast<const __m256i*>(kRGBfamilyToYUV_UCoeffs8));
 	ymmVCoeffs = _mm256_load_si256(reinterpret_cast<const __m256i*>(kRGBfamilyToYUV_VCoeffs8));
-	ymm128 = _mm256_load_si256(reinterpret_cast<const __m256i*>(k128_i16));
+	ymm128 = _mm256_load_si256(reinterpret_cast<const __m256i*>(k128_16s));
 	ymmMaskRgbToRgba = _mm256_load_si256(reinterpret_cast<const __m256i*>(kShuffleEpi8_RgbToRgba_i32));
-	ymmAEBFCGDH = _mm256_load_si256(reinterpret_cast<const __m256i*>(kAVXPermutevar8x32_AEBFCGDH_i32));
-	ymmABCDDEFG = _mm256_load_si256(reinterpret_cast<const __m256i*>(kAVXPermutevar8x32_ABCDDEFG_i32));
+	ymmAEBFCGDH = _mm256_load_si256(reinterpret_cast<const __m256i*>(kAVXPermutevar8x32_AEBFCGDH_32s));
+	ymmABCDDEFG = _mm256_load_si256(reinterpret_cast<const __m256i*>(kAVXPermutevar8x32_ABCDDEFG_32s));
 
 	// U = (((-38 * R) + (-74 * G) + (112 * B))) >> 8 + 128
 	// V = (((112 * R) + (-94 * G) + (-18 * B))) >> 8 + 128
@@ -312,8 +312,8 @@ void CompVImageConvRgb32family_to_uv_planar_11_Intrin_AVX2(COMPV_ALIGNED(AVX) co
 
 	ymmUCoeffs = _mm256_load_si256(reinterpret_cast<const __m256i*>(kRGBAfamilyToYUV_UCoeffs8));
 	ymmVCoeffs = _mm256_load_si256(reinterpret_cast<const __m256i*>(kRGBAfamilyToYUV_VCoeffs8));
-	ymm128 = _mm256_load_si256(reinterpret_cast<const __m256i*>(k128_i16));
-	ymmAEBFCGDH = _mm256_load_si256(reinterpret_cast<const __m256i*>(kAVXPermutevar8x32_AEBFCGDH_i32));
+	ymm128 = _mm256_load_si256(reinterpret_cast<const __m256i*>(k128_16s));
+	ymmAEBFCGDH = _mm256_load_si256(reinterpret_cast<const __m256i*>(kAVXPermutevar8x32_AEBFCGDH_32s));
 
 	// U = (((-38 * R) + (-74 * G) + (112 * B))) >> 8 + 128
 	// V = (((112 * R) + (-94 * G) + (-18 * B))) >> 8 + 128

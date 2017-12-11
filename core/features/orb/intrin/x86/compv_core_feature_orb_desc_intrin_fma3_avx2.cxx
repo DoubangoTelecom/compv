@@ -36,7 +36,7 @@ void CompVOrbBrief256_31_32f_Intrin_FMA3_AVX2(
 
 	uint32_t* outPtr = reinterpret_cast<uint32_t*>(out); // uint32_t for AVX
 
-	const __m256i vec128 = _mm256_load_si256(reinterpret_cast<const __m256i*>(k128_u8));
+	const __m256i vec128 = _mm256_load_si256(reinterpret_cast<const __m256i*>(k128_8u));
 	const __m256 vecStride = _mm256_set1_ps(static_cast<compv_float32_t>(img_stride));
 	const __m256 vecCosT = _mm256_set1_ps(*cos1);
 	const __m256 vecSinT = _mm256_set1_ps(*sin1);

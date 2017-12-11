@@ -15,7 +15,7 @@ COMPV_YASM_DEFAULT_REL
 global sym(CompVMathStatsMSE2DHomogeneous_64f_Asm_X64_SSE2)
 
 section .data
-	extern sym(k1_f64)
+	extern sym(k1_64f)
 
 section .text
 
@@ -37,7 +37,7 @@ sym(CompVMathStatsMSE2DHomogeneous_64f_Asm_X64_SSE2):
 	push rbx
 	;; end prolog ;;
 
-	movapd xmm10, [sym(k1_f64)] ; xmm7 = vecOne
+	movapd xmm10, [sym(k1_64f)] ; xmm7 = vecOne
 	xor rcx, rcx ; rcx = i
 	mov rsi, arg(0) ; aX_h
 	mov rdi, arg(1) ; aY_h

@@ -31,7 +31,7 @@ void CompVOrbBrief256_31_32f_Intrin_SSE2(
 
 	uint16_t* outPtr = reinterpret_cast<uint16_t*>(out); // uint32_t for AVX
 
-	const __m128i vec128 = _mm_load_si128(reinterpret_cast<const __m128i*>(k128_u8));
+	const __m128i vec128 = _mm_load_si128(reinterpret_cast<const __m128i*>(k128_8u));
 	const __m128i vecStride = _mm_set1_epi32(static_cast<int>(img_stride));
 	const __m128 vecCosT = _mm_set1_ps(*cos1);
 	const __m128 vecSinT = _mm_set1_ps(*sin1);
