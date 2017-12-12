@@ -80,6 +80,7 @@ sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_X
 	%define t0b				r14b
 	%define t0w				r14w
 	%define t0d				r14d
+	%define t1				r15
 
 	%define vecER			xmm10
 	%define vecDup7th16s	xmm11
@@ -125,8 +126,12 @@ sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_X
 		mov i, 1
 		.LoopWidth16:
 			vmovdqa xmm8, [Xi + (i-1)*COMPV_YASM_UINT8_SZ_BYTES]
+			lea t0, [Xi + i*COMPV_YASM_UINT8_SZ_BYTES]
 			vpxor xmm8, [Xi + (i)*COMPV_YASM_UINT8_SZ_BYTES]
+			lea t1, [ERi + i*COMPV_YASM_INT16_SZ_BYTES]
 			vptest xmm8, xmm8
+			prefetcht0 [t0 + Xi_stride]
+			prefetchw [t1 + ERi_stride]
 			jz .XorIsZero
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			; erUint8 += ((Xi[i - 1] ^ Xi[i]) & 1)
@@ -250,7 +255,8 @@ sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_X
 	%undef t0				
 	%undef t0b				
 	%undef t0w				
-	%undef t0d				
+	%undef t0d
+	%undef t1			
 
 	%undef vecER					
 	%undef vecDup7th16s	

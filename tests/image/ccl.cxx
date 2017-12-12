@@ -34,7 +34,7 @@ COMPV_UNITTEST_CCL[] =
 };
 static const size_t COMPV_UNITTEST_CCL_COUNT = sizeof(COMPV_UNITTEST_CCL) / sizeof(COMPV_UNITTEST_CCL[0]);
 
-#define LOOP_COUNT		1000
+#define LOOP_COUNT		1
 #define TEST_TYPE		TEST_TYPE_DIFFRACT
 
 COMPV_ERROR_CODE ccl()
@@ -95,7 +95,7 @@ COMPV_ERROR_CODE ccl()
 
 	COMPV_DEBUG_INFO("MD5: %s", compv_tests_md5(result.labels).c_str());
 
-	//COMPV_CHECK_EXP_RETURN(std::string(test->md5).compare(compv_tests_md5(result.labels)) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "CCL MD5 mismatch");
+	COMPV_CHECK_EXP_RETURN(std::string(test->md5).compare(compv_tests_md5(result.labels)) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "CCL MD5 mismatch");
 
 	return COMPV_ERROR_CODE_S_OK;
 }

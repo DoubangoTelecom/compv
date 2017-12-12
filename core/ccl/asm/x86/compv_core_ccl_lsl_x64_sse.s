@@ -356,19 +356,21 @@ sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_X64
 	shl RLCi_stride, 1
 	and width16, -16
 
-
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	; for (compv_uscalar_t j = 0; j < height; ++j)
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	.LoopHeight:
+		lea t1, [RLCi + COMPV_YASM_INT16_SZ_BYTES]
 		movzx er, byte [Xi + 0*COMPV_YASM_UINT8_SZ_BYTES]
 		mov [RLCi], word 0
 		and erb, 1
+		prefetchw [t1 + RLCi_stride] ; don''t expect more than 32 RLC and this is why the prefetch is outside the width loop
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		; for (i = 1; i < width16; i += 16)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		mov i, 1
 		.LoopWidth16:
+			lea t1, [ERi + i*COMPV_YASM_INT16_SZ_BYTES]
 			movdqu xmm0, [ERi + (i-1)*COMPV_YASM_INT16_SZ_BYTES]
 			movdqu xmm1, [ERi + (i)*COMPV_YASM_INT16_SZ_BYTES]
 			movdqu xmm2, [ERi + (i+7)*COMPV_YASM_INT16_SZ_BYTES]
@@ -377,6 +379,7 @@ sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_X64
 			pcmpeqw xmm2, xmm3
 			packsswb xmm0, xmm2
 			pmovmskb t0, xmm0
+			prefetcht0 [t1 + ERi_stride]
 			xor t0, 0xffff
 			jz .EndOfMask
 				mov t1, i

@@ -629,7 +629,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 	);
 
 	/* For testing */
-#if 0
+#if 1
 	build_all_labels(
 		A,
 		ERA, 

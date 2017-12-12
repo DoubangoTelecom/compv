@@ -91,8 +91,12 @@ sym(CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_16s32s_Asm_X
 		cmp er, nerj
 		jge .EndOf_LoopER
 		.LoopER:
+			lea f0, [RLCi + er*COMPV_YASM_INT16_SZ_BYTES]
+			lea f1, [ERiminus1 + 0*COMPV_YASM_INT16_SZ_BYTES]
 			movzx j0, word [RLCi + (er-1)*COMPV_YASM_INT16_SZ_BYTES] ; use movzx once to clear j0d
 			movzx j1, word [RLCi + er*COMPV_YASM_INT16_SZ_BYTES] ; use movzx once to clear j1d
+			prefetcht0 [f0 + RLCi_stride]
+			prefetcht0 [f1 + ERi_stride]
 			cmp j0w, 0
 			lea j1, [j1 - 1]
 			lea f1, [width - 1]
