@@ -36,18 +36,16 @@ void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Intrin
 
 		// In asm code, no need to test "width16 != 0" because "width1" > 16 (at least 17)
 		for (i = 1; i < width16; i += 16) {
-			vec0 = _mm_cmpnot_epi16_SSE2(
+			vec0 = _mm_cmpeq_epi16(
 				_mm_loadu_si128(reinterpret_cast<const __m128i*>(&ERi[i - 1])),
-				_mm_loadu_si128(reinterpret_cast<const __m128i*>(&ERi[i])),
-				vecFF
+				_mm_loadu_si128(reinterpret_cast<const __m128i*>(&ERi[i]))
 			);
-			vec1 = _mm_cmpnot_epi16_SSE2(
+			vec1 = _mm_cmpeq_epi16(
 				_mm_loadu_si128(reinterpret_cast<const __m128i*>(&ERi[i + 7])),
-				_mm_loadu_si128(reinterpret_cast<const __m128i*>(&ERi[i + 8])),
-				vecFF
+				_mm_loadu_si128(reinterpret_cast<const __m128i*>(&ERi[i + 8]))
 			);
 			vec0 = _mm_packs_epi16(vec0, vec1);
-			mask = _mm_movemask_epi8(vec0);
+			mask = _mm_movemask_epi8(vec0) ^ 0xffff;
 			if (mask) {
 				m = 0;
 				do {
