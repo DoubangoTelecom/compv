@@ -96,11 +96,6 @@ sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_X
 	mov width, arg(7)
 	mov height, arg(8)
 
-	prefetcht0 [Xi + COMPV_YASM_CACHE_LINE_SIZE*0]
-	prefetcht0 [Xi + COMPV_YASM_CACHE_LINE_SIZE*1]
-	prefetcht0 [Xi + COMPV_YASM_CACHE_LINE_SIZE*2]
-	prefetcht0 [Xi + COMPV_YASM_CACHE_LINE_SIZE*3]
-
 	lea width16, [width - 1]
 	mov t0, 1
 	xor ner_sum, ner_sum
@@ -129,9 +124,8 @@ sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_X
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		mov i, 1
 		.LoopWidth16:
-			prefetcht0 [Xi + COMPV_YASM_CACHE_LINE_SIZE*4] ; to avoid cache because we''re loading (xi) then (xi - 1)
-			vmovdqu xmm8, [Xi + (i)*COMPV_YASM_UINT8_SZ_BYTES]
-			vpxor xmm8, [Xi + (i-1)*COMPV_YASM_UINT8_SZ_BYTES]
+			vmovdqa xmm8, [Xi + (i-1)*COMPV_YASM_UINT8_SZ_BYTES]
+			vpxor xmm8, [Xi + (i)*COMPV_YASM_UINT8_SZ_BYTES]
 			vptest xmm8, xmm8
 			jz .XorIsZero
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

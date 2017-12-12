@@ -174,7 +174,7 @@ COMPV_NAMESPACE_BEGIN()
 Macro to build arg32 values for _mm(256/128)_shuffle_epi8().
 a,b,c,d must be <= 16 for _mm128_shuffle_epi8() and <32 for _mm256_shuffle_epi8()
 */
-#define COMPV_MM_SHUFFLE_EPI8(fp3,fp2,fp1,fp0) ((fp3 << 24) | (fp2 << 16) | (fp1 << 8) | (fp0 & 0xFF))
+#define COMPV_MM_SHUFFLE_EPI8(fp3,fp2,fp1,fp0) (((fp3) << 24) | ((fp2) << 16) | ((fp1) << 8) | ((fp0) & 0xFF))
 
 typedef int32_t compv_core_id_t;
 typedef intptr_t compv_scalar_t;  /* This type *must* have the width of a general-purpose register on the target CPU. 64bits or 32bits. */

@@ -20,6 +20,7 @@ Some literature about LSL:
 
 #include "compv/core/ccl/intrin/x86/compv_core_ccl_lsl_intrin_sse2.h"
 #include "compv/core/ccl/intrin/x86/compv_core_ccl_lsl_intrin_ssse3.h"
+#include "compv/core/ccl/intrin/x86/compv_core_ccl_lsl_intrin_avx2.h"
 
 #define COMPV_CCL_LSL_STEP1_MIN_SAMPLES_PER_THREAD	(20*20)
 #define COMPV_CCL_LSL_STEP20_MIN_SAMPLES_PER_THREAD	(30*30)
@@ -613,7 +614,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 	);
 
 	/* For testing */
-	//build_all_labels(A, ERA, ER, &result.labels);
+	build_all_labels(A, ERA, ER, &result.labels);
 	result.labels_count = (na + 1); // +1 for the background
 
 	return COMPV_ERROR_CODE_S_OK;
