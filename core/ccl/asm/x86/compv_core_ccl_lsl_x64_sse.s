@@ -351,6 +351,8 @@ sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_X64
 	mov width, arg(6)
 	mov height, arg(7)
 
+	prefetchw [RLCi]
+
 	lea width16, [width - 1]
 	shl ERi_stride, 1
 	shl RLCi_stride, 1
