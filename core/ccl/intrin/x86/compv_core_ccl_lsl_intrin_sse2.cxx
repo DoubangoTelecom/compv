@@ -28,7 +28,6 @@ void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Intrin
 	int16_t er, i;
 	__m128i vec0, vec1;
 	int mask, m;
-	const __m128i vecFF = _mm_set1_epi16((int16_t)0xffff); // asm: _mm_cmpeq_epi8(vec0, vec0)
 
 	for (compv_uscalar_t j = 0; j < height; ++j) {
 		er = (Xi[0] & 1);
@@ -47,10 +46,10 @@ void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Intrin
 			vec0 = _mm_packs_epi16(vec0, vec1);
 			mask = _mm_movemask_epi8(vec0) ^ 0xffff;
 			if (mask) {
-				m = 0;
+				m = i;
 				do {
 					if (mask & 1) {
-						RLCi[er++] = i + m;
+						RLCi[er++] = m;
 					}
 					++m;
 				} while (mask >>= 1);
