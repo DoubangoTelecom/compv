@@ -132,13 +132,13 @@ sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_X
 			prefetcht0 [Xi + COMPV_YASM_CACHE_LINE_SIZE*4] ; to avoid cache because we''re loading (xi) then (xi - 1)
 			vmovdqu xmm8, [Xi + (i)*COMPV_YASM_UINT8_SZ_BYTES]
 			vpxor xmm8, [Xi + (i-1)*COMPV_YASM_UINT8_SZ_BYTES]
-			vpand xmm8, vecOne
 			vptest xmm8, xmm8
 			jz .XorIsZero
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			; erUint8 += ((Xi[i - 1] ^ Xi[i]) & 1)
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			.XorIsNotZero:
+				vpand xmm8, vecOne
 				vpshufb xmm0, xmm8, vecMask0
 				vpshufb xmm1, xmm8, vecMask1
 				vpshufb xmm2, xmm8, vecMask2
