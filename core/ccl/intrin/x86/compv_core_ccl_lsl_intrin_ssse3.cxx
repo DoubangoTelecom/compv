@@ -7,8 +7,9 @@
 #include "compv/core/ccl/intrin/x86/compv_core_ccl_lsl_intrin_ssse3.h"
 
 #if COMPV_ARCH_X86 && COMPV_INTRINSIC
-#include "compv/base/intrin/x86/compv_intrin_sse.h"
+#include "compv/core/compv_core_simd_globals.h"
 #include "compv/base/compv_simd_globals.h"
+#include "compv/base/intrin/x86/compv_intrin_sse.h"
 #include "compv/base/compv_debug.h"
 
 COMPV_NAMESPACE_BEGIN()
@@ -23,6 +24,7 @@ void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Intr
 {
 	COMPV_DEBUG_INFO_CHECK_SSSE3();
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Should use AVX2 code which is faster (requires enabling asm)");
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Asm code faster");
 	int16_t i, er, ner_max = 0;
 	const int16_t width1 = static_cast<int16_t>(width);
 	const int16_t width16 = (width1 - 1) & -16; // width > 16 (at least 17) which means never equal to zero
@@ -85,7 +87,7 @@ void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Intr
 				vec1 = _mm_add_epi8(vec1, _mm_shuffle_epi8(vec0, __vecMask14));
 				vec1 = _mm_add_epi8(vec1, _mm_shuffle_epi8(vec0, __vecMask15));
 
-				/* Convert erUint8 to erInt16 and sum then store*/
+				/* Convert erUint8 to erInt16 and sum then store */
 				vec0 = _mm_add_epi16(vecER, _mm_unpacklo_epi8(vec1, vecZero));
 				vecER = _mm_add_epi16(vecER, _mm_unpackhi_epi8(vec1, vecZero));
 				_mm_storeu_si128(reinterpret_cast<__m128i*>(&ERi[i]), vec0);
@@ -111,7 +113,7 @@ void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Intr
 		er += (Xi[width1 - 1] & 1);
 		ner[j] = er;
 		ner_sum += er;
-		if (ner_max < er) { // TODO(dmi): asm use cmovgt
+		if (ner_max < er) { // TODO(dmi): asm use cmovl
 			ner_max = er;
 		}
 		/* next */

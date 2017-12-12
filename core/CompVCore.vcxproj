@@ -217,6 +217,7 @@
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <ClCompile Include="compv_core.cxx" />
+    <ClCompile Include="compv_core_simd_globals.cxx" />
     <ClCompile Include="features\edges\compv_core_feature_canny_dete.cxx" />
     <ClCompile Include="features\edges\compv_core_feature_edge_dete.cxx" />
     <ClCompile Include="features\edges\intrin\arm\compv_core_feature_canny_dete_intrin_neon.cxx" />
@@ -302,6 +303,7 @@
     <ClInclude Include="include\compv\core\compv_core.h" />
     <ClInclude Include="include\compv\core\compv_core_common.h" />
     <ClInclude Include="include\compv\core\compv_core_config.h" />
+    <ClInclude Include="include\compv\core\compv_core_simd_globals.h" />
     <ClInclude Include="include\compv\core\features\edges\compv_core_feature_canny_dete.h" />
     <ClInclude Include="include\compv\core\features\edges\compv_core_feature_edge_dete.h" />
     <ClInclude Include="include\compv\core\features\edges\intrin\arm\compv_core_feature_canny_dete_intrin_neon.h" />
@@ -476,6 +478,20 @@
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)../base/asm/x86;%(IncludePaths)</IncludePaths>
     </YASM>
     <YASM Include="ccl\asm\x86\compv_core_ccl_lsl_x64.s">
+      <FileType>Document</FileType>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)../base/asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)../base/asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)../base/asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)../base/asm/x86;%(IncludePaths)</IncludePaths>
+    </YASM>
+    <YASM Include="ccl\asm\x86\compv_core_ccl_lsl_x64_avx.s">
+      <FileType>Document</FileType>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)../base/asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)../base/asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)../base/asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)../base/asm/x86;%(IncludePaths)</IncludePaths>
+    </YASM>
+    <YASM Include="ccl\asm\x86\compv_core_ccl_lsl_x64_sse.s">
       <FileType>Document</FileType>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)../base/asm/x86;%(IncludePaths)</IncludePaths>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)../base/asm/x86;%(IncludePaths)</IncludePaths>

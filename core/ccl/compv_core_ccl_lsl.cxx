@@ -30,17 +30,18 @@ COMPV_NAMESPACE_BEGIN()
 
 // X64
 #if COMPV_ASM && COMPV_ARCH_X64
-COMPV_EXTERNC void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_X64_CMOV(const uint8_t* Xi, const compv_uscalar_t Xi_stride,
-	int16_t* RLCi, const compv_uscalar_t RLCi_stride,
+COMPV_EXTERNC void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_X64_SSSE3(
+	COMPV_ALIGNED(SSE) const uint8_t* Xi, const compv_uscalar_t Xi_stride,
 	int16_t* ERi, const compv_uscalar_t ERi_stride,
 	int16_t* ner, int16_t* ner_max1, int32_t* ner_sum1,
-	const compv_uscalar_t width, const compv_uscalar_t height);
-COMPV_EXTERNC void CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_16s32s_Asm_X64_CMOV(
-	const int16_t* RLCi, const compv_uscalar_t RLCi_stride,
-	int32_t* ERAi, const compv_uscalar_t ERAi_stride,
-	const int16_t* ERiminus1, const compv_uscalar_t ERi_stride,
-	const int16_t* ner,
-	const compv_uscalar_t width, const compv_uscalar_t height);
+	const compv_uscalar_t width, const compv_uscalar_t height
+);
+COMPV_EXTERNC void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_X64_AVX2(
+	COMPV_ALIGNED(SSE) const uint8_t* Xi, const compv_uscalar_t Xi_stride,
+	int16_t* ERi, const compv_uscalar_t ERi_stride,
+	int16_t* ner, int16_t* ner_max1, int32_t* ner_sum1,
+	const compv_uscalar_t width, const compv_uscalar_t height
+);
 #endif /* COMPV_ASM && COMPV_ARCH_X64 */
 
 static const compv_ccl_indice_t kCompVConnectedComponentLabelingLSLBachgroundLabel = 0; // Must be zero because of calloc()
@@ -204,6 +205,10 @@ static void step1_algo13_segment_STDZ(const CompVMatPtr& X, CompVMatPtr ER, Comp
 #if COMPV_ARCH_X86
 		if (w > 16 && CompVCpu::isEnabled(kCpuFlagSSSE3) && X->isAlignedSSE()) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(funPtrERi_8u16s32s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Intrin_SSSE3);
+			COMPV_EXEC_IFDEF_ASM_X64(funPtrERi_8u16s32s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_X64_SSSE3);
+		}
+		if (w > 32 && CompVCpu::isEnabled(kCpuFlagAVX2) && X->isAlignedAVX()) {
+			COMPV_EXEC_IFDEF_ASM_X64(funPtrERi_8u16s32s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_X64_AVX2);
 		}
 #elif COMPV_ARCH_ARM
 		//COMPV_EXEC_IFDEF_ASM_ARM32(funPtrERi_8u16s32s = nullptr);
@@ -332,10 +337,9 @@ static void step20_algo14_equivalence_build(const CompVMatPtr& ER, const CompVMa
 			const compv_uscalar_t width, const compv_uscalar_t height)
 			= nullptr;
 #if COMPV_ARCH_X86
-		COMPV_EXEC_IFDEF_ASM_X64(funPtr_16s32s = CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_16s32s_Asm_X64_CMOV);
+		
 #elif COMPV_ARCH_ARM
-		//COMPV_EXEC_IFDEF_ASM_ARM32(funPtr_16s32s = CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_16s32s_Asm_X64_ARM32);
-		//COMPV_EXEC_IFDEF_ASM_ARM64(funPtr_16s32s = CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_16s32s_Asm_X64_ARM64);
+		
 #endif
 		if (funPtr_16s32s) {
 			funPtr = reinterpret_cast<FunPtr>(funPtr_16s32s);
@@ -609,7 +613,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 	);
 
 	/* For testing */
-	build_all_labels(A, ERA, ER, &result.labels);
+	//build_all_labels(A, ERA, ER, &result.labels);
 	result.labels_count = (na + 1); // +1 for the background
 
 	return COMPV_ERROR_CODE_S_OK;

@@ -296,6 +296,9 @@
     <ClCompile Include="ccl\intrin\x86\compv_core_ccl_lsl_intrin_sse2.cxx">
       <Filter>Source Files\ccl\intrin\x86</Filter>
     </ClCompile>
+    <ClCompile Include="compv_core_simd_globals.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\core\compv_core.h">
@@ -415,6 +418,9 @@
     <ClInclude Include="include\compv\core\ccl\intrin\x86\compv_core_ccl_lsl_intrin_sse2.h">
       <Filter>Header Files\ccl\intrin\x86</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\core\compv_core_simd_globals.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <YASM Include="features\fast\asm\x86\compv_core_feature_fast_dete_x64_sse.s">
@@ -484,6 +490,12 @@
     </None>
     <None Include="features\fast\asm\arm\compv_core_feature_fast_dete_macros_neon.S">
       <Filter>Source Files\features\fast\asm\arm</Filter>
+    </None>
+    <None Include="ccl\asm\x86\compv_core_ccl_lsl_x64_sse.s">
+      <Filter>Source Files\ccl\asm\x86</Filter>
+    </None>
+    <None Include="ccl\asm\x86\compv_core_ccl_lsl_x64_avx.s">
+      <Filter>Source Files\ccl\asm\x86</Filter>
     </None>
   </ItemGroup>
 </Project>
