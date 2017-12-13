@@ -47,6 +47,7 @@ extern "C" {
 #endif  /* MSPACES */
 
 #define USE_DL_PREFIX
+#define USE_LOCKS 1
 
 #if !ONLY_MSPACES
 

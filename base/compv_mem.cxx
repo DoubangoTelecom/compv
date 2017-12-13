@@ -36,7 +36,7 @@ COMPV_NAMESPACE_BEGIN()
 #endif
 
 #if !defined(COMPV_USE_DLMALLOC)
-#	define COMPV_USE_DLMALLOC 0 // Crash on MT (e.g. Morph test)
+#	define COMPV_USE_DLMALLOC 0 // Crash on MT (e.g. Morph test, "USE_LOCKS" defined in header but doesn't fix the issue)
 #endif
 
 #if !defined(COMPV_OS_WINDOWS) && !defined(HAVE_POSIX_MEMALIGN)
@@ -80,7 +80,7 @@ COMPV_EXTERNC void CompVMemCopy3_Asm_NEON64(COMPV_ALIGNED(NEON) uint8_t* dstPt0,
 #endif /* COMPV_ARCH_ARM64 && COMPV_ASM */
 
 std::map<uintptr_t, compv_special_mem_t > CompVMem::s_Specials;
-CompVPtr<CompVMutex* > CompVMem::s_SpecialsMutex;
+CompVMutexPtr CompVMem::s_SpecialsMutex;
 bool CompVMem::s_bInitialize = false;
 void(*CompVMem::MemSetDword)(void* dstPtr, compv_scalar_t val, compv_uscalar_t count) = nullptr;
 void(*CompVMem::MemSetQword)(void* dstPtr, compv_scalar_t val, compv_uscalar_t count) = nullptr;
