@@ -17,10 +17,10 @@
 #define FILE_NAME_OPENGLBOOK			"opengl_programming_guide_8th_edition_200x258_gray.yuv"
 #define FILE_NAME_GRIOTS				"mandekalou_480x640_gray.yuv"
 
-#define LOOP_COUNT				1000
-#define FILE_NAME				FILE_NAME_GRIOTS
-#define CANNY_THRESHOLD_LOW		0.8f
-#define CANNY_THRESHOLD_HIGH	CANNY_THRESHOLD_LOW*2.f	
+#define LOOP_COUNT				1
+#define FILE_NAME				FILE_NAME_EQUIRECTANGULAR
+#define CANNY_THRESHOLD_LOW		59
+#define CANNY_THRESHOLD_HIGH	119
 
 #define HOUGHSHT_RHO			1.f
 #define HOUGHSHT_THETA			1.f
@@ -64,6 +64,7 @@ COMPV_ERROR_CODE houghsht()
 	}
 
 	COMPV_CHECK_CODE_RETURN(CompVEdgeDete::newObj(&canny, COMPV_CANNY_ID, CANNY_THRESHOLD_LOW, CANNY_THRESHOLD_HIGH));
+	COMPV_CHECK_CODE_RETURN(canny->setInt(COMPV_CANNY_SET_INT_THRESHOLD_TYPE, COMPV_CANNY_THRESHOLD_TYPE_COMPARE_TO_GRADIENT));
 	COMPV_CHECK_CODE_RETURN(CompVHough::newObj(&houghsht, COMPV_HOUGHSHT_ID, HOUGHSHT_RHO, HOUGHSHT_THETA, HOUGHSHT_THRESHOLD));
 	COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &image));
 	COMPV_CHECK_CODE_RETURN(canny->process(image, &edges, &directions));
@@ -84,6 +85,7 @@ COMPV_ERROR_CODE houghsht()
 		sum_strength += i->strength;
 	}
 
+	// Next values no longer valid (canny thresholds changed)
 	COMPV_CHECK_EXP_RETURN(sum_rho != test->sum_rho, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Houghsht sum_rho mismatch");
 	COMPV_CHECK_EXP_RETURN(COMPV_MATH_ABS(sum_theta - test->sum_theta) > 0.0009765625, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Houghsht sum_theta mismatch");
 	COMPV_CHECK_EXP_RETURN(sum_strength != test->sum_strength, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Houghsht sum_strength mismatch");

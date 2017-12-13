@@ -36,7 +36,7 @@ static const struct compv_unittest_morph {
 };
 static const size_t COMPV_UNITTEST_MORPH_COUNT = sizeof(COMPV_UNITTEST_MORPH) / sizeof(COMPV_UNITTEST_MORPH[0]);
 
-#define TEST_INDEX	3
+#define TEST_INDEX	0
 
 COMPV_ERROR_CODE morph()
 {

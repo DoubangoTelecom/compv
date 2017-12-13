@@ -17,7 +17,7 @@
 #define FILE_NAME_OPENGLBOOK			"opengl_programming_guide_8th_edition_200x258_gray.yuv"
 #define FILE_NAME_GRIOTS				"mandekalou_480x640_gray.yuv"
 
-#define LOOP_COUNT			1
+#define LOOP_COUNT			10000
 #define FILE_NAME			FILE_NAME_EQUIRECTANGULAR
 #define THRESHOLD_LOW		59 // otsu*0.5
 #define THRESHOLD_HIGH		119 // otsu*1.0

@@ -14,7 +14,7 @@ Shared Memory: 3810 MB
 *****************************************************
 
 !!!
-!!! IMPORTANT: All the results from CompV use assembler code (no intrinsics).
+!!! IMPORTANT: All the results from CompV use assembler code (no intrinsics) and TBBMalloc (preferable) or TCMalloc.
 !!!
 
 === RGB24 -> Grayscale (1282, 720) (#10k times) ===
@@ -106,19 +106,19 @@ Remarque: We're 2840% (#28 times) faster.
 We're #28 times faster. Thanks to popcnt SSE42 instruction, multi-threading, cache blocking and many other optiz.
 
 === Canny edge detector (Kernel size = 3, tLow=59, tHigh=119, gradient L1 compare) (1282, 720) (#10k times) ===
-CompV: 17219.ms(full optiz), 168137.ms(st,c++)
+CompV: 14903.ms(full optiz),
 OpenCV: 63434.ms(full optiz)
-Remarque: We're 368% (#4 times) faster.
+Remarque: We're 425% (#4 times) faster.
 tLow and tHight values are very important for speed comparison(high values -> less time spent in hysterisis and nms)
 The test images contains many edges and this is why it's unusually slow. Canny on HD image should last ~1.ms (which means ~1k fps)
 Both CompV and OpenCV are using L1 gradient.
 
-=== HoughLines (Canny: Kernel size = 3, tLow=0.80f, tHigh=tLow*2, HoughStd: rho = 1.f, theta = Pi/180, threshold = 100) (1282, 720) (#1k times) ===
-CompV(SHT): 11222.ms(full optiz)
+=== HoughLines (Canny: Kernel size = 3, tLow=59, tHigh=119, rho = 1.0, theta = pi/180, threshold = 100) (1282, 720) (#1k times) ===
+CompV(SHT): 10367.ms(full optiz)
 CompV(KHT): 1413.ms(full optiz)
 OpenCV: 25219.ms(full optiz)
 Remarque: We're 1784% (almost #18 times) faster.
-Test done with dense image (many non-zero pixels). In normal use case our KHT implementation should work at ~800fps while OpenCV works at ~40fps.
+Test done with dense image (many non-zero pixels). In normal use case our KHT implementation should work at ~1kfps while OpenCV works at ~40fps.
 SHT implementation not used in comercial products for know and needs more optimizations.
 
 === MorphOp Erode (Strel: 3x3 MORPH_CROSS) (1285, 1285) (8u array and strel) (#10k times) ===
@@ -131,9 +131,9 @@ In both OpenCV and CompV we reuse the result Mat in the loop to supress cache la
 https://en.wikipedia.org/wiki/Erosion_(morphology)
 
 === MorphOp Close (Strel: 3x3 MORPH_CROSS) (1285, 1285) (8u array and strel) (#10k times) ===
-CompV: 1395.ms(full optiz)
+CompV: 794.ms(full optiz)
 OpenCV: 10075.ms(full optiz)
-Remarque: We're 722% (#7 times) faster.
+Remarque: We're 1268% (almost #13 times) faster.
 OpenCV's morphOps are multi-threaded and using SSE(vecOp). Used code: morphologyEx(MORPH_CLOSE). 
 Using Cross because it's not separable filter and requires more processing.
 In both OpenCV and CompV we reuse the result Mat in the loop to supress cache latency. Debugging the code we can see that OpenCV reuse same memory address (Mat::create checks the size).

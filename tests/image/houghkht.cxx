@@ -19,8 +19,8 @@
 
 #define LOOP_COUNT				1
 #define FILE_NAME				FILE_NAME_EQUIRECTANGULAR
-#define CANNY_THRESHOLD_LOW		0.8f
-#define CANNY_THRESHOLD_HIGH	CANNY_THRESHOLD_LOW*2.f	
+#define CANNY_THRESHOLD_LOW		59
+#define CANNY_THRESHOLD_HIGH	119
 
 #define HOUGHKHT_RHO						1.0f // "rho-delta" (full-pixel)
 #define HOUGHKHT_THETA						1.0f // "theta-delta" (full-radian)
@@ -81,6 +81,7 @@ COMPV_ERROR_CODE houghkht()
 	}
 
 	COMPV_CHECK_CODE_RETURN(CompVEdgeDete::newObj(&canny, COMPV_CANNY_ID, CANNY_THRESHOLD_LOW, CANNY_THRESHOLD_HIGH));
+	COMPV_CHECK_CODE_RETURN(canny->setInt(COMPV_CANNY_SET_INT_THRESHOLD_TYPE, COMPV_CANNY_THRESHOLD_TYPE_COMPARE_TO_GRADIENT));
 	COMPV_CHECK_CODE_RETURN(CompVHough::newObj(&houghkht, COMPV_HOUGHKHT_ID, HOUGHKHT_RHO, HOUGHKHT_THETA, HOUGHKHT_THRESHOLD));
 	COMPV_CHECK_CODE_RETURN(houghkht->setFloat32(COMPV_HOUGHKHT_SET_FLT32_CLUSTER_MIN_DEVIATION, HOUGHKHT_CLUSTER_MIN_DEVIATION));
 	COMPV_CHECK_CODE_RETURN(houghkht->setInt(COMPV_HOUGHKHT_SET_INT_CLUSTER_MIN_SIZE, HOUGHKHT_CLUSTER_MIN_SIZE));
@@ -104,6 +105,7 @@ COMPV_ERROR_CODE houghkht()
 		sum_strength += i->strength;
 	}
 
+	// Next values no longer valid (canny thresholds changed)
 	COMPV_CHECK_EXP_RETURN(sum_rho != test->sum_rho, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Houghkht sum_rho mismatch");
 	COMPV_CHECK_EXP_RETURN(COMPV_MATH_ABS(sum_theta - test->sum_theta) > 0.0009765625, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Houghkht sum_theta mismatch");
 	COMPV_CHECK_EXP_RETURN(sum_strength != test->sum_strength, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Houghkht sum_strength mismatch");
