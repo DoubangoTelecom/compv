@@ -7,6 +7,7 @@
 #include "compv/base/compv_mem.h"
 #include "compv/base/compv_cpu.h"
 #include "compv/base/compv_debug.h"
+#include "compv/base/compv_dlmalloc.h"
 #include "compv/base/math/compv_math_utils.h"
 
 #include "compv/base/parallel/compv_mutex.h"
@@ -32,6 +33,10 @@ COMPV_NAMESPACE_BEGIN()
 
 #if ((defined(_DEBUG) && _DEBUG != 0) || (defined(DEBUG) && DEBUG != 0)) && !defined(COMPV_MEM_CHECK)
 #	define COMPV_MEM_CHECK 1
+#endif
+
+#if !defined(COMPV_USE_DLMALLOC)
+#	define COMPV_USE_DLMALLOC 1
 #endif
 
 #if !defined(COMPV_OS_WINDOWS) && !defined(HAVE_POSIX_MEMALIGN)
@@ -77,9 +82,9 @@ COMPV_EXTERNC void CompVMemCopy3_Asm_NEON64(COMPV_ALIGNED(NEON) uint8_t* dstPt0,
 std::map<uintptr_t, compv_special_mem_t > CompVMem::s_Specials;
 CompVPtr<CompVMutex* > CompVMem::s_SpecialsMutex;
 bool CompVMem::s_bInitialize = false;
-void(*CompVMem::MemSetDword)(void* dstPtr, compv_scalar_t val, compv_uscalar_t count) = NULL;
-void(*CompVMem::MemSetQword)(void* dstPtr, compv_scalar_t val, compv_uscalar_t count) = NULL;
-void(*CompVMem::MemSetDQword)(void* dstPtr, compv_scalar_t val, compv_uscalar_t count) = NULL;
+void(*CompVMem::MemSetDword)(void* dstPtr, compv_scalar_t val, compv_uscalar_t count) = nullptr;
+void(*CompVMem::MemSetQword)(void* dstPtr, compv_scalar_t val, compv_uscalar_t count) = nullptr;
+void(*CompVMem::MemSetDQword)(void* dstPtr, compv_scalar_t val, compv_uscalar_t count) = nullptr;
 
 typedef void(*CompVMemCopy)(void* dstPtr, const void*srcPtr, compv_uscalar_t size);
 
@@ -351,7 +356,11 @@ void* CompVMem::malloc(size_t size)
 #if COMPV_MEMALIGN_ALWAYS
     return mallocAligned(size);
 #else
+#	if COMPV_USE_DLMALLOC
+	void *pMem = dlmalloc(size);
+#	else
     void *pMem = ::malloc(size);
+#	endif
     if (!pMem) {
         COMPV_DEBUG_ERROR("Memory allocation failed");
     }
@@ -448,10 +457,14 @@ void CompVMem::free(void** ptr)
 #if COMPV_MEMALIGN_ALWAYS
             freeAligned(ptr);
 #else
+#	if COMPV_USE_DLMALLOC
+			dlfree(*ptr);
+#	else
             ::free(*ptr);
+#	endif
 #endif
         }
-        *ptr = NULL;
+        *ptr = nullptr;
     }
 }
 
@@ -459,7 +472,9 @@ void* CompVMem::mallocAligned(size_t size, int alignment_/*= CompVMem::bestAlign
 {
     void* pMem;
 	const int alignment = COMPV_MATH_MAX(alignment_, COMPV_MEMALIGN_MINSIZE); // For example, posix_memalign(&pMem, 1, ...) return null on Android
-#if COMPV_OS_WINDOWS && !COMPV_UNDER_OS_CE && !COMPV_OS_WINDOWS_RT
+#if COMPV_USE_DLMALLOC
+	pMem = dlmemalign(static_cast<size_t>(alignment), size);
+#elif COMPV_OS_WINDOWS && !COMPV_UNDER_OS_CE && !COMPV_OS_WINDOWS_RT
     pMem = _aligned_malloc(size, alignment);
 #elif HAVE_POSIX_MEMALIGN || _POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600
     pMem = NULL;
@@ -478,7 +493,7 @@ void* CompVMem::mallocAligned(size_t size, int alignment_/*= CompVMem::bestAlign
 #	if COMPV_MEM_CHECK
     if (pMem) {
         CompVMem::specialsLock();
-        CompVMem::s_Specials.insert(std::pair<uintptr_t, compv_special_mem_t>((uintptr_t)pMem, compv_special_mem_t((uintptr_t)pMem, size, alignment)));
+        CompVMem::s_Specials.insert(std::pair<uintptr_t, compv_special_mem_t>(reinterpret_cast<uintptr_t>(pMem), compv_special_mem_t(reinterpret_cast<uintptr_t>(pMem), size, alignment)));
         CompVMem::specialsUnLock();
     }
 #	endif
@@ -494,14 +509,16 @@ void* CompVMem::reallocAligned(void* ptr, size_t size, int alignment/*= CompVMem
     }
 #endif
     void* pMem;
-#if COMPV_OS_WINDOWS && !COMPV_OS_WINDOWS_CE && !COMPV_OS_WINDOWS_RT
+#if COMPV_USE_DLMALLOC
+	pMem = dlrealloc(ptr, size);
+#elif COMPV_OS_WINDOWS && !COMPV_OS_WINDOWS_CE && !COMPV_OS_WINDOWS_RT
     pMem = _aligned_realloc(ptr, size, alignment);
 #	if COMPV_MEM_CHECK
     if (pMem != ptr) {
         CompVMem::specialsLock();
-        CompVMem::s_Specials.erase((uintptr_t)ptr);
+        CompVMem::s_Specials.erase(reinterpret_cast<uintptr_t>(ptr));
         if (pMem) {
-            CompVMem::s_Specials.insert(std::pair<uintptr_t, compv_special_mem_t>((uintptr_t)pMem, compv_special_mem_t((uintptr_t)pMem, size, alignment)));
+            CompVMem::s_Specials.insert(std::pair<uintptr_t, compv_special_mem_t>(reinterpret_cast<uintptr_t>(pMem), compv_special_mem_t(reinterpret_cast<uintptr_t>(pMem), size, alignment)));
         }
         CompVMem::specialsUnLock();
     }
@@ -511,7 +528,7 @@ void* CompVMem::reallocAligned(void* ptr, size_t size, int alignment/*= CompVMem
     if (pMem && ptr) {
 #	if COMPV_MEM_CHECK
         CompVMem::specialsLock();
-        std::map<uintptr_t, compv_special_mem_t >::iterator it = CompVMem::s_Specials.find((uintptr_t)ptr);
+        std::map<uintptr_t, compv_special_mem_t >::iterator it = CompVMem::s_Specials.find(reinterpret_cast<uintptr_t>(ptr));
         COMPV_ASSERT(it != CompVMem::s_Specials.end());
 		CompVMem::copy(pMem, ptr, COMPV_MATH_MIN(it->second.size, size));
         CompVMem::specialsUnLock();
@@ -531,7 +548,7 @@ void* CompVMem::callocAligned(size_t num, size_t size, int alignment/*= CompVMem
         CompVMem::zero(pMem, (size * num));
 #	if COMPV_MEM_CHECK
         CompVMem::specialsLock();
-        CompVMem::s_Specials.insert(std::pair<uintptr_t, compv_special_mem_t>((uintptr_t)pMem, compv_special_mem_t((uintptr_t)pMem, (size * num), alignment)));
+        CompVMem::s_Specials.insert(std::pair<uintptr_t, compv_special_mem_t>(reinterpret_cast<uintptr_t>(pMem), compv_special_mem_t(reinterpret_cast<uintptr_t>(pMem), (size * num), alignment)));
         CompVMem::specialsUnLock();
 #	endif
     }
@@ -548,11 +565,13 @@ void CompVMem::freeAligned(void** ptr)
         }
         else {
             CompVMem::specialsLock();
-            CompVMem::s_Specials.erase((uintptr_t)ptr_);
+            CompVMem::s_Specials.erase(reinterpret_cast<uintptr_t>(ptr_));
             CompVMem::specialsUnLock();
         }
 #endif
-#if COMPV_OS_WINDOWS && !COMPV_OS_WINDOWS_CE && !COMPV_OS_WINDOWS_RT
+#if COMPV_USE_DLMALLOC
+		dlfree(ptr_);
+#elif COMPV_OS_WINDOWS && !COMPV_OS_WINDOWS_CE && !COMPV_OS_WINDOWS_RT
         _aligned_free(ptr_);
 #elif HAVE_POSIX_MEMALIGN || _POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600 || _ISOC11_SOURCE
         ::free(ptr_);
@@ -560,7 +579,7 @@ void CompVMem::freeAligned(void** ptr)
         COMPV_DEBUG_INFO_CODE_NOT_TESTED();
         ::free((((uint8_t*)ptr_) - ((uint8_t*)ptr_)[-1]));
 #endif
-        *ptr = NULL;
+        *ptr = nullptr;
     }
 }
 

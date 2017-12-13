@@ -77,7 +77,7 @@ void CompVImageScaleBilinear_Intrin_NEON(
             
 
 			/* Deinterleave neighbs	*/
-			// Assembler code uses vuzp and vswp and the result is very faaast. Same code in intrinsic is very slooow (GCC 4.1). So, we keep using
+			// Assembler code uses vuzp and vswp and the result is very faaast. Same code in intrinsic is very slooow (GCC 4.1, Android, Huawei MediaPad2). So, we keep using
 			// vtables in intrin.
 			vec0 = vcombine_u8(vtbx2_u8(vget_low_u8(vecNeighb0), (uint8x8x2_t&)vecNeighb0, vget_low_u8(vecMask)),
 				vtbx2_u8(vget_high_u8(vecNeighb0), (uint8x8x2_t&)vecNeighb0, vget_high_u8(vecMask))); // 0,0,0,0,1,1,1,1

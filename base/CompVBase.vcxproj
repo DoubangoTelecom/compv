@@ -36,6 +36,7 @@
     <ClInclude Include="include\compv\base\compv_config.h" />
     <ClInclude Include="include\compv\base\compv_cpu.h" />
     <ClInclude Include="include\compv\base\compv_debug.h" />
+    <ClInclude Include="include\compv\base\compv_dlmalloc.h" />
     <ClInclude Include="include\compv\base\compv_errno.h" />
     <ClInclude Include="include\compv\base\compv_features.h" />
     <ClInclude Include="include\compv\base\compv_fileutils.h" />
@@ -181,6 +182,7 @@
     <ClCompile Include="compv_common.cxx" />
     <ClCompile Include="compv_cpu.cxx" />
     <ClCompile Include="compv_debug.cxx" />
+    <ClCompile Include="compv_dlmalloc.c" />
     <ClCompile Include="compv_features.cxx" />
     <ClCompile Include="compv_fileutils.cxx" />
     <ClCompile Include="compv_jni.cxx" />
