@@ -48,6 +48,7 @@
     <ClInclude Include="..\include\compv\core\compv_core.h" />
     <ClInclude Include="..\include\compv\core\compv_core_common.h" />
     <ClInclude Include="..\include\compv\core\compv_core_config.h" />
+    <ClInclude Include="..\include\compv\core\compv_core_simd_globals.h" />
     <ClInclude Include="..\include\compv\core\features\edges\compv_core_feature_canny_dete.h" />
     <ClInclude Include="..\include\compv\core\features\edges\compv_core_feature_edge_dete.h" />
     <ClInclude Include="..\include\compv\core\features\edges\intrin\arm\compv_core_feature_canny_dete_intrin_neon.h" />
@@ -85,6 +86,7 @@
     <ClCompile Include="..\ccl\compv_core_ccl_lsl.cxx" />
     <ClCompile Include="..\ccl\intrin\x86\compv_core_ccl_lsl_intrin_sse2.cxx" />
     <ClCompile Include="..\compv_core.cxx" />
+    <ClCompile Include="..\compv_core_simd_globals.cxx" />
     <ClCompile Include="..\features\edges\compv_core_feature_canny_dete.cxx" />
     <ClCompile Include="..\features\edges\compv_core_feature_edge_dete.cxx" />
     <ClCompile Include="..\features\edges\intrin\arm\compv_core_feature_canny_dete_intrin_neon.cxx" />

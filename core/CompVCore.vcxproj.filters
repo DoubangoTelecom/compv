@@ -284,9 +284,6 @@
     <ClCompile Include="features\hough\intrin\arm\compv_core_feature_houghkht_intrin_neon.cxx">
       <Filter>Source Files\features\hough\intrin\arm</Filter>
     </ClCompile>
-    <ClCompile Include="ccl\compv_core_ccl_lsl.cxx">
-      <Filter>Source Files\ccl</Filter>
-    </ClCompile>
     <ClCompile Include="ccl\intrin\x86\compv_core_ccl_lsl_intrin_ssse3.cxx">
       <Filter>Source Files\ccl\intrin\x86</Filter>
     </ClCompile>
@@ -298,6 +295,9 @@
     </ClCompile>
     <ClCompile Include="compv_core_simd_globals.cxx">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ccl\compv_core_ccl_lsl.cxx">
+      <Filter>Source Files\ccl</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -480,6 +480,12 @@
     <YASM Include="ccl\asm\x86\compv_core_ccl_lsl_x64.s">
       <Filter>Source Files\ccl\asm\x86</Filter>
     </YASM>
+    <YASM Include="ccl\asm\x86\compv_core_ccl_lsl_x64_sse.s">
+      <Filter>Source Files\ccl\asm\x86</Filter>
+    </YASM>
+    <YASM Include="ccl\asm\x86\compv_core_ccl_lsl_x64_avx.s">
+      <Filter>Source Files\ccl\asm\x86</Filter>
+    </YASM>
   </ItemGroup>
   <ItemGroup>
     <None Include="features\fast\asm\arm\compv_core_feature_fast_dete_arm32_neon.S">
@@ -490,12 +496,6 @@
     </None>
     <None Include="features\fast\asm\arm\compv_core_feature_fast_dete_macros_neon.S">
       <Filter>Source Files\features\fast\asm\arm</Filter>
-    </None>
-    <None Include="ccl\asm\x86\compv_core_ccl_lsl_x64_sse.s">
-      <Filter>Source Files\ccl\asm\x86</Filter>
-    </None>
-    <None Include="ccl\asm\x86\compv_core_ccl_lsl_x64_avx.s">
-      <Filter>Source Files\ccl\asm\x86</Filter>
     </None>
   </ItemGroup>
 </Project>

@@ -36,7 +36,7 @@ COMPV_NAMESPACE_BEGIN()
 #endif
 
 #if !defined(COMPV_USE_DLMALLOC)
-#	define COMPV_USE_DLMALLOC 1
+#	define COMPV_USE_DLMALLOC 0 // Crash on MT (e.g. Morph test)
 #endif
 
 #if !defined(COMPV_OS_WINDOWS) && !defined(HAVE_POSIX_MEMALIGN)

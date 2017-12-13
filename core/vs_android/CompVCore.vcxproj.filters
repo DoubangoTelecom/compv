@@ -282,6 +282,9 @@
     <ClInclude Include="..\include\compv\core\ccl\intrin\x86\compv_core_ccl_lsl_intrin_sse2.h">
       <Filter>include\ccl\intrin\x86</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\compv\core\compv_core_simd_globals.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_core.cxx">
@@ -388,6 +391,9 @@
     </ClCompile>
     <ClCompile Include="..\ccl\intrin\x86\compv_core_ccl_lsl_intrin_sse2.cxx">
       <Filter>source\ccl\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\compv_core_simd_globals.cxx">
+      <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
