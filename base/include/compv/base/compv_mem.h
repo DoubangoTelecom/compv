@@ -49,17 +49,19 @@ public:
     static void* calloc(size_t num, size_t size);
     static void free(void** ptr);
 
-    static void* mallocAligned(size_t size, int alignment = CompVMem::bestAlignment());
-    static void* reallocAligned(void * ptr, size_t size, int alignment = CompVMem::bestAlignment());
-    static void* callocAligned(size_t num, size_t size, int alignment = CompVMem::bestAlignment());
+    static void* mallocAligned(size_t size, size_t alignment = CompVMem::bestAlignment());
+    static void* reallocAligned(void * ptr, size_t size, size_t alignment = CompVMem::bestAlignment());
+    static void* callocAligned(size_t num, size_t size, size_t alignment = CompVMem::bestAlignment());
     static void freeAligned(void** ptr);
 
-    static uintptr_t alignBackward(uintptr_t ptr, int alignment = CompVMem::bestAlignment());
-    static uintptr_t alignForward(uintptr_t ptr, int alignment = CompVMem::bestAlignment());
+    static uintptr_t alignBackward(uintptr_t ptr, size_t alignment = CompVMem::bestAlignment());
+    static uintptr_t alignForward(uintptr_t ptr, size_t alignment = CompVMem::bestAlignment());
     static size_t alignSizeOnCacheLineAndSIMD(size_t size);
 
 	static bool isGpuFriendly(const void* mem, size_t size);
 
+	static bool isTbbMallocEnabled();
+	static COMPV_ERROR_CODE setTbbMallocEnabled(bool enabled);
     static int bestAlignment();
     static bool isSpecial(void* ptr);
     static size_t specialTotalMemSize();
@@ -73,6 +75,7 @@ private:
 private:
     COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
     static bool s_bInitialize;
+	static bool s_bTbbMallocEnabled;
     static std::map<uintptr_t, compv_special_mem_t > s_Specials;
     static CompVPtr<CompVMutex* >s_SpecialsMutex;
     static void(*MemSetDword)(void* dstPtr, compv_scalar_t val, compv_uscalar_t count);

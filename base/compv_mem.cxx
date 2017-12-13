@@ -18,8 +18,17 @@
 #include "compv/base/intrin/x86/compv_mem_intrin_ssse3.h"
 #include "compv/base/intrin/x86/compv_mem_intrin_avx.h"
 
+#if defined(HAVE_TBB) || defined(HAVE_TBBMALLOC) || (COMPV_OS_WINDOWS || COMPV_USE_TBBMALLOC)
+#	define __TBB_NO_IMPLICIT_LINKAGE 0
+#	include <scalable_allocator.h> /* tbbmalloc */
+#	undef COMPV_USE_TBBMALLOC
+#	define COMPV_USE_TBBMALLOC	1
+#endif /* Intel tbbmalloc */
+
 #include <stdio.h>
 #include <stdlib.h>
+
+#define COMPV_THIS_CLASSNAME "CompVMem"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -35,7 +44,7 @@ COMPV_NAMESPACE_BEGIN()
 #	define COMPV_MEM_CHECK 1
 #endif
 
-#if !defined(COMPV_USE_DLMALLOC)
+#if !defined(COMPV_USE_DLMALLOC) && !defined(COMPV_USE_TBBMALLOC)
 #	define COMPV_USE_DLMALLOC 0 // Crash on MT (e.g. Morph test, "USE_LOCKS" defined in header but doesn't fix the issue)
 #endif
 
@@ -79,6 +88,11 @@ COMPV_EXTERNC void CompVMemZero_Asm_NEON64(COMPV_ALIGNED(NEON) void* dstPtr, com
 COMPV_EXTERNC void CompVMemCopy3_Asm_NEON64(COMPV_ALIGNED(NEON) uint8_t* dstPt0, COMPV_ALIGNED(NEON) uint8_t* dstPt1, COMPV_ALIGNED(NEON) uint8_t* dstPt2, COMPV_ALIGNED(NEON) const compv_uint8x3_t* srcPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
 #endif /* COMPV_ARCH_ARM64 && COMPV_ASM */
 
+#if COMPV_USE_TBBMALLOC
+bool CompVMem::s_bTbbMallocEnabled = true;
+#else
+bool CompVMem::s_bTbbMallocEnabled = false;
+#endif
 std::map<uintptr_t, compv_special_mem_t > CompVMem::s_Specials;
 CompVMutexPtr CompVMem::s_SpecialsMutex;
 bool CompVMem::s_bInitialize = false;
@@ -96,7 +110,12 @@ COMPV_ERROR_CODE CompVMem::init()
     if (!s_bInitialize) {
 #if COMPV_MEM_CHECK
         COMPV_CHECK_CODE_RETURN(CompVMutex::newObj(&s_SpecialsMutex));
-        COMPV_DEBUG_INFO("Memory check enabled for debugging, this may slowdown the code");
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Memory check enabled for debugging, this may slowdown the code");
+#endif
+#if COMPV_USE_TBBMALLOC
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Intel tbbmalloc is enabled and activated, this a good news");
+#else
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Intel tbbmalloc not enabled. You may have some perf issues on memory allocation and cache management. Sad!");
 #endif
         COMPV_EXEC_IFDEF_ASM_X86(CompVMem::MemSetDword = CompVMemSetDword_Asm_X86);
         if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
@@ -356,13 +375,15 @@ void* CompVMem::malloc(size_t size)
 #if COMPV_MEMALIGN_ALWAYS
     return mallocAligned(size);
 #else
-#	if COMPV_USE_DLMALLOC
+#	if COMPV_USE_TBBMALLOC
+	void *pMem = scalable_malloc(size);
+#	elif COMPV_USE_DLMALLOC
 	void *pMem = dlmalloc(size);
 #	else
     void *pMem = ::malloc(size);
 #	endif
     if (!pMem) {
-        COMPV_DEBUG_ERROR("Memory allocation failed");
+		COMPV_DEBUG_FATAL_EX(COMPV_THIS_CLASSNAME, "Memory allocation failed");
     }
     return pMem;
 #endif
@@ -397,12 +418,12 @@ void* CompVMem::realloc(void* ptr, size_t size)
     if (size) {
         if (ptr) {
             if (!(pMem = ::realloc(ptr, size))) {
-                COMPV_DEBUG_ERROR("Memory reallocation failed");
+				COMPV_DEBUG_FATAL_EX(COMPV_THIS_CLASSNAME, "Memory reallocation failed");
             }
         }
         else {
             if (!(pMem = ::calloc(size, 1))) {
-                COMPV_DEBUG_ERROR("Memory allocation (%u) failed", (unsigned)size);
+				COMPV_DEBUG_FATAL_EX(COMPV_THIS_CLASSNAME, "Memory allocation (%u) failed", (unsigned)size);
             }
         }
     }
@@ -432,7 +453,7 @@ void* CompVMem::calloc(size_t num, size_t size)
     if (num && size) {
         pMem = ::calloc(num, size);
         if (!pMem) {
-            COMPV_DEBUG_ERROR("Memory allocation failed. num=%u and size=%u", (unsigned)num, (unsigned)size);
+			COMPV_DEBUG_FATAL_EX(COMPV_THIS_CLASSNAME, "Memory allocation failed. num=%u and size=%u", (unsigned)num, (unsigned)size);
         }
     }
     return pMem;
@@ -457,7 +478,9 @@ void CompVMem::free(void** ptr)
 #if COMPV_MEMALIGN_ALWAYS
             freeAligned(ptr);
 #else
-#	if COMPV_USE_DLMALLOC
+#	if COMPV_USE_TBBMALLOC
+			scalable_free(*ptr);
+#	elif COMPV_USE_DLMALLOC
 			dlfree(*ptr);
 #	else
             ::free(*ptr);
@@ -468,17 +491,19 @@ void CompVMem::free(void** ptr)
     }
 }
 
-void* CompVMem::mallocAligned(size_t size, int alignment_/*= CompVMem::bestAlignment()*/)
+void* CompVMem::mallocAligned(size_t size, size_t alignment_/*= CompVMem::bestAlignment()*/)
 {
     void* pMem;
-	const int alignment = COMPV_MATH_MAX(alignment_, COMPV_MEMALIGN_MINSIZE); // For example, posix_memalign(&pMem, 1, ...) return null on Android
-#if COMPV_USE_DLMALLOC
-	pMem = dlmemalign(static_cast<size_t>(alignment), size);
+	const size_t alignment = COMPV_MATH_MAX(alignment_, COMPV_MEMALIGN_MINSIZE); // For example, posix_memalign(&pMem, 1, ...) return null on Android
+#if COMPV_USE_TBBMALLOC
+	pMem = scalable_aligned_malloc(size, alignment);
+#elif COMPV_USE_DLMALLOC
+	pMem = dlmemalign(alignment, size);
 #elif COMPV_OS_WINDOWS && !COMPV_UNDER_OS_CE && !COMPV_OS_WINDOWS_RT
     pMem = _aligned_malloc(size, alignment);
 #elif HAVE_POSIX_MEMALIGN || _POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600
     pMem = NULL;
-    posix_memalign(&pMem, static_cast<size_t>(alignment), size); // TODO(dmi): available starting 'android-18'
+    posix_memalign(&pMem, alignment, size); // TODO(dmi): available starting 'android-18'
 #elif _ISOC11_SOURCE
     pMem = aligned_alloc(alignment, size);
 #else
@@ -500,16 +525,18 @@ void* CompVMem::mallocAligned(size_t size, int alignment_/*= CompVMem::bestAlign
     return pMem;
 }
 
-void* CompVMem::reallocAligned(void* ptr, size_t size, int alignment/*= CompVMem::bestAlignment()*/)
+void* CompVMem::reallocAligned(void* ptr, size_t size, size_t alignment/*= CompVMem::bestAlignment()*/)
 {
 #if COMPV_MEM_CHECK
     if (ptr && !isSpecial(ptr)) {
-        COMPV_DEBUG_FATAL("Using reallocAligned on no-special address: %p", ptr);
+		COMPV_DEBUG_FATAL_EX(COMPV_THIS_CLASSNAME, "Using reallocAligned on no-special address: %p", ptr);
         return NULL;
     }
 #endif
     void* pMem;
-#if COMPV_USE_DLMALLOC
+#if COMPV_USE_TBBMALLOC
+	pMem = scalable_aligned_realloc(ptr, size, alignment);
+#elif COMPV_USE_DLMALLOC
 	pMem = dlrealloc(ptr, size);
 #elif COMPV_OS_WINDOWS && !COMPV_OS_WINDOWS_CE && !COMPV_OS_WINDOWS_RT
     pMem = _aligned_realloc(ptr, size, alignment);
@@ -533,7 +560,7 @@ void* CompVMem::reallocAligned(void* ptr, size_t size, int alignment/*= CompVMem
 		CompVMem::copy(pMem, ptr, COMPV_MATH_MIN(it->second.size, size));
         CompVMem::specialsUnLock();
 #	else
-        COMPV_DEBUG_ERROR("Data lost");
+		COMPV_DEBUG_FATAL_EX(COMPV_THIS_CLASSNAME, "Data lost");
 #	endif
     }
     CompVMem::freeAligned(&ptr);
@@ -541,7 +568,7 @@ void* CompVMem::reallocAligned(void* ptr, size_t size, int alignment/*= CompVMem
     return pMem;
 }
 
-void* CompVMem::callocAligned(size_t num, size_t size, int alignment/*= CompVMem::bestAlignment()*/)
+void* CompVMem::callocAligned(size_t num, size_t size, size_t alignment/*= CompVMem::bestAlignment()*/)
 {
     void* pMem = CompVMem::mallocAligned((size * num), alignment);
     if (pMem) {
@@ -561,7 +588,7 @@ void CompVMem::freeAligned(void** ptr)
         void* ptr_ = *ptr;
 #if COMPV_MEM_CHECK
         if (!isSpecial(ptr_)) {
-            COMPV_DEBUG_FATAL("Using freeAligned on no-special address: %p", ptr_);
+			COMPV_DEBUG_FATAL_EX(COMPV_THIS_CLASSNAME, "Using freeAligned on no-special address: %p", ptr_);
         }
         else {
             CompVMem::specialsLock();
@@ -569,7 +596,9 @@ void CompVMem::freeAligned(void** ptr)
             CompVMem::specialsUnLock();
         }
 #endif
-#if COMPV_USE_DLMALLOC
+#if COMPV_USE_TBBMALLOC
+		scalable_aligned_free(ptr_);
+#elif COMPV_USE_DLMALLOC
 		dlfree(ptr_);
 #elif COMPV_OS_WINDOWS && !COMPV_OS_WINDOWS_CE && !COMPV_OS_WINDOWS_RT
         _aligned_free(ptr_);
@@ -584,16 +613,31 @@ void CompVMem::freeAligned(void** ptr)
 }
 
 // alignment must be power of two
-uintptr_t CompVMem::alignBackward(uintptr_t ptr, int alignment /*= CompVMem::bestAlignment()*/)
+uintptr_t CompVMem::alignBackward(uintptr_t ptr, size_t alignment /*= CompVMem::bestAlignment()*/)
 {
     COMPV_ASSERT(COMPV_IS_POW2(alignment));
-    return (ptr & -alignment);
+    return (ptr & -static_cast<int>(alignment));
 }
 
-uintptr_t CompVMem::alignForward(uintptr_t ptr, int alignment /*= CompVMem::bestAlignment()*/)
+uintptr_t CompVMem::alignForward(uintptr_t ptr, size_t alignment /*= CompVMem::bestAlignment()*/)
 {
     COMPV_ASSERT(COMPV_IS_POW2(alignment));
-    return (ptr + (alignment - 1)) & -alignment;
+    return (ptr + (alignment - 1)) & -static_cast<int>(alignment);
+}
+
+bool CompVMem::isTbbMallocEnabled()
+{
+	return s_bTbbMallocEnabled;
+}
+
+COMPV_ERROR_CODE CompVMem::setTbbMallocEnabled(bool enabled)
+{
+	COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED, "Changing this value at runtime not supported yet");
+#if !COMPV_USE_TBBMALLOC
+	COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED, "Source code not built with support for Intel tbbmalloc");
+#endif
+	s_bTbbMallocEnabled = enabled;
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 int CompVMem::bestAlignment()
@@ -626,13 +670,13 @@ bool CompVMem::isGpuFriendly(const void* mem, size_t size)
 // Allocated using mallocAligned, callocAligned or reallocAligned
 bool CompVMem::isSpecial(void* ptr)
 {
-#	if COMPV_MEM_CHECK
+#if COMPV_MEM_CHECK
     CompVMem::specialsLock();
     bool ret = CompVMem::s_Specials.find(reinterpret_cast<uintptr_t>(ptr)) != CompVMem::s_Specials.end();
     CompVMem::specialsUnLock();
     return ret;
 #else
-    COMPV_DEBUG_INFO("Memory check disabled. Returning false for CompVMem::isSpecial() function");
+    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Memory check disabled. Returning false for CompVMem::isSpecial() function");
     return false;
 #endif
 }
@@ -649,7 +693,7 @@ size_t CompVMem::specialTotalMemSize()
     CompVMem::specialsUnLock();
     return total;
 #else
-    COMPV_DEBUG_INFO("Memory check disabled. Returning 0 for CompVMem::specialTotalMemSize() function");
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Memory check disabled. Returning 0 for CompVMem::specialTotalMemSize() function");
     return 0;
 #endif
 }
@@ -662,7 +706,7 @@ size_t CompVMem::specialsCount()
     CompVMem::specialsUnLock();
     return ret;
 #else
-    COMPV_DEBUG_INFO("Memory check disabled. Returning 0 for CompVMem::specialsCount() function");
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Memory check disabled. Returning 0 for CompVMem::specialsCount() function");
     return 0;
 #endif
 }
