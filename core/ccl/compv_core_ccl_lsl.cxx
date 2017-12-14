@@ -425,7 +425,7 @@ static void step21_algo14_equivalence_build(const int16_t* ner, CompVMemZeroCclI
 	*nea1 = nea;
 }
 
-// 2.4 Equivalence resolution: step#4 (MT friendly)
+// 2.4 Equivalence resolution: step#4
 // EQ, the table holding the equivalence classes, before transitive closure
 // A, the associative table of ancestors
 // nea, the current number of absolute labels
@@ -434,15 +434,13 @@ static void step4_algo6_eq_resolv(const compv_ccl_indice_t* EQ, const compv_ccl_
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No ASM implementation found (cmov)");
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No unroll implementation found");
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
 	na = 0;
 
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Could be nea only instead of size");
-	for (compv_ccl_indice_t e = 1; e <= nea; ++e) {
-		const compv_ccl_indice_t eq = EQ[e];
-		COMPV_ASSERT(eq <= nea); // FIXME(dmi): remove
-		A[e] = (eq != e)
-			? A[eq]
+	for (compv_ccl_indice_t ea = 1; ea <= nea; ++ea) {
+		const compv_ccl_indice_t a = EQ[ea];
+		COMPV_ASSERT(a <= nea); // FIXME(dmi): remove
+		A[ea] = (a != ea)
+			? A[a]
 			: ++na;
 	}
 }
