@@ -21,7 +21,7 @@ class CompVMemZero : public CompVObj
 {
 protected:
 	CompVMemZero(size_t rows, size_t cols, size_t stride = 0) : m_nCols(cols), m_nRows(rows) {
-		size_t strideInBytes = stride ? (stride * sizeof(T)) : CompVMem::alignForward(cols * sizeof(T));
+		size_t strideInBytes = (stride > cols) ? (stride * sizeof(T)) : CompVMem::alignForward(cols * sizeof(T));
 		m_nDataSize = ((strideInBytes * rows)) + CompVMem::bestAlignment();
 		m_pMem = static_cast<uint8_t*>(::calloc(m_nDataSize, sizeof(uint8_t)));
 		m_pPtr = reinterpret_cast<T*>(CompVMem::alignForward(reinterpret_cast<uintptr_t>(m_pMem)));
