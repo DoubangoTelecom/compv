@@ -12,9 +12,9 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-CompVBuffer::CompVBuffer(const void* pcPtr COMPV_DEFAULT(NULL), size_t size COMPV_DEFAULT(0))
+CompVBuffer::CompVBuffer(const void* pcPtr COMPV_DEFAULT(nullptr), size_t size COMPV_DEFAULT(0))
     : CompVObj()
-    , m_pPtr(NULL)
+    , m_pPtr(nullptr)
     , m_nSize(0)
     , m_bOweMem(true)
 {
@@ -35,21 +35,15 @@ COMPV_ERROR_CODE CompVBuffer::copyData(const void* pcPtr, size_t size)
     COMPV_CHECK_EXP_RETURN(!size, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
     if (m_bOweMem) {
-        COMPV_ASSERT((m_pPtr = CompVMem::realloc(m_pPtr, size + 8)) != NULL);
+        COMPV_CHECK_EXP_RETURN(!(m_pPtr = CompVMem::realloc(m_pPtr, size + 8)), COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
     }
     else {
-        COMPV_ASSERT((m_pPtr = CompVMem::malloc(size + 8)) != NULL);
+		COMPV_CHECK_EXP_RETURN(!(m_pPtr = CompVMem::malloc(size + 8)), COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
         m_bOweMem = true;
     }
-    if (m_pPtr) {
-        m_nSize = size;
-        if (pcPtr) {
-            CompVMem::copy(m_pPtr, pcPtr, size);
-        }
-    }
-    else {
-        COMPV_DEBUG_FATAL_EX(COMPV_THIS_CLASSNAME, "Failed to allocate buffer with size = %u", (unsigned)size);
-        return COMPV_ERROR_CODE_E_OUT_OF_MEMORY;
+    m_nSize = size;
+    if (pcPtr) {
+        CompVMem::copy(m_pPtr, pcPtr, size);
     }
     return COMPV_ERROR_CODE_S_OK;
 }
@@ -95,7 +89,7 @@ COMPV_ERROR_CODE CompVBuffer::newObj(const void* pcPtr, size_t size, CompVBuffer
 
 COMPV_ERROR_CODE CompVBuffer::newObjAndNullData(CompVBufferPtrPtr buffer)
 {
-    return CompVBuffer::newObj(NULL, 0, buffer);
+    return CompVBuffer::newObj(nullptr, 0, buffer);
 }
 
 COMPV_ERROR_CODE CompVBuffer::newObjAndTakeData(void** ppPtr, size_t size, CompVBufferPtrPtr buffer)

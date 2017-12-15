@@ -13,6 +13,7 @@ Some literature about LSL:
 */
 
 #include "compv/core/ccl/compv_core_ccl_lsl.h"
+#include "compv/core/ccl/compv_core_ccl_lsl_result.h"
 #include "compv/core/compv_core.h"
 #include "compv/base/parallel/compv_parallel.h"
 #include "compv/base/compv_cpu.h"
@@ -438,11 +439,11 @@ static void step21_algo14_equivalence_build(const int16_t* ner, CompVMemZeroCclI
 // A, the associative table of ancestors
 // nea, the current number of absolute labels
 // na, final number of absolute labels (background not counted)
-static void step4_algo6_eq_resolv(const compv_ccl_indice_t* EQ, const compv_ccl_indice_t nea, compv_ccl_indice_t* A, compv_ccl_indice_t& na)
+static void step4_algo6_eq_resolv(const compv_ccl_indice_t* EQ, const compv_ccl_indice_t nea, compv_ccl_indice_t* A, compv_ccl_indice_t* na1)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No ASM implementation found (cmov)");
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No unroll implementation found");
-	na = 0;
+	compv_ccl_indice_t na = 0;
 
 	for (compv_ccl_indice_t ea = 1; ea <= nea; ++ea) {
 		const compv_ccl_indice_t a = EQ[ea];
@@ -451,6 +452,7 @@ static void step4_algo6_eq_resolv(const compv_ccl_indice_t* EQ, const compv_ccl_
 			? A[a]
 			: ++na;
 	}
+	*na1 = na;
 }
 
 static COMPV_ERROR_CODE build_EQ(const size_t ner_sum, compv_ccl_indice_t*& EQ)
@@ -550,20 +552,24 @@ static COMPV_ERROR_CODE count_points(
 
 
 // VERY important: binar must be binary image (allowed values: 0x01, 0xff, 0x00)
-COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& binar, CompVConnectedComponentLabelingResult& result) /*Overrides(CompVConnectedComponentLabeling)*/
+COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& binar, CompVConnectedComponentLabelingResultPtrPtr result) /*Overrides(CompVConnectedComponentLabeling)*/
 {
-	COMPV_CHECK_EXP_RETURN(!binar || binar->isEmpty() || binar->planeCount() != 1 || binar->elmtInBytes() != sizeof(uint8_t)
+	COMPV_CHECK_EXP_RETURN(!binar || binar->isEmpty() || binar->planeCount() != 1 || binar->elmtInBytes() != sizeof(uint8_t) || !result
 		, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
-	/* Reset result */
-	result.reset();
-	result.label_background = kCompVConnectedComponentLabelingLSLBachgroundLabel;
+	/* Create result */
+	CompVConnectedComponentLabelingResultLSLImplPtr result_;
+	if (*result && (*result)->id() == id()) {
+		result_ = dynamic_cast<CompVConnectedComponentLabelingResultLSLImpl*>(**result);
+	}
+	COMPV_CHECK_CODE_RETURN(CompVConnectedComponentLabelingResultLSLImpl::newObj(&result_));
 
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 
 	const size_t width = binar->cols();
 	const size_t height = binar->rows();
 	const size_t __ner_max = ((width + 1) >> 1); // full dashed row
+	const size_t RLC_stride = __ner_max;
 	int16_t ner_max;
 	compv_ccl_indice_t ner_sum;
 	std::function<COMPV_ERROR_CODE(const compv_ccl_indice_t mt_start, const compv_ccl_indice_t mt_end, int16_t* mt_ner_max, compv_ccl_indice_t* mt_ner_sum)> funcPtrStep1;
@@ -588,13 +594,13 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 	compv_ccl_indice_t* EQ = nullptr; // the table holding the equivalence classes, before transitive closure
 	compv_ccl_indice_t* A = nullptr; // the associative table of ancestors
 	compv_ccl_indice_t* Ainv = nullptr; // inv(A)
-	compv_ccl_indice_t nea; // the current number of absolute labels, update of EQ and ERAi
-	compv_ccl_indice_t na = 0; // final number of absolute labels
-	CompVMemZeroLockedCountPtr na_count; // Only needed if we want to extract points
+	compv_ccl_indice_t nea1 = 0; // the current number of absolute labels, update of EQ and ERAi
+	compv_ccl_indice_t na1 = 0; // final number of absolute labels
+	CompVMemZeroLockedCountPtr na; // final number of absolute labels (only needed to extract points)
 
 	ER = reinterpret_cast<int16_t*>(CompVMem::malloc(height * width * sizeof(int16_t)));
 	COMPV_CHECK_EXP_BAIL(!ER, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY));
-	RLC = reinterpret_cast<int16_t*>(CompVMem::malloc(height * __ner_max * sizeof(int16_t)));
+	RLC = reinterpret_cast<int16_t*>(CompVMem::malloc(height * RLC_stride * sizeof(int16_t)));
 	COMPV_CHECK_EXP_BAIL(!RLC, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY));
 	ner = reinterpret_cast<int16_t*>(CompVMem::malloc(height * 1 * sizeof(int16_t)));
 	COMPV_CHECK_EXP_BAIL(!ner, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY));
@@ -606,7 +612,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 			ER,
 			width,
 			RLC,
-			__ner_max,
+			RLC_stride,
 			ner,
 			mt_ner_max,
 			mt_ner_sum,
@@ -653,7 +659,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 			ER,
 			width,
 			RLC,
-			__ner_max,
+			RLC_stride,
 			ner,
 			ERA,
 			static_cast<compv_ccl_indice_t>(width),
@@ -678,47 +684,50 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 		ner,
 		ERA,
 		EQ,
-		&nea
+		&nea1
 	);
 
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("A and step4_algo6_eq_resolv not needed unless for computing na");
 
 	/* Create A and init first element with zero (because bacground label is equal to zero) */
-	A = reinterpret_cast<compv_ccl_indice_t*>(CompVMem::malloc((nea + 1) * sizeof(compv_ccl_indice_t)));
+	A = reinterpret_cast<compv_ccl_indice_t*>(CompVMem::malloc((nea1 + 1) * sizeof(compv_ccl_indice_t)));
 	COMPV_CHECK_EXP_BAIL(!A, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY));
 	A[0] = 0; // other values will be initialzed in step4_algo6_eq_resolv
 
 	/* Equivalence resolution: step#4 */
 	step4_algo6_eq_resolv(
 		EQ,
-		nea,
+		nea1,
 		A,
-		na
+		&na1
 	);
 
-	COMPV_CHECK_CODE_BAIL(err = CompVMemZeroLockedCount::newObj(&na_count, 1, (na + 1)));
+	COMPV_CHECK_CODE_BAIL(err = CompVMemZeroLockedCount::newObj(&na, 1, (na1 + 1)));
 	COMPV_CHECK_CODE_BAIL(err = count_points(
-		na_count,
+		na,
 		ERA,
 		A,
 		RLC,
-		__ner_max,
+		RLC_stride,
 		ner,
 		height));
 
-	build_all_labels4(
+	/*build_all_labels4(
 		A,
 		ERA,
 		RLC,
-		__ner_max,
+		RLC_stride,
 		ner,
 		width,
 		height,
-		&result.labels);
+		&result.labels);*/
 	
-	result.labels_count = (na + 1); // +1 for the background
+	//result.labels_count = (na + 1); // +1 for the background
 
 bail:
+	if (COMPV_ERROR_CODE_IS_OK(err) && result_) {
+		*result = *result_;
+	}
 	CompVMem::free(reinterpret_cast<void**>(&ner));
 	CompVMem::free(reinterpret_cast<void**>(&ER));
 	CompVMem::free(reinterpret_cast<void**>(&A));
@@ -726,7 +735,7 @@ bail:
 	CompVMem::free(reinterpret_cast<void**>(&EQ));
 	CompVMem::free(reinterpret_cast<void**>(&RLC));
 
-	return COMPV_ERROR_CODE_S_OK;
+	return err;
 }
 
 COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::newObj(CompVConnectedComponentLabelingPtrPtr ccl)

@@ -18,7 +18,7 @@ COMPV_OBJECT_DECLARE_PTRS(Buffer)
 class COMPV_BASE_API CompVBuffer : public CompVObj
 {
 protected:
-    CompVBuffer(const void* pcPtr = NULL, size_t size = 0);
+    CompVBuffer(const void* pcPtr = nullptr, size_t size = 0);
 public:
     virtual ~CompVBuffer();
 	COMPV_OBJECT_GET_ID(CompVBuffer);

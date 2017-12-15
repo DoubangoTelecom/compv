@@ -19,6 +19,8 @@
 COMPV_NAMESPACE_BEGIN()
 
 COMPV_OBJECT_DECLARE_PTRS(ConnectedComponentLabeling)
+COMPV_OBJECT_DECLARE_PTRS(ConnectedComponentLabelingResult)
+COMPV_OBJECT_DECLARE_PTRS(ConnectedComponentLabelingResultLSL)
 
 typedef int32_t compv_ccl_indice_t; /* use to hold max(width, height) */
 
@@ -66,14 +68,46 @@ enum {
 	COMPV_PRED_ID
 };
 
-struct CompVConnectedComponentLabelingResult {
-	CompVMatPtr labels;
-	compv_ccl_indice_t labels_count;
-	compv_ccl_indice_t label_background;
-	void reset() {
-		labels = nullptr;
-		labels_count = 0;
+// Class: CompVConnectedComponentLabelingResult
+class COMPV_BASE_API CompVConnectedComponentLabelingResult : public CompVObj
+{
+protected:
+	CompVConnectedComponentLabelingResult(int id) : m_nId(id) {
 	}
+public:
+	virtual ~CompVConnectedComponentLabelingResult() {
+	}
+	COMPV_INLINE int id() const {
+		return m_nId;
+	}
+	virtual size_t labelsCount() const = 0;
+	virtual COMPV_ERROR_CODE debugFlatten(CompVMatPtrPtr labels) const {
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("This function is for visual debugging only. It created an image with the list of the labels");
+		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
+		return COMPV_ERROR_CODE_S_OK;
+	}
+	virtual COMPV_ERROR_CODE extract(std::vector<CompVMatPtr>& points) const {
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("If you just want to compute the label features (e.g. centroid, bounding boxes, first order moment...) then, you don't need to extract the points");
+		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
+		return COMPV_ERROR_CODE_S_OK;
+	}
+private:
+	int m_nId;
+};
+
+// Class: CompVConnectedComponentLabelingResultLSL
+class COMPV_BASE_API CompVConnectedComponentLabelingResultLSL : public CompVConnectedComponentLabelingResult
+{
+protected:
+	CompVConnectedComponentLabelingResultLSL()
+		: CompVConnectedComponentLabelingResult(COMPV_PLSL_ID) {
+	}
+public:
+	virtual ~CompVConnectedComponentLabelingResultLSL() {
+	}
+	
+	virtual COMPV_ERROR_CODE boundingBoxes() const = 0;
+	virtual COMPV_ERROR_CODE firstOrderMoment() const = 0;
 };
 
 // Class: CompVConnectedComponentLabeling
@@ -83,11 +117,20 @@ protected:
 	CompVConnectedComponentLabeling(int id);
 public:
 	virtual ~CompVConnectedComponentLabeling();
-	COMPV_INLINE int id()const {
+	COMPV_INLINE int id() const {
 		return m_nId;
 	}
 
-	virtual COMPV_ERROR_CODE process(const CompVMatPtr& binar, CompVConnectedComponentLabelingResult& result) = 0;
+	virtual COMPV_ERROR_CODE process(const CompVMatPtr& binar, CompVConnectedComponentLabelingResultPtrPtr result) = 0;
+	template<typename T>
+	static const T* reinterpret_castr(const CompVConnectedComponentLabelingResultPtr& result) {
+		if (result) {
+			if (result->id() == COMPV_PLSL_ID && std::is_same<T, CompVConnectedComponentLabelingResultLSL>::value) {
+				return dynamic_cast<const CompVConnectedComponentLabelingResultLSL*>(*result);
+			}
+		}
+		return nullptr;
+	}
 
 	static COMPV_ERROR_CODE newObj(CompVConnectedComponentLabelingPtrPtr ccl, int id);
 	static COMPV_ERROR_CODE addFactory(const CompVConnectedComponentLabelingFactory* factory);
