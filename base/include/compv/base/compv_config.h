@@ -245,12 +245,17 @@
 #endif
 
 #ifdef __GNUC__
-#	define compv_atomic_inc(_ptr_) __sync_fetch_and_add((_ptr_), 1)
-#	define compv_atomic_dec(_ptr_) __sync_fetch_and_sub((_ptr_), 1)
+#	define compv_atomic_inc(_ptr_)			__sync_fetch_and_add((_ptr_), 1)
+#	define compv_atomic_dec(_ptr_)			__sync_fetch_and_sub((_ptr_), 1)
+#	define compv_atomic_add(_ptr_, value)	__sync_fetch_and_add((_ptr_), (value))
+#	define compv_atomic_sub(_ptr_, value)	__sync_fetch_and_sub((_ptr_), (value))
 #elif defined (_MSC_VER)
-#	define compv_atomic_inc(_ptr_) InterlockedIncrement((_ptr_))
-#	define compv_atomic_dec(_ptr_) InterlockedDecrement((_ptr_))
+#	define compv_atomic_inc(_ptr_)			InterlockedIncrement((_ptr_))
+#	define compv_atomic_dec(_ptr_)			InterlockedDecrement((_ptr_))
+#	define compv_atomic_add(_ptr_, value)	InterlockedExchangeAdd((_ptr_), (value))
+#	define compv_atomic_sub(_ptr_, value)	InterlockedExchangeSubtract((_ptr_), (value))
 #else
+#	error "Not implemented"
 #	define compv_atomic_inc(_ptr_) ++(*(_ptr_))
 #	define compv_atomic_dec(_ptr_) --(*(_ptr_))
 #endif

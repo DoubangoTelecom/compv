@@ -59,8 +59,17 @@ COMPV_EXTERNC void CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBui
 #endif /* COMPV_ASM && COMPV_ARCH_X64 */
 
 static const compv_ccl_indice_t kCompVConnectedComponentLabelingLSLBachgroundLabel = 0; // Must be zero because of calloc()
+
 typedef CompVMemZero<compv_ccl_indice_t > CompVMemZeroCclIndice;
 typedef CompVPtr<CompVMemZeroCclIndice *> CompVMemZeroCclIndicePtr;
+
+#if COMPV_OS_WINDOWS
+typedef LONG compv_ccl_accumulator_t; /* InterlockedDecrement/InterlockedIncrement requires LONG */
+#else
+typedef int compv_ccl_accumulator_t;
+#endif
+typedef CompVMemZero<compv_ccl_accumulator_t > CompVMemZeroLockedCount;
+typedef CompVPtr<CompVMemZeroLockedCount *> CompVMemZeroLockedCountPtr;
 
 CompVConnectedComponentLabelingLSL::CompVConnectedComponentLabelingLSL()
 	:CompVConnectedComponentLabeling(static_cast<compv_ccl_indice_t>(COMPV_PLSL_ID))
@@ -390,7 +399,6 @@ static void step21_algo14_equivalence_build(const int16_t* ner, CompVMemZeroCclI
 	const compv_ccl_indice_t* ERAiminus1 = ERA->ptr(0);
 	const size_t ERA_stride = ERA->stride();
 
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No ASM implementation found");
 	for (size_t j = 1; j < rows; ++j) {
 		const int16_t ner0j = ner[j];
 		for (int16_t er = 1; er < ner0j; er += 2) {
@@ -447,7 +455,6 @@ static void step4_algo6_eq_resolv(const compv_ccl_indice_t* EQ, const compv_ccl_
 
 static COMPV_ERROR_CODE build_EQ(const size_t ner_sum, compv_ccl_indice_t*& EQ)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
 	/* Create EQ and init with 0...n */
 	EQ = reinterpret_cast<compv_ccl_indice_t*>(CompVMem::malloc(ner_sum * 1 * sizeof(compv_ccl_indice_t)));
 	COMPV_CHECK_EXP_RETURN(!EQ, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
@@ -458,31 +465,89 @@ static COMPV_ERROR_CODE build_EQ(const size_t ner_sum, compv_ccl_indice_t*& EQ)
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-static COMPV_ERROR_CODE build_all_labels(const compv_ccl_indice_t* A, const CompVMemZeroCclIndicePtr& ERA, const int16_t* ER, const size_t ER_width, const size_t ER_height, const size_t ER_stride, CompVMatPtrPtr EA)
+static COMPV_ERROR_CODE build_all_labels4(
+	const compv_ccl_indice_t* A,
+	const CompVMemZeroCclIndicePtr& ERA,
+	const int16_t* RLC,
+	const size_t RLC_stride,
+	const int16_t* ner,
+	const size_t EA_width,
+	const size_t EA_height,
+	CompVMatPtrPtr EA)
 {
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ER no longer needed");
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
-	const size_t ERA_stride = ERA->stride();
 
 	// Create EA using same size and stride as ER
-	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_ccl_indice_t>(EA, ER_height, ER_width, ER_stride));
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_ccl_indice_t>(EA, EA_height, EA_width));
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Calling zero all not good at all");
+	COMPV_CHECK_CODE_RETURN((*EA)->zero_all());
 
 	const compv_ccl_indice_t* ERAPtr = ERA->ptr();
 	compv_ccl_indice_t* EAPtr = (*EA)->ptr<compv_ccl_indice_t>();
+	const size_t ERA_stride = ERA->stride();
+	const size_t EA_stride = (*EA)->stride();
 
 	// #3 and #5 merged 
 	// step #3: First absolute labeling
 	// step #5: Second absolute labeling
-	for (size_t j = 0; j < ER_height; ++j) {
-		for (size_t i = 0; i < ER_width; ++i) {
-			EAPtr[i] = A[ERAPtr[ER[i]]];
+	for (size_t j = 0; j < EA_height; ++j) {
+		const int16_t ner1 = ner[j];
+		for (int16_t er = 1; er < ner1; ++er) {
+			const compv_ccl_indice_t ea = ERAPtr[er];
+			if (ea) { // "0" is background
+				const compv_ccl_indice_t a = A[ea];
+				const int16_t er0 = RLC[er - 1];
+				const int16_t er1 = RLC[er];
+				for (int16_t e = er0; e < er1; ++e) {
+					EAPtr[e] = a;
+				}
+			}
 		}
-		EAPtr += ER_stride;
-		ER += ER_stride;
+		RLC += RLC_stride;
+		EAPtr += EA_stride;
 		ERAPtr += ERA_stride;
 	}
 
 	return COMPV_ERROR_CODE_S_OK;
 }
+
+static COMPV_ERROR_CODE count_points(
+	CompVMemZeroLockedCountPtr na_count,
+	const CompVMemZeroCclIndicePtr& ERA,
+	const compv_ccl_indice_t* A,
+	const int16_t* RLC,
+	const size_t RLC_stride,
+	const int16_t* ner,
+	const size_t height)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ER no longer needed");
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
+
+	compv_ccl_accumulator_t* naPtr = na_count->ptr();
+	const compv_ccl_indice_t* ERAPtr = ERA->ptr();
+	const size_t ERA_stride = ERA->stride();
+
+	// #3 and #5 merged 
+	// step #3: First absolute labeling
+	// step #5: Second absolute labeling
+	for (size_t j = 0; j < height; ++j) {
+		const int16_t ner1 = ner[j];
+		for (int16_t er = 1; er < ner1; ++er) {
+			const compv_ccl_indice_t ea = ERAPtr[er];
+			if (ea) { // "0" is background
+				const compv_ccl_indice_t a = A[ea];
+				const compv_ccl_accumulator_t v = (RLC[er] - RLC[er - 1]);
+				naPtr[a] += v;
+			}
+		}
+		RLC += RLC_stride;
+		ERAPtr += ERA_stride;
+	}
+
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 
 // VERY important: binar must be binary image (allowed values: 0x01, 0xff, 0x00)
 COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& binar, CompVConnectedComponentLabelingResult& result) /*Overrides(CompVConnectedComponentLabeling)*/
@@ -519,10 +584,13 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 	int16_t* ER = nullptr; //  an associative table of size w holding the relative labels er associated to Xi
 	int16_t* RLC = nullptr; // a table holding the run length coding of segments of the line Xi, RLCi-1 is the similar memorization of the previous line.
 	CompVMemZeroCclIndicePtr ERA; // an associative table holding the association between er and ea: ea = ERAi[er]
+	CompVMemZeroCclIndicePtr ERAinv; // inv(ERA)
 	compv_ccl_indice_t* EQ = nullptr; // the table holding the equivalence classes, before transitive closure
 	compv_ccl_indice_t* A = nullptr; // the associative table of ancestors
+	compv_ccl_indice_t* Ainv = nullptr; // inv(A)
 	compv_ccl_indice_t nea; // the current number of absolute labels, update of EQ and ERAi
 	compv_ccl_indice_t na = 0; // final number of absolute labels
+	CompVMemZeroLockedCountPtr na_count; // Only needed if we want to extract points
 
 	ER = reinterpret_cast<int16_t*>(CompVMem::malloc(height * width * sizeof(int16_t)));
 	COMPV_CHECK_EXP_BAIL(!ER, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY));
@@ -613,6 +681,8 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 		&nea
 	);
 
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING("A and step4_algo6_eq_resolv not needed unless for computing na");
+
 	/* Create A and init first element with zero (because bacground label is equal to zero) */
 	A = reinterpret_cast<compv_ccl_indice_t*>(CompVMem::malloc((nea + 1) * sizeof(compv_ccl_indice_t)));
 	COMPV_CHECK_EXP_BAIL(!A, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY));
@@ -626,23 +696,33 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 		na
 	);
 
-	/* For testing */
-#if 1
-	build_all_labels(
+	COMPV_CHECK_CODE_BAIL(err = CompVMemZeroLockedCount::newObj(&na_count, 1, (na + 1)));
+	COMPV_CHECK_CODE_BAIL(err = count_points(
+		na_count,
+		ERA,
 		A,
-		ERA, 
-		ER,
+		RLC,
+		__ner_max,
+		ner,
+		height));
+
+	build_all_labels4(
+		A,
+		ERA,
+		RLC,
+		__ner_max,
+		ner,
 		width,
 		height,
-		width,
 		&result.labels);
-#endif
+	
 	result.labels_count = (na + 1); // +1 for the background
 
 bail:
 	CompVMem::free(reinterpret_cast<void**>(&ner));
 	CompVMem::free(reinterpret_cast<void**>(&ER));
 	CompVMem::free(reinterpret_cast<void**>(&A));
+	CompVMem::free(reinterpret_cast<void**>(&Ainv));
 	CompVMem::free(reinterpret_cast<void**>(&EQ));
 	CompVMem::free(reinterpret_cast<void**>(&RLC));
 

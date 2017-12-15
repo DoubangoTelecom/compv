@@ -12,7 +12,7 @@ using namespace compv;
 #define WINDOW_WIDTH		1280
 #define WINDOW_HEIGHT		720
 
-#define CCL_ID				COMPV_LSL_ID // Light Speed Labeling
+#define CCL_ID				COMPV_PLSL_ID // Light Speed Labeling
 
 #define TAG_SAMPLE			"Connected Component Labeling"
 
@@ -82,8 +82,8 @@ compv_main()
 
 		// Create the ccl and set default settings
 		COMPV_CHECK_CODE_RETURN(CompVConnectedComponentLabeling::newObj(&ccl_obj, CCL_ID));
-		if (CCL_ID == COMPV_LSL_ID) {
-			COMPV_CHECK_CODE_RETURN(ccl_obj->setInt(COMPV_LSL_SET_INT_TYPE, COMPV_LSL_TYPE_STD));
+		if (CCL_ID == COMPV_PLSL_ID) {
+			COMPV_CHECK_CODE_RETURN(ccl_obj->setInt(COMPV_PLSL_SET_INT_TYPE, COMPV_PLSL_TYPE_STD));
 		}
 
 		// Add 'OnNewFrame' callback to the camera
@@ -105,7 +105,7 @@ compv_main()
 			bail:
 				COMPV_CHECK_CODE_NOP(err = window->endDraw()); // Make sure 'endDraw()' will be called regardless the result
 			}
-			//getchar();
+			getchar();
 			return err;
 		}));
 
