@@ -159,14 +159,13 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::extract(std::vect
 			const compv_float32_t y32f = static_cast<compv_float32_t>(j);
 			for (it = lea.begin(); it < lea.end(); ++it) {
 				const int32_t a = (A[it->ea] - 1); // a within [1, na]
-				compv_ccl_accumulator_t* gCount = &szFilled[a];
 				CompVMatPtr& pp = points[a];
 				const size_t count = static_cast<size_t>(it->end - it->start);
 				const size_t count4 = count & -4;
-				const size_t gOld = static_cast<size_t>(compv_atomic_add(gCount, static_cast<compv_ccl_accumulator_t>(count)));
+				const size_t gOld = static_cast<size_t>(compv_atomic_add(&szFilled[a], static_cast<compv_ccl_accumulator_t>(count)));
 				compv_float32_t x32f = static_cast<compv_float32_t>(it->start);
-				compv_float32_t* x32fPtr = pp->ptr<compv_float32_t>(0, gOld);
-				compv_float32_t* y32fPtr = pp->ptr<compv_float32_t>(1, gOld);
+				compv_float32_t* x32fPtr = pp->data<compv_float32_t>() + gOld;
+				compv_float32_t* y32fPtr = x32fPtr + pp->stride();
 				size_t i;
 				for (i = 0; i < count4; i+=4, x32f+=4.f) {
 					x32fPtr[i] = x32f;

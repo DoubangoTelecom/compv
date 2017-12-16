@@ -97,7 +97,6 @@ static void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_C(
 	const compv_uscalar_t width, const compv_uscalar_t height)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
-	COMPV_DEBUG_INFO_CODE_TODO("Unroll loop");
 	int16_t i, er;
 	const int16_t width1 = static_cast<int16_t>(width);
 	int16_t ner_max = 0;
@@ -280,8 +279,6 @@ static void CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_C(
 
 	const int16_t wminus1 = static_cast<int16_t>(width - 1);
 	int16_t er, er0, er1, j0, j1, nerj;
-
-	COMPV_DEBUG_INFO_CODE_TODO("ASM code not aligned: change single line: setting j1=RLCi[er] - 1");
 
 	for (compv_uscalar_t j = 0; j < height; ++j) {
 		nerj = ner[j];

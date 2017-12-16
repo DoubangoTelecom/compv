@@ -55,6 +55,11 @@ public:
 		return m_nDataSize;
 	}
 
+	template<class ptrType = const void>
+	COMPV_ALWAYS_INLINE ptrType* data()const {
+		return (ptrType*)m_pDataPtr;
+	}
+
 	COMPV_ALWAYS_INLINE bool isMemoryOwed()const {
 		return m_bOweMem;
 	}

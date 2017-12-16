@@ -34,7 +34,7 @@ COMPV_UNITTEST_CCL[] =
 };
 static const size_t COMPV_UNITTEST_CCL_COUNT = sizeof(COMPV_UNITTEST_CCL) / sizeof(COMPV_UNITTEST_CCL[0]);
 
-#define LOOP_COUNT		1000
+#define LOOP_COUNT		1
 #define TEST_TYPE		TEST_TYPE_DIFFRACT
 
 static COMPV_ERROR_CODE blitPoints(const CompVConnectedComponentLabelingResultPtr& result, const size_t binarWidth, const size_t binarHeight, CompVMatPtrPtr output);
