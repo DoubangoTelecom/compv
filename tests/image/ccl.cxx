@@ -69,7 +69,7 @@ COMPV_ERROR_CODE ccl()
 	const uint64_t timeStart = CompVTime::nowMillis();
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
 		COMPV_CHECK_CODE_RETURN(ccl_obj->process(binar, &result));
-		COMPV_CHECK_CODE_RETURN(result->extract(points));
+		COMPV_CHECK_CODE_RETURN(result->extract(points)); // FIXME(dmi): remove
 	}
 	const uint64_t timeEnd = CompVTime::nowMillis();
 	COMPV_DEBUG_INFO("Elapsed time (TestConnectedComponentLabeling) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));

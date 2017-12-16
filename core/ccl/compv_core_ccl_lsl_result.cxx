@@ -10,8 +10,9 @@
 
 #include <atomic>
 
-#define COMPV_CCL_LSL_FLATTEN_MIN_SAMPLES_PER_THREAD	(20*20)
-#define COMPV_CCL_LSL_FILL_MIN_SAMPLES_PER_THREAD		(20*20)
+#define COMPV_CCL_LSL_FLATTEN_MIN_SAMPLES_PER_THREAD			(20*20)
+#define COMPV_CCL_LSL_EXTRACT_COUNT_MIN_SAMPLES_PER_THREAD		(20*20)
+#define COMPV_CCL_LSL_EXTRACT_FILL_MIN_SAMPLES_PER_THREAD		(20*20)
 
 #define COMPV_THIS_CLASSNAME "CompVConnectedComponentLabelingResultLSLImpl"
 
@@ -29,7 +30,9 @@ static COMPV_ERROR_CODE count_points(
 	CompVMemZeroLockedAccumulatorPtr ptrxNa,
 	const compv_ccl_lea_t& vec32sLEA,
 	const CompVMatPtr& ptr32sA,
-	const CompVMatPtr& ptr16sRLC);
+	const CompVMatPtr& ptr16sRLC,
+	const size_t ystart,
+	const size_t yend);
 
 CompVConnectedComponentLabelingResultLSLImpl::CompVConnectedComponentLabelingResultLSLImpl()
 	: m_szInput(CompVSizeSz(0, 0))
@@ -124,16 +127,27 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::extract(std::vect
 
 	// LSL can compute the blob features without extracting the points
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("You don't need to extract the points in order to compute the blob features (bounding boxes, moments...)");
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("MT implementation could be found");
 
 	/* Count the number of points (required for features computation) */
 	CompVMemZeroLockedAccumulatorPtr ptrxNa; // final number of absolute labels (only needed to extract points)
 	COMPV_CHECK_CODE_RETURN(CompVMemZeroLockedAccumulator::newObj(&ptrxNa, 1, m_nNa1));
-	COMPV_CHECK_CODE_RETURN(count_points(
-		ptrxNa,
-		m_vec32sLEA,
-		m_ptr32sA,
-		m_ptr16sRLC));
+	auto funcPtrCountPoints = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
+		COMPV_CHECK_CODE_RETURN(count_points(
+			ptrxNa,
+			m_vec32sLEA,
+			m_ptr32sA,
+			m_ptr16sRLC,
+			ystart,
+			yend)
+		);
+		return COMPV_ERROR_CODE_S_OK;
+	};
+	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+		funcPtrCountPoints,
+		m_szInput.width,
+		m_szInput.height,
+		COMPV_CCL_LSL_EXTRACT_COUNT_MIN_SAMPLES_PER_THREAD
+	));
 
 	/* Fill points */
 	const size_t RLC_stride = m_ptr16sRLC->stride();
@@ -144,9 +158,9 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::extract(std::vect
 		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float32_t>(&points[na - 1], 2, count));
 	}
 	std::vector<compv_ccl_accumulator_t > szFilled(m_nNa1, 0);
+	const int32_t* A = m_ptr32sA->ptr<const int32_t>(0, 0);
 	auto funcPtrFill = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
 		const int16_t* RLC = m_ptr16sRLC->ptr<const int16_t>(ystart);
-		const int32_t* A = m_ptr32sA->ptr<const int32_t>(0, 0);
 		int16_t er;
 		CompVVec32s::const_iterator it;
 		for (size_t j = ystart; j < yend; ++j) {
@@ -175,7 +189,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::extract(std::vect
 		funcPtrFill,
 		m_szInput.width,
 		m_szInput.height,
-		COMPV_CCL_LSL_FILL_MIN_SAMPLES_PER_THREAD
+		COMPV_CCL_LSL_EXTRACT_FILL_MIN_SAMPLES_PER_THREAD
 	));
 
 	return COMPV_ERROR_CODE_S_OK;
@@ -213,13 +227,13 @@ static COMPV_ERROR_CODE count_points(
 	CompVMemZeroLockedAccumulatorPtr ptrxNa,
 	const compv_ccl_lea_t& vec32sLEA,
 	const CompVMatPtr& ptr32sA,
-	const CompVMatPtr& ptr16sRLC)
+	const CompVMatPtr& ptr16sRLC,
+	const size_t ystart,
+	const size_t yend)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
-
-	compv_ccl_accumulator_t* naPtr = ptrxNa->ptr();
-	const int16_t* RLC = ptr16sRLC->ptr<const int16_t>();
-	const int32_t* A = ptr32sA->ptr<const int32_t>();
+	compv_ccl_accumulator_t* naPtr = ptrxNa->ptr(0, 0);
+	const int32_t* A = ptr32sA->ptr<const int32_t>(0, 0);
+	const int16_t* RLC = ptr16sRLC->ptr<const int16_t>(ystart);
 	const size_t RLC_stride = ptr16sRLC->stride();
 
 	// #3 and #5 merged 
@@ -227,11 +241,12 @@ static COMPV_ERROR_CODE count_points(
 	// step #5: Second absolute labeling
 	int16_t er;
 	CompVVec32s::const_iterator it;
-	for (compv_ccl_lea_t::const_iterator j = vec32sLEA.begin(); j < vec32sLEA.end(); ++j) { // MT: vec32sLEA[0...height]
-		for (er = 1, it = j->begin(); it < j->end(); er += 2, ++it) {
+	for (size_t j = ystart; j < yend; ++j) {
+		const CompVVec32s& lea = vec32sLEA[j];
+		for (er = 1, it = lea.begin(); it < lea.end(); er += 2, ++it) {
 			const int32_t a = (A[*it] - 1); // a within [1, na]
 			const compv_ccl_accumulator_t v = (RLC[er] - RLC[er - 1]);
-			naPtr[a] += v;
+			compv_atomic_add(&naPtr[a], v);
 		}
 		RLC += RLC_stride;
 	}
