@@ -29,7 +29,6 @@ typedef CompVPtr<CompVMemZeroLockedAccumulator *> CompVMemZeroLockedAccumulatorP
 static COMPV_ERROR_CODE count_points(
 	CompVMemZeroLockedAccumulatorPtr ptrxNa,
 	const compv_ccl_lea_n_t& vecLEA,
-	const CompVMatPtr& ptr32sA,
 	const size_t ystart,
 	const size_t yend);
 
@@ -52,12 +51,7 @@ size_t CompVConnectedComponentLabelingResultLSLImpl::labelsCount() const
 COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::debugFlatten(CompVMatPtrPtr ptr32sLabels) const
 {
 	COMPV_CHECK_EXP_RETURN(!ptr32sLabels, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_CHECK_EXP_RETURN(
-		!m_szInput.width || !m_szInput.height ||
-		m_vecLEA.size() != m_szInput.height ||
-		!m_ptr32sA || m_ptr32sA->rows() != 1,
-		COMPV_ERROR_CODE_E_INVALID_STATE
-	);
+	COMPV_CHECK_EXP_RETURN(!m_szInput.width || !m_szInput.height || m_vecLEA.size() != m_szInput.height, COMPV_ERROR_CODE_E_INVALID_STATE);
 
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("This function is needed for debugging only and you should not call it");
 
@@ -73,14 +67,13 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::debugFlatten(Comp
 	// step #3: First absolute labeling
 	// step #5: Second absolute labeling
 	auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
-		const int32_t* A = m_ptr32sA->ptr<const int32_t>(0, 0);
 		int32_t* EA = ptr32sEA->ptr<int32_t>(ystart);
 		compv_ccl_lea_1_t::const_iterator it;
 		for (size_t j = ystart; j < yend; ++j) {
 			COMPV_CHECK_CODE_RETURN(ptr32sEA->zero_row(j)); // background is "0"
 			const compv_ccl_lea_1_t& lea = m_vecLEA[j];
 			for (it = lea.begin(); it < lea.end(); ++it) {
-				const int32_t a = A[it->ea]; // a within [1, na]
+				const int32_t a = it->a; // a within [1, na]
 				const int16_t er0 = it->start;
 				const int16_t er1 = it->end;
 				for (int16_t er = er0; er < er1; ++er) {
@@ -106,12 +99,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::debugFlatten(Comp
 
 COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::extract(std::vector<CompVMatPtr>& points) const
 {
-	COMPV_CHECK_EXP_RETURN(
-		!m_szInput.width || !m_szInput.height ||
-		m_vecLEA.size() != m_szInput.height ||
-		!m_ptr32sA || m_ptr32sA->rows() != 1,
-		COMPV_ERROR_CODE_E_INVALID_STATE
-	);
+	COMPV_CHECK_EXP_RETURN(!m_szInput.width || !m_szInput.height || m_vecLEA.size() != m_szInput.height, COMPV_ERROR_CODE_E_INVALID_STATE);
 
 	points.clear();
 
@@ -130,7 +118,6 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::extract(std::vect
 		COMPV_CHECK_CODE_RETURN(count_points(
 			ptrxNa,
 			m_vecLEA,
-			m_ptr32sA,
 			ystart,
 			yend)
 		);
@@ -151,14 +138,13 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::extract(std::vect
 		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float32_t>(&points[na - 1], 2, count));
 	}
 	std::vector<compv_ccl_accumulator_t > szFilled(m_nNa1, 0);
-	const int32_t* A = m_ptr32sA->ptr<const int32_t>(0, 0);
 	auto funcPtrFill = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
 		compv_ccl_lea_1_t::const_iterator it;
 		for (size_t j = ystart; j < yend; ++j) {
 			const compv_ccl_lea_1_t& lea = m_vecLEA[j];
 			const compv_float32_t y32f = static_cast<compv_float32_t>(j);
 			for (it = lea.begin(); it < lea.end(); ++it) {
-				const int32_t a = (A[it->ea] - 1); // a within [1, na]
+				const int32_t a = (it->a - 1); // a within [1, na]
 				CompVMatPtr& pp = points[a];
 				const size_t count = static_cast<size_t>(it->end - it->start);
 				const size_t count4 = count & -4;
@@ -228,12 +214,10 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::newObj(CompVConne
 static COMPV_ERROR_CODE count_points(
 	CompVMemZeroLockedAccumulatorPtr ptrxNa,
 	const compv_ccl_lea_n_t& vecLEA,
-	const CompVMatPtr& ptr32sA,
 	const size_t ystart,
 	const size_t yend)
 {
 	compv_ccl_accumulator_t* naPtr = ptrxNa->ptr(0, 0);
-	const int32_t* A = ptr32sA->ptr<const int32_t>(0, 0);
 
 	// #3 and #5 merged 
 	// step #3: First absolute labeling
@@ -242,9 +226,8 @@ static COMPV_ERROR_CODE count_points(
 	for (size_t j = ystart; j < yend; ++j) {
 		const compv_ccl_lea_1_t& lea = vecLEA[j];
 		for (it = lea.begin(); it < lea.end(); ++it) {
-			const int32_t a = (A[it->ea] - 1); // a within [1, na]
 			const compv_ccl_accumulator_t v = (it->end - it->start);
-			compv_atomic_add(&naPtr[a], v);
+			compv_atomic_add(&naPtr[it->a - 1], v); // a within [1, na]
 		}
 	}
 

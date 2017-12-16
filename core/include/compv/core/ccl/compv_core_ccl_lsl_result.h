@@ -22,7 +22,7 @@ static const int32_t kCompVConnectedComponentLabelingLSLBachgroundLabel = 0; // 
 
 typedef std::vector<CompVRangeInt16 > compv_ccl_rlc_t;
 struct compv_ccl_range_t {
-	int32_t ea;
+	int32_t a; // = A[ERA[er]] within [1, na]. /!\ IMPORTANT: not zero-based
 	int16_t start; // RLC[er - 1]
 	int16_t end; // RLC[er]
 };
@@ -50,7 +50,6 @@ public:
 
 	COMPV_INLINE int32_t& na1() { return m_nNa1; }
 	COMPV_INLINE compv_ccl_lea_n_t& vecLEA() { return m_vecLEA; }
-	COMPV_INLINE CompVMatPtr& ptr32sA() { return m_ptr32sA; }
 	COMPV_INLINE CompVSizeSz& szInput() { return m_szInput; }
 
 	COMPV_ERROR_CODE reset();
@@ -60,7 +59,6 @@ public:
 private:
 	int32_t m_nNa1; // final number of absolute labels
 	compv_ccl_lea_n_t m_vecLEA; // an associative table holding the association between er and ea: ea = ERAi[er]
-	CompVMatPtr m_ptr32sA; // the associative table of ancestors
 	CompVSizeSz m_szInput;
 };
 

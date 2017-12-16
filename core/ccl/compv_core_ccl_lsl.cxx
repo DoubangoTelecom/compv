@@ -442,11 +442,12 @@ static COMPV_ERROR_CODE build_EQ(const size_t ner_sum, CompVMatPtrPtr ptr32sEQ)
 }
 
 // MT-friendly
-static COMPV_ERROR_CODE build_LEA(const CompVMatPtr& ptr16sNer, const CompVMemZero32sPtr& ptr32sERA, const CompVMatPtr& ptr16sRLC, compv_ccl_lea_n_t& vecLEA, const size_t start, const size_t end)
+static COMPV_ERROR_CODE build_LEA(const CompVMatPtr& ptr16sNer, const CompVMemZero32sPtr& ptr32sERA, const CompVMatPtr& ptr16sRLC, const CompVMatPtr& ptr32sA, compv_ccl_lea_n_t& vecLEA, const size_t start, const size_t end)
 {	
 	const int16_t* ner = ptr16sNer->ptr<const int16_t>(0, 0);
 	int32_t* ERAi = ptr32sERA->ptr(start);
 	const int16_t* RLC = ptr16sRLC->ptr<const int16_t>(start);
+	const int32_t* A = ptr32sA->ptr<const int32_t>(0, 0);
 	const size_t ERA_stride = ptr32sERA->stride();
 	const size_t RLC_stride = ptr16sRLC->stride();
 
@@ -457,7 +458,7 @@ static COMPV_ERROR_CODE build_LEA(const CompVMatPtr& ptr16sNer, const CompVMemZe
 		compv_ccl_lea_1_t& lea = vecLEA[j];
 		lea.resize(ner0j >> 1);
 		for (er = 1, it_lea = lea.begin(); er < ner0j; er += 2, ++it_lea) {
-			it_lea->ea = ERAi[er];
+			it_lea->a = A[ERAi[er]];
 			it_lea->start = RLC[er - 1];
 			it_lea->end = RLC[er];
 		}
@@ -505,7 +506,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 	CompVMemZero32sPtr ptr32sERA; // an associative table holding the association between er and ea: ea = ERAi[er]
 	compv_ccl_lea_n_t& vecLEA = result_->vecLEA();
 	CompVMatPtr ptr32sEQ; // the table holding the equivalence classes, before transitive closure
-	CompVMatPtr& ptr32sA = result_->ptr32sA(); // the associative table of ancestors
+	CompVMatPtr ptr32sA; // the associative table of ancestors
 	int32_t nea1 = 0; // the current number of absolute labels, update of EQ and ERAi
 	int32_t& na1 = result_->na1(); // final number of absolute labels
 
@@ -583,12 +584,21 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 		minSamplePerThreadStep20
 	));
 	
-	/* Equivalence construction: step#2.1 (not MT-friendly) */
+	/* Equivalence construction: step#2.1 (MT-unfriendly) */
 	step21_algo14_equivalence_build(
 		ptr16sNer,
 		ptr32sERA,
 		ptr32sEQ,
 		&nea1
+	);
+
+	/* Equivalence resolution: step#4 (MT-unfriendly) */
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int32_t>(&ptr32sA, 1, (nea1 + 1))); // +1 for background which is "0"
+	*ptr32sA->ptr<int32_t>(0, 0) = 0; // other values will be initialzed in step4_algo6_eq_resolv
+	step4_algo6_eq_resolv(
+		ptr32sEQ,
+		ptr32sA,
+		&na1
 	);
 
 	/* Build LEA (MT friendly) */
@@ -598,6 +608,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 			ptr16sNer,
 			ptr32sERA,
 			ptr16sRLC,
+			ptr32sA,
 			vecLEA,
 			mt_start,
 			mt_end
@@ -610,15 +621,6 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 		szInputSize.height,
 		COMPV_CCL_LSL_BUILD_LEA_MIN_SAMPLES_PER_THREAD
 	));
-
-	/* Equivalence resolution: step#4 */
-	COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int32_t>(&ptr32sA, 1, (nea1 + 1))); // +1 for background which is "0"
-	*ptr32sA->ptr<int32_t>(0, 0) = 0; // other values will be initialzed in step4_algo6_eq_resolv
-	step4_algo6_eq_resolv(
-		ptr32sEQ,
-		ptr32sA,
-		&na1
-	);
 	
 	*result = *result_;
 	return COMPV_ERROR_CODE_S_OK;
