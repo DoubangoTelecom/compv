@@ -572,7 +572,8 @@ private:
     COMPV_SUBTYPE m_eSubType;
 };
 
-COMPV_GCC_DISABLE_WARNINGS_END()
+typedef std::vector<CompVMatPtr> CompVMatPtrVector;
+
 COMPV_GCC_DISABLE_WARNINGS_END()
 
 COMPV_NAMESPACE_END()

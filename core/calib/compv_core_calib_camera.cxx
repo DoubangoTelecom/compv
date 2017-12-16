@@ -748,7 +748,7 @@ COMPV_ERROR_CODE CompVCalibCamera::calibrate(CompVCalibContex& context)
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Reproj error before levmarq: %f", context.reproj_error);
 	if (context.levenberg_marquardt) {
 		CompVMatPtr levmarq_K, levmarq_d;
-		std::vector<CompVMatPtr> levmarq_R, levmarq_t;
+		CompVMatPtrVector levmarq_R, levmarq_t;
 		compv_float64_t levmarq_error;
 		COMPV_CHECK_CODE_RETURN(levmarq(context, &levmarq_K, &levmarq_d, levmarq_R, levmarq_t));
 		COMPV_CHECK_CODE_RETURN(CompVCalibUtils::proj2DError(context.planes, levmarq_K, levmarq_d, levmarq_R, levmarq_t, levmarq_error));
@@ -762,7 +762,7 @@ COMPV_ERROR_CODE CompVCalibCamera::calibrate(CompVCalibContex& context)
 			context.reproj_error = levmarq_error;
 			context.K = levmarq_K; // Camera matrix (fx, fy, cx, cy, skew)
 			context.d = levmarq_d; // Distorsion coefficients (k1, k2, p1, p2)
-			std::vector<CompVMatPtr>::const_iterator it_R = levmarq_R.begin(), it_t = levmarq_t.begin();
+			CompVMatPtrVector::const_iterator it_R = levmarq_R.begin(), it_t = levmarq_t.begin();
 			CompVCalibCameraPlanVector::iterator it_planes = context.planes.begin();
 			for (; it_planes < context.planes.end(); ++it_planes, ++it_R, ++it_t) {
 				it_planes->R = *it_R; // Rotation matrices (3x3)
@@ -1017,7 +1017,7 @@ COMPV_ERROR_CODE CompVCalibCamera::homography(const CompVCalibCameraPlan& plan, 
 // Parameters refinement:
 //	- [2] 3.6 Step 5: Refining all parameters
 //	- [2] 3.6.3 Non-linear optimization
-COMPV_ERROR_CODE CompVCalibCamera::levmarq(const CompVCalibContex& context, CompVMatPtrPtr K, CompVMatPtrPtr d, std::vector<CompVMatPtr>& R, std::vector<CompVMatPtr>& t)
+COMPV_ERROR_CODE CompVCalibCamera::levmarq(const CompVCalibContex& context, CompVMatPtrPtr K, CompVMatPtrPtr d, CompVMatPtrVector& R, CompVMatPtrVector& t)
 {
 	const size_t nplanes = context.planes.size();
 	const bool have_skew = context.compute_skew;

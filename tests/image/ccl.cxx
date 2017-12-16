@@ -64,12 +64,12 @@ COMPV_ERROR_CODE ccl()
 
 	CompVMatPtr ptr32sLabels, ptr8uRestored;
 	CompVConnectedComponentLabelingResultPtr result;
-	std::vector<CompVMatPtr> points; // FIXME(dmi): remove
+	CompVMatPtrVector points; // FIXME(dmi): remove
 
 	const uint64_t timeStart = CompVTime::nowMillis();
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
 		COMPV_CHECK_CODE_RETURN(ccl_obj->process(binar, &result));
-		COMPV_CHECK_CODE_RETURN(result->extract(points)); // FIXME(dmi): remove
+		COMPV_CHECK_CODE_RETURN(result->extract(points, COMPV_CCL_EXTRACT_TYPE_CONTOUR)); // FIXME(dmi): remove
 	}
 	const uint64_t timeEnd = CompVTime::nowMillis();
 	COMPV_DEBUG_INFO("Elapsed time (TestConnectedComponentLabeling) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
@@ -95,14 +95,14 @@ COMPV_ERROR_CODE ccl()
 
 static COMPV_ERROR_CODE blitPoints(const CompVConnectedComponentLabelingResultPtr& result, const size_t binarWidth, const size_t binarHeight, CompVMatPtrPtr output)
 {
-	std::vector<CompVMatPtr> points;
-	COMPV_CHECK_CODE_RETURN(result->extract(points));
+	CompVMatPtrVector points;
+	COMPV_CHECK_CODE_RETURN(result->extract(points, COMPV_CCL_EXTRACT_TYPE_BLOB));
 
 	CompVMatPtr imageOut = *output;
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<uint8_t>(&imageOut, binarHeight, binarWidth));
 	COMPV_CHECK_CODE_RETURN(imageOut->zero_all());
 
-	for (std::vector<CompVMatPtr>::const_iterator i = points.begin(); i < points.end(); ++i) {
+	for (CompVMatPtrVector::const_iterator i = points.begin(); i < points.end(); ++i) {
 		const compv_float32_t* x32f = (*i)->ptr<const compv_float32_t>(0);
 		const compv_float32_t* y32f = (*i)->ptr<const compv_float32_t>(1);
 		const size_t count = (*i)->cols();

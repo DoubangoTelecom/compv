@@ -25,6 +25,17 @@ using namespace compv;
 #define MORPH_BORDER_TYPE			COMPV_BORDER_TYPE_REPLICATE
 #define MORPH_OPERATOR				COMPV_MATH_MORPH_OP_TYPE_CLOSE
 
+#define CCL_ID						COMPV_PLSL_ID // Parallel Light Speed Labeling
+
+static const compv_float32x4_t __color_red = { 1.f, 0.f, 0.f, 1.f };
+static const compv_float32x4_t __color_green = { 0.f, 1.f, 0.f, 1.f };
+static const compv_float32x4_t __color_blue = { 0.f, 0.f, 1.f, 1.f };
+static const compv_float32x4_t __color_yellow = { 1.f, 1.f, 0.f, 1.f };
+static const compv_float32x4_t __color_tomato = { 1.f, .388f, .278f, 1.f };
+static const compv_float32x4_t __color_violet = { .933f, .509f, .933f, 1.f };
+static const compv_float32x4_t* __colors[] = { &__color_red , &__color_green , &__color_blue, &__color_yellow, &__color_tomato, &__color_violet };
+static const size_t __colors_count = sizeof(__colors) / sizeof(__colors[0]);
+
 #define TAG_SAMPLE			"Text recognition"
 
 typedef std::function<COMPV_ERROR_CODE()> FuncPtr;
@@ -39,12 +50,22 @@ compv_main()
 		std::string path;
 		CompVMatPtr image, structuringElement;
 		FuncPtr funcPtrProcessStart, funcPtrProcessStop;
+		CompVDrawingOptions drawingOptions;
+		CompVConnectedComponentLabelingResultPtr ccl_result;
+		CompVConnectedComponentLabelingPtr ccl_obj;
+		CompVMatPtrVector points;
 
 		// Change debug level to INFO before starting
 		CompVDebugMgr::setLevel(COMPV_DEBUG_LEVEL_INFO);
 
 		// Init the modules
 		COMPV_CHECK_CODE_BAIL(err = CompVInit());
+
+		// Set drawing options
+		drawingOptions.colorType = COMPV_DRAWING_COLOR_TYPE_STATIC;
+		drawingOptions.lineWidth = 1.f;
+		drawingOptions.fontSize = 12;
+		drawingOptions.pointSize = 1.f;
 
 		// Create "Hello world!" window and add a surface for drawing
 		COMPV_CHECK_CODE_BAIL(err = CompVWindow::newObj(&window, WINDOW_WIDTH, WINDOW_HEIGHT, TAG_SAMPLE));
@@ -71,17 +92,33 @@ compv_main()
 		// Composite morphological operation: close
 		COMPV_CHECK_CODE_BAIL(err = CompVMathMorph::buildStructuringElement(&structuringElement, MORPH_STREL_SIZE, MORPH_STREL_TYPE));
 		COMPV_CHECK_CODE_RETURN(CompVMathMorph::process(image, structuringElement, &image, MORPH_OPERATOR, MORPH_BORDER_TYPE));
+		
+		// Blob extraction
+		COMPV_CHECK_CODE_RETURN(CompVConnectedComponentLabeling::newObj(&ccl_obj, CCL_ID));
+		if (CCL_ID == COMPV_PLSL_ID) {
+			COMPV_CHECK_CODE_RETURN(ccl_obj->setInt(COMPV_PLSL_SET_INT_TYPE, COMPV_PLSL_TYPE_STD));
+		}
+		COMPV_CHECK_CODE_RETURN(ccl_obj->process(image, &ccl_result));
+		COMPV_CHECK_CODE_RETURN(ccl_result->extract(points)); // FIXME(dmi): probably no need to extract data
 
 		funcPtrProcessStart = [&]() -> COMPV_ERROR_CODE {
 			COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 			double delta = 0;
-			
+			CompVCanvasPtr canvas;
+			size_t color_index = 0;
 			while (CompVDrawing::isLoopRunning()) {
 				// Put here something you want to before drawing each frame to the screen
 
 				// Drawing
 				COMPV_CHECK_CODE_BAIL(err = window->beginDraw());
 				COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->cover()->drawImage(image));
+				canvas = singleSurfaceLayer->cover()->renderer()->canvas();
+				// FIXME(dmi): draw all the vector once
+				COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Draw all points (vector) once");
+				for (CompVMatPtrVector::const_iterator i = points.begin(); i < points.end(); ++i) {
+					drawingOptions.setColor(*__colors[color_index++ % __colors_count]);
+					COMPV_CHECK_CODE_BAIL(err = canvas->drawPoints(*i, &drawingOptions));
+				}
 				COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->blit());
 			bail:
 				COMPV_CHECK_CODE_NOP(err = window->endDraw()); // Make sure 'endDraw()' will be called regardless the result

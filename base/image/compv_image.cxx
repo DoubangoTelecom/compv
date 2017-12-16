@@ -156,7 +156,7 @@ COMPV_ERROR_CODE CompVImage::crop(const CompVMatPtr& imageIn, const CompVRectFlo
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVImage::split(const CompVMatPtr& imageIn, std::vector<CompVMatPtr>& outputs)
+COMPV_ERROR_CODE CompVImage::split(const CompVMatPtr& imageIn, CompVMatPtrVector& outputs)
 {
 	COMPV_CHECK_EXP_RETURN(!imageIn || imageIn->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 

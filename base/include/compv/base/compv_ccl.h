@@ -28,6 +28,11 @@ struct CompVConnectedComponentLabelingFactory {
 	COMPV_ERROR_CODE(*newObj)(CompVConnectedComponentLabelingPtrPtr ccl);
 };
 
+enum COMPV_CCL_EXTRACT_TYPE {
+	COMPV_CCL_EXTRACT_TYPE_CONTOUR, // external contour only (TODO(dmi): contour extraction using PLSL not correct -> use canny followed by blob extraction)
+	COMPV_CCL_EXTRACT_TYPE_BLOB // everything
+};
+
 /* Connected component labeling setters and getters */
 enum {
 	/* Common to all features */
@@ -85,7 +90,7 @@ public:
 		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
 		return COMPV_ERROR_CODE_S_OK;
 	}
-	virtual COMPV_ERROR_CODE extract(std::vector<CompVMatPtr>& points) const {
+	virtual COMPV_ERROR_CODE extract(CompVMatPtrVector& points, COMPV_CCL_EXTRACT_TYPE type = COMPV_CCL_EXTRACT_TYPE_BLOB) const {
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("If you just want to compute the label features (e.g. centroid, bounding boxes, first order moment...) then, you don't need to extract the points");
 		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
 		return COMPV_ERROR_CODE_S_OK;

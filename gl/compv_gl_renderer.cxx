@@ -531,6 +531,7 @@ COMPV_ERROR_CODE CompVGLRenderer::deInit()
     }
     m_uTexturesCount = 0;
 
+	m_ptrCanvas = nullptr; // Will be created with the right FBO next time the user calls canvas() function
     m_bInit = false;
     return COMPV_ERROR_CODE_S_OK;
 }

@@ -369,7 +369,7 @@ COMPV_ERROR_CODE CompVCalibUtils::proj2DError(const CompVCalibContex& context, c
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVCalibUtils::proj2DError(const CompVCalibCameraPlanVector& planes, const CompVMatPtr& K, const CompVMatPtr& d, const std::vector<CompVMatPtr>& R, const std::vector<CompVMatPtr>& t, compv_float64_t& error)
+COMPV_ERROR_CODE CompVCalibUtils::proj2DError(const CompVCalibCameraPlanVector& planes, const CompVMatPtr& K, const CompVMatPtr& d, const CompVMatPtrVector& R, const CompVMatPtrVector& t, compv_float64_t& error)
 {
 	COMPV_CHECK_EXP_RETURN(planes.empty() || !K || !d || R.empty() || t.empty() || R.size() != t.size(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
@@ -380,8 +380,8 @@ COMPV_ERROR_CODE CompVCalibUtils::proj2DError(const CompVCalibCameraPlanVector& 
 	size_t i;
 	CompVMatPtr intersections;
 	CompVPointFloat32Vector::const_iterator it_intersections;
-	std::vector<CompVMatPtr>::const_iterator it_R = R.begin();
-	std::vector<CompVMatPtr>::const_iterator it_t = t.begin();
+	CompVMatPtrVector::const_iterator it_R = R.begin();
+	CompVMatPtrVector::const_iterator it_t = t.begin();
 	compv_float64_t e;
 
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float64_t>(&intersections,

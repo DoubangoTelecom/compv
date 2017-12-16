@@ -12,31 +12,18 @@ using namespace compv;
 #define WINDOW_WIDTH		1280
 #define WINDOW_HEIGHT		720
 
-#define CCL_ID				COMPV_PLSL_ID // Light Speed Labeling
+#define CCL_ID				COMPV_PLSL_ID // Parallel Light Speed Labeling
+
+static const compv_float32x4_t __color_red = { 1.f, 0.f, 0.f, 1.f };
+static const compv_float32x4_t __color_green = { 0.f, 1.f, 0.f, 1.f };
+static const compv_float32x4_t __color_blue = { 0.f, 0.f, 1.f, 1.f };
+static const compv_float32x4_t __color_yellow = { 1.f, 1.f, 0.f, 1.f };
+static const compv_float32x4_t __color_tomato = { 1.f, .388f, .278f, 1.f };
+static const compv_float32x4_t __color_violet = { .933f, .509f, .933f, 1.f };
+static const compv_float32x4_t* __colors[] = { &__color_red , &__color_green , &__color_blue, &__color_yellow, &__color_tomato, &__color_violet };
+static const size_t __colors_count = sizeof(__colors) / sizeof(__colors[0]);
 
 #define TAG_SAMPLE			"Connected Component Labeling"
-
-static COMPV_ERROR_CODE FIXME_extract_label(const CompVConnectedComponentLabelingPtr& ccl_obj, const CompVConnectedComponentLabelingResult& ccl_result, const int label, CompVMatPtrPtr image)
-{
-	const size_t width = ccl_result.labels->cols();
-	const size_t height = ccl_result.labels->rows();
-	const size_t stride = ccl_result.labels->stride();
-
-	CompVMatPtr imageOut;
-	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<uint8_t>(image, height, width, stride));
-
-	const compv_ccl_indice_t* labelsPtr = ccl_result.labels->ptr<const compv_ccl_indice_t>();
-	uint8_t* imageOutPtr = (*image)->ptr<uint8_t>();
-
-	for (size_t j = 0; j < height; ++j) {
-		for (size_t i = 0; i < width; ++i) {
-			imageOutPtr[i] = (labelsPtr[i] == label) ? 0xff : 0x00;
-		}
-		labelsPtr += stride;
-		imageOutPtr += stride;
-	}
-	return COMPV_ERROR_CODE_S_OK;
-}
 
 /* Entry point function */
 compv_main()
@@ -48,17 +35,24 @@ compv_main()
 		CompVCameraPtr camera;
 		CompVCameraDeviceInfoList devices;
 		std::string cameraId = ""; // empty string means default
-
+		CompVDrawingOptions drawingOptions;
 		CompVMatPtr imageBinar, blob;
-		CompVConnectedComponentLabelingResult ccl_result;
+		CompVConnectedComponentLabelingResultPtr ccl_result;
 		CompVConnectedComponentLabelingPtr ccl_obj;
-		double threshold;
+		CompVCameraCallbackOnNewFrame funcPtrOnNewFrame;
+		double threshold = 0.0;
 
 		// Change debug level to INFO before starting
 		CompVDebugMgr::setLevel(COMPV_DEBUG_LEVEL_INFO);
 
 		// Init the modules
 		COMPV_CHECK_CODE_BAIL(err = CompVInit());
+
+		// Set drawing options
+		drawingOptions.colorType = COMPV_DRAWING_COLOR_TYPE_STATIC;
+		drawingOptions.lineWidth = 1.f;
+		drawingOptions.fontSize = 12;
+		drawingOptions.pointSize = 1.f;
 
 		// Create window and add a surface for drawing
 		COMPV_CHECK_CODE_BAIL(err = CompVWindow::newObj(&window, WINDOW_WIDTH, WINDOW_HEIGHT, TAG_SAMPLE));
@@ -87,27 +81,38 @@ compv_main()
 		}
 
 		// Add 'OnNewFrame' callback to the camera
-		COMPV_CHECK_CODE_BAIL(err = camera->setCallbackOnNewFrame([&](const CompVMatPtr& image) -> COMPV_ERROR_CODE {
+		funcPtrOnNewFrame = [&](const CompVMatPtr& image) -> COMPV_ERROR_CODE {
 			COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
-			static int __label = 0;
+			CompVCanvasPtr canvas;
+			CompVMatPtrVector points;
+			size_t color_index = 0;
 			if (CompVDrawing::isLoopRunning()) {
 				COMPV_CHECK_CODE_RETURN(CompVImage::convertGrayscale(image, &imageBinar));
+				//COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 1285, 1285, 1285, "C:/Projects/GitHub/data/morpho/diffract_1285x1285_gray.yuv", &imageBinar));
+				COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 1285, 803, 1285, "C:/Projects/GitHub/data/morpho/dummy_1285x803_gray.yuv", &imageBinar));
+				//COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 800, 600, 800, "C:/Projects/GitHub/data/morpho/labyrinth_800x600_gray.yuv", &imageBinar));
+				//COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 800, 600, 800, "C:/Projects/GitHub/data/morpho/checker_800x600_gray.yuv", &imageBinar));
 				COMPV_CHECK_CODE_RETURN(CompVImageThreshold::otsu(imageBinar, threshold, &imageBinar));
-				COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 1285, 1285, 1285, "C:/Projects/GitHub/data/morpho/diffract_1285x1285_gray.yuv", &imageBinar));
-				//COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 1285, 803, 1285, "C:/Projects/GitHub/data/morpho/dummy_1285x803_gray.yuv", &imageBinar));
-				COMPV_CHECK_CODE_RETURN(ccl_obj->process(imageBinar, ccl_result));
-				COMPV_CHECK_CODE_RETURN(FIXME_extract_label(ccl_obj, ccl_result, (++__label % ccl_result.labels_count), &blob));
-				COMPV_DEBUG_INFO_EX(TAG_SAMPLE, "label = %d", __label);
+				COMPV_CHECK_CODE_RETURN(ccl_obj->process(imageBinar, &ccl_result));
+				COMPV_CHECK_CODE_RETURN(ccl_result->extract(points, COMPV_CCL_EXTRACT_TYPE_CONTOUR));
 
 				COMPV_CHECK_CODE_BAIL(err = window->beginDraw());
-				COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->cover()->drawImage(blob/*imageBinar*/));
+				COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->cover()->drawImage(imageBinar));
+				canvas = singleSurfaceLayer->cover()->renderer()->canvas();
+				// FIXME(dmi): draw all the vector once
+				COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Draw all points (vector) once");
+				for (CompVMatPtrVector::const_iterator i = points.begin(); i < points.end(); ++i) {
+					drawingOptions.setColor(*__colors[color_index++ % __colors_count]);
+					COMPV_CHECK_CODE_BAIL(err = canvas->drawPoints(*i, &drawingOptions));
+				}
 				COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->blit());
 			bail:
 				COMPV_CHECK_CODE_NOP(err = window->endDraw()); // Make sure 'endDraw()' will be called regardless the result
 			}
-			getchar();
+			//getchar();
 			return err;
-		}));
+		};
+		COMPV_CHECK_CODE_BAIL(err = camera->setCallbackOnNewFrame(funcPtrOnNewFrame));
 
 		// Add 'OnError' callback to the camera
 		COMPV_CHECK_CODE_BAIL(err = camera->setCallbackOnError([&](const std::string& message) -> COMPV_ERROR_CODE {

@@ -154,7 +154,7 @@ COMPV_ERROR_CODE CompVMathHistogram::process_8u32u(const uint8_t* dataPtr, size_
 
 	if (threadsCount > 1) {
 		size_t threadIdx, padding;
-		std::vector<CompVMatPtr> mt_histograms;
+		CompVMatPtrVector mt_histograms;
 		const size_t countAny = (height / threadsCount);
 		const size_t countLast = countAny + (height % threadsCount);
 		auto funcPtr = [&](const uint8_t* mt_dataPtr, size_t mt_height, size_t mt_threadIdx) -> COMPV_ERROR_CODE {

@@ -34,6 +34,7 @@ public:
 	virtual COMPV_ERROR_CODE drawLines(const CompVPointFloat32Vector& points, const CompVDrawingOptions* options = nullptr) = 0;
 	virtual COMPV_ERROR_CODE drawRectangles(const CompVRectFloat32Vector& rects, const CompVDrawingOptions* options = nullptr) = 0; // rectangle with square angles, for arbitrary angles use drawLines
 	virtual COMPV_ERROR_CODE drawPoints(const CompVPointFloat32Vector& points, const CompVDrawingOptions* options = nullptr) = 0;
+	virtual COMPV_ERROR_CODE drawPoints(const CompVMatPtr& points, const CompVDrawingOptions* options = nullptr) = 0;
 	virtual COMPV_ERROR_CODE drawInterestPoints(const CompVInterestPointVector& interestPoints, const CompVDrawingOptions* options = nullptr) = 0;
 	virtual bool haveDrawTexts()const = 0;
 };

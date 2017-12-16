@@ -107,7 +107,7 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVMatPtr &src, const CompVMat
 
 	if (threadsCount_ > 1) {
 		std::vector<T> variances_(threadsCount_); // variance used when number of inliers are equal
-		std::vector<CompVMatPtr> inliers_(threadsCount_);
+		CompVMatPtrVector inliers_(threadsCount_);
 		CompVAsyncTaskIds taskIds;
 		taskIds.reserve(threadsCount_);
 		auto funcPtr = [&](const CompVMatPtr &src, const CompVMatPtr &dst, size_t threadIdx_) -> COMPV_ERROR_CODE {

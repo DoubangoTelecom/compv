@@ -43,7 +43,7 @@ public:
 	virtual int32_t backgroundLabelId() const override { return kCompVConnectedComponentLabelingLSLBachgroundLabel; }
 	virtual size_t labelsCount() const override;
 	virtual COMPV_ERROR_CODE debugFlatten(CompVMatPtrPtr ptr32sLabels) const override;
-	virtual COMPV_ERROR_CODE extract(std::vector<CompVMatPtr>& points) const override;
+	virtual COMPV_ERROR_CODE extract(CompVMatPtrVector& points, COMPV_CCL_EXTRACT_TYPE type = COMPV_CCL_EXTRACT_TYPE_BLOB) const override;
 
 	virtual COMPV_ERROR_CODE boundingBoxes() const override;
 	virtual COMPV_ERROR_CODE firstOrderMoment() const override;

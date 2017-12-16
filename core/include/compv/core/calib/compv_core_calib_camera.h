@@ -39,7 +39,7 @@ private:
 	COMPV_ERROR_CODE lineBestFit(const CompVLineFloat32Vector& points_cartesian, const CompVHoughLineVector& points_hough, CompVLineFloat32& line);
 	COMPV_ERROR_CODE buildPatternCorners(const CompVCalibContex& context);
 	COMPV_ERROR_CODE homography(const CompVCalibCameraPlan& plan, CompVHomographyResult& result_homography, CompVMatPtrPtr homographyMat);
-	COMPV_ERROR_CODE levmarq(const CompVCalibContex& context, CompVMatPtrPtr K, CompVMatPtrPtr d, std::vector<CompVMatPtr>& R, std::vector<CompVMatPtr>& t);
+	COMPV_ERROR_CODE levmarq(const CompVCalibContex& context, CompVMatPtrPtr K, CompVMatPtrPtr d, CompVMatPtrVector& R, CompVMatPtrVector& t);
 
 private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
