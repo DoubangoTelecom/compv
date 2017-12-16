@@ -180,15 +180,15 @@ static COMPV_ERROR_CODE count_points_blobs(
 	const size_t yend)
 {
 	compv_ccl_accumulator_t* naPtr = ptrxNa->ptr(0, 0);
-	compv_ccl_lea_1_t::const_iterator it;
-	for (size_t j = ystart; j < yend; ++j) {
-		const compv_ccl_lea_1_t& lea = vecLEA[j];
-		for (it = lea.begin(); it < lea.end(); ++it) {
-			const compv_ccl_accumulator_t v = (it->end - it->start);
-			compv_atomic_add(&naPtr[it->a - 1], v); // a within [1, na]
+	compv_ccl_lea_n_t::const_iterator j = vecLEA.begin() + ystart;
+	compv_ccl_lea_n_t::const_iterator jend = vecLEA.begin() + yend;
+	compv_ccl_lea_1_t::const_iterator i;
+	for (; j < jend; ++j) {
+		for (i = j->begin(); i < j->end(); ++i) {
+			const compv_ccl_accumulator_t v = (i->end - i->start);
+			compv_atomic_add(&naPtr[i->a - 1], v); // a within [1, na]
 		}
 	}
-
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -199,14 +199,14 @@ static COMPV_ERROR_CODE count_points_contours(
 	const size_t yend)
 {
 	compv_ccl_accumulator_t* naPtr = ptrxNa->ptr(0, 0);
-	compv_ccl_lea_1_t::const_iterator it;
-	for (size_t j = ystart; j < yend; ++j) {
-		const compv_ccl_lea_1_t& lea = vecLEA[j];
-		for (it = lea.begin(); it < lea.end(); ++it) {
-			compv_atomic_add(&naPtr[it->a - 1], 2); // a within [1, na]
+	compv_ccl_lea_n_t::const_iterator j = vecLEA.begin() + ystart;
+	compv_ccl_lea_n_t::const_iterator jend = vecLEA.begin() + yend;
+	compv_ccl_lea_1_t::const_iterator i;
+	for (; j < jend; ++j) {
+		for (i = j->begin(); i < j->end(); ++i) {
+			compv_atomic_add(&naPtr[i->a - 1], 2); // a within [1, na]
 		}
 	}
-
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -248,10 +248,11 @@ static COMPV_ERROR_CODE extract_blobs(
 	std::vector<compv_ccl_accumulator_t > szFilled(na, 0);
 	auto funcPtrFill = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
 		compv_ccl_lea_1_t::const_iterator it;
-		for (size_t j = ystart; j < yend; ++j) {
-			const compv_ccl_lea_1_t& lea = vecLEA[j];
-			const compv_float32_t y32f = static_cast<compv_float32_t>(j);
-			for (it = lea.begin(); it < lea.end(); ++it) {
+		compv_ccl_lea_n_t::const_iterator j = vecLEA.begin() + ystart;
+		compv_ccl_lea_n_t::const_iterator jend = vecLEA.begin() + yend;
+		compv_float32_t y32f = static_cast<compv_float32_t>(ystart);
+		for (; j < jend; ++j, ++y32f) {
+			for (it = j->begin(); it < j->end(); ++it) {
 				const int32_t a = (it->a - 1); // a within [1, na]
 				CompVMatPtr& pp = points[a];
 				const size_t count = static_cast<size_t>(it->end - it->start);
