@@ -20,13 +20,8 @@ COMPV_NAMESPACE_BEGIN()
 
 static const int32_t kCompVConnectedComponentLabelingLSLBachgroundLabel = 0; // Must be zero because of calloc()
 
-#if COMPV_OS_WINDOWS
-typedef LONG compv_ccl_accumulator_t; /* InterlockedDecrement/InterlockedIncrement requires LONG */
-#else
-typedef int compv_ccl_accumulator_t;
-#endif
-typedef CompVMemZero<compv_ccl_accumulator_t > CompVMemZeroLockedCount;
-typedef CompVPtr<CompVMemZeroLockedCount *> CompVMemZeroLockedCountPtr;
+typedef std::vector<CompVVec32s > compv_ccl_lea_t;
+
 
 COMPV_OBJECT_DECLARE_PTRS(ConnectedComponentLabelingResultLSLImpl);
 
@@ -46,21 +41,21 @@ public:
 	virtual COMPV_ERROR_CODE boundingBoxes() const override;
 	virtual COMPV_ERROR_CODE firstOrderMoment() const override;
 
-	COMPV_INLINE CompVMemZeroLockedCountPtr& ptrxNa() { return m_ptrxNa; }
-	COMPV_INLINE CompVMemZero32sPtr& ptr32sERA() { return m_ptr32sERA; }
+	COMPV_INLINE int32_t& na1() { return m_nNa1; }
+	COMPV_INLINE compv_ccl_lea_t& vec32sLEA() { return m_vec32sLEA; }
 	COMPV_INLINE CompVMatPtr& ptr32sA() { return m_ptr32sA; }
 	COMPV_INLINE CompVMatPtr& ptr16sRLC() { return m_ptr16sRLC; }
-	COMPV_INLINE CompVMatPtr& ptr16sNer() { return m_ptr16sNer; }
 	COMPV_INLINE CompVSizeSz& szInput() { return m_szInput; }
+
+	COMPV_ERROR_CODE reset();
 
 	static COMPV_ERROR_CODE newObj(CompVConnectedComponentLabelingResultLSLImplPtrPtr result);
 
 private:
-	CompVMemZeroLockedCountPtr m_ptrxNa; // final number of absolute labels (only needed to extract points)
-	CompVMemZero32sPtr m_ptr32sERA; // an associative table holding the association between er and ea: ea = ERAi[er]
+	int32_t m_nNa1; // final number of absolute labels
+	compv_ccl_lea_t m_vec32sLEA; // an associative table holding the association between er and ea: ea = ERAi[er]
 	CompVMatPtr m_ptr32sA; // the associative table of ancestors
 	CompVMatPtr m_ptr16sRLC; // a table holding the run length coding of segments of the line Xi, RLCi-1 is the similar memorization of the previous line.
-	CompVMatPtr m_ptr16sNer; // the number of segments of ERi - black + white -
 	CompVSizeSz m_szInput;
 };
 

@@ -95,7 +95,7 @@ CompVGLDrawTexts::~CompVGLDrawTexts()
 #endif
 }
 
-COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const CompVPointFloat32Vector& positions, const CompVDrawingOptions* options COMPV_DEFAULT(nullptr))
+COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVVecString& texts, const CompVPointFloat32Vector& positions, const CompVDrawingOptions* options COMPV_DEFAULT(nullptr))
 {
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 #if HAVE_FREETYPE
@@ -181,7 +181,7 @@ COMPV_ERROR_CODE CompVGLDrawTexts::texts(const CompVStringVector& texts, const C
 
 	// Get number of chars
 	numChars = 0;
-	for (CompVStringVector::const_iterator it_texts = texts.begin(); it_texts < texts.end(); ++it_texts) {
+	for (CompVVecString::const_iterator it_texts = texts.begin(); it_texts < texts.end(); ++it_texts) {
 		numChars += it_texts->size();
 	}
 	if (numChars > maxChars) {
@@ -353,10 +353,10 @@ COMPV_ERROR_CODE CompVGLDrawTexts::freeTypeCreateFace(const std::string fontFull
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVGLDrawTexts::freeTypeFillAtlas(const bool bUtf8, const CompVStringVector& texts, const CompVPointFloat32Vector& positions, CompVMatPtr& ptrAtlas, CompVMatPtr& ptrBoxes, size_t& numChars)
+COMPV_ERROR_CODE CompVGLDrawTexts::freeTypeFillAtlas(const bool bUtf8, const CompVVecString& texts, const CompVPointFloat32Vector& positions, CompVMatPtr& ptrAtlas, CompVMatPtr& ptrBoxes, size_t& numChars)
 {
 	// Internal function, do not check input parameters
-	CompVStringVector::const_iterator it_texts;
+	CompVVecString::const_iterator it_texts;
 	CompVPointFloat32Vector::const_iterator it_positions;
 	uint8_t *atlas_buffer, *bitmap_buffer;
 

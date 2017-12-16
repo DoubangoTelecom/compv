@@ -187,7 +187,8 @@ typedef compv_float32_t compv_float32x4_t[4];
 typedef compv_float64_t compv_float64x3_t[3];
 typedef uint8_t compv_uint8x3_t[3];
 typedef uint8_t compv_uint8x4_t[4];
-typedef std::vector<std::string> CompVStringVector;
+typedef std::vector<std::string> CompVVecString;
+typedef std::vector<int32_t> CompVVec32s;
 
 enum COMPV_DEBUG_LEVEL {
 	COMPV_DEBUG_LEVEL_VERBOSE = 5,

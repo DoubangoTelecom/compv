@@ -36,7 +36,7 @@ public:
     }
 
 	virtual COMPV_ERROR_CODE clear(const CompVDrawingOptions* options = nullptr) override /*Overrides(CompVCanvas)*/;
-    virtual COMPV_ERROR_CODE drawTexts(const CompVStringVector& texts, const CompVPointFloat32Vector& positions, const CompVDrawingOptions* options = nullptr) override /*Overrides(CompVCanvas)*/;
+    virtual COMPV_ERROR_CODE drawTexts(const CompVVecString& texts, const CompVPointFloat32Vector& positions, const CompVDrawingOptions* options = nullptr) override /*Overrides(CompVCanvas)*/;
 	virtual COMPV_ERROR_CODE drawLines(const CompVLineFloat32Vector& lines, const CompVDrawingOptions* options = nullptr) override /*Overrides(CompVCanvas)*/;
 	virtual COMPV_ERROR_CODE drawLines(const CompVPointFloat32Vector& points, const CompVDrawingOptions* options = nullptr) override /*Overrides(CompVCanvas)*/;
 	virtual COMPV_ERROR_CODE drawRectangles(const CompVRectFloat32Vector& rects, const CompVDrawingOptions* options = nullptr) override /*Overrides(CompVCanvas)*/;

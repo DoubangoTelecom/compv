@@ -45,7 +45,7 @@ bail:
 }
 
 // Public override
-COMPV_ERROR_CODE CompVGLCanvas::drawTexts(const CompVStringVector& texts, const CompVPointFloat32Vector& positions, const CompVDrawingOptions* options COMPV_DEFAULT(nullptr)) /*Overrides(CompVCanvasInterface)*/
+COMPV_ERROR_CODE CompVGLCanvas::drawTexts(const CompVVecString& texts, const CompVPointFloat32Vector& positions, const CompVDrawingOptions* options COMPV_DEFAULT(nullptr)) /*Overrides(CompVCanvasInterface)*/
 {
 	if (positions.empty()) {
 		return COMPV_ERROR_CODE_S_OK;

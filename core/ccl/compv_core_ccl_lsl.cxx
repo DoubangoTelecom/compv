@@ -23,6 +23,8 @@ Some literature about LSL:
 #include "compv/core/ccl/intrin/x86/compv_core_ccl_lsl_intrin_ssse3.h"
 #include "compv/core/ccl/intrin/x86/compv_core_ccl_lsl_intrin_avx2.h"
 
+#include <numeric> /* std::iota */
+
 #define COMPV_CCL_LSL_STEP1_MIN_SAMPLES_PER_THREAD	(20*20)
 #define COMPV_CCL_LSL_STEP20_MIN_SAMPLES_PER_THREAD	(30*30)
 
@@ -358,8 +360,12 @@ static void step20_algo14_equivalence_build(const CompVMatPtr& ptr16sER, const C
 
 // 2.2 Equivalence construction: step#2.1 (not MT friendly)
 // Algorithm 14: LSL equivalence construction
-static void step21_algo14_equivalence_build(const CompVMatPtr& ptr16sNer, CompVMemZero32sPtr ptr32sERA, CompVMatPtr ptr32sEQ, int32_t* nea1)
+static void step21_algo14_equivalence_build(const CompVMatPtr& ptr16sNer, CompVMemZero32sPtr ptr32sERA, CompVMatPtr ptr32sEQ, compv_ccl_lea_t& vec32sLEA, int32_t* nea1)
 {
+	const size_t rows = ptr32sERA->rows();
+	
+	vec32sLEA.resize(rows);
+
 	const int16_t* ner = ptr16sNer->ptr<const int16_t>(0, 0);
 	const int16_t ner00 = ner[0];
 	int32_t* ERA0 = ptr32sERA->ptr(0);
@@ -367,16 +373,20 @@ static void step21_algo14_equivalence_build(const CompVMatPtr& ptr16sNer, CompVM
 	for (int16_t er = 1; er < ner00; er += 2) {
 		ERA0[er] = ++nea; // [new label]
 	}
-
-	const size_t rows = ptr32sERA->rows();
+	vec32sLEA[0].resize(ner00 >> 1);
+	std::iota(vec32sLEA[0].begin(), vec32sLEA[0].end(), 1);
+	
 	int32_t* EQ = ptr32sEQ->ptr<int32_t>(0, 0);
 	int32_t* ERAi = ptr32sERA->ptr(1);
 	const int32_t* ERAiminus1 = ptr32sERA->ptr(0);
 	const size_t ERA_stride = ptr32sERA->stride();
 
+	CompVVec32s::iterator lea32s;
+	int16_t er;
 	for (size_t j = 1; j < rows; ++j) {
 		const int16_t ner0j = ner[j];
-		for (int16_t er = 1; er < ner0j; er += 2) {
+		vec32sLEA[j].resize(ner0j >> 1);
+		for (er = 1, lea32s = vec32sLEA[j].begin(); er < ner0j; er += 2, ++lea32s) {
 			if (ERAi[er]) {
 				const int32_t er0 = ERAi[er] & 0xffff;
 				const int32_t er1 = (ERAi[er] >> 16) & 0xffff;
@@ -396,9 +406,11 @@ static void step21_algo14_equivalence_build(const CompVMatPtr& ptr16sNer, CompVM
 					}
 				}
 				ERAi[er] = a; // [global min]
+				*lea32s = a;
 			}
 			else {
 				ERAi[er] = ++nea; // [new label]
+				*lea32s = nea;
 			}
 		}
 		ERAiminus1 = ERAi;
@@ -409,10 +421,6 @@ static void step21_algo14_equivalence_build(const CompVMatPtr& ptr16sNer, CompVM
 }
 
 // 2.4 Equivalence resolution: step#4
-// EQ, the table holding the equivalence classes, before transitive closure
-// A, the associative table of ancestors
-// nea, the current number of absolute labels
-// na, final number of absolute labels (background not counted)
 static void step4_algo6_eq_resolv(const CompVMatPtr& ptr32sEQ, CompVMatPtr ptr32sA, int32_t* na1)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No ASM implementation found (cmov)");
@@ -444,46 +452,6 @@ static COMPV_ERROR_CODE build_EQ(const size_t ner_sum, CompVMatPtrPtr ptr32sEQ)
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-static COMPV_ERROR_CODE count_points(
-	CompVMemZeroLockedCountPtr ptrxNa,
-	const CompVMemZero32sPtr& ptr32sERA,
-	const CompVMatPtr& ptr32sA,
-	const CompVMatPtr& ptr16sRLC,
-	const CompVMatPtr& ptr16sNer,
-	const size_t height)
-{
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ER no longer needed");
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
-
-	compv_ccl_accumulator_t* naPtr = ptrxNa->ptr();
-	const int32_t* ERAPtr = ptr32sERA->ptr();
-	const int16_t* RLC = ptr16sRLC->ptr<const int16_t>();
-	const int16_t* ner = ptr16sNer->ptr<const int16_t>();
-	const int32_t* A = ptr32sA->ptr<const int32_t>();
-	const size_t ERA_stride = ptr32sERA->stride();
-	const size_t RLC_stride = ptr16sRLC->stride();
-
-	// #3 and #5 merged 
-	// step #3: First absolute labeling
-	// step #5: Second absolute labeling
-	for (size_t j = 0; j < height; ++j) {
-		const int16_t ner1 = ner[j];
-		for (int16_t er = 1; er < ner1; ++er) { // FIXME(dmi): er += 2
-			const int32_t ea = ERAPtr[er];
-			if (ea) { // FIXME(dmi): not needed
-				const int32_t a = A[ea];
-				const compv_ccl_accumulator_t v = (RLC[er] - RLC[er - 1]);
-				naPtr[a] += v;
-			}
-		}
-		RLC += RLC_stride;
-		ERAPtr += ERA_stride;
-	}
-
-	return COMPV_ERROR_CODE_S_OK;
-}
-
-
 // VERY important: binar must be binary image (allowed values: 0x01, 0xff, 0x00)
 COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& binar, CompVConnectedComponentLabelingResultPtrPtr result) /*Overrides(CompVConnectedComponentLabeling)*/
 {
@@ -496,6 +464,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 		result_ = dynamic_cast<CompVConnectedComponentLabelingResultLSLImpl*>(**result);
 	}
 	COMPV_CHECK_CODE_RETURN(CompVConnectedComponentLabelingResultLSLImpl::newObj(&result_));
+	COMPV_CHECK_CODE_RETURN(result_->reset());
 	CompVSizeSz& szInputSize = result_->szInput();
 
 	szInputSize.width = binar->cols();
@@ -517,15 +486,15 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 		(szInputSize.width << 1) // At least #2 rows (because of ERiminus1)
 	);
 
-	CompVMatPtr& ptr16sNer = result_->ptr16sNer(); // the number of segments of ERi - black + white -
+	CompVMatPtr ptr16sNer; // the number of segments of ERi - black + white -
 	CompVMatPtr ptr16sER; //  an associative table of size w holding the relative labels er associated to Xi
 	CompVMatPtr& ptr16sRLC = result_->ptr16sRLC(); // a table holding the run length coding of segments of the line Xi, RLCi-1 is the similar memorization of the previous line.
-	CompVMemZero32sPtr& ptr32sERA = result_->ptr32sERA(); // an associative table holding the association between er and ea: ea = ERAi[er]
+	CompVMemZero32sPtr ptr32sERA; // an associative table holding the association between er and ea: ea = ERAi[er]
+	compv_ccl_lea_t& vec32sLEA = result_->vec32sLEA();
 	CompVMatPtr ptr32sEQ; // the table holding the equivalence classes, before transitive closure
 	CompVMatPtr& ptr32sA = result_->ptr32sA(); // the associative table of ancestors
 	int32_t nea1 = 0; // the current number of absolute labels, update of EQ and ERAi
-	int32_t na1 = 0; // final number of absolute labels
-	CompVMemZeroLockedCountPtr& ptrxNa = result_->ptrxNa(); // final number of absolute labels (only needed to extract points)
+	int32_t& na1 = result_->na1(); // final number of absolute labels
 
 	/* Create some local variables */
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int16_t>(&ptr16sER, szInputSize.height, szInputSize.width));
@@ -606,40 +575,18 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 		ptr16sNer,
 		ptr32sERA,
 		ptr32sEQ,
+		vec32sLEA,
 		&nea1
 	);
 
-	/* Create A and init first element with zero (because bacground label is equal to zero) */
-	COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int32_t>(&ptr32sA, 1, (nea1 + 1)));
-	*ptr32sA->ptr<int32_t>(0, 0) = 0; // other values will be initialzed in step4_algo6_eq_resolv
-
 	/* Equivalence resolution: step#4 */
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int32_t>(&ptr32sA, 1, (nea1 + 1))); // +1 for background which is "0"
+	*ptr32sA->ptr<int32_t>(0, 0) = 0; // other values will be initialzed in step4_algo6_eq_resolv
 	step4_algo6_eq_resolv(
 		ptr32sEQ,
 		ptr32sA,
 		&na1
 	);
-
-	COMPV_CHECK_CODE_RETURN(CompVMemZeroLockedCount::newObj(&ptrxNa, 1, na1));
-	COMPV_CHECK_CODE_RETURN(count_points(
-		ptrxNa,
-		ptr32sERA,
-		ptr32sA,
-		ptr16sRLC,
-		ptr16sNer,
-		szInputSize.height));
-
-	/*build_all_labels4(
-		A,
-		ERA,
-		RLC,
-		RLC_stride,
-		ner,
-		width,
-		height,
-		&result.labels);*/
-	
-	//result.labels_count = (na + 1); // +1 for the background
 	
 	*result = *result_;
 	return COMPV_ERROR_CODE_S_OK;

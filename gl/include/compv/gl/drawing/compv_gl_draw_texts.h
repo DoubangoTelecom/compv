@@ -48,7 +48,7 @@ public:
 	virtual ~CompVGLDrawTexts();
 	COMPV_OBJECT_GET_ID(CompVGLDrawTexts);
 
-	COMPV_ERROR_CODE texts(const CompVStringVector& texts, const CompVPointFloat32Vector& positions, const CompVDrawingOptions* options = nullptr);
+	COMPV_ERROR_CODE texts(const CompVVecString& texts, const CompVPointFloat32Vector& positions, const CompVDrawingOptions* options = nullptr);
 
 	static COMPV_ERROR_CODE newObj(CompVGLDrawTextsPtrPtr drawTexts);
 
@@ -56,7 +56,7 @@ private:
 #if HAVE_FREETYPE
 	COMPV_ERROR_CODE freeTypeAddChar(unsigned long charcode);
 	COMPV_ERROR_CODE freeTypeCreateFace(const std::string fontFullPath, size_t fontSize);
-	COMPV_ERROR_CODE freeTypeFillAtlas(const bool bUtf8, const CompVStringVector& texts, const CompVPointFloat32Vector& positions, CompVMatPtr& ptrAtlas, CompVMatPtr& ptrBoxes, size_t& numChars);
+	COMPV_ERROR_CODE freeTypeFillAtlas(const bool bUtf8, const CompVVecString& texts, const CompVPointFloat32Vector& positions, CompVMatPtr& ptrAtlas, CompVMatPtr& ptrBoxes, size_t& numChars);
 #endif /* HAVE_FREETYPE */
 
 private:
