@@ -5,7 +5,10 @@
 * WebSite: http://compv.org
 */
 #include "compv/core/ccl/compv_core_ccl_lsl_result.h"
+#include "compv/base/parallel/compv_parallel.h"
 #include "compv/base/compv_debug.h"
+
+#define COMPV_CCL_LSL_FLATTEN_MIN_SAMPLES_PER_THREAD	(20*20)
 
 #define COMPV_THIS_CLASSNAME "CompVConnectedComponentLabelingResultLSLImpl"
 
@@ -40,18 +43,11 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::debugFlatten(Comp
 	);
 
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("This function is needed for debugging only and you should not call it");
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
 
-	// Create EA using same size and stride as ER
+	// Create EA (image of absolute labels)
 	CompVMatPtr ptr32sEA = *ptr32sLabels;
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int32_t>(&ptr32sEA, m_szInput.height, m_szInput.width));
-	COMPV_CHECK_CODE_RETURN(ptr32sEA->zero_all());
 
-	const int16_t* ner = m_ptr16sNer->ptr<const int16_t>();
-	const int16_t* RLC = m_ptr16sRLC->ptr<const int16_t>();
-	const int32_t* ERA = m_ptr32sERA->ptr();
-	const int32_t* A = m_ptr32sA->ptr<const int32_t>();
-	int32_t* EA = ptr32sEA->ptr<int32_t>();
 	const size_t ERA_stride = m_ptr32sERA->stride();
 	const size_t EA_stride = ptr32sEA->stride();
 	const size_t RLC_stride = m_ptr16sRLC->stride();
@@ -59,27 +55,39 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::debugFlatten(Comp
 	// #3 and #5 merged 
 	// step #3: First absolute labeling
 	// step #5: Second absolute labeling
-	for (size_t j = 0; j < m_szInput.height; ++j) {
-		COMPV_CHECK_CODE_RETURN(ptr32sEA->zero_row(j)); // background is "0"
-		const int16_t ner1 = ner[j];
-		for (int16_t er = 1; er < ner1; er += 2) {
-			const int32_t ea = ERA[er];
-			if (ea) { // "0" is background
-				const int32_t a = A[ea];
-				const int16_t er0 = RLC[er - 1];
-				const int16_t er1 = RLC[er];
-				for (int16_t e = er0; e < er1; ++e) {
-					EA[e] = a;
+	auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
+		const int16_t* ner = m_ptr16sNer->ptr<const int16_t>(0, 0);
+		const int16_t* RLC = m_ptr16sRLC->ptr<const int16_t>(ystart);
+		const int32_t* ERA = m_ptr32sERA->ptr(ystart);
+		const int32_t* A = m_ptr32sA->ptr<const int32_t>(0, 0);
+		int32_t* EA = ptr32sEA->ptr<int32_t>(ystart);
+		for (size_t j = ystart; j < yend; ++j) {
+			COMPV_CHECK_CODE_RETURN(ptr32sEA->zero_row(j)); // background is "0"
+			const int16_t ner1 = ner[j];
+			for (int16_t er = 1; er < ner1; er += 2) {
+				const int32_t ea = ERA[er];
+				if (ea) { // "0" is background (FIXME(dmi): neded?)
+					const int32_t a = A[ea];
+					const int16_t er0 = RLC[er - 1];
+					const int16_t er1 = RLC[er];
+					for (int16_t e = er0; e < er1; ++e) {
+						EA[e] = a;
+					}
 				}
 			}
-			else {
-				int kaka = 0;
-			}
+			RLC += RLC_stride;
+			EA += EA_stride;
+			ERA += ERA_stride;
 		}
-		RLC += RLC_stride;
-		EA += EA_stride;
-		ERA += ERA_stride;
-	}
+		return COMPV_ERROR_CODE_S_OK;
+	};
+
+	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+		funcPtr,
+		m_szInput.width,
+		m_szInput.height,
+		COMPV_CCL_LSL_FLATTEN_MIN_SAMPLES_PER_THREAD
+	));
 
 	*ptr32sLabels = ptr32sEA;
 

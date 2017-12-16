@@ -60,8 +60,10 @@ COMPV_ERROR_CODE ccl()
 	COMPV_CHECK_CODE_RETURN(CompVConnectedComponentLabeling::newObj(&ccl_obj, COMPV_PLSL_ID));
 	COMPV_CHECK_CODE_RETURN(ccl_obj->setInt(COMPV_PLSL_SET_INT_TYPE, COMPV_PLSL_TYPE_STD));
 
-	const uint64_t timeStart = CompVTime::nowMillis();
+	CompVMatPtr ptr32sLabels;
 	CompVConnectedComponentLabelingResultPtr result;
+
+	const uint64_t timeStart = CompVTime::nowMillis();
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
 		COMPV_CHECK_CODE_RETURN(ccl_obj->process(binar, &result));
 	}
@@ -71,7 +73,6 @@ COMPV_ERROR_CODE ccl()
 	const CompVConnectedComponentLabelingResultLSL* result_lsl =
 		CompVConnectedComponentLabeling::reinterpret_castr<CompVConnectedComponentLabelingResultLSL>(result);
 
-	CompVMatPtr ptr32sLabels;
 	COMPV_CHECK_CODE_RETURN(result->debugFlatten(&ptr32sLabels));
 
 #if COMPV_OS_WINDOWS && 1
