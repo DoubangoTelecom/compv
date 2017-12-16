@@ -14,7 +14,7 @@
 #define TEST_TYPE_LABYRINTH		"labyrinth_800x600_gray.yuv"
 #define TEST_TYPE_CHECKER		"checker_800x600_gray.yuv"
 #define TEST_TYPE_SHAPE			"shape_960x720_gray.yuv"
-#define TEST_TYPE_TEXT			"text_1122x1182_gray.yuv"
+#define TEST_TYPE_TEXT			"text_1122x1182_white_gray.yuv" // text is white and background black
 
 static const struct compv_unittest_ccl {
 	const char* filename;
@@ -30,12 +30,12 @@ COMPV_UNITTEST_CCL[] =
 	{ TEST_TYPE_LABYRINTH, 800, 600, 800, "bd4bdfccb0ea70467421abf7d573b51d" },
 	{ TEST_TYPE_CHECKER, 800, 600, 800, "43e40b4efe74bc924fb9239d14f1387d" },
 	{ TEST_TYPE_SHAPE, 960, 720, 960, "dafbf5d4265ee4a1e1e44984e0e00e4f" },
-	{ TEST_TYPE_TEXT, 1122, 1182, 1122, "a8ee46de9728e8d2178d8f2081b87dab"}
+	{ TEST_TYPE_TEXT, 1122, 1182, 1122, "5d416e9164481180f279f807e42ef5b0"}
 };
 static const size_t COMPV_UNITTEST_CCL_COUNT = sizeof(COMPV_UNITTEST_CCL) / sizeof(COMPV_UNITTEST_CCL[0]);
 
 #define LOOP_COUNT		1
-#define TEST_TYPE		TEST_TYPE_DIFFRACT
+#define TEST_TYPE		TEST_TYPE_TEXT
 
 static COMPV_ERROR_CODE blitPoints(const CompVConnectedComponentLabelingResultPtr& result, const size_t binarWidth, const size_t binarHeight, CompVMatPtrPtr output);
 
@@ -54,6 +54,7 @@ COMPV_ERROR_CODE ccl()
 	// Read file
 	CompVMatPtr binar;
 	COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &binar));
+
 	// CCL expect binar image
 	COMPV_CHECK_CODE_RETURN(CompVImageThreshold::global(binar, &binar, 128));
 
@@ -69,7 +70,7 @@ COMPV_ERROR_CODE ccl()
 	const uint64_t timeStart = CompVTime::nowMillis();
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
 		COMPV_CHECK_CODE_RETURN(ccl_obj->process(binar, &result));
-		COMPV_CHECK_CODE_RETURN(result->extract(points, COMPV_CCL_EXTRACT_TYPE_CONTOUR)); // FIXME(dmi): remove
+		//COMPV_CHECK_CODE_RETURN(result->extract(points, COMPV_CCL_EXTRACT_TYPE_CONTOUR)); // FIXME(dmi): remove
 	}
 	const uint64_t timeEnd = CompVTime::nowMillis();
 	COMPV_DEBUG_INFO("Elapsed time (TestConnectedComponentLabeling) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
@@ -82,7 +83,7 @@ COMPV_ERROR_CODE ccl()
 
 #if COMPV_OS_WINDOWS && 1
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Do not write the file to the hd");
-	COMPV_CHECK_CODE_RETURN(compv_tests_write_to_file(ptr8uRestored, TEST_TYPE));	
+	COMPV_CHECK_CODE_RETURN(compv_tests_write_to_file(ptr8uRestored, TEST_TYPE));
 #endif
 
 	COMPV_DEBUG_INFO("MD5(labels): %s", compv_tests_md5(ptr32sLabels).c_str());

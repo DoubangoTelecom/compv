@@ -13,12 +13,13 @@ using namespace compv;
 #define WINDOW_WIDTH				1280
 #define WINDOW_HEIGHT				720
 
-#define IMAGE_FILE_NAME				"text_1122x1182_gray.yuv"
+#define IMAGE_FILE_NAME				"text_1122x1182_black_gray.yuv" // text is black and background white
 #define IMAGE_WIDTH					1122
 #define IMAGE_HEIGHT				1182
 
 #define THRESHOLDING_KERNEL_SIZE	5
 #define THRESHOLDING_DELTA			+4
+#define THRESHOLDING_INVERT			false // true if text is black and background white
 
 #define MORPH_STREL_SIZE			CompVSizeSz(3, 3)
 #define MORPH_STREL_TYPE			COMPV_MATH_MORPH_STREL_TYPE_DIAMOND
