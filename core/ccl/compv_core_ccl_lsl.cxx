@@ -59,21 +59,8 @@ COMPV_EXTERNC void CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBui
 );
 #endif /* COMPV_ASM && COMPV_ARCH_X64 */
 
-static const compv_ccl_indice_t kCompVConnectedComponentLabelingLSLBachgroundLabel = 0; // Must be zero because of calloc()
-
-typedef CompVMemZero<compv_ccl_indice_t > CompVMemZeroCclIndice;
-typedef CompVPtr<CompVMemZeroCclIndice *> CompVMemZeroCclIndicePtr;
-
-#if COMPV_OS_WINDOWS
-typedef LONG compv_ccl_accumulator_t; /* InterlockedDecrement/InterlockedIncrement requires LONG */
-#else
-typedef int compv_ccl_accumulator_t;
-#endif
-typedef CompVMemZero<compv_ccl_accumulator_t > CompVMemZeroLockedCount;
-typedef CompVPtr<CompVMemZeroLockedCount *> CompVMemZeroLockedCountPtr;
-
 CompVConnectedComponentLabelingLSL::CompVConnectedComponentLabelingLSL()
-	:CompVConnectedComponentLabeling(static_cast<compv_ccl_indice_t>(COMPV_PLSL_ID))
+	:CompVConnectedComponentLabeling(static_cast<int32_t>(COMPV_PLSL_ID))
 {
 
 }
@@ -103,7 +90,7 @@ template<typename T>
 static void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_C(
 	const T* Xi, const compv_uscalar_t Xi_stride,
 	int16_t* ERi, const compv_uscalar_t ERi_stride,
-	int16_t* ner, int16_t* ner_max1, compv_ccl_indice_t* ner_sum1,
+	int16_t* ner, int16_t* ner_max1, int32_t* ner_sum1,
 	const compv_uscalar_t width, const compv_uscalar_t height)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
@@ -111,7 +98,7 @@ static void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_C(
 	int16_t i, er;
 	const int16_t width1 = static_cast<int16_t>(width);
 	int16_t ner_max = 0;
-	compv_ccl_indice_t ner_sum = 0;
+	int32_t ner_sum = 0;
 
 	for (compv_uscalar_t j = 0; j < height; ++j) {
 		er = (Xi[0] & 1);
@@ -165,25 +152,23 @@ static void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_C(
 }
 
 // Relative segment labeling: step#1
-// Algorithm 12: LSL segment detection STD
-// Xi: a binary line of width w (allowed values: 0x01, 0xff, 0x00)
-// ERi, an associative table of size w holding the relative labels er associated to Xi
-// RLCi, a table holding the run length coding of segments of the line Xi
-// ner, the number of segments of ERi – black + white
 template<typename T>
-static void step1_algo13_segment_STDZ(const CompVMatPtr& X, int16_t* ER, const size_t ER_stride, int16_t* RLC, const size_t RLC_stride, int16_t* ner, int16_t* ner_max1, compv_ccl_indice_t* ner_sum1, const compv_ccl_indice_t w, const compv_ccl_indice_t start, const compv_ccl_indice_t end)
+static void step1_algo13_segment_STDZ(const CompVMatPtr& X, CompVMatPtr ptr16sER, CompVMatPtr ptr16sRLC, CompVMatPtr ptr16sNer, int16_t* ner_max1, int32_t* ner_sum1, const size_t start, const size_t end)
 {
 	const T* Xi = X->ptr<T>(start);
-	int16_t* ERi = ER + (ER_stride * start);
-	int16_t* RLCi = RLC + (RLC_stride * start);
-	int16_t* ner0 = ner + start;
-
-	const size_t X_stride = X->stride();
+	int16_t* ERi = ptr16sER->ptr<int16_t>(start);
+	int16_t* RLCi = ptr16sRLC->ptr<int16_t>(start);
+	int16_t* ner0 = ptr16sNer->ptr<int16_t>(0, start);
+	const compv_uscalar_t ERi_stride = static_cast<compv_uscalar_t>(ptr16sER->stride());
+	const compv_uscalar_t RLCi_stride = static_cast<compv_uscalar_t>(ptr16sRLC->stride());
+	const compv_uscalar_t X_stride = static_cast<compv_uscalar_t>(X->stride());
+	const compv_uscalar_t width = static_cast<compv_uscalar_t>(X->cols());
+	const compv_uscalar_t height = static_cast<compv_uscalar_t>(end - start);
 
 	/* Hook to processing functions */
 	typedef void(*FunERiPtr)(const T* Xi, const compv_uscalar_t Xi_stride,
 		int16_t* ERi, const compv_uscalar_t ERi_stride,
-		int16_t* ner, int16_t* ner_max1, compv_ccl_indice_t* ner_sum1,
+		int16_t* ner, int16_t* ner_max1, int32_t* ner_sum1,
 		const compv_uscalar_t width, const compv_uscalar_t height);
 	typedef void(*FunRLCiPtr)(const T* Xi, const compv_uscalar_t Xi_stride,
 		int16_t* ERi, const compv_uscalar_t ERi_stride,
@@ -192,7 +177,7 @@ static void step1_algo13_segment_STDZ(const CompVMatPtr& X, int16_t* ER, const s
 
 	FunERiPtr funPtrERi = [](const T* Xi, const compv_uscalar_t Xi_stride,
 		int16_t* ERi, const compv_uscalar_t ERi_stride,
-		int16_t* ner, int16_t* ner_max1, compv_ccl_indice_t* ner_sum1,
+		int16_t* ner, int16_t* ner_max1, int32_t* ner_sum1,
 		const compv_uscalar_t width, const compv_uscalar_t height) {
 		CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_C<T >(
 			Xi, Xi_stride,
@@ -216,7 +201,7 @@ static void step1_algo13_segment_STDZ(const CompVMatPtr& X, int16_t* ER, const s
 	};
 
 
-	if (std::is_same<T, uint8_t>::value && std::is_same<int32_t, compv_ccl_indice_t>::value) {
+	if (std::is_same<T, uint8_t>::value) {
 		/* ERi */
 		void(*funPtrERi_8u16s32s)(const uint8_t* Xi, const compv_uscalar_t Xi_stride,
 			int16_t* ERi, const compv_uscalar_t ERi_stride,
@@ -225,11 +210,11 @@ static void step1_algo13_segment_STDZ(const CompVMatPtr& X, int16_t* ER, const s
 			= nullptr;
 		// SIMD functions requires width > alignment (not ">=" but ">" because we start at 1 (asm code expect it), also c++ can handle short data without perf issues -thanks to unrolling-)
 #if COMPV_ARCH_X86
-		if (w > 16 && CompVCpu::isEnabled(kCpuFlagSSSE3) && X->isAlignedSSE()) {
+		if (width > 16 && CompVCpu::isEnabled(kCpuFlagSSSE3) && X->isAlignedSSE()) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(funPtrERi_8u16s32s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Intrin_SSSE3);
 			COMPV_EXEC_IFDEF_ASM_X64(funPtrERi_8u16s32s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_X64_SSSE3);
 		}
-		if (w > 32 && CompVCpu::isEnabled(kCpuFlagAVX2) && X->isAlignedAVX()) {
+		if (width > 32 && CompVCpu::isEnabled(kCpuFlagAVX2) && X->isAlignedAVX()) {
 			COMPV_EXEC_IFDEF_ASM_X64(funPtrERi_8u16s32s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_X64_AVX2);
 		}
 #elif COMPV_ARCH_ARM
@@ -249,7 +234,7 @@ static void step1_algo13_segment_STDZ(const CompVMatPtr& X, int16_t* ER, const s
 			= nullptr;
 		// SIMD functions requires width > alignment (not ">=" but ">" because we start at 1 (asm code expect it), also c++ can handle short data without perf issues -thanks to unrolling-)
 #if COMPV_ARCH_X86
-		if (w > 16 && CompVCpu::isEnabled(kCpuFlagSSE2) && X->isAlignedSSE()) {
+		if (width > 16 && CompVCpu::isEnabled(kCpuFlagSSE2) && X->isAlignedSSE()) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(funPtrRLCi_8u16s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Intrin_SSE2);
 			COMPV_EXEC_IFDEF_ASM_X64(funPtrRLCi_8u16s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_X64_SSE2);
 		}
@@ -266,23 +251,23 @@ static void step1_algo13_segment_STDZ(const CompVMatPtr& X, int16_t* ER, const s
 	/* Compute ERi */
 	funPtrERi(
 		Xi, X_stride,
-		ERi, ER_stride,
+		ERi, ERi_stride,
 		ner0, ner_max1, ner_sum1,
-		static_cast<compv_uscalar_t>(w), static_cast<compv_uscalar_t>(end - start)
+		width, height
 	);
 
 	/* COmpute RLCi */
 	funPtrRLCi(
 		Xi, X_stride,
-		ERi, ER_stride,
-		RLCi, RLC_stride,
-		static_cast<compv_uscalar_t>(w), static_cast<compv_uscalar_t>(end - start)
+		ERi, ERi_stride,
+		RLCi, RLCi_stride,
+		width, height
 	);
 }
 
 static void CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_C(
 	const int16_t* RLCi, const compv_uscalar_t RLCi_stride,
-	compv_ccl_indice_t* ERAi, const compv_uscalar_t ERAi_stride,
+	int32_t* ERAi, const compv_uscalar_t ERAi_stride,
 	const int16_t* ERiminus1, const compv_uscalar_t ERi_stride,
 	const int16_t* ner,
 	const compv_uscalar_t width, const compv_uscalar_t height)
@@ -319,29 +304,31 @@ static void CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_C(
 }
 
 // 2.2 Equivalence construction: step#2.0 (MT friendly)
-// Algorithm 14: LSL equivalence construction
-// ERi, an associative table of size w holding the relative labels er associated to Xi
-// RLCi, a table holding the run length coding of segments of the line Xi
-// ERAi, an associative table holding the association between er and ea: ea = ERAi[er]
-static void step20_algo14_equivalence_build(const int16_t* ER, const size_t ER_stride, const int16_t* RLC, const size_t RLC_stride, const int16_t* ner, CompVMemZeroCclIndicePtr ERA, const compv_ccl_indice_t w, const compv_ccl_indice_t start, const compv_ccl_indice_t end)
+static void step20_algo14_equivalence_build(const CompVMatPtr& ptr16sER, const CompVMatPtr& ptr16sRLC, CompVMatPtr ptr16sNer, CompVMemZero32sPtr ptr32sERA, const size_t width, const size_t start, const size_t end)
 {
-	const compv_ccl_indice_t jstart = !start ? 1 : start;
-	const int16_t* ERiminus1 = ER + (ER_stride * (jstart - 1));
-	const int16_t* RLCi = RLC + (RLC_stride * jstart);
-	const int16_t* ner0 = ner + (jstart);
-	compv_ccl_indice_t* ERAi = ERA->ptr(jstart);
-	const size_t ERA_stride = ERA->stride();
+	const size_t jstart = !start ? 1 : start;
+	const int16_t* ERiminus1 = ptr16sER->ptr<const int16_t>(jstart - 1);
+	const int16_t* RLCi = ptr16sRLC->ptr<const int16_t>(jstart);
+	const int16_t* ner0 = ptr16sNer->ptr<const int16_t>(0, jstart);
+	int32_t* ERAi = ptr32sERA->ptr(jstart);
+	const compv_uscalar_t ERA_stride = static_cast<compv_uscalar_t>(ptr32sERA->stride());
+	const compv_uscalar_t RLCi_stride = static_cast<compv_uscalar_t>(ptr16sRLC->stride());
+	const compv_uscalar_t ERi_stride = static_cast<compv_uscalar_t>(ptr16sER->stride());
 
-	typedef void(*FunPtr)(const int16_t* RLCi, const compv_uscalar_t RLCi_stride,
-		compv_ccl_indice_t* ERAi, const compv_uscalar_t ERAi_stride,
+	void(*funPtr)(
+		const int16_t* RLCi, const compv_uscalar_t RLCi_stride,
+		int32_t* ERAi, const compv_uscalar_t ERAi_stride,
 		const int16_t* ERiminus1, const compv_uscalar_t ERi_stride,
 		const int16_t* ner,
-		const compv_uscalar_t width, const compv_uscalar_t height);
-	FunPtr funPtr = [](const int16_t* RLCi, const compv_uscalar_t RLCi_stride,
-		compv_ccl_indice_t* ERAi, const compv_uscalar_t ERAi_stride,
+		const compv_uscalar_t width, const compv_uscalar_t height
+	) = 
+	[](
+		const int16_t* RLCi, const compv_uscalar_t RLCi_stride,
+		int32_t* ERAi, const compv_uscalar_t ERAi_stride,
 		const int16_t* ERiminus1, const compv_uscalar_t ERi_stride,
 		const int16_t* ner,
-		const compv_uscalar_t width, const compv_uscalar_t height) {
+		const compv_uscalar_t width, const compv_uscalar_t height
+	) {
 		CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_C(
 			RLCi, RLCi_stride,
 			ERAi, ERAi_stride,
@@ -350,67 +337,54 @@ static void step20_algo14_equivalence_build(const int16_t* ER, const size_t ER_s
 			width, height);
 	};
 
-	if (std::is_same<int32_t, compv_ccl_indice_t>::value) {
-		void(*funPtr_16s32s)(const int16_t* RLCi, const compv_uscalar_t RLCi_stride,
-			int32_t* ERAi, const compv_uscalar_t ERAi_stride,
-			const int16_t* ERi, const compv_uscalar_t ERi_stride,
-			const int16_t* ner,
-			const compv_uscalar_t width, const compv_uscalar_t height)
-			= nullptr;
 #if COMPV_ARCH_X86
 		if (CompVCpu::isEnabled(kCpuFlagCMOV)) {
-			COMPV_EXEC_IFDEF_ASM_X64(funPtr_16s32s = CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_16s32s_Asm_X64_CMOV);
+			COMPV_EXEC_IFDEF_ASM_X64(funPtr = CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_16s32s_Asm_X64_CMOV);
 		}
 #elif COMPV_ARCH_ARM
-		//COMPV_EXEC_IFDEF_ASM_ARM32(funPtr_16s32s = CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_16s32s_Asm_X64_ARM32);
-		//COMPV_EXEC_IFDEF_ASM_ARM64(funPtr_16s32s = CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_16s32s_Asm_X64_ARM64);
+		//COMPV_EXEC_IFDEF_ASM_ARM32(funPtr = CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_16s32s_Asm_X64_ARM32);
+		//COMPV_EXEC_IFDEF_ASM_ARM64(funPtr = CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_16s32s_Asm_X64_ARM64);
 #endif
 
-		if (funPtr_16s32s) {
-			funPtr = reinterpret_cast<FunPtr>(funPtr_16s32s);
-		}
-	}
-
 	funPtr(
-		RLCi, RLC_stride,
+		RLCi, RLCi_stride,
 		ERAi, ERA_stride,
-		ERiminus1, ER_stride,
+		ERiminus1, ERi_stride,
 		ner0,
-		static_cast<compv_uscalar_t>(w), static_cast<compv_uscalar_t>(end - jstart)
+		static_cast<compv_uscalar_t>(width),
+		static_cast<compv_uscalar_t>(end - jstart)
 	);
 }
 
 // 2.2 Equivalence construction: step#2.1 (not MT friendly)
 // Algorithm 14: LSL equivalence construction
-// EQ,  the table holding the equivalence classes, before transitive closure
-// ERAi, an associative table holding the association between er and ea: ea = ERAi[er]
-// ner, the number of segments of ERi - black + white
-// nea the current number of absolute labels, update of EQ and ERAi
-static void step21_algo14_equivalence_build(const int16_t* ner, CompVMemZeroCclIndicePtr ERA, compv_ccl_indice_t* EQ, compv_ccl_indice_t* nea1)
+static void step21_algo14_equivalence_build(const CompVMatPtr& ptr16sNer, CompVMemZero32sPtr ptr32sERA, CompVMatPtr ptr32sEQ, int32_t* nea1)
 {
-	const int16_t ner00 = *ner;
-	compv_ccl_indice_t* ERA0 = ERA->ptr(0);
-	compv_ccl_indice_t nea = 0;
+	const int16_t* ner = ptr16sNer->ptr<const int16_t>(0, 0);
+	const int16_t ner00 = ner[0];
+	int32_t* ERA0 = ptr32sERA->ptr(0);
+	int32_t nea = 0;
 	for (int16_t er = 1; er < ner00; er += 2) {
 		ERA0[er] = ++nea; // [new label]
 	}
 
-	const size_t rows = ERA->rows();
-	compv_ccl_indice_t* ERAi = ERA->ptr(1);
-	const compv_ccl_indice_t* ERAiminus1 = ERA->ptr(0);
-	const size_t ERA_stride = ERA->stride();
+	const size_t rows = ptr32sERA->rows();
+	int32_t* EQ = ptr32sEQ->ptr<int32_t>(0, 0);
+	int32_t* ERAi = ptr32sERA->ptr(1);
+	const int32_t* ERAiminus1 = ptr32sERA->ptr(0);
+	const size_t ERA_stride = ptr32sERA->stride();
 
 	for (size_t j = 1; j < rows; ++j) {
 		const int16_t ner0j = ner[j];
 		for (int16_t er = 1; er < ner0j; er += 2) {
 			if (ERAi[er]) {
-				const compv_ccl_indice_t er0 = ERAi[er] & 0xffff;
-				const compv_ccl_indice_t er1 = (ERAi[er] >> 16) & 0xffff;
-				compv_ccl_indice_t ea = ERAiminus1[er0];
-				compv_ccl_indice_t a = EQ[ea];
-				for (compv_ccl_indice_t erk = er0 + 2; erk <= er1; erk += 2) {
-					const compv_ccl_indice_t eak = ERAiminus1[erk];
-					const compv_ccl_indice_t ak = EQ[eak];
+				const int32_t er0 = ERAi[er] & 0xffff;
+				const int32_t er1 = (ERAi[er] >> 16) & 0xffff;
+				int32_t ea = ERAiminus1[er0];
+				int32_t a = EQ[ea];
+				for (int32_t erk = er0 + 2; erk <= er1; erk += 2) {
+					const int32_t eak = ERAiminus1[erk];
+					const int32_t ak = EQ[eak];
 					// [min extraction and propagation]
 					if (a < ak) {
 						EQ[eak] = a;
@@ -439,14 +413,17 @@ static void step21_algo14_equivalence_build(const int16_t* ner, CompVMemZeroCclI
 // A, the associative table of ancestors
 // nea, the current number of absolute labels
 // na, final number of absolute labels (background not counted)
-static void step4_algo6_eq_resolv(const compv_ccl_indice_t* EQ, const compv_ccl_indice_t nea, compv_ccl_indice_t* A, compv_ccl_indice_t* na1)
+static void step4_algo6_eq_resolv(const CompVMatPtr& ptr32sEQ, CompVMatPtr ptr32sA, int32_t* na1)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No ASM implementation found (cmov)");
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No unroll implementation found");
-	compv_ccl_indice_t na = 0;
+	const int32_t nea = static_cast<int32_t>(ptr32sA->cols());
+	int32_t* A = ptr32sA->ptr<int32_t>(0, 0);
+	const int32_t* EQ = ptr32sEQ->ptr<const int32_t>(0, 0);
+	int32_t na = 0;
 
-	for (compv_ccl_indice_t ea = 1; ea <= nea; ++ea) {
-		const compv_ccl_indice_t a = EQ[ea];
+	for (int32_t ea = 1; ea < nea; ++ea) {
+		const int32_t a = EQ[ea];
 		COMPV_ASSERT(a <= nea); // FIXME(dmi): remove
 		A[ea] = (a != ea)
 			? A[a]
@@ -455,90 +432,46 @@ static void step4_algo6_eq_resolv(const compv_ccl_indice_t* EQ, const compv_ccl_
 	*na1 = na;
 }
 
-static COMPV_ERROR_CODE build_EQ(const size_t ner_sum, compv_ccl_indice_t*& EQ)
+static COMPV_ERROR_CODE build_EQ(const size_t ner_sum, CompVMatPtrPtr ptr32sEQ)
 {
 	/* Create EQ and init with 0...n */
-	EQ = reinterpret_cast<compv_ccl_indice_t*>(CompVMem::malloc(ner_sum * 1 * sizeof(compv_ccl_indice_t)));
-	COMPV_CHECK_EXP_RETURN(!EQ, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-	const compv_ccl_indice_t n = static_cast<compv_ccl_indice_t>(ner_sum);
-	for (compv_ccl_indice_t i = 0; i < n; ++i) {
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int32_t>(ptr32sEQ, 1, ner_sum));
+	const int32_t n = static_cast<int32_t>(ner_sum);
+	int32_t* EQ = (*ptr32sEQ)->ptr<int32_t>();
+	for (int32_t i = 0; i < n; ++i) {
 		EQ[i] = i;
 	}
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-static COMPV_ERROR_CODE build_all_labels4(
-	const compv_ccl_indice_t* A,
-	const CompVMemZeroCclIndicePtr& ERA,
-	const int16_t* RLC,
-	const size_t RLC_stride,
-	const int16_t* ner,
-	const size_t EA_width,
-	const size_t EA_height,
-	CompVMatPtrPtr EA)
-{
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ER no longer needed");
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
-
-	// Create EA using same size and stride as ER
-	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_ccl_indice_t>(EA, EA_height, EA_width));
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Calling zero all not good at all");
-	COMPV_CHECK_CODE_RETURN((*EA)->zero_all());
-
-	const compv_ccl_indice_t* ERAPtr = ERA->ptr();
-	compv_ccl_indice_t* EAPtr = (*EA)->ptr<compv_ccl_indice_t>();
-	const size_t ERA_stride = ERA->stride();
-	const size_t EA_stride = (*EA)->stride();
-
-	// #3 and #5 merged 
-	// step #3: First absolute labeling
-	// step #5: Second absolute labeling
-	for (size_t j = 0; j < EA_height; ++j) {
-		const int16_t ner1 = ner[j];
-		for (int16_t er = 1; er < ner1; ++er) {
-			const compv_ccl_indice_t ea = ERAPtr[er];
-			if (ea) { // "0" is background
-				const compv_ccl_indice_t a = A[ea];
-				const int16_t er0 = RLC[er - 1];
-				const int16_t er1 = RLC[er];
-				for (int16_t e = er0; e < er1; ++e) {
-					EAPtr[e] = a;
-				}
-			}
-		}
-		RLC += RLC_stride;
-		EAPtr += EA_stride;
-		ERAPtr += ERA_stride;
-	}
-
-	return COMPV_ERROR_CODE_S_OK;
-}
-
 static COMPV_ERROR_CODE count_points(
-	CompVMemZeroLockedCountPtr na_count,
-	const CompVMemZeroCclIndicePtr& ERA,
-	const compv_ccl_indice_t* A,
-	const int16_t* RLC,
-	const size_t RLC_stride,
-	const int16_t* ner,
+	CompVMemZeroLockedCountPtr ptrxNa,
+	const CompVMemZero32sPtr& ptr32sERA,
+	const CompVMatPtr& ptr32sA,
+	const CompVMatPtr& ptr16sRLC,
+	const CompVMatPtr& ptr16sNer,
 	const size_t height)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ER no longer needed");
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
 
-	compv_ccl_accumulator_t* naPtr = na_count->ptr();
-	const compv_ccl_indice_t* ERAPtr = ERA->ptr();
-	const size_t ERA_stride = ERA->stride();
+	compv_ccl_accumulator_t* naPtr = ptrxNa->ptr();
+	const int32_t* ERAPtr = ptr32sERA->ptr();
+	const int16_t* RLC = ptr16sRLC->ptr<const int16_t>();
+	const int16_t* ner = ptr16sNer->ptr<const int16_t>();
+	const int32_t* A = ptr32sA->ptr<const int32_t>();
+	const size_t ERA_stride = ptr32sERA->stride();
+	const size_t RLC_stride = ptr16sRLC->stride();
 
 	// #3 and #5 merged 
 	// step #3: First absolute labeling
 	// step #5: Second absolute labeling
 	for (size_t j = 0; j < height; ++j) {
 		const int16_t ner1 = ner[j];
-		for (int16_t er = 1; er < ner1; ++er) {
-			const compv_ccl_indice_t ea = ERAPtr[er];
-			if (ea) { // "0" is background
-				const compv_ccl_indice_t a = A[ea];
+		for (int16_t er = 1; er < ner1; ++er) { // FIXME(dmi): er += 2
+			const int32_t ea = ERAPtr[er];
+			if (ea) { // FIXME(dmi): not needed
+				const int32_t a = A[ea];
 				const compv_ccl_accumulator_t v = (RLC[er] - RLC[er - 1]);
 				naPtr[a] += v;
 			}
@@ -563,83 +496,74 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 		result_ = dynamic_cast<CompVConnectedComponentLabelingResultLSLImpl*>(**result);
 	}
 	COMPV_CHECK_CODE_RETURN(CompVConnectedComponentLabelingResultLSLImpl::newObj(&result_));
+	CompVSizeSz& szInputSize = result_->szInput();
 
-	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
-
-	const size_t width = binar->cols();
-	const size_t height = binar->rows();
-	const size_t __ner_max = ((width + 1) >> 1); // full dashed row
-	const size_t RLC_stride = __ner_max;
+	szInputSize.width = binar->cols();
+	szInputSize.height = binar->rows();
+	const size_t __ner_max = ((szInputSize.width + 1) >> 1); // full dashed row
 	int16_t ner_max;
-	compv_ccl_indice_t ner_sum;
-	std::function<COMPV_ERROR_CODE(const compv_ccl_indice_t mt_start, const compv_ccl_indice_t mt_end, int16_t* mt_ner_max, compv_ccl_indice_t* mt_ner_sum)> funcPtrStep1;
+	int32_t ner_sum;
+	std::function<COMPV_ERROR_CODE(const int32_t mt_start, const int32_t mt_end, int16_t* mt_ner_max, int32_t* mt_ner_sum)> funcPtrStep1;
 	std::function<COMPV_ERROR_CODE(const size_t mt_start, const size_t mt_end)> funcPtrStep20;
 
 	/* Multi-threading dispatcher */
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
 	const size_t maxThreads = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
 	const size_t threadsCountStep1 = (threadDisp && !threadDisp->isMotherOfTheCurrentThread())
-		? CompVThreadDispatcher::guessNumThreadsDividingAcrossY(width, height, maxThreads, COMPV_CCL_LSL_STEP1_MIN_SAMPLES_PER_THREAD)
+		? CompVThreadDispatcher::guessNumThreadsDividingAcrossY(szInputSize.width, szInputSize.height, maxThreads, COMPV_CCL_LSL_STEP1_MIN_SAMPLES_PER_THREAD)
 		: 1;
 	const size_t minSamplePerThreadStep20 = std::max(
 		static_cast<size_t>(COMPV_CCL_LSL_STEP20_MIN_SAMPLES_PER_THREAD),
-		(width << 1) // At least #2 rows (because of ERiminus1)
+		(szInputSize.width << 1) // At least #2 rows (because of ERiminus1)
 	);
 
-	int16_t* ner = nullptr; // the number of segments of ERi - black + white -
-	int16_t* ER = nullptr; //  an associative table of size w holding the relative labels er associated to Xi
-	int16_t* RLC = nullptr; // a table holding the run length coding of segments of the line Xi, RLCi-1 is the similar memorization of the previous line.
-	CompVMemZeroCclIndicePtr ERA; // an associative table holding the association between er and ea: ea = ERAi[er]
-	CompVMemZeroCclIndicePtr ERAinv; // inv(ERA)
-	compv_ccl_indice_t* EQ = nullptr; // the table holding the equivalence classes, before transitive closure
-	compv_ccl_indice_t* A = nullptr; // the associative table of ancestors
-	compv_ccl_indice_t* Ainv = nullptr; // inv(A)
-	compv_ccl_indice_t nea1 = 0; // the current number of absolute labels, update of EQ and ERAi
-	compv_ccl_indice_t na1 = 0; // final number of absolute labels
-	CompVMemZeroLockedCountPtr na; // final number of absolute labels (only needed to extract points)
+	CompVMatPtr& ptr16sNer = result_->ptr16sNer(); // the number of segments of ERi - black + white -
+	CompVMatPtr ptr16sER; //  an associative table of size w holding the relative labels er associated to Xi
+	CompVMatPtr& ptr16sRLC = result_->ptr16sRLC(); // a table holding the run length coding of segments of the line Xi, RLCi-1 is the similar memorization of the previous line.
+	CompVMemZero32sPtr& ptr32sERA = result_->ptr32sERA(); // an associative table holding the association between er and ea: ea = ERAi[er]
+	CompVMatPtr ptr32sEQ; // the table holding the equivalence classes, before transitive closure
+	CompVMatPtr& ptr32sA = result_->ptr32sA(); // the associative table of ancestors
+	int32_t nea1 = 0; // the current number of absolute labels, update of EQ and ERAi
+	int32_t na1 = 0; // final number of absolute labels
+	CompVMemZeroLockedCountPtr& ptrxNa = result_->ptrxNa(); // final number of absolute labels (only needed to extract points)
 
-	ER = reinterpret_cast<int16_t*>(CompVMem::malloc(height * width * sizeof(int16_t)));
-	COMPV_CHECK_EXP_BAIL(!ER, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY));
-	RLC = reinterpret_cast<int16_t*>(CompVMem::malloc(height * RLC_stride * sizeof(int16_t)));
-	COMPV_CHECK_EXP_BAIL(!RLC, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY));
-	ner = reinterpret_cast<int16_t*>(CompVMem::malloc(height * 1 * sizeof(int16_t)));
-	COMPV_CHECK_EXP_BAIL(!ner, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY));
+	/* Create some local variables */
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int16_t>(&ptr16sER, szInputSize.height, szInputSize.width));
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int16_t>(&ptr16sRLC, szInputSize.height, __ner_max));
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int16_t>(&ptr16sNer, 1, szInputSize.height));
 
 	/* Relative segment labeling: step#1 */
-	funcPtrStep1 = [&](const compv_ccl_indice_t mt_start, const compv_ccl_indice_t mt_end, int16_t* mt_ner_max, compv_ccl_indice_t* mt_ner_sum) -> COMPV_ERROR_CODE {
+	funcPtrStep1 = [&](const int32_t mt_start, const int32_t mt_end, int16_t* mt_ner_max, int32_t* mt_ner_sum) -> COMPV_ERROR_CODE {
 		step1_algo13_segment_STDZ<uint8_t>(
 			binar,
-			ER,
-			width,
-			RLC,
-			RLC_stride,
-			ner,
+			ptr16sER,
+			ptr16sRLC,
+			ptr16sNer,
 			mt_ner_max,
 			mt_ner_sum,
-			static_cast<compv_ccl_indice_t>(width),
 			mt_start,
 			mt_end
-			);
+		);
 		return COMPV_ERROR_CODE_S_OK;
 	};
 	if (threadsCountStep1 > 1) {
 		CompVAsyncTaskIds taskIds;
 		taskIds.reserve(threadsCountStep1);
 		std::vector<int16_t> mt_ner_max(threadsCountStep1);
-		std::vector<compv_ccl_indice_t> mt_ner_sum(threadsCountStep1);
-		const size_t heights = (height / threadsCountStep1);
+		std::vector<int32_t> mt_ner_sum(threadsCountStep1);
+		const size_t heights = (szInputSize.height / threadsCountStep1);
 		size_t YStart = 0, YEnd;
 		for (size_t threadIdx = 0; threadIdx < threadsCountStep1; ++threadIdx) {
-			YEnd = (threadIdx == (threadsCountStep1 - 1)) ? height : (YStart + heights);
-			COMPV_CHECK_CODE_BAIL(err = threadDisp->invoke(std::bind(funcPtrStep1, static_cast<compv_ccl_indice_t>(YStart), static_cast<compv_ccl_indice_t>(YEnd), &mt_ner_max[threadIdx], &mt_ner_sum[threadIdx]),
+			YEnd = (threadIdx == (threadsCountStep1 - 1)) ? szInputSize.height : (YStart + heights);
+			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrStep1, static_cast<int32_t>(YStart), static_cast<int32_t>(YEnd), &mt_ner_max[threadIdx], &mt_ner_sum[threadIdx]),
 				taskIds), "Dispatching task failed");
 			YStart += heights;
 		}
-		COMPV_CHECK_CODE_BAIL(err = threadDisp->waitOne(taskIds[0]));
+		COMPV_CHECK_CODE_RETURN(threadDisp->waitOne(taskIds[0]));
 		ner_max = mt_ner_max[0];
 		ner_sum = mt_ner_sum[0];
 		for (size_t threadIdx = 1; threadIdx < threadsCountStep1; ++threadIdx) {
-			COMPV_CHECK_CODE_BAIL(err = threadDisp->waitOne(taskIds[threadIdx]));
+			COMPV_CHECK_CODE_RETURN(threadDisp->waitOne(taskIds[threadIdx]));
 			if (ner_max < mt_ner_max[threadIdx]) {
 				ner_max = mt_ner_max[threadIdx];
 			}
@@ -647,70 +571,63 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 		}
 	}
 	else {
-		COMPV_CHECK_CODE_BAIL(err = funcPtrStep1(0, static_cast<compv_ccl_indice_t>(height), &ner_max, &ner_sum));
+		COMPV_CHECK_CODE_RETURN(funcPtrStep1(0, static_cast<int32_t>(szInputSize.height), &ner_max, &ner_sum));
 	}
 
 	/* Create ERA and init with zeros */
-	COMPV_CHECK_CODE_BAIL(err = CompVMemZeroCclIndice::newObj(&ERA, height, ner_max));
+	COMPV_CHECK_CODE_RETURN(CompVMemZero32s::newObj(&ptr32sERA, szInputSize.height, ner_max));
 
 	/* Equivalence construction: step#2.0 (MT-friendly) */
 	funcPtrStep20 = [&](const size_t mt_start, const size_t mt_end) -> COMPV_ERROR_CODE {
 		step20_algo14_equivalence_build(
-			ER,
-			width,
-			RLC,
-			RLC_stride,
-			ner,
-			ERA,
-			static_cast<compv_ccl_indice_t>(width),
-			static_cast<compv_ccl_indice_t>(mt_start),
-			static_cast<compv_ccl_indice_t>(mt_end)
+			ptr16sER,
+			ptr16sRLC,
+			ptr16sNer,
+			ptr32sERA,
+			static_cast<int32_t>(szInputSize.width),
+			static_cast<int32_t>(mt_start),
+			static_cast<int32_t>(mt_end)
 		);
 		if (!mt_start) {
 			/* Build EQ */
-			COMPV_CHECK_CODE_RETURN(build_EQ(ner_sum, EQ));
+			COMPV_CHECK_CODE_RETURN(build_EQ(ner_sum, &ptr32sEQ));
 		}
 		return COMPV_ERROR_CODE_S_OK;
 	};
-	COMPV_CHECK_CODE_BAIL(err = CompVThreadDispatcher::dispatchDividingAcrossY(
+	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
 		funcPtrStep20,
-		width,
-		height,
+		szInputSize.width,
+		szInputSize.height,
 		minSamplePerThreadStep20
 	));
 	
 	/* Equivalence construction: step#2.1 (not MT-friendly) */
 	step21_algo14_equivalence_build(
-		ner,
-		ERA,
-		EQ,
+		ptr16sNer,
+		ptr32sERA,
+		ptr32sEQ,
 		&nea1
 	);
 
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING("A and step4_algo6_eq_resolv not needed unless for computing na");
-
 	/* Create A and init first element with zero (because bacground label is equal to zero) */
-	A = reinterpret_cast<compv_ccl_indice_t*>(CompVMem::malloc((nea1 + 1) * sizeof(compv_ccl_indice_t)));
-	COMPV_CHECK_EXP_BAIL(!A, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY));
-	A[0] = 0; // other values will be initialzed in step4_algo6_eq_resolv
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int32_t>(&ptr32sA, 1, (nea1 + 1)));
+	*ptr32sA->ptr<int32_t>(0, 0) = 0; // other values will be initialzed in step4_algo6_eq_resolv
 
 	/* Equivalence resolution: step#4 */
 	step4_algo6_eq_resolv(
-		EQ,
-		nea1,
-		A,
+		ptr32sEQ,
+		ptr32sA,
 		&na1
 	);
 
-	COMPV_CHECK_CODE_BAIL(err = CompVMemZeroLockedCount::newObj(&na, 1, (na1 + 1)));
-	COMPV_CHECK_CODE_BAIL(err = count_points(
-		na,
-		ERA,
-		A,
-		RLC,
-		RLC_stride,
-		ner,
-		height));
+	COMPV_CHECK_CODE_RETURN(CompVMemZeroLockedCount::newObj(&ptrxNa, 1, na1));
+	COMPV_CHECK_CODE_RETURN(count_points(
+		ptrxNa,
+		ptr32sERA,
+		ptr32sA,
+		ptr16sRLC,
+		ptr16sNer,
+		szInputSize.height));
 
 	/*build_all_labels4(
 		A,
@@ -723,19 +640,9 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 		&result.labels);*/
 	
 	//result.labels_count = (na + 1); // +1 for the background
-
-bail:
-	if (COMPV_ERROR_CODE_IS_OK(err) && result_) {
-		*result = *result_;
-	}
-	CompVMem::free(reinterpret_cast<void**>(&ner));
-	CompVMem::free(reinterpret_cast<void**>(&ER));
-	CompVMem::free(reinterpret_cast<void**>(&A));
-	CompVMem::free(reinterpret_cast<void**>(&Ainv));
-	CompVMem::free(reinterpret_cast<void**>(&EQ));
-	CompVMem::free(reinterpret_cast<void**>(&RLC));
-
-	return err;
+	
+	*result = *result_;
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::newObj(CompVConnectedComponentLabelingPtrPtr ccl)

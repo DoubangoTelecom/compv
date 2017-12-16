@@ -71,22 +71,26 @@ COMPV_ERROR_CODE ccl()
 	const CompVConnectedComponentLabelingResultLSL* result_lsl =
 		CompVConnectedComponentLabeling::reinterpret_castr<CompVConnectedComponentLabelingResultLSL>(result);
 
-#if COMPV_OS_WINDOWS && 0
+	CompVMatPtr ptr32sLabels;
+	COMPV_CHECK_CODE_RETURN(result->debugFlatten(&ptr32sLabels));
+
+#if COMPV_OS_WINDOWS && 1
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Do not write the file to the hd");
-	if (result.labels) {
-		const size_t width = result.labels->cols();
-		const size_t height = result.labels->rows();
-		const size_t stride = result.labels->stride();
+	if (ptr32sLabels) {
+		const size_t width = ptr32sLabels->cols();
+		const size_t height = ptr32sLabels->rows();
+		const size_t stride = ptr32sLabels->stride();
 
 		CompVMatPtr imageOut;
 		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<uint8_t>(&imageOut, height, width, stride));
 
-		const compv_ccl_indice_t* labelsPtr = result.labels->ptr<const compv_ccl_indice_t>();
+		const int32_t backgroundLabelId = result->backgroundLabelId();
+		const int32_t* labelsPtr = ptr32sLabels->ptr<const int32_t>();
 		uint8_t* imageOutPtr = imageOut->ptr<uint8_t>();
 
 		for (size_t j = 0; j < height; ++j) {
 			for (size_t i = 0; i < width; ++i) {
-				imageOutPtr[i] = (labelsPtr[i] != result.label_background) ? 0xff : 0x00;
+				imageOutPtr[i] = (labelsPtr[i] == backgroundLabelId) ? 0x00 : 0xff;
 			}
 			labelsPtr += stride;
 			imageOutPtr += stride;
@@ -96,9 +100,9 @@ COMPV_ERROR_CODE ccl()
 	}
 #endif
 
-	//COMPV_DEBUG_INFO("MD5: %s", compv_tests_md5(result.labels).c_str());
+	COMPV_DEBUG_INFO("MD5: %s", compv_tests_md5(ptr32sLabels).c_str());
 
-	//COMPV_CHECK_EXP_RETURN(std::string(test->md5).compare(compv_tests_md5(result.labels)) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "CCL MD5 mismatch");
+	COMPV_CHECK_EXP_RETURN(std::string(test->md5).compare(compv_tests_md5(ptr32sLabels)) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "CCL MD5 mismatch");
 
 	return COMPV_ERROR_CODE_S_OK;
 }

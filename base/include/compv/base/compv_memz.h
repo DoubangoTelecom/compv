@@ -21,16 +21,24 @@ class CompVMemZero : public CompVObj
 {
 protected:
 	CompVMemZero(size_t rows, size_t cols, size_t stride = 0) : m_nCols(cols), m_nRows(rows) {
-		size_t strideInBytes = (stride > cols) ? (stride * sizeof(T)) : CompVMem::alignForward(cols * sizeof(T));
+		m_bIsTbbMallocEnabled = CompVMem::isTbbMallocEnabled();
+		const size_t strideInBytes = (stride > cols) ? (stride * sizeof(T)) : CompVMem::alignForward(cols * sizeof(T), CompVMem::bestAlignment());
 		m_nDataSize = ((strideInBytes * rows)) + CompVMem::bestAlignment();
-		m_pMem = static_cast<uint8_t*>(::calloc(m_nDataSize, sizeof(uint8_t)));
+		m_pMem = m_bIsTbbMallocEnabled
+			? reinterpret_cast<uint8_t*>(CompVMem::callocAligned(m_nDataSize, sizeof(uint8_t), 8)) // use alignment equal to "8" to avoid calling malloc folowed by memset(0)
+			: reinterpret_cast<uint8_t*>(::calloc(m_nDataSize, sizeof(uint8_t)));
 		m_pPtr = reinterpret_cast<T*>(CompVMem::alignForward(reinterpret_cast<uintptr_t>(m_pMem)));
 		m_nStride = strideInBytes / sizeof(T);
 	}
 public:
 	virtual ~CompVMemZero() {
 		if (m_pMem) {
-			::free(m_pMem);
+			if (m_bIsTbbMallocEnabled) {
+				CompVMem::freeAligned(reinterpret_cast<void**>(&m_pMem));
+			}
+			else {
+				::free(m_pMem);
+			}
 		}
 	}
 	COMPV_OBJECT_GET_ID(CompVMemZero);
@@ -65,13 +73,14 @@ private:
 	size_t m_nStride;
 	size_t m_nDataSize;
 	uint8_t* m_pMem;
+	bool m_bIsTbbMallocEnabled;
 };
 
-typedef CompVMemZero<int32_t> CompVMemZeroInt32;
-typedef CompVMemZero<uint8_t> CompVMemZeroUInt8;
+typedef CompVMemZero<int32_t> CompVMemZero32s;
+typedef CompVMemZero<uint8_t> CompVMemZero8u;
 
-typedef CompVPtr<CompVMemZeroInt32 *> CompVMemZeroInt32Ptr;
-typedef CompVPtr<CompVMemZeroUInt8 *> CompVMemZeroUInt8Ptr;
+typedef CompVPtr<CompVMemZero32s *> CompVMemZero32sPtr;
+typedef CompVPtr<CompVMemZero8u *> CompVMemZero8uPtr;
 
 COMPV_NAMESPACE_END()
 

@@ -61,7 +61,6 @@ public:
 	static bool isGpuFriendly(const void* mem, size_t size);
 
 	static bool isTbbMallocEnabled();
-	static COMPV_ERROR_CODE setTbbMallocEnabled(bool enabled);
     static int bestAlignment();
     static bool isSpecial(void* ptr);
     static size_t specialTotalMemSize();
@@ -75,7 +74,6 @@ private:
 private:
     COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
     static bool s_bInitialize;
-	static bool s_bTbbMallocEnabled;
     static std::map<uintptr_t, compv_special_mem_t > s_Specials;
     static CompVPtr<CompVMutex* >s_SpecialsMutex;
     static void(*MemSetDword)(void* dstPtr, compv_scalar_t val, compv_uscalar_t count);

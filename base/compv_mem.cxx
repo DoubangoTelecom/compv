@@ -88,11 +88,6 @@ COMPV_EXTERNC void CompVMemZero_Asm_NEON64(COMPV_ALIGNED(NEON) void* dstPtr, com
 COMPV_EXTERNC void CompVMemCopy3_Asm_NEON64(COMPV_ALIGNED(NEON) uint8_t* dstPt0, COMPV_ALIGNED(NEON) uint8_t* dstPt1, COMPV_ALIGNED(NEON) uint8_t* dstPt2, COMPV_ALIGNED(NEON) const compv_uint8x3_t* srcPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
 #endif /* COMPV_ARCH_ARM64 && COMPV_ASM */
 
-#if COMPV_USE_TBBMALLOC
-bool CompVMem::s_bTbbMallocEnabled = true;
-#else
-bool CompVMem::s_bTbbMallocEnabled = false;
-#endif
 std::map<uintptr_t, compv_special_mem_t > CompVMem::s_Specials;
 CompVMutexPtr CompVMem::s_SpecialsMutex;
 bool CompVMem::s_bInitialize = false;
@@ -451,9 +446,13 @@ void* CompVMem::calloc(size_t num, size_t size)
 #else
     void* pMem = NULL;
     if (num && size) {
+#	if COMPV_USE_TBBMALLOC
+		pMem = scalable_calloc(num, size);
+#	else
         pMem = ::calloc(num, size);
+#endif
         if (!pMem) {
-			COMPV_DEBUG_FATAL_EX(COMPV_THIS_CLASSNAME, "Memory allocation failed. num=%u and size=%u", (unsigned)num, (unsigned)size);
+			COMPV_DEBUG_FATAL_EX(COMPV_THIS_CLASSNAME, "Memory allocation failed. num=%zu and size=%zu", num, size);
         }
     }
     return pMem;
@@ -570,15 +569,29 @@ void* CompVMem::reallocAligned(void* ptr, size_t size, size_t alignment/*= CompV
 
 void* CompVMem::callocAligned(size_t num, size_t size, size_t alignment/*= CompVMem::bestAlignment()*/)
 {
-    void* pMem = CompVMem::mallocAligned((size * num), alignment);
-    if (pMem) {
-        CompVMem::zero(pMem, (size * num));
+	void* pMem = nullptr;
+#if COMPV_USE_TBBMALLOC
+	if (alignment <= 8) { // no alignment needed -> calloc only, no need for malloc followed by memset(0)
+		pMem = scalable_calloc(num, size);
+		if (!pMem) {
+			COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "scalable_calloc(%zu, %zu) failed", num, size);
+			return pMem;
+		}
+	}
+#endif
+	if (!pMem) {
+		pMem = CompVMem::mallocAligned((size * num), alignment);
+		if (pMem) {
+			CompVMem::zero(pMem, (size * num));
+		}
+	}
 #	if COMPV_MEM_CHECK
-        CompVMem::specialsLock();
-        CompVMem::s_Specials.insert(std::pair<uintptr_t, compv_special_mem_t>(reinterpret_cast<uintptr_t>(pMem), compv_special_mem_t(reinterpret_cast<uintptr_t>(pMem), (size * num), alignment)));
-        CompVMem::specialsUnLock();
+	if (pMem) {
+		CompVMem::specialsLock();
+		CompVMem::s_Specials.insert(std::pair<uintptr_t, compv_special_mem_t>(reinterpret_cast<uintptr_t>(pMem), compv_special_mem_t(reinterpret_cast<uintptr_t>(pMem), (size * num), alignment)));
+		CompVMem::specialsUnLock();
+	}
 #	endif
-    }
     return pMem;
 }
 
@@ -627,17 +640,11 @@ uintptr_t CompVMem::alignForward(uintptr_t ptr, size_t alignment /*= CompVMem::b
 
 bool CompVMem::isTbbMallocEnabled()
 {
-	return s_bTbbMallocEnabled;
-}
-
-COMPV_ERROR_CODE CompVMem::setTbbMallocEnabled(bool enabled)
-{
-	COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED, "Changing this value at runtime not supported yet");
-#if !COMPV_USE_TBBMALLOC
-	COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED, "Source code not built with support for Intel tbbmalloc");
+#if COMPV_USE_TBBMALLOC
+	return true;
+#else
+	return false;
 #endif
-	s_bTbbMallocEnabled = enabled;
-	return COMPV_ERROR_CODE_S_OK;
 }
 
 int CompVMem::bestAlignment()

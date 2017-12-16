@@ -22,8 +22,6 @@ COMPV_OBJECT_DECLARE_PTRS(ConnectedComponentLabeling)
 COMPV_OBJECT_DECLARE_PTRS(ConnectedComponentLabelingResult)
 COMPV_OBJECT_DECLARE_PTRS(ConnectedComponentLabelingResultLSL)
 
-typedef int32_t compv_ccl_indice_t; /* use to hold max(width, height) */
-
 struct CompVConnectedComponentLabelingFactory {
 	int id;
 	const char* name;
@@ -80,8 +78,9 @@ public:
 	COMPV_INLINE int id() const {
 		return m_nId;
 	}
+	virtual int32_t backgroundLabelId() const { return 0; }
 	virtual size_t labelsCount() const = 0;
-	virtual COMPV_ERROR_CODE debugFlatten(CompVMatPtrPtr labels) const {
+	virtual COMPV_ERROR_CODE debugFlatten(CompVMatPtrPtr ptr32sLabels) const {
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("This function is for visual debugging only. It created an image with the list of the labels");
 		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
 		return COMPV_ERROR_CODE_S_OK;
