@@ -513,6 +513,24 @@ typedef CompVSize<int> CompVSizeInt;
 typedef CompVSize<size_t> CompVSizeSz;
 
 template <typename T>
+struct CompVRange {
+public:
+	CompVRange(T start_ = 0, T end_ = 0) {
+		start = width_, end = end_;
+	}
+	bool operator==(const CompVSize &other) const {
+		return start == other.start && end == other.end;
+	}
+	T start, end;
+};
+typedef CompVRange<compv_float32_t> CompVRangeFloat32;
+typedef CompVRange<compv_float64_t> CompVRangeFloat64;
+typedef CompVRange<int32_t> CompVRangeInt32;
+typedef CompVRange<int16_t> CompVRangeInt16;
+typedef CompVRange<int> CompVRangeInt;
+typedef CompVRange<size_t> CompVRangeSz;
+
+template <typename T>
 struct CompVLine {
 	CompVPoint<T> a, b;
 public:

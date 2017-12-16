@@ -25,8 +25,9 @@ Some literature about LSL:
 
 #include <numeric> /* std::iota */
 
-#define COMPV_CCL_LSL_STEP1_MIN_SAMPLES_PER_THREAD	(20*20)
-#define COMPV_CCL_LSL_STEP20_MIN_SAMPLES_PER_THREAD	(30*30)
+#define COMPV_CCL_LSL_STEP1_MIN_SAMPLES_PER_THREAD		(20*20)
+#define COMPV_CCL_LSL_STEP20_MIN_SAMPLES_PER_THREAD		(30*30)
+#define COMPV_CCL_LSL_BUILD_LEA_MIN_SAMPLES_PER_THREAD	(40*40)
 
 #define COMPV_THIS_CLASSNAME	"CompVConnectedComponentLabelingLSL"
 
@@ -360,11 +361,9 @@ static void step20_algo14_equivalence_build(const CompVMatPtr& ptr16sER, const C
 
 // 2.2 Equivalence construction: step#2.1 (not MT friendly)
 // Algorithm 14: LSL equivalence construction
-static void step21_algo14_equivalence_build(const CompVMatPtr& ptr16sNer, CompVMemZero32sPtr ptr32sERA, CompVMatPtr ptr32sEQ, compv_ccl_lea_t& vec32sLEA, int32_t* nea1)
+static void step21_algo14_equivalence_build(const CompVMatPtr& ptr16sNer, CompVMemZero32sPtr ptr32sERA, CompVMatPtr ptr32sEQ, int32_t* nea1)
 {
 	const size_t rows = ptr32sERA->rows();
-	
-	vec32sLEA.resize(rows);
 
 	const int16_t* ner = ptr16sNer->ptr<const int16_t>(0, 0);
 	const int16_t ner00 = ner[0];
@@ -373,20 +372,15 @@ static void step21_algo14_equivalence_build(const CompVMatPtr& ptr16sNer, CompVM
 	for (int16_t er = 1; er < ner00; er += 2) {
 		ERA0[er] = ++nea; // [new label]
 	}
-	vec32sLEA[0].resize(ner00 >> 1);
-	std::iota(vec32sLEA[0].begin(), vec32sLEA[0].end(), 1);
 	
 	int32_t* EQ = ptr32sEQ->ptr<int32_t>(0, 0);
 	int32_t* ERAi = ptr32sERA->ptr(1);
 	const int32_t* ERAiminus1 = ptr32sERA->ptr(0);
 	const size_t ERA_stride = ptr32sERA->stride();
-
-	CompVVec32s::iterator lea32s;
-	int16_t er;
+	
 	for (size_t j = 1; j < rows; ++j) {
 		const int16_t ner0j = ner[j];
-		vec32sLEA[j].resize(ner0j >> 1);
-		for (er = 1, lea32s = vec32sLEA[j].begin(); er < ner0j; er += 2, ++lea32s) {
+		for (int16_t er = 1; er < ner0j; er += 2) {
 			if (ERAi[er]) {
 				const int32_t er0 = ERAi[er] & 0xffff;
 				const int32_t er1 = (ERAi[er] >> 16) & 0xffff;
@@ -406,11 +400,9 @@ static void step21_algo14_equivalence_build(const CompVMatPtr& ptr16sNer, CompVM
 					}
 				}
 				ERAi[er] = a; // [global min]
-				*lea32s = a;
 			}
 			else {
 				ERAi[er] = ++nea; // [new label]
-				*lea32s = nea;
 			}
 		}
 		ERAiminus1 = ERAi;
@@ -452,6 +444,32 @@ static COMPV_ERROR_CODE build_EQ(const size_t ner_sum, CompVMatPtrPtr ptr32sEQ)
 	return COMPV_ERROR_CODE_S_OK;
 }
 
+// MT-friendly
+static COMPV_ERROR_CODE build_LEA(const CompVMatPtr& ptr16sNer, const CompVMemZero32sPtr& ptr32sERA, const CompVMatPtr& ptr16sRLC, compv_ccl_lea_n_t& vecLEA, const size_t start, const size_t end)
+{	
+	const int16_t* ner = ptr16sNer->ptr<const int16_t>(0, 0);
+	int32_t* ERAi = ptr32sERA->ptr(start);
+	const int16_t* RLC = ptr16sRLC->ptr<const int16_t>(start);
+	const size_t ERA_stride = ptr32sERA->stride();
+	const size_t RLC_stride = ptr16sRLC->stride();
+
+	int16_t er;
+	compv_ccl_lea_1_t::iterator it_lea;
+	for (size_t j = start; j < end; ++j) {
+		const int16_t ner0j = ner[j];
+		compv_ccl_lea_1_t& lea = vecLEA[j];
+		lea.resize(ner0j >> 1);
+		for (er = 1, it_lea = lea.begin(); er < ner0j; er += 2, ++it_lea) {
+			it_lea->ea = ERAi[er];
+			it_lea->start = RLC[er - 1];
+			it_lea->end = RLC[er];
+		}
+		ERAi += ERA_stride;
+		RLC += RLC_stride;
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 // VERY important: binar must be binary image (allowed values: 0x01, 0xff, 0x00)
 COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& binar, CompVConnectedComponentLabelingResultPtrPtr result) /*Overrides(CompVConnectedComponentLabeling)*/
 {
@@ -472,9 +490,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 	const size_t __ner_max = ((szInputSize.width + 1) >> 1); // full dashed row
 	int16_t ner_max;
 	int32_t ner_sum;
-	std::function<COMPV_ERROR_CODE(const int32_t mt_start, const int32_t mt_end, int16_t* mt_ner_max, int32_t* mt_ner_sum)> funcPtrStep1;
-	std::function<COMPV_ERROR_CODE(const size_t mt_start, const size_t mt_end)> funcPtrStep20;
-
+	
 	/* Multi-threading dispatcher */
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
 	const size_t maxThreads = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
@@ -488,9 +504,9 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 
 	CompVMatPtr ptr16sNer; // the number of segments of ERi - black + white -
 	CompVMatPtr ptr16sER; //  an associative table of size w holding the relative labels er associated to Xi
-	CompVMatPtr& ptr16sRLC = result_->ptr16sRLC(); // a table holding the run length coding of segments of the line Xi, RLCi-1 is the similar memorization of the previous line.
+	CompVMatPtr ptr16sRLC; // a table holding the run length coding of segments of the line Xi, RLCi-1 is the similar memorization of the previous line.
 	CompVMemZero32sPtr ptr32sERA; // an associative table holding the association between er and ea: ea = ERAi[er]
-	compv_ccl_lea_t& vec32sLEA = result_->vec32sLEA();
+	compv_ccl_lea_n_t& vecLEA = result_->vecLEA();
 	CompVMatPtr ptr32sEQ; // the table holding the equivalence classes, before transitive closure
 	CompVMatPtr& ptr32sA = result_->ptr32sA(); // the associative table of ancestors
 	int32_t nea1 = 0; // the current number of absolute labels, update of EQ and ERAi
@@ -502,7 +518,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int16_t>(&ptr16sNer, 1, szInputSize.height));
 
 	/* Relative segment labeling: step#1 */
-	funcPtrStep1 = [&](const int32_t mt_start, const int32_t mt_end, int16_t* mt_ner_max, int32_t* mt_ner_sum) -> COMPV_ERROR_CODE {
+	auto funcPtrStep1 = [&](const int32_t mt_start, const int32_t mt_end, int16_t* mt_ner_max, int32_t* mt_ner_sum) -> COMPV_ERROR_CODE {
 		step1_algo13_segment_STDZ<uint8_t>(
 			binar,
 			ptr16sER,
@@ -547,7 +563,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 	COMPV_CHECK_CODE_RETURN(CompVMemZero32s::newObj(&ptr32sERA, szInputSize.height, ner_max));
 
 	/* Equivalence construction: step#2.0 (MT-friendly) */
-	funcPtrStep20 = [&](const size_t mt_start, const size_t mt_end) -> COMPV_ERROR_CODE {
+	auto funcPtrStep20 = [&](const size_t mt_start, const size_t mt_end) -> COMPV_ERROR_CODE {
 		step20_algo14_equivalence_build(
 			ptr16sER,
 			ptr16sRLC,
@@ -575,9 +591,28 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 		ptr16sNer,
 		ptr32sERA,
 		ptr32sEQ,
-		vec32sLEA,
 		&nea1
 	);
+
+	/* Build LEA (MT friendly) */
+	vecLEA.resize(szInputSize.height);
+	auto funcPtrBuildLEA = [&](const size_t mt_start, const size_t mt_end) -> COMPV_ERROR_CODE {
+		COMPV_CHECK_CODE_RETURN(build_LEA(
+			ptr16sNer,
+			ptr32sERA,
+			ptr16sRLC,
+			vecLEA,
+			mt_start,
+			mt_end
+		));
+		return COMPV_ERROR_CODE_S_OK;
+	};
+	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+		funcPtrBuildLEA,
+		szInputSize.width,
+		szInputSize.height,
+		COMPV_CCL_LSL_BUILD_LEA_MIN_SAMPLES_PER_THREAD
+	));
 
 	/* Equivalence resolution: step#4 */
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int32_t>(&ptr32sA, 1, (nea1 + 1))); // +1 for background which is "0"

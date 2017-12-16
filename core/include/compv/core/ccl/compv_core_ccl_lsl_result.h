@@ -20,7 +20,14 @@ COMPV_NAMESPACE_BEGIN()
 
 static const int32_t kCompVConnectedComponentLabelingLSLBachgroundLabel = 0; // Must be zero because of calloc()
 
-typedef std::vector<CompVVec32s > compv_ccl_lea_t;
+typedef std::vector<CompVRangeInt16 > compv_ccl_rlc_t;
+struct compv_ccl_range_t {
+	int32_t ea;
+	int16_t start; // RLC[er - 1]
+	int16_t end; // RLC[er]
+};
+typedef std::vector<compv_ccl_range_t, CompVAllocatorNoDefaultConstruct<compv_ccl_range_t> > compv_ccl_lea_1_t;
+typedef std::vector<compv_ccl_lea_1_t > compv_ccl_lea_n_t;
 
 
 COMPV_OBJECT_DECLARE_PTRS(ConnectedComponentLabelingResultLSLImpl);
@@ -42,9 +49,8 @@ public:
 	virtual COMPV_ERROR_CODE firstOrderMoment() const override;
 
 	COMPV_INLINE int32_t& na1() { return m_nNa1; }
-	COMPV_INLINE compv_ccl_lea_t& vec32sLEA() { return m_vec32sLEA; }
+	COMPV_INLINE compv_ccl_lea_n_t& vecLEA() { return m_vecLEA; }
 	COMPV_INLINE CompVMatPtr& ptr32sA() { return m_ptr32sA; }
-	COMPV_INLINE CompVMatPtr& ptr16sRLC() { return m_ptr16sRLC; }
 	COMPV_INLINE CompVSizeSz& szInput() { return m_szInput; }
 
 	COMPV_ERROR_CODE reset();
@@ -53,9 +59,8 @@ public:
 
 private:
 	int32_t m_nNa1; // final number of absolute labels
-	compv_ccl_lea_t m_vec32sLEA; // an associative table holding the association between er and ea: ea = ERAi[er]
+	compv_ccl_lea_n_t m_vecLEA; // an associative table holding the association between er and ea: ea = ERAi[er]
 	CompVMatPtr m_ptr32sA; // the associative table of ancestors
-	CompVMatPtr m_ptr16sRLC; // a table holding the run length coding of segments of the line Xi, RLCi-1 is the similar memorization of the previous line.
 	CompVSizeSz m_szInput;
 };
 
