@@ -35,7 +35,7 @@ COMPV_UNITTEST_CCL[] =
 static const size_t COMPV_UNITTEST_CCL_COUNT = sizeof(COMPV_UNITTEST_CCL) / sizeof(COMPV_UNITTEST_CCL[0]);
 
 #define LOOP_COUNT		1
-#define TEST_TYPE		TEST_TYPE_TEXT
+#define TEST_TYPE		TEST_TYPE_DIFFRACT
 
 static COMPV_ERROR_CODE blitPoints(const CompVConnectedComponentLabelingResultPtr& result, const size_t binarWidth, const size_t binarHeight, CompVMatPtrPtr output);
 
@@ -75,8 +75,8 @@ COMPV_ERROR_CODE ccl()
 	const uint64_t timeEnd = CompVTime::nowMillis();
 	COMPV_DEBUG_INFO("Elapsed time (TestConnectedComponentLabeling) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 
-	const CompVConnectedComponentLabelingResultLSL* result_lsl =
-		CompVConnectedComponentLabeling::reinterpret_castr<CompVConnectedComponentLabelingResultLSL>(result);
+	//const CompVConnectedComponentLabelingResultLSL* result_lsl =
+	//	CompVConnectedComponentLabeling::reinterpret_castr<CompVConnectedComponentLabelingResultLSL>(result);
 
 	COMPV_CHECK_CODE_RETURN(result->debugFlatten(&ptr32sLabels));
 	COMPV_CHECK_CODE_RETURN(blitPoints(result, binar->cols(), binar->rows(), &ptr8uRestored));

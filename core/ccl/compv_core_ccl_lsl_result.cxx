@@ -53,8 +53,8 @@ static COMPV_ERROR_CODE extract_contours(
 );
 
 CompVConnectedComponentLabelingResultLSLImpl::CompVConnectedComponentLabelingResultLSLImpl()
-	: m_szInput(CompVSizeSz(0, 0))
-	, m_nNa1(0)
+	: m_nNa1(0)
+	, m_szInput(CompVSizeSz(0, 0))
 {
 }
 
@@ -337,7 +337,6 @@ static COMPV_ERROR_CODE extract_contours(
 				const int32_t a = (it->a - 1); // a within [1, na]
 				CompVMatPtr& pp = points[a];
 				const size_t gOld = static_cast<size_t>(compv_atomic_add(&szFilled[a], 2));
-				compv_float32_t x32f = static_cast<compv_float32_t>(it->start);
 				compv_float32_t* x32fPtr = pp->data<compv_float32_t>() + gOld;
 				compv_float32_t* y32fPtr = x32fPtr + pp->stride();
 				*x32fPtr = static_cast<compv_float32_t>(it->start);

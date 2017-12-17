@@ -136,6 +136,12 @@
     <Filter Include="source\intrin\arm">
       <UniqueIdentifier>{81d54b48-9617-4544-89bf-9e8aeafee48a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\tbbmalloc">
+      <UniqueIdentifier>{366a9231-ae82-4479-8f08-3b8fc7a2ca14}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\tbbmalloc">
+      <UniqueIdentifier>{20c5da7e-dbbd-4e4b-90d4-ea11bdf15931}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\base\compv_base.h">
@@ -579,6 +585,192 @@
     <ClInclude Include="include\compv\base\compv_dlmalloc.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\aggregator.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\aligned_space.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\atomic.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\blocked_range.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\blocked_range2d.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\blocked_range3d.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\cache_aligned_allocator.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\combinable.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\concurrent_hash_map.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\concurrent_lru_cache.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\concurrent_priority_queue.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\concurrent_queue.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\concurrent_unordered_map.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\concurrent_unordered_set.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\concurrent_vector.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\critical_section.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\enumerable_thread_specific.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\flow_graph.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\flow_graph_abstractions.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\flow_graph_opencl_node.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\gfx_factory.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\global_control.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\memory_pool.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\mutex.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\null_mutex.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\null_rw_mutex.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\parallel_do.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\parallel_for.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\parallel_for_each.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\parallel_invoke.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\parallel_reduce.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\parallel_scan.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\parallel_sort.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\parallel_while.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\partitioner.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\pipeline.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\queuing_mutex.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\queuing_rw_mutex.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\reader_writer_lock.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\recursive_mutex.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\runtime_loader.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\scalable_allocator.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\spin_mutex.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\spin_rw_mutex.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\task.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\task_arena.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\task_group.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\task_scheduler_init.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\task_scheduler_observer.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\tbb_allocator.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\tbb_config.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\itt_notify.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\tbb.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\tbb_disable_exceptions.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\tbb_exception.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\tbb_machine.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\tbb_profiling.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\tbb_stddef.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\tbb_thread.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\tbb_version.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\tbbmalloc_proxy.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\tbbmalloc\tick_count.h">
+      <Filter>include\tbbmalloc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx">
@@ -988,6 +1180,21 @@
     </ClCompile>
     <ClCompile Include="compv_dlmalloc.c">
       <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="tbbmalloc\frontend.cpp">
+      <Filter>source\tbbmalloc</Filter>
+    </ClCompile>
+    <ClCompile Include="tbbmalloc\backend.cpp">
+      <Filter>source\tbbmalloc</Filter>
+    </ClCompile>
+    <ClCompile Include="tbbmalloc\backref.cpp">
+      <Filter>source\tbbmalloc</Filter>
+    </ClCompile>
+    <ClCompile Include="tbbmalloc\large_objects.cpp">
+      <Filter>source\tbbmalloc</Filter>
+    </ClCompile>
+    <ClCompile Include="tbbmalloc\tbbmalloc.cpp">
+      <Filter>source\tbbmalloc</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -575,6 +575,7 @@ private:
 typedef std::vector<CompVMatPtr> CompVMatPtrVector;
 
 COMPV_GCC_DISABLE_WARNINGS_END()
+COMPV_GCC_DISABLE_WARNINGS_END()
 
 COMPV_NAMESPACE_END()
 

@@ -130,7 +130,7 @@ public:
 	static const T* reinterpret_castr(const CompVConnectedComponentLabelingResultPtr& result) {
 		if (result) {
 			if (result->id() == COMPV_PLSL_ID && std::is_same<T, CompVConnectedComponentLabelingResultLSL>::value) {
-				return dynamic_cast<const CompVConnectedComponentLabelingResultLSL*>(*result);
+				return reinterpret_cast<const CompVConnectedComponentLabelingResultLSL*>(*result);
 			}
 		}
 		return nullptr;

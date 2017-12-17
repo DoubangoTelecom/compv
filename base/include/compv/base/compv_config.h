@@ -190,6 +190,9 @@
 #define COMPV_ASM                       1
 #define COMPV_INTRINSIC                 1
 
+// Intel TBBMalloc
+#define  COMPV_TBBMALLOC				1
+
 // Disable some well-known warnings
 #if defined(_MSC_VER)
 #	define COMPV_VS_DISABLE_WARNINGS_BEGIN(nn) \
@@ -405,6 +408,11 @@
 #	elif COMPV_ARCH_ARM
 #		include <arm_neon.h>
 #	endif
+#endif
+
+#if COMPV_TBBMALLOC
+#	define __TBB_SOURCE_DIRECTLY_INCLUDED	1
+#	define __TBBMALLOC_BUILD				1
 #endif
 
 #endif /* _COMPV_BASE_CONFIG_H_ */

@@ -516,9 +516,9 @@ template <typename T>
 struct CompVRange {
 public:
 	CompVRange(T start_ = 0, T end_ = 0) {
-		start = width_, end = end_;
+		start = start_, end = end_;
 	}
-	bool operator==(const CompVSize &other) const {
+	bool operator==(const CompVRange &other) const {
 		return start == other.start && end == other.end;
 	}
 	T start, end;

@@ -477,7 +477,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 	/* Create result */
 	CompVConnectedComponentLabelingResultLSLImplPtr result_;
 	if (*result && (*result)->id() == id()) {
-		result_ = dynamic_cast<CompVConnectedComponentLabelingResultLSLImpl*>(**result);
+		result_ = reinterpret_cast<CompVConnectedComponentLabelingResultLSLImpl*>(**result);
 	}
 	COMPV_CHECK_CODE_RETURN(CompVConnectedComponentLabelingResultLSLImpl::newObj(&result_));
 	COMPV_CHECK_CODE_RETURN(result_->reset());

@@ -44,6 +44,7 @@
     <ClInclude Include="..\include\compv\core\calib\compv_core_calib_homography.h" />
     <ClInclude Include="..\include\compv\core\calib\compv_core_calib_utils.h" />
     <ClInclude Include="..\include\compv\core\ccl\compv_core_ccl_lsl.h" />
+    <ClInclude Include="..\include\compv\core\ccl\compv_core_ccl_lsl_result.h" />
     <ClInclude Include="..\include\compv\core\ccl\intrin\x86\compv_core_ccl_lsl_intrin_sse2.h" />
     <ClInclude Include="..\include\compv\core\compv_core.h" />
     <ClInclude Include="..\include\compv\core\compv_core_common.h" />
@@ -84,6 +85,7 @@
     <ClCompile Include="..\calib\compv_core_calib_homography.cxx" />
     <ClCompile Include="..\calib\compv_core_calib_utils.cxx" />
     <ClCompile Include="..\ccl\compv_core_ccl_lsl.cxx" />
+    <ClCompile Include="..\ccl\compv_core_ccl_lsl_result.cxx" />
     <ClCompile Include="..\ccl\intrin\x86\compv_core_ccl_lsl_intrin_sse2.cxx" />
     <ClCompile Include="..\compv_core.cxx" />
     <ClCompile Include="..\compv_core_simd_globals.cxx" />

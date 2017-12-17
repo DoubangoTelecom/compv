@@ -18,12 +18,9 @@
 #include "compv/base/intrin/x86/compv_mem_intrin_ssse3.h"
 #include "compv/base/intrin/x86/compv_mem_intrin_avx.h"
 
-#if defined(HAVE_TBB) || defined(HAVE_TBBMALLOC) || (COMPV_OS_WINDOWS || COMPV_USE_TBBMALLOC)
-#	define __TBB_NO_IMPLICIT_LINKAGE 0
-#	include <scalable_allocator.h> /* tbbmalloc */
-#	undef COMPV_USE_TBBMALLOC
-#	define COMPV_USE_TBBMALLOC	1
-#endif /* Intel tbbmalloc */
+#if COMPV_TBBMALLOC
+#include "compv/base/tbbmalloc/scalable_allocator.h"
+#endif /* COMPV_TBBMALLOC */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -44,7 +41,7 @@ COMPV_NAMESPACE_BEGIN()
 #	define COMPV_MEM_CHECK 1
 #endif
 
-#if !defined(COMPV_USE_DLMALLOC) && !defined(COMPV_USE_TBBMALLOC)
+#if !defined(COMPV_USE_DLMALLOC) && !defined(COMPV_TBBMALLOC)
 #	define COMPV_USE_DLMALLOC 0 // Crash on MT (e.g. Morph test, "USE_LOCKS" defined in header but doesn't fix the issue)
 #endif
 
@@ -107,7 +104,7 @@ COMPV_ERROR_CODE CompVMem::init()
         COMPV_CHECK_CODE_RETURN(CompVMutex::newObj(&s_SpecialsMutex));
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Memory check enabled for debugging, this may slowdown the code");
 #endif
-#if COMPV_USE_TBBMALLOC
+#if COMPV_TBBMALLOC
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Intel tbbmalloc is enabled and activated, this a good news");
 #else
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Intel tbbmalloc not enabled. You may have some perf issues on memory allocation and cache management. Sad!");
@@ -370,7 +367,7 @@ void* CompVMem::malloc(size_t size)
 #if COMPV_MEMALIGN_ALWAYS
     return mallocAligned(size);
 #else
-#	if COMPV_USE_TBBMALLOC
+#	if COMPV_TBBMALLOC
 	void *pMem = scalable_malloc(size);
 #	elif COMPV_USE_DLMALLOC
 	void *pMem = dlmalloc(size);
@@ -446,7 +443,7 @@ void* CompVMem::calloc(size_t num, size_t size)
 #else
     void* pMem = NULL;
     if (num && size) {
-#	if COMPV_USE_TBBMALLOC
+#	if COMPV_TBBMALLOC
 		pMem = scalable_calloc(num, size);
 #	else
         pMem = ::calloc(num, size);
@@ -477,7 +474,7 @@ void CompVMem::free(void** ptr)
 #if COMPV_MEMALIGN_ALWAYS
             freeAligned(ptr);
 #else
-#	if COMPV_USE_TBBMALLOC
+#	if COMPV_TBBMALLOC
 			scalable_free(*ptr);
 #	elif COMPV_USE_DLMALLOC
 			dlfree(*ptr);
@@ -494,7 +491,7 @@ void* CompVMem::mallocAligned(size_t size, size_t alignment_/*= CompVMem::bestAl
 {
     void* pMem;
 	const size_t alignment = COMPV_MATH_MAX(alignment_, COMPV_MEMALIGN_MINSIZE); // For example, posix_memalign(&pMem, 1, ...) return null on Android
-#if COMPV_USE_TBBMALLOC
+#if COMPV_TBBMALLOC
 	pMem = scalable_aligned_malloc(size, alignment);
 #elif COMPV_USE_DLMALLOC
 	pMem = dlmemalign(alignment, size);
@@ -533,7 +530,7 @@ void* CompVMem::reallocAligned(void* ptr, size_t size, size_t alignment/*= CompV
     }
 #endif
     void* pMem;
-#if COMPV_USE_TBBMALLOC
+#if COMPV_TBBMALLOC
 	pMem = scalable_aligned_realloc(ptr, size, alignment);
 #elif COMPV_USE_DLMALLOC
 	pMem = dlrealloc(ptr, size);
@@ -570,7 +567,7 @@ void* CompVMem::reallocAligned(void* ptr, size_t size, size_t alignment/*= CompV
 void* CompVMem::callocAligned(size_t num, size_t size, size_t alignment/*= CompVMem::bestAlignment()*/)
 {
 	void* pMem = nullptr;
-#if COMPV_USE_TBBMALLOC
+#if COMPV_TBBMALLOC
 	if (alignment <= 8) { // no alignment needed -> calloc only, no need for malloc followed by memset(0)
 		pMem = scalable_calloc(num, size);
 		if (!pMem) {
@@ -609,7 +606,7 @@ void CompVMem::freeAligned(void** ptr)
             CompVMem::specialsUnLock();
         }
 #endif
-#if COMPV_USE_TBBMALLOC
+#if COMPV_TBBMALLOC
 		scalable_aligned_free(ptr_);
 #elif COMPV_USE_DLMALLOC
 		dlfree(ptr_);
@@ -640,7 +637,7 @@ uintptr_t CompVMem::alignForward(uintptr_t ptr, size_t alignment /*= CompVMem::b
 
 bool CompVMem::isTbbMallocEnabled()
 {
-#if COMPV_USE_TBBMALLOC
+#if COMPV_TBBMALLOC
 	return true;
 #else
 	return false;
