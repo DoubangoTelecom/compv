@@ -383,8 +383,8 @@ sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_X64
 			xor t0w, 0xffff
 			jz .EndOfMask
 				.BeginOfWhile
-					; "bsf" (http://www.felixcloutier.com/x86/BSF.html) on zero is undefined but thanks to our guards t1d will never be zero. 
-					; "tzcnt" which is better (handles zeros) is available Haswell+ 
+					; "bsf" (http://www.felixcloutier.com/x86/BSF.html) on zero is undefined but thanks to our guards t1w will never be zero. 
+					; "tzcnt" which is better (handles zeros) is available Haswell+
 					bsf t1w, t0w
 					add t1w, iw
 					mov [RLCi + er*COMPV_YASM_INT16_SZ_BYTES], word t1w
