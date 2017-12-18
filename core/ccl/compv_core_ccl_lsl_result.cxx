@@ -119,7 +119,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::debugFlatten(Comp
 
 COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::extract(CompVMatPtrVector& points, COMPV_CCL_EXTRACT_TYPE type COMPV_DEFAULT(COMPV_CCL_EXTRACT_TYPE_BLOB)) const
 {
-	COMPV_CHECK_EXP_RETURN(type != COMPV_CCL_EXTRACT_TYPE_CONTOUR && type != COMPV_CCL_EXTRACT_TYPE_BLOB, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(type != COMPV_CCL_EXTRACT_TYPE_SEGMENT && type != COMPV_CCL_EXTRACT_TYPE_BLOB, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_CHECK_EXP_RETURN(!m_szInput.width || !m_szInput.height || m_vecLEA.size() != m_szInput.height, COMPV_ERROR_CODE_E_INVALID_STATE);
 
 	points.clear();
@@ -136,7 +136,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::extract(CompVMatP
 	case COMPV_CCL_EXTRACT_TYPE_BLOB:
 		COMPV_CHECK_CODE_RETURN(extract_blobs(points, m_vecLEA, m_szInput, static_cast<size_t>(m_nNa1)));
 		break;
-	case COMPV_CCL_EXTRACT_TYPE_CONTOUR:
+	case COMPV_CCL_EXTRACT_TYPE_SEGMENT:
 		COMPV_CHECK_CODE_RETURN(extract_contours(points, m_vecLEA, m_szInput, static_cast<size_t>(m_nNa1)));
 		break;
 	default:

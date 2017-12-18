@@ -63,7 +63,8 @@ COMPV_EXTERNC void CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBui
 #endif /* COMPV_ASM && COMPV_ARCH_X64 */
 
 CompVConnectedComponentLabelingLSL::CompVConnectedComponentLabelingLSL()
-	:CompVConnectedComponentLabeling(static_cast<int32_t>(COMPV_PLSL_ID))
+	:CompVConnectedComponentLabeling(static_cast<int32_t>(COMPV_PLSL_TYPE_XRLEZ))
+	, m_nType(COMPV_PLSL_TYPE_XRLEZ)
 {
 
 }
@@ -79,8 +80,8 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::set(int id, const void* val
 	switch (id) {
 	case COMPV_PLSL_SET_INT_TYPE: {
 		COMPV_CHECK_EXP_RETURN(valueSize != sizeof(int), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-		//int type = *reinterpret_cast<const int*>(valuePtr);
-
+		const int type = *reinterpret_cast<const int*>(valuePtr);
+		COMPV_CHECK_EXP_RETURN(type != COMPV_PLSL_TYPE_XRLEZ, COMPV_ERROR_CODE_E_NOT_IMPLEMENTED, "Only XRLEZ type is supported in the current version");
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	default:

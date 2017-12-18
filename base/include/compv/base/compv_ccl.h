@@ -29,7 +29,7 @@ struct CompVConnectedComponentLabelingFactory {
 };
 
 enum COMPV_CCL_EXTRACT_TYPE {
-	COMPV_CCL_EXTRACT_TYPE_CONTOUR, // external contour only (TODO(dmi): contour extraction using PLSL not correct -> use canny followed by blob extraction)
+	COMPV_CCL_EXTRACT_TYPE_SEGMENT, // external contour only (TODO(dmi): contour extraction using PLSL not correct -> use canny followed by blob extraction)
 	COMPV_CCL_EXTRACT_TYPE_BLOB // everything
 };
 
@@ -42,9 +42,12 @@ enum {
 	COMPV_PLSL_ID,
 	COMPV_PLSL_SET_INT_TYPE,
 	COMPV_PLSL_TYPE_STD,
+	COMPV_PLSL_TYPE_STDZ,
 	COMPV_PLSL_TYPE_RLC,
 	COMPV_PLSL_TYPE_XRLC,
 	COMPV_PLSL_TYPE_RLE,
+	COMPV_PLSL_TYPE_XRLE,
+	COMPV_PLSL_TYPE_XRLEZ,
 
 	/* Contour Tracing approach by Fu Chang et al */
 	COMPV_CT_ID,

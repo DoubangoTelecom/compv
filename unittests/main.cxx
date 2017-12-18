@@ -8,11 +8,12 @@ using namespace compv;
 #define UNITTEST_SCALE							0
 #define UNITTEST_PYRAMID						0
 #define UNITTEST_SOBEL							0
-#define UNITTEST_CANNY							1
+#define UNITTEST_CANNY							0
 #define UNITTEST_THRESHOLD_ADAPT				0
 #define UNITTEST_THRESHOLD_OTSU					0
 #define UNITTEST_HOUGHSHT						0
 #define UNITTEST_HOUGHKHT						0
+#define UNITTEST_CCL							1
 
 #define UNITTEST_FEATURE_FAST					0
 #define UNITTEST_CHROMA_CONV					0
@@ -132,7 +133,12 @@ compv_main()
 #if UNITTEST_HOUGHKHT || !defined(COMPV_TEST_LOCAL)
 								extern COMPV_ERROR_CODE unittest_houghkht();
 								COMPV_CHECK_CODE_BAIL(err = unittest_houghkht(), "Houghkht unittest failed");
-#endif						
+#endif	
+#if UNITTEST_CCL || !defined(COMPV_TEST_LOCAL)
+								extern COMPV_ERROR_CODE unittest_ccl();
+								COMPV_CHECK_CODE_BAIL(err = unittest_ccl(), "CCL unittest failed");
+#endif	
+								
 								
 								
 #if UNITTEST_FEATURE_FAST || !defined(COMPV_TEST_LOCAL)

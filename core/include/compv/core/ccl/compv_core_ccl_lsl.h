@@ -33,6 +33,7 @@ public:
 	static COMPV_ERROR_CODE newObj(CompVConnectedComponentLabelingPtrPtr ccl);
 
 private:
+	int m_nType;
 };
 
 COMPV_NAMESPACE_END()
