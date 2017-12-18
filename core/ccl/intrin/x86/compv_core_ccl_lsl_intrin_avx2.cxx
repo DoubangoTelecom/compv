@@ -27,7 +27,7 @@ void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Intrin
 {
 	COMPV_DEBUG_INFO_CHECK_AVX2();
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("SSE version faster");
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM version faster");
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM version faster is #8 times faster (thanks to 'bsf' and 'blsr' instructions)");
 	_mm256_zeroupper();
 	const int16_t width1 = static_cast<int16_t>(width);
 	const int16_t width32 = (width1 - 1) & -32; // width > 32 (at least 33) which means never equal to zero

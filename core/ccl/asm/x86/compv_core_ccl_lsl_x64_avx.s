@@ -319,10 +319,12 @@ sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_X64
 	%define t0d			r11d
 	%define t1			r12
 	%define t1w			r12w
-	%define i			r13
-	%define iw			r13w
-	%define er			r14
-	%define erb			r14b
+	%define t1d			r12d
+	%define i			r14
+	%define iw			r14w
+	%define id			r14d
+	%define er			r15
+	%define erb			r15b
 
 	mov Xi, arg(0) 
 	mov Xi_stride, arg(1)
@@ -365,15 +367,14 @@ sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_X64
 			vpmovmskb t0d, ymm0
 			xor t0d, 0xffffffff
 			jz .EndOfMask
-				mov t1, i
 				.BeginOfWhile
-					test t0, 1
-					jz .Next_BeginOfWhile
-						mov [RLCi + er*COMPV_YASM_INT16_SZ_BYTES], word t1w
-						inc er
-					.Next_BeginOfWhile:
-					inc t1
-					shr t0d, 1
+					; "bsf" (http://www.felixcloutier.com/x86/BSF.html) on zero is undefined but thanks to our guards t1d will never be zero. 
+					; "tzcnt" which is better (handles zeros) is available Haswell+ 
+					bsf t1d, t0d
+					lea t1d, [t1d + id]
+					mov [RLCi + er*COMPV_YASM_INT16_SZ_BYTES], word t1w
+					inc er
+					blsr t0d, t0d ; Reset Lowest Set Bit (http://www.felixcloutier.com/x86/BLSR.html)
 					jnz .BeginOfWhile
 				.EndOfWhile
 			.EndOfMask
@@ -427,9 +428,11 @@ sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_X64
 	%undef t0w
 	%undef t0d		
 	%undef t1			
-	%undef t1w			
+	%undef t1w
+	%undef t1d
 	%undef i			
-	%undef iw			
+	%undef iw
+	%undef id		
 	%undef er			
 	%undef erb	
 

@@ -59,7 +59,7 @@ COMPV_UNITTEST_CCL[] =
 };
 static const size_t COMPV_UNITTEST_CCL_COUNT = sizeof(COMPV_UNITTEST_CCL) / sizeof(COMPV_UNITTEST_CCL[0]);
 
-#define LOOP_COUNT		1
+#define LOOP_COUNT		1000
 #define TEST_TYPE		TEST_TYPE_DIFFRACT
 
 static COMPV_ERROR_CODE check_labels(const CompVConnectedComponentLabelingResultPtr& result, const compv_unittest_ccl* test);
@@ -138,7 +138,7 @@ static COMPV_ERROR_CODE check_blobs(const CompVConnectedComponentLabelingResultP
 {
 	CompVMatPtr ptr8uRestored;
 	COMPV_CHECK_CODE_RETURN(__extract(result, COMPV_CCL_EXTRACT_TYPE_BLOB, ptr8uInput->cols(), ptr8uInput->rows(), &ptr8uRestored));
-#if COMPV_OS_WINDOWS && 0
+#if COMPV_OS_WINDOWS && 1
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Do not write the file to the hd");
 	COMPV_CHECK_CODE_RETURN(compv_tests_write_to_file(ptr8uRestored, TEST_TYPE));
 #endif
