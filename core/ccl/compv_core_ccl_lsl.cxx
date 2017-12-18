@@ -286,8 +286,7 @@ static void CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_C(
 	const int16_t* ner,
 	const compv_uscalar_t width, const compv_uscalar_t height)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("You should ASM code which is faster");
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation could be found");
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("You should use ASM code which is faster");
 
 	const int16_t wminus1 = static_cast<int16_t>(width - 1);
 	int16_t er, er0, er1, j0, j1, nerj;
@@ -354,8 +353,8 @@ static void step20_algo14_equivalence_build(const CompVMatPtr& ptr16sER, const C
 			COMPV_EXEC_IFDEF_ASM_X64(funPtr = CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_16s32s_Asm_X64_CMOV);
 		}
 #elif COMPV_ARCH_ARM
-		//COMPV_EXEC_IFDEF_ASM_ARM32(funPtr = CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_16s32s_Asm_X64_ARM32);
-		//COMPV_EXEC_IFDEF_ASM_ARM64(funPtr = CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_16s32s_Asm_X64_ARM64);
+		//COMPV_EXEC_IFDEF_ASM_ARM32(funPtr = CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_16s32s_Asm_ARM32);
+		//COMPV_EXEC_IFDEF_ASM_ARM64(funPtr = CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_16s32s_Asm_ARM64);
 #endif
 
 	funPtr(
@@ -421,24 +420,55 @@ static void step21_algo14_equivalence_build(const CompVMatPtr& ptr16sNer, CompVM
 	*nea1 = nea;
 }
 
+static void step4_algo6_eq_resolv_C(const int32_t* EQ, const compv_uscalar_t nea, int32_t* A, int32_t* na1)
+{
+#if 0 // Not CPU intensive -> for now do not write CMOV version
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("You should use ASM version which is fater (requires CMOV)");
+#endif
+	const int32_t nea1 = static_cast<int32_t>(nea);
+	const int32_t nea4 = (nea1 - 1) & -4;
+	int32_t na = 0, ea;
+
+	for (ea = 1; ea < nea4; ea += 4) {
+		const int32_t a1 = EQ[ea];
+		const int32_t a2 = EQ[ea + 1];
+		const int32_t a3 = EQ[ea + 2];
+		const int32_t a4 = EQ[ea + 3];
+		A[ea] = (a1 != ea) ? A[a1] : ++na;
+		A[ea + 1] = (a2 != (ea + 1)) ? A[a2] : ++na;
+		A[ea + 2] = (a3 != (ea + 2)) ? A[a3] : ++na;
+		A[ea + 3] = (a4 != (ea + 3)) ? A[a4] : ++na;
+	}
+	for (; ea < nea1; ++ea) {
+		const int32_t a1 = EQ[ea];
+		A[ea] = (a1 != ea) ? A[a1] : ++na;
+	}
+	*na1 = na;
+}
+
 // 2.4 Equivalence resolution: step#4
 static void step4_algo6_eq_resolv(const CompVMatPtr& ptr32sEQ, CompVMatPtr ptr32sA, int32_t* na1)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No ASM implementation found (cmov)");
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No unroll implementation found");
-	const int32_t nea = static_cast<int32_t>(ptr32sA->cols());
-	int32_t* A = ptr32sA->ptr<int32_t>(0, 0);
-	const int32_t* EQ = ptr32sEQ->ptr<const int32_t>(0, 0);
-	int32_t na = 0;
+	void (*funcPtr)(const int32_t* EQ, const compv_uscalar_t nea, int32_t* A, int32_t* na1)
+		= [](const int32_t* EQ, const compv_uscalar_t nea, int32_t* A, int32_t* na1) {
+		step4_algo6_eq_resolv_C(EQ, nea, A, na1);
+	};
 
-	for (int32_t ea = 1; ea < nea; ++ea) {
-		const int32_t a = EQ[ea];
-		COMPV_ASSERT(a <= nea); // FIXME(dmi): remove
-		A[ea] = (a != ea)
-			? A[a]
-			: ++na;
-	}
-	*na1 = na;
+#if COMPV_ARCH_X86
+	//if (CompVCpu::isEnabled(kCpuFlagCMOV)) {
+		//COMPV_EXEC_IFDEF_ASM_X64(funcPtr = CompVConnectedComponentLabelingLSL_Step4Algo6EqResolv_32s_Asm_X64_CMOV);
+	//}
+#elif COMPV_ARCH_ARM
+	//COMPV_EXEC_IFDEF_ASM_ARM32(funcPtr = CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_16s32s_Asm_ARM32);
+	//COMPV_EXEC_IFDEF_ASM_ARM64(funcPtr = CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_16s32s_Asm_ARM64);
+#endif
+
+	funcPtr(
+		ptr32sEQ->ptr<const int32_t>(0, 0),
+		static_cast<compv_uscalar_t>(ptr32sA->cols()),
+		ptr32sA->ptr<int32_t>(0, 0),
+		na1
+	);
 }
 
 static COMPV_ERROR_CODE build_EQ(const size_t ner_sum, CompVMatPtrPtr ptr32sEQ)

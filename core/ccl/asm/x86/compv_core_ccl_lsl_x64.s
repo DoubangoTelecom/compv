@@ -172,5 +172,6 @@ sym(CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_16s32s_Asm_X
 	mov rsp, rbp
 	pop rbp
 	ret
+	
 
 %endif ; COMPV_YASM_ABI_IS_64BIT
