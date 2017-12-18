@@ -98,7 +98,7 @@ void CompVHoughShtNmsGatherRow_8mpd_Intrin_NEON(const int32_t * pAcc, compv_usca
 		/* == Low part == */
 		vecAcc = vld1q_s32(&pAcc[colStart]); // ASM: load unaligned
 		vec0low = vcgtq_s32(vecAcc, vecThreshold);
-		if (COMPV_ARM_NEON_NEQ_ZERO(vec0low)) {
+		if (COMPV_ARM_NEON_NEQ_ZEROQ(vec0low)) {
 			// TODO(dmi): ARM neon no need for curr, top and bottom -> use post-increment
 			curr = &pAcc[colStart];
 			top = &pAcc[colStart - stride];
@@ -109,7 +109,7 @@ void CompVHoughShtNmsGatherRow_8mpd_Intrin_NEON(const int32_t * pAcc, compv_usca
 		/* == High part == */
 		vecAcc = vld1q_s32(&pAcc[colStart + 4]); // ASM: load unaligned
 		vec0high = vcgtq_s32(vecAcc, vecThreshold);
-		if (COMPV_ARM_NEON_NEQ_ZERO(vec0high)) {
+		if (COMPV_ARM_NEON_NEQ_ZEROQ(vec0high)) {
 			// TODO(dmi): ARM neon no need for curr, top and bottom -> use post-increment
 			curr = &pAcc[colStart + 4];
 			top = &pAcc[colStart + 4 - stride];
@@ -144,7 +144,7 @@ void CompVHoughShtNmsApplyRow_Intrin_NEON(COMPV_ALIGNED(NEON) int32_t* pACC, COM
 
 	for (; colStart < maxCols - 15; colStart += 16) {
 		vec0 = vceqq_u8(vld1q_u8(&pNMS[colStart]), vecZero);
-		if (COMPV_ARM_NEON_NEQ_ZERO(vec0)) {
+		if (COMPV_ARM_NEON_NEQ_ZEROQ(vec0)) {
 			vec1 = vcgtq_s32(vld1q_s32(&pACC[colStart]), vecThreshold);
 			vec2 = vcgtq_s32(vld1q_s32(&pACC[colStart + 4]), vecThreshold);
 			vec3 = vcgtq_s32(vld1q_s32(&pACC[colStart + 8]), vecThreshold);
@@ -173,7 +173,7 @@ void CompVHoughShtNmsApplyRow_Intrin_NEON(COMPV_ALIGNED(NEON) int32_t* pACC, COM
 			}
 #else
 #define CompVHoughShtNmsApplyRowPush_Intrin_NEON(vec, index) if (vgetq_lane_u8(vec, index)) lines.push_back(CompVHoughLine(static_cast<compv_float32_t>(barrier - row), (colStart + index) * theta, static_cast<size_t>(pACC[(colStart + index)])))
-			if (COMPV_ARM_NEON_NEQ_ZERO(vec0)) {
+			if (COMPV_ARM_NEON_NEQ_ZEROQ(vec0)) {
 				CompVHoughShtNmsApplyRowPush_Intrin_NEON(vec0, 0); CompVHoughShtNmsApplyRowPush_Intrin_NEON(vec0, 1);
 				CompVHoughShtNmsApplyRowPush_Intrin_NEON(vec0, 2); CompVHoughShtNmsApplyRowPush_Intrin_NEON(vec0, 3);
 				CompVHoughShtNmsApplyRowPush_Intrin_NEON(vec0, 4); CompVHoughShtNmsApplyRowPush_Intrin_NEON(vec0, 5);

@@ -605,7 +605,7 @@ COMPV_ERROR_CODE CompVHoughKht::linking_AppendixA(CompVMatPtr& edges, CompVHough
 
 		for (y_ref = 1; y_ref < maxj; ++y_ref) {
 			vec = vld1q_u8(&edgesPtr[0]); // read starting #0 for aligned
-			if (COMPV_ARM_NEON_NEQ_ZERO(vec)) {
+			if (COMPV_ARM_NEON_NEQ_ZEROQ(vec)) {
 				/*KHT_LINK_A5(0);*/ KHT_LINK_A5(1); KHT_LINK_A5(2); KHT_LINK_A5(3);
 				KHT_LINK_A5(4); KHT_LINK_A5(5); KHT_LINK_A5(6); KHT_LINK_A5(7);
 				KHT_LINK_A5(8); KHT_LINK_A5(9); KHT_LINK_A5(10); KHT_LINK_A5(11);
@@ -614,7 +614,7 @@ COMPV_ERROR_CODE CompVHoughKht::linking_AppendixA(CompVMatPtr& edges, CompVHough
 			for (x_ref = 16; x_ref < maxi128; x_ref += 16) {
 				__compv_builtin_prefetch_read(&edgesPtr[x_ref + (COMPV_CACHE1_LINE_SIZE * 3)]);
 				vec = vld1q_u8(&edgesPtr[x_ref]);
-				if (COMPV_ARM_NEON_NEQ_ZERO(vec)) {
+				if (COMPV_ARM_NEON_NEQ_ZEROQ(vec)) {
 					KHT_LINK_A5(x_ref + 0); KHT_LINK_A5(x_ref + 1); KHT_LINK_A5(x_ref + 2); KHT_LINK_A5(x_ref + 3);
 					KHT_LINK_A5(x_ref + 4); KHT_LINK_A5(x_ref + 5); KHT_LINK_A5(x_ref + 6); KHT_LINK_A5(x_ref + 7);
 					KHT_LINK_A5(x_ref + 8); KHT_LINK_A5(x_ref + 9); KHT_LINK_A5(x_ref + 10); KHT_LINK_A5(x_ref + 11);

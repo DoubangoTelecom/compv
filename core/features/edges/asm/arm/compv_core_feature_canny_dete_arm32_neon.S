@@ -96,7 +96,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
         vmov.u32 r11, q1x[1]
         orrs r11, r11, r10
         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-        @ if (COMPV_ARM_NEON_NEQ_ZERO(vec0))
+        @ if (COMPV_ARM_NEON_NEQ_ZEROQ(vec0))
         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         beq EndOf_Ifvec0_CompVCannyNMSGatherRow_8mpw_Asm_NEON32
 		Ifvec0_CompVCannyNMSGatherRow_8mpw_Asm_NEON32:
@@ -121,7 +121,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
             vmov.u32 r11, q4x[1]
             orrs r11, r11, r10
 			@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-			@ if (COMPV_ARM_NEON_NEQ_ZERO(vec3))
+			@ if (COMPV_ARM_NEON_NEQ_ZEROQ(vec3))
 			@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 			beq EndOf_Ifvec30_CompVCannyNMSGatherRow_8mpw_Asm_NEON32
 			Ifvec30_CompVCannyNMSGatherRow_8mpw_Asm_NEON32:
@@ -146,7 +146,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
             vmov.u32 r11, q3x[1]
             orrs r11, r11, r10
 			@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-			@ if (COMPV_ARM_NEON_NEQ_ZERO(vec4)) - 0
+			@ if (COMPV_ARM_NEON_NEQ_ZEROQ(vec4)) - 0
 			@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 			beq EndOf_Ifvec40_CompVCannyNMSGatherRow_8mpw_Asm_NEON32
 			Ifvec40_CompVCannyNMSGatherRow_8mpw_Asm_NEON32:
@@ -164,7 +164,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
                 vmov.u32 r11, q5x[1]
                 orrs r11, r11, r10
 				@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-				@ if (COMPV_ARM_NEON_NEQ_ZERO(vec4)) - 1
+				@ if (COMPV_ARM_NEON_NEQ_ZEROQ(vec4)) - 1
 				@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 				beq EndOf_Ifvec41_CompVCannyNMSGatherRow_8mpw_Asm_NEON32
 				Ifvec41_CompVCannyNMSGatherRow_8mpw_Asm_NEON32:
@@ -177,7 +177,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
                     vmov.u32 r11, q3x[1]
                     orrs r11, r10
 					@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-					@ if (COMPV_ARM_NEON_NEQ_ZERO(vec1))
+					@ if (COMPV_ARM_NEON_NEQ_ZEROQ(vec1))
 					@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 					beq EndOf_Ifvec10_CompVCannyNMSGatherRow_8mpw_Asm_NEON32
 					Ifvec10_CompVCannyNMSGatherRow_8mpw_Asm_NEON32:
@@ -198,7 +198,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
                     vmov.u32 r11, q6x[1]
                     orrs r11, r11, r10
 					@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-					@ if (COMPV_ARM_NEON_NEQ_ZERO(vec2))
+					@ if (COMPV_ARM_NEON_NEQ_ZEROQ(vec2))
 					@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 					beq EndOfIfvec20_CompVCannyNMSGatherRow_8mpw_Asm_NEON32
 					Ifvec20_CompVCannyNMSGatherRow_8mpw_Asm_NEON32:
@@ -232,7 +232,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
             vmov.u32 r11, q6x[1]
             orrs r11, r11, r10
 			@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-			@ if (COMPV_ARM_NEON_NEQ_ZERO(vec5))
+			@ if (COMPV_ARM_NEON_NEQ_ZEROQ(vec5))
 			@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 			beq EndOf_Ifvec50_CompVCannyNMSGatherRow_8mpw_Asm_NEON32
 			Ifvec50_CompVCannyNMSGatherRow_8mpw_Asm_NEON32:

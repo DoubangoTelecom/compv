@@ -68,7 +68,7 @@ void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Intr
 			);
 			vec0 = _mm_and_si128(vec0, vecOne);
 
-			if (_mm_movemask_epi8(_mm_cmpgt_epi8(vec0, vecZero))) { // ARM neon: use COMPV_ARM_NEON_NEQ_ZERO(vec0)
+			if (_mm_movemask_epi8(_mm_cmpgt_epi8(vec0, vecZero))) { // ARM neon: use COMPV_ARM_NEON_NEQ_ZEROQ(vec0)
 				/* erUint8 += ((Xi[i - 1] ^ Xi[i]) & 1) */
 				vec1 = _mm_shuffle_epi8(vec0, __vecMask0);
 				vec1 = _mm_add_epi8(vec1, _mm_shuffle_epi8(vec0, __vecMask1));

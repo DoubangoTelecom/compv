@@ -33,7 +33,7 @@ void CompVHoughKhtPeaks_Section3_4_VotesCount_4mpd_Intrin_NEON(const int32_t *pc
 	for (rho_index = 1; rho_index < rho_count_NEON; rho_index += 4) {
 		vec0 = vld1q_s32(&pcount[rho_index]); // same as vecPcount_center[0]
 		vec0Mask = vcgtq_s32(vec0, vecZero);
-		if (COMPV_ARM_NEON_NEQ_ZERO(vec0Mask)) {
+		if (COMPV_ARM_NEON_NEQ_ZEROQ(vec0Mask)) {
 			pcount_center = &pcount[rho_index];
 			pcount_top = (pcount_center - pcount_stride);
 			pcount_bottom = (pcount_center + pcount_stride);

@@ -19,7 +19,7 @@
 		vorrq_u8(vcltq_u8(vec0, vecDarker1), vcltq_u8(vec1, vecDarker1)), \
 		vorrq_u8(vcgtq_u8(vec0, vecBrighter1), vcgtq_u8(vec1, vecBrighter1)) \
 	); \
-	if (COMPV_ARM_NEON_EQ_ZERO(vec2)) goto Next; \
+	if (COMPV_ARM_NEON_EQ_ZEROQ(vec2)) goto Next; \
 	vecCircle16[a] = vec0, vecCircle16[b] = vec1
 
 
@@ -60,7 +60,7 @@
 #define _neon_fast_strength(ii, vecSum1, vecDiff16, vecStrengths, vecTemp) \
 	vecSum1 = vaddq_u8(vecSum1, vecDiffBinary16[(NminusOne + ii) & 15]); /* add tail */ \
 	vecTemp = vcgeq_u8(vecSum1, vecN); \
-	if (COMPV_ARM_NEON_NEQ_ZERO(vecTemp)) { \
+	if (COMPV_ARM_NEON_NEQ_ZEROQ(vecTemp)) { \
 		vecTemp = vecDiff16[(ii + 0) & 15]; \
 		vecTemp = vminq_u8(vecDiff16[(ii + 1) & 15], vecTemp); \
 		vecTemp = vminq_u8(vecDiff16[(ii + 2) & 15], vecTemp); \
@@ -118,12 +118,12 @@ void CompVFastDataRow_Intrin_NEON(const uint8_t* IP, COMPV_ALIGNED(NEON) compv_u
 			vecSum1 = vdupq_n_u8(0);
 			_neon_fast_load(0, 8, 4, 12, Darker);
 			vec0 = vcgeq_u8(vecSum1, vecMinSum);
-			if (COMPV_ARM_NEON_EQ_ZERO(vec0)) goto EndOfDarkers; // at least #3 for FAST12 and #2 for FAST9
+			if (COMPV_ARM_NEON_EQ_ZEROQ(vec0)) goto EndOfDarkers; // at least #3 for FAST12 and #2 for FAST9
 			_neon_fast_load(1, 9, 5, 13, Darker);
 			_neon_fast_load(2, 10, 6, 14, Darker);
 			_neon_fast_load(3, 11, 7, 15, Darker);
 			vec0 = vcgeq_u8(vecSum1, vecN);
-			if (COMPV_ARM_NEON_EQ_ZERO(vec0)) goto EndOfDarkers; // at least #12 for FAST12 and #9 for FAST9
+			if (COMPV_ARM_NEON_EQ_ZEROQ(vec0)) goto EndOfDarkers; // at least #12 for FAST12 and #9 for FAST9
 
 			_neon_fast_init_diffbinarysum(vecSum1, vecDiffBinary16);
 			_neon_fast_strength(0, vecSum1, vecDiff16, vecStrengths, vec0); _neon_fast_strength(1, vecSum1, vecDiff16, vecStrengths, vec0);
@@ -140,12 +140,12 @@ void CompVFastDataRow_Intrin_NEON(const uint8_t* IP, COMPV_ALIGNED(NEON) compv_u
 			vecSum1 = vdupq_n_u8(0);
 			_neon_fast_load(0, 8, 4, 12, Brighter);
 			vec0 = vcgeq_u8(vecSum1, vecMinSum);
-			if (COMPV_ARM_NEON_EQ_ZERO(vec0)) goto EndOfBrighters; // at least #3 for FAST12 and #2 for FAST9
+			if (COMPV_ARM_NEON_EQ_ZEROQ(vec0)) goto EndOfBrighters; // at least #3 for FAST12 and #2 for FAST9
 			_neon_fast_load(1, 9, 5, 13, Brighter);
 			_neon_fast_load(2, 10, 6, 14, Brighter);
 			_neon_fast_load(3, 11, 7, 15, Brighter);
 			vec0 = vcgeq_u8(vecSum1, vecN);
-			if (COMPV_ARM_NEON_EQ_ZERO(vec0)) goto EndOfBrighters; // at least #12 for FAST12 and #9 for FAST9
+			if (COMPV_ARM_NEON_EQ_ZEROQ(vec0)) goto EndOfBrighters; // at least #12 for FAST12 and #9 for FAST9
 
 			_neon_fast_init_diffbinarysum(vecSum1, vecDiffBinary16);
 			_neon_fast_strength(0, vecSum1, vecDiff16, vecStrengths, vec0); _neon_fast_strength(1, vecSum1, vecDiff16, vecStrengths, vec0);
@@ -177,7 +177,7 @@ void CompVFastNmsGather_Intrin_NEON(const uint8_t* pcStrengthsMap, uint8_t* pNMS
 		for (i = 3; i < width - 3; i += 16) {
 			vecStrength = vld1q_u8(&pcStrengthsMap[i]);
 			vec1 = vcgtq_u8(vecStrength, vecZero); // vecStrength is unsigned which means checking it's not eq to #0 is same as checking it's > #0			
-			if (COMPV_ARM_NEON_NEQ_ZERO(vec1)) {
+			if (COMPV_ARM_NEON_NEQ_ZEROQ(vec1)) {
 				vec0 = vcgeq_u8(vld1q_u8(&pcStrengthsMap[i - 1]), vecStrength);  // left
 				vec0 = vorrq_u8(vec0,
 					vcgeq_u8(vld1q_u8(&pcStrengthsMap[i + 1]), vecStrength)); // right
@@ -215,7 +215,7 @@ void CompVFastNmsApply_Intrin_NEON(COMPV_ALIGNED(NEON) uint8_t* pcStrengthsMap, 
 	for (j = 3; j < heigth - 3; ++j) {
 		for (i = 0; i < width; i += 16) { // SIMD: start at #zero index to have aligned memory
 			vec0 = vcgtq_u8(vld1q_u8(&pNMS[i]), vecZero); // pNMS is unsigned which means checking it's not eq to #0 is same as checking it's > #0	
-			if (COMPV_ARM_NEON_NEQ_ZERO(vec0)) {
+			if (COMPV_ARM_NEON_NEQ_ZEROQ(vec0)) {
 				vst1q_u8(&pNMS[i], vecZero); // must, for next frame
 				vst1q_u8(&pcStrengthsMap[i], vbicq_u8(vld1q_u8(&pcStrengthsMap[i]), vec0)); // suppress
 			}
@@ -240,7 +240,7 @@ void CompVFastBuildInterestPoints_Intrin_NEON(COMPV_ALIGNED(NEON) uint8_t* pcStr
 	for (compv_uscalar_t j = jstart; j < jend; ++j) {
 		for (compv_uscalar_t i = 0; i < width; i += 16) {
 			vec0 = vcgtq_u8(vld1q_u8(&pcStrengthsMap[i]), vecZero);
-			if (COMPV_ARM_NEON_NEQ_ZERO(vec0)) {
+			if (COMPV_ARM_NEON_NEQ_ZEROQ(vec0)) {
 				COMPV_PUSH1_NEON(0); COMPV_PUSH1_NEON(1); COMPV_PUSH1_NEON(2); COMPV_PUSH1_NEON(3); COMPV_PUSH1_NEON(4); COMPV_PUSH1_NEON(5); COMPV_PUSH1_NEON(6); COMPV_PUSH1_NEON(7);
 				COMPV_PUSH1_NEON(8); COMPV_PUSH1_NEON(9); COMPV_PUSH1_NEON(10); COMPV_PUSH1_NEON(11); COMPV_PUSH1_NEON(12); COMPV_PUSH1_NEON(13); COMPV_PUSH1_NEON(14); COMPV_PUSH1_NEON(15);
 			}

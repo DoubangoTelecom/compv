@@ -88,7 +88,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON64
         mov r11, v0.d[1]
         orr r10, r10, r11
         #########################################################################
-        # .if (COMPV_ARM_NEON_NEQ_ZERO(vec0))
+        # .if (COMPV_ARM_NEON_NEQ_ZEROQ(vec0))
         #########################################################################
         cbz r10, EndOf_Ifvec00_CompVCannyNMSGatherRow_8mpw_Asm_NEON64
 		Ifvec00_CompVCannyNMSGatherRow_8mpw_Asm_NEON64:
@@ -110,7 +110,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON64
             mov r11, v1.d[1]
             orr r10, r10, r11
 			#########################################################################
-			# .if (COMPV_ARM_NEON_NEQ_ZERO(vec3))
+			# .if (COMPV_ARM_NEON_NEQ_ZEROQ(vec3))
 			#########################################################################
 			cbz r10, EndOf_Ifvec30_CompVCannyNMSGatherRow_8mpw_Asm_NEON64
 			Ifvec30_CompVCannyNMSGatherRow_8mpw_Asm_NEON64:
@@ -132,7 +132,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON64
             mov r11, v2.d[1]
             orr r10, r10, r11
 			#########################################################################
-			# .if (COMPV_ARM_NEON_NEQ_ZERO(vec4)) - 0
+			# .if (COMPV_ARM_NEON_NEQ_ZEROQ(vec4)) - 0
 			#########################################################################
 			cbz r10, EndOf_Ifvec40_CompVCannyNMSGatherRow_8mpw_Asm_NEON64
 			Ifvec40_CompVCannyNMSGatherRow_8mpw_Asm_NEON64:
@@ -149,7 +149,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON64
                 mov r11, v2.d[1]
                 orr r10, r10, r11
 				#########################################################################
-				# .if (COMPV_ARM_NEON_NEQ_ZERO(vec4)) - 1
+				# .if (COMPV_ARM_NEON_NEQ_ZEROQ(vec4)) - 1
 				#########################################################################
 				cbz r10, EndOf_Ifvec41_CompVCannyNMSGatherRow_8mpw_Asm_NEON64
 				Ifvec41_CompVCannyNMSGatherRow_8mpw_Asm_NEON64:
@@ -161,7 +161,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON64
                     mov r11, v4.d[1]
                     orr r10, r10, r11
 					#########################################################################
-					# .if (COMPV_ARM_NEON_NEQ_ZERO(vec1))
+					# .if (COMPV_ARM_NEON_NEQ_ZEROQ(vec1))
 					#########################################################################
 					cbz r10, EndOf_Ifvec10_CompVCannyNMSGatherRow_8mpw_Asm_NEON64
 					Ifvec10_CompVCannyNMSGatherRow_8mpw_Asm_NEON64:
@@ -182,7 +182,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON64
                     mov r11, v5.d[1]
                     orr r10, r10, r11
 					#########################################################################
-					# .if (COMPV_ARM_NEON_NEQ_ZERO(vec2))
+					# .if (COMPV_ARM_NEON_NEQ_ZEROQ(vec2))
 					#########################################################################
 					cbz r10, EndOfIfvec20_CompVCannyNMSGatherRow_8mpw_Asm_NEON64
 					Ifvec20_CompVCannyNMSGatherRow_8mpw_Asm_NEON64:
@@ -214,7 +214,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON64
             mov r11, v1.d[1]
             orr r10, r10, r11
 			#########################################################################
-			# .if (COMPV_ARM_NEON_NEQ_ZERO(vec5))
+			# .if (COMPV_ARM_NEON_NEQ_ZEROQ(vec5))
 			#########################################################################
 			cbz r10, EndOf_Ifvec50_CompVCannyNMSGatherRow_8mpw_Asm_NEON64
 			Ifvec50_CompVCannyNMSGatherRow_8mpw_Asm_NEON64:

@@ -139,7 +139,7 @@ void CompVCannyHysteresisRow_16mpw_Intrin_NEON(size_t row, size_t colStart, size
 				vqmovn_u16(vcgtq_u16(vld1q_u16(&grad[col + 8]), vecTHigh))
 			)
 		);
-		if (COMPV_ARM_NEON_EQ_ZERO(vec0)) {
+		if (COMPV_ARM_NEON_EQ_ZEROQ(vec0)) {
 			continue;
 		}
 		for (i = 0, j = 0; i < 16; ++i, j += 8) {
@@ -236,7 +236,7 @@ void CompVCannyNMSGatherRow_8mpw_Intrin_NEON(uint8_t* nms, const uint16_t* g, co
 	for (col = 1; col < width - 7; col += 8) { // up to the caller to check that width is >= 8
 		vecG = vld1q_u16(&g[col]);
 		vec0 = vcgtq_u16(vecG, vecTLow);
-		if (COMPV_ARM_NEON_NEQ_ZERO(vec0)) {
+		if (COMPV_ARM_NEON_NEQ_ZEROQ(vec0)) {
 			vecNMS = vdup_n_u8(0);
 			vecGX = vld1q_s16(&gx[col]);
 			vecGY = vld1q_s16(&gy[col]);
@@ -251,7 +251,7 @@ void CompVCannyNMSGatherRow_8mpw_Intrin_NEON(uint8_t* nms, const uint16_t* g, co
 			vec1 = vcgtq_u32(vmull_u16(vecTangentPiOver8Int, vget_low_u16(vecAbsGX)), vecAbsGY0); // convert from epi16 to epi32 then multiply
 			vec2 = vcgtq_u32(vmull_u16(vecTangentPiOver8Int, vget_high_u16(vecAbsGX)), vecAbsGY1); // convert from epi16 to epi32 then multiply
 			vec3 = vandq_u16(vec0, vcombine_u16(vqmovn_u32(vec1), vqmovn_u32(vec2)));
-			if (COMPV_ARM_NEON_NEQ_ZERO(vec3)) {
+			if (COMPV_ARM_NEON_NEQ_ZEROQ(vec3)) {
 				vec1 = vcgtq_u16(vld1q_u16(&g[col - 1]), vecG); // aligned load
 				vec2 = vcgtq_u16(vld1q_u16(&g[col + 1]), vecG); // unaligned load
 				vec1 = vandq_s16(vec3, vorrq_s16(vec1, vec2));
@@ -260,32 +260,32 @@ void CompVCannyNMSGatherRow_8mpw_Intrin_NEON(uint8_t* nms, const uint16_t* g, co
 
 			// angle = "45° / 225°" or "135 / 315"
 			vec4 = vbicq_s16(vec0, vec3);
-			if (COMPV_ARM_NEON_NEQ_ZERO(vec4)) {
+			if (COMPV_ARM_NEON_NEQ_ZEROQ(vec4)) {
 				vec1 = vcgtq_u32(vmulq_u32(vecTangentPiTimes3Over8Int, vmovl_u16(vget_low_u16(vecAbsGX))), vecAbsGY0); // multiply without pre-conversion
 				vec2 = vcgtq_u32(vmulq_u32(vecTangentPiTimes3Over8Int, vmovl_u16(vget_high_u16(vecAbsGX))), vecAbsGY1); // multiply without pre-conversion
 				vec4 = vandq_u16(vec4, vcombine_u16(vqmovn_u32(vec1), vqmovn_u32(vec2)));
-				if (COMPV_ARM_NEON_NEQ_ZERO(vec4)) {
+				if (COMPV_ARM_NEON_NEQ_ZEROQ(vec4)) {
 					vec1 = vcgtq_s16(vecZero, veorq_s16(vecGX, vecGY)); // todo(asm): compare on signed numbers (different than other compare in this function)
 					vec1 = vandq_u16(vec1, vec4);
 					vec2 = vbicq_u16(vec4, vec1);
-					if (COMPV_ARM_NEON_NEQ_ZERO(vec1)) {
+					if (COMPV_ARM_NEON_NEQ_ZEROQ(vec1)) {
 						vec5 = vcgtq_u16(vld1q_u16(&g[col - c0]), vecG); // aligned load
 						vec6 = vcgtq_u16(vld1q_u16(&g[col + c0]), vecG); // unaligned load
 						vec1 = vandq_s16(vec1, vorrq_s16(vec5, vec6));
 					}
-					if (COMPV_ARM_NEON_NEQ_ZERO(vec2)) {
+					if (COMPV_ARM_NEON_NEQ_ZEROQ(vec2)) {
 						vec5 = vcgtq_u16(vld1q_u16(&g[col - c1]), vecG); // aligned load
 						vec6 = vcgtq_u16(vld1q_u16(&g[col + c1]), vecG); // unaligned load
 						vec2 = vandq_u16(vec2, vorrq_s16(vec5, vec6));
 					}
 					vec1 = vorrq_u16(vec1, vec2);
 					vecNMS = vorr_u8(vecNMS, vqmovn_u16(vec1));
-				} // if (COMPV_ARM_NEON_NEQ_ZERO(vec4)) - 1
-			} // if (COMPV_ARM_NEON_NEQ_ZERO(vec4)) - 0
+				} // if (COMPV_ARM_NEON_NEQ_ZEROQ(vec4)) - 1
+			} // if (COMPV_ARM_NEON_NEQ_ZEROQ(vec4)) - 0
 
 			  // angle = "90° / 270°"
 			vec5 = vbicq_s16(vbicq_s16(vec0, vec4), vec3);
-			if (COMPV_ARM_NEON_NEQ_ZERO(vec5)) {
+			if (COMPV_ARM_NEON_NEQ_ZEROQ(vec5)) {
 				vec1 = vcgtq_u16(vld1q_u16(&g[col - stride]), vecG); // unaligned load
 				vec2 = vcgtq_u16(vld1q_u16(&g[col + stride]), vecG); // unaligned load
 				vec5 = vandq_u16(vec5, vorrq_u16(vec1, vec2));
@@ -294,7 +294,7 @@ void CompVCannyNMSGatherRow_8mpw_Intrin_NEON(uint8_t* nms, const uint16_t* g, co
 
 			// update NMS
 			vst1_u8(&nms[col], vecNMS);
-		} // if (COMPV_ARM_NEON_NEQ_ZERO(vec0))
+		} // if (COMPV_ARM_NEON_NEQ_ZEROQ(vec0))
 	} // for (col = 1...
 }
 

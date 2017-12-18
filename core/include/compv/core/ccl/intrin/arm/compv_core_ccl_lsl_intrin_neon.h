@@ -25,6 +25,13 @@ void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Intr
 	const compv_uscalar_t width, const compv_uscalar_t height
 );
 
+void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Intrin_NEON(
+	const uint8_t* Xi, const compv_uscalar_t Xi_stride,
+	int16_t* ERi, const compv_uscalar_t ERi_stride,
+	int16_t* RLCi, const compv_uscalar_t RLCi_stride,
+	const compv_uscalar_t width, const compv_uscalar_t height
+);
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_ARM && COMPV_INTRINSIC */

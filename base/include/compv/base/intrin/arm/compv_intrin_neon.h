@@ -26,21 +26,32 @@ COMPV_NAMESPACE_BEGIN()
 // (s/u)qxtn v30.2s, v21.2d
 // fmov x27, d30
 // cbz r27, AllZeros
-#	define COMPV_ARM_NEON_NEQ_ZERO(vec)	(vgetq_lane_u64(vec, 0) || vgetq_lane_u64(vec, 1))
-#	define COMPV_ARM_NEON_EQ_ZERO(vec)	!COMPV_ARM_NEON_NEQ_ZERO(vec)
+#	define COMPV_ARM_NEON_NEQ_ZEROQ(vec)	(vgetq_lane_u64(vec, 0) || vgetq_lane_u64(vec, 1))
+#	define COMPV_ARM_NEON_EQ_ZEROQ(vec)		!COMPV_ARM_NEON_NEQ_ZEROQ(vec)
+#	define COMPV_ARM_NEON_NEQ_ZEROD(vec)	vget_lane_u64(vec, 0)
+#	define COMPV_ARM_NEON_EQ_ZEROD(vec)		!COMPV_ARM_NEON_NEQ_ZEROD(vec)
+
 #else
 // vorr q0x, q0x, q0y
 // vmov.32	r10, q0x[0]
 // vmov.32	r11, q0x[1]
 // orrs r11, r11, r10
 // beq AllZeros
-#	define COMPV_ARM_NEON_NEQ_ZERO(vec) ({ \
+#	define COMPV_ARM_NEON_NEQ_ZEROQ(vec) ({ \
 	bool __ret; \
 	uint8x8_t __vec = vorr_u8(vget_high_u8(vec), vget_low_u8(vec)); \
 	__ret = vget_lane_u32(__vec, 0) || vget_lane_u32(__vec, 1); \
 	__ret; \
 })
-#	define COMPV_ARM_NEON_EQ_ZERO(vec)	!COMPV_ARM_NEON_NEQ_ZERO(vec)
+#	define COMPV_ARM_NEON_EQ_ZEROQ(vec)	!COMPV_ARM_NEON_NEQ_ZEROQ(vec)
+
+#	define COMPV_ARM_NEON_NEQ_ZEROD(vec) ({ \
+	bool __ret; \
+	__ret = vget_lane_u32(vec, 0) || vget_lane_u32(vec, 1); \
+	__ret; \
+})
+#	define COMPV_ARM_NEON_EQ_ZEROD(vec)	!COMPV_ARM_NEON_NEQ_ZEROD(vec)
+
 #endif
 
 #if COMPV_ARCH_ARM64
