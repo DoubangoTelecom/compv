@@ -371,7 +371,7 @@ sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_X64
 					; "bsf" (http://www.felixcloutier.com/x86/BSF.html) on zero is undefined but thanks to our guards t1d will never be zero. 
 					; "tzcnt" which is better (handles zeros) is available Haswell+ 
 					bsf t1d, t0d
-					lea t1d, [t1d + id]
+					add t1d, id
 					mov [RLCi + er*COMPV_YASM_INT16_SZ_BYTES], word t1w
 					inc er
 					blsr t0d, t0d ; Reset Lowest Set Bit (http://www.felixcloutier.com/x86/BLSR.html)
