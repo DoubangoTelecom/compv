@@ -57,7 +57,6 @@ sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_X
 	push r12
 	push r13
 	push r14
-	push r15
 	;; end prolog ;;
 
 	%define Xi				rax
@@ -288,7 +287,6 @@ sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_X
 	%undef vecMask1		
 
 	;; begin epilog ;;
-	pop r15
 	pop r14
 	pop r13
 	pop r12
@@ -320,7 +318,6 @@ sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_X64
 	push r12
 	push r13
 	push r14
-	push r15
 	;; end prolog ;;
 
 	%define	Xi			rax
@@ -382,7 +379,7 @@ sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_X64
 			packsswb xmm0, xmm2
 			pmovmskb t0, xmm0
 			prefetcht0 [t1 + ERi_stride]
-			xor t0, 0xffff
+			xor t0w, 0xffff
 			jz .EndOfMask
 				mov t1, i
 				.BeginOfWhile
@@ -392,7 +389,7 @@ sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_X64
 						inc er
 					.Next_BeginOfWhile:
 					inc t1
-					shr t0, 1
+					shr t0w, 1
 					jnz .BeginOfWhile
 				.EndOfWhile
 			.EndOfMask
@@ -432,8 +429,27 @@ sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_X64
 		jnz .LoopHeight
 	.EndOf_LoopHeight:
 
+
+	%undef	Xi			
+	%undef	Xi_stride	
+	%undef	ERi			
+	%undef	ERi_stride	
+	%undef	RLCi		
+	%undef	RLCi_stride 
+	%undef	width		
+	%undef	height		
+	%undef width16		
+	%undef t0			
+	%undef t0b			
+	%undef t0w			
+	%undef t1			
+	%undef t1w			
+	%undef i			
+	%undef iw			
+	%undef er			
+	%undef erb			
+
 	;; begin epilog ;;
-	pop r15
 	pop r14
 	pop r13
 	pop r12

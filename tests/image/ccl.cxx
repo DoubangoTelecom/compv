@@ -104,9 +104,9 @@ COMPV_ERROR_CODE ccl()
 	//const CompVConnectedComponentLabelingResultLSL* result_lsl =
 	//	CompVConnectedComponentLabeling::reinterpret_castr<CompVConnectedComponentLabelingResultLSL>(result);
 
+	COMPV_CHECK_CODE_RETURN(check_blobs(result, binar));
 	COMPV_CHECK_CODE_RETURN(check_labels(result, test));
 	COMPV_CHECK_CODE_RETURN(check_segments(result, test));
-	COMPV_CHECK_CODE_RETURN(check_blobs(result, binar));
 
 	return COMPV_ERROR_CODE_S_OK;
 }

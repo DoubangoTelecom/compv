@@ -53,6 +53,12 @@ COMPV_EXTERNC void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLC
 	int16_t* RLCi, const compv_uscalar_t RLCi_stride,
 	const compv_uscalar_t width, const compv_uscalar_t height
 );
+COMPV_EXTERNC void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_X64_AVX2(
+	const uint8_t* Xi, const compv_uscalar_t Xi_stride,
+	int16_t* ERi, const compv_uscalar_t ERi_stride,
+	int16_t* RLCi, const compv_uscalar_t RLCi_stride,
+	const compv_uscalar_t width, const compv_uscalar_t height
+);
 COMPV_EXTERNC void CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_16s32s_Asm_X64_CMOV(
 	const int16_t* RLCi, const compv_uscalar_t RLCi_stride,
 	int32_t* ERAi, const compv_uscalar_t ERAi_stride,
@@ -134,7 +140,6 @@ static void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_C(
 )
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Unroll loop");
 	const int16_t width1 = static_cast<int16_t>(width);
 	int16_t er, i;
 	for (compv_uscalar_t j = 0; j < height; ++j) {
@@ -237,9 +242,13 @@ static void step1_algo13_segment_STDZ(const CompVMatPtr& X, CompVMatPtr ptr16sER
 			= nullptr;
 		// SIMD functions requires width > alignment (not ">=" but ">" because we start at 1 (asm code expect it), also c++ can handle short data without perf issues -thanks to unrolling-)
 #if COMPV_ARCH_X86
-		if (width > 16 && CompVCpu::isEnabled(kCpuFlagSSE2) && X->isAlignedSSE()) {
+		if (width > 16 && CompVCpu::isEnabled(kCpuFlagSSE2)) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(funPtrRLCi_8u16s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Intrin_SSE2);
 			COMPV_EXEC_IFDEF_ASM_X64(funPtrRLCi_8u16s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_X64_SSE2);
+		}
+		if (width > 32 && CompVCpu::isEnabled(kCpuFlagAVX2)) {
+			COMPV_EXEC_IFDEF_INTRIN_X86(funPtrRLCi_8u16s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Intrin_AVX2);
+			COMPV_EXEC_IFDEF_ASM_X64(funPtrRLCi_8u16s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_X64_AVX2);
 		}
 #elif COMPV_ARCH_ARM
 		//COMPV_EXEC_IFDEF_ASM_ARM32(funPtrRLCi_8u16s = nullptr);

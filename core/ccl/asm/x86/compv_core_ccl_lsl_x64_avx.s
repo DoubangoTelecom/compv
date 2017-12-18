@@ -13,6 +13,7 @@
 COMPV_YASM_DEFAULT_REL
 
 global sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_X64_AVX2)
+global sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_X64_AVX2)
 
 section .data
 	extern sym(kShuffleEpi8_DUP_16s7_32s)
@@ -274,6 +275,171 @@ sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_X
 	pop rdi
 	pop rsi
 	COMPV_YASM_RESTORE_YMM
+	COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	vzeroupper
+	ret
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) ->const uint8_t* Xi, 
+; arg(1) ->const compv_uscalar_t Xi_stride,
+; arg(2) ->int16_t* ERi, 
+; arg(3) ->const compv_uscalar_t ERi_stride,
+; arg(4) ->int16_t* RLCi, 
+; arg(5) ->const compv_uscalar_t RLCi_stride,
+; arg(6) ->const compv_uscalar_t width, 
+; arg(7) ->const compv_uscalar_t height
+sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_X64_AVX2):
+	vzeroupper
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 8
+	push rsi
+	push rdi
+	push rbx
+	push r12
+	push r13
+	push r14
+	;; end prolog ;;
+
+	%define	Xi			rax
+	%define	Xi_stride	rcx
+	%define	ERi			rdx
+	%define	ERi_stride	rbx
+	%define	RLCi		rsi
+	%define	RLCi_stride rdi
+	%define	width		r8
+	%define	height		r9
+	%define width32		r10
+	%define t0			r11
+	%define t0b			r11b
+	%define t0w			r11w
+	%define t0d			r11d
+	%define t1			r12
+	%define t1w			r12w
+	%define i			r13
+	%define iw			r13w
+	%define er			r14
+	%define erb			r14b
+
+	mov Xi, arg(0) 
+	mov Xi_stride, arg(1)
+	mov ERi, arg(2) 
+	mov ERi_stride, arg(3)
+	mov RLCi, arg(4)
+	mov RLCi_stride, arg(5)
+	mov width, arg(6)
+	mov height, arg(7)
+
+	prefetchw [RLCi]
+
+	lea width32, [width - 1]
+	shl ERi_stride, 1
+	shl RLCi_stride, 1
+	and width32, -32
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	; for (compv_uscalar_t j = 0; j < height; ++j)
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	.LoopHeight:
+		lea t1, [RLCi + COMPV_YASM_INT16_SZ_BYTES]
+		movzx er, byte [Xi + 0*COMPV_YASM_UINT8_SZ_BYTES]
+		mov [RLCi], word 0
+		and erb, 1
+		prefetchw [t1 + RLCi_stride] ; don''t expect more than 32 RLC and this is why the prefetch is outside the width loop
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; for (i = 1; i < width32; i += 32)
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		mov i, 1
+		.LoopWidth32:
+			vmovdqu ymm0, [ERi + (i-1)*COMPV_YASM_INT16_SZ_BYTES]
+			vmovdqu ymm1, [ERi + (i+15)*COMPV_YASM_INT16_SZ_BYTES]
+			vpcmpeqw ymm0, [ERi + (i)*COMPV_YASM_INT16_SZ_BYTES]
+			vpcmpeqw ymm1, [ERi + (i+16)*COMPV_YASM_INT16_SZ_BYTES]
+			vpacksswb ymm0, ymm1
+			lea t1, [ERi + i*COMPV_YASM_INT16_SZ_BYTES]
+			vpermq ymm0, ymm0, 0xD8
+			prefetcht0 [t1 + ERi_stride]
+			vpmovmskb t0d, ymm0
+			xor t0d, 0xffffffff
+			jz .EndOfMask
+				mov t1, i
+				.BeginOfWhile
+					test t0, 1
+					jz .Next_BeginOfWhile
+						mov [RLCi + er*COMPV_YASM_INT16_SZ_BYTES], word t1w
+						inc er
+					.Next_BeginOfWhile:
+					inc t1
+					shr t0d, 1
+					jnz .BeginOfWhile
+				.EndOfWhile
+			.EndOfMask
+			
+			add i, 32
+			cmp i, width32
+			jl .LoopWidth32
+		.EndOf_LoopWidth32:
+
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; for (; i < width1; ++i) 
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		cmp i, width
+		jge .EndOf_LoopWidth1
+		.LoopWidth1:
+			movzx t0, word [ERi + (i - 1)*COMPV_YASM_INT16_SZ_BYTES]
+			xor t0w, word [ERi + i*COMPV_YASM_INT16_SZ_BYTES]
+			jz .Next_LoopWidth1
+				mov [RLCi + er*COMPV_YASM_INT16_SZ_BYTES], word iw
+				inc er
+			.Next_LoopWidth1:
+			inc i
+			cmp i, width
+			jl .LoopWidth1
+		.EndOf_LoopWidth1:
+
+		mov t0, 1
+		mov t1, width
+		and t0b, byte [Xi + (width - 1)*COMPV_YASM_UINT8_SZ_BYTES]
+		lea Xi, [Xi + Xi_stride]
+		xor t0, 1
+		sub t1, t0
+		dec height
+		lea ERi, [ERi + ERi_stride] ; ERi_stride = ERi_stride*COMPV_YASM_INT16_SZ_BYTES
+		mov [RLCi + er*COMPV_YASM_INT16_SZ_BYTES], t1
+		lea RLCi, [RLCi + RLCi_stride] ; RLCi_stride = RLCi_stride*COMPV_YASM_INT16_SZ_BYTES
+		jnz .LoopHeight
+	.EndOf_LoopHeight:
+
+	%undef	Xi			
+	%undef	Xi_stride	
+	%undef	ERi			
+	%undef	ERi_stride	
+	%undef	RLCi		
+	%undef	RLCi_stride 
+	%undef	width		
+	%undef	height		
+	%undef width32		
+	%undef t0			
+	%undef t0b			
+	%undef t0w
+	%undef t0d		
+	%undef t1			
+	%undef t1w			
+	%undef i			
+	%undef iw			
+	%undef er			
+	%undef erb	
+
+	;; begin epilog ;;
+	pop r14
+	pop r13
+	pop r12
+	pop rbx
+	pop rdi
+	pop rsi
 	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp

@@ -27,7 +27,7 @@ void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Intrin
 	const int16_t width16 = (width1 - 1) & -16; // width > 16 (at least 17) which means never equal to zero
 	int16_t er, i;
 	__m128i vec0, vec1;
-	int mask, m;
+	unsigned mask, m; // unsigned shift (shr) instead of signed shift (sar)
 
 	for (compv_uscalar_t j = 0; j < height; ++j) {
 		er = (Xi[0] & 1);
