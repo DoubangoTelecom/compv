@@ -321,7 +321,7 @@ static void step1_algo13_segment_STDZ(const CompVMatPtr& X, CompVMatPtr ptr16sER
 			if (*RLCiBis->ptr<int16_t>(j, i) != RLCi[(RLCi_stride * j) + i]) {
 				printf("ooops");
 			}
-			if (j == 5) {
+			if (j == 0) {
 				COMPV_DEBUG_INFO("%d->%d", RLCi[(RLCi_stride * j) + i], *RLCiBis->ptr<int16_t>(j, i));
 			}
 		}

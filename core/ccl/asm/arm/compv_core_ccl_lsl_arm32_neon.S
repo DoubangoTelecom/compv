@@ -8,6 +8,8 @@
 #if defined(__arm__) && !defined(__aarch64__)
 .include "compv_common_arm32.S"
 
+.arch armv7-a @ for rbit
+
 .data
 
 .align 4
@@ -94,14 +96,14 @@ COMPV_GAS_FUNCTION_DECLARE CompVConnectedComponentLabelingLSL_Step1Algo13Segment
 				vpadd.u8 q0x, q0x, q0x
 				vpadd.u8 q0x, q0x, q0x
 				vmov.u16 t0, q0x[0]
+				rbit t0, t0
 				BeginOfWhile_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_NEON32:
 				@ ARM there is no ctz (Count Trailing Zero): ctz = 31 - clz(t0)
-				@ FIXME(dmi): ARM64 -> code could be better with more registers
+				@ FIXME(dmi): ARM64 -> code could be better with more registers: lsl #1, t1 then xor
 				clz t1, t0
-				rsb t1, t1, #32 @ FIXME(dmi): maybe use RRX
-				lsr t0, t0, t1
-				lsls t0, t0, t1
-				sub t1, t1, #1
+				lsl t0, t0, t1
+				and t0, t0, #0x7fffffff
+				lsrs t0, t0, t1
 				add t1, t1, i
 				strh t1, [RLCi], #(1*COMPV_GAS_INT16_SZ_BYTES)	
 				bne BeginOfWhile_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_NEON32
