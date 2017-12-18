@@ -22,6 +22,7 @@ Some literature about LSL:
 #include "compv/core/ccl/intrin/x86/compv_core_ccl_lsl_intrin_sse2.h"
 #include "compv/core/ccl/intrin/x86/compv_core_ccl_lsl_intrin_ssse3.h"
 #include "compv/core/ccl/intrin/x86/compv_core_ccl_lsl_intrin_avx2.h"
+#include "compv/core/ccl/intrin/arm/compv_core_ccl_lsl_intrin_neon.h"
 
 #include <numeric> /* std::iota */
 
@@ -88,6 +89,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::set(int id, const void* val
 		COMPV_CHECK_EXP_RETURN(valueSize != sizeof(int), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 		const int type = *reinterpret_cast<const int*>(valuePtr);
 		COMPV_CHECK_EXP_RETURN(type != COMPV_PLSL_TYPE_XRLEZ, COMPV_ERROR_CODE_E_NOT_IMPLEMENTED, "Only XRLEZ type is supported in the current version");
+		m_nType = type;
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	default:
@@ -226,8 +228,11 @@ static void step1_algo13_segment_STDZ(const CompVMatPtr& X, CompVMatPtr ptr16sER
 			COMPV_EXEC_IFDEF_ASM_X64(funPtrERi_8u16s32s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_X64_AVX2);
 		}
 #elif COMPV_ARCH_ARM
-		//COMPV_EXEC_IFDEF_ASM_ARM32(funPtrERi_8u16s32s = nullptr);
-		//COMPV_EXEC_IFDEF_ASM_ARM64(funPtrERi_8u16s32s = nullptr);
+		if (width > 16 && CompVCpu::isEnabled(kCpuFlagARM_NEON) && X->isAlignedNEON()) {
+			COMPV_EXEC_IFDEF_INTRIN_ARM(funPtrERi_8u16s32s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Intrin_NEON);
+			//COMPV_EXEC_IFDEF_ASM_ARM32(funPtrERi_8u16s32s = nullptr);
+			//COMPV_EXEC_IFDEF_ASM_ARM64(funPtrERi_8u16s32s = nullptr);
+		}
 #endif
 
 		if (funPtrERi_8u16s32s) {

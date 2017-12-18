@@ -169,6 +169,12 @@
     <Filter Include="source\ccl\intrin\x86">
       <UniqueIdentifier>{0d4ad6c4-e183-4673-a357-3175bc39cde4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\ccl\intrin\arm">
+      <UniqueIdentifier>{c0e37464-4a88-47f8-b928-7f1a07f63ecd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\ccl\intrin\arm">
+      <UniqueIdentifier>{f61762c9-4223-411c-8fb2-08630e4749a9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\compv\core\compv_core.h">
@@ -288,6 +294,15 @@
     <ClInclude Include="..\include\compv\core\ccl\compv_core_ccl_lsl_result.h">
       <Filter>include\ccl</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\compv\core\ccl\intrin\x86\compv_core_ccl_lsl_intrin_avx2.h">
+      <Filter>include\ccl\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\core\ccl\intrin\x86\compv_core_ccl_lsl_intrin_ssse3.h">
+      <Filter>include\ccl\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\core\ccl\intrin\arm\compv_core_ccl_lsl_intrin_neon.h">
+      <Filter>include\ccl\intrin\arm</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_core.cxx">
@@ -400,6 +415,15 @@
     </ClCompile>
     <ClCompile Include="..\ccl\compv_core_ccl_lsl_result.cxx">
       <Filter>source\ccl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ccl\intrin\x86\compv_core_ccl_lsl_intrin_avx2.cxx">
+      <Filter>source\ccl\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ccl\intrin\x86\compv_core_ccl_lsl_intrin_ssse3.cxx">
+      <Filter>source\ccl\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ccl\intrin\arm\compv_core_ccl_lsl_intrin_neon.cxx">
+      <Filter>source\ccl\intrin\arm</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
