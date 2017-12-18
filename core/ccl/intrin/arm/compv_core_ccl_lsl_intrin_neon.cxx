@@ -41,18 +41,13 @@ void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Intr
 		// In asm code, no need to test "width16 != 0" because "width1" > 16 (at least 17)
 
 		for (i = 1; i < width16; i += 16) {
-			/* Xi[i - 1] ^ Xi[i] & 1 */
 			vec0 = veorq_u8(
 				vld1q_u8(&Xi[i - 1]), // aligned load
 				vld1q_u8(&Xi[i]) // unaligned load
 			);
 			vec0 = vandq_u8(vec0, vecOne);
 
-			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Split code in two 64bit values");
-
-			if (COMPV_ARM_NEON_NEQ_ZERO(vec0)) {
-				/* erUint8 += ((Xi[i - 1] ^ Xi[i]) & 1) */
-				// TODO(dmi): ASM code -> just shift "dlow" no need for combine etc
+			if (COMPV_ARM_NEON_NEQ_ZEROQ(vec0)) {
 				vec1 = vdupq_lane_u8(vget_low_u8(vec0), 0);
 				vec2 = vdupq_lane_u8(vget_low_u8(vec0), 1);
 				vec3 = vdupq_lane_u8(vget_low_u8(vec0), 2);
@@ -92,7 +87,6 @@ void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Intr
 				vec6 = vaddq_u8(vec6, vec8);
 				vec1 = vaddq_u8(vec1, vec2);
 				vec1 = vaddq_u8(vec1, vec6);
-
 				
 				/* Convert erUint8 to erInt16 and sum then store */
 				vec0 = vaddw_u8(vecER, vget_low_u8(vec1));
