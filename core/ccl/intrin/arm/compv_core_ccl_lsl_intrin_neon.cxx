@@ -163,15 +163,19 @@ void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Intrin
 		er = (Xi[0] & 1);
 		RLCi[0] = 0;
 
+		if (j == 5) {
+			printf("FIXME");
+		}
+
 		// In asm code, no need to test "width16 != 0" because "width1" > 16 (at least 17)
 		for (i = 1; i < width16; i += 16) {
 			vec0 = vceqq_s16(
-				vld1q_s16(&ERi[i - 1]), // unaligned load
-				vld1q_s16(&ERi[i]) // unaligned load
+				vld1q_s16(&ERi[i - 1]), // unaligned load (q0)
+				vld1q_s16(&ERi[i]) // unaligned load (q2)
 			);
 			vec1 = vceqq_s16(
-				vld1q_s16(&ERi[i + 7]), // unaligned load
-				vld1q_s16(&ERi[i + 8]) // unaligned load
+				vld1q_s16(&ERi[i + 7]), // unaligned load (q1)
+				vld1q_s16(&ERi[i + 8]) // unaligned load (q3)
 			);
 			vec0 = vcombine_u8(vqmovn_u16(vec0), vqmovn_u16(vec1));
 			vec0 = vmvnq_u8(vec0);			
@@ -182,10 +186,14 @@ void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Intrin
 				vec0n = vpadd_u8(vec0n, vec0n);
 				vec0n = vpadd_u8(vec0n, vec0n);
 				mask = vget_lane_u16(vec0n, 0);
+				//int FIXME = 0;
 				m = i;
 				do {
 					if (mask & 1) {
 						RLCi[er++] = m;
+						//if (FIXME++) {
+						//	printf("ooops");
+						//}
 					}
 					++m;
 				} while (mask >>= 1);

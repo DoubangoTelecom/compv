@@ -175,6 +175,15 @@
     <Filter Include="source\ccl\intrin\arm">
       <UniqueIdentifier>{f61762c9-4223-411c-8fb2-08630e4749a9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="source\ccl\asm">
+      <UniqueIdentifier>{f9e5262c-cbc3-4488-ab8e-915a3373429e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\ccl\asm\arm">
+      <UniqueIdentifier>{a2479758-74a7-4640-98c8-81af543b6f9b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\ccl\asm\x86">
+      <UniqueIdentifier>{cb84671b-8c09-4a2f-b1ad-6083cf45cf07}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\compv\core\compv_core.h">
@@ -457,6 +466,15 @@
     <None Include="..\features\edges\asm\x86\compv_core_feature_canny_dete_x86_sse.s">
       <Filter>source\features\edges\asm\x86</Filter>
     </None>
+    <None Include="..\ccl\asm\x86\compv_core_ccl_lsl_x64.s">
+      <Filter>source\ccl\asm\x86</Filter>
+    </None>
+    <None Include="..\ccl\asm\x86\compv_core_ccl_lsl_x64_avx.s">
+      <Filter>source\ccl\asm\x86</Filter>
+    </None>
+    <None Include="..\ccl\asm\x86\compv_core_ccl_lsl_x64_sse.s">
+      <Filter>source\ccl\asm\x86</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <GAS Include="..\features\fast\asm\arm\compv_core_feature_fast_dete_macros_neon.S">
@@ -485,6 +503,9 @@
     </GAS>
     <GAS Include="..\features\hough\asm\arm\compv_core_feature_houghkht_arm64.S">
       <Filter>source\features\hough\asm\arm</Filter>
+    </GAS>
+    <GAS Include="..\ccl\asm\arm\compv_core_ccl_lsl_arm32_neon.S">
+      <Filter>source\ccl\asm\arm</Filter>
     </GAS>
   </ItemGroup>
 </Project>

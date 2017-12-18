@@ -150,6 +150,12 @@ q15y .req d31
 
 #########################################################################
 # requires COMPV_GAS_SHADOW_ARGS_TO_STACK
+.macro str_arg nn rx
+    str \rx, [bp, #(\nn * COMPV_GAS_REG_SZ_BYTES)]
+.endm
+
+#########################################################################
+# requires COMPV_GAS_SHADOW_ARGS_TO_STACK
 # Example: ldmia_args r0-r7
 .macro ldm_args registers
     ldm bp, {\registers}
