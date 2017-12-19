@@ -77,9 +77,11 @@ private:
 };
 
 typedef CompVMemZero<int32_t> CompVMemZero32s;
+typedef CompVMemZero<int16_t> CompVMemZero16s;
 typedef CompVMemZero<uint8_t> CompVMemZero8u;
 
 typedef CompVPtr<CompVMemZero32s *> CompVMemZero32sPtr;
+typedef CompVPtr<CompVMemZero16s *> CompVMemZero16sPtr;
 typedef CompVPtr<CompVMemZero8u *> CompVMemZero8uPtr;
 
 COMPV_NAMESPACE_END()

@@ -296,17 +296,19 @@ static void step1_algo13_segment_STDZ(const CompVMatPtr& X, CompVMatPtr ptr16sER
 	//COMPV_DEBUG_INFO("Elapsed time (funPtrERi) = [[[ %" PRIu64 " millis ]]]", (timeEndERi - timeStartERi));
 
 	/* Compute RLCi */
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING("FIXME: Remove loop");
-	const uint64_t timeStartRLCi = CompVTime::nowMillis();
-	for (int i = 0; i < 1; ++i) {
+	//COMPV_DEBUG_INFO_CODE_FOR_TESTING("FIXME: Remove loop");
+	//const uint64_t timeStartRLCi = CompVTime::nowMillis();
+	//for (int i = 0; i < 1; ++i) {
 		funPtrRLCi(
 			Xi, X_stride,
 			ERi, ERi_stride,
 			RLCi, RLCi_stride,
 			width, height
 		);
-	}
+	//}
 
+#if 0
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING("FIXME: Remove next code");
 	CompVMatPtr RLCiBis;
 	CompVMat::newObjStrideless<int16_t>(&RLCiBis, height, RLCi_stride);
 	CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Intrin_NEON(
@@ -319,7 +321,7 @@ static void step1_algo13_segment_STDZ(const CompVMatPtr& X, CompVMatPtr ptr16sER
 	for (int j = 0; j < height; ++j) {
 		for (int i = 0; i <= ner0[j]; ++i) {
 			if (*RLCiBis->ptr<int16_t>(j, i) != RLCi[(RLCi_stride * j) + i]) {
-				printf("ooops");
+				printf("FIXME");
 			}
 			if (j == 0) {
 				COMPV_DEBUG_INFO("%d->%d", RLCi[(RLCi_stride * j) + i], *RLCiBis->ptr<int16_t>(j, i));
@@ -328,6 +330,7 @@ static void step1_algo13_segment_STDZ(const CompVMatPtr& X, CompVMatPtr ptr16sER
 	}
 	const uint64_t timeEndRLCi = CompVTime::nowMillis();
 	COMPV_DEBUG_INFO("Elapsed time (funPtrRLCi) = [[[ %" PRIu64 " millis ]]]", (timeEndRLCi - timeStartRLCi));
+#endif
 }
 
 static void CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_C(
