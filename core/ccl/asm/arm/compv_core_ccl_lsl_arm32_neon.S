@@ -25,25 +25,24 @@ mask: .word 0x8040201, 0x80402010, 0x8040201, 0x80402010
 @ arg(0) -> COMPV_ALIGNED(NEON) const uint8_t* Xi
 @ arg(1) -> const compv_uscalar_t Xi_stride
 @ arg(2) -> int16_t* ERi
-@ arg(3) -> const compv_uscalar_t ERi_stride,
-@ arg(4) -> int16_t* ner
-@ arg(5) -> int16_t* ner_max1
-@ arg(6) -> int32_t* ner_sum1
-@ arg(7) -> const compv_uscalar_t width
-@ arg(8) -> const compv_uscalar_t height
+@ arg(3) -> int16_t* ner
+@ arg(4) -> int16_t* ner_max1
+@ arg(5) -> int32_t* ner_sum1
+@ arg(6) -> const compv_uscalar_t width
+@ arg(7) -> const compv_uscalar_t height
 COMPV_GAS_FUNCTION_DECLARE CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32
 	COMPV_GAS_FUNCTION_PROLOG
-	COMPV_GAS_SHADOW_ARGS_TO_STACK 9
+	COMPV_GAS_SHADOW_ARGS_TO_STACK 8
 	COMPV_GAS_SAVE_NEON_REGS
 
 	@@ Load arguments @@
-	ldm_args r0-r8 @ load arguments in [r0-r8]
+	ldm_args r0-r7 @ load arguments in [r0-r7]
 	Xi .req r0
 
 
 
 	COMPV_GAS_RESTORE_NEON_REGS
-	COMPV_GAS_UNSHADOW_ARGS 9
+	COMPV_GAS_UNSHADOW_ARGS 8
 	COMPV_GAS_FUNCTION_EPILOG
 	COMPV_GAS_FUNCTION_RETURN
 
