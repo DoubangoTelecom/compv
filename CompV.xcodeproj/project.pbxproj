@@ -127,8 +127,8 @@
 		157F72BF1E5811BA000DE45F /* compv_math_distance_intrin_avx2.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 157F72BD1E5811BA000DE45F /* compv_math_distance_intrin_avx2.cxx */; };
 		157F72C01E5811BA000DE45F /* compv_math_distance_intrin_sse42.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 157F72BE1E5811BA000DE45F /* compv_math_distance_intrin_sse42.cxx */; };
 		157F72C21E5811C3000DE45F /* compv_math_distance_intrin_neon.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 157F72C11E5811C3000DE45F /* compv_math_distance_intrin_neon.cxx */; };
-		157F72C61E5812DF000DE45F /* compv_math_distance_arm32_neon.S in Sources */ = {isa = PBXBuildFile; fileRef = 157F72C51E5812DF000DE45F /* compv_math_distance_arm32_neon.S */; };
-		157F72C81E5812EF000DE45F /* compv_math_distance_arm64_neon.S in Sources */ = {isa = PBXBuildFile; fileRef = 157F72C71E5812EF000DE45F /* compv_math_distance_arm64_neon.S */; };
+		157F72C61E5812DF000DE45F /* compv_math_distance_arm32_neon.S in Sources */ = {isa = PBXBuildFile; fileRef = 157F72C51E5812DF000DE45F /* compv_math_distance_arm32_neon.S */; settings = {COMPILER_FLAGS = "-mfpu=neon-vfpv4"; }; };
+		157F72C81E5812EF000DE45F /* compv_math_distance_arm64_neon.S in Sources */ = {isa = PBXBuildFile; fileRef = 157F72C71E5812EF000DE45F /* compv_math_distance_arm64_neon.S */; settings = {COMPILER_FLAGS = "-mfpu=neon-vfpv4"; }; };
 		157F900C1E4510790005A4EA /* compv_math_convlt_arm32_neon.S in Sources */ = {isa = PBXBuildFile; fileRef = 157F900B1E4510790005A4EA /* compv_math_convlt_arm32_neon.S */; settings = {COMPILER_FLAGS = "-mfpu=neon-vfpv4"; }; };
 		157F900F1E4510E60005A4EA /* compv_math_convlt_intrin_avx2.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 157F900D1E4510E60005A4EA /* compv_math_convlt_intrin_avx2.cxx */; };
 		157F90101E4510E60005A4EA /* compv_math_convlt_intrin_sse2.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 157F900E1E4510E60005A4EA /* compv_math_convlt_intrin_sse2.cxx */; };
@@ -140,6 +140,21 @@
 		159A2D4B1E7DAC0C000FEBE5 /* compv_core_feature_canny_dete_intrin_ssse3.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 159A2D471E7DAC0C000FEBE5 /* compv_core_feature_canny_dete_intrin_ssse3.cxx */; };
 		159A2D611E7DB5DB000FEBE5 /* compv_core_feature_canny_dete_arm32_neon.S in Sources */ = {isa = PBXBuildFile; fileRef = 159A2D601E7DB5DB000FEBE5 /* compv_core_feature_canny_dete_arm32_neon.S */; };
 		159A2D631E7DB5EC000FEBE5 /* compv_core_feature_canny_dete_arm64_neon.S in Sources */ = {isa = PBXBuildFile; fileRef = 159A2D621E7DB5EC000FEBE5 /* compv_core_feature_canny_dete_arm64_neon.S */; };
+		159A9C651FE9C26A0080DB32 /* compv_ccl.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 159A9C511FE9C26A0080DB32 /* compv_ccl.cxx */; };
+		159A9C661FE9C26A0080DB32 /* compv_dlmalloc.c in Sources */ = {isa = PBXBuildFile; fileRef = 159A9C521FE9C26A0080DB32 /* compv_dlmalloc.c */; };
+		159A9C671FE9C26A0080DB32 /* backend.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 159A9C541FE9C26A0080DB32 /* backend.cpp */; };
+		159A9C681FE9C26A0080DB32 /* backref.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 159A9C551FE9C26A0080DB32 /* backref.cpp */; };
+		159A9C691FE9C26A0080DB32 /* frontend.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 159A9C571FE9C26A0080DB32 /* frontend.cpp */; };
+		159A9C6A1FE9C26A0080DB32 /* large_objects.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 159A9C581FE9C26A0080DB32 /* large_objects.cpp */; };
+		159A9C6B1FE9C26A0080DB32 /* tbbmalloc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 159A9C601FE9C26A0080DB32 /* tbbmalloc.cpp */; };
+		159A9C7D1FE9C2A60080DB32 /* compv_core_ccl_lsl_arm32_neon.S in Sources */ = {isa = PBXBuildFile; fileRef = 159A9C6F1FE9C2A60080DB32 /* compv_core_ccl_lsl_arm32_neon.S */; };
+		159A9C831FE9C2A60080DB32 /* compv_core_ccl_lsl_intrin_neon.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 159A9C781FE9C2A60080DB32 /* compv_core_ccl_lsl_intrin_neon.cxx */; };
+		159A9C841FE9C2A60080DB32 /* compv_core_ccl_lsl_intrin_avx2.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 159A9C7A1FE9C2A60080DB32 /* compv_core_ccl_lsl_intrin_avx2.cxx */; };
+		159A9C851FE9C2A60080DB32 /* compv_core_ccl_lsl_intrin_sse2.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 159A9C7B1FE9C2A60080DB32 /* compv_core_ccl_lsl_intrin_sse2.cxx */; };
+		159A9C861FE9C2A60080DB32 /* compv_core_ccl_lsl_intrin_ssse3.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 159A9C7C1FE9C2A60080DB32 /* compv_core_ccl_lsl_intrin_ssse3.cxx */; };
+		159A9C941FE9C2EE0080DB32 /* compv_core_ccl_lsl.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 159A9C741FE9C2A60080DB32 /* compv_core_ccl_lsl.cxx */; };
+		159A9C951FE9C2EE0080DB32 /* compv_core_ccl_lsl_result.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 159A9C751FE9C2A60080DB32 /* compv_core_ccl_lsl_result.cxx */; };
+		159A9CA51FE9C42B0080DB32 /* compv_image_threshold_intrin_neon.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 159A9CA41FE9C42B0080DB32 /* compv_image_threshold_intrin_neon.cxx */; };
 		159E15871E5DA5FD00D8CE75 /* compv_core_feature_orb_desc_intrin_neon.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 159E157C1E5DA5EE00D8CE75 /* compv_core_feature_orb_desc_intrin_neon.cxx */; settings = {COMPILER_FLAGS = "-mfpu=neon"; }; };
 		159E15881E5DA60500D8CE75 /* compv_core_feature_orb_desc_intrin_avx2.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 159E157E1E5DA5EE00D8CE75 /* compv_core_feature_orb_desc_intrin_avx2.cxx */; };
 		159E15891E5DA60500D8CE75 /* compv_core_feature_orb_desc_intrin_fma3_avx2.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 159E157F1E5DA5EE00D8CE75 /* compv_core_feature_orb_desc_intrin_fma3_avx2.cxx */; };
@@ -565,6 +580,33 @@
 		159A2D471E7DAC0C000FEBE5 /* compv_core_feature_canny_dete_intrin_ssse3.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_core_feature_canny_dete_intrin_ssse3.cxx; sourceTree = "<group>"; };
 		159A2D601E7DB5DB000FEBE5 /* compv_core_feature_canny_dete_arm32_neon.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = compv_core_feature_canny_dete_arm32_neon.S; sourceTree = "<group>"; };
 		159A2D621E7DB5EC000FEBE5 /* compv_core_feature_canny_dete_arm64_neon.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = compv_core_feature_canny_dete_arm64_neon.S; sourceTree = "<group>"; };
+		159A9C511FE9C26A0080DB32 /* compv_ccl.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = compv_ccl.cxx; path = base/compv_ccl.cxx; sourceTree = SOURCE_ROOT; };
+		159A9C521FE9C26A0080DB32 /* compv_dlmalloc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = compv_dlmalloc.c; path = base/compv_dlmalloc.c; sourceTree = SOURCE_ROOT; };
+		159A9C541FE9C26A0080DB32 /* backend.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = backend.cpp; sourceTree = "<group>"; };
+		159A9C551FE9C26A0080DB32 /* backref.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = backref.cpp; sourceTree = "<group>"; };
+		159A9C561FE9C26A0080DB32 /* Customize.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Customize.h; sourceTree = "<group>"; };
+		159A9C571FE9C26A0080DB32 /* frontend.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = frontend.cpp; sourceTree = "<group>"; };
+		159A9C581FE9C26A0080DB32 /* large_objects.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = large_objects.cpp; sourceTree = "<group>"; };
+		159A9C591FE9C26A0080DB32 /* MapMemory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MapMemory.h; sourceTree = "<group>"; };
+		159A9C5A1FE9C26A0080DB32 /* proxy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = proxy.h; sourceTree = "<group>"; };
+		159A9C5B1FE9C26A0080DB32 /* proxy_overload_osx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = proxy_overload_osx.h; sourceTree = "<group>"; };
+		159A9C5C1FE9C26A0080DB32 /* shared_utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = shared_utils.h; sourceTree = "<group>"; };
+		159A9C5D1FE9C26A0080DB32 /* Statistics.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Statistics.h; sourceTree = "<group>"; };
+		159A9C5E1FE9C26A0080DB32 /* tbb_assert_impl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tbb_assert_impl.h; sourceTree = "<group>"; };
+		159A9C5F1FE9C26A0080DB32 /* tbb_function_replacement.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tbb_function_replacement.h; sourceTree = "<group>"; };
+		159A9C601FE9C26A0080DB32 /* tbbmalloc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tbbmalloc.cpp; sourceTree = "<group>"; };
+		159A9C611FE9C26A0080DB32 /* tbbmalloc.rc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = tbbmalloc.rc; sourceTree = "<group>"; };
+		159A9C621FE9C26A0080DB32 /* tbbmalloc_internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tbbmalloc_internal.h; sourceTree = "<group>"; };
+		159A9C631FE9C26A0080DB32 /* tbbmalloc_internal_api.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tbbmalloc_internal_api.h; sourceTree = "<group>"; };
+		159A9C641FE9C26A0080DB32 /* TypeDefinitions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TypeDefinitions.h; sourceTree = "<group>"; };
+		159A9C6F1FE9C2A60080DB32 /* compv_core_ccl_lsl_arm32_neon.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = compv_core_ccl_lsl_arm32_neon.S; sourceTree = "<group>"; };
+		159A9C741FE9C2A60080DB32 /* compv_core_ccl_lsl.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_core_ccl_lsl.cxx; sourceTree = "<group>"; };
+		159A9C751FE9C2A60080DB32 /* compv_core_ccl_lsl_result.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_core_ccl_lsl_result.cxx; sourceTree = "<group>"; };
+		159A9C781FE9C2A60080DB32 /* compv_core_ccl_lsl_intrin_neon.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_core_ccl_lsl_intrin_neon.cxx; sourceTree = "<group>"; };
+		159A9C7A1FE9C2A60080DB32 /* compv_core_ccl_lsl_intrin_avx2.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_core_ccl_lsl_intrin_avx2.cxx; sourceTree = "<group>"; };
+		159A9C7B1FE9C2A60080DB32 /* compv_core_ccl_lsl_intrin_sse2.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_core_ccl_lsl_intrin_sse2.cxx; sourceTree = "<group>"; };
+		159A9C7C1FE9C2A60080DB32 /* compv_core_ccl_lsl_intrin_ssse3.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_core_ccl_lsl_intrin_ssse3.cxx; sourceTree = "<group>"; };
+		159A9CA41FE9C42B0080DB32 /* compv_image_threshold_intrin_neon.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_image_threshold_intrin_neon.cxx; sourceTree = "<group>"; };
 		159E157C1E5DA5EE00D8CE75 /* compv_core_feature_orb_desc_intrin_neon.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_core_feature_orb_desc_intrin_neon.cxx; sourceTree = "<group>"; };
 		159E157E1E5DA5EE00D8CE75 /* compv_core_feature_orb_desc_intrin_avx2.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_core_feature_orb_desc_intrin_avx2.cxx; sourceTree = "<group>"; };
 		159E157F1E5DA5EE00D8CE75 /* compv_core_feature_orb_desc_intrin_fma3_avx2.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_core_feature_orb_desc_intrin_fma3_avx2.cxx; sourceTree = "<group>"; };
@@ -1020,6 +1062,7 @@
 		1525C0431E3633AF00B00689 /* source */ = {
 			isa = PBXGroup;
 			children = (
+				159A9C6C1FE9C2A60080DB32 /* ccl */,
 				15F9409B1FCB8E3E00C4E188 /* calib */,
 				1525C0131E3633AB00B00689 /* features */,
 				1525C0121E3633AB00B00689 /* compv_core.cxx */,
@@ -1599,6 +1642,94 @@
 			path = arm;
 			sourceTree = "<group>";
 		};
+		159A9C531FE9C26A0080DB32 /* tbbmalloc */ = {
+			isa = PBXGroup;
+			children = (
+				159A9C541FE9C26A0080DB32 /* backend.cpp */,
+				159A9C551FE9C26A0080DB32 /* backref.cpp */,
+				159A9C561FE9C26A0080DB32 /* Customize.h */,
+				159A9C571FE9C26A0080DB32 /* frontend.cpp */,
+				159A9C581FE9C26A0080DB32 /* large_objects.cpp */,
+				159A9C591FE9C26A0080DB32 /* MapMemory.h */,
+				159A9C5A1FE9C26A0080DB32 /* proxy.h */,
+				159A9C5B1FE9C26A0080DB32 /* proxy_overload_osx.h */,
+				159A9C5C1FE9C26A0080DB32 /* shared_utils.h */,
+				159A9C5D1FE9C26A0080DB32 /* Statistics.h */,
+				159A9C5E1FE9C26A0080DB32 /* tbb_assert_impl.h */,
+				159A9C5F1FE9C26A0080DB32 /* tbb_function_replacement.h */,
+				159A9C601FE9C26A0080DB32 /* tbbmalloc.cpp */,
+				159A9C611FE9C26A0080DB32 /* tbbmalloc.rc */,
+				159A9C621FE9C26A0080DB32 /* tbbmalloc_internal.h */,
+				159A9C631FE9C26A0080DB32 /* tbbmalloc_internal_api.h */,
+				159A9C641FE9C26A0080DB32 /* TypeDefinitions.h */,
+			);
+			name = tbbmalloc;
+			path = base/tbbmalloc;
+			sourceTree = SOURCE_ROOT;
+		};
+		159A9C6C1FE9C2A60080DB32 /* ccl */ = {
+			isa = PBXGroup;
+			children = (
+				159A9C761FE9C2A60080DB32 /* intrin */,
+				159A9C6D1FE9C2A60080DB32 /* asm */,
+				159A9C741FE9C2A60080DB32 /* compv_core_ccl_lsl.cxx */,
+				159A9C751FE9C2A60080DB32 /* compv_core_ccl_lsl_result.cxx */,
+			);
+			name = ccl;
+			path = core/ccl;
+			sourceTree = SOURCE_ROOT;
+		};
+		159A9C6D1FE9C2A60080DB32 /* asm */ = {
+			isa = PBXGroup;
+			children = (
+				159A9C6E1FE9C2A60080DB32 /* arm */,
+				159A9C701FE9C2A60080DB32 /* x86 */,
+			);
+			path = asm;
+			sourceTree = "<group>";
+		};
+		159A9C6E1FE9C2A60080DB32 /* arm */ = {
+			isa = PBXGroup;
+			children = (
+				159A9C6F1FE9C2A60080DB32 /* compv_core_ccl_lsl_arm32_neon.S */,
+			);
+			path = arm;
+			sourceTree = "<group>";
+		};
+		159A9C701FE9C2A60080DB32 /* x86 */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = x86;
+			sourceTree = "<group>";
+		};
+		159A9C761FE9C2A60080DB32 /* intrin */ = {
+			isa = PBXGroup;
+			children = (
+				159A9C771FE9C2A60080DB32 /* arm */,
+				159A9C791FE9C2A60080DB32 /* x86 */,
+			);
+			path = intrin;
+			sourceTree = "<group>";
+		};
+		159A9C771FE9C2A60080DB32 /* arm */ = {
+			isa = PBXGroup;
+			children = (
+				159A9C781FE9C2A60080DB32 /* compv_core_ccl_lsl_intrin_neon.cxx */,
+			);
+			path = arm;
+			sourceTree = "<group>";
+		};
+		159A9C791FE9C2A60080DB32 /* x86 */ = {
+			isa = PBXGroup;
+			children = (
+				159A9C7A1FE9C2A60080DB32 /* compv_core_ccl_lsl_intrin_avx2.cxx */,
+				159A9C7B1FE9C2A60080DB32 /* compv_core_ccl_lsl_intrin_sse2.cxx */,
+				159A9C7C1FE9C2A60080DB32 /* compv_core_ccl_lsl_intrin_ssse3.cxx */,
+			);
+			path = x86;
+			sourceTree = "<group>";
+		};
 		159E157A1E5DA5EE00D8CE75 /* intrin */ = {
 			isa = PBXGroup;
 			children = (
@@ -1698,6 +1829,8 @@
 				15A3E8F61E35A0E600303F7C /* source */,
 				15A3E78F1E3599D800303F7C /* compv_base.cxx */,
 				15A3E7901E3599D800303F7C /* compv_bind.cxx */,
+				159A9C511FE9C26A0080DB32 /* compv_ccl.cxx */,
+				159A9C521FE9C26A0080DB32 /* compv_dlmalloc.c */,
 				15A3E7911E3599D800303F7C /* compv_box_interestpoint.cxx */,
 				15A3E7921E3599D800303F7C /* compv_box.cxx */,
 				15A3E7931E3599D800303F7C /* compv_buffer.cxx */,
@@ -1838,6 +1971,7 @@
 		15A3E7C91E3599D800303F7C /* arm */ = {
 			isa = PBXGroup;
 			children = (
+				159A9CA41FE9C42B0080DB32 /* compv_image_threshold_intrin_neon.cxx */,
 				152BA38E1F0571530024C7A9 /* compv_image_conv_hsv_intrin_neon.cxx */,
 				152BA38F1F0571530024C7A9 /* compv_image_conv_to_rgbx_intrin_neon.cxx */,
 				15A3E7CA1E3599D800303F7C /* compv_image_conv_grayscale_intrin_neon.cxx */,
@@ -2214,6 +2348,7 @@
 		15A3E8F61E35A0E600303F7C /* source */ = {
 			isa = PBXGroup;
 			children = (
+				159A9C531FE9C26A0080DB32 /* tbbmalloc */,
 				15A3E7701E3599D800303F7C /* android */,
 				15A3E7741E3599D800303F7C /* asm */,
 				15A3E83C1E3599D800303F7C /* intrin */,
@@ -2431,6 +2566,7 @@
 				159E15981E5DB40400D8CE75 /* compv_core_feature_orb_desc_arm32.S in Sources */,
 				15AA07011E3AE39E0058D1F1 /* compv_core_feature_fast_dete_arm64_neon.S in Sources */,
 				1525C0361E3633AB00B00689 /* compv_core.cxx in Sources */,
+				159A9C951FE9C2EE0080DB32 /* compv_core_ccl_lsl_result.cxx in Sources */,
 				159E15871E5DA5FD00D8CE75 /* compv_core_feature_orb_desc_intrin_neon.cxx in Sources */,
 				159E159A1E5DB41D00D8CE75 /* compv_core_feature_orb_desc_arm64.S in Sources */,
 				159E15891E5DA60500D8CE75 /* compv_core_feature_orb_desc_intrin_fma3_avx2.cxx in Sources */,
@@ -2441,6 +2577,7 @@
 				1525C0401E3633AB00B00689 /* compv_core_feature_fast_dete_intrin_neon.cxx in Sources */,
 				1525C0381E3633AB00B00689 /* compv_core_feature_fast_dete_macros_neon.S in Sources */,
 				15FC519C1F0D15310002D2A4 /* compv_core_feature_houghkht_arm64.S in Sources */,
+				159A9C941FE9C2EE0080DB32 /* compv_core_ccl_lsl.cxx in Sources */,
 				159E158A1E5DA60500D8CE75 /* compv_core_feature_orb_desc_intrin_sse2.cxx in Sources */,
 				1582167B1F0CF5B100B72169 /* compv_core_feature_houghkht_arm32.S in Sources */,
 				159A2D631E7DB5EC000FEBE5 /* compv_core_feature_canny_dete_arm64_neon.S in Sources */,
@@ -2508,6 +2645,7 @@
 				15A3E8F21E3599D900303F7C /* compv_threaddisptbb.cxx in Sources */,
 				15A3E8C41E3599D900303F7C /* compv_image_conv_rgbfamily_intrin_avx2.cxx in Sources */,
 				15A3E8AB1E3599D900303F7C /* compv_image_conv_rgbfamily_arm32_neon.S in Sources */,
+				159A9C7D1FE9C2A60080DB32 /* compv_core_ccl_lsl_arm32_neon.S in Sources */,
 				152BA3CF1F05B0E40024C7A9 /* compv_image_conv_hsv_arm32_neon.S in Sources */,
 				15A3E89D1E3599D900303F7C /* compv_sharedlib.cxx in Sources */,
 				157F72C21E5811C3000DE45F /* compv_math_distance_intrin_neon.cxx in Sources */,
@@ -2527,6 +2665,7 @@
 				15A3E8C71E3599D900303F7C /* compv_image_scale_bilinear_intrin_avx2.cxx in Sources */,
 				156E41C51E7119F700DF9950 /* compv_core_feature_edge_dete.cxx in Sources */,
 				15A3E8E41E3599D900303F7C /* compv_math_utils_intrin_avx2.cxx in Sources */,
+				159A9C6A1FE9C26A0080DB32 /* large_objects.cpp in Sources */,
 				15A3E8971E3599D900303F7C /* compv_jni.cxx in Sources */,
 				15AA06DD1E3844790058D1F1 /* compv_common_arm32.S in Sources */,
 				15F940841FCB78E000C4E188 /* compv_math_stats_intrin_sse2.cxx in Sources */,
@@ -2537,6 +2676,7 @@
 				152BA3CB1F0573A10024C7A9 /* compv_image_conv_to_rgbx_arm32_neon.S in Sources */,
 				15A3E8EA1E3599D900303F7C /* compv_mutex.cxx in Sources */,
 				15A3E8E81E3599D900303F7C /* compv_asynctask11.cxx in Sources */,
+				159A9C851FE9C2A60080DB32 /* compv_core_ccl_lsl_intrin_sse2.cxx in Sources */,
 				15A3E8BF1E3599D900303F7C /* compv_image_utils.cxx in Sources */,
 				159A2D4B1E7DAC0C000FEBE5 /* compv_core_feature_canny_dete_intrin_ssse3.cxx in Sources */,
 				156E41CA1E711A8600DF9950 /* compv_math_utils_arm32_neon.S in Sources */,
@@ -2553,6 +2693,8 @@
 				152BA3BA1F0571D70024C7A9 /* compv_core_feature_houghsht_intrin_avx2.cxx in Sources */,
 				15A3E8721E3599D900303F7C /* compv_android_dexclassloader.cxx in Sources */,
 				15A3E8711E3599D800303F7C /* compv_android_cpu-features.cxx in Sources */,
+				159A9C841FE9C2A60080DB32 /* compv_core_ccl_lsl_intrin_avx2.cxx in Sources */,
+				159A9C671FE9C26A0080DB32 /* backend.cpp in Sources */,
 				15A3E8EF1E3599D900303F7C /* compv_threaddisp.cxx in Sources */,
 				15D8B0101F1D112500029C90 /* compv_mem_arm32_neon.S in Sources */,
 				157F72AA1E580801000DE45F /* compv_bits.cxx in Sources */,
@@ -2583,6 +2725,7 @@
 				15A3E8751E3599D900303F7C /* compv_test_arm.S in Sources */,
 				15621B801E6DA57800DCBBCC /* compv_math_stats_arm64_neon.S in Sources */,
 				15A3E8ED1E3599D900303F7C /* compv_semaphore.cxx in Sources */,
+				159A9C651FE9C26A0080DB32 /* compv_ccl.cxx in Sources */,
 				157030C41E672AD500F0B895 /* compv_math_matrix_intrin_neon64.cxx in Sources */,
 				15A3E8981E3599D900303F7C /* compv_lock.cxx in Sources */,
 				15A3E8C91E3599D900303F7C /* compv_mem_intrin_avx.cxx in Sources */,
@@ -2595,6 +2738,7 @@
 				15A3E8BA1E3599D900303F7C /* compv_image_conv_rgbfamily.cxx in Sources */,
 				157F72A31E5807BC000DE45F /* compv_math_eigen.cxx in Sources */,
 				152BA3A01F0571BC0024C7A9 /* compv_core_matcher_bruteforce.cxx in Sources */,
+				159A9C861FE9C2A60080DB32 /* compv_core_ccl_lsl_intrin_ssse3.cxx in Sources */,
 				15A3E8D91E3599D900303F7C /* compv_math_utils.cxx in Sources */,
 				152BA38A1F05714A0024C7A9 /* compv_image_conv_hsv_intrin_ssse3.cxx in Sources */,
 				157F72861E580767000DE45F /* compv_core_calib_homography.cxx in Sources */,
@@ -2603,16 +2747,20 @@
 				15A3E8BB1E3599D900303F7C /* compv_image_conv_to_grayscale.cxx in Sources */,
 				15AEA0071E6450690030D908 /* compv_patch_arm32_neon.S in Sources */,
 				15A3E8AC1E3599D900303F7C /* compv_image_scale_bilinear_arm32_neon.S in Sources */,
+				159A9C831FE9C2A60080DB32 /* compv_core_ccl_lsl_intrin_neon.cxx in Sources */,
 				15A3E8A91E3599D900303F7C /* compv_window_registry.cxx in Sources */,
 				15F940A11FCB8E3E00C4E188 /* compv_core_calib_utils.cxx in Sources */,
+				159A9C681FE9C26A0080DB32 /* backref.cpp in Sources */,
 				15621B751E6B8E6B00DCBBCC /* compv_math_stats_intrin_neon64.cxx in Sources */,
 				15A3E8C21E3599D900303F7C /* compv_image_scale_bilinear_intrin_neon.cxx in Sources */,
 				15F940A01FCB8E3E00C4E188 /* compv_core_calib_homography.cxx in Sources */,
 				157F90121E4556240005A4EA /* compv_math_convlt_arm64_neon.S in Sources */,
 				157F72B91E581170000DE45F /* compv_image_scale_pyramid.cxx in Sources */,
 				157030C81E672B8A00F0B895 /* compv_math_matrix_arm64_neon.S in Sources */,
+				159A9C6B1FE9C26A0080DB32 /* tbbmalloc.cpp in Sources */,
 				15A3E8D81E3599D900303F7C /* compv_math.cxx in Sources */,
 				152BA3B91F0571D70024C7A9 /* compv_core_feature_houghkht_intrin_sse2.cxx in Sources */,
+				159A9C661FE9C26A0080DB32 /* compv_dlmalloc.c in Sources */,
 				15AA06D71E3834320058D1F1 /* compv_image_scale_bilinear_arm64_neon.S in Sources */,
 				152BA3B61F0571D70024C7A9 /* compv_core_feature_houghkht_intrin_neon.cxx in Sources */,
 				156AD8F01E4274960078FA95 /* compv_math_convlt_intrin_neon.cxx in Sources */,
@@ -2669,7 +2817,9 @@
 				157F72AB1E580801000DE45F /* compv_matchers.cxx in Sources */,
 				15A3E88C1E3599D900303F7C /* compv_base.cxx in Sources */,
 				15621B7C1E6BB09000DCBBCC /* compv_math_transform_arm32_neon.S in Sources */,
+				159A9C691FE9C26A0080DB32 /* frontend.cpp in Sources */,
 				15F940A71FCBAE8A00C4E188 /* compv_image_threshold_arm32_neon.S in Sources */,
+				159A9CA51FE9C42B0080DB32 /* compv_image_threshold_intrin_neon.cxx in Sources */,
 				15A3E8931E3599D900303F7C /* compv_cpu.cxx in Sources */,
 				157F72A51E5807BC000DE45F /* compv_math_stats.cxx in Sources */,
 				15A3E88E1E3599D900303F7C /* compv_box_interestpoint.cxx in Sources */,

@@ -8,7 +8,9 @@
 #if defined(__arm__) && !defined(__aarch64__)
 .include "compv_common_arm32.S"
 
+#if !defined(__APPLE__)
 .arch armv7-a @ for rbit
+#endif
 
 .data
 
@@ -45,8 +47,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVConnectedComponentLabelingLSL_Step1Algo13Segment
     height .req r7
 
 	vecMask .req q10
-	vecMaskx .req q10x
-    vecMasky .req q10y
 	width16 .req r8
 	i .req r9
 	t0 .req r10
@@ -86,9 +86,9 @@ COMPV_GAS_FUNCTION_DECLARE CompVConnectedComponentLabelingLSL_Step1Algo13Segment
 			vqmovn.u16 q0x, q0
 			vqmovn.u16 q0y, q1
 			vmvn.u8 q0, q0
-			vorr q0x, q0x, q0y
-			vmov.32	t0, q0x[0]
-			vmov.32	t1, q0x[1]
+			vorr q1x, q0x, q0y
+			vmov.32	t0, q1x[0]
+			vmov.32	t1, q1x[1]
 			orrs t0, t0, t1
 			beq EndOfMask_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_NEON32
 				vand.u8 q0, q0, vecMask
@@ -102,7 +102,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVConnectedComponentLabelingLSL_Step1Algo13Segment
 				@ FIXME(dmi): ARM64 -> code could be better with more registers: lsl #1, t1 then xor
 				clz t1, t0
 				lsl t0, t0, t1
-				and t0, t0, #0x7fffffff
+				bic t0, t0, #0x80000000
 				lsrs t0, t0, t1
 				add t1, t1, i
 				strh t1, [RLCi], #(1*COMPV_GAS_INT16_SZ_BYTES)	

@@ -306,6 +306,8 @@ static void step1_algo13_segment_STDZ(const CompVMatPtr& X, CompVMatPtr ptr16sER
 			width, height
 		);
 	//}
+    //const uint64_t timeEndRLCi = CompVTime::nowMillis();
+    //COMPV_DEBUG_INFO("Elapsed time (funPtrRLCi) = [[[ %" PRIu64 " millis ]]]", (timeEndRLCi - timeStartRLCi));
 
 #if 0
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("FIXME: Remove next code");
@@ -321,15 +323,14 @@ static void step1_algo13_segment_STDZ(const CompVMatPtr& X, CompVMatPtr ptr16sER
 	for (int j = 0; j < height; ++j) {
 		for (int i = 0; i <= ner0[j]; ++i) {
 			if (*RLCiBis->ptr<int16_t>(j, i) != RLCi[(RLCi_stride * j) + i]) {
-				printf("FIXME");
+				//printf("FIXME");
 			}
 			if (j == 0) {
 				COMPV_DEBUG_INFO("%d->%d", RLCi[(RLCi_stride * j) + i], *RLCiBis->ptr<int16_t>(j, i));
 			}
 		}
 	}
-	const uint64_t timeEndRLCi = CompVTime::nowMillis();
-	COMPV_DEBUG_INFO("Elapsed time (funPtrRLCi) = [[[ %" PRIu64 " millis ]]]", (timeEndRLCi - timeStartRLCi));
+	
 #endif
 }
 
