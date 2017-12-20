@@ -9,7 +9,7 @@
 .include "compv_common_arm32.S"
 
 #if !defined(__APPLE__)
-.arch armv7-a @ for rbit
+.arch armv7-a @ for rbit (FIXME(dmi) -> ARM64 -> do not include)
 #endif
 
 .data
@@ -56,6 +56,11 @@ COMPV_GAS_FUNCTION_DECLARE CompVConnectedComponentLabelingLSL_Step1Algo13Segment
 	vecERy .req q14y
 	vecOne .req q15
 
+	pld [Xi, #(CACHE_LINE_SIZE*0)]
+	pld [Xi, #(CACHE_LINE_SIZE*1)]
+	pld [Xi, #(CACHE_LINE_SIZE*2)]
+	pld [Xi, #(CACHE_LINE_SIZE*3)]
+
 	mov t0, #1
 	eor ner_max1, ner_max1
 	eor ner_sum1, ner_sum1
@@ -78,6 +83,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVConnectedComponentLabelingLSL_Step1Algo13Segment
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 		LoopWidth16_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32:
 			add t0, Xi, #-(1*COMPV_GAS_UINT8_SZ_BYTES)
+			pld [Xi, #(CACHE_LINE_SIZE*4)]
 			vld1.u8 {q0}, [t0 :128]
 			vld1.u8 {q1}, [Xi]!
 			veor.u8 q0, q0, q1
@@ -268,11 +274,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVConnectedComponentLabelingLSL_Step1Algo13Segment
 	t0 .req r9
 	t1 .req r10
 	rMask .req r11 @ Mask to simulate x86 'blsr' instruction
-
-	pld [ERi, #(CACHE_LINE_SIZE*0)]
-	pld [ERi, #(CACHE_LINE_SIZE*1)]
-	pld [ERi, #(CACHE_LINE_SIZE*2)]
-	pld [ERi, #(CACHE_LINE_SIZE*3)]
 
 	lsl RLCi_stride, RLCi_stride, #(COMPV_GAS_INT16_SHIFT_BYTES) @ int16 -> byte
 	sub width16, width, #1
