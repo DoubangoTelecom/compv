@@ -72,6 +72,12 @@ COMPV_EXTERNC void CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBui
 
 // ARM32
 #if COMPV_ASM && COMPV_ARCH_ARM32
+COMPV_EXTERNC void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32(
+	COMPV_ALIGNED(NEON) const uint8_t* Xi, const compv_uscalar_t Xi_stride,
+	int16_t* ERi,
+	int16_t* ner, int16_t* ner_max1, int32_t* ner_sum1,
+	const compv_uscalar_t width, const compv_uscalar_t height
+);
 COMPV_EXTERNC void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_NEON32(
 	const uint8_t* Xi, const compv_uscalar_t Xi_stride,
 	int16_t* ERi, 
@@ -240,7 +246,7 @@ static void step1_algo13_segment_STDZ(const CompVMatPtr& X, CompVMatPtr ptr16sER
 #elif COMPV_ARCH_ARM
 		if (width > 16 && CompVCpu::isEnabled(kCpuFlagARM_NEON) && X->isAlignedNEON()) {
 			COMPV_EXEC_IFDEF_INTRIN_ARM(funPtrERi_8u16s32s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Intrin_NEON);
-			//COMPV_EXEC_IFDEF_ASM_ARM32(funPtrERi_8u16s32s = nullptr);
+			COMPV_EXEC_IFDEF_ASM_ARM32(funPtrERi_8u16s32s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32);
 			//COMPV_EXEC_IFDEF_ASM_ARM64(funPtrERi_8u16s32s = nullptr);
 		}
 #endif
@@ -281,18 +287,18 @@ static void step1_algo13_segment_STDZ(const CompVMatPtr& X, CompVMatPtr ptr16sER
 	}
 
 	/* Compute ERi */
-	//COMPV_DEBUG_INFO_CODE_FOR_TESTING("FIXME: Remove loop");
-	//const uint64_t timeStartERi = CompVTime::nowMillis();
-	//for (int i = 0; i < 1; ++i) {
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING("FIXME: Remove loop");
+	const uint64_t timeStartERi = CompVTime::nowMillis();
+	for (int i = 0; i < 100; ++i) {
 		funPtrERi(
 			Xi, X_stride,
 			ERi, 
 			ner0, ner_max1, ner_sum1,
 			width, height
 		);
-	//}
-	//const uint64_t timeEndERi = CompVTime::nowMillis();
-	//COMPV_DEBUG_INFO("Elapsed time (funPtrERi) = [[[ %" PRIu64 " millis ]]]", (timeEndERi - timeStartERi));
+	}
+	const uint64_t timeEndERi = CompVTime::nowMillis();
+	COMPV_DEBUG_INFO("Elapsed time (funPtrERi) = [[[ %" PRIu64 " millis ]]]", (timeEndERi - timeStartERi));
 
 	/* Compute RLCi */
 	//COMPV_DEBUG_INFO_CODE_FOR_TESTING("FIXME: Remove loop");
@@ -304,7 +310,7 @@ static void step1_algo13_segment_STDZ(const CompVMatPtr& X, CompVMatPtr ptr16sER
 			RLCi, RLCi_stride,
 			width, height
 		);
-	}
+	//}
     //const uint64_t timeEndRLCi = CompVTime::nowMillis();
     //COMPV_DEBUG_INFO("Elapsed time (funPtrRLCi) = [[[ %" PRIu64 " millis ]]]", (timeEndRLCi - timeStartRLCi));
 

@@ -125,7 +125,7 @@ void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Intr
 		er += (Xi[width1 - 1] & 1);
 		ner[j] = er;
 		ner_sum += er;
-		if (ner_max < er) { // TODO(dmi): asm use cmovl
+		if (ner_max < er) { // TODO(dmi): asm use movlt
 			ner_max = er;
 		}
 		/* next */

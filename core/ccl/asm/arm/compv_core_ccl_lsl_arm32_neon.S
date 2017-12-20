@@ -38,8 +38,199 @@ COMPV_GAS_FUNCTION_DECLARE CompVConnectedComponentLabelingLSL_Step1Algo13Segment
 	@@ Load arguments @@
 	ldm_args r0-r7 @ load arguments in [r0-r7]
 	Xi .req r0
+	Xi_stride .req r1
+	ERi .req r2
+	ner .req r3
+	ner_max1 .req r4
+	ner_sum1 .req r5
+	width .req r6
+	height .req r7
 
+	er .req r8
+	i .req r9
+	t0 .req r10
+	t1 .req r11
 
+	vecER .req q14
+	vecERx .req q14x
+	vecERy .req q14y
+	vecOne .req q15
+
+	mov t0, #1
+	eor ner_max1, ner_max1
+	eor ner_sum1, ner_sum1
+	vdup.u8 vecOne, t0
+	sub Xi_stride, Xi_stride, width @ now Xi_stride contains padding
+
+	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	@ for (compv_uscalar_t j = 0; j < height; ++j)
+	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	LoopHeight_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32:
+		ldrb er, [Xi], #(1*COMPV_GAS_UINT8_SZ_BYTES)
+		sub i, width, #1
+		and er, er, #1
+		and i, i, #-16 @ now 'i' is equal to width16 (FIXME(dmi): on ARM64, pre-compute width16)
+		strh er, [ERi], #(1*COMPV_GAS_INT16_SZ_BYTES)
+		vdup.s16 vecER, er
+		
+		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+		@ for (i = 1; i < width16; i += 16)
+		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+		LoopWidth16_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32:
+			add t0, Xi, #-(1*COMPV_GAS_UINT8_SZ_BYTES)
+			vld1.u8 {q0}, [t0 :128]
+			vld1.u8 {q1}, [Xi]!
+			veor.u8 q0, q0, q1
+			vand.u8 q0, q0, vecOne
+			vorr q1x, q0x, q0y
+			vmov.32	t0, q1x[0]
+			vmov.32	t1, q1x[1]
+			orrs t0, t0, t1
+			beq EndOf_TestBoth_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32
+			TestBoth_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32:
+				veor.u8 q1, q1, q1
+				@@ == Low == @@
+				vmov.32	t0, q0x[0]
+				vmov.32	t1, q0x[1]
+				orrs t0, t0, t1
+				beq EndOf_TestLow_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32
+				TestLow_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32:
+					vdup.u8 q1, q0x[0]
+					vdup.u8 q2, q0x[1]
+					vdup.u8 q3, q0x[2]
+					vdup.u8 q4, q0x[3]
+					vdup.u8 q5, q0x[4]
+					vdup.u8 q6, q0x[5]
+					vdup.u8 q7, q0x[6]
+					vdup.u8 q8, q0x[7]
+					vshl.u64 q2x, #8
+					vshl.u64 q3x, #16
+					vshl.u64 q4x, #24
+					vshl.u64 q5x, #32
+					vshl.u64 q6x, #40
+					vshl.u64 q7x, #48
+					vshl.u64 q8x, #56
+					vadd.u8 q2, q3
+					vadd.u8 q4, q5
+					vadd.u8 q6, q7
+					vadd.u8 q2, q8
+					vadd.u8 q4, q6
+					vadd.u8 q1, q2
+					vadd.u8 q1, q4
+				EndOf_TestLow_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32:
+
+				@@ == High == @@
+				vmov.32	t0, q0y[0]
+				vmov.32	t1, q0y[1]
+				orrs t0, t0, t1
+				beq EndOf_TestHigh_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32
+				TestHigh_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32:
+					vdup.u8 q2y, q0y[0]
+					vdup.u8 q3x, q0y[1]
+					vdup.u8 q4x, q0y[2]
+					vdup.u8 q5x, q0y[3]
+					vdup.u8 q6x, q0y[4]
+					vdup.u8 q7x, q0y[5]
+					vdup.u8 q8x, q0y[6]
+					vdup.u8 q0x, q0y[7]
+					vshl.u64 q3x, #8
+					vshl.u64 q4x, #16
+					vshl.u64 q5x, #24
+					vshl.u64 q6x, #32
+					vshl.u64 q7x, #40
+					vshl.u64 q8x, #48
+					vshl.u64 q0x, #56
+					vadd.u8 q2y, q3x
+					vadd.u8 q4x, q5x
+					vadd.u8 q6x, q7x
+					vadd.u8 q8x, q0x
+					vadd.u8 q2y, q4x
+					vadd.u8 q6x, q8x
+					veor.u8 q2x, q2x @ now q2x contains zeros
+					vadd.u8 q2y, q6x
+					vadd.u8 q1, q2
+				EndOf_TestHigh_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32:
+
+				@@ Convert erUint8 to erInt16 and sum then store @@
+				vaddw.u8 q0, vecER, q1x
+				vaddw.u8 vecER, vecER, q1y
+				vst1.s16 {q0}, [ERi]!
+				vst1.s16 {vecER}, [ERi]! @ FIXME(dmi): ARM64 -> use stp
+
+				@@ Duplicate latest element @@
+				vdup.s16 vecER, vecERy[3]
+
+				@@ Skip stroring previous ER and goto Next @@
+				b Next16_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32
+			EndOf_TestBoth_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32:
+
+			@@ Store previous ER (FIXME(dmi): ARM64 -> stp) @@
+			vst1.s16 {vecER}, [ERi]!
+			vst1.s16 {vecER}, [ERi]!
+
+			Next16_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32:
+			subs i, i, #16
+			bne LoopWidth16_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32
+		EndOf_LoopWidth16_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32:
+		
+		@@ Get highest "er" before switching from SIMD to serial code @@
+		and i, width, #-16
+		vmov.s16 er, vecERy[3]
+		add i, i, #1 @ now i is equal to (width16 + 1) (FIXME(dmi): ARM64 -> precompute width16 and don't override i)
+
+		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+		@ for (; i < width1; ++i) @
+		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+		cmp i, width
+		bge EndOf_LoopWidth1_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32
+		LoopWidth1_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32:
+			ldrb t0, [Xi, #-(1*COMPV_GAS_UINT8_SZ_BYTES)]
+			ldrb t1, [Xi], #(1*COMPV_GAS_UINT8_SZ_BYTES)
+			eor t0, t0, t1
+			and t0, t0, #1
+			add er, er, t0
+			strh er, [ERi], #(1*COMPV_GAS_INT16_SZ_BYTES)
+			add i, i, #1
+			cmp i, width
+			blt LoopWidth1_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32
+		EndOf_LoopWidth1_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32:
+
+		ldrb t1, [Xi, #-(1*COMPV_GAS_UINT8_SZ_BYTES)]
+		add Xi, Xi, Xi_stride
+		and t1, t1, #1
+		add er, er, t1
+		add ner_sum1, ner_sum1, er
+		strh er, [ner], #(1*COMPV_GAS_INT16_SZ_BYTES)
+		cmp ner_max1, er
+		movlt ner_max1, er
+		
+		subs height, height, #1
+		bne LoopHeight_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32
+	EndOf_LoopHeight_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32:
+
+	ldr_arg 4, t0
+	ldr_arg 5, t1
+	strh ner_max1, [t0] @ int16
+	str ner_sum1, [t1] @ int32
+
+	.unreq Xi
+	.unreq Xi_stride
+	.unreq ERi
+	.unreq ner
+	.unreq ner_max1
+	.unreq ner_sum1
+	.unreq width
+	.unreq height
+
+	.unreq er
+	.unreq i
+	.unreq t0
+	.unreq t1
+
+	.unreq vecER
+	.unreq vecERx
+	.unreq vecERy
+	.unreq vecOne
 
 	COMPV_GAS_RESTORE_NEON_REGS
 	COMPV_GAS_UNSHADOW_ARGS 8
