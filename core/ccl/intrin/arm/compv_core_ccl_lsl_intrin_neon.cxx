@@ -17,7 +17,7 @@ COMPV_NAMESPACE_BEGIN()
 // Function requires width > 16 (not ">=" but ">")
 void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Intrin_NEON(
 	COMPV_ALIGNED(NEON) const uint8_t* Xi, const compv_uscalar_t Xi_stride,
-	int16_t* ERi, const compv_uscalar_t ERi_stride,
+	int16_t* ERi, 
 	int16_t* ner, int16_t* ner_max1, int32_t* ner_sum1,
 	const compv_uscalar_t width, const compv_uscalar_t height
 )
@@ -130,7 +130,7 @@ void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Intr
 		}
 		/* next */
 		Xi += Xi_stride;
-		ERi += ERi_stride;
+		ERi += width;
 	}
 
 	*ner_max1 = ner_max;
@@ -139,13 +139,13 @@ void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Intr
 
 void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Intrin_NEON(
 	const uint8_t* Xi, const compv_uscalar_t Xi_stride,
-	int16_t* ERi, const compv_uscalar_t ERi_stride,
+	int16_t* ERi, 
 	int16_t* RLCi, const compv_uscalar_t RLCi_stride,
 	const compv_uscalar_t width, const compv_uscalar_t height
 )
 {
 	COMPV_DEBUG_INFO_CHECK_NEON();
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM version faster is #8 times faster (thanks to 'bsf' and 'blsr' instructions)");
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM version faster is #2 times faster (thanks to 'rbit' and 'clz' instructions)");
 
 	const int16_t width1 = static_cast<int16_t>(width);
 	const int16_t width16 = (width1 - 1) & -16; // width > 16 (at least 17) which means never equal to zero
@@ -162,10 +162,6 @@ void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Intrin
 	for (compv_uscalar_t j = 0; j < height; ++j) {
 		er = (Xi[0] & 1);
 		RLCi[0] = 0;
-
-		if (j == 5) {
-			printf("FIXME");
-		}
 
 		// In asm code, no need to test "width16 != 0" because "width1" > 16 (at least 17)
 		for (i = 1; i < width16; i += 16) {
@@ -186,14 +182,10 @@ void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Intrin
 				vec0n = vpadd_u8(vec0n, vec0n);
 				vec0n = vpadd_u8(vec0n, vec0n);
 				mask = vget_lane_u16(vec0n, 0);
-				//int FIXME = 0;
 				m = i;
 				do {
 					if (mask & 1) {
 						RLCi[er++] = m;
-						//if (FIXME++) {
-						//	printf("ooops");
-						//}
 					}
 					++m;
 				} while (mask >>= 1);
@@ -211,7 +203,7 @@ void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Intrin
 		/* next */
 		Xi += Xi_stride;
 		RLCi += RLCi_stride;
-		ERi += ERi_stride;
+		ERi += width;
 	}
 }
 

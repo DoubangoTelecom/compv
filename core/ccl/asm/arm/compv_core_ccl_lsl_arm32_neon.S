@@ -6,7 +6,7 @@
 # WebSite: http://compv.org                                             #
 #########################################################################
 #if defined(__arm__) && !defined(__aarch64__)
-.include "compv_common_arm32.S" // "
+.include "compv_common_arm32.S"
 
 #if !defined(__APPLE__)
 .arch armv7-a @ for rbit
@@ -52,42 +52,44 @@ COMPV_GAS_FUNCTION_DECLARE CompVConnectedComponentLabelingLSL_Step1Algo13Segment
 @ arg(0) -> const uint8_t* Xi, 
 @ arg(1) -> const compv_uscalar_t Xi_stride,
 @ arg(2) -> int16_t* ERi, 
-@ arg(3) -> const compv_uscalar_t ERi_stride,
-@ arg(4) -> int16_t* RLCi, 
-@ arg(5) -> const compv_uscalar_t RLCi_stride,
-@ arg(6) -> const compv_uscalar_t width, 
-@ arg(7) -> const compv_uscalar_t height
+@ arg(3) -> int16_t* RLCi, 
+@ arg(4) -> const compv_uscalar_t RLCi_stride,
+@ arg(5) -> const compv_uscalar_t width, 
+@ arg(6) -> const compv_uscalar_t height
 COMPV_GAS_FUNCTION_DECLARE CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_NEON32
 	COMPV_GAS_FUNCTION_PROLOG
-	COMPV_GAS_SHADOW_ARGS_TO_STACK 8
+	COMPV_GAS_SHADOW_ARGS_TO_STACK 7
 	COMPV_GAS_SAVE_NEON_REGS
 
 	@@ Load arguments @@
-	ldm_args r0-r7 @ load arguments in [r0-r7]
+	ldm_args r0-r6 @ load arguments in [r0-r6]
 	Xi .req r0
 	Xi_stride .req r1
 	ERi .req r2
-	ERi_stride .req r3
-	RLCi .req r4
-	RLCi_stride .req r5
-    width .req r6
-    height .req r7
+	RLCi .req r3
+	RLCi_stride .req r4
+    width .req r5
+    height .req r6
 
 	vecMask .req q10
-	width16 .req r8
-	i .req r9
-	t0 .req r10
-	t1 .req r11
+	width16 .req r7
+	i .req r8
+	t0 .req r9
+	t1 .req r10
+	rMask .req r11 @ Mask to simulate x86 'blsr' instruction
 
-	sub ERi_stride, width, ERi_stride @ ERi_stride now contains pad
+	pld [ERi, #(CACHE_LINE_SIZE*0)]
+	pld [ERi, #(CACHE_LINE_SIZE*1)]
+	pld [ERi, #(CACHE_LINE_SIZE*2)]
+	pld [ERi, #(CACHE_LINE_SIZE*3)]
+
 	lsl RLCi_stride, RLCi_stride, #(COMPV_GAS_INT16_SHIFT_BYTES) @ int16 -> byte
-	lsl ERi_stride, ERi_stride, #(COMPV_GAS_INT16_SHIFT_BYTES) @ int16 -> byte
 	sub width16, width, #1
 	and width16, width16, #-16
-	
 
 	ldr t0, =mask
 	vld1.u32 {vecMask}, [t0]
+	mov rMask, #0x80000000 @ << #0x8000000000000000 for ARM64
 
 	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	@ for (compv_uscalar_t j = 0; j < height; ++j)
@@ -106,6 +108,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVConnectedComponentLabelingLSL_Step1Algo13Segment
 		mov i, #1
 		LoopWidth16_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_NEON32:
 			add t0, ERi, #-(1*COMPV_GAS_INT16_SZ_BYTES)
+			pld [ERi, width, LSL #(COMPV_GAS_INT16_SHIFT_BYTES)]
 			vld1.s16 {q0, q1}, [t0]
 			vld1.s16 {q2, q3}, [ERi]!
 			vceq.s16 q0, q0, q2
@@ -125,15 +128,12 @@ COMPV_GAS_FUNCTION_DECLARE CompVConnectedComponentLabelingLSL_Step1Algo13Segment
 				vmov.u16 t0, q0x[0]
 				rbit t0, t0
 				BeginOfWhile_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_NEON32:
-				@ ARM there is no ctz (Count Trailing Zero): ctz = 31 - clz(t0)
-				@ FIXME(dmi): ARM64 -> code could be better with more registers: lsl #1, t1 then xor
-				clz t1, t0
-				lsl t0, t0, t1
-				bic t0, t0, #0x80000000
-				lsrs t0, t0, t1
-				add t1, t1, i
-				strh t1, [RLCi], #(1*COMPV_GAS_INT16_SZ_BYTES)	
-				bne BeginOfWhile_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_NEON32
+					@ ARM there is no ctz (Count Trailing Zero): ctz = clz(rbit(t0))
+					clz t1, t0
+					bics t0, t0, rMask, LSR t1 @ clear bit at t1
+					add t1, t1, i
+					strh t1, [RLCi], #(1*COMPV_GAS_INT16_SZ_BYTES)	
+					bne BeginOfWhile_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_NEON32
 				EndOf_BeginOfWhile_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_NEON32:
 			EndOfMask_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_NEON32:
 
@@ -167,17 +167,32 @@ COMPV_GAS_FUNCTION_DECLARE CompVConnectedComponentLabelingLSL_Step1Algo13Segment
 		strh t0, [RLCi]
 
 		@ next @
-		ldr_arg 4, RLCi
+		ldr_arg 3, RLCi
 		add Xi, Xi, Xi_stride
 		add RLCi, RLCi, RLCi_stride
-		add ERi, ERi, ERi_stride
-		str_arg 4, RLCi
+		str_arg 3, RLCi
 		subs height, height, #1
 		bne LoopHeight_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_NEON32
 	EndOf_LoopHeight_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_NEON32:
 
+
+	.unreq Xi
+	.unreq Xi_stride
+	.unreq ERi
+	.unreq RLCi
+	.unreq RLCi_stride
+    .unreq width
+    .unreq height
+
+	.unreq vecMask
+	.unreq width16
+	.unreq i
+	.unreq t0
+	.unreq t1
+	.unreq rMask
+
 	COMPV_GAS_RESTORE_NEON_REGS
-	COMPV_GAS_UNSHADOW_ARGS 8
+	COMPV_GAS_UNSHADOW_ARGS 7
 	COMPV_GAS_FUNCTION_EPILOG
 	COMPV_GAS_FUNCTION_RETURN
 

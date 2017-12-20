@@ -24,14 +24,13 @@ section .text
 ; arg(2) -> int32_t* ERAi
 ; arg(3) -> const compv_uscalar_t ERAi_stride,
 ; arg(4) -> const int16_t* ERiminus1
-; arg(5) -> const compv_uscalar_t ERi_stride,
-; arg(6) -> const int16_t* ner,
-; arg(7) -> const compv_uscalar_t width
-; arg(8) -> const compv_uscalar_t height
+; arg(5) -> const int16_t* ner,
+; arg(6) -> const compv_uscalar_t width
+; arg(7) -> const compv_uscalar_t height
 sym(CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_16s32s_Asm_X64_CMOV):
 	push rbp
 	mov rbp, rsp
-	COMPV_YASM_SHADOW_ARGS_TO_STACK 9
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 8
 	push rsi
 	push rdi
 	push rbx
@@ -46,34 +45,33 @@ sym(CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_16s32s_Asm_X
 	%define ERAi			rdx
 	%define ERAi_stride		rax
 	%define ERiminus1		rdi
-	%define ERi_stride		rbx
-	%define ner				r8
-	%define width			r9	
-	%define nerj			r10
-	%define er				r11
-	%define j0				r12
-	%define j0d				r12d
-	%define j0w				r12w
-	%define j1				r13
-	%define j1d				r13d
-	%define j1w				r13w
-	%define f0				r14
-	%define f0b				r14b
-	%define f0w				r14w
-	%define f1				r15
-	%define f1b				r15b
-	%define f1w				r15w
+	%define ner				rbx
+	%define width			r8	
+	%define nerj			r9
+	%define er				r10
+	%define j0				r11
+	%define j0d				r11d
+	%define j0w				r11w
+	%define j1				r12
+	%define j1d				r12d
+	%define j1w				r12w
+	%define f0				r13
+	%define f0b				r13b
+	%define f0w				r13w
+	%define f1				r14
+	%define f1b				r14b
+	%define f1w				r14w
+	%define height			r15
 
 	mov RLCi, arg(0)
 	mov RLCi_stride, arg(1)
 	mov ERAi, arg(2)
 	mov ERAi_stride, arg(3)
 	mov ERiminus1, arg(4)
-	mov ERi_stride, arg(5)
-	mov ner, arg(6)
-	mov width, arg(7)
+	mov ner, arg(5)
+	mov width, arg(6)
+	mov height, arg(7)
 
-	shl ERi_stride, 1
 	shl RLCi_stride, 1
 	shl ERAi_stride, 2
 	xor j0, j0 ; clear high 32 bytes
@@ -96,7 +94,7 @@ sym(CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_16s32s_Asm_X
 			movzx j0, word [RLCi + (er-1)*COMPV_YASM_INT16_SZ_BYTES] ; use movzx once to clear j0d
 			movzx j1, word [RLCi + er*COMPV_YASM_INT16_SZ_BYTES] ; use movzx once to clear j1d
 			prefetcht0 [f0 + RLCi_stride]
-			prefetcht0 [f1 + ERi_stride]
+			prefetcht0 [f1 + width*COMPV_YASM_INT16_SZ_BYTES]
 			cmp j0w, 0
 			lea j1, [j1 - 1]
 			lea f1, [width - 1]
@@ -129,8 +127,8 @@ sym(CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_16s32s_Asm_X
 			jl .LoopER
 		.EndOf_LoopER:
 
-		dec qword arg(8)
-		lea ERiminus1, [ERiminus1 + ERi_stride*1]
+		dec height
+		lea ERiminus1, [ERiminus1 + width*COMPV_YASM_INT16_SZ_BYTES]
 		lea RLCi, [RLCi + RLCi_stride*1]
 		lea ERAi, [ERAi + ERAi_stride*1]
 		lea ner, [ner + 1*COMPV_YASM_INT16_SZ_BYTES]
@@ -142,7 +140,6 @@ sym(CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_16s32s_Asm_X
 	%undef ERAi			
 	%undef ERAi_stride		
 	%undef ERiminus1		
-	%undef ERi_stride		
 	%undef ner				
 	%undef width				
 	%undef nerj			
@@ -158,7 +155,8 @@ sym(CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_16s32s_Asm_X
 	%undef f0w				
 	%undef f1				
 	%undef f1b				
-	%undef f1w				
+	%undef f1w
+	%undef height			
 
 	;; begin epilog ;;
 	pop r15

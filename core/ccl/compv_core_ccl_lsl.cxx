@@ -39,32 +39,32 @@ COMPV_NAMESPACE_BEGIN()
 #if COMPV_ASM && COMPV_ARCH_X64
 COMPV_EXTERNC void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_X64_SSSE3(
 	COMPV_ALIGNED(SSE) const uint8_t* Xi, const compv_uscalar_t Xi_stride,
-	int16_t* ERi, const compv_uscalar_t ERi_stride,
+	int16_t* ERi,
 	int16_t* ner, int16_t* ner_max1, int32_t* ner_sum1,
 	const compv_uscalar_t width, const compv_uscalar_t height
 );
 COMPV_EXTERNC void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_X64_AVX2(
 	COMPV_ALIGNED(SSE) const uint8_t* Xi, const compv_uscalar_t Xi_stride,
-	int16_t* ERi, const compv_uscalar_t ERi_stride,
+	int16_t* ERi,
 	int16_t* ner, int16_t* ner_max1, int32_t* ner_sum1,
 	const compv_uscalar_t width, const compv_uscalar_t height
 );
 COMPV_EXTERNC void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_X64_SSE2(
 	const uint8_t* Xi, const compv_uscalar_t Xi_stride,
-	int16_t* ERi, const compv_uscalar_t ERi_stride,
+	int16_t* ERi,
 	int16_t* RLCi, const compv_uscalar_t RLCi_stride,
 	const compv_uscalar_t width, const compv_uscalar_t height
 );
 COMPV_EXTERNC void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_X64_AVX2(
 	const uint8_t* Xi, const compv_uscalar_t Xi_stride,
-	int16_t* ERi, const compv_uscalar_t ERi_stride,
+	int16_t* ERi,
 	int16_t* RLCi, const compv_uscalar_t RLCi_stride,
 	const compv_uscalar_t width, const compv_uscalar_t height
 );
 COMPV_EXTERNC void CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_16s32s_Asm_X64_CMOV(
 	const int16_t* RLCi, const compv_uscalar_t RLCi_stride,
 	int32_t* ERAi, const compv_uscalar_t ERAi_stride,
-	const int16_t* ERi, const compv_uscalar_t ERi_stride,
+	const int16_t* ERi, 
 	const int16_t* ner,
 	const compv_uscalar_t width, const compv_uscalar_t height
 );
@@ -74,7 +74,7 @@ COMPV_EXTERNC void CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBui
 #if COMPV_ASM && COMPV_ARCH_ARM32
 COMPV_EXTERNC void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_NEON32(
 	const uint8_t* Xi, const compv_uscalar_t Xi_stride,
-	int16_t* ERi, const compv_uscalar_t ERi_stride,
+	int16_t* ERi, 
 	int16_t* RLCi, const compv_uscalar_t RLCi_stride,
 	const compv_uscalar_t width, const compv_uscalar_t height
 );
@@ -112,7 +112,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::set(int id, const void* val
 template<typename T>
 static void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_C(
 	const T* Xi, const compv_uscalar_t Xi_stride,
-	int16_t* ERi, const compv_uscalar_t ERi_stride,
+	int16_t* ERi,
 	int16_t* ner, int16_t* ner_max1, int32_t* ner_sum1,
 	const compv_uscalar_t width, const compv_uscalar_t height)
 {
@@ -137,7 +137,7 @@ static void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_C(
 		}
 		/* next */
 		Xi += Xi_stride;
-		ERi += ERi_stride;
+		ERi += width;
 	}
 	
 	*ner_max1 = ner_max;
@@ -147,7 +147,7 @@ static void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_C(
 template<typename T>
 static void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_C(
 	const T* Xi, const compv_uscalar_t Xi_stride,
-	int16_t* ERi, const compv_uscalar_t ERi_stride,
+	int16_t* ERi, 
 	int16_t* RLCi, const compv_uscalar_t RLCi_stride,
 	const compv_uscalar_t width, const compv_uscalar_t height
 )
@@ -168,7 +168,7 @@ static void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_C(
 		/* next */
 		Xi += Xi_stride;
 		RLCi += RLCi_stride;
-		ERi += ERi_stride;
+		ERi += width;
 	}
 }
 
@@ -180,7 +180,6 @@ static void step1_algo13_segment_STDZ(const CompVMatPtr& X, CompVMatPtr ptr16sER
 	int16_t* ERi = ptr16sER->ptr<int16_t>(start);
 	int16_t* RLCi = ptr16sRLC->ptr<int16_t>(start);
 	int16_t* ner0 = ptr16sNer->ptr<int16_t>(0, start);
-	const compv_uscalar_t ERi_stride = static_cast<compv_uscalar_t>(ptr16sER->stride());
 	const compv_uscalar_t RLCi_stride = static_cast<compv_uscalar_t>(ptr16sRLC->stride());
 	const compv_uscalar_t X_stride = static_cast<compv_uscalar_t>(X->stride());
 	const compv_uscalar_t width = static_cast<compv_uscalar_t>(X->cols());
@@ -188,21 +187,21 @@ static void step1_algo13_segment_STDZ(const CompVMatPtr& X, CompVMatPtr ptr16sER
 
 	/* Hook to processing functions */
 	typedef void(*FunERiPtr)(const T* Xi, const compv_uscalar_t Xi_stride,
-		int16_t* ERi, const compv_uscalar_t ERi_stride,
+		int16_t* ERi,
 		int16_t* ner, int16_t* ner_max1, int32_t* ner_sum1,
 		const compv_uscalar_t width, const compv_uscalar_t height);
 	typedef void(*FunRLCiPtr)(const T* Xi, const compv_uscalar_t Xi_stride,
-		int16_t* ERi, const compv_uscalar_t ERi_stride,
+		int16_t* ERi,
 		int16_t* RLCi, const compv_uscalar_t RLCi_stride,
 		const compv_uscalar_t width, const compv_uscalar_t height);
 
 	FunERiPtr funPtrERi = [](const T* Xi, const compv_uscalar_t Xi_stride,
-		int16_t* ERi, const compv_uscalar_t ERi_stride,
+		int16_t* ERi,
 		int16_t* ner, int16_t* ner_max1, int32_t* ner_sum1,
 		const compv_uscalar_t width, const compv_uscalar_t height) {
 		CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_C<T >(
 			Xi, Xi_stride,
-			ERi, ERi_stride,
+			ERi, 
 			ner,
 			ner_max1,
 			ner_sum1,
@@ -210,12 +209,12 @@ static void step1_algo13_segment_STDZ(const CompVMatPtr& X, CompVMatPtr ptr16sER
 		);
 	};
 	FunRLCiPtr funPtrRLCi = [](const T* Xi, const compv_uscalar_t Xi_stride,
-		int16_t* ERi, const compv_uscalar_t ERi_stride,
+		int16_t* ERi, 
 		int16_t* RLCi, const compv_uscalar_t RLCi_stride,
 		const compv_uscalar_t width, const compv_uscalar_t height) {
 		CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_C(
 			Xi, Xi_stride,
-			ERi, ERi_stride,
+			ERi,
 			RLCi, RLCi_stride,
 			width, height
 		);
@@ -225,7 +224,7 @@ static void step1_algo13_segment_STDZ(const CompVMatPtr& X, CompVMatPtr ptr16sER
 	if (std::is_same<T, uint8_t>::value) {
 		/* ERi */
 		void(*funPtrERi_8u16s32s)(const uint8_t* Xi, const compv_uscalar_t Xi_stride,
-			int16_t* ERi, const compv_uscalar_t ERi_stride,
+			int16_t* ERi,
 			int16_t* ner, int16_t* ner_max1, int32_t* ner_sum1,
 			const compv_uscalar_t width, const compv_uscalar_t height)
 			= nullptr;
@@ -252,7 +251,7 @@ static void step1_algo13_segment_STDZ(const CompVMatPtr& X, CompVMatPtr ptr16sER
 
 		/* RLCi */
 		void(*funPtrRLCi_8u16s)(const uint8_t* Xi, const compv_uscalar_t Xi_stride,
-			int16_t* ERi, const compv_uscalar_t ERi_stride,
+			int16_t* ERi, 
 			int16_t* RLCi, const compv_uscalar_t RLCi_stride,
 			const compv_uscalar_t width, const compv_uscalar_t height)
 			= nullptr;
@@ -287,7 +286,7 @@ static void step1_algo13_segment_STDZ(const CompVMatPtr& X, CompVMatPtr ptr16sER
 	//for (int i = 0; i < 1; ++i) {
 		funPtrERi(
 			Xi, X_stride,
-			ERi, ERi_stride,
+			ERi, 
 			ner0, ner_max1, ner_sum1,
 			width, height
 		);
@@ -301,11 +300,11 @@ static void step1_algo13_segment_STDZ(const CompVMatPtr& X, CompVMatPtr ptr16sER
 	//for (int i = 0; i < 1; ++i) {
 		funPtrRLCi(
 			Xi, X_stride,
-			ERi, ERi_stride,
+			ERi, 
 			RLCi, RLCi_stride,
 			width, height
 		);
-	//}
+	}
     //const uint64_t timeEndRLCi = CompVTime::nowMillis();
     //COMPV_DEBUG_INFO("Elapsed time (funPtrRLCi) = [[[ %" PRIu64 " millis ]]]", (timeEndRLCi - timeStartRLCi));
 
@@ -315,7 +314,7 @@ static void step1_algo13_segment_STDZ(const CompVMatPtr& X, CompVMatPtr ptr16sER
 	CompVMat::newObjStrideless<int16_t>(&RLCiBis, height, RLCi_stride);
 	CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Intrin_NEON(
 		Xi, X_stride,
-		ERi, ERi_stride,
+		ERi, 
 		RLCiBis->ptr<int16_t>(), RLCi_stride,
 		width, height
 	);
@@ -337,7 +336,7 @@ static void step1_algo13_segment_STDZ(const CompVMatPtr& X, CompVMatPtr ptr16sER
 static void CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_C(
 	const int16_t* RLCi, const compv_uscalar_t RLCi_stride,
 	int32_t* ERAi, const compv_uscalar_t ERAi_stride,
-	const int16_t* ERiminus1, const compv_uscalar_t ERi_stride,
+	const int16_t* ERiminus1,
 	const int16_t* ner,
 	const compv_uscalar_t width, const compv_uscalar_t height)
 {
@@ -363,7 +362,7 @@ static void CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_C(
 				? (er0 | er1 << 16)
 				: 0;
 		}
-		ERiminus1 += ERi_stride;
+		ERiminus1 += width;
 		RLCi += RLCi_stride;
 		ERAi += ERAi_stride;
 	}
@@ -379,26 +378,25 @@ static void step20_algo14_equivalence_build(const CompVMatPtr& ptr16sER, const C
 	int32_t* ERAi = ptr32sERA->ptr(jstart);
 	const compv_uscalar_t ERA_stride = static_cast<compv_uscalar_t>(ptr32sERA->stride());
 	const compv_uscalar_t RLCi_stride = static_cast<compv_uscalar_t>(ptr16sRLC->stride());
-	const compv_uscalar_t ERi_stride = static_cast<compv_uscalar_t>(ptr16sER->stride());
 
 	void(*funPtr)(
 		const int16_t* RLCi, const compv_uscalar_t RLCi_stride,
 		int32_t* ERAi, const compv_uscalar_t ERAi_stride,
-		const int16_t* ERiminus1, const compv_uscalar_t ERi_stride,
+		const int16_t* ERiminus1,
 		const int16_t* ner,
 		const compv_uscalar_t width, const compv_uscalar_t height
 	) = 
 	[](
 		const int16_t* RLCi, const compv_uscalar_t RLCi_stride,
 		int32_t* ERAi, const compv_uscalar_t ERAi_stride,
-		const int16_t* ERiminus1, const compv_uscalar_t ERi_stride,
+		const int16_t* ERiminus1,
 		const int16_t* ner,
 		const compv_uscalar_t width, const compv_uscalar_t height
 	) {
 		CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_C(
 			RLCi, RLCi_stride,
 			ERAi, ERAi_stride,
-			ERiminus1, ERi_stride,
+			ERiminus1,
 			ner,
 			width, height);
 	};
@@ -415,7 +413,7 @@ static void step20_algo14_equivalence_build(const CompVMatPtr& ptr16sER, const C
 	funPtr(
 		RLCi, RLCi_stride,
 		ERAi, ERA_stride,
-		ERiminus1, ERi_stride,
+		ERiminus1,
 		ner0,
 		static_cast<compv_uscalar_t>(width),
 		static_cast<compv_uscalar_t>(end - jstart)

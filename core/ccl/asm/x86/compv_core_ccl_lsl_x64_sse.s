@@ -40,16 +40,15 @@ section .text
 ; arg(0) -> COMPV_ALIGNED(AVX) const uint8_t* Xi
 ; arg(1) -> const compv_uscalar_t Xi_stride,
 ; arg(2) -> int16_t* ERi, 
-; arg(3) -> const compv_uscalar_t ERi_stride,
-; arg(4) -> int16_t* ner, 
-; arg(5) -> int16_t* ner_max1, 
-; arg(6) -> int32_t* ner_sum1,
-; arg(7) -> const compv_uscalar_t width, 
-; arg(8) -> const compv_uscalar_t height
+; arg(3) -> int16_t* ner, 
+; arg(4) -> int16_t* ner_max1, 
+; arg(5) -> int32_t* ner_sum1,
+; arg(6) -> const compv_uscalar_t width, 
+; arg(7) -> const compv_uscalar_t height
 sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_X64_SSSE3):
 	push rbp
 	mov rbp, rsp
-	COMPV_YASM_SHADOW_ARGS_TO_STACK 9
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 8
 	COMPV_YASM_SAVE_XMM 15
 	push rsi
 	push rdi
@@ -90,10 +89,9 @@ sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_X
 	mov Xi, arg(0)
 	mov Xi_stride, arg(1)
 	mov ERi, arg(2)
-	mov ERi_stride, arg(3)
-	mov ner, arg(4)
-	mov width, arg(7)
-	mov height, arg(8)
+	mov ner, arg(3)
+	mov width, arg(6)
+	mov height, arg(7)
 
 	prefetcht0 [Xi + COMPV_YASM_CACHE_LINE_SIZE*0]
 	prefetcht0 [Xi + COMPV_YASM_CACHE_LINE_SIZE*1]
@@ -113,7 +111,7 @@ sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_X
 	movdqa vecMask1, [sym(kShuffleEpi8_DUP_SHL1_8u_32s)]	 
 	pshufd vecOne, vecOne, 0
 	and width16, -16
-	shl ERi_stride, 1
+	lea ERi_stride, [width*COMPV_YASM_INT16_SZ_BYTES]
 	
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	; for (compv_uscalar_t j = 0; j < height; ++j)
@@ -253,8 +251,8 @@ sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_X
 		jnz .LoopHeight
 	.EndOf_LoopHeight:
 
-	mov rax, arg(5)
-	mov rdx, arg(6)
+	mov rax, arg(4)
+	mov rdx, arg(5)
 	mov [rax], word ner_maxw
 	mov [rdx], dword ner_sumd
 
@@ -303,15 +301,14 @@ sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_X
 ; arg(0) ->const uint8_t* Xi, 
 ; arg(1) ->const compv_uscalar_t Xi_stride,
 ; arg(2) ->int16_t* ERi, 
-; arg(3) ->const compv_uscalar_t ERi_stride,
-; arg(4) ->int16_t* RLCi, 
-; arg(5) ->const compv_uscalar_t RLCi_stride,
-; arg(6) ->const compv_uscalar_t width, 
-; arg(7) ->const compv_uscalar_t height
+; arg(3) ->int16_t* RLCi, 
+; arg(4) ->const compv_uscalar_t RLCi_stride,
+; arg(5) ->const compv_uscalar_t width, 
+; arg(6) ->const compv_uscalar_t height
 sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_X64_SSE2):
 	push rbp
 	mov rbp, rsp
-	COMPV_YASM_SHADOW_ARGS_TO_STACK 8
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 7
 	push rsi
 	push rdi
 	push rbx
@@ -343,16 +340,15 @@ sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_X64
 	mov Xi, arg(0) 
 	mov Xi_stride, arg(1)
 	mov ERi, arg(2) 
-	mov ERi_stride, arg(3)
-	mov RLCi, arg(4)
-	mov RLCi_stride, arg(5)
-	mov width, arg(6)
-	mov height, arg(7)
+	mov RLCi, arg(3)
+	mov RLCi_stride, arg(4)
+	mov width, arg(5)
+	mov height, arg(6)
 
 	prefetchw [RLCi]
 
 	lea width16, [width - 1]
-	shl ERi_stride, 1
+	lea ERi_stride, [width*COMPV_YASM_INT16_SZ_BYTES]
 	shl RLCi_stride, 1
 	and width16, -16
 
