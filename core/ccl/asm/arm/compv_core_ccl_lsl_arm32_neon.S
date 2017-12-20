@@ -342,7 +342,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVConnectedComponentLabelingLSL_Step1Algo13Segment
 		LoopWidth1_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_NEON32:
 			ldrh t0, [ERi, #-(1*COMPV_GAS_INT16_SZ_BYTES)]
 			ldrh t1, [ERi], #(1*COMPV_GAS_INT16_SZ_BYTES)
-			eors t0, t0, t1
+			teq t0, t1 @ can also be "eors t0, t1"
 			beq Next_LoopWidth1_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_NEON32
 				strh i, [RLCi], #(1*COMPV_GAS_INT16_SZ_BYTES)
 			Next_LoopWidth1_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_NEON32:

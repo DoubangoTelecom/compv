@@ -434,20 +434,14 @@ static void step20_algo14_equivalence_build(const CompVMatPtr& ptr16sER, const C
 		COMPV_EXEC_IFDEF_ASM_ARM64(funPtr = CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_16s32s_Asm_ARM64);
 #endif
 
-		COMPV_DEBUG_INFO_CODE_FOR_TESTING("FIXME: Remove loop");
-		const uint64_t timeStartEquivalenceBuild = CompVTime::nowMillis();
-		for (int i = 0; i < 100; ++i) {
-			funPtr(
-				RLCi, RLCi_stride,
-				ERAi, ERA_stride,
-				ERiminus1,
-				ner0,
-				static_cast<compv_uscalar_t>(width),
-				static_cast<compv_uscalar_t>(end - jstart)
-			);
-		}
-		const uint64_t timeEndEquivalenceBuild = CompVTime::nowMillis();
-		COMPV_DEBUG_INFO("Elapsed time (funPtrEquivalenceBuild) = [[[ %" PRIu64 " millis ]]]", (timeEndEquivalenceBuild - timeStartEquivalenceBuild));	
+		funPtr(
+			RLCi, RLCi_stride,
+			ERAi, ERA_stride,
+			ERiminus1,
+			ner0,
+			static_cast<compv_uscalar_t>(width),
+			static_cast<compv_uscalar_t>(end - jstart)
+		);
 }
 
 // 2.2 Equivalence construction: step#2.1 (not MT friendly)

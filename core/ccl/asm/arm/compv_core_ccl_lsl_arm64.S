@@ -77,10 +77,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVConnectedComponentLabelingLSL_Step20Algo14Equiva
 			cmp j1, wminus1
 			sub j0, j0, f0
 			cinc j1, j1, lt
-			lsl j0, j0, #COMPV_GAS_INT16_SHIFT_BYTES
-			lsl j1, j1, #COMPV_GAS_INT16_SHIFT_BYTES
-			ldrh j0w, [ERiminus1, j0]
-			ldrh j1w, [ERiminus1, j1]
+			ldrh j0w, [ERiminus1, j0, LSL #COMPV_GAS_INT16_SHIFT_BYTES]
+			ldrh j1w, [ERiminus1, j1, LSL #COMPV_GAS_INT16_SHIFT_BYTES]
 			tst j0, #1
 			cinc j0, j0, eq
 			tst j1, #1
