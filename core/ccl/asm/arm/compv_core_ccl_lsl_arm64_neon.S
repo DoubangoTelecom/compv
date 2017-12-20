@@ -100,35 +100,30 @@ COMPV_GAS_FUNCTION_DECLARE CompVConnectedComponentLabelingLSL_Step1Algo13Segment
 				mov t0, v0.d[0]
 				cbz t0, EndOf_TestLow_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON64
 				TestLow_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON64:
-					dup v1.16b, v0.b[0]
-					dup v12.8b, v0.b[1]
-					dup v13.8b, v0.b[2]
-					dup v14.8b, v0.b[3]
-					dup v15.8b, v0.b[4]
-					dup v16.8b, v0.b[5]
-					dup v17.8b, v0.b[6]
-					dup v18.8b, v0.b[7]
-					shl d2, d12, #8
-					shl d3, d13, #16
-					shl d4, d14, #24
-					shl d5, d15, #32
-					shl d6, d16, #40
-					shl d7, d17, #48
-					shl d8, d18, #56
-					mov	v2.d[1], v12.d[0]
-					mov	v3.d[1], v13.d[0]
-					mov	v4.d[1], v14.d[0]
-					mov	v5.d[1], v15.d[0]
-					mov	v6.d[1], v16.d[0]
-					mov	v7.d[1], v17.d[0]
-					mov	v8.d[1], v18.d[0]
-					add v2.16b, v2.16b, v3.16b
-					add v4.16b, v4.16b, v5.16b
-					add v6.16b, v6.16b, v7.16b
-					add v2.16b, v2.16b, v8.16b
-					add v4.16b, v4.16b, v6.16b
-					add v1.16b, v1.16b, v2.16b
-					add v1.16b, v1.16b, v4.16b
+					dup v1.8b, v0.b[0]
+					dup v2.8b, v0.b[1]
+					dup v3.8b, v0.b[2]
+					dup v4.8b, v0.b[3]
+					dup v5.8b, v0.b[4]
+					dup v6.8b, v0.b[5]
+					dup v7.8b, v0.b[6]
+					dup v8.8b, v0.b[7]
+					shl d2, d2, #8
+					shl d3, d3, #16
+					shl d4, d4, #24
+					shl d5, d5, #32
+					shl d6, d6, #40
+					shl d7, d7, #48
+					shl d8, d8, #56
+					add v2.8b, v2.8b, v3.8b
+					add v4.8b, v4.8b, v5.8b
+					add v6.8b, v6.8b, v7.8b
+					add v2.8b, v2.8b, v8.8b
+					add v4.8b, v4.8b, v6.8b
+					add v1.8b, v1.8b, v2.8b
+					add v1.8b, v1.8b, v4.8b
+					dup v29.8b, v1.b[7]
+					mov	v1.d[1], v29.d[0]
 				EndOf_TestLow_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON64:
 
 				## == High == ##

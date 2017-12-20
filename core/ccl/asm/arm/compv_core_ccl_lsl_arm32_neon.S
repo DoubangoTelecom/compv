@@ -100,14 +100,14 @@ COMPV_GAS_FUNCTION_DECLARE CompVConnectedComponentLabelingLSL_Step1Algo13Segment
 				orrs t0, t0, t1
 				beq EndOf_TestLow_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32
 				TestLow_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32:
-					vdup.u8 q1, q0x[0]
-					vdup.u8 q2, q0x[1]
-					vdup.u8 q3, q0x[2]
-					vdup.u8 q4, q0x[3]
-					vdup.u8 q5, q0x[4]
-					vdup.u8 q6, q0x[5]
-					vdup.u8 q7, q0x[6]
-					vdup.u8 q8, q0x[7]
+					vdup.u8 q1x, q0x[0]
+					vdup.u8 q2x, q0x[1]
+					vdup.u8 q3x, q0x[2]
+					vdup.u8 q4x, q0x[3]
+					vdup.u8 q5x, q0x[4]
+					vdup.u8 q6x, q0x[5]
+					vdup.u8 q7x, q0x[6]
+					vdup.u8 q8x, q0x[7]
 					vshl.u64 q2x, #8
 					vshl.u64 q3x, #16
 					vshl.u64 q4x, #24
@@ -115,13 +115,14 @@ COMPV_GAS_FUNCTION_DECLARE CompVConnectedComponentLabelingLSL_Step1Algo13Segment
 					vshl.u64 q6x, #40
 					vshl.u64 q7x, #48
 					vshl.u64 q8x, #56
-					vadd.u8 q2, q3
-					vadd.u8 q4, q5
-					vadd.u8 q6, q7
-					vadd.u8 q2, q8
-					vadd.u8 q4, q6
-					vadd.u8 q1, q2
-					vadd.u8 q1, q4
+					vadd.u8 q2x, q3x
+					vadd.u8 q4x, q5x
+					vadd.u8 q6x, q7x
+					vadd.u8 q2x, q8x
+					vadd.u8 q4x, q6x
+					vadd.u8 q1x, q2x
+					vadd.u8 q1x, q4x
+					vdup.u8 q1y, q1x[7]
 				EndOf_TestLow_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32:
 
 				@@ == High == @@

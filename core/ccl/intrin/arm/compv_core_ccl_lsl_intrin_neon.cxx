@@ -28,7 +28,7 @@ void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Intr
 	const int16_t width1 = static_cast<int16_t>(width);
 	const int16_t width16 = (width1 - 1) & -16; // width > 16 (at least 17) which means never equal to zero
 	int32_t ner_sum = 0;
-	uint8x16_t vec0, vec1, vec2, vec3, vec4, vec5, vec6, vec7, vec8;
+	uint8x16_t vec0, vec1;
 	uint8x8_t vec0n, vec2n, vec3n, vec4n, vec5n, vec6n, vec7n, vec8n;
 	int16x8_t vecER;
 	const uint8x16_t vecOne = vdupq_n_u8(1);
@@ -54,28 +54,22 @@ void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Intr
 				/* == Low == */
 				vec0n = vget_low_u8(vec0);
 				if (COMPV_ARM_NEON_NEQ_ZEROD(vec0n)) {
-					vec1 = vdupq_lane_u8(vec0n, 0);
-					vec2 = vdupq_lane_u8(vec0n, 1);
-					vec3 = vdupq_lane_u8(vec0n, 2);
-					vec4 = vdupq_lane_u8(vec0n, 3);
-					vec5 = vdupq_lane_u8(vec0n, 4);
-					vec6 = vdupq_lane_u8(vec0n, 5);
-					vec7 = vdupq_lane_u8(vec0n, 6);
-					vec8 = vdupq_lane_u8(vec0n, 7);
-					vec2 = vcombine_u8(vshl_n_u64(vget_low_u8(vec2), 8), vget_high_u8(vec2));
-					vec3 = vcombine_u8(vshl_n_u64(vget_low_u8(vec3), 16), vget_high_u8(vec3));
-					vec4 = vcombine_u8(vshl_n_u64(vget_low_u8(vec4), 24), vget_high_u8(vec4));
-					vec5 = vcombine_u8(vshl_n_u64(vget_low_u8(vec5), 32), vget_high_u8(vec5));
-					vec6 = vcombine_u8(vshl_n_u64(vget_low_u8(vec6), 40), vget_high_u8(vec6));
-					vec7 = vcombine_u8(vshl_n_u64(vget_low_u8(vec7), 48), vget_high_u8(vec7));
-					vec8 = vcombine_u8(vshl_n_u64(vget_low_u8(vec8), 56), vget_high_u8(vec8));
-					vec2 = vaddq_u8(vec2, vec3);
-					vec4 = vaddq_u8(vec4, vec5);
-					vec6 = vaddq_u8(vec6, vec7);
-					vec2 = vaddq_u8(vec2, vec8);
-					vec4 = vaddq_u8(vec4, vec6);
-					vec1 = vaddq_u8(vec1, vec2);
-					vec1 = vaddq_u8(vec1, vec4);
+					vec2n = vdup_lane_u8(vec0n, 0);
+					vec3n = vshl_n_u64(vdup_lane_u8(vec0n, 1), 8);
+					vec4n = vshl_n_u64(vdup_lane_u8(vec0n, 2), 16);
+					vec5n = vshl_n_u64(vdup_lane_u8(vec0n, 3), 24);
+					vec6n = vshl_n_u64(vdup_lane_u8(vec0n, 4), 32);
+					vec7n = vshl_n_u64(vdup_lane_u8(vec0n, 5), 40);
+					vec8n = vshl_n_u64(vdup_lane_u8(vec0n, 6), 48);
+					vec0n = vshl_n_u64(vdup_lane_u8(vec0n, 7), 56);
+					vec2n = vadd_u8(vec2n, vec3n);
+					vec4n = vadd_u8(vec4n, vec5n);
+					vec6n = vadd_u8(vec6n, vec7n);
+					vec8n = vadd_u8(vec8n, vec0n);
+					vec2n = vadd_u8(vec2n, vec4n);
+					vec6n = vadd_u8(vec6n, vec8n);
+					vec2n = vadd_u8(vec2n, vec6n);
+					vec1 = vcombine_u8(vec2n, vdup_lane_u8(vec2n, 7));
 				}
 
 				/* == High == */
