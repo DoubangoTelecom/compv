@@ -59,7 +59,7 @@ COMPV_UNITTEST_CCL[] =
 };
 static const size_t COMPV_UNITTEST_CCL_COUNT = sizeof(COMPV_UNITTEST_CCL) / sizeof(COMPV_UNITTEST_CCL[0]);
 
-#define LOOP_COUNT		100
+#define LOOP_COUNT		1
 #define TEST_TYPE		TEST_TYPE_DIFFRACT
 
 static COMPV_ERROR_CODE check_labels(const CompVConnectedComponentLabelingResultPtr& result, const compv_unittest_ccl* test);

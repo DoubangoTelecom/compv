@@ -185,8 +185,28 @@
       <Link>assets\equirectangular_1282x720_yuyv422.yuv</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="..\..\..\..\data\morpho\checker_800x600_gray.yuv">
+      <Link>assets\checker_800x600_gray.yuv</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="..\..\..\..\data\morpho\diffract_1285x1285_gray.yuv">
       <Link>assets\diffract_1285x1285_gray.yuv</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\..\..\data\morpho\dummy_1285x803_gray.yuv">
+      <Link>assets\dummy_1285x803_gray.yuv</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\..\..\data\morpho\labyrinth_800x600_gray.yuv">
+      <Link>assets\labyrinth_800x600_gray.yuv</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\..\..\data\morpho\shape_960x720_gray.yuv">
+      <Link>assets\shape_960x720_gray.yuv</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\..\..\data\morpho\text_1122x1182_white_gray.yuv">
+      <Link>assets\text_1122x1182_white_gray.yuv</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="..\..\..\..\data\test_images\equirectangular_1282x720_gray.yuv">

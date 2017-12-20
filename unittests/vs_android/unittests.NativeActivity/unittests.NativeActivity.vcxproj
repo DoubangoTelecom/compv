@@ -37,6 +37,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\tests\tests_common.cxx" />
     <ClCompile Include="..\..\canny.cxx" />
+    <ClCompile Include="..\..\ccl.cxx" />
     <ClCompile Include="..\..\chroma_conv.cxx" />
     <ClCompile Include="..\..\feature_fast.cxx" />
     <ClCompile Include="..\..\houghkht.cxx" />

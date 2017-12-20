@@ -72,15 +72,14 @@ COMPV_GAS_FUNCTION_DECLARE CompVConnectedComponentLabelingLSL_Step1Algo13Segment
 	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	LoopHeight_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32:
 		ldrb er, [Xi], #(1*COMPV_GAS_UINT8_SZ_BYTES)
-		sub i, width, #1
 		and er, er, #1
-		and i, i, #-16 @ now 'i' is equal to width16
 		strh er, [ERi], #(1*COMPV_GAS_INT16_SZ_BYTES)
 		vdup.s16 vecER, er
 		
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 		@ for (i = 1; i < width16; i += 16)
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+		mov i, #(1 + 16) @ +16 to be 1 step ahea
 		LoopWidth16_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32:
 			add t0, Xi, #-(1*COMPV_GAS_UINT8_SZ_BYTES)
 			pld [Xi, #(CACHE_LINE_SIZE*4)]
@@ -175,14 +174,14 @@ COMPV_GAS_FUNCTION_DECLARE CompVConnectedComponentLabelingLSL_Step1Algo13Segment
 			vst1.s16 {vecER}, [ERi]!
 
 			Next16_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32:
-			subs i, i, #16
-			bne LoopWidth16_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32
+			add i, i, #16
+			cmp i, width
+			blt LoopWidth16_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32
 		EndOf_LoopWidth16_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32:
 		
 		@@ Get highest "er" before switching from SIMD to serial code @@
-		and i, width, #-16
+		sub i, i, #16 @ was 1 step ahead, return
 		vmov.s16 er, vecERy[3]
-		add i, i, #1 @ now i is equal to (width16 + 1)
 
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 		@ for (; i < width1; ++i) @
