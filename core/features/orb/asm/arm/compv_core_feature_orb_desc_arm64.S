@@ -8,17 +8,16 @@
 #if defined(__aarch64__)
 .include "compv_common_arm64.S"
 
-#if defined(__APPLE__)
-#   define sym(funcname) _##funcname
-#else
-#   define sym(funcname) funcname
-#endif
-
 .data
 
 .extern
 
 .text
+
+ .equ mask0, 0x8040
+ .equ mask1, 0x2010
+ .equ mask2, 0x804
+ .equ mask3, 0x201
 
 #########################################################################
 # arg(0) -> const uint8_t* img_center
@@ -68,11 +67,7 @@
    dup vecStride.4s, img_stridew
    dup vecCosT.4s, r9w
    dup vecSinT.4s, r10w
-
-   .equ mask0, 0x8040
-   .equ mask1, 0x2010
-   .equ mask2, 0x804
-   .equ mask3, 0x201
+	
    movz r9, #mask0, lsl #48
    movk r9, #mask1, lsl #32
    movk r9, #mask2, lsl #16

@@ -18,7 +18,6 @@ Some literature about LSL:
 #include "compv/base/parallel/compv_parallel.h"
 #include "compv/base/compv_cpu.h"
 #include "compv/base/compv_memz.h"
-#include "compv/base/time/compv_time.h" // FIXME(dmi): remove
 
 #include "compv/core/ccl/intrin/x86/compv_core_ccl_lsl_intrin_sse2.h"
 #include "compv/core/ccl/intrin/x86/compv_core_ccl_lsl_intrin_ssse3.h"
@@ -307,7 +306,7 @@ static void step1_algo13_segment_STDZ(const CompVMatPtr& X, CompVMatPtr ptr16sER
 		if (width > 16 && CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
 			COMPV_EXEC_IFDEF_INTRIN_ARM(funPtrRLCi_8u16s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Intrin_NEON);
 			COMPV_EXEC_IFDEF_ASM_ARM32(funPtrRLCi_8u16s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_NEON32);
-			//COMPV_EXEC_IFDEF_ASM_ARM64(funPtrRLCi_8u16s = nullptr);
+			COMPV_EXEC_IFDEF_ASM_ARM64(funPtrRLCi_8u16s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_NEON64);
 		}
 #endif
 
@@ -317,56 +316,20 @@ static void step1_algo13_segment_STDZ(const CompVMatPtr& X, CompVMatPtr ptr16sER
 	}
 
 	/* Compute ERi */
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING("FIXME: Remove loop");
-	const uint64_t timeStartERi = CompVTime::nowMillis();
-	for (int i = 0; i < 100; ++i) {
-		funPtrERi(
-			Xi, X_stride,
-			ERi, 
-			ner0, ner_max1, ner_sum1,
-			width, height
-		);
-	}
-	const uint64_t timeEndERi = CompVTime::nowMillis();
-	COMPV_DEBUG_INFO("Elapsed time (funPtrERi) = [[[ %" PRIu64 " millis ]]]", (timeEndERi - timeStartERi));
-
-	/* Compute RLCi */
-	//COMPV_DEBUG_INFO_CODE_FOR_TESTING("FIXME: Remove loop");
-	//const uint64_t timeStartRLCi = CompVTime::nowMillis();
-	//for (int i = 0; i < 1; ++i) {
-		funPtrRLCi(
-			Xi, X_stride,
-			ERi, 
-			RLCi, RLCi_stride,
-			width, height
-		);
-	//}
-    //const uint64_t timeEndRLCi = CompVTime::nowMillis();
-    //COMPV_DEBUG_INFO("Elapsed time (funPtrRLCi) = [[[ %" PRIu64 " millis ]]]", (timeEndRLCi - timeStartRLCi));
-
-#if 0
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING("FIXME: Remove next code");
-	CompVMatPtr RLCiBis;
-	CompVMat::newObjStrideless<int16_t>(&RLCiBis, height, RLCi_stride);
-	CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Intrin_NEON(
+	funPtrERi(
 		Xi, X_stride,
 		ERi, 
-		RLCiBis->ptr<int16_t>(), RLCi_stride,
+		ner0, ner_max1, ner_sum1,
 		width, height
 	);
-
-	for (int j = 0; j < height; ++j) {
-		for (int i = 0; i <= ner0[j]; ++i) {
-			if (*RLCiBis->ptr<int16_t>(j, i) != RLCi[(RLCi_stride * j) + i]) {
-				//printf("FIXME");
-			}
-			if (j == 0) {
-				COMPV_DEBUG_INFO("%d->%d", RLCi[(RLCi_stride * j) + i], *RLCiBis->ptr<int16_t>(j, i));
-			}
-		}
-	}
 	
-#endif
+	/* Compute RLCi */
+	funPtrRLCi(
+		Xi, X_stride,
+		ERi, 
+		RLCi, RLCi_stride,
+		width, height
+	);
 }
 
 static void CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_C(
