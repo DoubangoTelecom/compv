@@ -9,7 +9,7 @@
 .include "compv_common_arm32.S"
 
 #if !defined(__APPLE__)
-.arch armv7-a @ for rbit (FIXME(dmi) -> ARM64 -> do not include)
+.arch armv7-a @ for rbit
 #endif
 
 .data
@@ -74,7 +74,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVConnectedComponentLabelingLSL_Step1Algo13Segment
 		ldrb er, [Xi], #(1*COMPV_GAS_UINT8_SZ_BYTES)
 		sub i, width, #1
 		and er, er, #1
-		and i, i, #-16 @ now 'i' is equal to width16 (FIXME(dmi): on ARM64, pre-compute width16)
+		and i, i, #-16 @ now 'i' is equal to width16
 		strh er, [ERi], #(1*COMPV_GAS_INT16_SZ_BYTES)
 		vdup.s16 vecER, er
 		
@@ -161,7 +161,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVConnectedComponentLabelingLSL_Step1Algo13Segment
 				vaddw.u8 q0, vecER, q1x
 				vaddw.u8 vecER, vecER, q1y
 				vst1.s16 {q0}, [ERi]!
-				vst1.s16 {vecER}, [ERi]! @ FIXME(dmi): ARM64 -> use stp
+				vst1.s16 {vecER}, [ERi]!
 
 				@@ Duplicate latest element @@
 				vdup.s16 vecER, vecERy[3]
@@ -170,7 +170,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVConnectedComponentLabelingLSL_Step1Algo13Segment
 				b Next16_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32
 			EndOf_TestBoth_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32:
 
-			@@ Store previous ER (FIXME(dmi): ARM64 -> stp) @@
+			@@ Store previous ER
 			vst1.s16 {vecER}, [ERi]!
 			vst1.s16 {vecER}, [ERi]!
 
@@ -182,7 +182,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVConnectedComponentLabelingLSL_Step1Algo13Segment
 		@@ Get highest "er" before switching from SIMD to serial code @@
 		and i, width, #-16
 		vmov.s16 er, vecERy[3]
-		add i, i, #1 @ now i is equal to (width16 + 1) (FIXME(dmi): ARM64 -> precompute width16 and don't override i)
+		add i, i, #1 @ now i is equal to (width16 + 1)
 
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 		@ for (; i < width1; ++i) @
