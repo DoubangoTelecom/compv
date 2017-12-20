@@ -84,7 +84,25 @@ COMPV_EXTERNC void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLC
 	int16_t* RLCi, const compv_uscalar_t RLCi_stride,
 	const compv_uscalar_t width, const compv_uscalar_t height
 );
+COMPV_EXTERNC void CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_16s32s_Asm_ARM32(
+	const int16_t* RLCi, const compv_uscalar_t RLCi_stride,
+	int32_t* ERAi, const compv_uscalar_t ERAi_stride,
+	const int16_t* ERi,
+	const int16_t* ner,
+	const compv_uscalar_t width, const compv_uscalar_t height
+);
 #endif /* COMPV_ASM && COMPV_ARCH_ARM32 */
+
+// ARM64
+#if COMPV_ASM && COMPV_ARCH_ARM64
+COMPV_EXTERNC void CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_16s32s_Asm_ARM64(
+	const int16_t* RLCi, const compv_uscalar_t RLCi_stride,
+	int32_t* ERAi, const compv_uscalar_t ERAi_stride,
+	const int16_t* ERi,
+	const int16_t* ner,
+	const compv_uscalar_t width, const compv_uscalar_t height
+);
+#endif /* COMPV_ASM && COMPV_ARCH_ARM64 */
 
 CompVConnectedComponentLabelingLSL::CompVConnectedComponentLabelingLSL()
 	:CompVConnectedComponentLabeling(static_cast<int32_t>(COMPV_PLSL_TYPE_XRLEZ))
@@ -287,18 +305,18 @@ static void step1_algo13_segment_STDZ(const CompVMatPtr& X, CompVMatPtr ptr16sER
 	}
 
 	/* Compute ERi */
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING("FIXME: Remove loop");
-	const uint64_t timeStartERi = CompVTime::nowMillis();
-	for (int i = 0; i < 100; ++i) {
+	//COMPV_DEBUG_INFO_CODE_FOR_TESTING("FIXME: Remove loop");
+	//const uint64_t timeStartERi = CompVTime::nowMillis();
+	//for (int i = 0; i < 100; ++i) {
 		funPtrERi(
 			Xi, X_stride,
 			ERi, 
 			ner0, ner_max1, ner_sum1,
 			width, height
 		);
-	}
-	const uint64_t timeEndERi = CompVTime::nowMillis();
-	COMPV_DEBUG_INFO("Elapsed time (funPtrERi) = [[[ %" PRIu64 " millis ]]]", (timeEndERi - timeStartERi));
+	//}
+	//const uint64_t timeEndERi = CompVTime::nowMillis();
+	//COMPV_DEBUG_INFO("Elapsed time (funPtrERi) = [[[ %" PRIu64 " millis ]]]", (timeEndERi - timeStartERi));
 
 	/* Compute RLCi */
 	//COMPV_DEBUG_INFO_CODE_FOR_TESTING("FIXME: Remove loop");
@@ -412,18 +430,24 @@ static void step20_algo14_equivalence_build(const CompVMatPtr& ptr16sER, const C
 			COMPV_EXEC_IFDEF_ASM_X64(funPtr = CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_16s32s_Asm_X64_CMOV);
 		}
 #elif COMPV_ARCH_ARM
-		//COMPV_EXEC_IFDEF_ASM_ARM32(funPtr = CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_16s32s_Asm_ARM32);
-		//COMPV_EXEC_IFDEF_ASM_ARM64(funPtr = CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_16s32s_Asm_ARM64);
+		COMPV_EXEC_IFDEF_ASM_ARM32(funPtr = CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_16s32s_Asm_ARM32);
+		COMPV_EXEC_IFDEF_ASM_ARM64(funPtr = CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBuild_16s32s_Asm_ARM64);
 #endif
 
-	funPtr(
-		RLCi, RLCi_stride,
-		ERAi, ERA_stride,
-		ERiminus1,
-		ner0,
-		static_cast<compv_uscalar_t>(width),
-		static_cast<compv_uscalar_t>(end - jstart)
-	);
+		COMPV_DEBUG_INFO_CODE_FOR_TESTING("FIXME: Remove loop");
+		const uint64_t timeStartEquivalenceBuild = CompVTime::nowMillis();
+		for (int i = 0; i < 100; ++i) {
+			funPtr(
+				RLCi, RLCi_stride,
+				ERAi, ERA_stride,
+				ERiminus1,
+				ner0,
+				static_cast<compv_uscalar_t>(width),
+				static_cast<compv_uscalar_t>(end - jstart)
+			);
+		}
+		const uint64_t timeEndEquivalenceBuild = CompVTime::nowMillis();
+		COMPV_DEBUG_INFO("Elapsed time (funPtrEquivalenceBuild) = [[[ %" PRIu64 " millis ]]]", (timeEndEquivalenceBuild - timeStartEquivalenceBuild));	
 }
 
 // 2.2 Equivalence construction: step#2.1 (not MT friendly)
