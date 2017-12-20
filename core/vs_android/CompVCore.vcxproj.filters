@@ -481,6 +481,9 @@
     <None Include="..\ccl\asm\arm\compv_core_ccl_lsl_arm64.S">
       <Filter>source\ccl\asm\arm</Filter>
     </None>
+    <None Include="..\ccl\asm\arm\compv_core_ccl_lsl_arm64_neon.S">
+      <Filter>source\ccl\asm\arm</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <GAS Include="..\features\fast\asm\arm\compv_core_feature_fast_dete_macros_neon.S">

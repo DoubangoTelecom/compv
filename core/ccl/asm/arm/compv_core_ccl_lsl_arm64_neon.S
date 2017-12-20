@@ -48,8 +48,9 @@ COMPV_GAS_FUNCTION_DECLARE CompVConnectedComponentLabelingLSL_Step1Algo13Segment
 	ner_maxw .req r12w
 	ner_sum .req r13
 	ner_sumw .req r13w
+	width16 .req r14
 
-	vecER .req v30
+	vecER .req v30 // must be v30 (q30 used as alias within the code)
 	vecOne .req v31
 
 	prfm pldl1keep, [Xi, #(CACHE_LINE_SIZE*0)]
@@ -58,30 +59,30 @@ COMPV_GAS_FUNCTION_DECLARE CompVConnectedComponentLabelingLSL_Step1Algo13Segment
 	prfm pldl1keep, [Xi, #(CACHE_LINE_SIZE*3)]
 
 	mov t0, #1
+	sub width16, width, #1
 	eor ner_max, ner_max, ner_max
 	eor ner_sum, ner_sum, ner_sum
 	dup vecOne.16b, t0w
 	sub Xi_stride, Xi_stride, width // now Xi_stride contains padding
+	and width16, width16, #-16
 
 	#########################################################
 	# for (compv_uscalar_t j = 0; j < height; ++j)
 	#########################################################
 	LoopHeight_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON64:
 		ldrb erw, [Xi], #(1*COMPV_GAS_UINT8_SZ_BYTES)
-		sub i, width, #1
 		and er, er, #1
-		and i, i, #-16 // now 'i' is equal to width16 (FIXME(dmi): on ARM64, pre-compute width16)
 		strh erw, [ERi], #(1*COMPV_GAS_INT16_SZ_BYTES)
 		dup vecER.8h, erw
 		
 		#########################################################
 		# for (i = 1; i < width16; i += 16)
 		#########################################################
+		mov i, #1
 		LoopWidth16_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON64:
-			add t0, Xi, #-(1*COMPV_GAS_UINT8_SZ_BYTES)
+			ldr q0, [Xi, #-(1*COMPV_GAS_UINT8_SZ_BYTES)]
+			ldr q1, [Xi], #COMPV_GAS_V_SZ_BYTES
 			prfm pldl1keep, [Xi, #(CACHE_LINE_SIZE*4)]
-			ld1 {v0.16b}, [t0]
-			ld1 {v1.16b}, [Xi], #COMPV_GAS_V_SZ_BYTES
 			eor v0.16b, v0.16b, v1.16b
 			and v0.16b, v0.16b, vecOne.16b
 			mov t0, v0.d[0]
@@ -95,20 +96,27 @@ COMPV_GAS_FUNCTION_DECLARE CompVConnectedComponentLabelingLSL_Step1Algo13Segment
 				cbz t0, EndOf_TestLow_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON64
 				TestLow_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON64:
 					dup v1.16b, v0.b[0]
-					dup v2.16b, v0.b[1]
-					dup v3.16b, v0.b[2]
-					dup v4.16b, v0.b[3]
-					dup v5.16b, v0.b[4]
-					dup v6.16b, v0.b[5]
-					dup v7.16b, v0.b[6]
-					dup v8.16b, v0.b[7]
-					shl d2, d2, #8
-					shl d3, d3, #16
-					shl d4, d4, #24
-					shl d5, d5, #32
-					shl d6, d6, #40
-					shl d7, d7, #48
-					shl d8, d8, #56
+					dup v12.8b, v0.b[1]
+					dup v13.8b, v0.b[2]
+					dup v14.8b, v0.b[3]
+					dup v15.8b, v0.b[4]
+					dup v16.8b, v0.b[5]
+					dup v17.8b, v0.b[6]
+					dup v18.8b, v0.b[7]
+					shl d2, d12, #8
+					shl d3, d13, #16
+					shl d4, d14, #24
+					shl d5, d15, #32
+					shl d6, d16, #40
+					shl d7, d17, #48
+					shl d8, d18, #56
+					mov	v2.d[1], v12.d[0]
+					mov	v3.d[1], v13.d[0]
+					mov	v4.d[1], v14.d[0]
+					mov	v5.d[1], v15.d[0]
+					mov	v6.d[1], v16.d[0]
+					mov	v7.d[1], v17.d[0]
+					mov	v8.d[1], v18.d[0]
 					add v2.16b, v2.16b, v3.16b
 					add v4.16b, v4.16b, v5.16b
 					add v6.16b, v6.16b, v7.16b
@@ -152,8 +160,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVConnectedComponentLabelingLSL_Step1Algo13Segment
 				## Convert erUint8 to erInt16 and sum then store ##
 				uaddw v0.8h, vecER.8h, v1.8b
 				uaddw2 vecER.8h, vecER.8h, v1.16b
-				st1 {v0.8h}, [ERi], #COMPV_GAS_V_SZ_BYTES
-				st1 {vecER.8h}, [ERi], #COMPV_GAS_V_SZ_BYTES // FIXME(dmi): ARM64 -> use stp
+				stp q0, q30, [ERi], #(2*COMPV_GAS_Q_SZ_BYTES) // (v/q)30 is equal to vecER
 
 				## Duplicate latest element ##
 				dup vecER.8h, vecER.h[7]
@@ -162,19 +169,17 @@ COMPV_GAS_FUNCTION_DECLARE CompVConnectedComponentLabelingLSL_Step1Algo13Segment
 				b Next16_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON64
 			EndOf_TestBoth_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON64:
 
-			## Store previous ER (FIXME(dmi): ARM64 -> stp) ##
-			st1 {vecER.8h}, [ERi], #COMPV_GAS_V_SZ_BYTES
-			st1 {vecER.8h}, [ERi], #COMPV_GAS_V_SZ_BYTES
+			## Store previous ER ##
+			stp q30, q30, [ERi], #(2*COMPV_GAS_Q_SZ_BYTES) // (v/q)30 is equal to vecER
 
 			Next16_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON64:
-			subs i, i, #16
-			bne LoopWidth16_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON64
+			add i, i, #16
+			cmp i, width16
+			blt LoopWidth16_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON64
 		EndOf_LoopWidth16_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON64:
 		
 		## Get highest "er" before switching from SIMD to serial code ##
-		and i, width, #-16
 		umov erw, vecER.h[7]
-		add i, i, #1 // now i is equal to (width16 + 1) (FIXME(dmi): ARM64 -> precompute width16 and don't override i)
 
 		#########################################################
 		# for (; i < width1; ++i) #
@@ -229,6 +234,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVConnectedComponentLabelingLSL_Step1Algo13Segment
 	.unreq ner_maxw
 	.unreq ner_sum
 	.unreq ner_sumw
+	.unreq width16
 
 	.unreq vecER
 	.unreq vecOne
