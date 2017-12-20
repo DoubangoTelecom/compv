@@ -32,11 +32,21 @@ COMPV_NAMESPACE_BEGIN()
 #	define COMPV_ARM_NEON_EQ_ZEROD(vec)		!COMPV_ARM_NEON_NEQ_ZEROD(vec)
 
 #else
+// === fully tested
 // vorr q0x, q0x, q0y @ /!\\ q0 lost
 // vmov.32	r10, q0x[0]
 // vmov.32	r11, q0x[1]
 // orrs r11, r11, r10
 // beq AllZeros
+// ==== partially tested
+//vcmp.f64 q0x, #0
+//vmrs APSR_nzcv, fpscr
+//vcmp.f64 q0y, #0
+//vmrseq APSR_nzcv, fpscr
+// ==== (not tested)
+//vlsi.32 q0y, q0x, #16
+//vcmp.f64 q0y, #0
+//vmrs APSR_nzcv, fpscr
 #	define COMPV_ARM_NEON_NEQ_ZEROQ(vec) ({ \
 	bool __ret; \
 	uint8x8_t __vec = vorr_u8(vget_high_u8(vec), vget_low_u8(vec)); \

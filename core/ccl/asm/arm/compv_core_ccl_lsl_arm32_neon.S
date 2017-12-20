@@ -87,17 +87,16 @@ COMPV_GAS_FUNCTION_DECLARE CompVConnectedComponentLabelingLSL_Step1Algo13Segment
 			vld1.u8 {q1}, [Xi]!
 			veor.u8 q0, q0, q1
 			vand.u8 q0, q0, vecOne
-			vorr q1x, q0x, q0y
-			vmov.32	t0, q1x[0]
-			vmov.32	t1, q1x[1]
-			orrs t0, t0, t1
+			vcmp.f64 q0x, #0
+			vmrs APSR_nzcv, fpscr
+			vcmp.f64 q0y, #0
+			vmrseq APSR_nzcv, fpscr
 			beq EndOf_TestBoth_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32
 			TestBoth_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32:
 				veor.u8 q1, q1, q1
 				@@ == Low == @@
-				vmov.32	t0, q0x[0]
-				vmov.32	t1, q0x[1]
-				orrs t0, t0, t1
+				vcmp.f64 q0x, #0
+				vmrs APSR_nzcv, fpscr
 				beq EndOf_TestLow_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32
 				TestLow_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32:
 					vdup.u8 q1x, q0x[0]
@@ -126,9 +125,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVConnectedComponentLabelingLSL_Step1Algo13Segment
 				EndOf_TestLow_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32:
 
 				@@ == High == @@
-				vmov.32	t0, q0y[0]
-				vmov.32	t1, q0y[1]
-				orrs t0, t0, t1
+				vcmp.f64 q0y, #0
+				vmrs APSR_nzcv, fpscr
 				beq EndOf_TestHigh_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32
 				TestHigh_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32:
 					vdup.u8 q2y, q0y[0]

@@ -6,7 +6,7 @@
 # WebSite: http://compv.org                                             #
 #########################################################################
 #if defined(__arm__) && !defined(__aarch64__)
-.include "compv_common_arm32.S" @"
+.include "compv_common_arm32.S"
 
 .data
 .align 4
@@ -107,7 +107,7 @@ zeroDotOne: .quad 0x3fb999999999999a, 0x3fb999999999999a
 			vadd.f64 vecSigma_rho_square, vecSigma_rho_square, vecTmp0
 		.endif
 		vcmp.f64 vecSigma_theta_square, #0 @ AArch64, use 'vceqq_f64 vecMaskEqZero, vecSigma_theta_square, #0'
-        vmrs   APSR_nzcv, fpscr
+        vmrs APSR_nzcv, fpscr
         vmoveq.f64 vecSigma_theta_square, vecZeroDotOne
 		vmul.f64 vecSigma_rho_square, vecSigma_rho_square, vecFour
 		vmul.f64 vecSigma_theta_square, vecSigma_theta_square, vecFour
@@ -132,7 +132,7 @@ zeroDotOne: .quad 0x3fb999999999999a, 0x3fb999999999999a
 		vmul.f64 vecOne_minus_r_square, vecOne_minus_r_square, vecTwoPi
 		vdiv.f64 vecHeight, vecOne, vecOne_minus_r_square
         vcmp.f64 vecheightMax1, vecHeight
-        vmrs   APSR_nzcv, fpscr
+        vmrs APSR_nzcv, fpscr
         vmovmi.f64 vecheightMax1, vecHeight
         subs count, count, #(1*COMPV_GAS_FLOAT64_SZ_BYTES) @ AArch64, move after the vdiv
 		vst1.f64 {vecHeight}, [height :64]!
