@@ -9,6 +9,15 @@ using namespace compv;
 #define CAMERA_SUBTYPE		COMPV_SUBTYPE_PIXELS_YUY2
 #define CAMERA_AUTOFOCUS	true
 
+#define THRESHOLDING_KERNEL_SIZE	7
+#define THRESHOLDING_DELTA			+10
+#define THRESHOLDING_INVERT			true // true if text is black and background white
+
+#define MORPH_STREL_SIZE			CompVSizeSz(3, 3)
+#define MORPH_STREL_TYPE			COMPV_MATH_MORPH_STREL_TYPE_DIAMOND
+#define MORPH_BORDER_TYPE			COMPV_BORDER_TYPE_REPLICATE
+#define MORPH_OPERATOR				COMPV_MATH_MORPH_OP_TYPE_CLOSE
+
 #define WINDOW_WIDTH		1280
 #define WINDOW_HEIGHT		720
 
@@ -77,7 +86,7 @@ compv_main()
 		// Create the ccl and set default settings
 		COMPV_CHECK_CODE_RETURN(CompVConnectedComponentLabeling::newObj(&ccl_obj, CCL_ID));
 		if (CCL_ID == COMPV_PLSL_ID) {
-			COMPV_CHECK_CODE_RETURN(ccl_obj->setInt(COMPV_PLSL_SET_INT_TYPE, COMPV_PLSL_TYPE_STD));
+			COMPV_CHECK_CODE_RETURN(ccl_obj->setInt(COMPV_PLSL_SET_INT_TYPE, COMPV_PLSL_TYPE_XRLEZ));
 		}
 
 		// Add 'OnNewFrame' callback to the camera
@@ -89,12 +98,13 @@ compv_main()
 			if (CompVDrawing::isLoopRunning()) {
 				COMPV_CHECK_CODE_RETURN(CompVImage::convertGrayscale(image, &imageBinar));
 				//COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 1285, 1285, 1285, "C:/Projects/GitHub/data/morpho/diffract_1285x1285_gray.yuv", &imageBinar));
-				COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 1285, 803, 1285, "C:/Projects/GitHub/data/morpho/dummy_1285x803_gray.yuv", &imageBinar));
+				//COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 1285, 803, 1285, "C:/Projects/GitHub/data/morpho/dummy_1285x803_gray.yuv", &imageBinar));
 				//COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 800, 600, 800, "C:/Projects/GitHub/data/morpho/labyrinth_800x600_gray.yuv", &imageBinar));
 				//COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 800, 600, 800, "C:/Projects/GitHub/data/morpho/checker_800x600_gray.yuv", &imageBinar));
 				COMPV_CHECK_CODE_RETURN(CompVImageThreshold::otsu(imageBinar, threshold, &imageBinar));
+				COMPV_CHECK_CODE_RETURN(CompVImageThreshold::adaptive(imageBinar, &imageBinar, THRESHOLDING_KERNEL_SIZE, THRESHOLDING_DELTA, 255, THRESHOLDING_INVERT));
 				COMPV_CHECK_CODE_RETURN(ccl_obj->process(imageBinar, &ccl_result));
-				COMPV_CHECK_CODE_RETURN(ccl_result->extract(points, COMPV_CCL_EXTRACT_TYPE_CONTOUR));
+				COMPV_CHECK_CODE_RETURN(ccl_result->extract(points, COMPV_CCL_EXTRACT_TYPE_SEGMENT));
 
 				COMPV_CHECK_CODE_BAIL(err = window->beginDraw());
 				COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->cover()->drawImage(imageBinar));
@@ -103,7 +113,7 @@ compv_main()
 				COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Draw all points (vector) once");
 				for (CompVMatPtrVector::const_iterator i = points.begin(); i < points.end(); ++i) {
 					drawingOptions.setColor(*__colors[color_index++ % __colors_count]);
-					COMPV_CHECK_CODE_BAIL(err = canvas->drawPoints(*i, &drawingOptions));
+					COMPV_CHECK_CODE_BAIL(err = canvas->drawLines(*i, &drawingOptions));
 				}
 				COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->blit());
 			bail:

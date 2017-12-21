@@ -19,7 +19,7 @@ using namespace compv;
 
 #define THRESHOLDING_KERNEL_SIZE	5
 #define THRESHOLDING_DELTA			+4
-#define THRESHOLDING_INVERT			false // true if text is black and background white
+#define THRESHOLDING_INVERT			true // true if text is black and background white
 
 #define MORPH_STREL_SIZE			CompVSizeSz(3, 3)
 #define MORPH_STREL_TYPE			COMPV_MATH_MORPH_STREL_TYPE_DIAMOND
@@ -90,7 +90,7 @@ compv_main()
 		));
 		
 		// Inversed adaptive thresholding. Inversed to swap back<->white (text became white and background back)
-		COMPV_CHECK_CODE_BAIL(err = CompVImageThreshold::adaptive(image, &image, THRESHOLDING_KERNEL_SIZE, THRESHOLDING_DELTA, 255, true));
+		COMPV_CHECK_CODE_BAIL(err = CompVImageThreshold::adaptive(image, &image, THRESHOLDING_KERNEL_SIZE, THRESHOLDING_DELTA, 255, THRESHOLDING_INVERT));
 
 		// Composite morphological operation: close
 		COMPV_CHECK_CODE_BAIL(err = CompVMathMorph::buildStructuringElement(&structuringElement, MORPH_STREL_SIZE, MORPH_STREL_TYPE));
