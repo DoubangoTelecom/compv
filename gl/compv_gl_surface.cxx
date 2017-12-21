@@ -76,14 +76,20 @@ CompVCanvasPtr CompVGLSurface::canvas() /*Overrides(CompVSurface)*/
 	return *m_ptrCanvas;
 }
 
-CompVCanvasPtr CompVGLSurface::requestCanvas() /*Overrides(CompVSurface)*/
+CompVCanvasPtr CompVGLSurface::requestCanvas(size_t width COMPV_DEFAULT(0), size_t height COMPV_DEFAULT(0)) /*Overrides(CompVSurface)*/
 {
 	if (!m_ptrCanvas) {
 		COMPV_CHECK_EXP_BAIL(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 		COMPV_CHECK_CODE_BAIL(init());
 		COMPV_CHECK_EXP_BAIL(!m_ptrBlitter->isInitialized(), COMPV_ERROR_CODE_E_INVALID_STATE);
 		if (!m_ptrBlitter->fbo()) {
-			COMPV_CHECK_CODE_BAIL(m_ptrBlitter->requestFBO(m_ptrBlitter->width(), m_ptrBlitter->height()));
+			if (!width) {
+				width = m_ptrBlitter->width();
+			}
+			if (!height) {
+				height = m_ptrBlitter->height();
+			}
+			COMPV_CHECK_CODE_BAIL(m_ptrBlitter->requestFBO(width, height));
 		}
 		COMPV_CHECK_CODE_BAIL(CompVGLCanvas::newObj(&m_ptrCanvas, m_ptrBlitter->fbo()));
 	}
