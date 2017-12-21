@@ -87,100 +87,88 @@ COMPV_GAS_FUNCTION_DECLARE CompVConnectedComponentLabelingLSL_Step1Algo13Segment
 			vld1.u8 {q1}, [Xi]!
 			veor.u8 q0, q0, q1
 			vand.u8 q0, q0, vecOne
+			@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+			@ if (mask & 0xff)
+			@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 			vcmp.f64 q0x, #0
-			vmrs APSR_nzcv, fpscr
+			vmrs APSR_nzcv, fpscr	
+			bne TestMask1_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32
+			vst1.s16 {vecER}, [ERi]!
+			b EndOf_TestMask1_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32
+			TestMask1_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32:
+				vmov.32 t0, q0x[0]
+				vmov.32 t1, q0x[1]
+				tst t0, #(1 << (0*8))
+				addne er, er, #1
+				strh er, [ERi], #(1*COMPV_GAS_INT16_SZ_BYTES)
+				tst t0, #(1 << (1*8))
+				addne er, er, #1
+				strh er, [ERi], #(1*COMPV_GAS_INT16_SZ_BYTES)
+				tst t0, #(1 << (2*8))
+				addne er, er, #1
+				strh er, [ERi], #(1*COMPV_GAS_INT16_SZ_BYTES)
+				tst t0, #(1 << (3*8))
+				addne er, er, #1
+				strh er, [ERi], #(1*COMPV_GAS_INT16_SZ_BYTES)
+				tst t1, #(1 << (0*8))
+				addne er, er, #1
+				strh er, [ERi], #(1*COMPV_GAS_INT16_SZ_BYTES)
+				tst t1, #(1 << (1*8))
+				addne er, er, #1
+				strh er, [ERi], #(1*COMPV_GAS_INT16_SZ_BYTES)
+				tst t1, #(1 << (2*8))
+				addne er, er, #1
+				strh er, [ERi], #(1*COMPV_GAS_INT16_SZ_BYTES)
+				tst t1, #(1 << (3*8))
+				addne er, er, #1
+				strh er, [ERi], #(1*COMPV_GAS_INT16_SZ_BYTES)
+				vdup.s16 vecER, er
+			EndOf_TestMask1_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32:
+
+			@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+			@ if (mask & 0xff00)
+			@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 			vcmp.f64 q0y, #0
 			vmrseq APSR_nzcv, fpscr
-			beq EndOf_TestBoth_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32
-			TestBoth_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32:
-				veor.u8 q1, q1, q1
-				@@ == Low == @@
-				vcmp.f64 q0x, #0
-				vmrs APSR_nzcv, fpscr
-				beq EndOf_TestLow_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32
-				TestLow_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32:
-					vdup.u8 q1x, q0x[0]
-					vdup.u8 q2x, q0x[1]
-					vdup.u8 q3x, q0x[2]
-					vdup.u8 q4x, q0x[3]
-					vdup.u8 q5x, q0x[4]
-					vdup.u8 q6x, q0x[5]
-					vdup.u8 q7x, q0x[6]
-					vdup.u8 q8x, q0x[7]
-					vshl.u64 q2x, #8
-					vshl.u64 q3x, #16
-					vshl.u64 q4x, #24
-					vshl.u64 q5x, #32
-					vshl.u64 q6x, #40
-					vshl.u64 q7x, #48
-					vshl.u64 q8x, #56
-					vadd.u8 q2x, q3x
-					vadd.u8 q4x, q5x
-					vadd.u8 q6x, q7x
-					vadd.u8 q2x, q8x
-					vadd.u8 q4x, q6x
-					vadd.u8 q1x, q2x
-					vadd.u8 q1x, q4x
-					vdup.u8 q1y, q1x[7]
-				EndOf_TestLow_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32:
-
-				@@ == High == @@
-				vcmp.f64 q0y, #0
-				vmrs APSR_nzcv, fpscr
-				beq EndOf_TestHigh_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32
-				TestHigh_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32:
-					vdup.u8 q2y, q0y[0]
-					vdup.u8 q3x, q0y[1]
-					vdup.u8 q4x, q0y[2]
-					vdup.u8 q5x, q0y[3]
-					vdup.u8 q6x, q0y[4]
-					vdup.u8 q7x, q0y[5]
-					vdup.u8 q8x, q0y[6]
-					vdup.u8 q0x, q0y[7]
-					vshl.u64 q3x, #8
-					vshl.u64 q4x, #16
-					vshl.u64 q5x, #24
-					vshl.u64 q6x, #32
-					vshl.u64 q7x, #40
-					vshl.u64 q8x, #48
-					vshl.u64 q0x, #56
-					vadd.u8 q2y, q3x
-					vadd.u8 q4x, q5x
-					vadd.u8 q6x, q7x
-					vadd.u8 q8x, q0x
-					vadd.u8 q2y, q4x
-					vadd.u8 q6x, q8x
-					veor.u8 q2x, q2x @ now q2x contains zeros
-					vadd.u8 q2y, q6x
-					vadd.u8 q1, q2
-				EndOf_TestHigh_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32:
-
-				@@ Convert erUint8 to erInt16 and sum then store @@
-				vaddw.u8 q0, vecER, q1x
-				vaddw.u8 vecER, vecER, q1y
-				vst1.s16 {q0}, [ERi]!
-				vst1.s16 {vecER}, [ERi]!
-
-				@@ Duplicate latest element @@
-				vdup.s16 vecER, vecERy[3]
-
-				@@ Skip stroring previous ER and goto Next @@
-				b Next16_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32
-			EndOf_TestBoth_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32:
-
-			@@ Store previous ER
+			bne TestMask2_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32
 			vst1.s16 {vecER}, [ERi]!
-			vst1.s16 {vecER}, [ERi]!
-
-			Next16_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32:
+			b EndOf_TestMask2_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32
+			TestMask2_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32:
+				vmov.32 t0, q0y[0]
+				vmov.32 t1, q0y[1]
+				tst t0, #(1 << (0*8))
+				addne er, er, #1
+				strh er, [ERi], #(1*COMPV_GAS_INT16_SZ_BYTES)
+				tst t0, #(1 << (1*8))
+				addne er, er, #1
+				strh er, [ERi], #(1*COMPV_GAS_INT16_SZ_BYTES)
+				tst t0, #(1 << (2*8))
+				addne er, er, #1
+				strh er, [ERi], #(1*COMPV_GAS_INT16_SZ_BYTES)
+				tst t0, #(1 << (3*8))
+				addne er, er, #1
+				strh er, [ERi], #(1*COMPV_GAS_INT16_SZ_BYTES)
+				tst t1, #(1 << (0*8))
+				addne er, er, #1
+				strh er, [ERi], #(1*COMPV_GAS_INT16_SZ_BYTES)
+				tst t1, #(1 << (1*8))
+				addne er, er, #1
+				strh er, [ERi], #(1*COMPV_GAS_INT16_SZ_BYTES)
+				tst t1, #(1 << (2*8))
+				addne er, er, #1
+				strh er, [ERi], #(1*COMPV_GAS_INT16_SZ_BYTES)
+				tst t1, #(1 << (3*8))
+				addne er, er, #1
+				strh er, [ERi], #(1*COMPV_GAS_INT16_SZ_BYTES)
+				vdup.s16 vecER, er
+			EndOf_TestMask2_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32:
+			
 			add i, i, #16
 			cmp i, width
 			blt LoopWidth16_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32
 		EndOf_LoopWidth16_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32:
 		
-		@@ Get highest "er" before switching from SIMD to serial code @@
 		sub i, i, #16 @ was 1 step ahead, return
-		vmov.s16 er, vecERy[3]
 
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 		@ for (; i < width1; ++i) @

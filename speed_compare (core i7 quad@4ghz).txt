@@ -141,7 +141,7 @@ https://en.wikipedia.org/wiki/Closing_(morphology)
 CompV(PLSL): 3495.ms(full optiz)
 OpenCV: 66416.ms(full optiz)
 Remarque: We're 1900% (#19 times) faster.
-This is a HD document full of text to stress the function.
+This is a high density document full of text to stress the function.
 We're using Parallel Light Speed Labeling (https://hal.archives-ouvertes.fr/hal-01361188/document) and we're not extraction the points but
 a run-lenght (LEA) table (few data). This make features (centroid, perimeter, bounding boxes...) computation insanely fast.
 

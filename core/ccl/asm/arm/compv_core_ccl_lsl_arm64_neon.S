@@ -90,89 +90,42 @@ COMPV_GAS_FUNCTION_DECLARE CompVConnectedComponentLabelingLSL_Step1Algo13Segment
 			prfm pldl1keep, [Xi, #(CACHE_LINE_SIZE*4)]
 			eor v0.16b, v0.16b, v1.16b
 			and v0.16b, v0.16b, vecOne.16b
+			#################################################
+			// if (mask & 0xff)
+			#################################################
 			mov t0, v0.d[0]
-			mov t1, v0.d[1]
-			orr t0, t0, t1 // orrs not avail on Aarch64
-			cbz t0, EndOf_TestBoth_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON64
-			TestBoth_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON64:
-				eor v1.16b, v1.16b, v1.16b
-				## == Low == ##
-				mov t0, v0.d[0]
-				cbz t0, EndOf_TestLow_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON64
-				TestLow_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON64:
-					dup v1.8b, v0.b[0]
-					dup v2.8b, v0.b[1]
-					dup v3.8b, v0.b[2]
-					dup v4.8b, v0.b[3]
-					dup v5.8b, v0.b[4]
-					dup v6.8b, v0.b[5]
-					dup v7.8b, v0.b[6]
-					dup v8.8b, v0.b[7]
-					shl d2, d2, #8
-					shl d3, d3, #16
-					shl d4, d4, #24
-					shl d5, d5, #32
-					shl d6, d6, #40
-					shl d7, d7, #48
-					shl d8, d8, #56
-					add v2.8b, v2.8b, v3.8b
-					add v4.8b, v4.8b, v5.8b
-					add v6.8b, v6.8b, v7.8b
-					add v2.8b, v2.8b, v8.8b
-					add v4.8b, v4.8b, v6.8b
-					add v1.8b, v1.8b, v2.8b
-					add v1.8b, v1.8b, v4.8b
-					dup v29.8b, v1.b[7]
-					mov	v1.d[1], v29.d[0]
-				EndOf_TestLow_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON64:
+			cbnz t0, TestMask1_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON64
+			str q30, [ERi], #(1*COMPV_GAS_Q_SZ_BYTES)
+			b EndOf_TestMask1_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON64
+			TestMask1_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON64:
+				.set index, 0
+				.rep 8
+					tst t0, #(1<<index)
+					cinc erw, erw, ne
+					strh erw, [ERi], #(1*COMPV_GAS_INT16_SZ_BYTES)
+					.set index, index+8
+				.endr
+				dup vecER.8h, erw
+			EndOf_TestMask1_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON64:
 
-				## == High == ##
-				mov t0, v0.d[1]
-				cbz t0, EndOf_TestHigh_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON64
-				TestHigh_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON64:
-					dup v29.8b, v0.b[8]
-					dup v3.8b, v0.b[9]
-					dup v4.8b, v0.b[10]
-					dup v5.8b, v0.b[11]
-					dup v6.8b, v0.b[12]
-					dup v7.8b, v0.b[13]
-					dup v8.8b, v0.b[14]
-					dup v0.8b, v0.b[15]
-					shl d3, d3, #8
-					shl d4, d4, #16
-					shl d5, d5, #24
-					shl d6, d6, #32
-					shl d7, d7, #40
-					shl d8, d8, #48
-					shl d0, d0, #56
-					add v29.8b, v29.8b, v3.8b
-					add v4.8b, v4.8b, v5.8b
-					add v6.8b, v6.8b, v7.8b
-					add v8.8b, v8.8b, v0.8b
-					add v29.8b, v29.8b, v4.8b
-					add v6.8b, v6.8b, v8.8b
-					eor v2.8b, v2.8b, v2.8b // now q2x contains zeros
-					add v29.8b, v29.8b, v6.8b
-					mov	v2.d[1], v29.d[0] // setting q2y = d29					
-					add v1.16b, v1.16b, v2.16b
-				EndOf_TestHigh_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON64:
+			#################################################
+			// if (mask & 0xff00)
+			#################################################
+			mov t0, v0.d[1]
+			cbnz t0, TestMask2_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON64
+			str q30, [ERi], #(1*COMPV_GAS_Q_SZ_BYTES)
+			b EndOf_TestMask2_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON64
+			TestMask2_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON64:
+				.set index, 0
+				.rep 8
+					tst t0, #(1<<index)
+					cinc erw, erw, ne
+					strh erw, [ERi], #(1*COMPV_GAS_INT16_SZ_BYTES)
+					.set index, index+8
+				.endr
+				dup vecER.8h, erw
+			EndOf_TestMask2_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON64:
 
-				## Convert erUint8 to erInt16 and sum then store ##
-				uaddw v0.8h, vecER.8h, v1.8b
-				uaddw2 vecER.8h, vecER.8h, v1.16b
-				stp q0, q30, [ERi], #(2*COMPV_GAS_Q_SZ_BYTES) // (v/q)30 is equal to vecER
-
-				## Duplicate latest element ##
-				dup vecER.8h, vecER.h[7]
-
-				## Skip stroring previous ER and goto Next ##
-				b Next16_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON64
-			EndOf_TestBoth_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON64:
-
-			## Store previous ER ##
-			stp q30, q30, [ERi], #(2*COMPV_GAS_Q_SZ_BYTES) // (v/q)30 is equal to vecER
-
-			Next16_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON64:
 			add i, i, #16
 			cmp i, width16
 			blt LoopWidth16_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON64
