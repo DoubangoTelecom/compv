@@ -180,10 +180,10 @@ COMPV_GAS_FUNCTION_DECLARE CompVConnectedComponentLabelingLSL_Step1Algo13Segment
 			ldrb t1, [Xi], #(1*COMPV_GAS_UINT8_SZ_BYTES)
 			eor t0, t0, t1
 			and t0, t0, #1
-			add er, er, t0
-			strh er, [ERi], #(1*COMPV_GAS_INT16_SZ_BYTES)
 			add i, i, #1
+			add er, er, t0
 			cmp i, width
+			strh er, [ERi], #(1*COMPV_GAS_INT16_SZ_BYTES)			
 			blt LoopWidth1_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32
 		EndOf_LoopWidth1_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32:
 

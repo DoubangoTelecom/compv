@@ -130,9 +130,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVConnectedComponentLabelingLSL_Step1Algo13Segment
 			cmp i, width16
 			blt LoopWidth16_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON64
 		EndOf_LoopWidth16_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON64:
-		
-		## Get highest "er" before switching from SIMD to serial code ##
-		umov erw, vecER.h[7]
 
 		#########################################################
 		# for (; i < width1; ++i) #
@@ -144,10 +141,10 @@ COMPV_GAS_FUNCTION_DECLARE CompVConnectedComponentLabelingLSL_Step1Algo13Segment
 			ldrb t1w, [Xi], #(1*COMPV_GAS_UINT8_SZ_BYTES)
 			eor t0w, t0w, t1w
 			and t0w, t0w, #1
-			add erw, erw, t0w
-			strh erw, [ERi], #(1*COMPV_GAS_INT16_SZ_BYTES)
 			add i, i, #1
+			add erw, erw, t0w
 			cmp i, width
+			strh erw, [ERi], #(1*COMPV_GAS_INT16_SZ_BYTES)			
 			blt LoopWidth1_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON64
 		EndOf_LoopWidth1_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON64:
 
