@@ -401,6 +401,12 @@ enum COMPV_DRAWING_LINE_TYPE {
 	COMPV_DRAWING_LINE_TYPE_MATCH,
 };
 
+enum COMPV_DRAWING_LINE_CONNECT {
+	COMPV_DRAWING_LINE_CONNECT_NONE, // GL_LINES: Vertices 0 and 1 are considered a line. Vertices 2 and 3 are considered a line. And so on. If the user specifies a non-even number of vertices, then the extra vertex is ignored.
+	COMPV_DRAWING_LINE_CONNECT_STRIP, // GL_LINE_STRIP: The adjacent vertices are considered lines. Thus, if you pass n vertices, you will get n-1 lines. If the user only specifies 1 vertex, the drawing command is ignored.
+	COMPV_DRAWING_LINE_CONNECT_LOOP // GL_LINE_LOOP: As line strips, except that the first and last vertices are also used as a line. Thus, you get n lines for n input vertices. If the user only specifies 1 vertex, the drawing command is ignored. The line between the first and last vertices happens after all of the previous lines in the sequence.
+};
+
 struct CompVImageInfo {
     COMPV_IMAGE_FORMAT format;
     COMPV_SUBTYPE pixelFormat; // COMPV_SUBTYPE_PIXELS_XXX
@@ -619,10 +625,10 @@ struct CompVDrawingOptions {
 	compv_float32_t pointSize = 7.f;
 	compv_float32_t lineWidth = 2.f;
 	COMPV_DRAWING_LINE_TYPE lineType = COMPV_DRAWING_LINE_TYPE_SIMPLE;
+	COMPV_DRAWING_LINE_CONNECT lineConnect = COMPV_DRAWING_LINE_CONNECT_NONE;
 	size_t fontSize = 16; // Pixel Size (FreeType)
 	std::string fontFullPath; // Full path to the font (e.g. "C:/Windows/Fonts/arial.ttf") - on Android or iOS, to retrieve the full path (from the assets/bundle), use 'COMPV_PATH_FROM_NAME' (a.k.a 'CompVFileUtils::getFullPathFromFileName')
 	bool fontUtf8 = false; // Whether to consider the string passed to drawTexts() as utf8 or not
-	bool lineLoop = false; // Connect first and last vertices when drawing lines. True -> GL_LINE_LOOP, False -> GL_LINE_STRIP
 public:
 	COMPV_INLINE void setColor(const compv_float32x4_t& c) {
 		color[0] = c[0], color[1] = c[1], color[2] = c[2], color[3] = c[3];

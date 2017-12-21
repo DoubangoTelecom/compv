@@ -39,14 +39,15 @@ public:
     virtual COMPV_ERROR_CODE drawTexts(const CompVVecString& texts, const CompVPointFloat32Vector& positions, const CompVDrawingOptions* options = nullptr) override /*Overrides(CompVCanvas)*/;
 	virtual COMPV_ERROR_CODE drawLines(const CompVLineFloat32Vector& lines, const CompVDrawingOptions* options = nullptr) override /*Overrides(CompVCanvas)*/;
 	virtual COMPV_ERROR_CODE drawLines(const CompVPointFloat32Vector& points, const CompVDrawingOptions* options = nullptr) override /*Overrides(CompVCanvas)*/;
+	virtual COMPV_ERROR_CODE drawLines(const CompVMatPtr& points, const CompVDrawingOptions* options = nullptr) override /*Overrides(CompVCanvas)*/;
 	virtual COMPV_ERROR_CODE drawRectangles(const CompVRectFloat32Vector& rects, const CompVDrawingOptions* options = nullptr) override /*Overrides(CompVCanvas)*/;
 	virtual COMPV_ERROR_CODE drawPoints(const CompVPointFloat32Vector& points, const CompVDrawingOptions* options = nullptr) override /*Overrides(CompVCanvas)*/;
 	virtual COMPV_ERROR_CODE drawPoints(const CompVMatPtr& points, const CompVDrawingOptions* options = nullptr) override /*Overrides(CompVCanvas)*/;
 	virtual COMPV_ERROR_CODE drawInterestPoints(const CompVInterestPointVector& interestPoints, const CompVDrawingOptions* options = nullptr) override /*Overrides(CompVCanvas)*/;
 	virtual bool haveDrawTexts()const override /*Overrides(CompVCanvas)*/;
 
-	COMPV_ERROR_CODE drawLinesGL(const compv_float32_t* x0, const compv_float32_t* y0, const compv_float32_t* x1, const compv_float32_t* y1, const size_t count, const CompVDrawingOptions* options = nullptr, bool connected = false); // internal function
-	COMPV_ERROR_CODE drawLinesGL(const CompVGLPoint2D* lines, const size_t count, const CompVDrawingOptions* options = nullptr, bool connected = false); // internal function
+	COMPV_ERROR_CODE drawLinesGL(const compv_float32_t* x0, const compv_float32_t* y0, const compv_float32_t* x1, const compv_float32_t* y1, const size_t count, const CompVDrawingOptions* options = nullptr); // internal function
+	COMPV_ERROR_CODE drawLinesGL(const CompVGLPoint2D* lines, const size_t count, const CompVDrawingOptions* options = nullptr); // internal function
 
 	COMPV_ERROR_CODE close();
 

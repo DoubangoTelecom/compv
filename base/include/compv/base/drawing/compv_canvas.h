@@ -32,6 +32,7 @@ public:
 	virtual COMPV_ERROR_CODE drawTexts(const CompVVecString& texts, const CompVPointFloat32Vector& positions, const CompVDrawingOptions* options = nullptr) = 0;
 	virtual COMPV_ERROR_CODE drawLines(const CompVLineFloat32Vector& lines, const CompVDrawingOptions* options = nullptr) = 0;
 	virtual COMPV_ERROR_CODE drawLines(const CompVPointFloat32Vector& points, const CompVDrawingOptions* options = nullptr) = 0;
+	virtual COMPV_ERROR_CODE drawLines(const CompVMatPtr& points, const CompVDrawingOptions* options = nullptr) = 0;
 	virtual COMPV_ERROR_CODE drawRectangles(const CompVRectFloat32Vector& rects, const CompVDrawingOptions* options = nullptr) = 0; // rectangle with square angles, for arbitrary angles use drawLines
 	virtual COMPV_ERROR_CODE drawPoints(const CompVPointFloat32Vector& points, const CompVDrawingOptions* options = nullptr) = 0;
 	virtual COMPV_ERROR_CODE drawPoints(const CompVMatPtr& points, const CompVDrawingOptions* options = nullptr) = 0;

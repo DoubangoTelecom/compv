@@ -65,6 +65,8 @@ compv_main()
 		// Set drawing options
 		drawingOptions.colorType = COMPV_DRAWING_COLOR_TYPE_STATIC;
 		drawingOptions.lineWidth = 1.f;
+		drawingOptions.lineType = COMPV_DRAWING_LINE_TYPE_SIMPLE;
+		drawingOptions.lineConnect = COMPV_DRAWING_LINE_CONNECT_NONE;
 		drawingOptions.fontSize = 12;
 		drawingOptions.pointSize = 1.f;
 
@@ -97,10 +99,10 @@ compv_main()
 		// Blob extraction
 		COMPV_CHECK_CODE_RETURN(CompVConnectedComponentLabeling::newObj(&ccl_obj, CCL_ID));
 		if (CCL_ID == COMPV_PLSL_ID) {
-			COMPV_CHECK_CODE_RETURN(ccl_obj->setInt(COMPV_PLSL_SET_INT_TYPE, COMPV_PLSL_TYPE_STD));
+			COMPV_CHECK_CODE_RETURN(ccl_obj->setInt(COMPV_PLSL_SET_INT_TYPE, COMPV_PLSL_TYPE_XRLEZ));
 		}
 		COMPV_CHECK_CODE_RETURN(ccl_obj->process(image, &ccl_result));
-		COMPV_CHECK_CODE_RETURN(ccl_result->extract(points)); // FIXME(dmi): probably no need to extract data
+		COMPV_CHECK_CODE_RETURN(ccl_result->extract(points, COMPV_CCL_EXTRACT_TYPE_SEGMENT)); // FIXME(dmi): probably no need to extract data
 
 		funcPtrProcessStart = [&]() -> COMPV_ERROR_CODE {
 			COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
@@ -118,11 +120,12 @@ compv_main()
 				COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Draw all points (vector) once");
 				for (CompVMatPtrVector::const_iterator i = points.begin(); i < points.end(); ++i) {
 					drawingOptions.setColor(*__colors[color_index++ % __colors_count]);
-					COMPV_CHECK_CODE_BAIL(err = canvas->drawPoints(*i, &drawingOptions));
+					COMPV_CHECK_CODE_BAIL(err = canvas->drawLines(*i, &drawingOptions));
 				}
 				COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->blit());
 			bail:
 				COMPV_CHECK_CODE_NOP(err = window->endDraw()); // Make sure 'endDraw()' will be called regardless the result
+				CompVThread::sleep(1);
 			}
 			return err;
 		};

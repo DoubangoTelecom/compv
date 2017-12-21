@@ -246,7 +246,7 @@ COMPV_ERROR_CODE CompVGLDrawTexts::freeTypeAddChar(unsigned long charcode)
 
 	COMPV_DEBUG_VERBOSE_EX(COMPV_THIS_CLASS_NAME, "Adding new charcode to the cache: %ld", charcode);
 	void* memory = CompVMem::malloc(ft_g->bitmap.rows * ft_g->bitmap.width);
-	COMPV_CHECK_EXP_RETURN(!memory, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+	COMPV_CHECK_EXP_RETURN(!memory && ft_g->bitmap.rows && ft_g->bitmap.width, COMPV_ERROR_CODE_E_OUT_OF_MEMORY); // charcode 32 will have zero memory allocated
 	CompVFreeTypeChar& fchar = m_freeTypeCache[charcode] = CompVFreeTypeChar();
 	fchar.mem = reinterpret_cast<uint8_t*>(memory);
 	fchar.left = ft_g->bitmap_left;

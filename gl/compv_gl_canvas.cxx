@@ -85,7 +85,18 @@ COMPV_ERROR_CODE CompVGLCanvas::drawLines(const CompVPointFloat32Vector& points,
 	}
 	CompVMatPtr glMemPoints;
 	COMPV_CHECK_CODE_RETURN(CompVGLCanvas::pointsBuild(&glMemPoints, points, options));
-	COMPV_CHECK_CODE_RETURN(drawLinesGL(glMemPoints->ptr<const CompVGLPoint2D>(), glMemPoints->cols(), options, true));
+	COMPV_CHECK_CODE_RETURN(drawLinesGL(glMemPoints->ptr<const CompVGLPoint2D>(), glMemPoints->cols(), options));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVGLCanvas::drawLines(const CompVMatPtr& points, const CompVDrawingOptions* options COMPV_DEFAULT(nullptr)) /*Overrides(CompVCanvas)*/
+{
+	if (!points || !points->cols() || !points->rows()) {
+		return COMPV_ERROR_CODE_S_OK;
+	}
+	CompVMatPtr glMemPoints;
+	COMPV_CHECK_CODE_RETURN(CompVGLCanvas::pointsBuild(&glMemPoints, points, options));
+	COMPV_CHECK_CODE_RETURN(drawLinesGL(glMemPoints->ptr<const CompVGLPoint2D>(), glMemPoints->cols(), options));
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -193,19 +204,19 @@ COMPV_ERROR_CODE CompVGLCanvas::drawInterestPoints(const CompVInterestPointVecto
 }
 
 // Internal implementation
-COMPV_ERROR_CODE CompVGLCanvas::drawLinesGL(const compv_float32_t* x0, const compv_float32_t* y0, const compv_float32_t* x1, const compv_float32_t* y1, const size_t count, const CompVDrawingOptions* options COMPV_DEFAULT(nullptr), bool connected COMPV_DEFAULT(false))
+COMPV_ERROR_CODE CompVGLCanvas::drawLinesGL(const compv_float32_t* x0, const compv_float32_t* y0, const compv_float32_t* x1, const compv_float32_t* y1, const size_t count, const CompVDrawingOptions* options COMPV_DEFAULT(nullptr))
 {
 	COMPV_CHECK_EXP_RETURN(!x0 || !y0 || !x1 || !y1 || !count, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
 	CompVMatPtr glPoints2D;
 	COMPV_CHECK_CODE_RETURN(CompVGLCanvas::linesBuild(&glPoints2D, x0, y0, x1, y1, count));
 	COMPV_CHECK_CODE_RETURN(CompVGLCanvas::linesApplyOptions(glPoints2D, options));
-	COMPV_CHECK_CODE_RETURN(drawLinesGL(glPoints2D->ptr<const CompVGLPoint2D>(), glPoints2D->cols(), options, connected));
+	COMPV_CHECK_CODE_RETURN(drawLinesGL(glPoints2D->ptr<const CompVGLPoint2D>(), glPoints2D->cols(), options));
 	return COMPV_ERROR_CODE_S_OK;
 }
 
 // Internal implemenation
-COMPV_ERROR_CODE CompVGLCanvas::drawLinesGL(const CompVGLPoint2D* lines, const size_t count, const CompVDrawingOptions* options COMPV_DEFAULT(nullptr), bool loop COMPV_DEFAULT(false))
+COMPV_ERROR_CODE CompVGLCanvas::drawLinesGL(const CompVGLPoint2D* lines, const size_t count, const CompVDrawingOptions* options COMPV_DEFAULT(nullptr))
 {
 	COMPV_CHECK_EXP_RETURN(!lines || !count, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
@@ -214,7 +225,7 @@ COMPV_ERROR_CODE CompVGLCanvas::drawLinesGL(const CompVGLPoint2D* lines, const s
 	}
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	COMPV_CHECK_CODE_BAIL(err = m_ptrFBO->bind());
-	COMPV_CHECK_CODE_BAIL(err = m_ptrDrawLines->lines(lines, static_cast<GLsizei>(count), options, loop));
+	COMPV_CHECK_CODE_BAIL(err = m_ptrDrawLines->lines(lines, static_cast<GLsizei>(count), options));
 
 bail:
 	COMPV_CHECK_CODE_NOP(m_ptrFBO->unbind());
