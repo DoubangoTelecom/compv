@@ -187,9 +187,9 @@ static uint64_t CompVMipsCaps(const char* search_string)
 uint64_t CompVCpu::s_uFlags = 0;
 uint64_t CompVCpu::s_uFlagsDisabled = 0;
 uint64_t CompVCpu::s_uFlagsEnabled = 0;
-int32_t CompVCpu::s_iCores = 0;
-int32_t CompVCpu::s_iCache1LineSize = 0;
-int32_t CompVCpu::s_iCache1Size = 0;
+int CompVCpu::s_iCores = 0;
+int CompVCpu::s_iCache1LineSize = 0;
+int CompVCpu::s_iCache1Size = 0;
 bool CompVCpu::s_bInitialized = false;
 #if COMPV_ASM
 bool CompVCpu::s_bAsmEnabled = true;
@@ -456,9 +456,9 @@ COMPV_ERROR_CODE CompVCpu::init()
     int mib0[2] = { CTL_HW, HW_NCPU };
     sysctl(mib0, 2, &s_iCores, &len, NULL, 0);
 #elif COMPV_OS_ANDROID
-    s_iCores = static_cast<int32_t>(android_getCpuCount());
+    s_iCores = static_cast<int>(android_getCpuCount());
 #elif defined(__GNUC__)
-    s_iCores = static_cast<int32_t>(sysconf(_SC_NPROCESSORS_ONLN));
+    s_iCores = static_cast<int>(sysconf(_SC_NPROCESSORS_ONLN));
 #else
     COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "coresCount function not implemented ...using 1 as default value");
     s_iCores = 1;
@@ -503,8 +503,8 @@ COMPV_ERROR_CODE CompVCpu::init()
     s_iCache1LineSize = COMPV_CACHE1_LINE_SIZE;
     s_iCache1Size = 4096;
 #else
-    s_iCache1LineSize = (int32_t)sysconf(_SC_LEVEL1_DCACHE_LINESIZE);
-    s_iCache1Size = (int32_t)sysconf(_SC_LEVEL1_DCACHE_SIZE);
+    s_iCache1LineSize = (int)sysconf(_SC_LEVEL1_DCACHE_LINESIZE);
+    s_iCache1Size = (int)sysconf(_SC_LEVEL1_DCACHE_SIZE);
 #endif
 
 	s_bInitialized = true;

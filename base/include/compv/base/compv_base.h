@@ -23,7 +23,7 @@ protected:
     CompVBase();
 public:
     virtual ~CompVBase();
-    static COMPV_ERROR_CODE init(int32_t numThreads = -1);
+    static COMPV_ERROR_CODE init(int numThreads = -1);
     static COMPV_ERROR_CODE deInit();
     static COMPV_ERROR_CODE setTestingModeEnabled(bool bTesting);
     static bool isInitialized();

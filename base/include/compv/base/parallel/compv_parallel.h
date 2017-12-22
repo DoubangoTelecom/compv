@@ -21,7 +21,7 @@ protected:
     CompVParallel();
 public:
     virtual ~CompVParallel();
-    static COMPV_ERROR_CODE init(int32_t numThreads = -1);
+    static COMPV_ERROR_CODE init(int numThreads = -1);
     static COMPV_ERROR_CODE deInit();
     static COMPV_INLINE CompVThreadDispatcherPtr threadDispatcher() {
 #if defined(_COMPV_API_H_) && 0 // Disabled for now because of templates

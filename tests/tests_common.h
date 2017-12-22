@@ -15,7 +15,7 @@ const COMPV_ERROR_CODE compv_tests_init();
 
 const COMPV_ERROR_CODE compv_tests_deInit();
 
-const std::string compv_tests_path_from_file(const char* filename, const char* optional_folder = NULL);
+const std::string compv_tests_path_from_file(const char* filename, const char* optional_folder = nullptr);
 
 COMPV_ERROR_CODE compv_tests_write_to_file(const CompVMatPtr& mat, const char* filename);
 

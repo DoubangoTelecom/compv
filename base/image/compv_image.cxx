@@ -16,6 +16,13 @@
 #include "compv/base/compv_mem.h"
 #include "compv/base/compv_fileutils.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_STATIC
+#define STBI_MALLOC(sz)				compv::CompVMem::malloc((sz))
+#define STBI_REALLOC(p,newsz)		compv::CompVMem::realloc((p),(newsz))
+#define STBI_FREE(p)				compv::CompVMem::free(reinterpret_cast<void**>((&p)))
+#include "compv/base/image/stb_image.h"
+
 #define COMPV_THIS_CLASSNAME	"CompVImage"
 
 #define COMPV_IMAGE_NEWOBJ_CASE(elmType,pixelFormat) \
@@ -90,6 +97,51 @@ COMPV_ERROR_CODE CompVImage::readPixels(COMPV_SUBTYPE ePixelFormat, size_t width
 	//	-> use wrap() to make sure the ouput image will be created with the stride possible (aligned on SIMD and GPU pages)
 	COMPV_CHECK_CODE_RETURN(CompVImage::wrap(ePixelFormat, buffer->ptr(), width, height, stride, image));
 	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVImage::decodePixels(const char* filePath, CompVMatPtrPtr image)
+{
+	COMPV_CHECK_EXP_RETURN(!filePath || !image, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(
+		"This function uses STBI instead of libjpeg-turbo or libpng to decode pictures."
+		"This is a quick and dirty way to do it for testing purpose only. You *must not* use it in your final application"
+	);
+	FILE* file_ = nullptr;
+#if COMPV_OS_ANDROID
+	if (compv_android_have_assetmgr()) {
+		file_ = compv_android_asset_fopen(filePath, "rb");
+	}
+	else {
+		COMPV_DEBUG_INFO_CODE_ONCE("Not using asset manager");
+	}
+#endif /* COMPV_OS_ANDROID */
+	if (!file_ && (file_ = fopen(filePath, "rb")) == nullptr) {
+		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Can't open %s", filePath);
+		return COMPV_ERROR_CODE_E_FILE_NOT_FOUND;
+	}
+
+	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
+	int width = 0, height = 0, channels = 0;
+	stbi_uc* data = stbi_load_from_file(file_, &width, &height, &channels, 0);
+	CompVMatPtr image_ = *image;
+	COMPV_SUBTYPE subType;
+	COMPV_CHECK_EXP_BAIL(!width || !height || (channels != 1 && channels != 3 && channels != 4) || !data, (err = COMPV_ERROR_CODE_E_STBI));
+	subType = (channels == 1)
+		? (COMPV_SUBTYPE_PIXELS_Y)
+		: (channels == 3 ? COMPV_SUBTYPE_PIXELS_RGB24 : COMPV_SUBTYPE_PIXELS_RGBA32);
+	COMPV_CHECK_CODE_BAIL(err = CompVImage::newObj8u(&image_, subType, static_cast<size_t>(width), static_cast<size_t>(height)));
+	COMPV_CHECK_CODE_BAIL(err = CompVImageUtils::copy(
+		subType,
+		data, static_cast<size_t>(width), static_cast<size_t>(height), static_cast<size_t>(width),
+		image_->ptr<void>(), image_->cols(), image_->rows(), image_->stride()
+	));
+bail:
+	if (COMPV_ERROR_CODE_IS_OK(err)) {
+		*image = image_;
+	}
+	stbi_image_free(data);
+	fclose(file_);
+	return err;
 }
 
 COMPV_ERROR_CODE CompVImage::wrap(COMPV_SUBTYPE ePixelFormat, const void* dataPtr, const size_t dataWidth, const size_t dataHeight, const size_t dataStride, CompVMatPtrPtr image, const size_t imageStride COMPV_DEFAULT(0))

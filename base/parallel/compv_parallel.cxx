@@ -28,7 +28,7 @@ CompVParallel:: ~CompVParallel()
 
 }
 
-COMPV_ERROR_CODE CompVParallel::init(int32_t numThreads /*= -1*/)
+COMPV_ERROR_CODE CompVParallel::init(int numThreads /*= -1*/)
 {
     COMPV_ERROR_CODE err_;
 

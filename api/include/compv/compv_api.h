@@ -107,7 +107,7 @@ COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-function")
 // Optional
 // TODO(dmi): add a param defining which modules to initialize. For example, chroma conversion
 // testing requires 'COMPV_MODULE_BASE' only
-static COMPV_ERROR_CODE CompVInit(int32_t numThreads = -1)
+static COMPV_ERROR_CODE CompVInit(int numThreads = -1)
 {
     COMPV_CHECK_CODE_RETURN(CompVBase::init(numThreads));
 	COMPV_CHECK_CODE_RETURN(CompVCore::init());

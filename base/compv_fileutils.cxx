@@ -225,8 +225,8 @@ COMPV_ERROR_CODE CompVFileUtils::read(const char* pcPath, CompVBufferPtrPtr buff
 		return COMPV_ERROR_CODE_E_FAILED_TO_READ_FILE;
 	}
 	else {
-        FILE* file_ = NULL;
-        void* mem_ = NULL;
+        FILE* file_ = nullptr;
+        void* mem_ = nullptr;
 #if COMPV_OS_ANDROID
         if (compv_android_have_assetmgr()) {
             file_ = compv_android_asset_fopen(pcPath, "rb");
@@ -235,7 +235,7 @@ COMPV_ERROR_CODE CompVFileUtils::read(const char* pcPath, CompVBufferPtrPtr buff
             COMPV_DEBUG_INFO_CODE_ONCE("Not using asset manager");
         }
 #endif /* COMPV_OS_ANDROID */
-        if (!file_ && (file_ = fopen(pcPath, "rb")) == NULL) {
+        if (!file_ && (file_ = fopen(pcPath, "rb")) == nullptr) {
             COMPV_DEBUG_ERROR_EX(kModuleNameFileUtils, "Can't open %s", pcPath);
             return COMPV_ERROR_CODE_E_FILE_NOT_FOUND;
         }

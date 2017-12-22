@@ -53,7 +53,7 @@ CompVBase::~CompVBase()
 
 }
 
-COMPV_ERROR_CODE CompVBase::init(int32_t numThreads COMPV_DEFAULT(-1))
+COMPV_ERROR_CODE CompVBase::init(int numThreads COMPV_DEFAULT(-1))
 {
     if (s_bInitialized || s_bInitializing) {
         return COMPV_ERROR_CODE_S_OK;

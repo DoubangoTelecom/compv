@@ -97,15 +97,15 @@ protected:
 public:
     virtual ~CompVCpu();
     static COMPV_ERROR_CODE init();
-    static int32_t coresCount() {
+    static int coresCount() {
         return s_iCores;
     }
     static compv_core_id_t validCoreId(compv_core_id_t coreId);
     static uint64_t cyclesCountGlobal();
-    static int32_t cache1LineSize() {
+    static int cache1LineSize() {
         return s_iCache1LineSize;
     }
-    static int32_t cache1Size() {
+    static int cache1Size() {
         return s_iCache1Size;
     }
     static uint64_t timeProcess();

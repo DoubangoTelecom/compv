@@ -45,7 +45,7 @@ const COMPV_ERROR_CODE compv_tests_deInit()
 	return err;
 }
 
-const std::string compv_tests_path_from_file(const char* filename, const char* optional_folder COMPV_DEFAULT(NULL))
+const std::string compv_tests_path_from_file(const char* filename, const char* optional_folder COMPV_DEFAULT(nullptr))
 {
 	std::string path = COMPV_PATH_FROM_NAME(filename); // path from android's assets, iOS' bundle....
 													   // The path isn't correct when the binary is loaded from another process(e.g. when Intel VTune is used)

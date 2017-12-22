@@ -771,6 +771,9 @@
     <ClInclude Include="include\compv\base\tbbmalloc\tick_count.h">
       <Filter>include\tbbmalloc</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\image\stb_image.h">
+      <Filter>include\image</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx">
