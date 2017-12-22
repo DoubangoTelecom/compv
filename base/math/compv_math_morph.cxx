@@ -475,7 +475,7 @@ static COMPV_ERROR_CODE buildStructuringElementInputPtrs(const CompVMatPtr& stre
 template <typename T>
 static COMPV_ERROR_CODE buildStructuringElementGeneric(CompVMatPtrPtr strel, const CompVSizeSz size, COMPV_MATH_MORPH_STREL_TYPE type)
 {
-	COMPV_CHECK_EXP_RETURN(!strel || !size.width || !size.width, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(!strel || !size.width || !size.height, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	CompVMatPtr strel_ = *strel;
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<T>(&strel_, size.height, size.width)); // For now only 8u elements are supported
 	T* strelPtr_ = strel_->ptr<T>();
