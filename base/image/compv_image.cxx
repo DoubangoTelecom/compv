@@ -18,9 +18,6 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_STATIC
-#define STBI_MALLOC(sz)				compv::CompVMem::malloc((sz))
-#define STBI_REALLOC(p,newsz)		compv::CompVMem::realloc((p),(newsz))
-#define STBI_FREE(p)				compv::CompVMem::free(reinterpret_cast<void**>((&p)))
 #include "compv/base/image/stb_image.h"
 
 #define COMPV_THIS_CLASSNAME	"CompVImage"
