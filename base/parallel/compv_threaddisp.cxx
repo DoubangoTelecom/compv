@@ -52,6 +52,23 @@ COMPV_ERROR_CODE CompVThreadDispatcher::dispatchDividingAcrossY(std::function<CO
 		? CompVThreadDispatcher::guessNumThreadsDividingAcrossY(xcount, ycount, maxThreads, minSamplesPerThread)
 		: 1;
 	/* Dispatch tasks */
+	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+		funcPtr,
+		ycount,
+		threadsCount
+	));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVThreadDispatcher::dispatchDividingAcrossY(std::function<COMPV_ERROR_CODE(const size_t ystart, const size_t yend)> funcPtr, const size_t ycount, const size_t threadsCount)
+{
+	/* Get max number of threads */
+	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
+	const size_t maxThreads = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
+	COMPV_CHECK_EXP_RETURN(threadsCount > maxThreads || threadsCount > ycount, COMPV_ERROR_CODE_E_OUT_OF_BOUND);
+	COMPV_CHECK_EXP_RETURN(threadsCount > 1 && threadDisp && threadDisp->isMotherOfTheCurrentThread(), COMPV_ERROR_CODE_E_RECURSIVE_CALL);
+
+	/* Dispatch tasks */
 	if (threadsCount > 1) {
 		CompVAsyncTaskIds taskIds;
 		taskIds.reserve(threadsCount);

@@ -40,6 +40,7 @@ public:
 	static size_t guessNumThreadsDividingAcrossY(const size_t xcount, const size_t ycount, const size_t maxThreads, const size_t minSamplesPerThread);
 #if COMPV_CPP11
 	static COMPV_ERROR_CODE dispatchDividingAcrossY(std::function<COMPV_ERROR_CODE(const size_t ystart, const size_t yend)> funcPtr, const size_t xcount, const size_t ycount, const size_t minSamplesPerThread);
+	static COMPV_ERROR_CODE dispatchDividingAcrossY(std::function<COMPV_ERROR_CODE(const size_t ystart, const size_t yend)> funcPtr, const size_t ycount, const size_t threadsCount);
 #endif
 
 	static COMPV_ERROR_CODE newObj(CompVThreadDispatcherPtrPtr disp, int32_t numThreads = -1);
