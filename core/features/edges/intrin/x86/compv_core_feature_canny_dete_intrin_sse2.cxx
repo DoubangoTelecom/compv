@@ -7,32 +7,30 @@
 #include "compv/core/features/edges/intrin/x86/compv_core_feature_canny_dete_intrin_sse2.h"
 
 #if COMPV_ARCH_X86 && COMPV_INTRINSIC
+#include "compv/base/compv_bits.h"
 #include "compv/base/compv_debug.h"
 
 COMPV_NAMESPACE_BEGIN()
-
-#define CompVCannyHysteresisRowMask_8mpw_Intrin_SSE2(mask, pp, rr, cc, mm, ii) \
-	if ((mask & mm) && ((cc) + ii) < width) { \
-		(pp)[ii] = 0xff; \
-		edges.push_back(CompVMatIndex(rr, (cc) + ii)); \
-	}
 
 #define CompVCannyHysteresisRowWeak_8mpw_Intrin_SSE2(gg, pp, rr, cc) \
 	vecgg = _mm_loadu_si128(reinterpret_cast<const __m128i*>((gg))); \
 	vecpp = _mm_loadl_epi64(reinterpret_cast<const __m128i*>((pp))); \
 	vecWeak = _mm_and_si128(_mm_cmpeq_epi16(_mm_unpacklo_epi8(vecpp, vecpp), vecZero), _mm_cmpgt_epi16(vecgg, vecTLow)); \
 	vecWeak = _mm_and_si128(vecWeak, vecp); \
-	mask = _mm_movemask_epi8(vecWeak); \
+	mask = _mm_movemask_epi8(_mm_packs_epi16(vecWeak, vecWeak)); \
 	if (mask) { \
-		CompVCannyHysteresisRowMask_8mpw_Intrin_SSE2(mask, (pp), (rr), (cc), 0x1, 0); \
-		CompVCannyHysteresisRowMask_8mpw_Intrin_SSE2(mask, (pp), (rr), (cc), 0x4, 1); \
-		CompVCannyHysteresisRowMask_8mpw_Intrin_SSE2(mask, (pp), (rr), (cc), 0x10, 2); \
-		CompVCannyHysteresisRowMask_8mpw_Intrin_SSE2(mask, (pp), (rr), (cc), 0x40, 3); \
-		CompVCannyHysteresisRowMask_8mpw_Intrin_SSE2(mask, (pp), (rr), (cc), 0x100, 4); \
-		CompVCannyHysteresisRowMask_8mpw_Intrin_SSE2(mask, (pp), (rr), (cc), 0x400, 5); \
-		CompVCannyHysteresisRowMask_8mpw_Intrin_SSE2(mask, (pp), (rr), (cc), 0x1000, 6); \
-		CompVCannyHysteresisRowMask_8mpw_Intrin_SSE2(mask, (pp), (rr), (cc), 0x4000, 7); \
+		mask &= 0xff; /*vecWeak duplicated because of packs(vecWeak, vecWeak) -> clear high and keep low */\
+		compv_bsf_t ii; \
+		do { \
+			compv_bsf(mask, &ii); \
+			const size_t cc_ii = cc + ii; \
+			if (cc_ii >= width) break; \
+			mask ^= (1 << ii); \
+			(pp)[ii] = 0xff; \
+			edges.push_back(CompVMatIndex(rr, cc_ii)); \
+		} while (mask); \
 	}
+
 
 // TODO(dmi): no ASM implementation
 // "g" and "tLow" are unsigned but we're using "epi16" instead of "epu16" because "g" is always < 0xFFFF (from u8 convolution operation)
@@ -45,7 +43,7 @@ void CompVCannyHysteresisRow_8mpw_Intrin_SSE2(size_t row, size_t colStart, size_
 	const __m128i vecTLow = _mm_set1_epi16(tLow);
 	const __m128i vecTHigh = _mm_set1_epi16(tHigh);
 	const __m128i vecZero = _mm_setzero_si128();
-	int mask;
+	compv_bsf_t mask;
 	uint8_t* p;
 	const uint16_t *g, *gb, *gt;
 	size_t c, r, s;
@@ -116,7 +114,7 @@ void CompVCannyHysteresisRow_16mpw_Intrin_SSE2(size_t row, size_t colStart, size
 	static const __m128i vecZero = _mm_setzero_si128();
 	static const __m128i vecMaskFF = _mm_setr_epi16(-1, -1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0);
 	static const __m128i vecMaskFFF = _mm_setr_epi16(-1, -1, -1, 0x0, 0x0, 0x0, 0x0, 0x0);
-	int m0, m1, mi;
+	compv_bsf_t m0, m1, mi;
 	uint8_t* p;
 	const uint16_t *g, *gb, *gt;
 	size_t c, r, s;
@@ -131,15 +129,14 @@ void CompVCannyHysteresisRow_16mpw_Intrin_SSE2(size_t row, size_t colStart, size
 		vec1 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&grad[col]));
 		vec2 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&grad[col + 8]));
 		vec1 = _mm_packs_epi16(_mm_cmpgt_epi16(vec1, vecTHigh), _mm_cmpgt_epi16(vec2, vecTHigh));
-		m0 = _mm_movemask_epi8(_mm_and_si128(_mm_cmpeq_epi16(vec0, vecZero), vec1));
+		m0 = _mm_movemask_epi8(_mm_and_si128(_mm_cmpeq_epi8(vec0, vecZero), vec1));
 		if (!m0) {
 			continue;
 		}
 
-		for (mi = 0; m0; ++mi, m0 >>= 1) {
-			if (!(m0 & 1)) {
-				continue;
-			}
+		do {
+			compv_bsf(m0, &mi);
+			m0 ^= (1 << mi); // asm: "btr" (http://www.felixcloutier.com/x86/BTR.html) - Visual Studio: "_bittestandreset"
 			e[col + mi] = 0xff;
 			edges.push_back(CompVMatIndex(row, col + mi));
 			while (!edges.empty()) {
@@ -207,7 +204,7 @@ void CompVCannyHysteresisRow_16mpw_Intrin_SSE2(size_t row, size_t colStart, size
 					}
 				}
 			}
-		}
+		} while (m0);
 	}
 }
 
