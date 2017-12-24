@@ -37,11 +37,12 @@ public:
 // https://github.com/DoubangoTelecom/compv/issues/27
 // #define compv_popcnt16(hard, val)		(val ? compv_popcnt16_hard((val)) : compv_popcnt16_soft((val)))
 
+// "bsf" is the same as "ctz" on x86
 #if defined(_MSC_VER)
 #	define compv_bsf(val, ret)			_BitScanForward(ret, (val))
 typedef DWORD compv_bsf_t;
 #else
-#	define compv_bsf(val, ret)		*(ret) = __builtin_ffs((val)) /* do not use '__builtin_ctz' which could lead to 'tzcnt' (requires 'BMI1' CPU flags) instead of 'bsf' */
+#	define compv_bsf(val, ret)		*(ret) = __builtin_ffs((val)) /* do not use '__builtin_ctz' which could lead to 'tzcnt' (requires 'BMI1' CPU flags, faster) instead of 'bsf' */
 typedef int compv_bsf_t;
 #endif /* !defined(_MSC_VER) */
 

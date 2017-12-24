@@ -155,32 +155,35 @@ void CompVCannyHysteresisRow_16mpw_Intrin_SSE2(size_t row, size_t colStart, size
 #if 0
 					vecG = _mm_setr_epi16(g[-1], g[1], gt[-1], gt[0], gt[1], gb[-1], gb[0], gb[1]);
 					vecP = _mm_setr_epi16(p[-1], p[1], pt[-1], pt[0], pt[1], pb[-1], pb[0], pb[1]);
-#else
+#endif
 					vecG = _mm_or_si128(_mm_or_si128(_mm_and_si128(_mm_shufflelo_epi16(_mm_loadl_epi64(reinterpret_cast<const __m128i*>(&g[-1])), 0x8), vecMaskFF),
 						_mm_slli_si128(_mm_and_si128(_mm_loadl_epi64(reinterpret_cast<const __m128i*>(&gt[-1])), vecMaskFFF), 4)),
 						_mm_slli_si128(_mm_and_si128(_mm_loadl_epi64(reinterpret_cast<const __m128i*>(&gb[-1])), vecMaskFFF), 10));
-					vecP = _mm_or_si128(_mm_or_si128(_mm_and_si128(_mm_shufflelo_epi16(_mm_unpacklo_epi8(_mm_cvtsi32_si128(*reinterpret_cast<const int32_t*>(&p[-1])), vecZero), 0x8), vecMaskFF),
-						_mm_slli_si128(_mm_and_si128(_mm_unpacklo_epi8(_mm_cvtsi32_si128(*reinterpret_cast<const int32_t*>(&pt[-1])), vecZero), vecMaskFFF), 4)),
-						_mm_slli_si128(_mm_and_si128(_mm_unpacklo_epi8(_mm_cvtsi32_si128(*reinterpret_cast<const int32_t*>(&pb[-1])), vecZero), vecMaskFFF), 10));
-#endif
-					vec0 = _mm_and_si128(_mm_cmpeq_epi16(vecP, vecZero), _mm_cmpgt_epi16(vecG, vecTLow));
-					m1 = _mm_movemask_epi8(_mm_packs_epi16(vec0, vec0));
-					if (m1) {
-						m1 &= 0xff; /* vec0 duplicated because of packs(vec0, vec0) -> clear high and keep low */
-						do {
-							compv_bsf(m1, &mi);
-							m1 ^= (1 << mi);
-							switch (mi) {
-							case 0: p[-1] = 0xff; edges.push_back(CompVMatIndex(r, c - 1)); break; // left	
-							case 1: p[1] = 0xff; edges.push_back(CompVMatIndex(r, c + 1)); break; // right
-							case 2: pt[-1] = 0xff; edges.push_back(CompVMatIndex(r - 1, c - 1)); break; // top-left
-							case 3: *pt = 0xff; edges.push_back(CompVMatIndex(r - 1, c)); break; // top-center
-							case 4: pt[1] = 0xff;  edges.push_back(CompVMatIndex(r - 1, c + 1)); break; // top-right
-							case 5: pb[-1] = 0xff;  edges.push_back(CompVMatIndex(r + 1, c - 1)); break; // bottom-left
-							case 6: *pb = 0xff;  edges.push_back(CompVMatIndex(r + 1, c)); break; // bottom-center
-							case 7: pb[1] = 0xff;  edges.push_back(CompVMatIndex(r + 1, c + 1)); break; // bottom-right
-							}
-						} while (m1);
+					vec0 = _mm_cmpgt_epi16(vecG, vecTLow);
+					if (_mm_movemask_epi8(vec0)) {
+						vecP = _mm_or_si128(_mm_or_si128(_mm_and_si128(_mm_shufflelo_epi16(_mm_unpacklo_epi8(_mm_cvtsi32_si128(*reinterpret_cast<const int32_t*>(&p[-1])), vecZero), 0x8), vecMaskFF),
+							_mm_slli_si128(_mm_and_si128(_mm_unpacklo_epi8(_mm_cvtsi32_si128(*reinterpret_cast<const int32_t*>(&pt[-1])), vecZero), vecMaskFFF), 4)),
+							_mm_slli_si128(_mm_and_si128(_mm_unpacklo_epi8(_mm_cvtsi32_si128(*reinterpret_cast<const int32_t*>(&pb[-1])), vecZero), vecMaskFFF), 10));
+
+						vec1 = _mm_and_si128(_mm_cmpeq_epi16(vecP, vecZero), vec0);
+						m1 = _mm_movemask_epi8(_mm_packs_epi16(vec1, vec1));
+						if (m1) {
+							m1 &= 0xff; /* vec0 duplicated because of packs(vec1, vec1) -> clear high and keep low */
+							do {
+								compv_bsf(m1, &mi);
+								m1 ^= (1 << mi);
+								switch (mi) {
+								case 0: p[-1] = 0xff; edges.push_back(CompVMatIndex(r, c - 1)); break; // left	
+								case 1: p[1] = 0xff; edges.push_back(CompVMatIndex(r, c + 1)); break; // right
+								case 2: pt[-1] = 0xff; edges.push_back(CompVMatIndex(r - 1, c - 1)); break; // top-left
+								case 3: *pt = 0xff; edges.push_back(CompVMatIndex(r - 1, c)); break; // top-center
+								case 4: pt[1] = 0xff;  edges.push_back(CompVMatIndex(r - 1, c + 1)); break; // top-right
+								case 5: pb[-1] = 0xff;  edges.push_back(CompVMatIndex(r + 1, c - 1)); break; // bottom-left
+								case 6: *pb = 0xff;  edges.push_back(CompVMatIndex(r + 1, c)); break; // bottom-center
+								case 7: pb[1] = 0xff;  edges.push_back(CompVMatIndex(r + 1, c + 1)); break; // bottom-right
+								}
+							} while (m1);
+						}
 					}
 				}
 			}

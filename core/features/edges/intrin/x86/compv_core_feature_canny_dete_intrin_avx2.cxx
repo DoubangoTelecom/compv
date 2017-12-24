@@ -10,14 +10,9 @@
 #include "compv/core/features/edges/compv_core_feature_canny_dete.h" /* kCannyTangentPiOver8Int and kCannyTangentPiTimes3Over8Int */
 #include "compv/base/intrin/x86/compv_intrin_avx.h"
 #include "compv/base/compv_debug.h"
+#include "compv/base/compv_bits.h"
 
 COMPV_NAMESPACE_BEGIN()
-
-#define CompVCannyHysteresisRowMask_8mpw_Intrin_AVX2(mask, pp, rr, cc, mm, ii) \
-	if (mask & mm && ((cc) + ii) < width) { \
-		(pp)[ii] = 0xff; \
-		edges.push_back(CompVMatIndex(rr, (cc) + ii)); \
-	}
 
 #define CompVCannyHysteresisRowWeak_8mpw_Intrin_AVX2(gg, pp, rr, cc) \
 	vecgg = _mm256_loadu_si256(reinterpret_cast<const __m256i*>((gg))); \
@@ -26,25 +21,20 @@ COMPV_NAMESPACE_BEGIN()
 	vecpp = _mm256_permute4x64_epi64(vecpp, 0xD8); \
 	vecWeak = _mm256_and_si256(_mm256_cmpeq_epi16(_mm256_unpacklo_epi8(vecpp, vecpp), vecZero), _mm256_cmpgt_epi16(vecgg, vecTLow)); \
 	vecWeak = _mm256_and_si256(vecWeak, vecp); \
-	mask = _mm256_movemask_epi8(vecWeak); \
+	mask = _mm256_movemask_epi8(compv_avx2_packs_epi16(vecWeak, vecWeak)); \
 	if (mask) { \
-		CompVCannyHysteresisRowMask_8mpw_Intrin_AVX2(mask, (pp), (rr), (cc), 0x1, 0); \
-		CompVCannyHysteresisRowMask_8mpw_Intrin_AVX2(mask, (pp), (rr), (cc), 0x4, 1); \
-		CompVCannyHysteresisRowMask_8mpw_Intrin_AVX2(mask, (pp), (rr), (cc), 0x10, 2); \
-		CompVCannyHysteresisRowMask_8mpw_Intrin_AVX2(mask, (pp), (rr), (cc), 0x40, 3); \
-		CompVCannyHysteresisRowMask_8mpw_Intrin_AVX2(mask, (pp), (rr), (cc), 0x100, 4); \
-		CompVCannyHysteresisRowMask_8mpw_Intrin_AVX2(mask, (pp), (rr), (cc), 0x400, 5); \
-		CompVCannyHysteresisRowMask_8mpw_Intrin_AVX2(mask, (pp), (rr), (cc), 0x1000, 6); \
-		CompVCannyHysteresisRowMask_8mpw_Intrin_AVX2(mask, (pp), (rr), (cc), 0x4000, 7); \
-		CompVCannyHysteresisRowMask_8mpw_Intrin_AVX2(mask, (pp), (rr), (cc), 0x10000, 8); \
-		CompVCannyHysteresisRowMask_8mpw_Intrin_AVX2(mask, (pp), (rr), (cc), 0x40000, 9); \
-		CompVCannyHysteresisRowMask_8mpw_Intrin_AVX2(mask, (pp), (rr), (cc), 0x100000, 10); \
-		CompVCannyHysteresisRowMask_8mpw_Intrin_AVX2(mask, (pp), (rr), (cc), 0x400000, 11); \
-		CompVCannyHysteresisRowMask_8mpw_Intrin_AVX2(mask, (pp), (rr), (cc), 0x1000000, 12); \
-		CompVCannyHysteresisRowMask_8mpw_Intrin_AVX2(mask, (pp), (rr), (cc), 0x4000000, 13); \
-		CompVCannyHysteresisRowMask_8mpw_Intrin_AVX2(mask, (pp), (rr), (cc), 0x10000000, 14); \
-		CompVCannyHysteresisRowMask_8mpw_Intrin_AVX2(mask, (pp), (rr), (cc), 0x40000000, 15); \
+		mask &= 0xffff; /*vecWeak duplicated because of packs(vecWeak, vecWeak) -> clear high and keep low */\
+		compv_bsf_t ii; \
+		do { \
+			compv_bsf(mask, &ii); \
+			const size_t cc_ii = cc + ii; \
+			if (cc_ii >= width) break; \
+			mask ^= (1 << ii); \
+			(pp)[ii] = 0xff; \
+			edges.push_back(CompVMatIndex(rr, cc_ii)); \
+		} while (mask); \
 	}
+
 
 
 #if defined(__INTEL_COMPILER)
