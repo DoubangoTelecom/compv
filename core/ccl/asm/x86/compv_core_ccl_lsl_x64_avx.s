@@ -13,7 +13,7 @@
 COMPV_YASM_DEFAULT_REL
 
 global sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_X64_AVX2)
-global sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_X64_AVX2)
+global sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_X64_BMI1_AVX2)
 
 section .data
 	extern sym(kShuffleEpi8_DUP_16s7_32s)
@@ -288,7 +288,7 @@ sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_X
 ; arg(4) ->const compv_uscalar_t RLCi_stride,
 ; arg(5) ->const compv_uscalar_t width, 
 ; arg(6) ->const compv_uscalar_t height
-sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_X64_AVX2):
+sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_X64_BMI1_AVX2):
 	vzeroupper
 	push rbp
 	mov rbp, rsp
@@ -364,13 +364,11 @@ sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_X64
 			xor t0d, 0xffffffff
 			jz .EndOfMask
 				.BeginOfWhile
-					; "bsf" (http://www.felixcloutier.com/x86/BSF.html) on zero is undefined but thanks to our guards t1d will never be zero. 
-					; "tzcnt" which is better (handles zeros) is available Haswell+ 
-					bsf t1d, t0d
+					tzcnt t1d, t0d
 					add t1d, id
 					mov [RLCi + er*COMPV_YASM_INT16_SZ_BYTES], word t1w
 					inc er
-					blsr t0d, t0d ; Reset Lowest Set Bit (http://www.felixcloutier.com/x86/BLSR.html)
+					blsr t0d, t0d
 					jnz .BeginOfWhile
 				.EndOfWhile
 			.EndOfMask

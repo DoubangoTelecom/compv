@@ -55,6 +55,18 @@ const std::string compv_tests_path_from_file(const char* filename, const char* o
 	return path;
 }
 
+// YuvPlayer can guess image size from the name (e.g. out_1280x720.yuv)
+const std::string compv_tests_build_filename(const CompVMatPtr& mat)
+{
+	const size_t width = mat ? mat->cols() : 0;
+	const size_t height = mat ? mat->rows() : 0;
+	return std::string("out_")
+		+ CompVBase::to_string(width)
+		+ std::string("x")
+		+ CompVBase::to_string(height)
+		+ std::string(".yuv");
+}
+
 COMPV_ERROR_CODE compv_tests_write_to_file(const CompVMatPtr& mat, const char* filename)
 {
 	COMPV_CHECK_EXP_RETURN(!mat || mat->isEmpty() || !filename, COMPV_ERROR_CODE_E_INVALID_PARAMETER);

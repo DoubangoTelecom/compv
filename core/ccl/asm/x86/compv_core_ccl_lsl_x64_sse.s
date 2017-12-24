@@ -315,6 +315,7 @@ sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_X64
 	push r12
 	push r13
 	push r14
+	push r15
 	;; end prolog ;;
 
 	%define	Xi			rax
@@ -336,6 +337,9 @@ sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_X64
 	%define iw			r13w
 	%define er			r14
 	%define erb			r14b
+	%define t2			r15
+	%define t2d			r15d
+	%define t2w			r15w
 
 	mov Xi, arg(0) 
 	mov Xi_stride, arg(1)
@@ -347,6 +351,7 @@ sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_X64
 
 	prefetchw [RLCi]
 
+	xor t2, t2
 	lea width16, [width - 1]
 	lea ERi_stride, [width*COMPV_YASM_INT16_SZ_BYTES]
 	shl RLCi_stride, 1
@@ -380,12 +385,14 @@ sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_X64
 			jz .EndOfMask
 				.BeginOfWhile
 					; "bsf" (http://www.felixcloutier.com/x86/BSF.html) on zero is undefined but thanks to our guards t1w will never be zero. 
-					; "tzcnt" which is better (handles zeros) is available Haswell+
+					; "tzcnt" which is better (handles zeros) requires "BMI1" CPU flags (AVX+)
 					bsf t1w, t0w
+					mov t2w, t1w
 					add t1w, iw
 					mov [RLCi + er*COMPV_YASM_INT16_SZ_BYTES], word t1w
 					inc er
-					blsr t0d, t0d ; Reset Lowest Set Bit (http://www.felixcloutier.com/x86/BLSR.html)
+					btr t0d, t2d ; Bit Test and Reset (http://www.felixcloutier.com/x86/BTR.html) - BLSR requires "BMI1" CPU flags (AVX+)
+					test t0d, t0d
 					jnz .BeginOfWhile
 				.EndOfWhile
 			.EndOfMask
@@ -444,9 +451,13 @@ sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_X64
 	%undef i			
 	%undef iw			
 	%undef er			
-	%undef erb			
+	%undef erb
+	%undef t2
+	%undef t2d		
+	%undef t2w			
 
 	;; begin epilog ;;
+	pop r15
 	pop r14
 	pop r13
 	pop r12

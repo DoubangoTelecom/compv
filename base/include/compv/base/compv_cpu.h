@@ -64,21 +64,22 @@ static const uint64_t kCpuFlagFMA3 = COMPV_CPU_FLAG_BIT(27);
 static const uint64_t kCpuFlagFMA4 = COMPV_CPU_FLAG_BIT(28);
 static const uint64_t kCpuFlagERMS = COMPV_CPU_FLAG_BIT(29);
 static const uint64_t kCpuFlagXOP = COMPV_CPU_FLAG_BIT(30);
-static const uint64_t kCpuFlagLZCNT = COMPV_CPU_FLAG_BIT(31);
-static const uint64_t kCpuFlagPOPCNT = COMPV_CPU_FLAG_BIT(32);
-static const uint64_t kCpuFlagCMOV = COMPV_CPU_FLAG_BIT(33); // Conditional move and FCMOV instructions
-static const uint64_t kCpuFlagAES = COMPV_CPU_FLAG_BIT(34);
-static const uint64_t kCpuFlagRDRAND = COMPV_CPU_FLAG_BIT(35);
-static const uint64_t kCpuFlagAVX512_F = COMPV_CPU_FLAG_BIT(36);
-static const uint64_t kCpuFlagAVX512_CD = COMPV_CPU_FLAG_BIT(37);
-static const uint64_t kCpuFlagAVX512_PF = COMPV_CPU_FLAG_BIT(38);
-static const uint64_t kCpuFlagAVX512_ER = COMPV_CPU_FLAG_BIT(39);
-static const uint64_t kCpuFlagAVX512_VL = COMPV_CPU_FLAG_BIT(40);
-static const uint64_t kCpuFlagAVX512_BW = COMPV_CPU_FLAG_BIT(41);
-static const uint64_t kCpuFlagAVX512_DQ = COMPV_CPU_FLAG_BIT(42);
-static const uint64_t kCpuFlagAVX512_IFMA = COMPV_CPU_FLAG_BIT(43);
-static const uint64_t kCpuFlagAVX512_VBMI = COMPV_CPU_FLAG_BIT(44);
-// [45-19] -- reserved for future x86/x64 flags
+static const uint64_t kCpuFlagLZCNT = COMPV_CPU_FLAG_BIT(31); // same as "bsf" which is alwayas available
+static const uint64_t kCpuFlagBMI1 = COMPV_CPU_FLAG_BIT(32); // Bit Manipulation Instruction Set 1 (andn, bextr, blsi, blsmsk, blsr, tzcnt)
+static const uint64_t kCpuFlagPOPCNT = COMPV_CPU_FLAG_BIT(33);
+static const uint64_t kCpuFlagCMOV = COMPV_CPU_FLAG_BIT(34); // Conditional move and FCMOV instructions
+static const uint64_t kCpuFlagAES = COMPV_CPU_FLAG_BIT(35);
+static const uint64_t kCpuFlagRDRAND = COMPV_CPU_FLAG_BIT(36);
+static const uint64_t kCpuFlagAVX512_F = COMPV_CPU_FLAG_BIT(37);
+static const uint64_t kCpuFlagAVX512_CD = COMPV_CPU_FLAG_BIT(38);
+static const uint64_t kCpuFlagAVX512_PF = COMPV_CPU_FLAG_BIT(39);
+static const uint64_t kCpuFlagAVX512_ER = COMPV_CPU_FLAG_BIT(40);
+static const uint64_t kCpuFlagAVX512_VL = COMPV_CPU_FLAG_BIT(41);
+static const uint64_t kCpuFlagAVX512_BW = COMPV_CPU_FLAG_BIT(42);
+static const uint64_t kCpuFlagAVX512_DQ = COMPV_CPU_FLAG_BIT(43);
+static const uint64_t kCpuFlagAVX512_IFMA = COMPV_CPU_FLAG_BIT(44);
+static const uint64_t kCpuFlagAVX512_VBMI = COMPV_CPU_FLAG_BIT(45);
+// [46-50] -- reserved for future x86/x64 flags
 
 // These flags are only valid on MIPS processors.
 static const uint64_t kCpuFlagMIPS = COMPV_CPU_FLAG_BIT(50);

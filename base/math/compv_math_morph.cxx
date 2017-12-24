@@ -549,7 +549,7 @@ static COMPV_ERROR_CODE addBordersVt(const CompVMatPtr input, CompVMatPtr output
 		output->cols() != input->cols() || output->rows() != input->rows() || output->stride() != input->stride(),
 		COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
-	const size_t strelHeightDiv2 = (strelHeight >> 1);
+	const size_t strelHeightDiv2 = ((strelHeight + 1) >> 1);
 	const size_t width = input->cols();
 	const size_t height = input->rows();
 	const size_t stride = input->stride();

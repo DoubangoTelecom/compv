@@ -54,7 +54,7 @@ COMPV_EXTERNC void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLC
 	int16_t* RLCi, const compv_uscalar_t RLCi_stride,
 	const compv_uscalar_t width, const compv_uscalar_t height
 );
-COMPV_EXTERNC void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_X64_AVX2(
+COMPV_EXTERNC void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_X64_BMI1_AVX2(
 	const uint8_t* Xi, const compv_uscalar_t Xi_stride,
 	int16_t* ERi,
 	int16_t* RLCi, const compv_uscalar_t RLCi_stride,
@@ -296,11 +296,11 @@ static void step1_algo13_segment_STDZ(const CompVMatPtr& X, CompVMatPtr ptr16sER
 			COMPV_EXEC_IFDEF_INTRIN_X86(funPtrRLCi_8u16s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Intrin_SSE2);
 			COMPV_EXEC_IFDEF_ASM_X64(funPtrRLCi_8u16s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_X64_SSE2);
 		}
-		if (width > 32 && CompVCpu::isEnabled(kCpuFlagAVX2)) {
-#if 0 // SSE version faster
+		if (width > 32 && CompVCpu::isEnabled(kCpuFlagAVX2) && CompVCpu::isEnabled(kCpuFlagBMI1)) {
+#if 0 // SSE2 version faster
 			COMPV_EXEC_IFDEF_INTRIN_X86(funPtrRLCi_8u16s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Intrin_AVX2);
 #endif
-			COMPV_EXEC_IFDEF_ASM_X64(funPtrRLCi_8u16s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_X64_AVX2);
+			COMPV_EXEC_IFDEF_ASM_X64(funPtrRLCi_8u16s = CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_X64_BMI1_AVX2);
 		}
 #elif COMPV_ARCH_ARM
 		if (width > 16 && CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
