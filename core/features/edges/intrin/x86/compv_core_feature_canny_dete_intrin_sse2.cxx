@@ -163,44 +163,24 @@ void CompVCannyHysteresisRow_16mpw_Intrin_SSE2(size_t row, size_t colStart, size
 						_mm_slli_si128(_mm_and_si128(_mm_unpacklo_epi8(_mm_cvtsi32_si128(*reinterpret_cast<const int32_t*>(&pt[-1])), vecZero), vecMaskFFF), 4)),
 						_mm_slli_si128(_mm_and_si128(_mm_unpacklo_epi8(_mm_cvtsi32_si128(*reinterpret_cast<const int32_t*>(&pb[-1])), vecZero), vecMaskFFF), 10));
 #endif
-					m1 = _mm_movemask_epi8(_mm_and_si128(_mm_cmpeq_epi16(vecP, vecZero), _mm_cmpgt_epi16(vecG, vecTLow)));
+					vec0 = _mm_and_si128(_mm_cmpeq_epi16(vecP, vecZero), _mm_cmpgt_epi16(vecG, vecTLow));
+					m1 = _mm_movemask_epi8(_mm_packs_epi16(vec0, vec0));
 					if (m1) {
-						if (m1 & 0x00ff) {
-							if (m1 & 0x0003) { // left
-								p[-1] = 0xff;
-								edges.push_back(CompVMatIndex(r, c - 1));
+						m1 &= 0xff; /* vec0 duplicated because of packs(vec0, vec0) -> clear high and keep low */
+						do {
+							compv_bsf(m1, &mi);
+							m1 ^= (1 << mi);
+							switch (mi) {
+							case 0: p[-1] = 0xff; edges.push_back(CompVMatIndex(r, c - 1)); break; // left	
+							case 1: p[1] = 0xff; edges.push_back(CompVMatIndex(r, c + 1)); break; // right
+							case 2: pt[-1] = 0xff; edges.push_back(CompVMatIndex(r - 1, c - 1)); break; // top-left
+							case 3: *pt = 0xff; edges.push_back(CompVMatIndex(r - 1, c)); break; // top-center
+							case 4: pt[1] = 0xff;  edges.push_back(CompVMatIndex(r - 1, c + 1)); break; // top-right
+							case 5: pb[-1] = 0xff;  edges.push_back(CompVMatIndex(r + 1, c - 1)); break; // bottom-left
+							case 6: *pb = 0xff;  edges.push_back(CompVMatIndex(r + 1, c)); break; // bottom-center
+							case 7: pb[1] = 0xff;  edges.push_back(CompVMatIndex(r + 1, c + 1)); break; // bottom-right
 							}
-							if (m1 & 0x000c) { // right
-								p[1] = 0xff;
-								edges.push_back(CompVMatIndex(r, c + 1));
-							}
-							if (m1 & 0x0030) { // top-left
-								pt[-1] = 0xff;
-								edges.push_back(CompVMatIndex(r - 1, c - 1));
-							}
-							if (m1 & 0x00c0) { // top-center
-								*pt = 0xff;
-								edges.push_back(CompVMatIndex(r - 1, c));
-							}
-						}
-						if (m1 & 0xff00) {
-							if (m1 & 0x0300) { // top-right
-								pt[1] = 0xff;
-								edges.push_back(CompVMatIndex(r - 1, c + 1));
-							}
-							if (m1 & 0x0c00) { // bottom-left
-								pb[-1] = 0xff;
-								edges.push_back(CompVMatIndex(r + 1, c - 1));
-							}
-							if (m1 & 0x3000) { // bottom-center
-								*pb = 0xff;
-								edges.push_back(CompVMatIndex(r + 1, c));
-							}
-							if (m1 & 0xc000) { // bottom-right
-								pb[1] = 0xff;
-								edges.push_back(CompVMatIndex(r + 1, c + 1));
-							}
-						}
+						} while (m1);
 					}
 				}
 			}
