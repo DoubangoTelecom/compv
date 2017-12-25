@@ -163,6 +163,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::boundingBoxes(Com
 		COMPV_CCL_LSL_EXTRACT_BOXES_MIN_SAMPLES_PER_THREAD
 	));
 #else
+	// Not a high prio: duration on "text_1122x1182_white_gray.yuv" -> 0.1145 millis
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation could be found");
 	COMPV_CHECK_CODE_RETURN(funcPtrBoxes(0, m_szInput.height));
 #endif
