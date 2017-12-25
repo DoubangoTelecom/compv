@@ -23,48 +23,57 @@ static const struct compv_unittest_ccl {
 	size_t stride;
 	const char* md5_labels;
 	const char* md5_segments;
+	const char* md5_boxes;
 }
 COMPV_UNITTEST_CCL[] =
 {
 	{ 
 		TEST_TYPE_DIFFRACT, 1285, 1285, 1285, 
 		"74b5978b6e1979eb7481983d4db0ccb0", // md5_labels
-		"073475af4a73d28163a9cbf648f63368" // md5_segments
+		"073475af4a73d28163a9cbf648f63368", // md5_segments
+		"0857434b5c604a01e433b705e5c5f497", // md5_boxes
 	},
 	{ 
 		TEST_TYPE_DUMMY, 1285, 803, 1285, 
 		"d7a95a99385e64a58b190334562698c4", // md5_labels
-		"b7a1c3d0d1b20feb987ece24d97be610" // md5_segments
+		"b7a1c3d0d1b20feb987ece24d97be610", // md5_segments
+		"05761d3174979b46b36ab8dc3ff10c3f", // md5_boxes
 	},
 	{ 
 		TEST_TYPE_LABYRINTH, 800, 600, 800, 
 		"bd4bdfccb0ea70467421abf7d573b51d", // md5_labels
-		"dad6291e26bb45ddb55c28b12ba575ed" // md5_segments
+		"dad6291e26bb45ddb55c28b12ba575ed", // md5_segments
+		"", // md5_boxes
 	},
 	{
 		TEST_TYPE_CHECKER, 800, 600, 800, 
 		"43e40b4efe74bc924fb9239d14f1387d", // md5_labels
-		"eeec4ea068dd274d34932d41f211babd" // md5_segments
+		"eeec4ea068dd274d34932d41f211babd", // md5_segments
+		"3837d2cffcf4c57bc50c0c828c796c57", // md5_boxes
 	},
 	{ 
 		TEST_TYPE_SHAPE, 960, 720, 960, 
 		"dafbf5d4265ee4a1e1e44984e0e00e4f", // md5_labels
-		"bf2627a2bd2e472b35cce7bb1daf5357" // md5_segments
+		"bf2627a2bd2e472b35cce7bb1daf5357", // md5_segments
+		"f446a8fa659a3cbe0514f4c416414afc", // md5_boxes
 	},
 	{ 
 		TEST_TYPE_TEXT, 1122, 1182, 1122, 
 		"5d416e9164481180f279f807e42ef5b0", // md5_labels
-		"266b623426994c24b668d8b02141729a" // md5_segments
+		"266b623426994c24b668d8b02141729a", // md5_segments
+		"314916d33d1d31bf81f0bd74099dfb44", // md5_boxes
 	}
 };
 static const size_t COMPV_UNITTEST_CCL_COUNT = sizeof(COMPV_UNITTEST_CCL) / sizeof(COMPV_UNITTEST_CCL[0]);
 
 #define LOOP_COUNT		1
-#define TEST_TYPE		TEST_TYPE_DIFFRACT
+#define TEST_TYPE		TEST_TYPE_TEXT
 
 static COMPV_ERROR_CODE check_labels(const CompVConnectedComponentLabelingResultPtr& result, const compv_unittest_ccl* test);
 static COMPV_ERROR_CODE check_segments(const CompVConnectedComponentLabelingResultPtr& result, const compv_unittest_ccl* test);
 static COMPV_ERROR_CODE check_blobs(const CompVConnectedComponentLabelingResultPtr& result, const CompVMatPtr& ptr8uInput);
+static COMPV_ERROR_CODE check_boxes(const CompVConnectedComponentLabelingResultPtr& result, const compv_unittest_ccl* test);
+
 
 COMPV_ERROR_CODE ccl()
 {
@@ -92,21 +101,22 @@ COMPV_ERROR_CODE ccl()
 
 	CompVConnectedComponentLabelingResultPtr result;
 	CompVConnectedComponentPointsVector points; // FIXME(dmi): remove
+	CompVConnectedComponentBoundingBoxesVector boxes; // FIXME(dmi): remove	
 
 	const uint64_t timeStart = CompVTime::nowMillis();
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
 		COMPV_CHECK_CODE_RETURN(ccl_obj->process(binar, &result));
-		//COMPV_CHECK_CODE_RETURN(result->extract(points, COMPV_CCL_EXTRACT_TYPE_BLOB)); // FIXME(dmi): remove
+		//COMPV_CHECK_CODE_RETURN(result->extract(points, COMPV_CCL_EXTRACT_TYPE_SEGMENT)); // FIXME(dmi): remove
+		//COMPV_CHECK_CODE_RETURN(result_->boundingBoxes(boxes));
+		//COMPV_CHECK_CODE_RETURN(check_boxes(result, test));
 	}
 	const uint64_t timeEnd = CompVTime::nowMillis();
 	COMPV_DEBUG_INFO("Elapsed time (TestConnectedComponentLabeling) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 
-	//const CompVConnectedComponentLabelingResultLSL* result_lsl =
-	//	CompVConnectedComponentLabeling::reinterpret_castr<CompVConnectedComponentLabelingResultLSL>(result);
-
 	COMPV_CHECK_CODE_RETURN(check_blobs(result, binar));
 	COMPV_CHECK_CODE_RETURN(check_labels(result, test));
 	COMPV_CHECK_CODE_RETURN(check_segments(result, test));
+	COMPV_CHECK_CODE_RETURN(check_boxes(result, test));
 
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -138,7 +148,7 @@ static COMPV_ERROR_CODE check_blobs(const CompVConnectedComponentLabelingResultP
 {
 	CompVMatPtr ptr8uRestored;
 	COMPV_CHECK_CODE_RETURN(__extract(result, COMPV_CCL_EXTRACT_TYPE_BLOB, ptr8uInput->cols(), ptr8uInput->rows(), &ptr8uRestored));
-#if COMPV_OS_WINDOWS && 1
+#if COMPV_OS_WINDOWS && 0
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Do not write the file to the hd");
 	COMPV_CHECK_CODE_RETURN(compv_tests_write_to_file(ptr8uRestored, TEST_TYPE));
 #endif
@@ -165,5 +175,42 @@ static COMPV_ERROR_CODE __blitPoints(const CompVConnectedComponentPointsVector& 
 		}
 	}
 	*ptr8uOut = ptr8uOut_;
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+static COMPV_ERROR_CODE check_boxes(const CompVConnectedComponentLabelingResultPtr& result, const compv_unittest_ccl* test)
+{
+	const CompVConnectedComponentLabelingResultLSL* result_lsl =
+		CompVConnectedComponentLabeling::reinterpret_castr<CompVConnectedComponentLabelingResultLSL>(result);
+
+	CompVConnectedComponentBoundingBoxesVector boxes;
+	COMPV_CHECK_CODE_RETURN(result_lsl->boundingBoxes(boxes));
+
+	CompVMatPtr ptr8uBoxes_;
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<uint8_t>(&ptr8uBoxes_, test->height, test->width));
+	COMPV_CHECK_CODE_RETURN(ptr8uBoxes_->zero_all());
+	const size_t stride = ptr8uBoxes_->stride();
+	for (CompVConnectedComponentBoundingBoxesVector::const_iterator i = boxes.begin(); i < boxes.end(); ++i) {
+		uint8_t* top = ptr8uBoxes_->ptr<uint8_t>(static_cast<size_t>(i->top));
+		uint8_t* bottom = ptr8uBoxes_->ptr<uint8_t>(static_cast<size_t>(i->bottom));
+		// top and bottom hz lines
+		for (int16_t k = i->left; k <= i->right; ++k) {
+			top[k] = 0xff;
+			bottom[k] = 0xff;
+		}
+		// vt lines
+		for (top = top + 1; top < bottom; top += stride) {
+			top[i->left] = 0xff;
+			top[i->right] = 0xff;
+		}
+	}
+
+#if COMPV_OS_WINDOWS && 0
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Do not write the file to the hd");
+	COMPV_CHECK_CODE_RETURN(compv_tests_write_to_file(ptr8uBoxes_, TEST_TYPE));
+#endif
+
+	COMPV_CHECK_EXP_RETURN(compv_tests_md5(ptr8uBoxes_).compare(test->md5_boxes) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "CCL MD5 mismatch (boxes)");
+
 	return COMPV_ERROR_CODE_S_OK;
 }

@@ -137,11 +137,18 @@ OpenCV's morphOps are multi-threaded and using SSE(vecOp). Used code: morphology
 Using Cross because it's not separable filter and requires more processing.
 https://en.wikipedia.org/wiki/Closing_(morphology)
 
-=== Connected Component Labeling (text_1122x1182_white.png) (#10k times) ===
+=== Connected Component Labeling *Processing* (text_1122x1182_white.png) (#10k times) ===
 CompV(PLSL): 2973.ms(full optiz)
 OpenCV: 66416.ms(full optiz)
 Remarque: We're 2233% (#22 times) faster.
 This is a high density document full of text to stress the function.
 We're using Parallel Light Speed Labeling (https://hal.archives-ouvertes.fr/hal-01361188/document) and we're not extraction the points but
 a run-lenght (LEA) table (few data). This make features (centroid, perimeter, bounding boxes...) computation insanely fast.
+
+=== Connected Component Labeling *Extracting bounding boxes* (text_1122x1182_white.png) (#10k times) ===
+CompV(PLSL): 1145.ms(full optiz)
+OpenCV: 2627.ms(full optiz)
+Remarque: We're 229% (2# times) faster.
+Our implementation is single-threaded. Must provide MT implementation to improve performances.
+
 

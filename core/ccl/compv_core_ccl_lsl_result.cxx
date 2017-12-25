@@ -15,41 +15,19 @@
 #define COMPV_CCL_LSL_EXTRACT_FILL_BLOBS_MIN_SAMPLES_PER_THREAD				(20*20)
 #define COMPV_CCL_LSL_EXTRACT_COUNT_POINTS_CONTOURS_MIN_SAMPLES_PER_THREAD	(30*30)
 #define COMPV_CCL_LSL_EXTRACT_FILL_CONTOURS_MIN_SAMPLES_PER_THREAD			(30*30)
+#define COMPV_CCL_LSL_EXTRACT_BOXES_MIN_SAMPLES_PER_THREAD					(40*40)
 
 #define COMPV_THIS_CLASSNAME "CompVConnectedComponentLabelingResultLSLImpl"
 
 COMPV_NAMESPACE_BEGIN()
 
-#if COMPV_OS_WINDOWS
-typedef LONG compv_ccl_accumulator_t; /* InterlockedDecrement/InterlockedIncrement requires LONG */
-#else
-typedef int compv_ccl_accumulator_t;
-#endif
-typedef CompVMemZero<compv_ccl_accumulator_t > CompVMemZeroLockedAccumulator;
-typedef CompVPtr<CompVMemZeroLockedAccumulator *> CompVMemZeroLockedAccumulatorPtr;
-typedef CompVMemZeroLockedAccumulatorPtr* CompVMemZeroLockedAccumulatorPtrPtr;
-
 static COMPV_ERROR_CODE count_points_blobs(
-	CompVMemZeroLockedAccumulatorPtr ptrxNa,
-	const compv_ccl_lea_n_t& vecLEA,
-	const size_t ystart,
-	const size_t yend);
-static COMPV_ERROR_CODE count_points_segments(
-	CompVMemZeroLockedAccumulatorPtr ptrxNa,
-	const compv_ccl_lea_n_t& vecLEA,
-	const size_t ystart,
-	const size_t yend);
-static COMPV_ERROR_CODE extract_blobs(
-	CompVConnectedComponentPointsVector& points,
-	const compv_ccl_lea_n_t& vecLEA,
-	const CompVSizeSz& szInput,
-	const size_t na
+	CompVMemZeroLockedAccumulatorPtrPtr ptrxNa,
+	const CompVConnectedComponentLabelingResultLSLImplPtr& result
 );
-static COMPV_ERROR_CODE extract_segments(
-	CompVConnectedComponentPointsVector& points,
-	const compv_ccl_lea_n_t& vecLEA,
-	const CompVSizeSz& szInput,
-	const size_t na
+static COMPV_ERROR_CODE count_points_segments(
+	CompVMemZeroLockedAccumulatorPtrPtr ptrxNa,
+	const CompVConnectedComponentLabelingResultLSLImplPtr& result
 );
 
 CompVConnectedComponentLabelingResultLSLImpl::CompVConnectedComponentLabelingResultLSLImpl()
@@ -132,12 +110,14 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::extract(CompVConn
 	// LSL can compute the blob features without extracting the points
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("You don't need to extract the points in order to compute the blob features (bounding boxes, moments...)");
 
+	CompVConnectedComponentLabelingResultLSLImplPtr hackedThis = const_cast<CompVConnectedComponentLabelingResultLSLImpl*>(this);
+
 	switch (type) {
 	case COMPV_CCL_EXTRACT_TYPE_BLOB:
-		COMPV_CHECK_CODE_RETURN(extract_blobs(points, m_vecLEA, m_szInput, static_cast<size_t>(m_nNa1)));
+		COMPV_CHECK_CODE_RETURN(hackedThis->extract_blobs(points));
 		break;
 	case COMPV_CCL_EXTRACT_TYPE_SEGMENT:
-		COMPV_CHECK_CODE_RETURN(extract_segments(points, m_vecLEA, m_szInput, static_cast<size_t>(m_nNa1)));
+		COMPV_CHECK_CODE_RETURN(hackedThis->extract_segments(points));
 		break;
 	default:
 		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
@@ -145,9 +125,48 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::extract(CompVConn
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::boundingBoxes() const
+COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::boundingBoxes(CompVConnectedComponentBoundingBoxesVector& boxes) const
 {
-	COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
+	CompVConnectedComponentLabelingResultLSLImplPtr hackedThis = const_cast<CompVConnectedComponentLabelingResultLSLImpl*>(this);
+	
+	boxes = CompVConnectedComponentBoundingBoxesVector(m_nNa1,
+		CompVConnectedComponentBoundingBox(
+			static_cast<int16_t>(m_szInput.width), // left - min
+			static_cast<int16_t>(m_szInput.height), // top - min
+			0, // right - max
+			0 // bottom - max
+		));
+
+	auto funcPtrBoxes = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
+		compv_ccl_lea_1_t::const_iterator it;
+		for (size_t j = ystart; j < yend; ++j) {
+			const compv_ccl_lea_1_t& lea = m_vecLEA[j];
+			const int16_t y = static_cast<int16_t>(j);
+			for (it = lea.begin(); it < lea.end(); ++it) {
+				const int32_t a = (it->a - 1); // a within [1, na]
+				CompVConnectedComponentBoundingBox& bb = boxes[a];
+				// Visual studio 2015 nicely generate branchless code using conditional movs
+				bb.left = COMPV_MATH_MIN(bb.left, it->start);
+				bb.top = COMPV_MATH_MIN(bb.top, y);
+				bb.right = COMPV_MATH_MAX(bb.right, it->end); // bb.right + ((it->end - bb.right) & ((bb.right - it->end) >> 15));
+				bb.bottom = COMPV_MATH_MAX(bb.bottom, y); // bb.bottom + ((y - bb.bottom) & ((bb.bottom - y) >> 15));
+			}
+		}
+		return COMPV_ERROR_CODE_S_OK;
+	};
+
+#if 0 // Not thread-safe
+	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+		funcPtrBoxes,
+		m_szInput.width,
+		m_szInput.height,
+		COMPV_CCL_LSL_EXTRACT_BOXES_MIN_SAMPLES_PER_THREAD
+	));
+#else
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation could be found");
+	COMPV_CHECK_CODE_RETURN(funcPtrBoxes(0, m_szInput.height));
+#endif
+
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -160,6 +179,8 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::firstOrderMoment(
 COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::reset()
 {
 	m_nNa1 = 0;
+	m_ptrCountPointsBlobs = nullptr;
+	m_ptrCountPointsSegment = nullptr;
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -173,83 +194,30 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::newObj(CompVConne
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-static COMPV_ERROR_CODE count_points_blobs(
-	CompVMemZeroLockedAccumulatorPtr ptrxNa,
-	const compv_ccl_lea_n_t& vecLEA,
-	const size_t ystart,
-	const size_t yend)
-{
-	compv_ccl_accumulator_t* naPtr = ptrxNa->ptr(0, 0);
-	compv_ccl_lea_n_t::const_iterator j = vecLEA.begin() + ystart;
-	compv_ccl_lea_n_t::const_iterator jend = vecLEA.begin() + yend;
-	compv_ccl_lea_1_t::const_iterator i;
-	for (; j < jend; ++j) {
-		for (i = j->begin(); i < j->end(); ++i) {
-			const compv_ccl_accumulator_t v = (i->end - i->start);
-			compv_atomic_add(&naPtr[i->a - 1], v); // a within [1, na]
-		}
-	}
-	return COMPV_ERROR_CODE_S_OK;
-}
-
-static COMPV_ERROR_CODE count_points_segments(
-	CompVMemZeroLockedAccumulatorPtr ptrxNa,
-	const compv_ccl_lea_n_t& vecLEA,
-	const size_t ystart,
-	const size_t yend)
-{
-	compv_ccl_accumulator_t* naPtr = ptrxNa->ptr(0, 0);
-	compv_ccl_lea_n_t::const_iterator j = vecLEA.begin() + ystart;
-	compv_ccl_lea_n_t::const_iterator jend = vecLEA.begin() + yend;
-	compv_ccl_lea_1_t::const_iterator i;
-	for (; j < jend; ++j) {
-		for (i = j->begin(); i < j->end(); ++i) {
-			compv_atomic_add(&naPtr[i->a - 1], 2); // a within [1, na]
-		}
-	}
-	return COMPV_ERROR_CODE_S_OK;
-}
-
-static COMPV_ERROR_CODE extract_blobs(
-	CompVConnectedComponentPointsVector& points,
-	const compv_ccl_lea_n_t& vecLEA,
-	const CompVSizeSz& szInput,
-	const size_t na
-)
+COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::extract_blobs(CompVConnectedComponentPointsVector& points)
 {
 	// Private function, no need to check input parameters
-
+	
 	/* Count the number of points (required for features computation) */
-	CompVMemZeroLockedAccumulatorPtr ptrxNa; // final number of absolute labels (only needed to extract points)
-	COMPV_CHECK_CODE_RETURN(CompVMemZeroLockedAccumulator::newObj(&ptrxNa, 1, na));
-	auto funcPtrCountPoints = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
+	if (!m_ptrCountPointsBlobs) {
 		COMPV_CHECK_CODE_RETURN(count_points_blobs(
-			ptrxNa,
-			vecLEA,
-			ystart,
-			yend)
-		);
-		return COMPV_ERROR_CODE_S_OK;
-	};
-	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
-		funcPtrCountPoints,
-		szInput.width,
-		szInput.height,
-		COMPV_CCL_LSL_EXTRACT_COUNT_POINTS_BLOBS_MIN_SAMPLES_PER_THREAD
-	));
+			&m_ptrCountPointsBlobs,
+			this
+		));
+	}
 
 	/* Fill points */
-	const compv_ccl_accumulator_t* ptrxNaPtr = ptrxNa->ptr();
-	points.resize(na);
-	for (size_t a = 1; a <= na; ++a) { // a within [1, na]
+	const compv_ccl_accumulator_t* ptrxNaPtr = m_ptrCountPointsBlobs->ptr();
+	points.resize(m_nNa1);
+	for (size_t a = 1; a <= m_nNa1; ++a) { // a within [1, na]
 		const size_t count = static_cast<size_t>(ptrxNaPtr[a - 1]);
 		points[a - 1].resize(count);
 	}
-	std::vector<compv_ccl_accumulator_t > szFilled(na, 0);
+	std::vector<compv_ccl_accumulator_t > szFilled(m_nNa1, 0);
 	auto funcPtrFill = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
 		compv_ccl_lea_1_t::const_iterator it;
-		compv_ccl_lea_n_t::const_iterator j = vecLEA.begin() + ystart;
-		compv_ccl_lea_n_t::const_iterator jend = vecLEA.begin() + yend;
+		compv_ccl_lea_n_t::const_iterator j = m_vecLEA.begin() + ystart;
+		compv_ccl_lea_n_t::const_iterator jend = m_vecLEA.begin() + yend;
 		int16_t y = static_cast<int16_t>(ystart);
 		for (; j < jend; ++j, ++y) {
 			for (it = j->begin(); it < j->end(); ++it) {
@@ -270,54 +238,38 @@ static COMPV_ERROR_CODE extract_blobs(
 
 	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
 		funcPtrFill,
-		szInput.width,
-		szInput.height,
+		m_szInput.width,
+		m_szInput.height,
 		COMPV_CCL_LSL_EXTRACT_FILL_BLOBS_MIN_SAMPLES_PER_THREAD
 	));
 
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-static COMPV_ERROR_CODE extract_segments(
-	CompVConnectedComponentPointsVector& points,
-	const compv_ccl_lea_n_t& vecLEA,
-	const CompVSizeSz& szInput,
-	const size_t na
-)
+COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::extract_segments(CompVConnectedComponentPointsVector& points)
 {
 	// Private function, no need to check input parameters
 
 	/* Count the number of points (required for features computation) */
-	CompVMemZeroLockedAccumulatorPtr ptrxNa; // final number of absolute labels (only needed to extract points)
-	COMPV_CHECK_CODE_RETURN(CompVMemZeroLockedAccumulator::newObj(&ptrxNa, 1, na));
-	auto funcPtrCountPoints = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
+	if (!m_ptrCountPointsSegment) {
 		COMPV_CHECK_CODE_RETURN(count_points_segments(
-			ptrxNa,
-			vecLEA,
-			ystart,
-			yend)
-		);
-		return COMPV_ERROR_CODE_S_OK;
-	};
-	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
-		funcPtrCountPoints,
-		szInput.width,
-		szInput.height,
-		COMPV_CCL_LSL_EXTRACT_COUNT_POINTS_CONTOURS_MIN_SAMPLES_PER_THREAD
-	));
+			&m_ptrCountPointsSegment,
+			this
+		));
+	}
 
 	/* Fill points */
-	const compv_ccl_accumulator_t* ptrxNaPtr = ptrxNa->ptr();
-	points.resize(na);
-	for (size_t a = 1; a <= na; ++a) { // a within [1, na]
+	const compv_ccl_accumulator_t* ptrxNaPtr = m_ptrCountPointsSegment->ptr();
+	points.resize(m_nNa1);
+	for (size_t a = 1; a <= m_nNa1; ++a) { // a within [1, na]
 		const size_t count = static_cast<size_t>(ptrxNaPtr[a - 1]);
 		points[a - 1].resize(count);
 	}
-	std::vector<compv_ccl_accumulator_t > szFilled(na, 0);
+	std::vector<compv_ccl_accumulator_t > szFilled(m_nNa1, 0);
 	auto funcPtrFill = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
 		compv_ccl_lea_1_t::const_iterator it;
 		for (size_t j = ystart; j < yend; ++j) {
-			const compv_ccl_lea_1_t& lea = vecLEA[j];
+			const compv_ccl_lea_1_t& lea = m_vecLEA[j];
 			const int16_t y = static_cast<int16_t>(j);
 			for (it = lea.begin(); it < lea.end(); ++it) {
 				const int32_t a = (it->a - 1); // a within [1, na]
@@ -336,11 +288,81 @@ static COMPV_ERROR_CODE extract_segments(
 
 	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
 		funcPtrFill,
-		szInput.width,
-		szInput.height,
+		m_szInput.width,
+		m_szInput.height,
 		COMPV_CCL_LSL_EXTRACT_FILL_CONTOURS_MIN_SAMPLES_PER_THREAD
 	));
 
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+static COMPV_ERROR_CODE count_points_blobs(
+	CompVMemZeroLockedAccumulatorPtrPtr ptrxNa,
+	const CompVConnectedComponentLabelingResultLSLImplPtr& result
+)
+{
+	const compv_ccl_lea_n_t& vecLEA = result->vecLEA();
+	const CompVSizeSz& szInput = result->szInput();
+	const size_t& na = result->na1();
+
+	CompVMemZeroLockedAccumulatorPtr ptrxNa_; // final number of absolute labels (only needed to extract points)
+	COMPV_CHECK_CODE_RETURN(CompVMemZeroLockedAccumulator::newObj(&ptrxNa_, 1, na));
+
+	auto funcPtrCountPoints = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
+		compv_ccl_accumulator_t* naPtr = ptrxNa_->ptr(0, 0);
+		compv_ccl_lea_n_t::const_iterator j = vecLEA.begin() + ystart;
+		compv_ccl_lea_n_t::const_iterator jend = vecLEA.begin() + yend;
+		compv_ccl_lea_1_t::const_iterator i;
+		for (; j < jend; ++j) {
+			for (i = j->begin(); i < j->end(); ++i) {
+				const compv_ccl_accumulator_t v = (i->end - i->start);
+				compv_atomic_add(&naPtr[i->a - 1], v); // a within [1, na]
+			}
+		}
+		return COMPV_ERROR_CODE_S_OK;
+	};
+	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+		funcPtrCountPoints,
+		szInput.width,
+		szInput.height,
+		COMPV_CCL_LSL_EXTRACT_COUNT_POINTS_BLOBS_MIN_SAMPLES_PER_THREAD
+	));
+
+	*ptrxNa = ptrxNa_;
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+static COMPV_ERROR_CODE count_points_segments(
+	CompVMemZeroLockedAccumulatorPtrPtr ptrxNa,
+	const CompVConnectedComponentLabelingResultLSLImplPtr& result
+)
+{
+	const compv_ccl_lea_n_t& vecLEA = result->vecLEA();
+	const CompVSizeSz& szInput = result->szInput();
+	const size_t& na = result->na1();
+
+	CompVMemZeroLockedAccumulatorPtr ptrxNa_; // final number of absolute labels (only needed to extract points)
+	COMPV_CHECK_CODE_RETURN(CompVMemZeroLockedAccumulator::newObj(&ptrxNa_, 1, na));
+	auto funcPtrCountPoints = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
+		compv_ccl_accumulator_t* naPtr = ptrxNa_->ptr(0, 0);
+		compv_ccl_lea_n_t::const_iterator j = vecLEA.begin() + ystart;
+		compv_ccl_lea_n_t::const_iterator jend = vecLEA.begin() + yend;
+		compv_ccl_lea_1_t::const_iterator i;
+		for (; j < jend; ++j) {
+			for (i = j->begin(); i < j->end(); ++i) {
+				compv_atomic_add(&naPtr[i->a - 1], 2); // a within [1, na]
+			}
+		}
+		return COMPV_ERROR_CODE_S_OK;
+	};
+	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+		funcPtrCountPoints,
+		szInput.width,
+		szInput.height,
+		COMPV_CCL_LSL_EXTRACT_COUNT_POINTS_CONTOURS_MIN_SAMPLES_PER_THREAD
+	));
+
+	*ptrxNa = ptrxNa_;
 	return COMPV_ERROR_CODE_S_OK;
 }
 

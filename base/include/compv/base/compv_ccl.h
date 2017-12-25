@@ -19,7 +19,10 @@
 COMPV_NAMESPACE_BEGIN()
 
 typedef CompVPoint2DInt16Vector CompVConnectedComponentPoints;
-typedef std::vector<CompVConnectedComponentPoints> CompVConnectedComponentPointsVector;
+typedef std::vector<CompVConnectedComponentPoints > CompVConnectedComponentPointsVector;
+
+typedef CompVRectInt16 CompVConnectedComponentBoundingBox;
+typedef std::vector<CompVConnectedComponentBoundingBox > CompVConnectedComponentBoundingBoxesVector;
 
 COMPV_OBJECT_DECLARE_PTRS(ConnectedComponentLabeling)
 COMPV_OBJECT_DECLARE_PTRS(ConnectedComponentLabelingResult)
@@ -116,7 +119,7 @@ public:
 	virtual ~CompVConnectedComponentLabelingResultLSL() {
 	}
 	
-	virtual COMPV_ERROR_CODE boundingBoxes() const = 0;
+	virtual COMPV_ERROR_CODE boundingBoxes(CompVConnectedComponentBoundingBoxesVector& boxes) const = 0;
 	virtual COMPV_ERROR_CODE firstOrderMoment() const = 0;
 };
 

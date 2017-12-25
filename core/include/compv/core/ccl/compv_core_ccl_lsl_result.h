@@ -18,6 +18,15 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+#if COMPV_OS_WINDOWS
+typedef LONG compv_ccl_accumulator_t; /* InterlockedDecrement/InterlockedIncrement requires LONG */
+#else
+typedef int compv_ccl_accumulator_t;
+#endif
+typedef CompVMemZero<compv_ccl_accumulator_t > CompVMemZeroLockedAccumulator;
+typedef CompVPtr<CompVMemZeroLockedAccumulator *> CompVMemZeroLockedAccumulatorPtr;
+typedef CompVMemZeroLockedAccumulatorPtr* CompVMemZeroLockedAccumulatorPtrPtr;
+
 static const int32_t kCompVConnectedComponentLabelingLSLBachgroundLabel = 0; // Must be zero because of calloc()
 
 typedef std::vector<CompVRangeInt16 > compv_ccl_rlc_t;
@@ -45,7 +54,7 @@ public:
 	virtual COMPV_ERROR_CODE debugFlatten(CompVMatPtrPtr ptr32sLabels) const override;
 	virtual COMPV_ERROR_CODE extract(CompVConnectedComponentPointsVector& points, COMPV_CCL_EXTRACT_TYPE type = COMPV_CCL_EXTRACT_TYPE_BLOB) const override;
 
-	virtual COMPV_ERROR_CODE boundingBoxes() const override;
+	virtual COMPV_ERROR_CODE boundingBoxes(CompVConnectedComponentBoundingBoxesVector& boxes) const override;
 	virtual COMPV_ERROR_CODE firstOrderMoment() const override;
 
 	COMPV_INLINE int32_t& na1() { return m_nNa1; }
@@ -57,9 +66,15 @@ public:
 	static COMPV_ERROR_CODE newObj(CompVConnectedComponentLabelingResultLSLImplPtrPtr result);
 
 private:
+	COMPV_ERROR_CODE extract_blobs(CompVConnectedComponentPointsVector& points);
+	COMPV_ERROR_CODE extract_segments(CompVConnectedComponentPointsVector& points);
+
+private:
 	int32_t m_nNa1; // final number of absolute labels
 	compv_ccl_lea_n_t m_vecLEA; // an associative table holding the association between er and ea: ea = ERAi[er]
 	CompVSizeSz m_szInput;
+	CompVMemZeroLockedAccumulatorPtr m_ptrCountPointsSegment;
+	CompVMemZeroLockedAccumulatorPtr m_ptrCountPointsBlobs;
 };
 
 COMPV_NAMESPACE_END()
