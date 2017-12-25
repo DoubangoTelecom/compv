@@ -15,6 +15,7 @@
 
 #include <map>
 #include <vector>
+#include <functional>
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -23,6 +24,8 @@ typedef std::vector<CompVConnectedComponentPoints > CompVConnectedComponentPoint
 
 typedef CompVRectInt16 CompVConnectedComponentBoundingBox;
 typedef std::vector<CompVConnectedComponentBoundingBox > CompVConnectedComponentBoundingBoxesVector;
+
+typedef std::function<bool(const int32_t id)> CompVConnectedComponentCallbackRemoveLabel;
 
 COMPV_OBJECT_DECLARE_PTRS(ConnectedComponentLabeling)
 COMPV_OBJECT_DECLARE_PTRS(ConnectedComponentLabelingResult)
@@ -121,6 +124,7 @@ public:
 	
 	virtual COMPV_ERROR_CODE boundingBoxes(CompVConnectedComponentBoundingBoxesVector& boxes) const = 0;
 	virtual COMPV_ERROR_CODE firstOrderMoment() const = 0;
+	virtual COMPV_ERROR_CODE remove(CompVConnectedComponentCallbackRemoveLabel funcPtr, size_t &removedCount) = 0;
 };
 
 // Class: CompVConnectedComponentLabeling

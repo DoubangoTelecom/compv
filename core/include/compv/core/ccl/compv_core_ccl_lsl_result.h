@@ -56,6 +56,7 @@ public:
 
 	virtual COMPV_ERROR_CODE boundingBoxes(CompVConnectedComponentBoundingBoxesVector& boxes) const override;
 	virtual COMPV_ERROR_CODE firstOrderMoment() const override;
+	virtual COMPV_ERROR_CODE remove(CompVConnectedComponentCallbackRemoveLabel funcPtr, size_t &removedCount) override;
 
 	COMPV_INLINE int32_t& na1() { return m_nNa1; }
 	COMPV_INLINE compv_ccl_lea_n_t& vecLEA() { return m_vecLEA; }

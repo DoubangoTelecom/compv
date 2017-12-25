@@ -16,6 +16,7 @@
 #define COMPV_CCL_LSL_EXTRACT_COUNT_POINTS_CONTOURS_MIN_SAMPLES_PER_THREAD	(30*30)
 #define COMPV_CCL_LSL_EXTRACT_FILL_CONTOURS_MIN_SAMPLES_PER_THREAD			(30*30)
 #define COMPV_CCL_LSL_EXTRACT_BOXES_MIN_SAMPLES_PER_THREAD					(40*40)
+#define COMPV_CCL_LSL_LABELS_REMOVE_MIN_SAMPLES_PER_THREAD					(60*60)
 
 #define COMPV_THIS_CLASSNAME "CompVConnectedComponentLabelingResultLSLImpl"
 
@@ -174,6 +175,50 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::boundingBoxes(Com
 COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::firstOrderMoment() const
 {
 	COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::remove(CompVConnectedComponentCallbackRemoveLabel funcPtr, size_t &removedCount)
+{
+	COMPV_CHECK_EXP_RETURN(!funcPtr, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	
+	// Collect labels to remove
+	std::vector<int32_t> vecLabelsToRemove;
+	vecLabelsToRemove.reserve(m_nNa1);
+	for (int32_t a = 1; a <= m_nNa1; ++a) {
+		if (funcPtr(a - 1)) {
+			vecLabelsToRemove.push_back(a);
+		}
+	}
+	removedCount = vecLabelsToRemove.size();
+
+	// Remove collected labels
+	if (removedCount) {
+		auto funcPtrRemove = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
+			std::vector<int32_t>::const_iterator r_begin = vecLabelsToRemove.begin();
+			std::vector<int32_t>::const_iterator r_end = vecLabelsToRemove.end();
+			for (size_t j = ystart; j < yend; ++j) {
+				compv_ccl_lea_1_t& lea = m_vecLEA[j];
+				lea.erase(std::remove_if(lea.begin(),
+					lea.end(),
+					[&](const compv_ccl_range_t& range) { return std::find(r_begin, r_end, range.a) != r_end; }),
+					lea.end());
+			}
+			return COMPV_ERROR_CODE_S_OK;
+		};
+
+		COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+			funcPtrRemove,
+			m_szInput.width,
+			m_szInput.height,
+			COMPV_CCL_LSL_LABELS_REMOVE_MIN_SAMPLES_PER_THREAD
+		));
+
+		// Reset local variables (no longer valid)
+		m_ptrCountPointsSegment = nullptr;
+		m_ptrCountPointsBlobs = nullptr;
+	}
+
 	return COMPV_ERROR_CODE_S_OK;
 }
 

@@ -497,6 +497,8 @@ public:
 		return CompVRect(x, y, x + width, y + height);
 	}
 	COMPV_INLINE bool isEmpty()const { return (left == right) && (top == bottom); }
+	COMPV_INLINE T width()const { return (right - left) + 1; }
+	COMPV_INLINE T height()const { return (bottom - top) + 1; }
 };
 typedef CompVRect<compv_float32_t> CompVRectFloat32;
 typedef CompVRect<compv_float64_t> CompVRectFloat64;
