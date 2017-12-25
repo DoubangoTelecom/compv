@@ -8,12 +8,12 @@ using namespace compv;
 #define UNITTEST_SCALE							0
 #define UNITTEST_PYRAMID						0
 #define UNITTEST_SOBEL							0
-#define UNITTEST_CANNY							1
+#define UNITTEST_CANNY							0
 #define UNITTEST_THRESHOLD_ADAPT				0
 #define UNITTEST_THRESHOLD_OTSU					0
 #define UNITTEST_HOUGHSHT						0
 #define UNITTEST_HOUGHKHT						0
-#define UNITTEST_CCL							0
+#define UNITTEST_CCL							1
 
 #define UNITTEST_FEATURE_FAST					0
 #define UNITTEST_CHROMA_CONV					0

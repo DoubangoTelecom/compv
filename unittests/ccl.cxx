@@ -98,7 +98,7 @@ COMPV_ERROR_CODE unittest_ccl()
 
 
 static COMPV_ERROR_CODE __extract(const CompVConnectedComponentLabelingResultPtr& result, const COMPV_CCL_EXTRACT_TYPE type, const size_t width, const size_t height, CompVMatPtrPtr ptr8uOut);
-static COMPV_ERROR_CODE __blitPoints(const CompVMatPtrVector& points, const size_t width, const size_t height, CompVMatPtrPtr ptr8uOut);
+static COMPV_ERROR_CODE __blitPoints(const CompVConnectedComponentPointsVector& points, const size_t width, const size_t height, CompVMatPtrPtr ptr8uOut);
 
 static COMPV_ERROR_CODE check_labels(const CompVConnectedComponentLabelingResultPtr& result, const compv_unittest_ccl* test)
 {
@@ -112,6 +112,10 @@ static COMPV_ERROR_CODE check_segments(const CompVConnectedComponentLabelingResu
 {
 	CompVMatPtr ptr8uSegments;
 	COMPV_CHECK_CODE_RETURN(__extract(result, COMPV_CCL_EXTRACT_TYPE_SEGMENT, test->width, test->height, &ptr8uSegments));
+#if COMPV_OS_WINDOWS && 0
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Do not write the file to the hd");
+	COMPV_CHECK_CODE_RETURN(compv_tests_write_to_file(ptr8uSegments, TEST_TYPE));
+#endif
 	COMPV_CHECK_EXP_RETURN(compv_tests_md5(ptr8uSegments).compare(test->md5_segments) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "CCL MD5 mismatch (segments)");
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -126,23 +130,20 @@ static COMPV_ERROR_CODE check_blobs(const CompVConnectedComponentLabelingResultP
 
 static COMPV_ERROR_CODE __extract(const CompVConnectedComponentLabelingResultPtr& result, const COMPV_CCL_EXTRACT_TYPE type, const size_t width, const size_t height, CompVMatPtrPtr ptr8uOut)
 {
-	CompVMatPtrVector points;
+	CompVConnectedComponentPointsVector points;
 	COMPV_CHECK_CODE_RETURN(result->extract(points, type));
 	COMPV_CHECK_CODE_RETURN(__blitPoints(points, width, height, ptr8uOut));
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-static COMPV_ERROR_CODE __blitPoints(const CompVMatPtrVector& points, const size_t width, const size_t height, CompVMatPtrPtr ptr8uOut)
+static COMPV_ERROR_CODE __blitPoints(const CompVConnectedComponentPointsVector& points, const size_t width, const size_t height, CompVMatPtrPtr ptr8uOut)
 {
 	CompVMatPtr ptr8uOut_ = *ptr8uOut;
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<uint8_t>(&ptr8uOut_, height, width));
 	COMPV_CHECK_CODE_RETURN(ptr8uOut_->zero_all());
-	for (CompVMatPtrVector::const_iterator i = points.begin(); i < points.end(); ++i) {
-		const compv_float32_t* x32f = (*i)->ptr<const compv_float32_t>(0);
-		const compv_float32_t* y32f = (*i)->ptr<const compv_float32_t>(1);
-		const size_t count = (*i)->cols();
-		for (size_t pp = 0; pp < count; ++pp) {
-			*ptr8uOut_->ptr<uint8_t>(static_cast<size_t>(y32f[pp]), static_cast<size_t>(x32f[pp])) = 0xff;
+	for (CompVConnectedComponentPointsVector::const_iterator i = points.begin(); i < points.end(); ++i) {
+		for (CompVConnectedComponentPoints::const_iterator j = i->begin(); j < i->end(); ++j) {
+			*ptr8uOut_->ptr<uint8_t>(static_cast<size_t>(j->y), static_cast<size_t>(j->x)) = 0xff;
 		}
 	}
 	*ptr8uOut = ptr8uOut_;

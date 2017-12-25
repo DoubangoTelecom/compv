@@ -18,6 +18,8 @@
 #error("This is a private file and must not be part of the API")
 #endif
 
+COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-function")
+
 static bool compv_android_have_assetmgr()
 {
     return (ANativeActivity_get() != NULL);
@@ -92,6 +94,8 @@ static FILE* compv_android_asset_fopen(const char* fname, const char* mode)
     }
     return NULL;
 }
+
+COMPV_GCC_DISABLE_WARNINGS_END()
 
 #endif /* COMPV_OS_ANDROID */
 

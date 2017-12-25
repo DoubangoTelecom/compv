@@ -467,6 +467,22 @@ typedef std::vector<CompVPointInt, CompVAllocatorNoDefaultConstruct<CompVPointIn
 typedef std::vector<CompVPointSz, CompVAllocatorNoDefaultConstruct<CompVPointSz> > CompVPointSzVector;
 
 template <typename T>
+struct CompVPoint2D {
+public:
+	CompVPoint2D(T x_ = 0, T y_ = 0) {
+		x = x_, y = y_;
+	}
+	bool operator==(const CompVPoint2D &other) const {
+		return x == other.x && y == other.y;
+	}
+	T x, y;
+};
+typedef CompVPoint2D<compv_float32_t> CompVPoint2DFloat32;
+typedef CompVPoint2D<int16_t> CompVPoint2DInt16;
+typedef std::vector<CompVPoint2DFloat32, CompVAllocatorNoDefaultConstruct<CompVPoint2DFloat32> > CompVPoint2DFloat32Vector;
+typedef std::vector<CompVPoint2DInt16, CompVAllocatorNoDefaultConstruct<CompVPoint2DInt16> > CompVPoint2DInt16Vector;
+
+template <typename T>
 struct CompVRect {
 public:
 	T left;
@@ -485,10 +501,12 @@ public:
 typedef CompVRect<compv_float32_t> CompVRectFloat32;
 typedef CompVRect<compv_float64_t> CompVRectFloat64;
 typedef CompVRect<int32_t> CompVRectInt32;
+typedef CompVRect<int16_t> CompVRectInt16;
 typedef CompVRect<int> CompVRectInt;
 typedef std::vector<CompVRectFloat32, CompVAllocatorNoDefaultConstruct<CompVRectFloat32> > CompVRectFloat32Vector;
 typedef std::vector<CompVRectFloat32, CompVAllocatorNoDefaultConstruct<CompVRectFloat32> > CompVRectFloat32Vector;
 typedef std::vector<CompVRectInt32, CompVAllocatorNoDefaultConstruct<CompVRectInt32> > CompVRectInt32Vector;
+typedef std::vector<CompVRectInt16, CompVAllocatorNoDefaultConstruct<CompVRectInt16> > CompVRectInt16Vector;
 typedef std::vector<CompVRectInt, CompVAllocatorNoDefaultConstruct<CompVRectInt> > CompVRectIntVector;
 
 typedef CompVPointFloat32 CompVQuadrilateralFloat32[4];

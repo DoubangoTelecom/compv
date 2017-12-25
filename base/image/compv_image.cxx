@@ -15,10 +15,13 @@
 #include "compv/base/compv_base.h"
 #include "compv/base/compv_mem.h"
 #include "compv/base/compv_fileutils.h"
+#include "compv/base/android/compv_android_fileutils.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_STATIC
+COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-function")
 #include "compv/base/image/stb_image.h"
+COMPV_GCC_DISABLE_WARNINGS_END()
 
 #define COMPV_THIS_CLASSNAME	"CompVImage"
 

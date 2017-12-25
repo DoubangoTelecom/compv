@@ -34,19 +34,19 @@ static COMPV_ERROR_CODE count_points_blobs(
 	const compv_ccl_lea_n_t& vecLEA,
 	const size_t ystart,
 	const size_t yend);
-static COMPV_ERROR_CODE count_points_contours(
+static COMPV_ERROR_CODE count_points_segments(
 	CompVMemZeroLockedAccumulatorPtr ptrxNa,
 	const compv_ccl_lea_n_t& vecLEA,
 	const size_t ystart,
 	const size_t yend);
 static COMPV_ERROR_CODE extract_blobs(
-	CompVMatPtrVector& points,
+	CompVConnectedComponentPointsVector& points,
 	const compv_ccl_lea_n_t& vecLEA,
 	const CompVSizeSz& szInput,
 	const size_t na
 );
-static COMPV_ERROR_CODE extract_contours(
-	CompVMatPtrVector& points,
+static COMPV_ERROR_CODE extract_segments(
+	CompVConnectedComponentPointsVector& points,
 	const compv_ccl_lea_n_t& vecLEA,
 	const CompVSizeSz& szInput,
 	const size_t na
@@ -117,7 +117,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::debugFlatten(Comp
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::extract(CompVMatPtrVector& points, COMPV_CCL_EXTRACT_TYPE type COMPV_DEFAULT(COMPV_CCL_EXTRACT_TYPE_BLOB)) const
+COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::extract(CompVConnectedComponentPointsVector& points, COMPV_CCL_EXTRACT_TYPE type COMPV_DEFAULT(COMPV_CCL_EXTRACT_TYPE_BLOB)) const
 {
 	COMPV_CHECK_EXP_RETURN(type != COMPV_CCL_EXTRACT_TYPE_SEGMENT && type != COMPV_CCL_EXTRACT_TYPE_BLOB, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_CHECK_EXP_RETURN(!m_szInput.width || !m_szInput.height || m_vecLEA.size() != m_szInput.height, COMPV_ERROR_CODE_E_INVALID_STATE);
@@ -137,7 +137,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::extract(CompVMatP
 		COMPV_CHECK_CODE_RETURN(extract_blobs(points, m_vecLEA, m_szInput, static_cast<size_t>(m_nNa1)));
 		break;
 	case COMPV_CCL_EXTRACT_TYPE_SEGMENT:
-		COMPV_CHECK_CODE_RETURN(extract_contours(points, m_vecLEA, m_szInput, static_cast<size_t>(m_nNa1)));
+		COMPV_CHECK_CODE_RETURN(extract_segments(points, m_vecLEA, m_szInput, static_cast<size_t>(m_nNa1)));
 		break;
 	default:
 		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
@@ -192,7 +192,7 @@ static COMPV_ERROR_CODE count_points_blobs(
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-static COMPV_ERROR_CODE count_points_contours(
+static COMPV_ERROR_CODE count_points_segments(
 	CompVMemZeroLockedAccumulatorPtr ptrxNa,
 	const compv_ccl_lea_n_t& vecLEA,
 	const size_t ystart,
@@ -211,7 +211,7 @@ static COMPV_ERROR_CODE count_points_contours(
 }
 
 static COMPV_ERROR_CODE extract_blobs(
-	CompVMatPtrVector& points,
+	CompVConnectedComponentPointsVector& points,
 	const compv_ccl_lea_n_t& vecLEA,
 	const CompVSizeSz& szInput,
 	const size_t na
@@ -243,39 +243,25 @@ static COMPV_ERROR_CODE extract_blobs(
 	points.resize(na);
 	for (size_t a = 1; a <= na; ++a) { // a within [1, na]
 		const size_t count = static_cast<size_t>(ptrxNaPtr[a - 1]);
-		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float32_t>(&points[a - 1], 2, count));
+		points[a - 1].resize(count);
 	}
 	std::vector<compv_ccl_accumulator_t > szFilled(na, 0);
 	auto funcPtrFill = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
 		compv_ccl_lea_1_t::const_iterator it;
 		compv_ccl_lea_n_t::const_iterator j = vecLEA.begin() + ystart;
 		compv_ccl_lea_n_t::const_iterator jend = vecLEA.begin() + yend;
-		compv_float32_t y32f = static_cast<compv_float32_t>(ystart);
-		for (; j < jend; ++j, ++y32f) {
+		int16_t y = static_cast<int16_t>(ystart);
+		for (; j < jend; ++j, ++y) {
 			for (it = j->begin(); it < j->end(); ++it) {
 				const int32_t a = (it->a - 1); // a within [1, na]
-				CompVMatPtr& pp = points[a];
+				CompVConnectedComponentPoints& pp = points[a];
 				const size_t count = static_cast<size_t>(it->end - it->start);
-				const size_t count4 = count & -4;
 				const size_t gOld = static_cast<size_t>(compv_atomic_add(&szFilled[a], static_cast<compv_ccl_accumulator_t>(count)));
-				compv_float32_t x32f = static_cast<compv_float32_t>(it->start);
-				compv_float32_t* x32fPtr = pp->data<compv_float32_t>() + gOld;
-				compv_float32_t* y32fPtr = x32fPtr + pp->stride();
-				size_t i;
-				for (i = 0; i < count4; i += 4, x32f += 4.f) {
-					x32fPtr[i] = x32f;
-					x32fPtr[i + 1] = x32f + 1.f;
-					x32fPtr[i + 2] = x32f + 2.f;
-					x32fPtr[i + 3] = x32f + 3.f;
-
-					y32fPtr[i] = y32f;
-					y32fPtr[i + 1] = y32f;
-					y32fPtr[i + 2] = y32f;
-					y32fPtr[i + 3] = y32f;
-				}
-				for (; i < count; ++i, ++x32f) {
-					x32fPtr[i] = x32f;
-					y32fPtr[i] = y32f;
+				int16_t x_start = it->start;
+				CompVConnectedComponentPoints::iterator it_pp = pp.begin() + gOld;
+				for (size_t i = 0; i < count; ++i) {
+					it_pp[i].x = x_start++;
+					it_pp[i].y = y;
 				}
 			}
 		}
@@ -292,8 +278,8 @@ static COMPV_ERROR_CODE extract_blobs(
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-static COMPV_ERROR_CODE extract_contours(
-	CompVMatPtrVector& points,
+static COMPV_ERROR_CODE extract_segments(
+	CompVConnectedComponentPointsVector& points,
 	const compv_ccl_lea_n_t& vecLEA,
 	const CompVSizeSz& szInput,
 	const size_t na
@@ -305,7 +291,7 @@ static COMPV_ERROR_CODE extract_contours(
 	CompVMemZeroLockedAccumulatorPtr ptrxNa; // final number of absolute labels (only needed to extract points)
 	COMPV_CHECK_CODE_RETURN(CompVMemZeroLockedAccumulator::newObj(&ptrxNa, 1, na));
 	auto funcPtrCountPoints = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
-		COMPV_CHECK_CODE_RETURN(count_points_contours(
+		COMPV_CHECK_CODE_RETURN(count_points_segments(
 			ptrxNa,
 			vecLEA,
 			ystart,
@@ -325,24 +311,24 @@ static COMPV_ERROR_CODE extract_contours(
 	points.resize(na);
 	for (size_t a = 1; a <= na; ++a) { // a within [1, na]
 		const size_t count = static_cast<size_t>(ptrxNaPtr[a - 1]);
-		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float32_t>(&points[a - 1], 2, count));
+		points[a - 1].resize(count);
 	}
 	std::vector<compv_ccl_accumulator_t > szFilled(na, 0);
 	auto funcPtrFill = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
 		compv_ccl_lea_1_t::const_iterator it;
 		for (size_t j = ystart; j < yend; ++j) {
 			const compv_ccl_lea_1_t& lea = vecLEA[j];
-			const compv_float32_t y32f = static_cast<compv_float32_t>(j);
+			const int16_t y = static_cast<int16_t>(j);
 			for (it = lea.begin(); it < lea.end(); ++it) {
 				const int32_t a = (it->a - 1); // a within [1, na]
-				CompVMatPtr& pp = points[a];
+				CompVConnectedComponentPoints& pp = points[a];
 				const size_t gOld = static_cast<size_t>(compv_atomic_add(&szFilled[a], 2));
-				compv_float32_t* x32fPtr = pp->data<compv_float32_t>() + gOld;
-				compv_float32_t* y32fPtr = x32fPtr + pp->stride();
-				*x32fPtr = static_cast<compv_float32_t>(it->start);
-				x32fPtr[1] = static_cast<compv_float32_t>(it->end);
-				*y32fPtr = y32f;
-				y32fPtr[1] = y32f;
+				CompVConnectedComponentPoints::iterator it_pp = pp.begin() + gOld;
+				it_pp->x = it->start;
+				it_pp->y = y;
+				++it_pp;
+				it_pp->x = it->end;
+				it_pp->y = y;
 			}
 		}
 		return COMPV_ERROR_CODE_S_OK;

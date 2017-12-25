@@ -18,6 +18,9 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+typedef CompVPoint2DInt16Vector CompVConnectedComponentPoints;
+typedef std::vector<CompVConnectedComponentPoints> CompVConnectedComponentPointsVector;
+
 COMPV_OBJECT_DECLARE_PTRS(ConnectedComponentLabeling)
 COMPV_OBJECT_DECLARE_PTRS(ConnectedComponentLabelingResult)
 COMPV_OBJECT_DECLARE_PTRS(ConnectedComponentLabelingResultLSL)
@@ -93,7 +96,7 @@ public:
 		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
 		return COMPV_ERROR_CODE_S_OK;
 	}
-	virtual COMPV_ERROR_CODE extract(CompVMatPtrVector& points, COMPV_CCL_EXTRACT_TYPE type = COMPV_CCL_EXTRACT_TYPE_BLOB) const {
+	virtual COMPV_ERROR_CODE extract(CompVConnectedComponentPointsVector& points, COMPV_CCL_EXTRACT_TYPE type = COMPV_CCL_EXTRACT_TYPE_BLOB) const {
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("If you just want to compute the label features (e.g. centroid, bounding boxes, first order moment...) then, you don't need to extract the points");
 		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
 		return COMPV_ERROR_CODE_S_OK;
