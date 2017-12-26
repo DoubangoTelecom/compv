@@ -603,6 +603,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 	CompVMatPtr ptr32sA; // the associative table of ancestors
 	int32_t nea1 = 0; // the current number of absolute labels, update of EQ and ERAi
 	int32_t& na1 = result_->na1(); // final number of absolute labels
+	std::vector<int32_t>& vecIds = result_->vecIds(); // List of absolute label ids (one-based)
 
 	/* Create some local variables */
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int16_t>(&ptr16sER, szInputSize.height, szInputSize.width));
@@ -715,6 +716,10 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 		szInputSize.height,
 		COMPV_CCL_LSL_BUILD_LEA_MIN_SAMPLES_PER_THREAD
 	));
+
+	/* Update list of absolute label ids */
+	vecIds.resize(na1);
+	std::iota(vecIds.begin(), vecIds.end(), 1);
 	
 	*result = *result_;
 	return COMPV_ERROR_CODE_S_OK;

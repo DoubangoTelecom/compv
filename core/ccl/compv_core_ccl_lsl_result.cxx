@@ -32,8 +32,7 @@ static COMPV_ERROR_CODE count_points_segments(
 );
 
 CompVConnectedComponentLabelingResultLSLImpl::CompVConnectedComponentLabelingResultLSLImpl()
-	: m_nNa1(0)
-	, m_szInput(CompVSizeSz(0, 0))
+	: m_szInput(CompVSizeSz(0, 0))
 {
 }
 
@@ -44,7 +43,7 @@ CompVConnectedComponentLabelingResultLSLImpl::~CompVConnectedComponentLabelingRe
 
 size_t CompVConnectedComponentLabelingResultLSLImpl::labelsCount() const
 {
-	return static_cast<size_t>(m_nNa1);
+	return m_vecIds.size();
 }
 
 COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::debugFlatten(CompVMatPtrPtr ptr32sLabels) const
@@ -126,6 +125,11 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::extract(CompVConn
 	return COMPV_ERROR_CODE_S_OK;
 }
 
+const std::vector<int32_t>& CompVConnectedComponentLabelingResultLSLImpl::labelIds() const
+{
+	return m_vecIds;
+}
+
 COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::boundingBoxes(CompVConnectedComponentBoundingBoxesVector& boxes) const
 {
 	CompVConnectedComponentLabelingResultLSLImplPtr hackedThis = const_cast<CompVConnectedComponentLabelingResultLSLImpl*>(this);
@@ -172,6 +176,49 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::boundingBoxes(Com
 	return COMPV_ERROR_CODE_S_OK;
 }
 
+COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::boundingBoxes(const CompVConnectedComponentPointsVector& segments, CompVConnectedComponentBoundingBoxesVector& boxes) const
+{
+	if (segments.empty()) {
+		boxes.clear();
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
+	const size_t na = segments.size();
+
+	boxes = CompVConnectedComponentBoundingBoxesVector(na,
+		CompVConnectedComponentBoundingBox(
+			static_cast<int16_t>(m_szInput.width), // left - min
+			static_cast<int16_t>(m_szInput.height), // top - min
+			0, // right - max
+			0 // bottom - max
+		));
+
+	auto funcPtrBoxes = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
+		for (size_t j = ystart; j < yend; ++j) {
+			const CompVConnectedComponentPoints& points = segments[j];
+			COMPV_CHECK_EXP_RETURN(points.size() & 1, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+			for (CompVConnectedComponentPoints::const_iterator it = points.begin(); it < points.end(); it += 2) {
+				CompVConnectedComponentBoundingBox& bb = boxes[j];
+				// Visual studio 2015 nicely generate branchless code using conditional movs
+				bb.left = COMPV_MATH_MIN(bb.left, it->x);
+				bb.top = COMPV_MATH_MIN(bb.top, it->y);
+				bb.right = COMPV_MATH_MAX(bb.right, (it + 1)->x); // bb.right + ((it->end - bb.right) & ((bb.right - it->end) >> 15));
+				bb.bottom = COMPV_MATH_MAX(bb.bottom, (it + 1)->y); // bb.bottom + ((y - bb.bottom) & ((bb.bottom - y) >> 15));
+			}
+		}
+		return COMPV_ERROR_CODE_S_OK;
+	};
+
+	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+		funcPtrBoxes,
+		m_szInput.width,
+		na,
+		COMPV_CCL_LSL_EXTRACT_BOXES_MIN_SAMPLES_PER_THREAD
+	));
+
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::firstOrderMoment() const
 {
 	COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
@@ -181,13 +228,14 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::firstOrderMoment(
 COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::remove(CompVConnectedComponentCallbackRemoveLabel funcPtr, size_t &removedCount)
 {
 	COMPV_CHECK_EXP_RETURN(!funcPtr, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING("You should not use this function unless you know what you're doing. Data will be corrupted after calling it");
 	
 	// Collect labels to remove
 	std::vector<int32_t> vecLabelsToRemove;
-	vecLabelsToRemove.reserve(m_nNa1);
-	for (int32_t a = 1; a <= m_nNa1; ++a) {
-		if (funcPtr(a - 1)) {
-			vecLabelsToRemove.push_back(a);
+	vecLabelsToRemove.reserve(m_vecIds.size());
+	for (std::vector<int32_t>::const_iterator a = m_vecIds.begin(); a < m_vecIds.end(); ++a) {
+		if (funcPtr(*a)) {
+			vecLabelsToRemove.push_back(*a);
 		}
 	}
 	removedCount = vecLabelsToRemove.size();
@@ -197,6 +245,16 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::remove(CompVConne
 		auto funcPtrRemove = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
 			std::vector<int32_t>::const_iterator r_begin = vecLabelsToRemove.begin();
 			std::vector<int32_t>::const_iterator r_end = vecLabelsToRemove.end();
+
+			// Remove labels from the vec-id list
+			if (!ystart) {
+				for (std::vector<int32_t>::const_iterator i = r_begin; i < r_end; ++i) {
+					m_vecIds.erase(std::remove(m_vecIds.begin(), m_vecIds.end(), *i), m_vecIds.end());
+				}
+				// Must not update "m_nNa1", it's the reference number of labels and never change
+			}
+
+			// Remove labels from run-length list
 			for (size_t j = ystart; j < yend; ++j) {
 				compv_ccl_lea_1_t& lea = m_vecLEA[j];
 				lea.erase(std::remove_if(lea.begin(),
@@ -225,6 +283,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::remove(CompVConne
 COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::reset()
 {
 	m_nNa1 = 0;
+	m_vecIds.clear();
 	m_ptrCountPointsBlobs = nullptr;
 	m_ptrCountPointsSegment = nullptr;
 	return COMPV_ERROR_CODE_S_OK;
@@ -320,13 +379,15 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::extract_segments(
 			for (it = lea.begin(); it < lea.end(); ++it) {
 				const int32_t a = (it->a - 1); // a within [1, na]
 				CompVConnectedComponentPoints& pp = points[a];
-				const size_t gOld = static_cast<size_t>(compv_atomic_add(&szFilled[a], 2));
-				CompVConnectedComponentPoints::iterator it_pp = pp.begin() + gOld;
-				it_pp->x = it->start;
-				it_pp->y = y;
-				++it_pp;
-				it_pp->x = it->end;
-				it_pp->y = y;
+				if (!pp.empty()) { // number of segments could be zero if labels removed
+					const size_t gOld = static_cast<size_t>(compv_atomic_add(&szFilled[a], 2));
+					CompVConnectedComponentPoints::iterator it_pp = pp.begin() + gOld;
+					it_pp->x = it->start;
+					it_pp->y = y;
+					++it_pp;
+					it_pp->x = it->end;
+					it_pp->y = y;
+				}
 			}
 		}
 		return COMPV_ERROR_CODE_S_OK;

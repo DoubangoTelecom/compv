@@ -148,7 +148,7 @@ a run-lenght (LEA) table (few data). This make features (centroid, perimeter, bo
 === Connected Component Labeling *Extracting bounding boxes* (text_1122x1182_white.png) (#10k times) ===
 CompV(PLSL): 1145.ms(full optiz)
 OpenCV: 2627.ms(full optiz)
-Remarque: We're 229% (2# times) faster.
+Remarque: We're 229% (#2 times) faster.
 Our implementation is single-threaded. Must provide MT implementation to improve performances.
 
 

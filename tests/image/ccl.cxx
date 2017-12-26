@@ -107,7 +107,7 @@ COMPV_ERROR_CODE ccl()
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
 		COMPV_CHECK_CODE_RETURN(ccl_obj->process(binar, &result));
 		//COMPV_CHECK_CODE_RETURN(result->extract(points, COMPV_CCL_EXTRACT_TYPE_SEGMENT)); // FIXME(dmi): remove
-		//COMPV_CHECK_CODE_RETURN(result_->boundingBoxes(boxes));
+		//COMPV_CHECK_CODE_RETURN(result->boundingBoxes(boxes));
 		//COMPV_CHECK_CODE_RETURN(check_boxes(result, test));
 	}
 	const uint64_t timeEnd = CompVTime::nowMillis();
@@ -183,8 +183,16 @@ static COMPV_ERROR_CODE check_boxes(const CompVConnectedComponentLabelingResultP
 	const CompVConnectedComponentLabelingResultLSL* result_lsl =
 		CompVConnectedComponentLabeling::reinterpret_castr<CompVConnectedComponentLabelingResultLSL>(result);
 
+#if 0
 	CompVConnectedComponentBoundingBoxesVector boxes;
 	COMPV_CHECK_CODE_RETURN(result_lsl->boundingBoxes(boxes));
+#else
+	CompVConnectedComponentBoundingBoxesVector boxes;
+	CompVConnectedComponentPointsVector segments;
+	COMPV_CHECK_CODE_RETURN(result_lsl->extract(segments, COMPV_CCL_EXTRACT_TYPE_SEGMENT));
+	COMPV_CHECK_CODE_RETURN(result_lsl->boundingBoxes(segments, boxes));
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING("You should use above code");
+#endif
 
 	CompVMatPtr ptr8uBoxes_;
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<uint8_t>(&ptr8uBoxes_, test->height, test->width));

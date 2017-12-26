@@ -122,7 +122,9 @@ public:
 	virtual ~CompVConnectedComponentLabelingResultLSL() {
 	}
 	
+	virtual const std::vector<int32_t>& labelIds() const = 0;
 	virtual COMPV_ERROR_CODE boundingBoxes(CompVConnectedComponentBoundingBoxesVector& boxes) const = 0;
+	virtual COMPV_ERROR_CODE boundingBoxes(const CompVConnectedComponentPointsVector& segments, CompVConnectedComponentBoundingBoxesVector& boxes) const = 0;
 	virtual COMPV_ERROR_CODE firstOrderMoment() const = 0;
 	virtual COMPV_ERROR_CODE remove(CompVConnectedComponentCallbackRemoveLabel funcPtr, size_t &removedCount) = 0;
 };
