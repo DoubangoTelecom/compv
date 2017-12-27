@@ -32,14 +32,19 @@ CompVThreadDispatcher::~CompVThreadDispatcher()
 
 size_t CompVThreadDispatcher::guessNumThreadsDividingAcrossY(const size_t xcount, const size_t ycount, const size_t maxThreads, const size_t minSamplesPerThread)
 {
+#if 0
 	size_t divCount = 1;
 	for (size_t div = 2; div <= maxThreads; ++div) {
-		divCount = div;
 		if ((xcount * (ycount / divCount)) <= minSamplesPerThread) { // we started with the smallest div, which mean largest number of pixs and break the loop when we're above the threshold
 			break;
 		}
+		divCount = div;
 	}
 	return divCount;
+#else
+	const size_t threadsCount = (xcount * ycount) / minSamplesPerThread;
+	return threadsCount > maxThreads ? maxThreads : threadsCount;
+#endif
 }
 
 #if COMPV_CPP11

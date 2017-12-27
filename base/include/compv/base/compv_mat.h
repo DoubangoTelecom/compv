@@ -302,14 +302,14 @@ public:
 		COMPV_CHECK_EXP_RETURN(colStart > m_nCols, COMPV_ERROR_CODE_E_OUT_OF_BOUND);
 		size_t colEnd = COMPV_MATH_ROUNDFU_2_NEAREST_INT(roi.right, size_t);
 		colEnd = std::min(colEnd, (m_nCols - 1)); // roi is up right which means 'roi.right' have to be included
-		COMPV_CHECK_EXP_RETURN(colStart >= colEnd, COMPV_ERROR_CODE_E_OUT_OF_BOUND);
+		COMPV_CHECK_EXP_RETURN(colStart > colEnd, COMPV_ERROR_CODE_E_OUT_OF_BOUND); // when equal means size = 1
 		const size_t colCount = (colEnd - colStart) + 1; // +1 because it's from 'colStart' up to 'colEnd'
 
 		const size_t rowStart = COMPV_MATH_ROUNDFU_2_NEAREST_INT(roi.top, size_t);
 		COMPV_CHECK_EXP_RETURN(rowStart > m_nRows, COMPV_ERROR_CODE_E_OUT_OF_BOUND);
 		size_t rowEnd = COMPV_MATH_ROUNDFU_2_NEAREST_INT(roi.bottom, size_t);
 		rowEnd = std::min(rowEnd, (m_nRows - 1)); // roi is up bottom which means 'roi.bottom' have to be included
-		COMPV_CHECK_EXP_RETURN(rowStart >= rowEnd, COMPV_ERROR_CODE_E_OUT_OF_BOUND);
+		COMPV_CHECK_EXP_RETURN(rowStart > rowEnd, COMPV_ERROR_CODE_E_OUT_OF_BOUND); // when equal means size = 1
 		const size_t rowCount = (rowEnd - rowStart) + 1; // +1 because it's from 'rowStart' up to 'rowEnd'
 
 		CompVMatPtr mat_;

@@ -136,6 +136,7 @@ COMPV_ERROR_CODE CompVMathHistogram::process_8u32u(const uint8_t* dataPtr, size_
         COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathHistogramProcess_8u32u = CompVMathHistogramProcess_8u32s_Asm_NEON32);
     }
 #   endif /* COMPV_ARCH_ARM32 */
+
 	if (width > 7) {
 		COMPV_EXEC_IFDEF_ASM_X64(CompVMathHistogramProcess_8u32u = CompVMathHistogramProcess_8u32s_Asm_X64);
         COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathHistogramProcess_8u32u = CompVMathHistogramProcess_8u32s_Asm_NEON64);

@@ -62,7 +62,7 @@ sym(CompVMathHistogramProcess_8u32s_Asm_X64)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		; for (i = 0; i < maxWidthStep1; i += 8)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-		.LoopWidth4:
+		.LoopWidth8:
 			movzx r9, byte [dataPtr + i + 0]
 			movzx r10, byte [dataPtr + i + 1]
 			movzx r11, byte [dataPtr + i + 2]
@@ -81,8 +81,8 @@ sym(CompVMathHistogramProcess_8u32s_Asm_X64)
 			inc dword ptr [histogramPtr + r15*COMPV_YASM_UINT32_SZ_BYTES]
 			inc dword ptr [histogramPtr + r9*COMPV_YASM_UINT32_SZ_BYTES]
 			cmp i, maxWidthStep1
-			jl .LoopWidth4
-			;; EndOf_LoopWidth4 ;;
+			jl .LoopWidth8
+			;; EndOf_LoopWidth8 ;;
 
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		; for (; i < width; ++i)
