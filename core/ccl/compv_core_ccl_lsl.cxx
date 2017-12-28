@@ -652,6 +652,12 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 		COMPV_CHECK_CODE_RETURN(funcPtrStep1(0, static_cast<int32_t>(szInputSize.height), &ner_max, &ner_sum));
 	}
 
+	if (!ner_max) {
+		COMPV_DEBUG_VERBOSE_EX(COMPV_THIS_CLASSNAME, "No label found"); // black image
+		*result = *result_;
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
 	/* Create ERA and init with zeros */
 	COMPV_CHECK_CODE_RETURN(CompVMemZero32s::newObj(&ptr32sERA, szInputSize.height, ner_max));
 

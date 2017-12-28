@@ -133,6 +133,11 @@ const std::vector<int32_t>& CompVConnectedComponentLabelingResultLSLImpl::labelI
 COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::boundingBoxes(CompVConnectedComponentBoundingBoxesVector& boxes) const
 {
 	CompVConnectedComponentLabelingResultLSLImplPtr hackedThis = const_cast<CompVConnectedComponentLabelingResultLSLImpl*>(this);
+
+	if (!labelsCount()) {
+		boxes.clear();
+		return COMPV_ERROR_CODE_S_OK;
+	}
 	
 	boxes = CompVConnectedComponentBoundingBoxesVector(m_nNa1,
 		CompVConnectedComponentBoundingBox(
