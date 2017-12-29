@@ -13,6 +13,7 @@
 #include <Codecapi.h>
 #include <initguid.h>
 #include <wmcodecdsp.h>
+#include <atlcomcli.h> /* CComQIPtr */
 
 #define COMPV_THIS_CLASSNAME "CompVMFUtils"
 
@@ -1675,6 +1676,27 @@ HRESULT CompVMFUtils::capsToMediaType(
 
 bail:
 	return hr;
+}
+
+HRESULT CompVMFUtils::setAutoFocus(
+	__in IMFMediaSource *pSource,
+	BOOL enabled
+)
+{
+	COMPV_CHECK_HRESULT_EXP_RETURN(!pSource, E_INVALIDARG);
+
+	CComQIPtr<IAMVideoProcAmp> spVideoProcAmp(pSource);
+	COMPV_CHECK_HRESULT_EXP_RETURN(!spVideoProcAmp, E_POINTER);
+
+	long Min, Max, SteppingDelta, Default, CapsFlags;
+	COMPV_CHECK_HRESULT_CODE_RETURN(spVideoProcAmp->GetRange(CameraControl_Focus, &Min, &Max, &SteppingDelta, &Default, &CapsFlags));
+	COMPV_CHECK_HRESULT_CODE_RETURN(spVideoProcAmp->Set(
+		CameraControl_Focus,
+		Default,
+		VideoProcAmp_Flags_Manual
+	));
+
+	return S_OK;
 }
 
 #if _WIN32_WINNT >= 0x0602

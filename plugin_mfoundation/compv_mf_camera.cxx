@@ -331,6 +331,7 @@ COMPV_ERROR_CODE CompVMFCamera::init(const std::string& deviceId)
 			capsGrabber.numFps = capsSource.numFps;
 			capsGrabber.denFps = capsSource.denFps;
 		}
+		capsGrabber.autofocus = capsSource.autofocus;
 	}
 
 	// Set session attributes
@@ -359,6 +360,13 @@ COMPV_ERROR_CODE CompVMFCamera::init(const std::string& deviceId)
 	if (m_hWndPreview) {
 		COMPV_CHECK_HRESULT_CODE_BAIL(hr = MFCreateVideoRendererActivate(m_hWndPreview, &pSinkActivatePreview));
 	}
+
+#if 0
+	// Set auto-focus
+	if (capsGrabber.autofocus) { // supported ?
+		/*hr = */CompVMFUtils::setAutoFocus(pSource, m_CapsPref.autofocus);
+	}
+#endif
 
 	// Create the topology.
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Create topology: source(%s) -> grabber(%s), pref = %s", capsGrabber.toString().c_str(), capsGrabber.toString().c_str(), m_CapsPref.toString().c_str());

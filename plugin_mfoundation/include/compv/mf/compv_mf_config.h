@@ -67,7 +67,14 @@ struct CompVMFCameraCaps {
 	// Important: update 'isEquals' and 'toString' functions if you add new field
 	BOOL autofocus;
 
-	CompVMFCameraCaps(UINT32 width_ = 640, UINT32 height_ = 480, UINT32 numFps_ = 25000, UINT32 denFps_ = 1000, COMPV_MF_SUBTYPE subType_ = MFVideoFormat_YUY2, BOOL autofocus_ = TRUE) {
+	CompVMFCameraCaps(
+		UINT32 width_ = 640, 
+		UINT32 height_ = 480, 
+		UINT32 numFps_ = 25000, 
+		UINT32 denFps_ = 1000, 
+		COMPV_MF_SUBTYPE subType_ = MFVideoFormat_YUY2, 
+		BOOL autofocus_ = TRUE) 
+	{
 		width = width_;
 		height = height_;
 		numFps = numFps_;

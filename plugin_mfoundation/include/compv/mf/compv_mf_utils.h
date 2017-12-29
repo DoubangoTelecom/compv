@@ -218,6 +218,11 @@ public:
 		const RECT& source,
 		const RECT& dst);
 #endif
+
+	static HRESULT setAutoFocus(
+		__in IMFMediaSource *pSource,
+		BOOL enabled
+	);
 	
 
 	template <class Q>
