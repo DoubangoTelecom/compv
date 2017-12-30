@@ -97,6 +97,7 @@
     <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_threshold_intrin_sse2.h" />
     <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_threshold_intrin_sse41.h" />
     <ClInclude Include="include\compv\base\image\stb_image.h" />
+    <ClInclude Include="include\compv\base\image\stb_image_write.h" />
     <ClInclude Include="include\compv\base\intrin\arm\compv_intrin_neon.h" />
     <ClInclude Include="include\compv\base\intrin\arm\compv_mem_intrin_neon.h" />
     <ClInclude Include="include\compv\base\intrin\arm\compv_patch_intrin_neon.h" />

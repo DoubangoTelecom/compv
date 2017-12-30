@@ -23,7 +23,7 @@ typedef CompVPoint2DInt16Vector CompVConnectedComponentPoints;
 typedef std::vector<CompVConnectedComponentPoints > CompVConnectedComponentPointsVector;
 
 typedef CompVRectInt16 CompVConnectedComponentBoundingBox;
-typedef std::vector<CompVConnectedComponentBoundingBox > CompVConnectedComponentBoundingBoxesVector;
+typedef CompVRectInt16Vector CompVConnectedComponentBoundingBoxesVector;
 
 typedef std::function<bool(const int32_t id)> CompVConnectedComponentCallbackRemoveLabel;
 

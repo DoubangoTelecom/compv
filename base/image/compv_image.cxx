@@ -22,8 +22,11 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_STATIC
+#define STB_IMAGE_WRITE_STATIC
+#define STB_IMAGE_WRITE_IMPLEMENTATION
 COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-function")
 #include "compv/base/image/stb_image.h"
+#include "compv/base/image/stb_image_write.h"
 COMPV_GCC_DISABLE_WARNINGS_END()
 
 #define COMPV_IMAGE_GAMMA_CORRECTION_SAMPLES_PER_THREAD (40 * 40)
@@ -81,7 +84,7 @@ COMPV_ERROR_CODE CompVImage::newObj16s(CompVMatPtrPtr image, COMPV_SUBTYPE subTy
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVImage::readPixels(COMPV_SUBTYPE ePixelFormat, size_t width, size_t height, size_t stride, const char* filePath, CompVMatPtrPtr image)
+COMPV_ERROR_CODE CompVImage::read(COMPV_SUBTYPE ePixelFormat, size_t width, size_t height, size_t stride, const char* filePath, CompVMatPtrPtr image)
 {
 	COMPV_CHECK_EXP_RETURN(!filePath || !width || !height || stride < width || !image, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	CompVBufferPtr buffer;
@@ -104,7 +107,7 @@ COMPV_ERROR_CODE CompVImage::readPixels(COMPV_SUBTYPE ePixelFormat, size_t width
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVImage::decodePixels(const char* filePath, CompVMatPtrPtr image)
+COMPV_ERROR_CODE CompVImage::decode(const char* filePath, CompVMatPtrPtr image)
 {
 	COMPV_CHECK_EXP_RETURN(!filePath || !image, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(
@@ -146,6 +149,58 @@ bail:
 	}
 	stbi_image_free(data);
 	fclose(file_);
+	return err;
+}
+
+static void CompVImage_stbi_write_func(void *context, void *data, int size)
+{
+	fwrite(data, 1, size, reinterpret_cast<FILE*>(context));
+}
+
+COMPV_ERROR_CODE CompVImage::encode(const char* filePath, const CompVMatPtr& image)
+{
+	COMPV_CHECK_EXP_RETURN(!filePath || !image, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(
+		image->subType() != COMPV_SUBTYPE_PIXELS_RGB24 &&
+		image->subType() != COMPV_SUBTYPE_PIXELS_RGBA32 &&
+		image->subType() != COMPV_SUBTYPE_PIXELS_Y,
+		COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(
+		"This function uses STBI instead of libjpeg-turbo or libpng to decode pictures."
+		"This is a quick and dirty way to do it for testing purpose only. You *must not* use it in your final application"
+	);
+	FILE* file_ = nullptr;
+#if COMPV_OS_ANDROID
+	if (compv_android_have_assetmgr()) {
+		file_ = compv_android_asset_fopen(filePath, "rb");
+	}
+	else {
+		COMPV_DEBUG_INFO_CODE_ONCE("Not using asset manager");
+	}
+#endif /* COMPV_OS_ANDROID */
+	if (!file_ && (file_ = fopen(filePath, "wb+")) == nullptr) {
+		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Can't open %s", filePath);
+		return COMPV_ERROR_CODE_E_FILE_NOT_FOUND;
+	}
+
+	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
+	int comp = 1;
+	switch (image->subType()){
+	case COMPV_SUBTYPE_PIXELS_Y: comp = 1; break;
+	case COMPV_SUBTYPE_PIXELS_RGB24: comp = 3; break;
+	case COMPV_SUBTYPE_PIXELS_RGBA32: comp = 4; break;
+	default:
+		break;
+	}
+	COMPV_CHECK_EXP_BAIL(stbi_write_png_to_func(CompVImage_stbi_write_func, file_,
+		static_cast<int>(image->cols()), static_cast<int>(image->rows()), comp,
+		image->ptr<const void>(),
+		static_cast<int>(image->stride())) != 1,
+		(err = COMPV_ERROR_CODE_E_STBI), "Failed to write file");
+bail:
+	if (file_) {
+		fclose(file_);
+	}
 	return err;
 }
 

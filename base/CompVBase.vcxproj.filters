@@ -654,6 +654,9 @@
     <ClInclude Include="include\compv\base\compv_kernel.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\image\stb_image_write.h">
+      <Filter>include\image</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx">
