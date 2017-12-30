@@ -29,6 +29,19 @@ public:
 	static COMPV_ERROR_CODE convertGrayscale(const CompVMatPtr& imageIn, CompVMatPtrPtr imageGray);
 	static COMPV_ERROR_CODE convertGrayscaleFast(CompVMatPtr& imageInOut);
 
+	static COMPV_ERROR_CODE histogramBuild(const CompVMatPtr& input, CompVMatPtrPtr histogram);
+	static COMPV_ERROR_CODE histogramEqualiz(const CompVMatPtr& input, CompVMatPtrPtr output);
+	static COMPV_ERROR_CODE histogramEqualiz(const CompVMatPtr& input, const CompVMatPtr& histogram, CompVMatPtrPtr output);
+
+	static COMPV_ERROR_CODE gammaCorrection(const CompVMatPtr& input, const double& gamma, CompVMatPtrPtr output);
+	static COMPV_ERROR_CODE gammaCorrection(const CompVMatPtr& input, const compv_uint8x256_t& gammaLUT, CompVMatPtrPtr output);
+
+	static COMPV_ERROR_CODE thesholdOtsu(const CompVMatPtr& input, double& threshold, CompVMatPtrPtr output = nullptr);
+	static COMPV_ERROR_CODE thesholdOtsu(const CompVMatPtr& input, CompVMatPtrPtr output);
+	static COMPV_ERROR_CODE thesholdGlobal(const CompVMatPtr& input, CompVMatPtrPtr output, const double& threshold);
+	static COMPV_ERROR_CODE thesholdAdaptive(const CompVMatPtr& input, CompVMatPtrPtr output, const size_t& blockSize, const double& delta, const double& maxVal = 255.0, bool invert = false);
+	static COMPV_ERROR_CODE thesholdAdaptive(const CompVMatPtr& input, CompVMatPtrPtr output, const CompVMatPtr& kernel, const double& delta, const double& maxVal = 255.0, bool invert = false);
+
 	static COMPV_ERROR_CODE scale(const CompVMatPtr& imageIn, CompVMatPtrPtr imageOut, size_t widthOut, size_t heightOut, COMPV_INTERPOLATION_TYPE scaleType = COMPV_INTERPOLATION_TYPE_BILINEAR);
 private:
 };

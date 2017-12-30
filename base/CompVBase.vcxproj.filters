@@ -651,6 +651,9 @@
     <ClInclude Include="include\compv\base\compv_points_transform.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\compv_kernel.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx">
@@ -1077,6 +1080,9 @@
       <Filter>source\tbbmalloc</Filter>
     </ClCompile>
     <ClCompile Include="compv_points_transform.cxx">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_kernel.cxx">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>

@@ -41,6 +41,7 @@
     <ClInclude Include="include\compv\base\compv_features.h" />
     <ClInclude Include="include\compv\base\compv_fileutils.h" />
     <ClInclude Include="include\compv\base\compv_jni.h" />
+    <ClInclude Include="include\compv\base\compv_kernel.h" />
     <ClInclude Include="include\compv\base\compv_lock.h" />
     <ClInclude Include="include\compv\base\compv_mat.h" />
     <ClInclude Include="include\compv\base\compv_matchers.h" />
@@ -208,6 +209,7 @@
     <ClCompile Include="compv_features.cxx" />
     <ClCompile Include="compv_fileutils.cxx" />
     <ClCompile Include="compv_jni.cxx" />
+    <ClCompile Include="compv_kernel.cxx" />
     <ClCompile Include="compv_lock.cxx" />
     <ClCompile Include="compv_mat.cxx" />
     <ClCompile Include="compv_matchers.cxx" />

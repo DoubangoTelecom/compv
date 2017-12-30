@@ -11,6 +11,7 @@
 #include "compv/base/math//compv_math_histogram.h"
 #include "compv/base/compv_mem.h"
 #include "compv/base/compv_cpu.h"
+#include "compv/base/compv_kernel.h"
 
 #include "compv/base/image/intrin/arm/compv_image_threshold_intrin_neon.h"
 #include "compv/base/image/intrin/x86/compv_image_threshold_intrin_sse2.h"
@@ -114,7 +115,7 @@ COMPV_ERROR_CODE CompVImageThreshold::otsu(const CompVMatPtr& input, double& thr
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVImageThreshold::global(const CompVMatPtr& input, CompVMatPtrPtr output, const double threshold)
+COMPV_ERROR_CODE CompVImageThreshold::global(const CompVMatPtr& input, CompVMatPtrPtr output, const double& threshold)
 {
 	COMPV_CHECK_EXP_RETURN(!input || input->isEmpty() || input->planeCount() != 1 || input->elmtInBytes() != sizeof(uint8_t) || !output || threshold < 0, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
@@ -180,7 +181,7 @@ COMPV_ERROR_CODE CompVImageThreshold::global(const CompVMatPtr& input, CompVMatP
 }
 
 // Adaptive thresholding as explained at http://homepages.inf.ed.ac.uk/rbf/HIPR2/adpthrsh.htm
-COMPV_ERROR_CODE CompVImageThreshold::adaptive(const CompVMatPtr& input, CompVMatPtrPtr output, const size_t blockSize, const double delta, const double maxVal COMPV_DEFAULT(255), bool invert COMPV_DEFAULT(false))
+COMPV_ERROR_CODE CompVImageThreshold::adaptive(const CompVMatPtr& input, CompVMatPtrPtr output, const size_t& blockSize, const double& delta, const double& maxVal COMPV_DEFAULT(255), bool invert COMPV_DEFAULT(false))
 {
 	COMPV_CHECK_EXP_RETURN(!input || input->isEmpty() || !(blockSize & 1), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("This function create the kernel each time you call it, You should create the kernel once (using CompVImageThreshold::kernelMean) and call the overrided one");
@@ -188,7 +189,7 @@ COMPV_ERROR_CODE CompVImageThreshold::adaptive(const CompVMatPtr& input, CompVMa
 	// TODO(dmi): add support for Gaussian kernels
 
 	CompVMatPtr ptr16uFxpKernl;
-	COMPV_CHECK_CODE_RETURN(CompVImageThreshold::kernelMean(blockSize, &ptr16uFxpKernl));
+	COMPV_CHECK_CODE_RETURN(CompVKernel::mean(blockSize, &ptr16uFxpKernl));
 	// Processing
 	COMPV_CHECK_CODE_RETURN(CompVImageThreshold::adaptive(input, output, ptr16uFxpKernl, delta, maxVal, invert));
 
@@ -197,7 +198,7 @@ COMPV_ERROR_CODE CompVImageThreshold::adaptive(const CompVMatPtr& input, CompVMa
 
 // Adaptive thresholding as explained at http://homepages.inf.ed.ac.uk/rbf/HIPR2/adpthrsh.htm
 // Kernel must be fixed-point 1xn or 2xn (16u): separable hz/vt kernels (e.g. mean, gaussian or median kernels)
-COMPV_ERROR_CODE CompVImageThreshold::adaptive(const CompVMatPtr& input, CompVMatPtrPtr output, const CompVMatPtr& kernel, const double delta, const double maxVal COMPV_DEFAULT(255), bool invert COMPV_DEFAULT(false))
+COMPV_ERROR_CODE CompVImageThreshold::adaptive(const CompVMatPtr& input, CompVMatPtrPtr output, const CompVMatPtr& kernel, const double& delta, const double& maxVal COMPV_DEFAULT(255), bool invert COMPV_DEFAULT(false))
 {
 	COMPV_CHECK_EXP_RETURN(!input || input->isEmpty() || !output || !kernel || kernel->isEmpty() || kernel->subType() != COMPV_SUBTYPE_RAW_UINT16 || !(kernel->cols() & 1) || maxVal < 0, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_CHECK_EXP_RETURN(input->planeCount() != 1 || input->elmtInBytes() != sizeof(uint8_t), COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Input must be #1 dimension uint8 (e.g. grayscale image)");
@@ -313,21 +314,6 @@ COMPV_ERROR_CODE CompVImageThreshold::adaptive(const CompVMatPtr& input, CompVMa
 
 	*output = output_;
 
-	return COMPV_ERROR_CODE_S_OK;
-}
-
-COMPV_ERROR_CODE CompVImageThreshold::kernelMean(const size_t blockSize, CompVMatPtrPtr kernel)
-{
-	COMPV_CHECK_EXP_RETURN(!kernel || !(blockSize & 1), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	CompVMatPtr ptr32fNormalizedKernl;
-	const compv_float32_t vvv = 1.f / static_cast<compv_float32_t>(blockSize);
-	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float32_t>(&ptr32fNormalizedKernl, 1, blockSize));
-	compv_float32_t* ptr32fNormalizedKernlPtr = ptr32fNormalizedKernl->ptr<compv_float32_t>();
-	for (size_t i = 0; i < blockSize; ++i) {
-		ptr32fNormalizedKernlPtr[i] = vvv;
-	}
-	// Create fixed point mean kernel. No need for floating point version because mean processing fxp version is largely enough.
-	COMPV_CHECK_CODE_RETURN(CompVMathConvlt::fixedPointKernel(ptr32fNormalizedKernl, kernel));
 	return COMPV_ERROR_CODE_S_OK;
 }
 

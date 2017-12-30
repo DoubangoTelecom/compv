@@ -11,7 +11,10 @@
 #include "compv/base/image/compv_image_conv_to_rgbx.h"
 #include "compv/base/image/compv_image_conv_hsv.h"
 #include "compv/base/image/compv_image_scale_bilinear.h"
+#include "compv/base/image/compv_image_threshold.h"
+#include "compv/base/parallel/compv_parallel.h"
 #include "compv/base/math/compv_math_utils.h"
+#include "compv/base/math/compv_math_histogram.h"
 #include "compv/base/compv_base.h"
 #include "compv/base/compv_mem.h"
 #include "compv/base/compv_fileutils.h"
@@ -22,6 +25,8 @@
 COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-function")
 #include "compv/base/image/stb_image.h"
 COMPV_GCC_DISABLE_WARNINGS_END()
+
+#define COMPV_IMAGE_GAMMA_CORRECTION_SAMPLES_PER_THREAD (40 * 40)
 
 #define COMPV_THIS_CLASSNAME	"CompVImage"
 
@@ -287,6 +292,113 @@ COMPV_ERROR_CODE CompVImage::convertGrayscaleFast(CompVMatPtr& imageInOut)
 {
 	// Input parameters will be checked in 'convert'
 	COMPV_CHECK_CODE_RETURN(CompVImage::convert(imageInOut, COMPV_SUBTYPE_PIXELS_Y, &imageInOut));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// https://en.wikipedia.org/wiki/Image_histogram
+COMPV_ERROR_CODE CompVImage::histogramBuild(const CompVMatPtr& input, CompVMatPtrPtr histogram)
+{
+	COMPV_CHECK_CODE_RETURN(CompVMathHistogram::build(input, histogram));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// https://en.wikipedia.org/wiki/Histogram_equalization
+COMPV_ERROR_CODE CompVImage::histogramEqualiz(const CompVMatPtr& input, CompVMatPtrPtr output)
+{
+	COMPV_CHECK_CODE_RETURN(CompVMathHistogram::equaliz(input, output));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// https://en.wikipedia.org/wiki/Histogram_equalization
+COMPV_ERROR_CODE CompVImage::histogramEqualiz(const CompVMatPtr& input, const CompVMatPtr& histogram, CompVMatPtrPtr output)
+{
+	COMPV_CHECK_CODE_RETURN(CompVMathHistogram::equaliz(input, histogram, output));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// https://en.wikipedia.org/wiki/Gamma_correction
+// A = 1
+COMPV_ERROR_CODE CompVImage::gammaCorrection(const CompVMatPtr& input, const double& gamma, CompVMatPtrPtr output)
+{
+	COMPV_CHECK_EXP_RETURN(!input || input->elmtInBytes() != sizeof(uint8_t) || input->planeCount() != 1 || !output, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("If gamma value is constant over time then, you should pre-compute LUT once and use the overrided function");
+	compv_uint8x256_t gammaLUT;
+	static const double scale = 1.0 / 255.0;
+	for (int i = 0; i < 256; ++i) {
+		const double v = std::pow((static_cast<double>(i) * scale), gamma) * 255.0;
+		gammaLUT[i] = COMPV_MATH_ROUNDFU_2_NEAREST_INT(v, uint8_t);
+	}
+	COMPV_CHECK_CODE_RETURN(CompVImage::gammaCorrection(input, gammaLUT, output));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// https://en.wikipedia.org/wiki/Gamma_correction
+// A = 1
+COMPV_ERROR_CODE CompVImage::gammaCorrection(const CompVMatPtr& input, const compv_uint8x256_t& gammaLUT, CompVMatPtrPtr output)
+{
+	COMPV_CHECK_EXP_RETURN(!input || input->elmtInBytes() != sizeof(uint8_t) || input->planeCount() != 1 || !output, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+	const size_t width = input->cols();
+	const size_t height = input->rows();
+	const size_t stride = input->stride();
+
+	CompVMatPtr output_ = (*output == input) ? nullptr : *output; // this function doesn't allow output to be equal to input
+	COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&output_, COMPV_SUBTYPE_PIXELS_Y, width, height, stride));
+
+	auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
+		const uint8_t* ptrIn = input->ptr<const uint8_t>(ystart);
+		uint8_t* ptrOut = output_->ptr<uint8_t>(ystart);
+		for (size_t j = ystart; j < yend; ++j) {
+			for (size_t i = 0; i < width; ++i) {
+				ptrOut[i] = gammaLUT[ptrIn[i]];
+			}
+			ptrOut += stride;
+			ptrIn += stride;
+		}
+		return COMPV_ERROR_CODE_S_OK;
+	};
+	
+	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+		funcPtr,
+		width,
+		height,
+		COMPV_IMAGE_GAMMA_CORRECTION_SAMPLES_PER_THREAD
+	));
+
+	*output = output_;
+
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVImage::thesholdOtsu(const CompVMatPtr& input, double& threshold, CompVMatPtrPtr output COMPV_DEFAULT(nullptr))
+{
+	COMPV_CHECK_CODE_RETURN(CompVImageThreshold::otsu(input, threshold, output));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVImage::thesholdOtsu(const CompVMatPtr& input, CompVMatPtrPtr output)
+{
+	double threshold = 0.0;
+	COMPV_CHECK_CODE_RETURN(CompVImageThreshold::otsu(input, threshold, output));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVImage::thesholdGlobal(const CompVMatPtr& input, CompVMatPtrPtr output, const double& threshold)
+{
+	COMPV_CHECK_CODE_RETURN(CompVImageThreshold::global(input, output, threshold));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVImage::thesholdAdaptive(const CompVMatPtr& input, CompVMatPtrPtr output, const size_t& blockSize, const double& delta, const double& maxVal COMPV_DEFAULT(255.0), bool invert COMPV_DEFAULT(false))
+{
+	COMPV_CHECK_CODE_RETURN(CompVImageThreshold::adaptive(input, output, blockSize, delta, maxVal, invert));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVImage::thesholdAdaptive(const CompVMatPtr& input, CompVMatPtrPtr output, const CompVMatPtr& kernel, const double& delta, const double& maxVal COMPV_DEFAULT(255.0), bool invert COMPV_DEFAULT(false))
+{
+	COMPV_CHECK_CODE_RETURN(CompVImageThreshold::adaptive(input, output, kernel, delta, maxVal, invert));
 	return COMPV_ERROR_CODE_S_OK;
 }
 

@@ -33,7 +33,6 @@
 #include <compv/base/image/compv_image_decoder.h>
 #include <compv/base/image/compv_image_remap.h>
 #include <compv/base/image/compv_image_scale_pyramid.h>
-#include <compv/base/image/compv_image_threshold.h>
 
 #include <compv/base/math/compv_math.h>
 #include <compv/base/math/compv_math_basic_ops.h>
@@ -41,7 +40,6 @@
 #include <compv/base/math/compv_math_distance.h>
 #include <compv/base/math/compv_math_eigen.h>
 #include <compv/base/math/compv_math_gauss.h>
-#include <compv/base/math/compv_math_histogram.h>
 #include <compv/base/math/compv_math_matrix.h>
 #include <compv/base/math/compv_math_morph.h>
 #include <compv/base/math/compv_math_transform.h>

@@ -11,9 +11,13 @@
 #include "compv/base/compv_common.h"
 #include "compv/base/compv_mat.h"
 
+#if defined(_COMPV_API_H_)
+#error("This is a private file and must not be part of the API")
+#endif
+
 COMPV_NAMESPACE_BEGIN()
 
-class COMPV_BASE_API CompVMathHistogram
+class CompVMathHistogram
 {
 public:
 	static COMPV_ERROR_CODE build(const CompVMatPtr& dataIn, CompVMatPtrPtr histogram);
