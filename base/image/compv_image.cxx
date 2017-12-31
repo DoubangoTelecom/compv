@@ -169,6 +169,29 @@ COMPV_ERROR_CODE CompVImage::encode(const char* filePath, const CompVMatPtr& ima
 		"This function uses STBI instead of libjpeg-turbo or libpng to decode pictures."
 		"This is a quick and dirty way to do it for testing purpose only. You *must not* use it in your final application"
 	);
+
+	std::string filePath_ = filePath;
+	const COMPV_IMAGE_FORMAT format = CompVFileUtils::getImageFormat(filePath);
+	int(*write_fn)(stbi_write_func *func, void *context, int x, int y, int comp, const void *data, int stride_bytes)
+		= stbi_write_png_to_func;
+	switch (format) {
+#if 0 // disabled for now -> no support for stridding
+	case COMPV_IMAGE_FORMAT_JPEG:
+		write_fn = stbi_write_jpg_to_func;
+		break;
+	case COMPV_IMAGE_FORMAT_BMP:
+		write_fn = stbi_write_bmp_to_func;
+		break;
+#endif
+	default:
+	case COMPV_IMAGE_FORMAT_PNG:
+		write_fn = stbi_write_png_to_func;
+		if (filePath_.size() <= 4 || filePath_.rfind(".png") != (filePath_.size() - 4)) {
+			filePath_ += ".png";
+		}
+		break;
+	}
+
 	FILE* file_ = nullptr;
 #if COMPV_OS_ANDROID
 	if (compv_android_have_assetmgr()) {
@@ -178,8 +201,8 @@ COMPV_ERROR_CODE CompVImage::encode(const char* filePath, const CompVMatPtr& ima
 		COMPV_DEBUG_INFO_CODE_ONCE("Not using asset manager");
 	}
 #endif /* COMPV_OS_ANDROID */
-	if (!file_ && (file_ = fopen(filePath, "wb+")) == nullptr) {
-		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Can't open %s", filePath);
+	if (!file_ && (file_ = fopen(filePath_.c_str(), "wb+")) == nullptr) {
+		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Can't create %s", filePath_.c_str());
 		return COMPV_ERROR_CODE_E_FILE_NOT_FOUND;
 	}
 
@@ -190,9 +213,11 @@ COMPV_ERROR_CODE CompVImage::encode(const char* filePath, const CompVMatPtr& ima
 	case COMPV_SUBTYPE_PIXELS_RGB24: comp = 3; break;
 	case COMPV_SUBTYPE_PIXELS_RGBA32: comp = 4; break;
 	default:
+		COMPV_ASSERT(false); // never happens, already checked above
 		break;
 	}
-	COMPV_CHECK_EXP_BAIL(stbi_write_png_to_func(CompVImage_stbi_write_func, file_,
+	
+	COMPV_CHECK_EXP_BAIL(write_fn(CompVImage_stbi_write_func, file_,
 		static_cast<int>(image->cols()), static_cast<int>(image->rows()), comp,
 		image->ptr<const void>(),
 		static_cast<int>(image->stride())) != 1,
