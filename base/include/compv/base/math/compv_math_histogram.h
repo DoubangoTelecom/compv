@@ -21,6 +21,8 @@ class CompVMathHistogram
 {
 public:
 	static COMPV_ERROR_CODE build(const CompVMatPtr& dataIn, CompVMatPtrPtr histogram);
+	static COMPV_ERROR_CODE buildProjectionY(const CompVMatPtr& dataIn, CompVMatPtrPtr ptr16sProjection);
+	static COMPV_ERROR_CODE buildProjectionX(const CompVMatPtr& dataIn, CompVMatPtrPtr ptr16sProjection);
 	static COMPV_ERROR_CODE equaliz(const CompVMatPtr& dataIn, CompVMatPtrPtr dataOut);
 	static COMPV_ERROR_CODE equaliz(const CompVMatPtr& dataIn, const CompVMatPtr& histogram, CompVMatPtrPtr dataOut);
 

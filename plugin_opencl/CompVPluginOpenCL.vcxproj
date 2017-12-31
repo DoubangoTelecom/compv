@@ -189,10 +189,10 @@
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
       <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">xcopy  %(FullPath) "$(TargetDir)" /i /d /y</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">xcopy  %(FullPath) "$(TargetDir)" /i /d /y</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">xcopy  %(FullPath) "$(TargetDir)" /i /d /y</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">xcopy  %(FullPath) "$(TargetDir)" /i /d /y</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">xcopy  %(FullPath) "$(TargetDir)" /d /i /y</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">xcopy  %(FullPath) "$(TargetDir)" /d /i /y</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">xcopy  %(FullPath) "$(TargetDir)" /d /i /y</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">xcopy  %(FullPath) "$(TargetDir)" /d /i /y</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Filename)%(Extension);%(Outputs)</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Filename)%(Extension);%(Outputs)</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Filename)%(Extension);%(Outputs)</Outputs>
@@ -214,10 +214,10 @@
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
       <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">xcopy  %(FullPath) "$(TargetDir)" /i /d /y</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">xcopy  %(FullPath) "$(TargetDir)" /i /d /y</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">xcopy  %(FullPath) "$(TargetDir)" /i /d /y</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">xcopy  %(FullPath) "$(TargetDir)" /i /d /y</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">xcopy  %(FullPath) "$(TargetDir)" /d /i /y</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">xcopy  %(FullPath) "$(TargetDir)" /d /i /y</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">xcopy  %(FullPath) "$(TargetDir)" /d /i /y</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">xcopy  %(FullPath) "$(TargetDir)" /d /i /y</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Filename)%(Extension);%(Outputs)</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Filename)%(Extension);%(Outputs)</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Filename)%(Extension);%(Outputs)</Outputs>

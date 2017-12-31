@@ -181,7 +181,6 @@
     <ClInclude Include="include\compv\base\tbbmalloc\tbb_stddef.h" />
     <ClInclude Include="include\compv\base\tbbmalloc\tbb_thread.h" />
     <ClInclude Include="include\compv\base\tbbmalloc\tbb_version.h" />
-    <ClInclude Include="include\compv\base\tbbmalloc\tick_count.h" />
     <ClInclude Include="include\compv\base\time\compv_time.h" />
     <ClInclude Include="include\compv\base\time\compv_timer.h" />
     <ClInclude Include="include\compv\base\utf8\checked.h" />
@@ -586,10 +585,6 @@
     </YASM>
   </ItemGroup>
   <ItemGroup>
-    <None Include="asm\arm\compv_common_arm.S" />
-    <None Include="asm\arm\compv_common_arm32.S" />
-    <None Include="asm\arm\compv_common_arm64.S" />
-    <None Include="asm\arm\compv_test_arm.S" />
     <YASM Include="math\asm\x86\compv_math_morph_x64_avx.s">
       <FileType>Document</FileType>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
@@ -722,12 +717,6 @@
       <FileType>Document</FileType>
     </YASM>
     <None Include="asm\x86\compv_vldx_vstx_macros_x86.s" />
-    <None Include="image\asm\arm\compv_image_conv_grayscale_arm32_neon.S" />
-    <None Include="image\asm\arm\compv_image_conv_grayscale_arm64_neon.S" />
-    <None Include="image\asm\arm\compv_image_conv_rgbfamily_arm32_neon.S" />
-    <None Include="image\asm\arm\compv_image_conv_rgbfamily_arm64_neon.S" />
-    <None Include="image\asm\arm\compv_image_scale_bilinear_arm32_neon.S" />
-    <None Include="image\asm\arm\compv_image_scale_bilinear_arm64_neon.S" />
     <YASM Include="image\asm\x86\compv_image_conv_to_rgbx_x64_sse.s">
       <FileType>Document</FileType>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>

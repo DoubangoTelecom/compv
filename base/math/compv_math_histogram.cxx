@@ -44,6 +44,72 @@ COMPV_ERROR_CODE CompVMathHistogram::build(const CompVMatPtr& data, CompVMatPtrP
 	return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
 }
 
+// Project the image on the vertical axis (sum non zero bytes per rows)
+COMPV_ERROR_CODE CompVMathHistogram::buildProjectionY(const CompVMatPtr& dataIn, CompVMatPtrPtr ptr16sProjection)
+{
+	COMPV_CHECK_EXP_RETURN(!dataIn || !dataIn || dataIn->isEmpty() || dataIn->elmtInBytes() != sizeof(uint8_t) || dataIn->planeCount() != 1 || !ptr16sProjection,
+		COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+	const size_t width = dataIn->cols();
+	const size_t height = dataIn->rows();
+	const size_t stride = dataIn->stride();
+
+	CompVMatPtr ptr16sProjection_ = (*ptr16sProjection == dataIn) ? nullptr : *ptr16sProjection;
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<int16_t>(&ptr16sProjection_, 1, height));
+
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation could be found");
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found"); // SIMD-friendly (for each row read (to avoid latency process per #4 rows) #32 bytes in #2 xmm registers and sum them)
+
+	const uint8_t* ptrIn = dataIn->ptr<const uint8_t>();
+	int16_t* ptrOut = ptr16sProjection_->ptr<int16_t>();
+	for (size_t j = 0; j < height; ++j) {
+		*ptrOut = (*ptrIn ? 1 : 0);
+		for (size_t i = 1; i < width; ++i) {
+			*ptrOut += (ptrIn[i] ? 1 : 0);
+		}
+		ptrIn += stride;
+		++ptrOut;
+	}
+
+	*ptr16sProjection = ptr16sProjection_;
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// Project the image on the horizontal axis (sum non zero bytes per cols)
+COMPV_ERROR_CODE CompVMathHistogram::buildProjectionX(const CompVMatPtr& dataIn, CompVMatPtrPtr ptr16sProjection)
+{
+	COMPV_CHECK_EXP_RETURN(!dataIn || !dataIn || dataIn->isEmpty() || dataIn->elmtInBytes() != sizeof(uint8_t) || dataIn->planeCount() != 1 || !ptr16sProjection,
+		COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+	const size_t width = dataIn->cols();
+	const size_t height = dataIn->rows();
+	const size_t stride = dataIn->stride();
+
+	CompVMatPtr ptr16sProjection_ = (*ptr16sProjection == dataIn) ? nullptr : *ptr16sProjection;
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<int16_t>(&ptr16sProjection_, 1, width));
+
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation could be found");
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found"); // SIMD-friendly process per #4 rows and sum them
+
+	const uint8_t* ptrIn = dataIn->ptr<const uint8_t>();
+	int16_t* ptrOut = ptr16sProjection_->ptr<int16_t>();
+	/* First row (to avoid using memset(0)) */
+	for (size_t i = 0; i < width; ++i) {
+		ptrOut[i] = (ptrIn[i] ? 1 : 0);
+	}
+	/* Other rows */
+	ptrIn += stride;
+	for (size_t j = 1; j < height; ++j) {
+		for (size_t i = 0; i < width; ++i) {
+			ptrOut[i] += (ptrIn[i] ? 1 : 0);
+		}
+		ptrIn += stride;
+	}
+
+	*ptr16sProjection = ptr16sProjection_;
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 static void CompVMathHistogramEqualiz_32u8u_C(const uint32_t* ptr32uHistogram, uint8_t* ptr8uLut, const compv_float32_t* scale1);
 
 COMPV_ERROR_CODE CompVMathHistogram::equaliz(const CompVMatPtr& dataIn, CompVMatPtrPtr dataOut)

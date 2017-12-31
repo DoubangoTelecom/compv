@@ -163,7 +163,7 @@ COMPV_ERROR_CODE CompVImage::encode(const char* filePath, const CompVMatPtr& ima
 	COMPV_CHECK_EXP_RETURN(
 		image->subType() != COMPV_SUBTYPE_PIXELS_RGB24 &&
 		image->subType() != COMPV_SUBTYPE_PIXELS_RGBA32 &&
-		image->subType() != COMPV_SUBTYPE_PIXELS_Y,
+		(image->subType() != COMPV_SUBTYPE_PIXELS_Y && image->elmtInBytes() != sizeof(uint8_t) && image->planeCount() != 1),
 		COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(
 		"This function uses STBI instead of libjpeg-turbo or libpng to decode pictures."
@@ -207,8 +207,12 @@ COMPV_ERROR_CODE CompVImage::encode(const char* filePath, const CompVMatPtr& ima
 	}
 
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
+	const COMPV_SUBTYPE subType =
+		(image->subType() == COMPV_SUBTYPE_PIXELS_Y || (image->elmtInBytes() == sizeof(uint8_t) && image->planeCount() == 1))
+		? COMPV_SUBTYPE_PIXELS_Y
+		: image->subType();
 	int comp = 1;
-	switch (image->subType()){
+	switch (subType){
 	case COMPV_SUBTYPE_PIXELS_Y: comp = 1; break;
 	case COMPV_SUBTYPE_PIXELS_RGB24: comp = 3; break;
 	case COMPV_SUBTYPE_PIXELS_RGBA32: comp = 4; break;
@@ -379,6 +383,20 @@ COMPV_ERROR_CODE CompVImage::convertGrayscaleFast(CompVMatPtr& imageInOut)
 COMPV_ERROR_CODE CompVImage::histogramBuild(const CompVMatPtr& input, CompVMatPtrPtr histogram)
 {
 	COMPV_CHECK_CODE_RETURN(CompVMathHistogram::build(input, histogram));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// Project the image on the vertical axis (sum non zero bytes per rows)
+COMPV_ERROR_CODE CompVImage::histogramBuildProjectionY(const CompVMatPtr& dataIn, CompVMatPtrPtr ptr16sProjection)
+{
+	COMPV_CHECK_CODE_RETURN(CompVMathHistogram::buildProjectionY(dataIn, ptr16sProjection));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// Project the image on the horizontal axis (sum non zero bytes per cols)
+COMPV_ERROR_CODE CompVImage::histogramBuildProjectionX(const CompVMatPtr& dataIn, CompVMatPtrPtr ptr16sProjection)
+{
+	COMPV_CHECK_CODE_RETURN(CompVMathHistogram::buildProjectionX(dataIn, ptr16sProjection));
 	return COMPV_ERROR_CODE_S_OK;
 }
 

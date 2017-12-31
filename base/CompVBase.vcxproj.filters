@@ -106,12 +106,6 @@
     <Filter Include="include\intrin\arm">
       <UniqueIdentifier>{0998673b-97f5-4a48-bbb2-4be610342994}</UniqueIdentifier>
     </Filter>
-    <Filter Include="source\asm\arm">
-      <UniqueIdentifier>{fecb7492-c695-4e87-bdd6-660902132fff}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="source\image\asm\arm">
-      <UniqueIdentifier>{6c7e972b-debc-4d3d-91b5-df3df76bed3f}</UniqueIdentifier>
-    </Filter>
     <Filter Include="source\math\intrin\arm">
       <UniqueIdentifier>{f462a08e-adea-4858-b592-70a4636ec749}</UniqueIdentifier>
     </Filter>
@@ -637,9 +631,6 @@
       <Filter>include\tbbmalloc</Filter>
     </ClInclude>
     <ClInclude Include="include\compv\base\tbbmalloc\tbbmalloc_proxy.h">
-      <Filter>include\tbbmalloc</Filter>
-    </ClInclude>
-    <ClInclude Include="include\compv\base\tbbmalloc\tick_count.h">
       <Filter>include\tbbmalloc</Filter>
     </ClInclude>
     <ClInclude Include="include\compv\base\image\stb_image.h">
@@ -1263,38 +1254,8 @@
     </YASM>
   </ItemGroup>
   <ItemGroup>
-    <None Include="asm\arm\compv_common_arm.S">
-      <Filter>source\asm\arm</Filter>
-    </None>
-    <None Include="asm\arm\compv_test_arm.S">
-      <Filter>source\asm\arm</Filter>
-    </None>
     <None Include="image\asm\x86\compv_image_scale_bilinear_macros.s">
       <Filter>source\image\asm\x86</Filter>
-    </None>
-    <None Include="image\asm\arm\compv_image_conv_grayscale_arm32_neon.S">
-      <Filter>source\image\asm\arm</Filter>
-    </None>
-    <None Include="image\asm\arm\compv_image_conv_rgbfamily_arm32_neon.S">
-      <Filter>source\image\asm\arm</Filter>
-    </None>
-    <None Include="image\asm\arm\compv_image_scale_bilinear_arm32_neon.S">
-      <Filter>source\image\asm\arm</Filter>
-    </None>
-    <None Include="asm\arm\compv_common_arm32.S">
-      <Filter>source\asm\arm</Filter>
-    </None>
-    <None Include="asm\arm\compv_common_arm64.S">
-      <Filter>source\asm\arm</Filter>
-    </None>
-    <None Include="image\asm\arm\compv_image_conv_grayscale_arm64_neon.S">
-      <Filter>source\image\asm\arm</Filter>
-    </None>
-    <None Include="image\asm\arm\compv_image_conv_rgbfamily_arm64_neon.S">
-      <Filter>source\image\asm\arm</Filter>
-    </None>
-    <None Include="image\asm\arm\compv_image_scale_bilinear_arm64_neon.S">
-      <Filter>source\image\asm\arm</Filter>
     </None>
     <None Include="asm\x86\compv_vldx_vstx_macros_x86.s">
       <Filter>source\asm\x86</Filter>
