@@ -22,7 +22,7 @@ COMPV_ERROR_CODE split3()
 	CompVMatPtr imageIn;
 	std::vector<CompVMatPtr> imageOutVector;
 
-	COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_RGB24, 1282, 720, 1282, COMPV_TEST_PATH_TO_FILE(FILE_NAME_SPLIT3).c_str(), &imageIn));
+	COMPV_CHECK_CODE_RETURN(CompVImage::read(COMPV_SUBTYPE_PIXELS_RGB24, 1282, 720, 1282, COMPV_TEST_PATH_TO_FILE(FILE_NAME_SPLIT3).c_str(), &imageIn));
 
 	uint64_t timeStart = CompVTime::nowMillis();
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {

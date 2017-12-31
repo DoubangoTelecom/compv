@@ -66,7 +66,7 @@ COMPV_ERROR_CODE houghsht()
 	COMPV_CHECK_CODE_RETURN(CompVEdgeDete::newObj(&canny, COMPV_CANNY_ID, CANNY_THRESHOLD_LOW, CANNY_THRESHOLD_HIGH));
 	COMPV_CHECK_CODE_RETURN(canny->setInt(COMPV_CANNY_SET_INT_THRESHOLD_TYPE, COMPV_CANNY_THRESHOLD_TYPE_COMPARE_TO_GRADIENT));
 	COMPV_CHECK_CODE_RETURN(CompVHough::newObj(&houghsht, COMPV_HOUGHSHT_ID, HOUGHSHT_RHO, HOUGHSHT_THETA, HOUGHSHT_THRESHOLD));
-	COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &image));
+	COMPV_CHECK_CODE_RETURN(CompVImage::read(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &image));
 	COMPV_CHECK_CODE_RETURN(canny->process(image, &edges, &directions));
 
 	uint64_t timeStart = CompVTime::nowMillis();

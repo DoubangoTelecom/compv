@@ -73,7 +73,7 @@ COMPV_ERROR_CODE scale()
 	}
 	
 	// Read params
-	COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &srcImage));
+	COMPV_CHECK_CODE_BAIL(err = CompVImage::read(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &srcImage));
 	widthOut = static_cast<size_t>(test->width * test->factor);
 	heightOut = static_cast<size_t>(test->height * test->factor);
 

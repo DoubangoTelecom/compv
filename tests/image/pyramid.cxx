@@ -90,7 +90,7 @@ COMPV_ERROR_CODE pyramid()
 	}
 
 	// Read image
-	COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &image));
+	COMPV_CHECK_CODE_RETURN(CompVImage::read(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &image));
 	// Create the pyramid
 	COMPV_CHECK_CODE_RETURN(CompVImageScalePyramid::newObj(&pyramid, test->factor, test->levels, test->scaleType));
 	// process

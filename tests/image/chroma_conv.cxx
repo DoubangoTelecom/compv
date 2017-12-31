@@ -137,7 +137,7 @@ COMPV_ERROR_CODE chroma_conv()
 	}
 
 	// Read source file
-	COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(test->srcPixelFormat, test->width, test->height, test->stride, COMPV_TEST_IMAGE_CHROMA_CONV_PATH_TO_FILE(test->srcFilename).c_str(), &srcImage));
+	COMPV_CHECK_CODE_BAIL(err = CompVImage::read(test->srcPixelFormat, test->width, test->height, test->stride, COMPV_TEST_IMAGE_CHROMA_CONV_PATH_TO_FILE(test->srcFilename).c_str(), &srcImage));
 
 	// Perform test
 	timeStart = CompVTime::nowMillis();

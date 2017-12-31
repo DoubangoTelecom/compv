@@ -89,10 +89,10 @@ COMPV_ERROR_CODE ccl()
 
 	// Read file
 	CompVMatPtr binar;
-	COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &binar));
+	COMPV_CHECK_CODE_RETURN(CompVImage::read(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &binar));
 
 	// CCL expect binar image
-	COMPV_CHECK_CODE_RETURN(CompVImageThreshold::global(binar, &binar, 128));
+	COMPV_CHECK_CODE_RETURN(CompVImage::thesholdGlobal(binar, &binar, 128));
 
 	// Create the LSL ccl and set default settings
 	CompVConnectedComponentLabelingPtr ccl_obj;
@@ -102,12 +102,11 @@ COMPV_ERROR_CODE ccl()
 	CompVConnectedComponentLabelingResultPtr result;
 	CompVConnectedComponentPointsVector points; // FIXME(dmi): remove
 	CompVConnectedComponentBoundingBoxesVector boxes; // FIXME(dmi): remove	
-
 	const uint64_t timeStart = CompVTime::nowMillis();
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
 		COMPV_CHECK_CODE_RETURN(ccl_obj->process(binar, &result));
 		//COMPV_CHECK_CODE_RETURN(result->extract(points, COMPV_CCL_EXTRACT_TYPE_SEGMENT)); // FIXME(dmi): remove
-		//COMPV_CHECK_CODE_RETURN(result->boundingBoxes(boxes));
+		//COMPV_CHECK_CODE_RETURN(((CompVConnectedComponentLabelingResultLSL*)*result)->boundingBoxes(boxes));
 		//COMPV_CHECK_CODE_RETURN(check_boxes(result, test));
 	}
 	const uint64_t timeEnd = CompVTime::nowMillis();
@@ -183,7 +182,7 @@ static COMPV_ERROR_CODE check_boxes(const CompVConnectedComponentLabelingResultP
 	const CompVConnectedComponentLabelingResultLSL* result_lsl =
 		CompVConnectedComponentLabeling::reinterpret_castr<CompVConnectedComponentLabelingResultLSL>(result);
 
-#if 0
+#if 1
 	CompVConnectedComponentBoundingBoxesVector boxes;
 	COMPV_CHECK_CODE_RETURN(result_lsl->boundingBoxes(boxes));
 #else

@@ -159,7 +159,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::boundingBoxes(Com
 				bb.left = COMPV_MATH_MIN(bb.left, it->start);
 				bb.top = COMPV_MATH_MIN(bb.top, y);
 				bb.right = COMPV_MATH_MAX(bb.right, it->end); // bb.right + ((it->end - bb.right) & ((bb.right - it->end) >> 15));
-				bb.bottom = COMPV_MATH_MAX(bb.bottom, y); // bb.bottom + ((y - bb.bottom) & ((bb.bottom - y) >> 15));
+				bb.bottom = y/*COMPV_MATH_MAX(bb.bottom, y)*/; // No need for max -> y is already going from 0 to max
 			}
 		}
 		return COMPV_ERROR_CODE_S_OK;

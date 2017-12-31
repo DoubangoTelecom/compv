@@ -146,9 +146,9 @@ We're using Parallel Light Speed Labeling (https://hal.archives-ouvertes.fr/hal-
 a run-lenght (LEA) table (few data). This make features (centroid, perimeter, bounding boxes...) computation insanely fast.
 
 === Connected Component Labeling *Extracting bounding boxes* (text_1122x1182_white.png) (#10k times) ===
-CompV(PLSL): 1145.ms(full optiz)
+CompV(PLSL): 956.ms(full optiz)
 OpenCV: 2627.ms(full optiz)
-Remarque: We're 229% (#2 times) faster.
+Remarque: We're 274% (almost #3 times) faster.
 Our implementation is single-threaded. Must provide MT implementation to improve performances.
 
 

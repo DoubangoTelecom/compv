@@ -30,12 +30,12 @@ COMPV_ERROR_CODE adaptiveThreshold()
 
 	CompVMatPtr imageIn, imageOut, kernel;
 
-	COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 1282, 720, 1282, COMPV_TEST_PATH_TO_FILE(FILE_NAME_EQUIRECTANGULAR).c_str(), &imageIn));
-	COMPV_CHECK_CODE_RETURN(CompVImageThreshold::kernelMean(BLOCK_SIZE, &kernel));
+	COMPV_CHECK_CODE_RETURN(CompVImage::read(COMPV_SUBTYPE_PIXELS_Y, 1282, 720, 1282, COMPV_TEST_PATH_TO_FILE(FILE_NAME_EQUIRECTANGULAR).c_str(), &imageIn));
+	COMPV_CHECK_CODE_RETURN(CompVKernel::mean(BLOCK_SIZE, &kernel));
 
 	uint64_t timeStart = CompVTime::nowMillis();
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
-		COMPV_CHECK_CODE_RETURN(CompVImageThreshold::adaptive(imageIn, &imageOut, kernel, DELTA, MAXVAL, INVERT));
+		COMPV_CHECK_CODE_RETURN(CompVImage::thesholdAdaptive(imageIn, &imageOut, kernel, DELTA, MAXVAL, INVERT));
 	}
 	uint64_t timeEnd = CompVTime::nowMillis();
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "Adaptive Threshold Elapsed time = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
@@ -100,7 +100,7 @@ COMPV_ERROR_CODE otsuThreshold()
 
 	// Read file
 	CompVMatPtr imageIn;
-	COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &imageIn));
+	COMPV_CHECK_CODE_RETURN(CompVImage::read(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &imageIn));
 
 	// Otsu processing
 	CompVMatPtr imageOut;
@@ -108,7 +108,7 @@ COMPV_ERROR_CODE otsuThreshold()
 
 	uint64_t timeStart = CompVTime::nowMillis();
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
-		COMPV_CHECK_CODE_RETURN(CompVImageThreshold::otsu(imageIn, threshold, &imageOut));
+		COMPV_CHECK_CODE_RETURN(CompVImage::thesholdOtsu(imageIn, threshold, &imageOut));
 	}
 	uint64_t timeEnd = CompVTime::nowMillis();
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "Otsu Threshold Elapsed time = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));

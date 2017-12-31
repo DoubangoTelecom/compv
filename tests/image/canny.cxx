@@ -59,7 +59,7 @@ COMPV_ERROR_CODE canny()
 	COMPV_CHECK_CODE_RETURN(CompVEdgeDete::newObj(&dete, COMPV_CANNY_ID, THRESHOLD_LOW, THRESHOLD_HIGH));
 	COMPV_CHECK_CODE_RETURN(dete->setInt(COMPV_CANNY_SET_INT_THRESHOLD_TYPE, THRESHOLD_TYPE));
 
-	COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &image));
+	COMPV_CHECK_CODE_RETURN(CompVImage::read(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &image));
 
 	uint64_t timeStart = CompVTime::nowMillis();
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
