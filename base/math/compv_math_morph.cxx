@@ -128,7 +128,7 @@ static COMPV_ERROR_CODE basicOper(const CompVMatPtr& input, const CompVMatPtr& s
 	COMPV_CHECK_EXP_RETURN(
 		!input || input->isEmpty() || input->elmtInBytes() != sizeof(T) || input->planeCount() != 1 ||
 		!strel || strel->isEmpty() || strel->elmtInBytes() != sizeof(T) || strel->planeCount() != 1 ||
-		input->cols() < (strel->cols() >> 1) || input->rows() < (strel->rows() >> 1) ||
+		input->cols() < strel->cols() || input->rows() < strel->rows() ||
 		!output,
 		COMPV_ERROR_CODE_E_INVALID_PARAMETER
 	);
@@ -252,7 +252,7 @@ static COMPV_ERROR_CODE openCloseOper(const CompVMatPtr& input, const CompVMatPt
 	COMPV_CHECK_EXP_RETURN(
 		!input || input->isEmpty() || input->elmtInBytes() != sizeof(T) || input->planeCount() != 1 ||
 		!strel || strel->isEmpty() || strel->elmtInBytes() != sizeof(T) || strel->planeCount() != 1 ||
-		input->cols() < (strel->cols() >> 1) || input->rows() < (strel->rows() >> 1) ||
+		input->cols() < strel->cols() || input->rows() < strel->rows() ||
 		!output,
 		COMPV_ERROR_CODE_E_INVALID_PARAMETER
 	);
