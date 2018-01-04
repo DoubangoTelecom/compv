@@ -55,12 +55,12 @@ void CompVCannyHysteresisRow_8mpw_Intrin_NEON(size_t row, size_t colStart, size_
 	uint8_t *pb, *pt;
 	uint32_t mask;
 	CompVMatIndex edge;
-	bool lookingForStringEdges;
+	bool lookingForStrongEdges;
 	// std::vector is faster than std::list, std::dequeue and std::stack (perf. done using Intel VTune on core i7)
 	// also, check https://baptiste-wicht.com/posts/2012/11/cpp-benchmark-vector-vs-list.html
 	std::vector<CompVMatIndex> edges;
 	while (colStart < width - 7 || !edges.empty()) { // width is already >=8 (checked by the caller)
-		if ((lookingForStringEdges = edges.empty())) { // looking for string edges if there is no pending edge in the vector
+		if ((lookingForStrongEdges = edges.empty())) { // looking for string edges if there is no pending edge in the vector
 			c = colStart;
 			r = row;
 			p = &e[colStart];
@@ -78,7 +78,7 @@ void CompVCannyHysteresisRow_8mpw_Intrin_NEON(size_t row, size_t colStart, size_
 		}
 		if (r && c && r < height && c < width) {
 			vecpn = vld1_u8(p); // high 64bits set to zero
-			if (lookingForStringEdges) {
+			if (lookingForStrongEdges) {
 				vecGrad = vld1q_u16(g);
 				vecStrongn = vand_u8(vceq_u8(vecpn, vecZeron), vqmovn_u16(vcgtq_u16(vecGrad, vecTHigh)));
 				if (vget_lane_u32(vecStrongn, 0) || vget_lane_u32(vecStrongn, 1)) {
