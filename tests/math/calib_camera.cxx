@@ -33,7 +33,7 @@ COMPV_ERROR_CODE calib_camera()
 	for (size_t n = 1010047; n < (1010047 + COMPV_TEST_NUM_IMAGES); ++n) {
 		CompVMatPtr image;
 		std::string image_name = std::string("P") + CompVBase::to_string(n) +std::string("s_640x480_gray.yuv");
-		COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 640, 480, 640, COMPV_TEST_PATH_TO_FILE(image_name.c_str()).c_str(), &image));
+		COMPV_CHECK_CODE_RETURN(CompVImage::read(COMPV_SUBTYPE_PIXELS_Y, 640, 480, 640, COMPV_TEST_PATH_TO_FILE(image_name.c_str()).c_str(), &image));
 	}
 	return COMPV_ERROR_CODE_S_OK;
 }

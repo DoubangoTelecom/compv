@@ -146,13 +146,6 @@ COMPV_ERROR_CODE CompVMathHistogram::equaliz(const CompVMatPtr& dataIn, const Co
 
 	CompVMathHistogramEqualiz_32u8u(histogram->ptr<const uint32_t>(), lut, &scale);
 
-	// Get Number of threads
-	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
-	const size_t maxThreads = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
-	const size_t threadsCount = (threadDisp && !threadDisp->isMotherOfTheCurrentThread())
-		? CompVThreadDispatcher::guessNumThreadsDividingAcrossY(width, height, maxThreads, COMPV_HISTOGRAM_EQUALIZ_MIN_SAMPLES_PER_THREAD)
-		: 1;
-
 	auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {		
 		const uint8_t* ptr8uDataIn = dataIn->ptr<const uint8_t>(ystart);
 		uint8_t* ptr8uDataOut_ = dataOut_->ptr<uint8_t>(ystart);
@@ -167,21 +160,12 @@ COMPV_ERROR_CODE CompVMathHistogram::equaliz(const CompVMatPtr& dataIn, const Co
 		return COMPV_ERROR_CODE_S_OK;
 	};
 
-	if (threadsCount > 1) {
-		CompVAsyncTaskIds taskIds;
-		taskIds.reserve(threadsCount);
-		const size_t heights = (height / threadsCount);
-		size_t YStart = 0, YEnd;
-		for (size_t threadIdx = 0; threadIdx < threadsCount; ++threadIdx) {
-			YEnd = (threadIdx == (threadsCount - 1)) ? height : (YStart + heights);
-			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, YStart, YEnd), taskIds), "Dispatching task failed");
-			YStart += heights;
-		}
-		COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds), "Failed to wait for tasks execution");
-	}
-	else {
-		COMPV_CHECK_CODE_RETURN(funcPtr(0, height));
-	}
+	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+		funcPtr,
+		width,
+		height,
+		COMPV_HISTOGRAM_EQUALIZ_MIN_SAMPLES_PER_THREAD
+	));
 
 	*dataOut = dataOut_;
 	return COMPV_ERROR_CODE_S_OK;
@@ -220,8 +204,9 @@ COMPV_ERROR_CODE CompVMathHistogram::process_8u32u(const uint8_t* dataPtr, size_
 	const size_t threadsCount = CompVThreadDispatcher::guessNumThreadsDividingAcrossY(width, height, maxThreads, COMPV_HISTOGRAM_BUILD_MIN_SAMPLES_PER_THREAD);
 
 	if (threadsCount > 1) {
+		COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 		size_t threadIdx, padding;
-		CompVMatPtrVector mt_histograms;
+		std::vector<uint32_t*> mt_histograms((threadsCount - 1), nullptr);
 		const size_t countAny = (height / threadsCount);
 		const size_t countLast = countAny + (height % threadsCount);
 		auto funcPtr = [&](const uint8_t* mt_dataPtr, size_t mt_height, size_t mt_threadIdx) -> COMPV_ERROR_CODE {
@@ -230,10 +215,9 @@ COMPV_ERROR_CODE CompVMathHistogram::process_8u32u(const uint8_t* dataPtr, size_
 				mt_histogramPtr = histogramPtr;
 			}
 			else {
-				const size_t mt_histogram_index = (mt_threadIdx - 1);
-				COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<uint32_t>(&mt_histograms[mt_histogram_index], 1, 256));
-				COMPV_CHECK_CODE_RETURN(mt_histograms[mt_histogram_index]->zero_rows());
-				mt_histogramPtr = mt_histograms[mt_histogram_index]->ptr<uint32_t>();
+				mt_histogramPtr = reinterpret_cast<uint32_t*>(CompVMem::calloc(256, sizeof(uint32_t)));
+				COMPV_CHECK_EXP_RETURN(!mt_histogramPtr, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY));
+				mt_histograms[mt_threadIdx - 1] = mt_histogramPtr;
 			}
 			CompVMathHistogramProcess_8u32u(mt_dataPtr, static_cast<compv_uscalar_t>(width), static_cast<compv_uscalar_t>(mt_height), static_cast<compv_uscalar_t>(stride), mt_histogramPtr);
 			return COMPV_ERROR_CODE_S_OK;
@@ -241,17 +225,23 @@ COMPV_ERROR_CODE CompVMathHistogram::process_8u32u(const uint8_t* dataPtr, size_
 		const uint8_t* mt_dataPtr = dataPtr;
 		const size_t paddingPerThread = (countAny * stride);
 		CompVAsyncTaskIds taskIds;
-		mt_histograms.resize(threadsCount - 1);
 		// Invoke
 		for (threadIdx = 0, padding = 0; threadIdx < (threadsCount - 1); ++threadIdx, padding += paddingPerThread) {
-			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, &mt_dataPtr[padding], countAny, threadIdx), taskIds));
+			COMPV_CHECK_CODE_BAIL(err = threadDisp->invoke(std::bind(funcPtr, &mt_dataPtr[padding], countAny, threadIdx), taskIds));
 		}
-		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, &mt_dataPtr[padding], countLast, (threadsCount - 1)), taskIds));
+		COMPV_CHECK_CODE_BAIL(err = threadDisp->invoke(std::bind(funcPtr, &mt_dataPtr[padding], countLast, (threadsCount - 1)), taskIds));
 		// Wait and sum the histograms
-		COMPV_CHECK_CODE_RETURN(threadDisp->waitOne(taskIds[0]));
+		COMPV_CHECK_CODE_BAIL(err = threadDisp->waitOne(taskIds[0]));
 		for (threadIdx = 1; threadIdx < threadsCount; ++threadIdx) {
-			COMPV_CHECK_CODE_RETURN(threadDisp->waitOne(taskIds[threadIdx]));
-			COMPV_CHECK_CODE_RETURN((CompVMathUtils::sum2<uint32_t, uint32_t>(mt_histograms[threadIdx - 1]->ptr<const uint32_t>(), histogramPtr, histogramPtr, 256, 1, 256))); // stride is useless as height is equal to 1
+			COMPV_CHECK_CODE_BAIL(err = threadDisp->waitOne(taskIds[threadIdx]));
+			COMPV_CHECK_CODE_BAIL(err = (CompVMathUtils::sum2<uint32_t, uint32_t>(mt_histograms[threadIdx - 1], histogramPtr, histogramPtr, 256, 1, 256))); // stride is useless as height is equal to 1
+			CompVMem::free(reinterpret_cast<void**>(&mt_histograms[threadIdx - 1]));
+		}
+	bail:
+		if (COMPV_ERROR_CODE_IS_NOK(err)) {
+			for (std::vector<uint32_t*>::iterator i = mt_histograms.begin(); i < mt_histograms.end(); ++i) {
+				CompVMem::free(reinterpret_cast<void**>(&*i));
+			}
 		}
 	}
 	else {

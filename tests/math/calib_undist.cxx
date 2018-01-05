@@ -35,7 +35,7 @@
 COMPV_ERROR_CODE calib_undist()
 {
 	CompVMatPtr distortedImage;
-	COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, CAMERA_CALIB_WIDTH, CAMERA_CALIB_HEIGHT, CAMERA_CALIB_WIDTH, COMPV_TEST_PATH_TO_FILE("distorted_640x360_gray.yuv").c_str(), &distortedImage));
+	COMPV_CHECK_CODE_RETURN(CompVImage::read(COMPV_SUBTYPE_PIXELS_Y, CAMERA_CALIB_WIDTH, CAMERA_CALIB_HEIGHT, CAMERA_CALIB_WIDTH, COMPV_TEST_PATH_TO_FILE("distorted_640x360_gray.yuv").c_str(), &distortedImage));
 	
 	CompVMatPtr K, d;
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<double>(&K, 3, 3));

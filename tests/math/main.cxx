@@ -21,10 +21,10 @@
 #define TEST_DISTANCE_HAMMING				0
 #define TEST_DISTANCE_LINE					0
 #define TEST_DISTANCE_PARABOLA				0
-#define TEST_HISTOGRAM_BUILD				0
+#define TEST_HISTOGRAM_BUILD				1
 #define TEST_HISTOGRAM_EQUALIZ				0
 #define TEST_CONVLT							0
-#define TEST_MORPH							1
+#define TEST_MORPH							0
 
 
 /* Entry point function */

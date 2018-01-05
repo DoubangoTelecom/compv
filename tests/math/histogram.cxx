@@ -20,11 +20,11 @@ COMPV_ERROR_CODE histogram_build()
 {
 #define BUILD_EXPECTED_MD5		"9cc75b0ec5f1522cfc65b7fadc0aacdb"
 	CompVMatPtr image, histogram;
-	COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 1282, 720, 1282, COMPV_TEST_PATH_TO_FILE(FILE_NAME_EQUIRECTANGULAR).c_str(), &image));
+	COMPV_CHECK_CODE_RETURN(CompVImage::read(COMPV_SUBTYPE_PIXELS_Y, 1282, 720, 1282, COMPV_TEST_PATH_TO_FILE(FILE_NAME_EQUIRECTANGULAR).c_str(), &image));
 
 	uint64_t timeStart = CompVTime::nowMillis();
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
-		COMPV_CHECK_CODE_RETURN(CompVMathHistogram::build(image, &histogram));
+		COMPV_CHECK_CODE_RETURN(CompVImage::histogramBuild(image, &histogram));
 	}
 	uint64_t timeEnd = CompVTime::nowMillis();
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "Elapsed time(Histogram) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
@@ -65,13 +65,13 @@ COMPV_ERROR_CODE histogram_equaliz()
 
 	// Read file
 	CompVMatPtr imageIn;
-	COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &imageIn));
+	COMPV_CHECK_CODE_RETURN(CompVImage::read(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &imageIn));
 
 	// Equalization
 	CompVMatPtr imageOut;
 	uint64_t timeStart = CompVTime::nowMillis();
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
-		COMPV_CHECK_CODE_RETURN(CompVMathHistogram::equaliz(imageIn, &imageOut));
+		COMPV_CHECK_CODE_RETURN(CompVImage::histogramEqualiz(imageIn, &imageOut));
 	}
 	uint64_t timeEnd = CompVTime::nowMillis();
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "Histogram equaliz Elapsed time = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
