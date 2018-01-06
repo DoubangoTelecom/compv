@@ -361,11 +361,11 @@ sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_X64
 	; for (compv_uscalar_t j = 0; j < height; ++j)
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	.LoopHeight:
-		lea t1, [RLCi + COMPV_YASM_INT16_SZ_BYTES]
+		lea t1, [RLCi + RLCi_stride*COMPV_YASM_INT16_SZ_BYTES]
 		movzx er, byte [Xi + 0*COMPV_YASM_UINT8_SZ_BYTES]
-		mov [RLCi], word 0
+		mov [RLCi + 0*COMPV_YASM_INT16_SZ_BYTES], word 0
 		and erb, 1
-		prefetchw [t1 + RLCi_stride] ; don''t expect more than 32 RLC and this is why the prefetch is outside the width loop
+		prefetchw [t1] ; don''t expect more than 32 RLC and this is why the prefetch is outside the width loop
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		; for (i = 1; i < width16; i += 16)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -392,7 +392,7 @@ sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_X64
 					mov [RLCi + er*COMPV_YASM_INT16_SZ_BYTES], word t1w
 					inc er
 					btr t0d, t2d ; Bit Test and Reset (http://www.felixcloutier.com/x86/BTR.html) - BLSR requires "BMI1" CPU flags (AVX+)
-					test t0d, t0d
+					test t0w, t0w
 					jnz .BeginOfWhile
 				.EndOfWhile
 			.EndOfMask
@@ -408,8 +408,8 @@ sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_X64
 		cmp i, width
 		jge .EndOf_LoopWidth1
 		.LoopWidth1:
-			movzx t0, word [ERi + (i - 1)*COMPV_YASM_INT16_SZ_BYTES]
-			xor t0w, word [ERi + i*COMPV_YASM_INT16_SZ_BYTES]
+			mov t0w, word [ERi + (i - 1)*COMPV_YASM_INT16_SZ_BYTES]
+			cmp t0w, word [ERi + i*COMPV_YASM_INT16_SZ_BYTES]
 			jz .Next_LoopWidth1
 				mov [RLCi + er*COMPV_YASM_INT16_SZ_BYTES], word iw
 				inc er
@@ -427,7 +427,7 @@ sym(CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_X64
 		sub t1, t0
 		dec height
 		lea ERi, [ERi + ERi_stride] ; ERi_stride = ERi_stride*COMPV_YASM_INT16_SZ_BYTES
-		mov [RLCi + er*COMPV_YASM_INT16_SZ_BYTES], t1
+		mov [RLCi + er*COMPV_YASM_INT16_SZ_BYTES], word t1w
 		lea RLCi, [RLCi + RLCi_stride] ; RLCi_stride = RLCi_stride*COMPV_YASM_INT16_SZ_BYTES
 		jnz .LoopHeight
 	.EndOf_LoopHeight:
