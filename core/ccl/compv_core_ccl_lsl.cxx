@@ -546,15 +546,22 @@ static COMPV_ERROR_CODE build_LEA(const CompVMatPtr& ptr16sNer, const CompVMemZe
 	const size_t RLC_stride = ptr16sRLC->stride();
 
 	int16_t er;
-	compv_ccl_lea_1_t::iterator it_lea;
 	for (size_t j = start; j < end; ++j) {
 		const int16_t ner0j = ner[j];
-		compv_ccl_lea_1_t& lea = vecLEA[j];
-		lea.resize(ner0j >> 1);
-		for (er = 1, it_lea = lea.begin(); er < ner0j; er += 2, ++it_lea) {
-			it_lea->a = A[ERAi[er]];
-			it_lea->start = RLC[er - 1];
-			it_lea->end = RLC[er];
+		if (ner0j) {
+			compv_ccl_lea_1_t& lea = vecLEA[j];
+			size_t count_lea = 0;
+			lea.resize(ner0j >> 1);
+			for (er = 1; er < ner0j; er += 2) {
+				const int32_t a = A[ERAi[er]];
+				if (a) { // zero is background
+					compv_ccl_range_t& range = lea[count_lea++];
+					range.a = a;
+					range.start = RLC[er - 1];
+					range.end = RLC[er];
+				}
+			}
+			lea.resize(count_lea);
 		}
 		ERAi += ERA_stride;
 		RLC += RLC_stride;
