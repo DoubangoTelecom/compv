@@ -226,12 +226,6 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::boundingBoxes(con
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::firstOrderMoment() const
-{
-	COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
-	return COMPV_ERROR_CODE_S_OK;
-}
-
 COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::remove(CompVConnectedComponentCallbackRemoveLabel funcPtr, size_t &removedCount)
 {
 	COMPV_CHECK_EXP_RETURN(!funcPtr, COMPV_ERROR_CODE_E_INVALID_PARAMETER);

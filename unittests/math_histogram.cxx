@@ -19,10 +19,10 @@ COMPV_ERROR_CODE unittest_histogram_build()
 #define EXPECTED_MD5_BUILD		"9cc75b0ec5f1522cfc65b7fadc0aacdb"
 
 	CompVMatPtr image, histogram;
-	COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 1282, 720, 1282, COMPV_TEST_PATH_TO_FILE(FILE_NAME_EQUIRECTANGULAR).c_str(), &image));
+	COMPV_CHECK_CODE_RETURN(CompVImage::read(COMPV_SUBTYPE_PIXELS_Y, 1282, 720, 1282, COMPV_TEST_PATH_TO_FILE(FILE_NAME_EQUIRECTANGULAR).c_str(), &image));
 	
 	COMPV_DEBUG_INFO_EX(TAG_UNITTESTS, "== Trying new test: histogram build on '%s'", FILE_NAME_EQUIRECTANGULAR);
-	COMPV_CHECK_CODE_RETURN(CompVMathHistogram::build(image, &histogram));
+	COMPV_CHECK_CODE_RETURN(CompVImage::histogramBuild(image, &histogram));
 	COMPV_CHECK_EXP_RETURN(compv_tests_md5(histogram).compare(EXPECTED_MD5_BUILD) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "MD5 mismatch");
 	COMPV_DEBUG_INFO_EX(TAG_UNITTESTS, "** Test OK **");
 
@@ -54,10 +54,10 @@ COMPV_ERROR_CODE unittest_histogram_equaliz()
 		COMPV_DEBUG_INFO_EX(TAG_UNITTESTS, "== Trying new test: histogram equaliz on '%s'", test->filename);
 		// Read file
 		CompVMatPtr imageIn;
-		COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &imageIn));
+		COMPV_CHECK_CODE_RETURN(CompVImage::read(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &imageIn));
 		// Equalization
 		CompVMatPtr imageOut;
-		COMPV_CHECK_CODE_RETURN(CompVMathHistogram::equaliz(imageIn, &imageOut));
+		COMPV_CHECK_CODE_RETURN(CompVImage::histogramEqualiz(imageIn, &imageOut));
 		// Check MD5
 		COMPV_CHECK_EXP_RETURN(std::string(test->md5).compare(compv_tests_md5(imageOut)) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Histogram equaliz MD5 mismatch");
 	}

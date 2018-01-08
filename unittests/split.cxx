@@ -20,7 +20,7 @@ static COMPV_ERROR_CODE unittest_split3()
 	std::vector<CompVMatPtr> imageOutVector;
 
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "== Trying new test: Split3 -> %s ==", FILE_NAME_SPLIT3);
-	COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_RGB24, 1282, 720, 1282, COMPV_TEST_PATH_TO_FILE(FILE_NAME_SPLIT3).c_str(), &imageIn));
+	COMPV_CHECK_CODE_RETURN(CompVImage::read(COMPV_SUBTYPE_PIXELS_RGB24, 1282, 720, 1282, COMPV_TEST_PATH_TO_FILE(FILE_NAME_SPLIT3).c_str(), &imageIn));
 	COMPV_CHECK_CODE_RETURN(CompVImage::split(imageIn, imageOutVector));
 	COMPV_CHECK_EXP_RETURN(std::string(MD5_0_SPLIT3).compare(compv_tests_md5(imageOutVector[0])) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Split3(0) MD5 mismatch");
 	COMPV_CHECK_EXP_RETURN(std::string(MD5_1_SPLIT3).compare(compv_tests_md5(imageOutVector[1])) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Split3(1) MD5 mismatch");

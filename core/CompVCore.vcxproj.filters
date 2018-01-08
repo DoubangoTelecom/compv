@@ -302,6 +302,12 @@
     <ClCompile Include="ccl\compv_core_ccl_lsl_result.cxx">
       <Filter>Source Files\ccl</Filter>
     </ClCompile>
+    <ClCompile Include="ccl\compv_core_ccl_lmser.cxx">
+      <Filter>Source Files\ccl</Filter>
+    </ClCompile>
+    <ClCompile Include="ccl\compv_core_ccl_lmser_result.cxx">
+      <Filter>Source Files\ccl</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\core\compv_core.h">
@@ -425,6 +431,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\compv\core\ccl\compv_core_ccl_lsl_result.h">
+      <Filter>Header Files\ccl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\core\ccl\compv_core_ccl_lmser.h">
+      <Filter>Header Files\ccl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\core\ccl\compv_core_ccl_lmser_result.h">
       <Filter>Header Files\ccl</Filter>
     </ClInclude>
   </ItemGroup>

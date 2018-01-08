@@ -61,7 +61,7 @@ COMPV_ERROR_CODE unittest_scale()
 	for (size_t i = 0; i < COMPV_UNITTEST_SCALE_COUNT; ++i) {
 		test = &COMPV_UNITTEST_SCALE[i];
 		COMPV_DEBUG_INFO_EX(TAG_TEST, "== Trying new test: Image scaling -> %s ==", compv_unittest_scale_to_string(test).c_str());
-		COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &srcImage));
+		COMPV_CHECK_CODE_BAIL(err = CompVImage::read(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &srcImage));
 		COMPV_CHECK_CODE_BAIL(err = CompVImage::scale(srcImage, &dstImage, static_cast<size_t>(test->width * test->factor), static_cast<size_t>(test->height * test->factor), test->type));
 		COMPV_CHECK_EXP_BAIL(std::string(test->md5).compare(compv_tests_md5(dstImage)) != 0, (err = COMPV_ERROR_CODE_E_UNITTEST_FAILED), "Image scaling MD5 mismatch");
 		dstImage = NULL; // do not reuse

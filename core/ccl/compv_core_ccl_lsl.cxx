@@ -116,7 +116,7 @@ COMPV_EXTERNC void CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBui
 #endif /* COMPV_ASM && COMPV_ARCH_ARM64 */
 
 CompVConnectedComponentLabelingLSL::CompVConnectedComponentLabelingLSL()
-	:CompVConnectedComponentLabeling(static_cast<int32_t>(COMPV_PLSL_TYPE_XRLEZ))
+	: CompVConnectedComponentLabeling(COMPV_PLSL_ID)
 	, m_nType(COMPV_PLSL_TYPE_XRLEZ)
 {
 

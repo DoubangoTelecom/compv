@@ -92,7 +92,7 @@ COMPV_ERROR_CODE ccl()
 	COMPV_CHECK_CODE_RETURN(CompVImage::read(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &binar));
 
 	// CCL expect binar image
-	COMPV_CHECK_CODE_RETURN(CompVImage::thesholdGlobal(binar, &binar, 128));
+	COMPV_CHECK_CODE_RETURN(CompVImage::thresholdGlobal(binar, &binar, 128));
 
 	// Create the LSL ccl and set default settings
 	CompVConnectedComponentLabelingPtr ccl_obj;

@@ -82,8 +82,8 @@ COMPV_ERROR_CODE unittest_ccl()
 	for (size_t i = 0; i < COMPV_UNITTEST_CCL_COUNT; ++i) {
 		test = &COMPV_UNITTEST_CCL[i];
 		COMPV_DEBUG_INFO_EX(TAG_TEST, "== Trying new test: CCL -> %s ==", compv_unittest_ccl_to_string(test).c_str());		
-		COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &binar));
-		COMPV_CHECK_CODE_RETURN(CompVImageThreshold::global(binar, &binar, 128));
+		COMPV_CHECK_CODE_RETURN(CompVImage::read(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &binar));
+		COMPV_CHECK_CODE_RETURN(CompVImage::thresholdGlobal(binar, &binar, 128));
 		COMPV_CHECK_CODE_RETURN(ccl_obj->process(binar, &result));
 		//const CompVConnectedComponentLabelingResultLSL* result_lsl =
 		//	CompVConnectedComponentLabeling::reinterpret_castr<CompVConnectedComponentLabelingResultLSL>(result);

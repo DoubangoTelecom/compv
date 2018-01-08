@@ -78,7 +78,7 @@ COMPV_ERROR_CODE unittest_houghkht()
 	for (size_t i = 0; i < COMPV_UNITTEST_HOUGHKHT_COUNT; ++i) {
 		test = &COMPV_UNITTEST_HOUGHKHT[i];
 		COMPV_DEBUG_INFO_EX(TAG_TEST, "== Trying new test: Hough lines (KHT) detector -> %s ==", test->filename);
-		COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &image));
+		COMPV_CHECK_CODE_BAIL(err = CompVImage::read(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &image));
 		COMPV_CHECK_CODE_RETURN(canny->process(image, &edges));
 		COMPV_CHECK_CODE_RETURN(houghkht->process(edges, lines));
 		sum_rho = 0.f;

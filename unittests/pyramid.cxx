@@ -83,7 +83,7 @@ COMPV_ERROR_CODE unittest_pyramid()
 		test = &COMPV_UNITTEST_PYRAMID[i];
 		COMPV_DEBUG_INFO_EX(TAG_TEST, "== Trying new test: Image pyramid -> %s ==", compv_unittest_pyramid_to_string(test).c_str());
 		// Read image
-		COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &image));
+		COMPV_CHECK_CODE_RETURN(CompVImage::read(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &image));
 		// Create the pyramid
 		COMPV_CHECK_CODE_RETURN(CompVImageScalePyramid::newObj(&pyramid, test->factor, test->levels, test->scaleType));
 		// process

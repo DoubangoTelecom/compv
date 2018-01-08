@@ -27,6 +27,8 @@ typedef CompVRectInt16Vector CompVConnectedComponentBoundingBoxesVector;
 
 typedef std::function<bool(const int32_t id)> CompVConnectedComponentCallbackRemoveLabel;
 
+typedef double CompVConnectedComponentMoments[6]; // sum(1), sum(x), sum(y), sum(x*x), sum(x*y), sum(y*y)
+
 COMPV_OBJECT_DECLARE_PTRS(ConnectedComponentLabeling)
 COMPV_OBJECT_DECLARE_PTRS(ConnectedComponentLabelingResult)
 COMPV_OBJECT_DECLARE_PTRS(ConnectedComponentLabelingResultLSL)
@@ -126,10 +128,24 @@ public:
 	}
 	
 	virtual const std::vector<int32_t>& labelIds() const = 0;
+	
 	virtual COMPV_ERROR_CODE boundingBoxes(CompVConnectedComponentBoundingBoxesVector& boxes) const = 0;
 	virtual COMPV_ERROR_CODE boundingBoxes(const CompVConnectedComponentPointsVector& segments, CompVConnectedComponentBoundingBoxesVector& boxes) const = 0;
-	virtual COMPV_ERROR_CODE firstOrderMoment() const = 0;
-	virtual COMPV_ERROR_CODE remove(CompVConnectedComponentCallbackRemoveLabel funcPtr, size_t &removedCount) = 0;
+	virtual COMPV_ERROR_CODE COMPV_DEPRECATED(remove)(CompVConnectedComponentCallbackRemoveLabel funcPtr, size_t &removedCount) = 0;
+};
+
+// Class: CompVConnectedComponentLabelingResultLMSER
+class COMPV_BASE_API CompVConnectedComponentLabelingResultLMSER : public CompVConnectedComponentLabelingResult
+{
+protected:
+	CompVConnectedComponentLabelingResultLMSER()
+		: CompVConnectedComponentLabelingResult(COMPV_LMSER_ID) {
+	}
+public:
+	virtual ~CompVConnectedComponentLabelingResultLMSER() {
+	}
+	virtual COMPV_ERROR_CODE boundingBoxes(CompVConnectedComponentBoundingBoxesVector& boxes) const = 0;
+	virtual COMPV_ERROR_CODE moments(CompVConnectedComponentMoments& moments) const = 0;
 };
 
 // Class: CompVConnectedComponentLabeling
@@ -148,7 +164,10 @@ public:
 	static const T* reinterpret_castr(const CompVConnectedComponentLabelingResultPtr& result) {
 		if (result) {
 			if (result->id() == COMPV_PLSL_ID && std::is_same<T, CompVConnectedComponentLabelingResultLSL>::value) {
-				return reinterpret_cast<const CompVConnectedComponentLabelingResultLSL*>(*result);
+				return reinterpret_cast<const T*>(*result);
+			}
+			if (result->id() == COMPV_LMSER_ID && std::is_same<T, CompVConnectedComponentLabelingResultLMSER>::value) {
+				return reinterpret_cast<const T*>(*result);
 			}
 		}
 		return nullptr;

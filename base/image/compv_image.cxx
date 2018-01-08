@@ -469,32 +469,32 @@ COMPV_ERROR_CODE CompVImage::gammaCorrection(const CompVMatPtr& input, const com
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVImage::thesholdOtsu(const CompVMatPtr& input, double& threshold, CompVMatPtrPtr output COMPV_DEFAULT(nullptr))
+COMPV_ERROR_CODE CompVImage::thresholdOtsu(const CompVMatPtr& input, double& threshold, CompVMatPtrPtr output COMPV_DEFAULT(nullptr))
 {
 	COMPV_CHECK_CODE_RETURN(CompVImageThreshold::otsu(input, threshold, output));
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVImage::thesholdOtsu(const CompVMatPtr& input, CompVMatPtrPtr output)
+COMPV_ERROR_CODE CompVImage::thresholdOtsu(const CompVMatPtr& input, CompVMatPtrPtr output)
 {
 	double threshold = 0.0;
 	COMPV_CHECK_CODE_RETURN(CompVImageThreshold::otsu(input, threshold, output));
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVImage::thesholdGlobal(const CompVMatPtr& input, CompVMatPtrPtr output, const double& threshold)
+COMPV_ERROR_CODE CompVImage::thresholdGlobal(const CompVMatPtr& input, CompVMatPtrPtr output, const double& threshold)
 {
 	COMPV_CHECK_CODE_RETURN(CompVImageThreshold::global(input, output, threshold));
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVImage::thesholdAdaptive(const CompVMatPtr& input, CompVMatPtrPtr output, const size_t& blockSize, const double& delta, const double& maxVal COMPV_DEFAULT(255.0), bool invert COMPV_DEFAULT(false))
+COMPV_ERROR_CODE CompVImage::thresholdAdaptive(const CompVMatPtr& input, CompVMatPtrPtr output, const size_t& blockSize, const double& delta, const double& maxVal COMPV_DEFAULT(255.0), bool invert COMPV_DEFAULT(false))
 {
 	COMPV_CHECK_CODE_RETURN(CompVImageThreshold::adaptive(input, output, blockSize, delta, maxVal, invert));
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVImage::thesholdAdaptive(const CompVMatPtr& input, CompVMatPtrPtr output, const CompVMatPtr& kernel, const double& delta, const double& maxVal COMPV_DEFAULT(255.0), bool invert COMPV_DEFAULT(false))
+COMPV_ERROR_CODE CompVImage::thresholdAdaptive(const CompVMatPtr& input, CompVMatPtrPtr output, const CompVMatPtr& kernel, const double& delta, const double& maxVal COMPV_DEFAULT(255.0), bool invert COMPV_DEFAULT(false))
 {
 	COMPV_CHECK_CODE_RETURN(CompVImageThreshold::adaptive(input, output, kernel, delta, maxVal, invert));
 	return COMPV_ERROR_CODE_S_OK;

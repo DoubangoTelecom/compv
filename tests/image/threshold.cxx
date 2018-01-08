@@ -35,7 +35,7 @@ COMPV_ERROR_CODE adaptiveThreshold()
 
 	uint64_t timeStart = CompVTime::nowMillis();
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
-		COMPV_CHECK_CODE_RETURN(CompVImage::thesholdAdaptive(imageIn, &imageOut, kernel, DELTA, MAXVAL, INVERT));
+		COMPV_CHECK_CODE_RETURN(CompVImage::thresholdAdaptive(imageIn, &imageOut, kernel, DELTA, MAXVAL, INVERT));
 	}
 	uint64_t timeEnd = CompVTime::nowMillis();
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "Adaptive Threshold Elapsed time = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
@@ -108,7 +108,7 @@ COMPV_ERROR_CODE otsuThreshold()
 
 	uint64_t timeStart = CompVTime::nowMillis();
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
-		COMPV_CHECK_CODE_RETURN(CompVImage::thesholdOtsu(imageIn, threshold, &imageOut));
+		COMPV_CHECK_CODE_RETURN(CompVImage::thresholdOtsu(imageIn, threshold, &imageOut));
 	}
 	uint64_t timeEnd = CompVTime::nowMillis();
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "Otsu Threshold Elapsed time = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));

@@ -124,7 +124,7 @@ COMPV_ERROR_CODE unittest_chroma_conv()
 	for (size_t i = 0; i < COMPV_UNITTESTS_CHROMA_CONV_COUNT; ++i) {
 		test = &COMPV_UNITTESTS_CHROMA_CONV[i];
 		COMPV_DEBUG_INFO_EX(TAG_UNITTESTS, "== Trying new test: Chroma conversion -> %s ==", unittest_chroma_conv_tostring(test).c_str());
-		COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(test->srcPixelFormat, test->width, test->height, test->stride, COMPV_TEST_IMAGE_CHROMA_CONV_PATH_TO_FILE(test->srcFilename).c_str(), &srcImage));
+		COMPV_CHECK_CODE_RETURN(CompVImage::read(test->srcPixelFormat, test->width, test->height, test->stride, COMPV_TEST_IMAGE_CHROMA_CONV_PATH_TO_FILE(test->srcFilename).c_str(), &srcImage));
 		COMPV_CHECK_CODE_RETURN(CompVImage::convert(srcImage, test->dstPixelFormat, &dstImage));
 		xmd5 = (test->dstPixelFormat == COMPV_SUBTYPE_PIXELS_HSV && compv_tests_is_rcp()) ? test->dstMD5_rcp : test->dstMD5;
 		COMPV_CHECK_EXP_RETURN(std::string(xmd5).compare(compv_tests_md5(dstImage)) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "MD5 mismatch");

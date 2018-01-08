@@ -55,8 +55,8 @@ COMPV_ERROR_CODE unittest_thresh_adapt()
 	for (size_t i = 0; i < COMPV_UNITTEST_THESH_ADAPT_COUNT; ++i) {
 		test = &COMPV_UNITTEST_THESH_ADAPT[i];
 		COMPV_DEBUG_INFO_EX(TAG_TEST, "== Trying new test: Adaptive thresholding -> %s ==", compv_unittest_thresh_adapt_to_string(test).c_str());
-		COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &imageIn));
-		COMPV_CHECK_CODE_BAIL(err = CompVImageThreshold::adaptive(imageIn, &imageOut, test->blockSize, test->delta, test->maxVal, test->invert));
+		COMPV_CHECK_CODE_BAIL(err = CompVImage::read(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &imageIn));
+		COMPV_CHECK_CODE_BAIL(err = CompVImage::thresholdAdaptive(imageIn, &imageOut, test->blockSize, test->delta, test->maxVal, test->invert));
 		COMPV_CHECK_EXP_BAIL(std::string(test->md5).compare(compv_tests_md5(imageOut)) != 0, (err = COMPV_ERROR_CODE_E_UNITTEST_FAILED), "Adaptive thresholding MD5 mismatch");
 		imageOut = nullptr; // do not reuse
 		COMPV_DEBUG_INFO_EX(TAG_TEST, "** Test OK **");
@@ -101,8 +101,8 @@ COMPV_ERROR_CODE unittest_thresh_otsu()
 	for (size_t i = 0; i < COMPV_UNITTEST_THESH_OTSU_COUNT; ++i) {
 		test = &COMPV_UNITTEST_THESH_OTSU[i];
 		COMPV_DEBUG_INFO_EX(TAG_TEST, "== Trying new test: Otsu thresholding -> %s ==", compv_unittest_thresh_otsu_to_string(test).c_str());
-		COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &imageIn));
-		COMPV_CHECK_CODE_BAIL(err = CompVImageThreshold::otsu(imageIn, threshold, &imageOut));
+		COMPV_CHECK_CODE_BAIL(err = CompVImage::read(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &imageIn));
+		COMPV_CHECK_CODE_BAIL(err = CompVImage::thresholdOtsu(imageIn, threshold, &imageOut));
 		COMPV_CHECK_EXP_BAIL(test->threshold != threshold, (err = COMPV_ERROR_CODE_E_UNITTEST_FAILED), "Otsu thresholding value mismatch");
 		COMPV_CHECK_EXP_BAIL(std::string(test->md5).compare(compv_tests_md5(imageOut)) != 0, (err = COMPV_ERROR_CODE_E_UNITTEST_FAILED), "Otsu thresholding MD5 mismatch");
 		imageOut = nullptr; // do not reuse

@@ -51,8 +51,8 @@ COMPV_ERROR_CODE unittest_math_morph()
 		COMPV_CHECK_CODE_RETURN(CompVMathMorph::buildStructuringElement(&strel, test->strelSize, test->strelType));
 		// Read image and thresholding to binar (morph ops work on grayscale but binar for fun)
 		CompVMatPtr imageIn, imageOut;
-		COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &imageIn));
-		COMPV_CHECK_CODE_RETURN(CompVImageThreshold::global(imageIn, &imageIn, 128.0));		
+		COMPV_CHECK_CODE_RETURN(CompVImage::read(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &imageIn));
+		COMPV_CHECK_CODE_RETURN(CompVImage::thresholdGlobal(imageIn, &imageIn, 128.0));		
 		COMPV_CHECK_CODE_RETURN(CompVMathMorph::process(imageIn, strel, &imageOut, test->opType, test->borderType));
 		COMPV_CHECK_EXP_RETURN(std::string(test->md5).compare(compv_tests_md5(imageOut)) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Morph MD5 mismatch");
 		COMPV_DEBUG_INFO_EX(TAG_TEST, "** Test OK **");

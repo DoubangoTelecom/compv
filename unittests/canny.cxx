@@ -49,7 +49,7 @@ COMPV_ERROR_CODE unittest_canny()
 	for (size_t i = 0; i < COMPV_UNITTEST_CANNY_COUNT; ++i) {
 		test = &COMPV_UNITTEST_CANNY[i];
 		COMPV_DEBUG_INFO_EX(TAG_TEST, "== Trying new test: Canny edge detector -> %s ==", test->filename);
-		COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &image));
+		COMPV_CHECK_CODE_BAIL(err = CompVImage::read(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &image));
 		COMPV_CHECK_CODE_RETURN(dete->process(image, &edges));
 		COMPV_CHECK_EXP_BAIL(std::string(test->md5).compare(compv_tests_md5(edges)) != 0, (err = COMPV_ERROR_CODE_E_UNITTEST_FAILED), "Canny edge detector MD5 mismatch");
 		COMPV_DEBUG_INFO_EX(TAG_TEST, "** Test OK **");
