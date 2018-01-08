@@ -459,6 +459,7 @@ public:
 typedef CompVPoint<compv_float32_t> CompVPointFloat32;
 typedef CompVPoint<compv_float64_t> CompVPointFloat64;
 typedef CompVPoint<int32_t> CompVPointInt32;
+typedef CompVPoint<int16_t> CompVPointInt16;
 typedef CompVPoint<int> CompVPointInt;
 typedef CompVPoint<size_t> CompVPointSz;
 typedef std::vector<CompVPointFloat32, CompVAllocatorNoDefaultConstruct<CompVPointFloat32> > CompVPointFloat32Vector;
@@ -524,11 +525,13 @@ typedef std::vector<CompVRectInt, CompVAllocatorNoDefaultConstruct<CompVRectInt>
 typedef CompVPointFloat32 CompVQuadrilateralFloat32[4];
 typedef CompVPointFloat64 CompVQuadrilateralFloat64[4];
 typedef CompVPointInt32 CompVQuadrilateralInt32[4];
+typedef CompVPointInt16 CompVQuadrilateralInt16[4];
 typedef CompVPointInt CompVQuadrilateralInt[4];
 typedef CompVPointSz CompVQuadrilateralSz[4];
 typedef std::vector<CompVQuadrilateralFloat32, CompVAllocatorNoDefaultConstruct<CompVQuadrilateralFloat32> > CompVQuadrilateralFloat32Vector;
 typedef std::vector<CompVQuadrilateralFloat64, CompVAllocatorNoDefaultConstruct<CompVQuadrilateralFloat64> > CompVQuadrilateralFloat64Vector;
 typedef std::vector<CompVQuadrilateralInt32, CompVAllocatorNoDefaultConstruct<CompVQuadrilateralInt32> > CompVQuadrilateralInt32Vector;
+typedef std::vector<CompVQuadrilateralInt16, CompVAllocatorNoDefaultConstruct<CompVQuadrilateralInt16> > CompVQuadrilateralInt16Vector;
 typedef std::vector<CompVQuadrilateralInt, CompVAllocatorNoDefaultConstruct<CompVQuadrilateralInt> > CompVQuadrilateralIntVector;
 typedef std::vector<CompVQuadrilateralSz, CompVAllocatorNoDefaultConstruct<CompVQuadrilateralSz> > CompVQuadrilateralSzVector;
 

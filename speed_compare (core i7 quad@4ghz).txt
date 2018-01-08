@@ -150,5 +150,6 @@ CompV(PLSL): 956.ms(full optiz)
 OpenCV: 2627.ms(full optiz)
 Remarque: We're 274% (almost #3 times) faster.
 Our implementation is single-threaded. Must provide MT implementation to improve performances.
+OpenCV uses SSE42.
 
 

@@ -48,7 +48,7 @@ enum {
 
 	
 	/* Parallel Light Speed Labeling */
-	COMPV_PLSL_ID,
+	COMPV_PLSL_ID, // Binary image
 	COMPV_PLSL_SET_INT_TYPE,
 	COMPV_PLSL_TYPE_STD,
 	COMPV_PLSL_TYPE_STDZ,
@@ -59,28 +59,31 @@ enum {
 	COMPV_PLSL_TYPE_XRLEZ,
 
 	/* Contour Tracing approach by Fu Chang et al */
-	COMPV_CT_ID,
+	COMPV_CT_ID, // Binary image
 
 	/* By Wan-Yu Chang et al.  */
-	COMPV_CCIT_ID,
+	COMPV_CCIT_ID, // Binary image
 
 	/* By Di Stefano */
-	COMPV_DISTEFANO_ID,
+	COMPV_DISTEFANO_ID, // Binary image
 
 	/* Block Based with Decision Trees algorithm by Grana et al. */
-	COMPV_BBDT_ID,
+	COMPV_BBDT_ID, // Binary image
 
 	/* the Scan Array Union Find algorithm by Wu et al. */
-	COMPV_SAUF_ID,
+	COMPV_SAUF_ID, // Binary image
 
 	/* Configuration-Transition-Based algorithm by He et al. */
-	COMPV_CTB_ID,
+	COMPV_CTB_ID, // Binary image
 
 	/* The stripe-based algorithm by Zhao et al. */
-	COMPV_SBLA_ID,
+	COMPV_SBLA_ID, // Binary image
 
 	/* Optimized Pixel Prediction by Grana et al. */
-	COMPV_PRED_ID
+	COMPV_PRED_ID, // Binary image
+
+	/* Linear Time Maximally Stable Extremal Regions */
+	COMPV_LMSER_ID, // Grayscale image
 };
 
 // Class: CompVConnectedComponentLabelingResult
