@@ -112,7 +112,7 @@ void CompVCannyHysteresisRow_8mpw_Intrin_NEON(size_t row, size_t colStart, size_
 void CompVCannyHysteresisRow_16mpw_Intrin_NEON(size_t row, size_t colStart, size_t width, size_t height, size_t stride, uint16_t tLow, uint16_t tHigh, const uint16_t* grad, const uint16_t* g0, uint8_t* e, uint8_t* e0)
 {
 	COMPV_DEBUG_INFO_CHECK_NEON();
-	compv_uscalar_t col;
+	int16_t col;
 	size_t i, j;
 	uint16x8_t vecG, vec0;
 	uint8x8_t vec0n, vecPn;
@@ -123,14 +123,17 @@ void CompVCannyHysteresisRow_16mpw_Intrin_NEON(size_t row, size_t colStart, size
 	uint32_t mask = 0, mask0;
 	uint8_t* p;
 	const uint16_t *g, *gb, *gt;
-	size_t c, r, s;
+	int16_t c, r;
+	size_t s;
 	uint8_t *pb, *pt;
-	CompVMatIndex edge;
+	int32_t edge;
 	// std::vector is faster than std::list, std::dequeue and std::stack (perf. done using Intel VTune on core i7)
 	// also, check https://baptiste-wicht.com/posts/2012/11/cpp-benchmark-vector-vs-list.html
-	std::vector<CompVMatIndex> edges;
+	std::vector<int32_t> edges;
+	const int16_t maxWidth = static_cast<int16_t>(width - 15);
+	const int32_t rowlsl16 = static_cast<int32_t>(row << 16);
 
-	for (col = colStart; col < width - 15; col += 16) { // width is alredy >=8 (checked by the caller)
+	for (col = static_cast<int16_t>(colStart); col < maxWidth; col += 16) { // width is alredy >=8 (checked by the caller)
 		vec0 = vceqq_u8(vld1q_u8(&e[col]), vecZero); // high 64bits then extend to 128bits (unaligned load)
 		vec0 = vandq_u8(
 			vec0, 
@@ -154,12 +157,12 @@ void CompVCannyHysteresisRow_16mpw_Intrin_NEON(size_t row, size_t colStart, size
 				continue;
 			}
 			e[col + i] = 0xff;
-			edges.push_back(CompVMatIndex(row, col + i));
+			edges.push_back(rowlsl16 | (col + i));
 			while (!edges.empty()) {
 				edge = edges.back();
 				edges.pop_back();
-				c = edge.col;
-				r = edge.row;
+				c = edge & 0xffff;
+				r = edge >> 16;
 				if (r && c && r < height && c < width) {
 					s = (r * stride) + c;
 					p = e0 + s;
@@ -176,38 +179,38 @@ void CompVCannyHysteresisRow_16mpw_Intrin_NEON(size_t row, size_t colStart, size
 					if (mask0) {
 						if (mask0 & 0x000000ff) { // left
 							p[-1] = 0xff;
-							edges.push_back(CompVMatIndex(r, c - 1));
+							edges.push_back((r << 16) | (c - 1));
 						}
 						if (mask0 & 0x0000ff00) { // right
 							p[1] = 0xff;
-							edges.push_back(CompVMatIndex(r, c + 1));
+							edges.push_back((r << 16) | (c + 1));
 						}
 						if (mask0 & 0x00ff0000) { // top-left
 							pt[-1] = 0xff;
-							edges.push_back(CompVMatIndex(r - 1, c - 1));
+							edges.push_back(((r - 1) << 16) | (c - 1));
 						}
 						if (mask0 & 0xff000000) { // top-center
 							*pt = 0xff;
-							edges.push_back(CompVMatIndex(r - 1, c));
+							edges.push_back(((r - 1) << 16) | (c));
 						}
 					}
 					mask0 = vget_lane_u32(vec0n, 1);
 					if (mask0) {
 						if (mask0 & 0x000000ff) { // top-right
 							pt[1] = 0xff;
-							edges.push_back(CompVMatIndex(r - 1, c + 1));
+							edges.push_back(((r - 1) << 16) | (c + 1));
 						}
 						if (mask0 & 0x0000ff00) { // bottom-left
 							pb[-1] = 0xff;
-							edges.push_back(CompVMatIndex(r + 1, c - 1));
+							edges.push_back(((r + 1) << 16) | (c - 1));
 						}
 						if (mask0 & 0x00ff0000) { // bottom-center
 							*pb = 0xff;
-							edges.push_back(CompVMatIndex(r + 1, c));
+							edges.push_back(((r + 1) << 16) | (c));
 						}
 						if (mask0 & 0xff000000) { // bottom-right
 							pb[1] = 0xff;
-							edges.push_back(CompVMatIndex(r + 1, c + 1));
+							edges.push_back(((r + 1) << 16) | (c + 1));
 						}
 					}
 				}

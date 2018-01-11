@@ -107,7 +107,7 @@ void CompVCannyHysteresisRow_8mpw_Intrin_SSE2(size_t row, size_t colStart, size_
 void CompVCannyHysteresisRow_16mpw_Intrin_SSE2(size_t row, size_t colStart, size_t width, size_t height, size_t stride, uint16_t tLow, uint16_t tHigh, const uint16_t* grad, const uint16_t* g0, uint8_t* e, uint8_t* e0)
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
-	compv_uscalar_t col;
+	int16_t col;
 	__m128i vecG, vecP, vec0, vec1, vec2;
 	const __m128i vecTLow = _mm_set1_epi16(tLow);
 	const __m128i vecTHigh = _mm_set1_epi16(tHigh);
@@ -117,14 +117,17 @@ void CompVCannyHysteresisRow_16mpw_Intrin_SSE2(size_t row, size_t colStart, size
 	compv_bsf_t m0, m1, mi;
 	uint8_t* p;
 	const uint16_t *g, *gb, *gt;
-	size_t c, r, s;
+	int16_t c, r;
+	size_t s;
 	uint8_t *pb, *pt;
-	CompVMatIndex edge;
+	int32_t edge;
+	const int16_t maxWidth = static_cast<int16_t>(width - 15);
+	const int32_t rowlsl16 = static_cast<int32_t>(row << 16);
 	// std::vector is faster than std::list, std::dequeue and std::stack (perf. done using Intel VTune on core i7)
 	// also, check https://baptiste-wicht.com/posts/2012/11/cpp-benchmark-vector-vs-list.html
-	std::vector<CompVMatIndex> edges;
+	std::vector<int32_t> edges;
 
-	for (col = colStart; col < width - 15; col += 16) { // width is alredy >=8 (checked by the caller)
+	for (col = static_cast<int16_t>(colStart); col < maxWidth; col += 16) { // width is alredy >=8 (checked by the caller)
 		vec0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&e[col]));
 		vec1 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&grad[col]));
 		vec2 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&grad[col + 8]));
@@ -138,12 +141,12 @@ void CompVCannyHysteresisRow_16mpw_Intrin_SSE2(size_t row, size_t colStart, size
 			compv_bsf(m0, &mi);
 			m0 ^= (1 << mi); // asm: "btr" (http://www.felixcloutier.com/x86/BTR.html) - Visual Studio: "_bittestandreset"
 			e[col + mi] = 0xff;
-			edges.push_back(CompVMatIndex(row, col + mi));
+			edges.push_back(rowlsl16 | (col + mi));
 			while (!edges.empty()) {
 				edge = edges.back();
 				edges.pop_back();
-				c = edge.col;
-				r = edge.row;
+				c = edge & 0xffff;
+				r = edge >> 16;
 				if (r && c && r < height && c < width) {
 					s = (r * stride) + c;
 					p = e0 + s;
@@ -173,14 +176,14 @@ void CompVCannyHysteresisRow_16mpw_Intrin_SSE2(size_t row, size_t colStart, size
 								compv_bsf(m1, &mi);
 								m1 ^= (1 << mi);
 								switch (mi) {
-								case 0: p[-1] = 0xff; edges.push_back(CompVMatIndex(r, c - 1)); break; // left	
-								case 1: p[1] = 0xff; edges.push_back(CompVMatIndex(r, c + 1)); break; // right
-								case 2: pt[-1] = 0xff; edges.push_back(CompVMatIndex(r - 1, c - 1)); break; // top-left
-								case 3: *pt = 0xff; edges.push_back(CompVMatIndex(r - 1, c)); break; // top-center
-								case 4: pt[1] = 0xff;  edges.push_back(CompVMatIndex(r - 1, c + 1)); break; // top-right
-								case 5: pb[-1] = 0xff;  edges.push_back(CompVMatIndex(r + 1, c - 1)); break; // bottom-left
-								case 6: *pb = 0xff;  edges.push_back(CompVMatIndex(r + 1, c)); break; // bottom-center
-								case 7: pb[1] = 0xff;  edges.push_back(CompVMatIndex(r + 1, c + 1)); break; // bottom-right
+								case 0: p[-1] = 0xff; edges.push_back((r << 16) | (c - 1)); break; // left	
+								case 1: p[1] = 0xff; edges.push_back((r << 16) | (c + 1)); break; // right
+								case 2: pt[-1] = 0xff; edges.push_back(((r - 1) << 16) | (c - 1)); break; // top-left
+								case 3: *pt = 0xff; edges.push_back(((r - 1) << 16) | (c)); break; // top-center
+								case 4: pt[1] = 0xff;  edges.push_back(((r - 1) << 16) | (c + 1)); break; // top-right
+								case 5: pb[-1] = 0xff;  edges.push_back(((r + 1)  << 16) | (c - 1)); break; // bottom-left
+								case 6: *pb = 0xff;  edges.push_back(((r + 1) << 16) | (c)); break; // bottom-center
+								case 7: pb[1] = 0xff;  edges.push_back(((r + 1) << 16) | (c + 1)); break; // bottom-right
 								}
 							} while (m1);
 						}

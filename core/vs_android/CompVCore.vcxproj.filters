@@ -312,6 +312,12 @@
     <ClInclude Include="..\include\compv\core\ccl\intrin\arm\compv_core_ccl_lsl_intrin_neon.h">
       <Filter>include\ccl\intrin\arm</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\compv\core\ccl\compv_core_ccl_lmser.h">
+      <Filter>include\ccl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\core\ccl\compv_core_ccl_lmser_result.h">
+      <Filter>include\ccl</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_core.cxx">
@@ -433,6 +439,12 @@
     </ClCompile>
     <ClCompile Include="..\ccl\intrin\arm\compv_core_ccl_lsl_intrin_neon.cxx">
       <Filter>source\ccl\intrin\arm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ccl\compv_core_ccl_lmser.cxx">
+      <Filter>source\ccl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ccl\compv_core_ccl_lmser_result.cxx">
+      <Filter>source\ccl</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

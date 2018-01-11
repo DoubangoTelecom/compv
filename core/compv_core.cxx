@@ -14,6 +14,7 @@
 #include "compv/core/features/orb/compv_core_feature_orb_dete.h"
 #include "compv/core/features/orb/compv_core_feature_orb_desc.h"
 #include "compv/core/ccl/compv_core_ccl_lsl.h"
+#include "compv/core/ccl/compv_core_ccl_lmser.h"
 #include "compv/core/matchers/compv_core_matcher_bruteforce.h"
 #include "compv/core/video/compv_core_video_reader_ffmpeg.h"
 #include "compv/core/video/compv_core_video_writer_ffmpeg.h"
@@ -112,6 +113,12 @@ static const CompVConnectedComponentLabelingFactory lslFactory = {
 	CompVConnectedComponentLabelingLSL::newObj,
 };
 
+static const CompVConnectedComponentLabelingFactory lmserFactory = {
+	COMPV_LMSER_ID,
+	"LMSER (Linear Time Maximally Stable Extremal Regions)",
+	CompVConnectedComponentLabelingLMSER::newObj,
+};
+
 COMPV_ERROR_CODE CompVCore::init()
 {
 	if (s_bInitialized) {
@@ -142,7 +149,8 @@ COMPV_ERROR_CODE CompVCore::init()
 	COMPV_CHECK_CODE_BAIL(err = CompVMatcher::addFactory(&bruteForceFactory), "Failed to add bruteforce matcher factory");
 
 	// Connected Component Labeling
-	COMPV_CHECK_CODE_BAIL(err = CompVConnectedComponentLabeling::addFactory(&lslFactory), "Failed to add Parallel Light Speed Labeling factory");
+	COMPV_CHECK_CODE_BAIL(err = CompVConnectedComponentLabeling::addFactory(&lslFactory), "Failed to add 'Parallel Light Speed Labeling' factory");
+	COMPV_CHECK_CODE_BAIL(err = CompVConnectedComponentLabeling::addFactory(&lmserFactory), "Failed to add 'Linear Time Maximally Stable Extremal Regions' factory");
 
 	// Video Readers and Writers
 #if defined(HAVE_FFMPEG)

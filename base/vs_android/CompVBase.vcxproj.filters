@@ -645,6 +645,9 @@
     <ClInclude Include="..\include\compv\base\tbbmalloc\tbbmalloc_proxy.h">
       <Filter>include\tbbmalloc</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\compv\base\compv_kernel.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_base.cxx">
@@ -1066,6 +1069,9 @@
     </ClCompile>
     <ClCompile Include="..\tbbmalloc\tbbmalloc.cpp">
       <Filter>source\tbbmalloc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\compv_kernel.cxx">
+      <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

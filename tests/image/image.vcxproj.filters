@@ -56,7 +56,10 @@
     <ClCompile Include="split.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ccl.cxx">
+    <ClCompile Include="ccl_binar.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ccl_mser.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

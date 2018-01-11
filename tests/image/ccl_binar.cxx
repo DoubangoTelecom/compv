@@ -75,7 +75,7 @@ static COMPV_ERROR_CODE check_blobs(const CompVConnectedComponentLabelingResultP
 static COMPV_ERROR_CODE check_boxes(const CompVConnectedComponentLabelingResultPtr& result, const compv_unittest_ccl* test);
 
 
-COMPV_ERROR_CODE ccl()
+COMPV_ERROR_CODE ccl_binar()
 {
 	const compv_unittest_ccl* test = nullptr;
 
@@ -110,7 +110,7 @@ COMPV_ERROR_CODE ccl()
 		//COMPV_CHECK_CODE_RETURN(check_boxes(result, test));
 	}
 	const uint64_t timeEnd = CompVTime::nowMillis();
-	COMPV_DEBUG_INFO("Elapsed time (TestConnectedComponentLabeling) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
+	COMPV_DEBUG_INFO("Elapsed time (TestConnectedComponentLabeling(Binar)) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 
 	COMPV_CHECK_CODE_RETURN(check_blobs(result, binar));
 	COMPV_CHECK_CODE_RETURN(check_labels(result, test));

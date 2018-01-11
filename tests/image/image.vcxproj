@@ -161,13 +161,14 @@
     <ClCompile Include="..\tests_common.cxx" />
     <ClCompile Include="bruteforce.cxx" />
     <ClCompile Include="canny.cxx" />
-    <ClCompile Include="ccl.cxx" />
+    <ClCompile Include="ccl_binar.cxx" />
     <ClCompile Include="chroma_conv.cxx" />
     <ClCompile Include="feature_fast.cxx" />
     <ClCompile Include="feature_orb.cxx" />
     <ClCompile Include="houghkht.cxx" />
     <ClCompile Include="houghsht.cxx" />
     <ClCompile Include="main.cxx" />
+    <ClCompile Include="ccl_mser.cxx" />
     <ClCompile Include="patch.cxx" />
     <ClCompile Include="pyramid.cxx" />
     <ClCompile Include="scale.cxx" />

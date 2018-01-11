@@ -292,7 +292,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::reset()
 
 COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::newObj(CompVConnectedComponentLabelingResultLSLImplPtrPtr result)
 {
-	COMPV_CHECK_EXP_RETURN(!result, COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
+	COMPV_CHECK_EXP_RETURN(!result, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	CompVConnectedComponentLabelingResultLSLImplPtr result_ = new CompVConnectedComponentLabelingResultLSLImpl();
 	COMPV_CHECK_EXP_RETURN(!result_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 

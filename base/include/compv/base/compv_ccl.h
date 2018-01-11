@@ -16,8 +16,16 @@
 #include <map>
 #include <vector>
 #include <functional>
+#include <array>
 
 COMPV_NAMESPACE_BEGIN()
+
+#define kCompVConnectedComponentDeltaDefault		5
+#define kCompVConnectedComponentMinAreaDefault		0.0002
+#define kCompVConnectedComponentMaxAreaDefault		0.5
+#define kCompVConnectedComponentMaxVariationDefault	0.5
+#define kCompVConnectedComponentMinDiversityDefault	0.5
+#define kCompVConnectedComponentConnectivity		8
 
 typedef CompVPoint2DInt16Vector CompVConnectedComponentPoints;
 typedef std::vector<CompVConnectedComponentPoints > CompVConnectedComponentPointsVector;
@@ -27,7 +35,8 @@ typedef CompVRectInt16Vector CompVConnectedComponentBoundingBoxesVector;
 
 typedef std::function<bool(const int32_t id)> CompVConnectedComponentCallbackRemoveLabel;
 
-typedef double CompVConnectedComponentMoments[6]; // sum(1), sum(x), sum(y), sum(x*x), sum(x*y), sum(y*y)
+typedef std::array<double, 6> CompVConnectedComponentMoments; // sum(1), sum(x), sum(y), sum(x*x), sum(x*y), sum(y*y)
+typedef std::vector<CompVConnectedComponentMoments, CompVAllocatorNoDefaultConstruct<CompVConnectedComponentMoments> > CompVConnectedComponentMomentsVector;
 
 COMPV_OBJECT_DECLARE_PTRS(ConnectedComponentLabeling)
 COMPV_OBJECT_DECLARE_PTRS(ConnectedComponentLabelingResult)
@@ -47,7 +56,7 @@ enum COMPV_CCL_EXTRACT_TYPE {
 /* Connected component labeling setters and getters */
 enum {
 	/* Common to all features */
-
+	COMPV_CCL_SET_INT_CONNECTIVITY,
 	
 	/* Parallel Light Speed Labeling */
 	COMPV_PLSL_ID, // Binary image
@@ -144,8 +153,8 @@ protected:
 public:
 	virtual ~CompVConnectedComponentLabelingResultLMSER() {
 	}
-	virtual COMPV_ERROR_CODE boundingBoxes(CompVConnectedComponentBoundingBoxesVector& boxes) const = 0;
-	virtual COMPV_ERROR_CODE moments(CompVConnectedComponentMoments& moments) const = 0;
+	virtual const CompVConnectedComponentMomentsVector& moments() const = 0;
+	virtual const CompVConnectedComponentBoundingBoxesVector& boundingBoxes() const = 0;
 };
 
 // Class: CompVConnectedComponentLabeling
@@ -155,11 +164,33 @@ protected:
 	CompVConnectedComponentLabeling(int id);
 public:
 	virtual ~CompVConnectedComponentLabeling();
+	
 	COMPV_INLINE int id() const {
 		return m_nId;
 	}
+	COMPV_INLINE int delta() const {
+		return m_nDelta;
+	}
+	COMPV_INLINE double minArea() const {
+		return m_64fMinArea;
+	}
+	COMPV_INLINE double maxArea() const {
+		return m_64fMaxArea;
+	}
+	COMPV_INLINE double maxVariation() const {
+		return m_64fMaxVariation;
+	}
+	COMPV_INLINE double minDiversity() const {
+		return m_64fMinDiversity;
+	}
+	COMPV_INLINE int connectivity() const {
+		return m_nConnectivity;
+	}
 
-	virtual COMPV_ERROR_CODE process(const CompVMatPtr& binar, CompVConnectedComponentLabelingResultPtrPtr result) = 0;
+	virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize) override /*Overrides(CompVCaps)*/;
+
+	virtual COMPV_ERROR_CODE process(const CompVMatPtr& ptr8uData, CompVConnectedComponentLabelingResultPtrPtr result) = 0;
+
 	template<typename T>
 	static const T* reinterpret_castr(const CompVConnectedComponentLabelingResultPtr& result) {
 		if (result) {
@@ -173,7 +204,12 @@ public:
 		return nullptr;
 	}
 
-	static COMPV_ERROR_CODE newObj(CompVConnectedComponentLabelingPtrPtr ccl, int id);
+	static COMPV_ERROR_CODE newObj(CompVConnectedComponentLabelingPtrPtr ccl, int id,
+		int delta = kCompVConnectedComponentDeltaDefault,
+		double min_area = kCompVConnectedComponentMinAreaDefault, double max_area = kCompVConnectedComponentMaxAreaDefault,
+		double max_variation = kCompVConnectedComponentMaxVariationDefault,
+		double min_diversity = kCompVConnectedComponentMinDiversityDefault,
+		int connectivity = kCompVConnectedComponentConnectivity);
 	static COMPV_ERROR_CODE addFactory(const CompVConnectedComponentLabelingFactory* factory);
 	static const CompVConnectedComponentLabelingFactory* findFactory(int id);
 
@@ -181,6 +217,12 @@ private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
 	static std::map<int, const CompVConnectedComponentLabelingFactory*> s_Factories;
 	int m_nId;
+	int m_nDelta;
+	double m_64fMinArea;
+	double m_64fMaxArea;
+	double m_64fMaxVariation;
+	double m_64fMinDiversity;
+	int m_nConnectivity;
 	COMPV_VS_DISABLE_WARNINGS_END()
 };
 

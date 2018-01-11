@@ -604,23 +604,26 @@ static void CompVCannyHysteresisRow_C(size_t row, size_t colStart, size_t width,
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
 	}
 #endif
-	CompVMatIndex edge;
+	int32_t edge;
 	uint8_t* p;
 	const uint16_t *g, *gb, *gt;
-	size_t c, r, s;
+	int16_t c, r;
+	size_t s;
 	uint8_t *pb, *pt;
 	uint32_t cmp32;
-	std::vector<CompVMatIndex> edges;
+	std::vector<int32_t> edges;
+	const int16_t width_ = static_cast<int16_t>(width);
+	const int32_t rowlsl16 = static_cast<int32_t>(row << 16);
 
-	for (size_t col = colStart; col < width; ++col) {
+	for (int16_t col = static_cast<int16_t>(colStart); col < width_; ++col) {
 		if (grad[col] > tHigh && !e[col]) { // strong edge and not connected yet
 			e[col] = 0xff;
-			edges.push_back(CompVMatIndex(row, col));
+			edges.push_back(rowlsl16 | col);
 			while (!edges.empty()) {
 				edge = edges.back();
 				edges.pop_back();
-				c = edge.col;
-				r = edge.row;
+				c = edge & 0xffff;
+				r = edge >> 16;
 				if (r && c && r < height && c < width) {
 					s = (r * stride) + c;
 					p = e0 + s;
@@ -631,42 +634,42 @@ static void CompVCannyHysteresisRow_C(size_t row, size_t colStart, size_t width,
 					gt = g - stride;
 					if (g[-1] > tLow && !p[-1]) { // left
 						p[-1] = 0xff;
-						edges.push_back(CompVMatIndex(r, c - 1));
+						edges.push_back((r << 16) | (c - 1));
 					}
 					if (g[1] > tLow && !p[1]) { // right
 						p[1] = 0xff;
-						edges.push_back(CompVMatIndex(r, c + 1));
+						edges.push_back((r << 16) | (c + 1));
 					}
 					/* TOP */
-					cmp32 = *reinterpret_cast<const uint32_t*>(&pt[-1]) ^ 0xffffff;
+					cmp32 = (*reinterpret_cast<const uint32_t*>(&pt[-1]) ^ 0xffffff) & 0x00ffffff;
 					if (cmp32) {
 						if (cmp32 & 0xff && gt[-1] > tLow) { // left
 							pt[-1] = 0xff;
-							edges.push_back(CompVMatIndex(r - 1, c - 1));
+							edges.push_back(((r - 1) << 16) | (c - 1));
 						}
 						if (cmp32 & 0xff00 && gt[0] > tLow) { // center
 							*pt = 0xff;
-							edges.push_back(CompVMatIndex(r - 1, c));
+							edges.push_back(((r - 1) << 16) | (c));
 						}
 						if (cmp32 & 0xff0000 && gt[1] > tLow && !pt[1]) { // right
 							pt[1] = 0xff;
-							edges.push_back(CompVMatIndex(r - 1, c + 1));
+							edges.push_back(((r - 1) << 16) | (c + 1));
 						}
 					}
 					/* BOTTOM */
-					cmp32 = *reinterpret_cast<const uint32_t*>(&pb[-1]) ^ 0xffffff;
+					cmp32 = (*reinterpret_cast<const uint32_t*>(&pb[-1]) ^ 0xffffff) & 0x00ffffff;
 					if (cmp32) {
 						if (cmp32 & 0xff && gb[-1] > tLow) { // left
 							pb[-1] = 0xff;
-							edges.push_back(CompVMatIndex(r + 1, c - 1));
+							edges.push_back(((r + 1) << 16) | (c - 1));
 						}
 						if (cmp32 & 0xff00 && gb[0] > tLow) { // center
 							*pb = 0xff;
-							edges.push_back(CompVMatIndex(r + 1, c));
+							edges.push_back(((r + 1) << 16) | (c));
 						}
 						if (cmp32 & 0xff0000 && gb[1] > tLow) { // right
 							pb[1] = 0xff;
-							edges.push_back(CompVMatIndex(r + 1, c + 1));
+							edges.push_back(((r + 1) << 16) | (c + 1));
 						}
 					}
 				}

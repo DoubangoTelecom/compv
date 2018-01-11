@@ -139,8 +139,8 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::set(int id, const void* val
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	default:
-		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Set with id %d not implemented", id);
-		return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
+		COMPV_CHECK_CODE_RETURN(CompVConnectedComponentLabeling::set(id, valuePtr, valueSize));
+		return COMPV_ERROR_CODE_S_OK;
 	}
 }
 

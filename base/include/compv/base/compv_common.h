@@ -549,6 +549,7 @@ public:
 typedef CompVSize<compv_float32_t> CompVSizeFloat32;
 typedef CompVSize<compv_float64_t> CompVSizeFloat64;
 typedef CompVSize<int32_t> CompVSizeInt32;
+typedef CompVSize<int16_t> CompVSizeInt16;
 typedef CompVSize<int> CompVSizeInt;
 typedef CompVSize<size_t> CompVSizeSz;
 

@@ -10,9 +10,10 @@ using namespace compv;
 #define TEST_FEATURE_FAST			0
 #define TEST_FEATURE_ORB			0
 #define TEST_PATCH_MOMENTS			0
-#define TEST_CCL					1
+#define TEST_CCL_BINAR				0
+#define TEST_CCL_MSER				0
 #define TEST_SOBEL					0
-#define TEST_CANNY					0
+#define TEST_CANNY					1
 #define TEST_ADAPT_THRESH			0
 #define TEST_OTSU_THRESH			0
 #define TEST_HOUGHSHT				0
@@ -51,9 +52,13 @@ compv_main()
 		extern COMPV_ERROR_CODE patch_moments0110();
 		COMPV_CHECK_CODE_BAIL(err = patch_moments0110(), TAG_TEST_IMAGE "Image moments test failed");
 #endif
-#if TEST_CCL
-		extern COMPV_ERROR_CODE ccl();
-		COMPV_CHECK_CODE_BAIL(err = ccl(), TAG_TEST_IMAGE "Connected component labeling test failed");
+#if TEST_CCL_BINAR
+		extern COMPV_ERROR_CODE ccl_binar();
+		COMPV_CHECK_CODE_BAIL(err = ccl_binar(), TAG_TEST_IMAGE "Connected component labeling(binar) test failed");
+#endif
+#if TEST_CCL_MSER
+		extern COMPV_ERROR_CODE ccl_mser();
+		COMPV_CHECK_CODE_BAIL(err = ccl_mser(), TAG_TEST_IMAGE "Connected component labeling(MSER) test failed");
 #endif
 
 #if TEST_SOBEL
