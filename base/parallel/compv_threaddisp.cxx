@@ -32,7 +32,7 @@ CompVThreadDispatcher::~CompVThreadDispatcher()
 
 size_t CompVThreadDispatcher::guessNumThreadsDividingAcrossY(const size_t xcount, const size_t ycount, const size_t maxThreads, const size_t minSamplesPerThread)
 {
-#if 0
+#if 1
 	size_t divCount = 1;
 	for (size_t div = 2; div <= maxThreads; ++div) {
 		if ((xcount * (ycount / divCount)) <= minSamplesPerThread) { // we started with the smallest div, which mean largest number of pixs and break the loop when we're above the threshold
