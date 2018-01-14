@@ -68,7 +68,7 @@ static COMPV_ERROR_CODE check_labels(const CompVConnectedComponentLabelingResult
 static COMPV_ERROR_CODE check_segments(const CompVConnectedComponentLabelingResultPtr& result, const compv_unittest_ccl* test);
 static COMPV_ERROR_CODE check_blobs(const CompVConnectedComponentLabelingResultPtr& result, const CompVMatPtr& ptr8uInput);
 
-COMPV_ERROR_CODE unittest_ccl()
+COMPV_ERROR_CODE unittest_ccl_binar()
 {
 	const compv_unittest_ccl* test;
 	CompVMatPtr binar;
@@ -81,7 +81,7 @@ COMPV_ERROR_CODE unittest_ccl()
 
 	for (size_t i = 0; i < COMPV_UNITTEST_CCL_COUNT; ++i) {
 		test = &COMPV_UNITTEST_CCL[i];
-		COMPV_DEBUG_INFO_EX(TAG_TEST, "== Trying new test: CCL -> %s ==", compv_unittest_ccl_to_string(test).c_str());		
+		COMPV_DEBUG_INFO_EX(TAG_TEST, "== Trying new test: CCL(binar) -> %s ==", compv_unittest_ccl_to_string(test).c_str());		
 		COMPV_CHECK_CODE_RETURN(CompVImage::read(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &binar));
 		COMPV_CHECK_CODE_RETURN(CompVImage::thresholdGlobal(binar, &binar, 128));
 		COMPV_CHECK_CODE_RETURN(ccl_obj->process(binar, &result));
