@@ -580,7 +580,9 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 	if (*result && (*result)->id() == id()) {
 		result_ = reinterpret_cast<CompVConnectedComponentLabelingResultLSLImpl*>(**result);
 	}
-	COMPV_CHECK_CODE_RETURN(CompVConnectedComponentLabelingResultLSLImpl::newObj(&result_));
+	if (!result_) {
+		COMPV_CHECK_CODE_RETURN(CompVConnectedComponentLabelingResultLSLImpl::newObj(&result_));
+	}
 	COMPV_CHECK_CODE_RETURN(result_->reset());
 	CompVSizeSz& szInputSize = result_->szInput();
 

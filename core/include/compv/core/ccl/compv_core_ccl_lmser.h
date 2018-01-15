@@ -9,6 +9,7 @@
 
 #include "compv/core/compv_core_config.h"
 #include "compv/core/compv_core_common.h"
+#include "compv/core/ccl/compv_core_ccl_lmser_result.h"
 #include "compv/base/compv_ccl.h"
 
 #if defined(_COMPV_API_H_)
@@ -28,11 +29,14 @@ public:
 	COMPV_OBJECT_GET_ID(CompVConnectedComponentLabelingLMSER);
 
 	virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize) override /*Overrides(CompVCaps)*/;
-	virtual COMPV_ERROR_CODE process(const CompVMatPtr& binar, CompVConnectedComponentLabelingResultPtrPtr result) override /*Overrides(CompVConnectedComponentLabeling)*/;
+	virtual COMPV_ERROR_CODE process(const CompVMatPtr& ptr8uImage, CompVConnectedComponentLabelingResultPtrPtr result) override /*Overrides(CompVConnectedComponentLabeling)*/;
 
 	static COMPV_ERROR_CODE newObj(CompVConnectedComponentLabelingPtrPtr ccl);
 
 private:
+	static void stability(CompVConnectedComponentLmserRef& component, const int& delta, const size_t& min_area, const size_t& max_area, const double& max_variation);
+	static void collect(CompVConnectedComponentLmserRef& component, const double& one_minus_min_diversity, const double& one_minus_min_diversity_scale, CompVConnectedComponentLabelingRegionMserRefsVector& vecRegions);
+	static bool checkCrit(const CompVConnectedComponentLmserRef& component, const double& area, const double& variation);
 };
 
 COMPV_NAMESPACE_END()

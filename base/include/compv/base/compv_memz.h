@@ -20,8 +20,13 @@ template<class T>
 class CompVMemZero : public CompVObj
 {
 protected:
-	CompVMemZero(size_t rows, size_t cols, size_t stride = 0) : m_nCols(cols), m_nRows(rows) {
-		m_bIsTbbMallocEnabled = CompVMem::isTbbMallocEnabled();
+	CompVMemZero(size_t rows, size_t cols, size_t stride = 0, bool useLegacyCalloc = false) : m_nCols(cols), m_nRows(rows) {
+		m_bIsTbbMallocEnabled = !useLegacyCalloc && CompVMem::isTbbMallocEnabled();
+#if 0 // MSER faster even if memset is called
+		if (m_bIsTbbMallocEnabled) {
+			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Intel tbbMalloc calls memset(0) which is not good for optimization");
+		}
+#endif
 		const size_t strideInBytes = (stride > cols) ? (stride * sizeof(T)) : CompVMem::alignForward(cols * sizeof(T), CompVMem::bestAlignment());
 		m_nDataSize = ((strideInBytes * rows)) + CompVMem::bestAlignment();
 		m_pMem = m_bIsTbbMallocEnabled
@@ -57,9 +62,9 @@ public:
 	COMPV_INLINE size_t dataSize() {
 		return m_nDataSize;
 	}
-	static COMPV_ERROR_CODE newObj(CompVPtr<CompVMemZero<T> *>* memz, size_t rows, size_t cols, size_t stride = 0) {
+	static COMPV_ERROR_CODE newObj(CompVPtr<CompVMemZero<T> *>* memz, size_t rows, size_t cols, size_t stride = 0, bool useLegacyCalloc = false) {
 		COMPV_CHECK_EXP_RETURN(!memz || !rows || !cols, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-		CompVPtr<CompVMemZero<T> *> memz_ = new CompVMemZero<T>(rows, cols, stride);
+		CompVPtr<CompVMemZero<T> *> memz_ = new CompVMemZero<T>(rows, cols, stride, useLegacyCalloc);
 		COMPV_CHECK_EXP_RETURN(!memz_, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 		COMPV_CHECK_EXP_RETURN(!memz_->m_pPtr, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 		*memz = memz_;

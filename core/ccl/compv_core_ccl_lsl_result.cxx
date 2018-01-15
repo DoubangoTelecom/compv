@@ -284,6 +284,8 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::remove(CompVConne
 COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::reset()
 {
 	m_nNa1 = 0;
+	m_vecLEA.clear();
+	m_szInput = CompVSizeSz(0, 0);
 	m_vecIds.clear();
 	m_ptrCountPointsBlobs = nullptr;
 	m_ptrCountPointsSegment = nullptr;

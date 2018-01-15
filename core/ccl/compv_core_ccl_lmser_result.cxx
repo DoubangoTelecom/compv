@@ -13,54 +13,88 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-ConnectedComponentLabelingResultLMSERImpl::ConnectedComponentLabelingResultLMSERImpl()
+CompVConnectedComponentLabelingResultLMSERImpl::CompVConnectedComponentLabelingResultLMSERImpl()
+	: m_bBoundingBoxesComputed(false)
 {
 
 }
 
-ConnectedComponentLabelingResultLMSERImpl::~ConnectedComponentLabelingResultLMSERImpl()
+CompVConnectedComponentLabelingResultLMSERImpl::~CompVConnectedComponentLabelingResultLMSERImpl()
 {
 
 }
 
-size_t ConnectedComponentLabelingResultLMSERImpl::labelsCount() const /*override*/
+size_t CompVConnectedComponentLabelingResultLMSERImpl::labelsCount() const /*override*/
 {
-	return 0;
+	return m_vecRegions.size();
 }
 
-COMPV_ERROR_CODE ConnectedComponentLabelingResultLMSERImpl::debugFlatten(CompVMatPtrPtr ptr32sLabels) const /*override*/
+COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLMSERImpl::debugFlatten(CompVMatPtrPtr ptr32sLabels) const /*override*/
 {
 	COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE ConnectedComponentLabelingResultLMSERImpl::extract(CompVConnectedComponentPointsVector& points, COMPV_CCL_EXTRACT_TYPE type COMPV_DEFAULT(COMPV_CCL_EXTRACT_TYPE_BLOB)) const /*override*/
+COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLMSERImpl::extract(CompVConnectedComponentPointsVector& points, COMPV_CCL_EXTRACT_TYPE type COMPV_DEFAULT(COMPV_CCL_EXTRACT_TYPE_BLOB)) const /*override*/
 {
 	COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE ConnectedComponentLabelingResultLMSERImpl::boundingBoxes(CompVConnectedComponentBoundingBoxesVector& boxes) const /*override*/
+// returned vector's life tied to "this"
+const CompVConnectedComponentLabelingRegionMserRefsVector& CompVConnectedComponentLabelingResultLMSERImpl::points() const /*override*/
 {
-	COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
+	return m_vecRegions;
+}
+
+// returned vector's life tied to "this"
+const CompVConnectedComponentLabelingRegionMserRefsVector& CompVConnectedComponentLabelingResultLMSERImpl::boundingBoxes() const /*override*/
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation could be found");
+
+	if (m_bBoundingBoxesComputed || m_vecRegions.empty()) {
+		return m_vecRegions;
+	}
+
+	CompVConnectedComponentLabelingResultLMSERImplPtr This = const_cast<CompVConnectedComponentLabelingResultLMSERImpl*>(this);
+	CompVConnectedComponentLabelingRegionMserRefsVector& vecRegions = This->vecRegions();
+
+	for (CompVConnectedComponentLabelingRegionMserRefsVector::iterator i = vecRegions.begin(); i < vecRegions.end(); ++i) {
+		CompVConnectedComponentBoundingBox& bb = (*i)->boundingBox;
+		CompVConnectedComponentPoints& pp = (*i)->points;
+		bb.left = pp.begin()->x;
+		bb.right = pp.begin()->x;
+		bb.top = pp.begin()->y;
+		bb.bottom = pp.begin()->y;
+		for (CompVConnectedComponentPoints::const_iterator j = pp.begin() + 1; j < pp.end(); ++j) {
+			bb.left = COMPV_MATH_MIN(bb.left, j->x);
+			bb.top = COMPV_MATH_MIN(bb.top, j->y);
+			bb.right = COMPV_MATH_MAX(bb.right, j->x);
+			bb.bottom = COMPV_MATH_MAX(bb.bottom, j->y);
+		}
+	}
+	
+	This->m_bBoundingBoxesComputed = true;
+
+	return m_vecRegions;
+}
+
+COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLMSERImpl::reset()
+{
+	m_vecRegions.clear();
+	m_bBoundingBoxesComputed = false;
+	COMPV_CHECK_CODE_RETURN(m_StackMem.reset());
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE ConnectedComponentLabelingResultLMSERImpl::moments(CompVConnectedComponentMoments& moments) const /*override*/
+COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLMSERImpl::newObj(CompVConnectedComponentLabelingResultLMSERImplPtrPtr result)
 {
-	COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
-	return COMPV_ERROR_CODE_S_OK;
-}
+	COMPV_CHECK_EXP_RETURN(!result, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	CompVConnectedComponentLabelingResultLMSERImplPtr result_ = new CompVConnectedComponentLabelingResultLMSERImpl();
+	COMPV_CHECK_EXP_RETURN(!result_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 
-COMPV_ERROR_CODE ConnectedComponentLabelingResultLMSERImpl::reset()
-{
-	COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
-	return COMPV_ERROR_CODE_S_OK;
-}
-
-COMPV_ERROR_CODE ConnectedComponentLabelingResultLMSERImpl::newObj(CompVConnectedComponentLabelingResultLMSERImplPtrPtr result)
-{
-	COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
+	*result = result_;
 	return COMPV_ERROR_CODE_S_OK;
 }
 

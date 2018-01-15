@@ -97,6 +97,14 @@ enum {
 	COMPV_LMSER_ID, // Grayscale image
 };
 
+// struct: CompVConnectedComponentLabelingResult
+struct CompVConnectedComponentLabelingRegionMser {
+	CompVConnectedComponentPoints points;
+	CompVConnectedComponentBoundingBox boundingBox;
+};
+typedef CompVConnectedComponentLabelingRegionMser* CompVConnectedComponentLabelingRegionMserRef;
+typedef std::vector<CompVConnectedComponentLabelingRegionMserRef, CompVAllocatorNoDefaultConstruct<CompVConnectedComponentLabelingRegionMserRef> > CompVConnectedComponentLabelingRegionMserRefsVector;
+
 // Class: CompVConnectedComponentLabelingResult
 class COMPV_BASE_API CompVConnectedComponentLabelingResult : public CompVObj
 {
@@ -153,8 +161,8 @@ protected:
 public:
 	virtual ~CompVConnectedComponentLabelingResultLMSER() {
 	}
-	virtual const CompVConnectedComponentMomentsVector& moments() const = 0;
-	virtual const CompVConnectedComponentBoundingBoxesVector& boundingBoxes() const = 0;
+	virtual const CompVConnectedComponentLabelingRegionMserRefsVector& points() const = 0; // returned vector's life tied to the result
+	virtual const CompVConnectedComponentLabelingRegionMserRefsVector& boundingBoxes() const = 0; // returned vector's life tied to the result
 };
 
 // Class: CompVConnectedComponentLabeling
