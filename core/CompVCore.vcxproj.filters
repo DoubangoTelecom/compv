@@ -293,9 +293,6 @@
     <ClCompile Include="ccl\intrin\x86\compv_core_ccl_lsl_intrin_sse2.cxx">
       <Filter>Source Files\ccl\intrin\x86</Filter>
     </ClCompile>
-    <ClCompile Include="compv_core_simd_globals.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ccl\compv_core_ccl_lsl.cxx">
       <Filter>Source Files\ccl</Filter>
     </ClCompile>
@@ -307,6 +304,9 @@
     </ClCompile>
     <ClCompile Include="ccl\compv_core_ccl_lmser_result.cxx">
       <Filter>Source Files\ccl</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_core_simd_globals.cxx">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
