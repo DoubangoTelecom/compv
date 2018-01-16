@@ -11,13 +11,15 @@
 #include "compv/core/compv_core_common.h"
 #include "compv/base/compv_memz.h"
 #include "compv/base/compv_ccl.h"
-#include "compv/base/compv_box.h"
+#include "compv/base/parallel/compv_parallel.h"
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
 #endif
 
 COMPV_NAMESPACE_BEGIN()
+
+#define COMPV_CORE_LMSER_RESULT_DELETE_PTR_SAMPLES_PER_THREAD		(1024)
 
 typedef const struct CompVConnectedComponentLmser* CompVConnectedComponentLmserNode;
 typedef std::vector<CompVConnectedComponentLmserNode, CompVAllocatorNoDefaultConstruct<CompVConnectedComponentLmserNode> > CompVConnectedComponentLmserNodeVector;
@@ -77,13 +79,19 @@ private:
 		if (!m_vecMem.empty()) {
 			for (std::vector<CompVMemZeroCompVConnectedComponentLmserPtr>::iterator i = m_vecMem.begin(); i < m_vecMem.end(); ++i) {
 				const size_t count = (i == (m_vecMem.end() - 1)) ? m_nItemIdx : (*i)->cols();
-				CompVConnectedComponentLmserRef ptrB = (*i)->ptr();
-				const CompVConnectedComponentLmserRef ptrE = ptrB + count;
-				while (ptrB < ptrE) {
-					COMPV_DEBUG_INFO_CODE_TODO("Maybe try with delete ptrB to see??");
-					ptrB->~CompVConnectedComponentLmser();
-					++ptrB;
-				}
+				CompVConnectedComponentLmserRef ptr = (*i)->ptr();
+				auto funcPtrDelete = [&](const size_t start, const size_t end) -> COMPV_ERROR_CODE {
+					for (size_t ii = start; ii < end; ++ii) {
+						ptr[ii].~CompVConnectedComponentLmser();
+					}
+					return COMPV_ERROR_CODE_S_OK;
+				};
+				COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+					funcPtrDelete,
+					1,
+					count,
+					COMPV_CORE_LMSER_RESULT_DELETE_PTR_SAMPLES_PER_THREAD
+				));
 			}
 		}
 		return COMPV_ERROR_CODE_S_OK;
