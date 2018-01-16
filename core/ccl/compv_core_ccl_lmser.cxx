@@ -23,6 +23,11 @@ Some literature about MSER:
 
 #define LMSER_HIGHEST_GREYLEVEL		256
 #define LMSER_GOTO(stepx) goto __________________________##stepx##__________________________
+#define LMSER_POOL_ADD_POINT_TO_LINKED_LIST(linked_list, xx, yy) { \
+		CompVConnectedComponentLmserLinkedListNodePoint2DInt16* pp = poolPoints->newItem(); \
+		pp->data.x = (xx), pp->data.y = (yy); \
+		(linked_list).addNode(pp); \
+}
 
 #define LMSER_EDGE_RIGHT		16	// 0b000 1000 0
 #define LMSER_EDGE_BOTTOM		8	// 0b000 0100 0
@@ -37,7 +42,7 @@ Some literature about MSER:
 
 COMPV_NAMESPACE_BEGIN()
 
-typedef CompVMemPoolLightUnstructured<CompVPoint2DInt16 > CompVMemPoolLightUnstructuredPoint2DInt16;
+typedef CompVMemPoolLightUnstructured<CompVConnectedComponentLmserLinkedListNodePoint2DInt16 > CompVMemPoolLightUnstructuredPoint2DInt16;
 typedef CompVPtr<CompVMemPoolLightUnstructuredPoint2DInt16* > CompVMemPoolLightUnstructuredPoint2DInt16Ptr;
 typedef CompVMemPoolLightUnstructuredPoint2DInt16Ptr* CompVMemPoolLightUnstructuredPoint2DInt16PtrPtr;
 
@@ -243,9 +248,7 @@ __________________________step3__________________________:
 		  // 	saturates the current pixel).
 		CompVConnectedComponentLmserRef& top = stackC.back();
 		++top->area;
-		CompVPoint2DInt16* point = poolPoints->newItem(); 
-		point->x = current_pixel_x, point->y = current_pixel_y;
-		top->points.push_back(point);
+		LMSER_POOL_ADD_POINT_TO_LINKED_LIST(top->points, current_pixel_x, current_pixel_y);
 
 		// 6. Pop the heap of boundary pixels. If the heap is empty, we are done. If the
 		// 	returned pixel is at the same grey - level as the previous, go to 4.
@@ -350,9 +353,9 @@ void CompVConnectedComponentLabelingLMSER::fill(const CompVConnectedComponentLms
 	if (!index) {
 		points_final.resize(static_cast<size_t>(cc_stable->area));
 	}
-	const CompVConnectedComponentLmserPointsVector& points_stable = cc_stable->points;
-	for (CompVConnectedComponentLmserPointsVector::const_iterator i = points_stable.begin(); i < points_stable.end(); ++i) {
-		points_final[index++] = **i;
+	const CompVConnectedComponentLmserLinkedListPoint2DInt16& points_stable = cc_stable->points;
+	for (const CompVConnectedComponentLmserLinkedListNodePoint2DInt16* node = points_stable.head; node; node = node->next) {
+		points_final[index++] = node->data;
 	}
 	const CompVConnectedComponentLmserNodesVector& merge_nodes_stable = cc_stable->merge_nodes;
 	for (CompVConnectedComponentLmserNodesVector::const_iterator merge_node = merge_nodes_stable.begin(); merge_node < merge_nodes_stable.end(); ++merge_node) {
