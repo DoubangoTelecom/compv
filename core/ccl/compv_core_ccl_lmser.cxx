@@ -16,6 +16,7 @@ Some literature about MSER:
 #include "compv/base/parallel/compv_parallel.h"
 #include "compv/base/compv_cpu.h"
 #include "compv/base/compv_memz.h"
+#include "compv/base/compv_mem_pool_light.h"
 
 #define COMPV_CORE_LMSER_ACCESSIBILITY_BUILD_SAMPLES_PER_THREAD		(40 * 40)
 #define COMPV_CORE_LMSER_FILL_REGIONS_SAMPLES_PER_THREAD			(1 * 1) // This is the number of regions -> use max threads
@@ -35,6 +36,10 @@ Some literature about MSER:
 #define COMPV_THIS_CLASSNAME	"CompVConnectedComponentLabelingLMSER"
 
 COMPV_NAMESPACE_BEGIN()
+
+typedef CompVMemPoolLightUnstructured<CompVPoint2DInt16 > CompVMemPoolLightUnstructuredPoint2DInt16;
+typedef CompVPtr<CompVMemPoolLightUnstructuredPoint2DInt16* > CompVMemPoolLightUnstructuredPoint2DInt16Ptr;
+typedef CompVMemPoolLightUnstructuredPoint2DInt16Ptr* CompVMemPoolLightUnstructuredPoint2DInt16PtrPtr;
 
 static const uint8_t LMSER_EDGES_MASKS[8] = {
 	LMSER_EDGE_RIGHT,
@@ -103,6 +108,10 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLMSER::process(const CompVMatPtr
 		stride - 1,
 		stride + 1
 	};
+
+	// Create a pool of points to speedup allocation
+	CompVMemPoolLightUnstructuredPoint2DInt16Ptr poolPoints;
+	COMPV_CHECK_CODE_RETURN(CompVMemPoolLightUnstructuredPoint2DInt16::newObj(&poolPoints, (width * height)));
 
 	// A binary mask of accessible pixels. These are the pixels to which the water
 	// already has access.
@@ -233,9 +242,10 @@ __________________________step3__________________________:
 		  // 5. Accumulate the current pixel to the component at the top of the stack(water
 		  // 	saturates the current pixel).
 		CompVConnectedComponentLmserRef& top = stackC.back();
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Use CompVMemPoolLightUnstructured");
 		++top->area;
-		top->points.push_back(CompVPoint2DInt16(current_pixel_x, current_pixel_y));
+		CompVPoint2DInt16* point = poolPoints->newItem(); 
+		point->x = current_pixel_x, point->y = current_pixel_y;
+		top->points.push_back(point);
 
 		// 6. Pop the heap of boundary pixels. If the heap is empty, we are done. If the
 		// 	returned pixel is at the same grey - level as the previous, go to 4.
@@ -340,12 +350,12 @@ void CompVConnectedComponentLabelingLMSER::fill(const CompVConnectedComponentLms
 	if (!index) {
 		points_final.resize(static_cast<size_t>(cc_stable->area));
 	}
-	const CompVConnectedComponentPoints& points_stable = cc_stable->points;
-	for (CompVConnectedComponentPoints::const_iterator i = points_stable.begin(); i < points_stable.end(); ++i) {
-		points_final[index++] = *i;
+	const CompVConnectedComponentLmserPointsVector& points_stable = cc_stable->points;
+	for (CompVConnectedComponentLmserPointsVector::const_iterator i = points_stable.begin(); i < points_stable.end(); ++i) {
+		points_final[index++] = **i;
 	}
-	const CompVConnectedComponentLmserNodeVector& merge_nodes_stable = cc_stable->merge_nodes;
-	for (CompVConnectedComponentLmserNodeVector::const_iterator merge_node = merge_nodes_stable.begin(); merge_node < merge_nodes_stable.end(); ++merge_node) {
+	const CompVConnectedComponentLmserNodesVector& merge_nodes_stable = cc_stable->merge_nodes;
+	for (CompVConnectedComponentLmserNodesVector::const_iterator merge_node = merge_nodes_stable.begin(); merge_node < merge_nodes_stable.end(); ++merge_node) {
 		CompVConnectedComponentLabelingLMSER::fill(*merge_node, cc_final, index);
 	}
 }

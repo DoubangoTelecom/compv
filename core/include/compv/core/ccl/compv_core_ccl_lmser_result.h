@@ -22,7 +22,9 @@ COMPV_NAMESPACE_BEGIN()
 #define COMPV_CORE_LMSER_RESULT_DELETE_PTR_SAMPLES_PER_THREAD		(1024)
 
 typedef const struct CompVConnectedComponentLmser* CompVConnectedComponentLmserNode;
-typedef std::vector<CompVConnectedComponentLmserNode, CompVAllocatorNoDefaultConstruct<CompVConnectedComponentLmserNode> > CompVConnectedComponentLmserNodeVector;
+typedef std::vector<CompVConnectedComponentLmserNode, CompVAllocatorNoDefaultConstruct<CompVConnectedComponentLmserNode> > CompVConnectedComponentLmserNodesVector;
+
+typedef std::vector<const CompVPoint2DInt16*, CompVAllocatorNoDefaultConstruct<CompVConnectedComponentLmserNode> > CompVConnectedComponentLmserPointsVector;
 
 struct CompVConnectedComponentLmser {
 	struct CompVConnectedComponentLmser* sister;
@@ -30,10 +32,10 @@ struct CompVConnectedComponentLmser {
 	struct CompVConnectedComponentLmser* parent;
 	double variation;
 	int8_t stable;
-	int16_t greyLevel;
+	int16_t greyLevel; // int16_t instead of uint8_t because the highest value is #256
 	int area;
-	CompVConnectedComponentLmserNodeVector merge_nodes;
-	CompVConnectedComponentPoints points;
+	CompVConnectedComponentLmserNodesVector merge_nodes;
+	CompVConnectedComponentLmserPointsVector points;
 	CompVConnectedComponentLmser(const int16_t greyLevel_ = 0)
 		: greyLevel(greyLevel_) {
 	}
