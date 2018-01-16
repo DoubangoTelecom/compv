@@ -34,8 +34,9 @@ public:
 	static COMPV_ERROR_CODE newObj(CompVConnectedComponentLabelingPtrPtr ccl);
 
 private:
-	static void stability(CompVConnectedComponentLmserRef& component, const int& delta, const size_t& min_area, const size_t& max_area, const double& max_variation);
-	static void collect(CompVConnectedComponentLmserRef& component, const double& one_minus_min_diversity, const double& one_minus_min_diversity_scale, CompVConnectedComponentLabelingRegionMserRefsVector& vecRegions);
+	static void fill(const CompVConnectedComponentLmser* cc_stable, CompVConnectedComponentLabelingRegionMser& cc_final, size_t& index);
+	static void stability(CompVConnectedComponentLmserRef& component, const int& delta, const int& min_area, const int& max_area, const double& max_variation);
+	static void collect(CompVConnectedComponentLmserRef& component, const double& one_minus_min_diversity, const double& one_minus_min_diversity_scale, CompVConnectedComponentLmserRefVector& vecRegions);
 	static bool checkCrit(const CompVConnectedComponentLmserRef& component, const double& area, const double& variation);
 };
 

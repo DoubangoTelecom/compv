@@ -11,16 +11,16 @@
 
 #if COMPV_TBBMALLOC
 #include "compv/base/tbbmalloc/scalable_allocator.h"
-#define defaulAllocator tbb::scalable_allocator
+#define CompVAllocator tbb::scalable_allocator
 #else
-#define defaulAllocator std::allocator
+#define CompVAllocator std::allocator
 #endif
 
 #include <memory> /* std::allocator_traits */
 
 COMPV_NAMESPACE_BEGIN()
 
-template <typename T, typename A=defaulAllocator<T> >
+template <typename T, typename A=CompVAllocator<T> >
 class CompVAllocatorNoDefaultConstruct : public A {
     typedef std::allocator_traits<A> a_t;
 public:

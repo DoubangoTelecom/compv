@@ -17,17 +17,11 @@ Some literature about MSER:
 #include "compv/base/compv_cpu.h"
 #include "compv/base/compv_memz.h"
 
-#define COMPV_CORE_LMSER_ACCESSIBILITY_BUILD_SAMPLES_PER_THREAD (40 * 40)
+#define COMPV_CORE_LMSER_ACCESSIBILITY_BUILD_SAMPLES_PER_THREAD		(40 * 40)
+#define COMPV_CORE_LMSER_FILL_REGIONS_SAMPLES_PER_THREAD			(1 * 1) // This is the number of regions -> use max threads
 
 #define LMSER_HIGHEST_GREYLEVEL		256
 #define LMSER_GOTO(stepx) goto __________________________##stepx##__________________________
-#define LMSER_MERGE(a, b) \
- { \
-	CompVConnectedComponentPoints& ap = a->region.points; \
-	CompVConnectedComponentPoints& bp = b->region.points; \
-	ap.insert(ap.end(), bp.begin(), bp.end()); \
-	b->sister = a->child, a->child = b, b->parent = a; \
-}
 
 #define LMSER_EDGE_RIGHT		16	// 0b000 1000 0
 #define LMSER_EDGE_BOTTOM		8	// 0b000 0100 0
@@ -88,7 +82,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLMSER::process(const CompVMatPtr
 		COMPV_CHECK_CODE_RETURN(CompVConnectedComponentLabelingResultLMSERImpl::newObj(&result_));
 	}
 	COMPV_CHECK_CODE_RETURN(result_->reset());
-	CompVConnectedComponentLabelingRegionMserRefsVector& vecRegions = result_->vecRegions();
+	CompVConnectedComponentLabelingRegionMserVector& vecRegions_final = result_->vecRegions();
 
 	const int16_t width = static_cast<int16_t>(ptr8uImage->cols());
 	const int16_t widthMinus1 = width - 1;
@@ -96,8 +90,6 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLMSER::process(const CompVMatPtr
 	const int16_t heightMinus1 = height - 1;
 	const int16_t stride = static_cast<int16_t>(ptr8uImage->stride());
 	const float stride_scale = 1.f / float(stride);
-
-	const uint8_t* ptr8uPixelsRef = ptr8uImage->ptr<const uint8_t>();
 
 	const bool b8Connectivity = (connectivity() == 8);
 	const int8_t maxEdges = b8Connectivity ? 8 : 4;
@@ -183,16 +175,16 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLMSER::process(const CompVMatPtr
 	// the number of grey - levels(due to one stop - element for each stack).
 	CompVConnectedComponentLabelingLMSERStackMem& stackMem = result_->stackMem();
 	CompVConnectedComponentLmserRef stackMemRef_;
-	COMPV_CHECK_CODE_RETURN(stackMem.requestNewItem(&stackMemRef_));
 
 	// 1. Clear the accessible pixel mask, the heap of boundary pixels and the component
 	// 	stack.Push a dummy - component onto the stack, with grey - level higher
 	// 	than any allowed in the image.
-	stackMemRef_->greyLevel = LMSER_HIGHEST_GREYLEVEL;
+	COMPV_CHECK_CODE_RETURN(stackMem.requestNewItem(&stackMemRef_, LMSER_HIGHEST_GREYLEVEL));
 	stackC.push_back(stackMemRef_);
 
 	// 2. Make the source pixel(with its first edge) the current pixel, mark it as
 	// 	accessible and store the grey - level of it in the variable current_level.
+	const uint8_t* ptr8uPixelsRef = ptr8uImage->ptr<const uint8_t>();
 	int32_t current_pixel = 0;
 	int8_t current_edge = 0;
 	ptr8uAccessibleRef[0] |= 1;
@@ -241,7 +233,9 @@ __________________________step3__________________________:
 		  // 5. Accumulate the current pixel to the component at the top of the stack(water
 		  // 	saturates the current pixel).
 		CompVConnectedComponentLmserRef& top = stackC.back();
-		top->region.points.push_back(CompVPoint2DInt16(current_pixel_x, current_pixel_y));
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Use CompVMemPoolLightUnstructured");
+		++top->area;
+		top->points.push_back(CompVPoint2DInt16(current_pixel_x, current_pixel_y));
 
 		// 6. Pop the heap of boundary pixels. If the heap is empty, we are done. If the
 		// 	returned pixel is at the same grey - level as the previous, go to 4.
@@ -282,7 +276,7 @@ __________________________step3__________________________:
 				// level by just changing its grey - level.
 				if (new_pixel_grey_level < stackC.back()->greyLevel) {
 					COMPV_CHECK_CODE_RETURN(stackMem.requestNewItem(&stackMemRef_, new_pixel_grey_level));
-					LMSER_MERGE(stackMemRef_, top);
+					stackMemRef_->merge(top);
 					stackC.push_back(stackMemRef_);
 					break;
 				}
@@ -295,7 +289,7 @@ __________________________step3__________________________:
 				// top of stack would be the winner if its current size is larger than the previous
 				// size of second on stack.
 				CompVConnectedComponentLmserRef back = stackC.back();
-				LMSER_MERGE(back, top);
+				back->merge(top);
 
 			} while (new_pixel_grey_level > stackC.back()->greyLevel); // 4. If(new pixel grey level>top of stack grey level) go to 1.
 		}
@@ -303,28 +297,69 @@ __________________________step3__________________________:
 
 __________________________we_are_done__________________________:
 	const int input_area = width * height;
-	const size_t min_area_ = static_cast<size_t>(input_area * minArea());
-	const size_t max_area_ = static_cast<size_t>(input_area * maxArea());
+	const int min_area_ = static_cast<int>(input_area * minArea());
+	const int max_area_ = static_cast<int>(input_area * maxArea());
 	const double one_minus_min_diversity = 1.0 - minDiversity();
 	const double one_minus_min_diversity_scale = 1.0 / one_minus_min_diversity;
+	CompVConnectedComponentLmserRefVector vecRegions_stable;
 	CompVConnectedComponentLabelingLMSER::stability(stackC.back(), delta(), min_area_, max_area_, maxVariation());
-	CompVConnectedComponentLabelingLMSER::collect(stackC.back(), one_minus_min_diversity, one_minus_min_diversity_scale, vecRegions);
+	CompVConnectedComponentLabelingLMSER::collect(stackC.back(), one_minus_min_diversity, one_minus_min_diversity_scale, vecRegions_stable);
+
+	/* Building final points from stable regions */
+	if (!vecRegions_stable.empty()) {
+		const size_t count = vecRegions_stable.size();
+		vecRegions_final.resize(count);
+		std::vector<size_t> indexes(count, 0);
+
+		auto funcPtrFill = [&](const size_t start, const size_t end) -> COMPV_ERROR_CODE {
+			CompVConnectedComponentLmserRefVector::iterator it_src = vecRegions_stable.begin();
+			CompVConnectedComponentLabelingRegionMserVector::iterator it_dst = vecRegions_final.begin();
+			std::vector<size_t>::iterator it_indexes = indexes.begin();
+			for (size_t i = start; i < end; ++i) {
+				CompVConnectedComponentLabelingLMSER::fill(it_src[i], it_dst[i], it_indexes[i]);
+			}
+			return COMPV_ERROR_CODE_S_OK;
+		};
+
+		COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+			funcPtrFill,
+			1,
+			count,
+			COMPV_CORE_LMSER_FILL_REGIONS_SAMPLES_PER_THREAD
+		));
+	}
 
 	*result = *result_;
 
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-void CompVConnectedComponentLabelingLMSER::stability(CompVConnectedComponentLmserRef& component, const int& delta, const size_t& min_area, const size_t& max_area, const double& max_variation)
+void CompVConnectedComponentLabelingLMSER::fill(const CompVConnectedComponentLmser* cc_stable, CompVConnectedComponentLabelingRegionMser& cc_final, size_t& index)
+{
+	CompVConnectedComponentPoints& points_final = cc_final.points;
+	if (!index) {
+		points_final.resize(static_cast<size_t>(cc_stable->area));
+	}
+	const CompVConnectedComponentPoints& points_stable = cc_stable->points;
+	for (CompVConnectedComponentPoints::const_iterator i = points_stable.begin(); i < points_stable.end(); ++i) {
+		points_final[index++] = *i;
+	}
+	const CompVConnectedComponentLmserNodeVector& merge_nodes_stable = cc_stable->merge_nodes;
+	for (CompVConnectedComponentLmserNodeVector::const_iterator merge_node = merge_nodes_stable.begin(); merge_node < merge_nodes_stable.end(); ++merge_node) {
+		CompVConnectedComponentLabelingLMSER::fill(*merge_node, cc_final, index);
+	}
+}
+
+void CompVConnectedComponentLabelingLMSER::stability(CompVConnectedComponentLmserRef& component, const int& delta, const int& min_area, const int& max_area, const double& max_variation)
 {
 	const int deltaPlus = (component->greyLevel + delta);
 	CompVConnectedComponentLmserRef parent;
 	for (parent = component; parent->parent && (parent->parent->greyLevel <= deltaPlus); parent = parent->parent)
 		/* do nothing */;
 
-	const double& aread_ = static_cast<double>(component->region.points.size());
-	const size_t areai_ = component->region.points.size();
-	component->variation = (parent->region.points.size() - aread_) / aread_;
+	const double& aread_ = static_cast<double>(component->area);
+	const int areai_ = component->area;
+	component->variation = (parent->area - aread_) / aread_;
 	
 	const int8_t stable_ = (!component->parent || (component->parent->variation >= component->variation)) &&
 		(component->variation <= max_variation) && (min_area <= areai_ && areai_ <= max_area);
@@ -341,13 +376,13 @@ void CompVConnectedComponentLabelingLMSER::stability(CompVConnectedComponentLmse
 	}
 }
 
-void CompVConnectedComponentLabelingLMSER::collect(CompVConnectedComponentLmserRef& component, const double& one_minus_min_diversity, const double& one_minus_min_diversity_scale, CompVConnectedComponentLabelingRegionMserRefsVector& vecRegions)
+void CompVConnectedComponentLabelingLMSER::collect(CompVConnectedComponentLmserRef& component, const double& one_minus_min_diversity, const double& one_minus_min_diversity_scale, CompVConnectedComponentLmserRefVector& vecRegions)
 {
 	int8_t& stable_ = component->stable;
 	if (stable_) {
-		const double min_parent_area = (component->region.points.size() * one_minus_min_diversity_scale) + 0.5;
+		const double min_parent_area = (component->area * one_minus_min_diversity_scale) + 0.5;
 		for (CompVConnectedComponentLmserRef parent = component->parent;
-			(parent && (parent->region.points.size() < min_parent_area) && (stable_ = (!parent->stable || (parent->variation > component->variation))));
+			(parent && (parent->area < min_parent_area) && (stable_ = (!parent->stable || (parent->variation > component->variation))));
 			(parent = parent->parent)
 			) /* do noting */;
 
@@ -355,12 +390,12 @@ void CompVConnectedComponentLabelingLMSER::collect(CompVConnectedComponentLmserR
 			stable_ &&
 			(CompVConnectedComponentLabelingLMSER::checkCrit(
 				component,
-				((component->region.points.size() * one_minus_min_diversity) + 0.5), // max_child_area
+				((component->area * one_minus_min_diversity) + 0.5), // max_child_area
 				component->variation
 			));
 
 		if (stable_) {
-			vecRegions.push_back(&component->region); // life tied to the result
+			vecRegions.push_back(component);
 		}
 	}
 
@@ -373,7 +408,7 @@ void CompVConnectedComponentLabelingLMSER::collect(CompVConnectedComponentLmserR
 
 bool CompVConnectedComponentLabelingLMSER::checkCrit(const CompVConnectedComponentLmserRef& component, const double& area, const double& variation)
 {
-	if (component->region.points.size() <= area) {
+	if (component->area <= area) {
 		return true;
 	}
 	if (component->stable && (component->variation < variation)) {

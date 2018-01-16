@@ -28,7 +28,7 @@ COMPV_UNITTEST_CCL[] =
 		TEST_TYPE_OCR0, 826, 633, 826,
 		"7acca8c8f80b363ed60f7aec588039b6", // md5_moments
 		"1f9a4e09e09ab1f5ab9298a9561d2ec7", // md5_boxes
-		"cb4df29eb927a183bddb23986cbb7fb", // md5_points
+		"2cb4df29eb927a183bddb23986cbb7fb", // md5_points
 	},
 	{
 		TEST_TYPE_OCR1, 354, 328, 354,
@@ -111,19 +111,20 @@ static COMPV_ERROR_CODE check_points(const CompVConnectedComponentLabelingResult
 	const CompVConnectedComponentLabelingResultLMSER* result_lmser =
 		CompVConnectedComponentLabeling::reinterpret_castr<CompVConnectedComponentLabelingResultLMSER>(result);
 
-	const CompVConnectedComponentLabelingRegionMserRefsVector& regions = result_lmser->points();
-	const size_t count = regions.size();
+	const CompVConnectedComponentLabelingRegionMserVector& regions = result_lmser->points();
+	size_t numPoints = 0;
 
-	for (CompVConnectedComponentLabelingRegionMserRefsVector::const_iterator i = regions.begin(); i < regions.end(); ++i) {
-		const CompVConnectedComponentPoints& pp = (*i)->points;
+	for (CompVConnectedComponentLabelingRegionMserVector::const_iterator i = regions.begin(); i < regions.end(); ++i) {
+		const CompVConnectedComponentPoints& pp = i->points;
+		numPoints += pp.size();
 		for (CompVConnectedComponentPoints::const_iterator p = pp.begin(); p < pp.end(); ++p) {
 			*ptr8uPoints_->ptr<uint8_t>(p->y, p->x) = 0xff;
 		}
 	}
 
-	//COMPV_DEBUG_INFO("MD5:%s", compv_tests_md5(ptr8uPoints_).c_str());
+	COMPV_DEBUG_INFO("MD5:%s", compv_tests_md5(ptr8uPoints_).c_str());
 
-	COMPV_CHECK_EXP_RETURN(compv_tests_md5(ptr8uPoints_).compare(test->md5_points) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "CCL MD5 mismatch (boxes)");
+	COMPV_CHECK_EXP_RETURN(compv_tests_md5(ptr8uPoints_).compare(test->md5_points) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "CCL MD5 mismatch (points)");
 
 #if COMPV_OS_WINDOWS && 0
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Do not write the file to the hd");
@@ -142,11 +143,11 @@ static COMPV_ERROR_CODE check_boxes(const CompVConnectedComponentLabelingResultP
 	const CompVConnectedComponentLabelingResultLMSER* result_lmser =
 		CompVConnectedComponentLabeling::reinterpret_castr<CompVConnectedComponentLabelingResultLMSER>(result);
 
-	const CompVConnectedComponentLabelingRegionMserRefsVector& regions = result_lmser->boundingBoxes();
+	const CompVConnectedComponentLabelingRegionMserVector& regions = result_lmser->boundingBoxes();
 	const size_t count = regions.size();
 	
-	for (CompVConnectedComponentLabelingRegionMserRefsVector::const_iterator i = regions.begin(); i < regions.end(); ++i) {
-		const CompVConnectedComponentBoundingBox& bb = (*i)->boundingBox;
+	for (CompVConnectedComponentLabelingRegionMserVector::const_iterator i = regions.begin(); i < regions.end(); ++i) {
+		const CompVConnectedComponentBoundingBox& bb = (*i).boundingBox;
 		uint8_t* top = ptr8uBoxes_->ptr<uint8_t>(static_cast<size_t>(bb.top));
 		uint8_t* bottom = ptr8uBoxes_->ptr<uint8_t>(static_cast<size_t>(bb.bottom));
 		// top and bottom hz lines

@@ -41,14 +41,12 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLMSERImpl::extract(CompVCo
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-// returned vector's life tied to "this"
-const CompVConnectedComponentLabelingRegionMserRefsVector& CompVConnectedComponentLabelingResultLMSERImpl::points() const /*override*/
+const CompVConnectedComponentLabelingRegionMserVector& CompVConnectedComponentLabelingResultLMSERImpl::points() const /*override*/
 {
 	return m_vecRegions;
 }
 
-// returned vector's life tied to "this"
-const CompVConnectedComponentLabelingRegionMserRefsVector& CompVConnectedComponentLabelingResultLMSERImpl::boundingBoxes() const /*override*/
+const CompVConnectedComponentLabelingRegionMserVector& CompVConnectedComponentLabelingResultLMSERImpl::boundingBoxes() const /*override*/
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation could be found");
@@ -58,11 +56,11 @@ const CompVConnectedComponentLabelingRegionMserRefsVector& CompVConnectedCompone
 	}
 
 	CompVConnectedComponentLabelingResultLMSERImplPtr This = const_cast<CompVConnectedComponentLabelingResultLMSERImpl*>(this);
-	CompVConnectedComponentLabelingRegionMserRefsVector& vecRegions = This->vecRegions();
+	CompVConnectedComponentLabelingRegionMserVector& vecRegions = This->vecRegions();
 
-	for (CompVConnectedComponentLabelingRegionMserRefsVector::iterator i = vecRegions.begin(); i < vecRegions.end(); ++i) {
-		CompVConnectedComponentBoundingBox& bb = (*i)->boundingBox;
-		CompVConnectedComponentPoints& pp = (*i)->points;
+	for (CompVConnectedComponentLabelingRegionMserVector::iterator i = vecRegions.begin(); i < vecRegions.end(); ++i) {
+		CompVConnectedComponentBoundingBox& bb = (*i).boundingBox;
+		CompVConnectedComponentPoints& pp = (*i).points;
 		bb.left = pp.begin()->x;
 		bb.right = pp.begin()->x;
 		bb.top = pp.begin()->y;

@@ -19,6 +19,9 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+typedef const struct CompVConnectedComponentLmser* CompVConnectedComponentLmserNode;
+typedef std::vector<CompVConnectedComponentLmserNode, CompVAllocatorNoDefaultConstruct<CompVConnectedComponentLmserNode> > CompVConnectedComponentLmserNodeVector;
+
 struct CompVConnectedComponentLmser {
 	struct CompVConnectedComponentLmser* sister;
 	struct CompVConnectedComponentLmser* child;
@@ -26,11 +29,18 @@ struct CompVConnectedComponentLmser {
 	double variation;
 	int8_t stable;
 	int16_t greyLevel;
-	CompVConnectedComponentLabelingRegionMser region;
+	int area;
+	CompVConnectedComponentLmserNodeVector merge_nodes;
+	CompVConnectedComponentPoints points;
 	CompVConnectedComponentLmser(const int16_t greyLevel_ = 0)
 		: greyLevel(greyLevel_) {
 	}
 	virtual ~CompVConnectedComponentLmser() {
+	}
+	COMPV_INLINE void merge(struct CompVConnectedComponentLmser* b) {
+		area += b->area;
+		b->sister = this->child, this->child = b, b->parent = this;
+		merge_nodes.push_back(b);
 	}
 };
 typedef CompVConnectedComponentLmser* CompVConnectedComponentLmserRef;
@@ -39,6 +49,7 @@ typedef std::vector<CompVConnectedComponentLmserRef, CompVAllocatorNoDefaultCons
 
 typedef CompVMemZero<CompVConnectedComponentLmser> CompVMemZeroCompVConnectedComponentLmser;
 typedef CompVPtr<CompVMemZeroCompVConnectedComponentLmser *> CompVMemZeroCompVConnectedComponentLmserPtr;
+
 
 static const bool CompVMemZeroCompVConnectedComponentLmserUseLegacyCalloc = false; // use libc's calloc or tbbCalloc?
 
@@ -63,19 +74,18 @@ public:
 	}
 private:
 	COMPV_INLINE COMPV_ERROR_CODE relase() {
-#if 1
 		if (!m_vecMem.empty()) {
 			for (std::vector<CompVMemZeroCompVConnectedComponentLmserPtr>::iterator i = m_vecMem.begin(); i < m_vecMem.end(); ++i) {
 				const size_t count = (i == (m_vecMem.end() - 1)) ? m_nItemIdx : (*i)->cols();
 				CompVConnectedComponentLmserRef ptrB = (*i)->ptr();
 				const CompVConnectedComponentLmserRef ptrE = ptrB + count;
 				while (ptrB < ptrE) {
+					COMPV_DEBUG_INFO_CODE_TODO("Maybe try with delete ptrB to see??");
 					ptrB->~CompVConnectedComponentLmser();
 					++ptrB;
 				}
 			}
 		}
-#endif
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	COMPV_INLINE COMPV_ERROR_CODE reset() {
@@ -128,12 +138,12 @@ public:
 	virtual COMPV_ERROR_CODE debugFlatten(CompVMatPtrPtr ptr32sLabels) const override;
 	virtual COMPV_ERROR_CODE extract(CompVConnectedComponentPointsVector& points, COMPV_CCL_EXTRACT_TYPE type = COMPV_CCL_EXTRACT_TYPE_BLOB) const override;
 
-	virtual const CompVConnectedComponentLabelingRegionMserRefsVector& points() const override;
-	virtual const CompVConnectedComponentLabelingRegionMserRefsVector& boundingBoxes() const override;
+	virtual const CompVConnectedComponentLabelingRegionMserVector& points() const override;
+	virtual const CompVConnectedComponentLabelingRegionMserVector& boundingBoxes() const override;
 
 	COMPV_ERROR_CODE reset();
 
-	COMPV_INLINE CompVConnectedComponentLabelingRegionMserRefsVector& vecRegions() {
+	COMPV_INLINE CompVConnectedComponentLabelingRegionMserVector& vecRegions() {
 		return m_vecRegions;
 	}
 	COMPV_INLINE CompVConnectedComponentLabelingLMSERStackMem& stackMem() {
@@ -145,7 +155,7 @@ public:
 private:
 
 private:
-	CompVConnectedComponentLabelingRegionMserRefsVector m_vecRegions;
+	CompVConnectedComponentLabelingRegionMserVector m_vecRegions;
 	CompVConnectedComponentLabelingLMSERStackMem m_StackMem;
 	bool m_bBoundingBoxesComputed;
 };
