@@ -237,7 +237,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLMSER::process(const CompVMatPtr
 	// not yet explored all the edges out from the pixel. Along with the pixel id,
 	// an edge number indicating the next edge to be explored can be stored.
 	CompVConnectedComponentLmserLinkedListBoundaryPixel boundaryPixels[256];
-	int32_t current_priority = LMSER_HIGHEST_GREYLEVEL;
+	int16_t current_priority = LMSER_HIGHEST_GREYLEVEL;
 
 	// A stack C of component information.Each entry holds the pixels in a component
 	// and / or the first and second order moments of the pixels in the component,
