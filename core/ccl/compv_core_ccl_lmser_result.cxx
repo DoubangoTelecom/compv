@@ -59,8 +59,8 @@ const CompVConnectedComponentLabelingRegionMserVector& CompVConnectedComponentLa
 	CompVConnectedComponentLabelingRegionMserVector& vecRegions = This->vecRegions();
 
 	for (CompVConnectedComponentLabelingRegionMserVector::iterator i = vecRegions.begin(); i < vecRegions.end(); ++i) {
-		CompVConnectedComponentBoundingBox& bb = (*i).boundingBox;
-		CompVConnectedComponentPoints& pp = (*i).points;
+		CompVConnectedComponentBoundingBox& bb = i->boundingBox;
+		const CompVConnectedComponentPoints& pp = i->points;
 		bb.left = pp.begin()->x;
 		bb.right = pp.begin()->x;
 		bb.top = pp.begin()->y;

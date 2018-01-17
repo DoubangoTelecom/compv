@@ -306,7 +306,6 @@ __________________________step3__________________________:
 		current_pixel = tail->data >> 4;
 		current_edge = tail->data & 0x0f;
 		tail = tail->prev; // pop_back()
-		
 
 		for (; current_priority < LMSER_HIGHEST_GREYLEVEL && !boundaryPixels[current_priority].tail; ++current_priority)
 			/* do nothing */;
@@ -394,22 +393,6 @@ __________________________we_are_done__________________________:
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-void CompVConnectedComponentLabelingLMSER::fill(const CompVConnectedComponentLmser* cc_stable, CompVConnectedComponentLabelingRegionMser& cc_final, size_t& index)
-{
-	CompVConnectedComponentPoints& points_final = cc_final.points;
-	if (!index) {
-		points_final.resize(static_cast<size_t>(cc_stable->area));
-	}
-	const CompVConnectedComponentLmserLinkedListPoint2DInt16& points_stable = cc_stable->points;
-	for (const CompVConnectedComponentLmserLinkedListNodePoint2DInt16* node = points_stable.head; node; node = node->next) {
-		points_final[index++] = node->data;
-	}
-	const CompVConnectedComponentLmserNodesVector& merge_nodes_stable = cc_stable->merge_nodes;
-	for (CompVConnectedComponentLmserNodesVector::const_iterator merge_node = merge_nodes_stable.begin(); merge_node < merge_nodes_stable.end(); ++merge_node) {
-		CompVConnectedComponentLabelingLMSER::fill(*merge_node, cc_final, index);
-	}
-}
-
 void CompVConnectedComponentLabelingLMSER::stability(CompVConnectedComponentLmserRef& component, const int& delta, const int& min_area, const int& max_area, const double& max_variation)
 {
 	const int deltaPlus = (component->greyLevel + delta);
@@ -417,9 +400,8 @@ void CompVConnectedComponentLabelingLMSER::stability(CompVConnectedComponentLmse
 	for (parent = component; parent->parent && (parent->parent->greyLevel <= deltaPlus); parent = parent->parent)
 		/* do nothing */;
 
-	const double& aread_ = static_cast<double>(component->area);
 	const int areai_ = component->area;
-	component->variation = (parent->area - aread_) / aread_;
+	component->variation = (parent->area - areai_) / static_cast<double>(component->area);
 	
 	const int8_t stable_ = (!component->parent || (component->parent->variation >= component->variation)) &&
 		(component->variation <= max_variation) && (min_area <= areai_ && areai_ <= max_area);
@@ -440,7 +422,7 @@ void CompVConnectedComponentLabelingLMSER::collect(CompVConnectedComponentLmserR
 {
 	int8_t& stable_ = component->stable;
 	if (stable_) {
-		const double min_parent_area = (component->area * one_minus_min_diversity_scale) + 0.5;
+		const int min_parent_area = COMPV_MATH_ROUNDFU_2_NEAREST_INT((component->area * one_minus_min_diversity_scale), int);
 		for (CompVConnectedComponentLmserRef parent = component->parent;
 			(parent && (parent->area < min_parent_area) && (stable_ = (!parent->stable || (parent->variation > component->variation))));
 			(parent = parent->parent)
@@ -450,7 +432,7 @@ void CompVConnectedComponentLabelingLMSER::collect(CompVConnectedComponentLmserR
 			stable_ &&
 			(CompVConnectedComponentLabelingLMSER::checkCrit(
 				component,
-				((component->area * one_minus_min_diversity) + 0.5), // max_child_area
+				COMPV_MATH_ROUNDFU_2_NEAREST_INT((component->area * one_minus_min_diversity), int), // max_child_area
 				component->variation
 			));
 
@@ -466,7 +448,7 @@ void CompVConnectedComponentLabelingLMSER::collect(CompVConnectedComponentLmserR
 	}
 }
 
-bool CompVConnectedComponentLabelingLMSER::checkCrit(const CompVConnectedComponentLmserRef& component, const double& area, const double& variation)
+bool CompVConnectedComponentLabelingLMSER::checkCrit(const CompVConnectedComponentLmserRef& component, const int& area, const double& variation)
 {
 	if (component->area <= area) {
 		return true;
@@ -484,6 +466,22 @@ bool CompVConnectedComponentLabelingLMSER::checkCrit(const CompVConnectedCompone
 	}
 
 	return true;
+}
+
+void CompVConnectedComponentLabelingLMSER::fill(const CompVConnectedComponentLmser* cc_stable, CompVConnectedComponentLabelingRegionMser& cc_final, size_t& index)
+{
+	CompVConnectedComponentPoints& points_final = cc_final.points;
+	if (!index) {
+		points_final.resize(static_cast<size_t>(cc_stable->area));
+	}
+	const CompVConnectedComponentLmserLinkedListPoint2DInt16& points_stable = cc_stable->points;
+	for (const CompVConnectedComponentLmserLinkedListNodePoint2DInt16* node = points_stable.head; node; node = node->next) {
+		points_final[index++] = node->data;
+	}
+	const CompVConnectedComponentLmserNodesVector& merge_nodes_stable = cc_stable->merge_nodes;
+	for (CompVConnectedComponentLmserNodesVector::const_iterator merge_node = merge_nodes_stable.begin(); merge_node < merge_nodes_stable.end(); ++merge_node) {
+		CompVConnectedComponentLabelingLMSER::fill(*merge_node, cc_final, index);
+	}
 }
 
 COMPV_ERROR_CODE CompVConnectedComponentLabelingLMSER::newObj(CompVConnectedComponentLabelingPtrPtr ccl)
