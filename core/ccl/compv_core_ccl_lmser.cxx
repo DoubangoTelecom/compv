@@ -23,10 +23,15 @@ Some literature about MSER:
 
 #define LMSER_HIGHEST_GREYLEVEL		256
 #define LMSER_GOTO(stepx) goto __________________________##stepx##__________________________
-#define LMSER_POOL_ADD_POINT_TO_LINKED_LIST(linked_list, xx, yy) { \
-		CompVConnectedComponentLmserLinkedListNodePoint2DInt16* pp = poolPoints->newItem(); \
-		pp->data.x = (xx), pp->data.y = (yy); \
-		(linked_list).addNode(pp); \
+#define LMSER_POOL_ADD_POINT_TO_LINKED_LIST(poolPoints, linked_list, xx, yy) { \
+		CompVConnectedComponentLmserLinkedListNodePoint2DInt16* node = (poolPoints)->newItem(); \
+		node->data.x = (xx), node->data.y = (yy); \
+		(linked_list).push_front(node); \
+}
+#define LMSER_POOL_ADD_BOUNDARY_PIXEL_TO_LINKED_LIST(poolBoundaryPixels, linked_list, boundary_pixel) { \
+	CompVConnectedComponentLmserLinkedListNodeBoundaryPixel* node = (poolBoundaryPixels)->newItem(); \
+	node->data = boundary_pixel; \
+	(linked_list).push_back(node); \
 }
 
 #define LMSER_EDGE_RIGHT		16	// 0b000 1000 0
@@ -41,6 +46,35 @@ Some literature about MSER:
 #define COMPV_THIS_CLASSNAME	"CompVConnectedComponentLabelingLMSER"
 
 COMPV_NAMESPACE_BEGIN()
+
+struct CompVConnectedComponentLmserLinkedListNodeBoundaryPixel {
+	int32_t data;
+	struct CompVConnectedComponentLmserLinkedListNodeBoundaryPixel* prev;
+};
+struct CompVConnectedComponentLmserLinkedListBoundaryPixel {
+	CompVConnectedComponentLmserLinkedListBoundaryPixel()
+		: tail(nullptr)
+	{ }
+	COMPV_INLINE bool empty()const {
+		return !tail;
+	}
+	COMPV_INLINE void push_back(CompVConnectedComponentLmserLinkedListNodeBoundaryPixel* node) {
+		if (tail) node->prev = tail, tail = node;
+		else tail = node, tail->prev = nullptr;
+	}
+	COMPV_INLINE void pop_back() {
+#if 0 // tail never null -> checked by the caller
+		tail = tail ? tail->prev : nullptr;
+#else
+		tail = tail->prev;
+#endif
+	}
+	CompVConnectedComponentLmserLinkedListNodeBoundaryPixel* tail;
+};
+
+typedef CompVMemPoolLightUnstructured<CompVConnectedComponentLmserLinkedListNodeBoundaryPixel > CompVMemPoolLightUnstructuredBoundaryPixel;
+typedef CompVPtr<CompVMemPoolLightUnstructuredBoundaryPixel* > CompVMemPoolLightUnstructuredBoundaryPixelPtr;
+typedef CompVMemPoolLightUnstructuredBoundaryPixelPtr* CompVMemPoolLightUnstructuredBoundaryPixelPtrPtr;
 
 typedef CompVMemPoolLightUnstructured<CompVConnectedComponentLmserLinkedListNodePoint2DInt16 > CompVMemPoolLightUnstructuredPoint2DInt16;
 typedef CompVPtr<CompVMemPoolLightUnstructuredPoint2DInt16* > CompVMemPoolLightUnstructuredPoint2DInt16Ptr;
@@ -118,6 +152,10 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLMSER::process(const CompVMatPtr
 	CompVMemPoolLightUnstructuredPoint2DInt16Ptr poolPoints;
 	COMPV_CHECK_CODE_RETURN(CompVMemPoolLightUnstructuredPoint2DInt16::newObj(&poolPoints, (width * height)));
 
+	//Create a poll of boundary pixels to speedup allocation
+	CompVMemPoolLightUnstructuredBoundaryPixelPtr poolBoundaryPixels;
+	COMPV_CHECK_CODE_RETURN(CompVMemPoolLightUnstructuredBoundaryPixel::newObj(&poolBoundaryPixels, (width * height)));
+
 	// A binary mask of accessible pixels. These are the pixels to which the water
 	// already has access.
 	CompVMatPtr ptr8uAccessible;
@@ -171,7 +209,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLMSER::process(const CompVMatPtr
 	// water has access to the pixel in question, but has either not yet entered, or
 	// not yet explored all the edges out from the pixel. Along with the pixel id,
 	// an edge number indicating the next edge to be explored can be stored.
-	std::vector<int32_t, CompVAllocatorNoDefaultConstruct<int32_t> > boundaryPixels[256];
+	CompVConnectedComponentLmserLinkedListBoundaryPixel boundaryPixels[256];
 	int32_t current_priority = LMSER_HIGHEST_GREYLEVEL;
 
 	// A stack C of component information.Each entry holds the pixels in a component
@@ -227,11 +265,11 @@ __________________________step3__________________________:
 					ptr8uAccessibleRef[neighbor_pixel] |= 1;
 					const uint8_t neighbor_level = ptr8uPixelsRef[neighbor_pixel];
 					if (neighbor_level >= current_level) {
-						boundaryPixels[neighbor_level].push_back(neighbor_pixel << 4);
+						LMSER_POOL_ADD_BOUNDARY_PIXEL_TO_LINKED_LIST(poolBoundaryPixels, boundaryPixels[neighbor_level], (neighbor_pixel << 4));
 						current_priority = COMPV_MATH_MIN(current_priority, neighbor_level);
 					}
 					else {
-						boundaryPixels[current_level].push_back((current_pixel << 4) | ++current_edge);
+						LMSER_POOL_ADD_BOUNDARY_PIXEL_TO_LINKED_LIST(poolBoundaryPixels, boundaryPixels[current_level], ((current_pixel << 4) | ++current_edge));
 						current_priority = COMPV_MATH_MIN(current_priority, current_level);
 						current_edge = 0;
 						current_pixel = neighbor_pixel;
@@ -248,7 +286,7 @@ __________________________step3__________________________:
 		  // 	saturates the current pixel).
 		CompVConnectedComponentLmserRef& top = stackC.back();
 		++top->area;
-		LMSER_POOL_ADD_POINT_TO_LINKED_LIST(top->points, current_pixel_x, current_pixel_y);
+		LMSER_POOL_ADD_POINT_TO_LINKED_LIST(poolPoints, top->points, current_pixel_x, current_pixel_y);
 
 		// 6. Pop the heap of boundary pixels. If the heap is empty, we are done. If the
 		// 	returned pixel is at the same grey - level as the previous, go to 4.
@@ -256,7 +294,7 @@ __________________________step3__________________________:
 			LMSER_GOTO(we_are_done);
 		}
 
-		const int32_t boundaryPixel = boundaryPixels[current_priority].back();
+		const int32_t boundaryPixel = boundaryPixels[current_priority].tail->data;
 		boundaryPixels[current_priority].pop_back();
 		current_pixel = boundaryPixel >> 4;
 		current_edge = boundaryPixel & 0x0f;

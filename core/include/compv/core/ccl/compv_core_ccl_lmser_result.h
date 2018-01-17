@@ -23,24 +23,18 @@ COMPV_NAMESPACE_BEGIN()
 
 struct CompVConnectedComponentLmserLinkedListNodePoint2DInt16 {
 	CompVPoint2DInt16 data;
-	const struct CompVConnectedComponentLmserLinkedListNodePoint2DInt16* next;
+	struct CompVConnectedComponentLmserLinkedListNodePoint2DInt16* next;
 };
-
-template<class T>
-struct CompVConnectedComponentLmserLinkedList {
-	CompVConnectedComponentLmserLinkedList()
+struct CompVConnectedComponentLmserLinkedListPoint2DInt16 {
+	CompVConnectedComponentLmserLinkedListPoint2DInt16()
 		: head(nullptr)
-		, tail(nullptr) 
 	{ }
-	COMPV_INLINE void addNode(T* node) {
-		node->next = nullptr;
-		if (head) tail->next = node, tail = node; 
-		else head = node, tail = node;
+	COMPV_INLINE void push_front(CompVConnectedComponentLmserLinkedListNodePoint2DInt16* node) {
+		if (head) node->next = head, head = node;
+		else node->next = nullptr, head = node;
 	}
-	T* head;
-	T* tail;
+	CompVConnectedComponentLmserLinkedListNodePoint2DInt16* head;
 };
-typedef CompVConnectedComponentLmserLinkedList<CompVConnectedComponentLmserLinkedListNodePoint2DInt16> CompVConnectedComponentLmserLinkedListPoint2DInt16;
 
 typedef const struct CompVConnectedComponentLmser* CompVConnectedComponentLmserNode;
 typedef std::vector<CompVConnectedComponentLmserNode, CompVAllocatorNoDefaultConstruct<CompVConnectedComponentLmserNode> > CompVConnectedComponentLmserNodesVector;
@@ -86,6 +80,7 @@ public:
 	}
 	virtual ~CompVConnectedComponentLabelingLMSERStackMem() {
 		COMPV_CHECK_CODE_ASSERT(relase());
+		m_vecMem.clear();
 	}
 	// https://en.wikipedia.org/wiki/Placement_syntax
 	COMPV_INLINE COMPV_ERROR_CODE requestNewItem(CompVConnectedComponentLmserRef* item, const int16_t greyLevel_ = 0) {
