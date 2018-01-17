@@ -29,9 +29,8 @@ struct CompVConnectedComponentLmserLinkedListPoint2DInt16 {
 	CompVConnectedComponentLmserLinkedListPoint2DInt16()
 		: head(nullptr)
 	{ }
-	COMPV_INLINE void push_front(CompVConnectedComponentLmserLinkedListNodePoint2DInt16* node) {
-		if (head) node->next = head, head = node;
-		else node->next = nullptr, head = node;
+	COMPV_ALWAYS_INLINE void push_front(CompVConnectedComponentLmserLinkedListNodePoint2DInt16* node) {
+		node->next = head, head = node;
 	}
 	CompVConnectedComponentLmserLinkedListNodePoint2DInt16* head;
 };

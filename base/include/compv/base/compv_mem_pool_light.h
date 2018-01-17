@@ -41,6 +41,9 @@ public:
 			? &m_ptrMem[m_nIx++]
 			: nullptr;
 	}
+	COMPV_INLINE T* ptr() {
+		return m_ptrMem;
+	}
 
 	static COMPV_ERROR_CODE newObj(CompVPtr<CompVMemPoolLightUnstructured<T >* >* pool, size_t countInSamples, bool zeroMem = false) {
 		COMPV_CHECK_EXP_RETURN(!pool || !countInSamples, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
