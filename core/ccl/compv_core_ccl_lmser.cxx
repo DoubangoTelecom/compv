@@ -33,6 +33,34 @@ Some literature about MSER:
 	node->data = boundary_pixel; \
 	(linked_list).push_back(node); \
 }
+#define LMSER_CHECK_EDGE() { \
+		if (current_edge < maxEdges) { \
+			const uint8_t edge_mask = LMSER_EDGES_MASKS[current_edge]; \
+			if ((ptr8uAccessibleRef[current_pixel] & edge_mask) == edge_mask) { \
+				const int32_t neighbor_pixel = current_pixel + LMSER_EDGES_OFFSETS[current_edge]; \
+				if (!(ptr8uAccessibleRef[neighbor_pixel] & 1)) { \
+					ptr8uAccessibleRef[neighbor_pixel] |= 1; \
+					const uint8_t neighbor_level = ptr8uPixelsRef[neighbor_pixel]; \
+					if (neighbor_level >= current_level) { \
+						LMSER_POOL_ADD_BOUNDARY_PIXEL_TO_LINKED_LIST(poolBoundaryPixels, boundaryPixels[neighbor_level], (neighbor_pixel << 4)); \
+						current_priority = COMPV_MATH_MIN(current_priority, neighbor_level); \
+					} \
+					else { \
+						LMSER_POOL_ADD_BOUNDARY_PIXEL_TO_LINKED_LIST(poolBoundaryPixels, boundaryPixels[current_level], ((current_pixel << 4) | ++current_edge)); \
+						current_priority = COMPV_MATH_MIN(current_priority, current_level); \
+						current_edge = 0; \
+						current_pixel = neighbor_pixel; \
+						current_level = neighbor_level; \
+						LMSER_GOTO(step3); \
+					} \
+				} \
+			} \
+			++current_edge; \
+		} \
+		else { \
+			break; /* break do{...} while(0) */ \
+		} \
+}
 
 #define LMSER_EDGE_RIGHT		16	// 0b000 1000 0
 #define LMSER_EDGE_BOTTOM		8	// 0b000 0100 0
@@ -256,31 +284,12 @@ __________________________step3__________________________:
 	// next edge number), consider the new pixel and its grey - level and go to 3.
 	do {
 		const int16_t current_pixel_y = static_cast<int16_t>(current_pixel * stride_scale);
-		const int16_t current_pixel_x = static_cast<int16_t>(current_pixel - (current_pixel_y * stride));		
-		while (current_edge < maxEdges) {
-			const uint8_t edge_mask = LMSER_EDGES_MASKS[current_edge];
-			if ((ptr8uAccessibleRef[current_pixel] & edge_mask) == edge_mask) {
-				const int32_t neighbor_pixel = current_pixel + LMSER_EDGES_OFFSETS[current_edge];
-				if (!(ptr8uAccessibleRef[neighbor_pixel] & 1)) {
-					ptr8uAccessibleRef[neighbor_pixel] |= 1;
-					const uint8_t neighbor_level = ptr8uPixelsRef[neighbor_pixel];
-					if (neighbor_level >= current_level) {
-						LMSER_POOL_ADD_BOUNDARY_PIXEL_TO_LINKED_LIST(poolBoundaryPixels, boundaryPixels[neighbor_level], (neighbor_pixel << 4));
-						current_priority = COMPV_MATH_MIN(current_priority, neighbor_level);
-					}
-					else {
-						LMSER_POOL_ADD_BOUNDARY_PIXEL_TO_LINKED_LIST(poolBoundaryPixels, boundaryPixels[current_level], ((current_pixel << 4) | ++current_edge));
-						current_priority = COMPV_MATH_MIN(current_priority, current_level);
-						current_edge = 0;
-						current_pixel = neighbor_pixel;
-						current_level = neighbor_level;
-						LMSER_GOTO(step3);
-					}
-				}
-			}
-
-			++current_edge;
-		} /* while (current_edge < maxEdges) */
+		const int16_t current_pixel_x = static_cast<int16_t>(current_pixel - (current_pixel_y * stride));
+		do {
+			/* No need to check if we're using 4-connectivity or 8-connectivity (thanks to maxEdges) */
+			LMSER_CHECK_EDGE(); LMSER_CHECK_EDGE(); LMSER_CHECK_EDGE(); LMSER_CHECK_EDGE(); // 4-connectivity
+			LMSER_CHECK_EDGE(); LMSER_CHECK_EDGE(); LMSER_CHECK_EDGE(); LMSER_CHECK_EDGE(); // 8-connectivity
+		} while (0);
 
 		  // 5. Accumulate the current pixel to the component at the top of the stack(water
 		  // 	saturates the current pixel).
