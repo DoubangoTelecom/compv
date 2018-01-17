@@ -21,18 +21,18 @@ COMPV_NAMESPACE_BEGIN()
 
 #define COMPV_CORE_LMSER_RESULT_DELETE_PTR_SAMPLES_PER_THREAD		(1024)
 
-struct CompVConnectedComponentLmserLinkedListNodePoint2DInt16 {
-	CompVPoint2DInt16 data;
-	struct CompVConnectedComponentLmserLinkedListNodePoint2DInt16* next;
+struct CompVConnectedComponentLmserLinkedListNodePixelIdx {
+	int32_t data;
+	struct CompVConnectedComponentLmserLinkedListNodePixelIdx* next;
 };
-struct CompVConnectedComponentLmserLinkedListPoint2DInt16 {
-	CompVConnectedComponentLmserLinkedListPoint2DInt16()
+struct CompVConnectedComponentLmserLinkedListPixelIdx {
+	CompVConnectedComponentLmserLinkedListPixelIdx()
 		: head(nullptr)
 	{ }
-	COMPV_ALWAYS_INLINE void push_front(CompVConnectedComponentLmserLinkedListNodePoint2DInt16* node) {
+	COMPV_ALWAYS_INLINE void push_front(CompVConnectedComponentLmserLinkedListNodePixelIdx* node) {
 		node->next = head, head = node;
 	}
-	CompVConnectedComponentLmserLinkedListNodePoint2DInt16* head;
+	CompVConnectedComponentLmserLinkedListNodePixelIdx* head;
 };
 
 typedef const struct CompVConnectedComponentLmser* CompVConnectedComponentLmserNode;
@@ -47,7 +47,7 @@ struct CompVConnectedComponentLmser {
 	int16_t greyLevel; // int16_t instead of uint8_t because the highest value is #256
 	int area;
 	CompVConnectedComponentLmserNodesVector merge_nodes;
-	CompVConnectedComponentLmserLinkedListPoint2DInt16 points;
+	CompVConnectedComponentLmserLinkedListPixelIdx points;
 	CompVConnectedComponentLmser(const int16_t greyLevel_ = 0)
 		: greyLevel(greyLevel_) {
 	}

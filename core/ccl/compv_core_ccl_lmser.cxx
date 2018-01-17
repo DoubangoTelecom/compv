@@ -23,8 +23,8 @@ Some literature about MSER:
 
 #define LMSER_HIGHEST_GREYLEVEL		256
 #define LMSER_GOTO(stepx) goto __________________________##stepx##__________________________
-#define LMSER_POOL_ADD_POINT_TO_LINKED_LIST(poolPointsPtr, linked_list, xx, yy) { \
-		poolPointsPtr->data.x = (xx), poolPointsPtr->data.y = (yy); \
+#define LMSER_POOL_ADD_POINT_TO_LINKED_LIST(poolPointsPtr, linked_list, pixel_idx) { \
+		poolPointsPtr->data = pixel_idx; \
 		(linked_list).push_front(poolPointsPtr++); \
 }
 #define LMSER_POOL_ADD_BOUNDARY_PIXEL_TO_LINKED_LIST(poolBoundaryPixelsPtr, linked_list, boundary_pixel) { \
@@ -101,9 +101,9 @@ typedef CompVMemPoolLightUnstructured<CompVConnectedComponentLmserLinkedListNode
 typedef CompVPtr<CompVMemPoolLightUnstructuredBoundaryPixel* > CompVMemPoolLightUnstructuredBoundaryPixelPtr;
 typedef CompVMemPoolLightUnstructuredBoundaryPixelPtr* CompVMemPoolLightUnstructuredBoundaryPixelPtrPtr;
 
-typedef CompVMemPoolLightUnstructured<CompVConnectedComponentLmserLinkedListNodePoint2DInt16 > CompVMemPoolLightUnstructuredPoint2DInt16;
-typedef CompVPtr<CompVMemPoolLightUnstructuredPoint2DInt16* > CompVMemPoolLightUnstructuredPoint2DInt16Ptr;
-typedef CompVMemPoolLightUnstructuredPoint2DInt16Ptr* CompVMemPoolLightUnstructuredPoint2DInt16PtrPtr;
+typedef CompVMemPoolLightUnstructured<CompVConnectedComponentLmserLinkedListNodePixelIdx > CompVMemPoolLightUnstructuredPixelIdx;
+typedef CompVPtr<CompVMemPoolLightUnstructuredPixelIdx* > CompVMemPoolLightUnstructuredPixelIdxPtr;
+typedef CompVMemPoolLightUnstructuredPixelIdxPtr* CompVMemPoolLightUnstructuredPixelIdxPtrPtr;
 
 static const uint8_t LMSER_EDGES_MASKS[8] = {
 	LMSER_EDGE_RIGHT,
@@ -158,7 +158,6 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLMSER::process(const CompVMatPtr
 	const int16_t height = static_cast<int16_t>(ptr8uImage->rows());
 	const int16_t heightMinus1 = height - 1;
 	const int16_t stride = static_cast<int16_t>(ptr8uImage->stride());
-	const float stride_scale = 1.f / float(stride);
 
 	const bool b8Connectivity = (connectivity() == 8);
 	const int8_t maxEdges = b8Connectivity ? 8 : 4;
@@ -174,9 +173,9 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLMSER::process(const CompVMatPtr
 	};
 
 	// Create a pool of points to speedup allocation
-	CompVMemPoolLightUnstructuredPoint2DInt16Ptr poolPoints;
-	COMPV_CHECK_CODE_RETURN(CompVMemPoolLightUnstructuredPoint2DInt16::newObj(&poolPoints, (width * height)));
-	CompVConnectedComponentLmserLinkedListNodePoint2DInt16* poolPointsPtr = poolPoints->ptr();
+	CompVMemPoolLightUnstructuredPixelIdxPtr poolPoints;
+	COMPV_CHECK_CODE_RETURN(CompVMemPoolLightUnstructuredPixelIdx::newObj(&poolPoints, (width * height)));
+	CompVConnectedComponentLmserLinkedListNodePixelIdx* poolPointsPtr = poolPoints->ptr();
 
 	//Create a poll of boundary pixels to speedup allocation
 	CompVMemPoolLightUnstructuredBoundaryPixelPtr poolBoundaryPixels;
@@ -282,8 +281,6 @@ __________________________step3__________________________:
 	// pixel back into the queue of boundary pixels for later processing(with the
 	// next edge number), consider the new pixel and its grey - level and go to 3.
 	do {
-		const int16_t current_pixel_y = static_cast<int16_t>(current_pixel * stride_scale);
-		const int16_t current_pixel_x = static_cast<int16_t>(current_pixel - (current_pixel_y * stride));
 		do {
 			/* No need to check if we're using 4-connectivity or 8-connectivity (thanks to maxEdges) */
 			LMSER_CHECK_EDGE(); LMSER_CHECK_EDGE(); LMSER_CHECK_EDGE(); LMSER_CHECK_EDGE(); // 4-connectivity
@@ -294,7 +291,7 @@ __________________________step3__________________________:
 		  // 	saturates the current pixel).
 		CompVConnectedComponentLmserRef& top = stackC.back();
 		++top->area;
-		LMSER_POOL_ADD_POINT_TO_LINKED_LIST(poolPointsPtr, top->points, current_pixel_x, current_pixel_y);
+		LMSER_POOL_ADD_POINT_TO_LINKED_LIST(poolPointsPtr, top->points, current_pixel);
 
 		// 6. Pop the heap of boundary pixels. If the heap is empty, we are done. If the
 		// 	returned pixel is at the same grey - level as the previous, go to 4.
@@ -366,16 +363,16 @@ __________________________we_are_done__________________________:
 
 	/* Building final points from stable regions */
 	if (!vecRegions_stable.empty()) {
+		const float stride_scale = 1.f / float(stride);
 		const size_t count = vecRegions_stable.size();
 		vecRegions_final.resize(count);
-		std::vector<size_t> indexes(count, 0);
 
 		auto funcPtrFill = [&](const size_t start, const size_t end) -> COMPV_ERROR_CODE {
 			CompVConnectedComponentLmserRefVector::iterator it_src = vecRegions_stable.begin();
 			CompVConnectedComponentLabelingRegionMserVector::iterator it_dst = vecRegions_final.begin();
-			std::vector<size_t>::iterator it_indexes = indexes.begin();
 			for (size_t i = start; i < end; ++i) {
-				CompVConnectedComponentLabelingLMSER::fill(it_src[i], it_dst[i], it_indexes[i]);
+				size_t index = 0;
+				CompVConnectedComponentLabelingLMSER::fill(it_src[i], it_dst[i], index, stride, stride_scale);
 			}
 			return COMPV_ERROR_CODE_S_OK;
 		};
@@ -468,19 +465,21 @@ bool CompVConnectedComponentLabelingLMSER::checkCrit(const CompVConnectedCompone
 	return true;
 }
 
-void CompVConnectedComponentLabelingLMSER::fill(const CompVConnectedComponentLmser* cc_stable, CompVConnectedComponentLabelingRegionMser& cc_final, size_t& index)
+void CompVConnectedComponentLabelingLMSER::fill(const CompVConnectedComponentLmser* cc_stable, CompVConnectedComponentLabelingRegionMser& cc_final, size_t& index, const int16_t& stride, const float& stride_scale)
 {
 	CompVConnectedComponentPoints& points_final = cc_final.points;
 	if (!index) {
 		points_final.resize(static_cast<size_t>(cc_stable->area));
 	}
-	const CompVConnectedComponentLmserLinkedListPoint2DInt16& points_stable = cc_stable->points;
-	for (const CompVConnectedComponentLmserLinkedListNodePoint2DInt16* node = points_stable.head; node; node = node->next) {
-		points_final[index++] = node->data;
+	const CompVConnectedComponentLmserLinkedListPixelIdx& points_stable = cc_stable->points;
+	for (const CompVConnectedComponentLmserLinkedListNodePixelIdx* node = points_stable.head; node; node = node->next) {
+		CompVPoint2DInt16& point = points_final[index++];
+		 point.y = static_cast<int16_t>(node->data * stride_scale);
+		 point.x = static_cast<int16_t>(node->data - (point.y * stride));
 	}
 	const CompVConnectedComponentLmserNodesVector& merge_nodes_stable = cc_stable->merge_nodes;
 	for (CompVConnectedComponentLmserNodesVector::const_iterator merge_node = merge_nodes_stable.begin(); merge_node < merge_nodes_stable.end(); ++merge_node) {
-		CompVConnectedComponentLabelingLMSER::fill(*merge_node, cc_final, index);
+		CompVConnectedComponentLabelingLMSER::fill(*merge_node, cc_final, index, stride, stride_scale);
 	}
 }
 
