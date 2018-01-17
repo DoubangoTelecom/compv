@@ -27,26 +27,26 @@ COMPV_UNITTEST_CCL[] =
 	{
 		TEST_TYPE_OCR0, 826, 633, 826,
 		"7acca8c8f80b363ed60f7aec588039b6", // md5_moments
-		"1f9a4e09e09ab1f5ab9298a9561d2ec7", // md5_boxes
+		"682cfb59ad185e1b299a573f0968e14f", // md5_boxes
 		"2cb4df29eb927a183bddb23986cbb7fb", // md5_points
 	},
 	{
 		TEST_TYPE_OCR1, 354, 328, 354,
 		"997194f3d1c00ed8cd71ddf157023a71", // md5_moments
-		"274bf84468e87d85a9decea09cb0fdf0", // md5_boxes
+		"ed7fc75bd9217fcaececed26009880c6", // md5_boxes
 		"1bc22b3b223b6c83204f5bd959cfbc1b", // md5_points
 	}
 	,
 	{
 		TEST_TYPE_OCR2, 1122, 1182, 1122,
 		"931cd6224c24b16b5794cd51c3c26486", // md5_moments
-		"6d26b58743a36ea58d79233a9b3ceeeb", // md5_boxes
+		"a7f0c127114a41b22cabd2f573492320", // md5_boxes
 		"e69a039b23ce2070f2af5245968f49cc", // md5_points
 	}
 };
 static const size_t COMPV_UNITTEST_CCL_COUNT = sizeof(COMPV_UNITTEST_CCL) / sizeof(COMPV_UNITTEST_CCL[0]);
 
-#define LOOP_COUNT		100
+#define LOOP_COUNT		1
 #define TEST_TYPE		TEST_TYPE_OCR2
 
 #define DELTA			2
@@ -123,7 +123,7 @@ static COMPV_ERROR_CODE check_points(const CompVConnectedComponentLabelingResult
 		}
 	}
 
-	COMPV_DEBUG_INFO("MD5:%s", compv_tests_md5(ptr8uPoints_).c_str());
+	//COMPV_DEBUG_INFO("MD5:%s", compv_tests_md5(ptr8uPoints_).c_str());
 
 	COMPV_CHECK_EXP_RETURN(compv_tests_md5(ptr8uPoints_).compare(test->md5_points) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "CCL MD5 mismatch (points)");
 
@@ -148,7 +148,7 @@ static COMPV_ERROR_CODE check_boxes(const CompVConnectedComponentLabelingResultP
 	const size_t count = regions.size();
 	
 	for (CompVConnectedComponentLabelingRegionMserVector::const_iterator i = regions.begin(); i < regions.end(); ++i) {
-		const CompVConnectedComponentBoundingBox& bb = (*i).boundingBox;
+		const CompVConnectedComponentBoundingBox& bb = i->boundingBox;
 		uint8_t* top = ptr8uBoxes_->ptr<uint8_t>(static_cast<size_t>(bb.top));
 		uint8_t* bottom = ptr8uBoxes_->ptr<uint8_t>(static_cast<size_t>(bb.bottom));
 		// top and bottom hz lines

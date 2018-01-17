@@ -34,10 +34,10 @@ public:
 	static COMPV_ERROR_CODE newObj(CompVConnectedComponentLabelingPtrPtr ccl);
 
 private:
-	static void fill(const CompVConnectedComponentLmser* cc_stable, CompVConnectedComponentLabelingRegionMser& cc_final, size_t& index);
 	static void stability(CompVConnectedComponentLmserRef& component, const int& delta, const int& min_area, const int& max_area, const double& max_variation);
 	static void collect(CompVConnectedComponentLmserRef& component, const double& one_minus_min_diversity, const double& one_minus_min_diversity_scale, CompVConnectedComponentLmserRefVector& vecRegions);
-	static bool checkCrit(const CompVConnectedComponentLmserRef& component, const double& area, const double& variation);
+	static bool checkCrit(const CompVConnectedComponentLmserRef& component, const int& area, const double& variation);
+	static void fill(const CompVConnectedComponentLmser* cc_stable, CompVConnectedComponentLabelingRegionMser& cc_final, size_t& index);
 };
 
 COMPV_NAMESPACE_END()
