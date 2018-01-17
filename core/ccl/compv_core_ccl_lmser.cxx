@@ -41,11 +41,11 @@ Some literature about MSER:
 					const uint8_t neighbor_level = ptr8uPixelsRef[neighbor_pixel]; \
 					if (neighbor_level >= current_level) { \
 						LMSER_POOL_ADD_BOUNDARY_PIXEL_TO_LINKED_LIST(poolBoundaryPixelsPtr, boundaryPixels[neighbor_level], (neighbor_pixel << 4)); \
-						current_priority = COMPV_MATH_MIN(current_priority, neighbor_level); \
+						if (neighbor_level < current_priority) current_priority = neighbor_level; \
 					} \
 					else { \
 						LMSER_POOL_ADD_BOUNDARY_PIXEL_TO_LINKED_LIST(poolBoundaryPixelsPtr, boundaryPixels[current_level], ((current_pixel << 4) | ++current_edge)); \
-						current_priority = COMPV_MATH_MIN(current_priority, current_level); \
+						if (current_level < current_priority) current_priority = current_level; \
 						current_edge = 0; \
 						current_pixel = neighbor_pixel; \
 						current_level = neighbor_level; \
