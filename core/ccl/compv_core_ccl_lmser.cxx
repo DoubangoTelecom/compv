@@ -358,18 +358,17 @@ __________________________we_are_done__________________________:
 	const int max_area_ = static_cast<int>(input_area * maxArea());
 	const double one_minus_min_diversity = 1.0 - minDiversity();
 	const double one_minus_min_diversity_scale = 1.0 / one_minus_min_diversity;
-	size_t numStableRegions = 0;
-	CompVConnectedComponentLmserRefVector vecRegions_stable;
-	vecRegions_stable.reserve(stackMem.size() >> 3);
+	size_t totalTemporaryStableRegions = 0, totalFinalStableRegions = 0;
 	COMPV_CHECK_CODE_RETURN(stackMem.computeVariation(delta()));
-	COMPV_CHECK_CODE_RETURN(stackMem.computeStability(min_area_, max_area_, maxVariation()));
-	stackC.back()->collectStableRegions(one_minus_min_diversity, one_minus_min_diversity_scale, vecRegions_stable);
+	COMPV_CHECK_CODE_RETURN(stackMem.computeStability(min_area_, max_area_, maxVariation(), totalTemporaryStableRegions));
+	CompVConnectedComponentLmserRefVector vecRegions_stable(totalTemporaryStableRegions);
+	stackC.back()->collectStableRegions(one_minus_min_diversity, one_minus_min_diversity_scale, vecRegions_stable, totalFinalStableRegions);
+	vecRegions_stable.resize(totalFinalStableRegions);
 
 	/* Building final points from stable regions */
-	if (!vecRegions_stable.empty()) {
+	if (totalFinalStableRegions) {
 		const float stride_scale = 1.f / float(stride);
-		const size_t count = vecRegions_stable.size();
-		vecRegions_final.resize(count);
+		vecRegions_final.resize(totalFinalStableRegions);
 		CompVConnectedComponentLmserRefVector::const_iterator it_src = vecRegions_stable.begin();
 		CompVConnectedComponentLabelingRegionMserVector::iterator it_dst = vecRegions_final.begin();
 		auto funcPtrFill = [&](const size_t start, const size_t end) -> COMPV_ERROR_CODE {
@@ -382,7 +381,7 @@ __________________________we_are_done__________________________:
 		COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
 			funcPtrFill,
 			1,
-			count,
+			totalFinalStableRegions,
 			COMPV_CORE_LMSER_FILL_REGIONS_SAMPLES_PER_THREAD
 		));
 	}

@@ -71,7 +71,7 @@ struct CompVConnectedComponentLmser {
 	}
 
 	// Not MT-friendly
-	void collectStableRegions(const double& one_minus_min_diversity, const double& one_minus_min_diversity_scale, CompVConnectedComponentLmserRefVector& vecRegions_stable) {
+	void collectStableRegions(const double& one_minus_min_diversity, const double& one_minus_min_diversity_scale, CompVConnectedComponentLmserRefVector& vecRegions_stable, size_t& index) {
 		int8_t& stable_ = stable;
 		if (stable_) {
 			const int min_parent_area = COMPV_MATH_ROUNDFU_2_NEAREST_INT((area * one_minus_min_diversity_scale), int);
@@ -87,12 +87,12 @@ struct CompVConnectedComponentLmser {
 					variation
 				));
 			if (stable_) {
-				vecRegions_stable.push_back(this);
+				vecRegions_stable[index++] = this;
 			}
 		}
 		struct CompVConnectedComponentLmser* child_ = child;
 		while (child_) {
-			child_->collectStableRegions(one_minus_min_diversity, one_minus_min_diversity_scale, vecRegions_stable);
+			child_->collectStableRegions(one_minus_min_diversity, one_minus_min_diversity_scale, vecRegions_stable, index);
 			child_ = child_->sister;
 		}
 	}
@@ -222,22 +222,45 @@ public:
 	}
 
 	// MT-friendly
-	COMPV_ERROR_CODE computeStability(const int& min_area, const int& max_area, const double& max_variation) {
+	COMPV_ERROR_CODE computeStability(const int& min_area, const int& max_area, const double& max_variation, size_t& totalTemporaryStableRegions) {
+		totalTemporaryStableRegions = 0;
+		CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
+		const size_t maxThreads = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
+		const bool dispatcherNotMotherOfTheCurrentThread = (threadDisp && !threadDisp->isMotherOfTheCurrentThread());
+		auto funcPtrComputeStability = [&](CompVConnectedComponentLmserRef ptr, const size_t start, const size_t end, size_t* numStableRegions) -> COMPV_ERROR_CODE {
+			size_t& numStableRegions_ = *numStableRegions;
+			for (size_t ii = start; ii < end; ++ii) {
+				ptr[ii].computeStability(min_area, max_area, max_variation);
+				numStableRegions_ += ptr[ii].stable;
+			}
+			return COMPV_ERROR_CODE_S_OK;
+		};
+
 		for (std::vector<CompVMemZeroCompVConnectedComponentLmserPtr>::const_iterator i = m_vecMem.begin(); i < m_vecMem.end(); ++i) {
 			const size_t count = (i == (m_vecMem.end() - 1)) ? m_nItemIdx : (*i)->cols();
+			const size_t threadsCount = dispatcherNotMotherOfTheCurrentThread
+				? CompVThreadDispatcher::guessNumThreadsDividingAcrossY(1, count, maxThreads, COMPV_CORE_LMSER_RESULT_COMPUTE_STABILITY_AND_POINTS_SAMPLES_PER_THREAD)
+				: 1;
 			CompVConnectedComponentLmserRef ptr = (*i)->ptr();
-			auto funcPtrComputeStability = [&](const size_t start, const size_t end) -> COMPV_ERROR_CODE {
-				for (size_t ii = start; ii < end; ++ii) {
-					ptr[ii].computeStability(min_area, max_area, max_variation);
+			if (threadsCount > 1) {
+				CompVAsyncTaskIds taskIds;
+				taskIds.reserve(threadsCount);
+				std::vector<size_t> numStableRegions(threadsCount, 0);
+				const size_t heights = (count / threadsCount);
+				size_t YStart = 0, YEnd;
+				for (size_t threadIdx = 0; threadIdx < threadsCount; ++threadIdx) {
+					YEnd = (threadIdx == (threadsCount - 1)) ? count : (YStart + heights);
+					COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrComputeStability, ptr, YStart, YEnd, &numStableRegions[threadIdx]), taskIds), "Dispatching task failed");
+					YStart += heights;
 				}
-				return COMPV_ERROR_CODE_S_OK;
-			};
-			COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
-				funcPtrComputeStability,
-				1,
-				count,
-				COMPV_CORE_LMSER_RESULT_COMPUTE_STABILITY_AND_POINTS_SAMPLES_PER_THREAD
-			));
+				COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds), "Failed to wait for tasks execution");
+				for (size_t threadIdx = 0; threadIdx < threadsCount; ++threadIdx) {
+					totalTemporaryStableRegions += numStableRegions[threadIdx];
+				}
+			}
+			else {
+				COMPV_CHECK_CODE_RETURN(funcPtrComputeStability(ptr, 0, count, &totalTemporaryStableRegions));
+			}
 		}
 		return COMPV_ERROR_CODE_S_OK;
 	}
