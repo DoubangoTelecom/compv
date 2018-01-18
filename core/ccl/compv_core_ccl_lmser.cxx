@@ -358,27 +358,27 @@ __________________________we_are_done__________________________:
 	const int max_area_ = static_cast<int>(input_area * maxArea());
 	const double one_minus_min_diversity = 1.0 - minDiversity();
 	const double one_minus_min_diversity_scale = 1.0 / one_minus_min_diversity;
+	size_t numStableRegions = 0;
 	CompVConnectedComponentLmserRefVector vecRegions_stable;
+	vecRegions_stable.reserve(stackMem.size() >> 3);
 	COMPV_CHECK_CODE_RETURN(stackMem.computeVariation(delta()));
 	COMPV_CHECK_CODE_RETURN(stackMem.computeStability(min_area_, max_area_, maxVariation()));
-	CompVConnectedComponentLabelingLMSER::collect(stackC.back(), one_minus_min_diversity, one_minus_min_diversity_scale, vecRegions_stable);
+	stackC.back()->collectStableRegions(one_minus_min_diversity, one_minus_min_diversity_scale, vecRegions_stable);
 
 	/* Building final points from stable regions */
 	if (!vecRegions_stable.empty()) {
 		const float stride_scale = 1.f / float(stride);
 		const size_t count = vecRegions_stable.size();
 		vecRegions_final.resize(count);
-
+		CompVConnectedComponentLmserRefVector::const_iterator it_src = vecRegions_stable.begin();
+		CompVConnectedComponentLabelingRegionMserVector::iterator it_dst = vecRegions_final.begin();
 		auto funcPtrFill = [&](const size_t start, const size_t end) -> COMPV_ERROR_CODE {
-			CompVConnectedComponentLmserRefVector::iterator it_src = vecRegions_stable.begin();
-			CompVConnectedComponentLabelingRegionMserVector::iterator it_dst = vecRegions_final.begin();
 			for (size_t i = start; i < end; ++i) {
 				size_t index = 0;
-				CompVConnectedComponentLabelingLMSER::fill(it_src[i], it_dst[i], index, stride, stride_scale);
+				it_src[i]->computeFinalPoints(it_dst[i], index, stride, stride_scale);
 			}
 			return COMPV_ERROR_CODE_S_OK;
 		};
-
 		COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
 			funcPtrFill,
 			1,
@@ -390,56 +390,6 @@ __________________________we_are_done__________________________:
 	*result = *result_;
 
 	return COMPV_ERROR_CODE_S_OK;
-}
-
-void CompVConnectedComponentLabelingLMSER::collect(CompVConnectedComponentLmserRef& component, const double& one_minus_min_diversity, const double& one_minus_min_diversity_scale, CompVConnectedComponentLmserRefVector& vecRegions)
-{
-	int8_t& stable_ = component->stable;
-	if (stable_) {
-		const int min_parent_area = COMPV_MATH_ROUNDFU_2_NEAREST_INT((component->area * one_minus_min_diversity_scale), int);
-		for (CompVConnectedComponentLmserRef parent = component->parent;
-			(parent && (parent->area < min_parent_area) && (stable_ = (!parent->stable || (parent->variation > component->variation))));
-			(parent = parent->parent)
-			) /* do noting */;
-
-		stable_ =
-			stable_ &&
-			(CompVConnectedComponentLabelingLMSER::checkCrit(
-				component,
-				COMPV_MATH_ROUNDFU_2_NEAREST_INT((component->area * one_minus_min_diversity), int), // max_child_area
-				component->variation
-			));
-
-		if (stable_) {
-			vecRegions.push_back(component);
-		}
-	}
-
-	CompVConnectedComponentLmserRef child_ = component->child;
-	while (child_) {
-		CompVConnectedComponentLabelingLMSER::collect(child_, one_minus_min_diversity, one_minus_min_diversity_scale, vecRegions);
-		child_ = child_->sister;
-	}
-}
-
-bool CompVConnectedComponentLabelingLMSER::checkCrit(const CompVConnectedComponentLmserRef& component, const int& area, const double& variation)
-{
-	if (component->area <= area) {
-		return true;
-	}
-	if (component->stable && (component->variation < variation)) {
-		return false;
-	}
-
-	CompVConnectedComponentLmserRef child_ = component->child;
-	while (child_) {
-		if (!CompVConnectedComponentLabelingLMSER::checkCrit(child_, area, variation)) {
-			return false;
-		}
-		child_ = child_->sister;
-	}
-
-	return true;
 }
 
 void CompVConnectedComponentLabelingLMSER::fill(const CompVConnectedComponentLmser* cc_stable, CompVConnectedComponentLabelingRegionMser& cc_final, size_t& index, const int16_t& stride, const float& stride_scale)

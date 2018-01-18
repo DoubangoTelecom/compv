@@ -19,9 +19,9 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-#define COMPV_CORE_LMSER_RESULT_DELETE_PTR_SAMPLES_PER_THREAD				(1024)
-#define COMPV_CORE_LMSER_RESULT_COMPUTE_VARIATION_SAMPLES_PER_THREAD		(256)
-#define COMPV_CORE_LMSER_RESULT_COMPUTE_STABILITY_SAMPLES_PER_THREAD		(256)
+#define COMPV_CORE_LMSER_RESULT_DELETE_PTR_SAMPLES_PER_THREAD						(1024)
+#define COMPV_CORE_LMSER_RESULT_COMPUTE_VARIATION_SAMPLES_PER_THREAD				(256)
+#define COMPV_CORE_LMSER_RESULT_COMPUTE_STABILITY_AND_POINTS_SAMPLES_PER_THREAD		(1) // very intensive function where regions' stability is computed and all points are built
 
 struct CompVConnectedComponentLmserLinkedListNodePixelIdx {
 	int32_t data;
@@ -39,6 +39,11 @@ struct CompVConnectedComponentLmserLinkedListPixelIdx {
 
 typedef const struct CompVConnectedComponentLmser* CompVConnectedComponentLmserNode;
 typedef std::vector<CompVConnectedComponentLmserNode, CompVAllocatorNoDefaultConstruct<CompVConnectedComponentLmserNode> > CompVConnectedComponentLmserNodesVector;
+
+typedef struct CompVConnectedComponentLmser* CompVConnectedComponentLmserRef;
+typedef std::vector<CompVConnectedComponentLmserRef, CompVAllocatorNoDefaultConstruct<CompVConnectedComponentLmserRef> > CompVConnectedComponentLmserRefVector;
+typedef std::vector<struct CompVConnectedComponentLmser, CompVAllocatorNoDefaultConstruct<struct CompVConnectedComponentLmser> > CompVConnectedComponentLmserVector;
+
 
 struct CompVConnectedComponentLmser {
 	friend struct CompVConnectedComponentLabelingLMSERStackMem;
@@ -65,7 +70,51 @@ struct CompVConnectedComponentLmser {
 		merge_nodes.push_back(b);
 	}
 
+	// Not MT-friendly
+	void collectStableRegions(const double& one_minus_min_diversity, const double& one_minus_min_diversity_scale, CompVConnectedComponentLmserRefVector& vecRegions_stable) {
+		int8_t& stable_ = stable;
+		if (stable_) {
+			const int min_parent_area = COMPV_MATH_ROUNDFU_2_NEAREST_INT((area * one_minus_min_diversity_scale), int);
+			for (struct CompVConnectedComponentLmser* parent_ = parent;
+				(parent_ && (parent_->area < min_parent_area) && (stable_ = (!parent_->stable || (parent_->variation > variation))));
+				(parent_ = parent_->parent)
+				) /* do noting */;
+
+			stable_ =
+				stable_ &&
+				(checkCrit(
+					COMPV_MATH_ROUNDFU_2_NEAREST_INT((area * one_minus_min_diversity), int), // max_child_area
+					variation
+				));
+			if (stable_) {
+				vecRegions_stable.push_back(this);
+			}
+		}
+		struct CompVConnectedComponentLmser* child_ = child;
+		while (child_) {
+			child_->collectStableRegions(one_minus_min_diversity, one_minus_min_diversity_scale, vecRegions_stable);
+			child_ = child_->sister;
+		}
+	}
+
+	// MT-friendly
+	void computeFinalPoints(CompVConnectedComponentLabelingRegionMser& cc_final, size_t& index, const int16_t& stride, const float& stride_scale) const {
+		CompVConnectedComponentPoints& points_final = cc_final.points;
+		if (!index) {
+			points_final.resize(static_cast<size_t>(area));
+		}
+		for (const CompVConnectedComponentLmserLinkedListNodePixelIdx* node = points.head; node; node = node->next) {
+			CompVPoint2DInt16& point = points_final[index++];
+			point.y = static_cast<int16_t>(node->data * stride_scale);
+			point.x = static_cast<int16_t>(node->data - (point.y * stride));
+		}
+		for (CompVConnectedComponentLmserNodesVector::const_iterator merge_node = merge_nodes.begin(); merge_node < merge_nodes.end(); ++merge_node) {
+			(*merge_node)->computeFinalPoints(cc_final, index, stride, stride_scale);
+		}
+	}
+
 private:
+	// MT-friendly
 	COMPV_INLINE void computeVariation(const int& delta) {
 		const int deltaPlus = (greyLevel + delta);
 		struct CompVConnectedComponentLmser* parent_;
@@ -75,6 +124,7 @@ private:
 		variation = (parent_->area - area) / static_cast<double>(area);
 	}
 
+	// MT-friendly
 	COMPV_INLINE void computeStability(const int& min_area, const int& max_area, const double& max_variation) {
 		const int8_t stable_ = (!parent || (parent->variation >= variation)) &&
 			(variation <= max_variation) && (min_area <= area && area <= max_area);
@@ -93,10 +143,25 @@ private:
 			stable = stable_;
 		}
 	}
+
+	// MT-friendly
+	COMPV_INLINE bool checkCrit(const int& area_, const double& variation_) const {
+		if (area <= area_) {
+			return true;
+		}
+		if (stable && (variation < variation_)) {
+			return false;
+		}
+		struct CompVConnectedComponentLmser* child_ = child;
+		while (child_) {
+			if (!child_->checkCrit(area_, variation_)) {
+				return false;
+			}
+			child_ = child_->sister;
+		}
+		return true;
+	}
 };
-typedef CompVConnectedComponentLmser* CompVConnectedComponentLmserRef;
-typedef std::vector<CompVConnectedComponentLmser, CompVAllocatorNoDefaultConstruct<CompVConnectedComponentLmser> > CompVConnectedComponentLmserVector;
-typedef std::vector<CompVConnectedComponentLmserRef, CompVAllocatorNoDefaultConstruct<CompVConnectedComponentLmserRef> > CompVConnectedComponentLmserRefVector;
 
 typedef CompVMemZero<CompVConnectedComponentLmser> CompVMemZeroCompVConnectedComponentLmser;
 typedef CompVPtr<CompVMemZeroCompVConnectedComponentLmser *> CompVMemZeroCompVConnectedComponentLmserPtr;
@@ -114,7 +179,7 @@ public:
 	}
 	
 	virtual ~CompVConnectedComponentLabelingLMSERStackMem() {
-		COMPV_CHECK_CODE_ASSERT(relase());
+		COMPV_CHECK_CODE_ASSERT(release());
 		m_vecMem.clear();
 	}
 	
@@ -135,6 +200,7 @@ public:
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
+	// MT-friendly
 	COMPV_ERROR_CODE computeVariation(const int& delta) {
 		for (std::vector<CompVMemZeroCompVConnectedComponentLmserPtr>::const_iterator i = m_vecMem.begin(); i < m_vecMem.end(); ++i) {
 			const size_t count = (i == (m_vecMem.end() - 1)) ? m_nItemIdx : (*i)->cols();
@@ -155,6 +221,7 @@ public:
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
+	// MT-friendly
 	COMPV_ERROR_CODE computeStability(const int& min_area, const int& max_area, const double& max_variation) {
 		for (std::vector<CompVMemZeroCompVConnectedComponentLmserPtr>::const_iterator i = m_vecMem.begin(); i < m_vecMem.end(); ++i) {
 			const size_t count = (i == (m_vecMem.end() - 1)) ? m_nItemIdx : (*i)->cols();
@@ -169,14 +236,14 @@ public:
 				funcPtrComputeStability,
 				1,
 				count,
-				COMPV_CORE_LMSER_RESULT_COMPUTE_STABILITY_SAMPLES_PER_THREAD
+				COMPV_CORE_LMSER_RESULT_COMPUTE_STABILITY_AND_POINTS_SAMPLES_PER_THREAD
 			));
 		}
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
 private:
-	COMPV_INLINE COMPV_ERROR_CODE relase() {
+	COMPV_INLINE COMPV_ERROR_CODE release() {
 		if (!m_vecMem.empty()) {
 			// Margaret Thatcher: "I want my memory back"
 			for (std::vector<CompVMemZeroCompVConnectedComponentLmserPtr>::iterator i = m_vecMem.begin(); i < m_vecMem.end(); ++i) {
@@ -199,7 +266,7 @@ private:
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	COMPV_INLINE COMPV_ERROR_CODE reset() {
-		COMPV_CHECK_CODE_RETURN(relase());
+		COMPV_CHECK_CODE_RETURN(release());
 		if (!m_vecMem.empty()) {
 			// For next time -> alloc right size'd mem
 			const size_t total = size();
