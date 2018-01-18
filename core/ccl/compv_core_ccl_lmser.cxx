@@ -353,23 +353,24 @@ __________________________step3__________________________:
 
 __________________________we_are_done__________________________:
 	// Compute stability and collect regions
+	CompVConnectedComponentLmserRef master = stackC.back();
 	const int input_area = width * height;
 	const int min_area_ = static_cast<int>(input_area * minArea());
 	const int max_area_ = static_cast<int>(input_area * maxArea());
 	const double one_minus_min_diversity = 1.0 - minDiversity();
 	const double one_minus_min_diversity_scale = 1.0 / one_minus_min_diversity;
 	size_t totalTemporaryStableRegions = 0, totalFinalStableRegions = 0;
-	COMPV_CHECK_CODE_RETURN(stackMem.computeVariation(delta()));
-	COMPV_CHECK_CODE_RETURN(stackMem.computeStability(min_area_, max_area_, maxVariation(), totalTemporaryStableRegions));
-	CompVConnectedComponentLmserRefVector vecRegions_stable(totalTemporaryStableRegions);
-	stackC.back()->collectStableRegions(one_minus_min_diversity, one_minus_min_diversity_scale, vecRegions_stable, totalFinalStableRegions);
-	vecRegions_stable.resize(totalFinalStableRegions);
+	COMPV_CHECK_CODE_RETURN(stackMem.computeVariation(delta())); // MT-friendly
+	COMPV_CHECK_CODE_RETURN(stackMem.computeStability(min_area_, max_area_, maxVariation(), totalTemporaryStableRegions)); // MT-friendly
+	stackC.resize(totalTemporaryStableRegions);
+	master->collectStableRegions(one_minus_min_diversity, one_minus_min_diversity_scale, stackC, totalFinalStableRegions); // MT-unfriendly
+	stackC.resize(totalFinalStableRegions);
 
 	/* Building final points from stable regions */
 	if (totalFinalStableRegions) {
 		const float stride_scale = 1.f / float(stride);
 		vecRegions_final.resize(totalFinalStableRegions);
-		CompVConnectedComponentLmserRefVector::const_iterator it_src = vecRegions_stable.begin();
+		CompVConnectedComponentLmserRefVector::const_iterator it_src = stackC.begin();
 		CompVConnectedComponentLabelingRegionMserVector::iterator it_dst = vecRegions_final.begin();
 		auto funcPtrFill = [&](const size_t start, const size_t end) -> COMPV_ERROR_CODE {
 			for (size_t i = start; i < end; ++i) {
