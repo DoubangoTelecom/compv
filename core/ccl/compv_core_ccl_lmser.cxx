@@ -243,7 +243,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLMSER::process(const CompVMatPtr
 	// as well as the size history of the component and the current grey - level
 	// at which the component is being processed.The maximum number of entries
 	// on the stack will be the number of grey - levels.
-	std::vector<CompVConnectedComponentLmserRef, CompVAllocatorNoDefaultConstruct<CompVConnectedComponentLmserRef> > stackC;
+	CompVConnectedComponentLmserRefVector stackC;
 
 	// The heap could be dynamically allocated and implemented as linked lists, but
 	// we prefer to count the number pixels at each grey - level in a single pre - sweep of
