@@ -121,6 +121,8 @@ void CompVCannyHysteresisRow_16mpw_Intrin_SSE2(size_t row, size_t colStart, size
 	size_t s;
 	uint8_t *pb, *pt;
 	int32_t edge;
+	const int16_t width_ = static_cast<int16_t>(width);
+	const int16_t height_ = static_cast<int16_t>(height);
 	const int16_t maxWidth = static_cast<int16_t>(width - 15);
 	const int32_t rowlsl16 = static_cast<int32_t>(row << 16);
 	// std::vector is faster than std::list, std::dequeue and std::stack (perf. done using Intel VTune on core i7)
@@ -147,7 +149,7 @@ void CompVCannyHysteresisRow_16mpw_Intrin_SSE2(size_t row, size_t colStart, size
 				edges.pop_back();
 				c = edge & 0xffff;
 				r = edge >> 16;
-				if (r && c && r < height && c < width) {
+				if (r && c && r < height_ && c < width_) {
 					s = (r * stride) + c;
 					p = e0 + s;
 					g = g0 + s;

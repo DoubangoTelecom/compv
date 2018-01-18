@@ -1919,7 +1919,7 @@ void MemoryPool::initDefaultPool()
         fclose(f);
     }
 #endif
-    hugePages.init(hugePageSize);
+    hugePages.init(static_cast<size_t>(hugePageSize));
 }
 
 #if USE_PTHREAD && (__TBB_SOURCE_DIRECTLY_INCLUDED || __TBB_USE_DLOPEN_REENTRANCY_WORKAROUND)

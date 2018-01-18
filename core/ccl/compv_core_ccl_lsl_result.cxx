@@ -317,7 +317,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::extract_blobs(Com
 	/* Fill points */
 	const compv_ccl_accumulator_t* ptrxNaPtr = m_ptrCountPointsBlobs->ptr();
 	points.resize(m_nNa1);
-	for (size_t a = 1; a <= m_nNa1; ++a) { // a within [1, na]
+	for (int32_t a = 1; a <= m_nNa1; ++a) { // a within [1, na]
 		const size_t count = static_cast<size_t>(ptrxNaPtr[a - 1]);
 		points[a - 1].resize(count);
 	}
@@ -369,7 +369,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::extract_segments(
 	/* Fill points */
 	const compv_ccl_accumulator_t* ptrxNaPtr = m_ptrCountPointsSegment->ptr();
 	points.resize(m_nNa1);
-	for (size_t a = 1; a <= m_nNa1; ++a) { // a within [1, na]
+	for (int32_t a = 1; a <= m_nNa1; ++a) { // a within [1, na]
 		const size_t count = static_cast<size_t>(ptrxNaPtr[a - 1]);
 		points[a - 1].resize(count);
 	}

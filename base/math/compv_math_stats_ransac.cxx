@@ -188,7 +188,7 @@ public:
 			std::uniform_int_distribution<size_t> unif_dist{ 0, static_cast<size_t>(totalPoints - 1) };
 			CompVMathStatsRansacModelIndices indices;
 
-			int numInliers;
+			size_t numInliers;
 			bool userBreak, userReject;
 
 			/* Create residual */

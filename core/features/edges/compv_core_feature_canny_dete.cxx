@@ -612,6 +612,7 @@ static void CompVCannyHysteresisRow_C(size_t row, size_t colStart, size_t width,
 	uint8_t *pb, *pt;
 	uint32_t cmp32;
 	std::vector<int32_t> edges;
+	const int16_t height_ = static_cast<int16_t>(height);
 	const int16_t width_ = static_cast<int16_t>(width);
 	const int32_t rowlsl16 = static_cast<int32_t>(row << 16);
 
@@ -624,7 +625,7 @@ static void CompVCannyHysteresisRow_C(size_t row, size_t colStart, size_t width,
 				edges.pop_back();
 				c = edge & 0xffff;
 				r = edge >> 16;
-				if (r && c && r < height && c < width) {
+				if (r && c && r < height_ && c < width_) {
 					s = (r * stride) + c;
 					p = e0 + s;
 					g = g0 + s;
