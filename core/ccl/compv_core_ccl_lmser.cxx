@@ -211,9 +211,9 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLMSER::process(const CompVMatPtr
 		const int16_t width64_ = (widthMinus1 < 8) ? 0 : ((widthMinus1 - 8) & -8);
 		int16_t x;
 		for (size_t y = ystart_; y < yend_; ++y) {
-			*reinterpret_cast<uint64_t*>(&mt_ptr8uAccessibleRef[0]) = 2170205185142300186ul;
+			*reinterpret_cast<uint64_t*>(&mt_ptr8uAccessibleRef[0]) = 2170205185142300186ull;
 			for (x = 8; x < width64_; x += 8) {
-				*reinterpret_cast<uint64_t*>(&mt_ptr8uAccessibleRef[x]) = 2170205185142300190ul;
+				*reinterpret_cast<uint64_t*>(&mt_ptr8uAccessibleRef[x]) = 2170205185142300190ull;
 			}
 			for (; x < widthMinus1; ++x) {
 				mt_ptr8uAccessibleRef[x] = 30;
