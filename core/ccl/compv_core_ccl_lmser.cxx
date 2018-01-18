@@ -352,13 +352,15 @@ __________________________step3__________________________:
 	} while (true);
 
 __________________________we_are_done__________________________:
+	// Compute stability and collect regions
 	const int input_area = width * height;
 	const int min_area_ = static_cast<int>(input_area * minArea());
 	const int max_area_ = static_cast<int>(input_area * maxArea());
 	const double one_minus_min_diversity = 1.0 - minDiversity();
 	const double one_minus_min_diversity_scale = 1.0 / one_minus_min_diversity;
 	CompVConnectedComponentLmserRefVector vecRegions_stable;
-	CompVConnectedComponentLabelingLMSER::stability(stackC.back(), delta(), min_area_, max_area_, maxVariation());
+	COMPV_CHECK_CODE_RETURN(stackMem.computeVariation(delta()));
+	COMPV_CHECK_CODE_RETURN(stackMem.computeStability(min_area_, max_area_, maxVariation()));
 	CompVConnectedComponentLabelingLMSER::collect(stackC.back(), one_minus_min_diversity, one_minus_min_diversity_scale, vecRegions_stable);
 
 	/* Building final points from stable regions */
@@ -388,31 +390,6 @@ __________________________we_are_done__________________________:
 	*result = *result_;
 
 	return COMPV_ERROR_CODE_S_OK;
-}
-
-void CompVConnectedComponentLabelingLMSER::stability(CompVConnectedComponentLmserRef& component, const int& delta, const int& min_area, const int& max_area, const double& max_variation)
-{
-	const int deltaPlus = (component->greyLevel + delta);
-	CompVConnectedComponentLmserRef parent;
-	for (parent = component; parent->parent && (parent->parent->greyLevel <= deltaPlus); parent = parent->parent)
-		/* do nothing */;
-
-	const int areai_ = component->area;
-	component->variation = (parent->area - areai_) / static_cast<double>(component->area);
-	
-	const int8_t stable_ = (!component->parent || (component->parent->variation >= component->variation)) &&
-		(component->variation <= max_variation) && (min_area <= areai_ && areai_ <= max_area);
-
-	CompVConnectedComponentLmserRef child_ = component->child;
-	if (child_) {
-		do {
-			CompVConnectedComponentLabelingLMSER::stability(child_, delta, min_area, max_area, max_variation);
-			component->stable |= (stable_ && (component->variation < child_->variation));
-		} while ((child_ = child_->sister));
-	}
-	else {
-		component->stable = stable_;
-	}
 }
 
 void CompVConnectedComponentLabelingLMSER::collect(CompVConnectedComponentLmserRef& component, const double& one_minus_min_diversity, const double& one_minus_min_diversity_scale, CompVConnectedComponentLmserRefVector& vecRegions)
