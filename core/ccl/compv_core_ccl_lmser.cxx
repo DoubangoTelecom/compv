@@ -392,24 +392,6 @@ __________________________we_are_done__________________________:
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-void CompVConnectedComponentLabelingLMSER::fill(const CompVConnectedComponentLmser* cc_stable, CompVConnectedComponentLabelingRegionMser& cc_final, size_t& index, const int16_t& stride, const float& stride_scale)
-{
-	CompVConnectedComponentPoints& points_final = cc_final.points;
-	if (!index) {
-		points_final.resize(static_cast<size_t>(cc_stable->area));
-	}
-	const CompVConnectedComponentLmserLinkedListPixelIdx& points_stable = cc_stable->points;
-	for (const CompVConnectedComponentLmserLinkedListNodePixelIdx* node = points_stable.head; node; node = node->next) {
-		CompVPoint2DInt16& point = points_final[index++];
-		 point.y = static_cast<int16_t>(node->data * stride_scale);
-		 point.x = static_cast<int16_t>(node->data - (point.y * stride));
-	}
-	const CompVConnectedComponentLmserNodesVector& merge_nodes_stable = cc_stable->merge_nodes;
-	for (CompVConnectedComponentLmserNodesVector::const_iterator merge_node = merge_nodes_stable.begin(); merge_node < merge_nodes_stable.end(); ++merge_node) {
-		CompVConnectedComponentLabelingLMSER::fill(*merge_node, cc_final, index, stride, stride_scale);
-	}
-}
-
 COMPV_ERROR_CODE CompVConnectedComponentLabelingLMSER::newObj(CompVConnectedComponentLabelingPtrPtr ccl)
 {
 	COMPV_CHECK_CODE_RETURN(CompVCore::init());

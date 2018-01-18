@@ -122,14 +122,14 @@ static COMPV_ERROR_CODE check_points(const CompVConnectedComponentLabelingResult
 		}
 	}
 
-	//COMPV_DEBUG_INFO("MD5:%s", compv_tests_md5(ptr8uPoints_).c_str());
-
-	COMPV_CHECK_EXP_RETURN(compv_tests_md5(ptr8uPoints_).compare(test->md5_points) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "CCL MD5 mismatch (points)");
-
 #if COMPV_OS_WINDOWS && 0
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Do not write the file to the hd");
 	COMPV_CHECK_CODE_RETURN(compv_tests_write_to_file(ptr8uPoints_, TEST_TYPE));
 #endif
+
+	//COMPV_DEBUG_INFO("MD5:%s", compv_tests_md5(ptr8uPoints_).c_str());
+
+	COMPV_CHECK_EXP_RETURN(compv_tests_md5(ptr8uPoints_).compare(test->md5_points) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "CCL MD5 mismatch (points)");
 
 	return COMPV_ERROR_CODE_S_OK;
 }

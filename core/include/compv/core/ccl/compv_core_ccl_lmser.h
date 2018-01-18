@@ -34,7 +34,6 @@ public:
 	static COMPV_ERROR_CODE newObj(CompVConnectedComponentLabelingPtrPtr ccl);
 
 private:
-	static void fill(const CompVConnectedComponentLmser* cc_stable, CompVConnectedComponentLabelingRegionMser& cc_final, size_t& index, const int16_t& stride, const float& stride_scale);
 };
 
 COMPV_NAMESPACE_END()
