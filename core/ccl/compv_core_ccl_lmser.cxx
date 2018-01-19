@@ -105,15 +105,24 @@ typedef CompVMemPoolLightUnstructured<CompVConnectedComponentLmserLinkedListNode
 typedef CompVPtr<CompVMemPoolLightUnstructuredPixelIdx* > CompVMemPoolLightUnstructuredPixelIdxPtr;
 typedef CompVMemPoolLightUnstructuredPixelIdxPtr* CompVMemPoolLightUnstructuredPixelIdxPtrPtr;
 
-static const uint8_t LMSER_EDGES_MASKS[8] = {
+static const uint8_t LMSER_EDGES_MASKS_8[8] = {
+	// Must not change the order: more cache_friendly and 'LMSER_EDGES_OFFSETS' depends on it
 	LMSER_EDGE_RIGHT,
-	LMSER_EDGE_BOTTOM,
-	LMSER_EDGE_LEFT,
-	LMSER_EDGE_TOP,
 	LMSER_EDGE_RIGHT_TOP,
+	LMSER_EDGE_TOP,
 	LMSER_EDGE_LEFT_TOP,
+	LMSER_EDGE_LEFT,
 	LMSER_EDGE_LEFT_BOTTOM,
 	LMSER_EDGE_RIGHT_BOTTOM,
+	LMSER_EDGE_BOTTOM,
+};
+
+static const uint8_t LMSER_EDGES_MASKS_4[4] = {
+	// Must not change the order: more cache_friendly and 'LMSER_EDGES_OFFSETS' depends on it
+	LMSER_EDGE_RIGHT,
+	LMSER_EDGE_TOP,
+	LMSER_EDGE_LEFT,
+	LMSER_EDGE_BOTTOM,
 };
 
 CompVConnectedComponentLabelingLMSER::CompVConnectedComponentLabelingLMSER()
@@ -160,18 +169,32 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLMSER::process(const CompVMatPtr
 	const int16_t stride = static_cast<int16_t>(ptr8uImage->stride());
 
 	const bool b8Connectivity = (connectivity() == 8);
-	const int8_t maxEdges = b8Connectivity ? 8 : 4;
-	const int16_t LMSER_EDGES_OFFSETS[8] = {
-		1,
-		stride,
-		-1,
-		-stride,
-		1 - stride,
-		-(1 + stride),
-		stride - 1,
-		stride + 1
-	};
-
+	const int8_t maxEdges = b8Connectivity 
+		? 8 
+		: 4;
+	const uint8_t* LMSER_EDGES_MASKS = b8Connectivity 
+		? &LMSER_EDGES_MASKS_8[0]
+		: &LMSER_EDGES_MASKS_4[0];
+	int16_t LMSER_EDGES_OFFSETS[8];
+	if (b8Connectivity) {
+		// Same order as 'LMSER_EDGES_MASKS_8'
+		LMSER_EDGES_OFFSETS[0] = 1;
+		LMSER_EDGES_OFFSETS[1] = 1 - stride;
+		LMSER_EDGES_OFFSETS[2] = -stride;
+		LMSER_EDGES_OFFSETS[3] = -stride - 1;
+		LMSER_EDGES_OFFSETS[4] = -1;
+		LMSER_EDGES_OFFSETS[5] = stride - 1;
+		LMSER_EDGES_OFFSETS[6] = stride + 1;
+		LMSER_EDGES_OFFSETS[7] = stride;
+	}
+	else {
+		// Same order as 'LMSER_EDGES_MASKS_4'
+		LMSER_EDGES_OFFSETS[0] = 1;
+		LMSER_EDGES_OFFSETS[1] = -stride;
+		LMSER_EDGES_OFFSETS[2] = -1;
+		LMSER_EDGES_OFFSETS[3] = stride;
+	}
+	
 	// Create a pool of points to speedup allocation
 	CompVMemPoolLightUnstructuredPixelIdxPtr poolPoints;
 	COMPV_CHECK_CODE_RETURN(CompVMemPoolLightUnstructuredPixelIdx::newObj(&poolPoints, (width * height)));
