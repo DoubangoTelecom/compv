@@ -28,7 +28,7 @@ COMPV_NAMESPACE_BEGIN()
 #define kCompVConnectedComponentConnectivity		8
 
 typedef CompVPoint2DInt16Vector CompVConnectedComponentPoints;
-typedef std::vector<CompVConnectedComponentPoints > CompVConnectedComponentPointsVector;
+typedef std::vector<CompVConnectedComponentPoints /* requires constructor */ > CompVConnectedComponentPointsVector;
 
 typedef CompVRectInt16 CompVConnectedComponentBoundingBox;
 typedef CompVRectInt16Vector CompVConnectedComponentBoundingBoxesVector;

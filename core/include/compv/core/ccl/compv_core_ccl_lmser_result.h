@@ -228,15 +228,26 @@ public:
 
 	// MT-friendly
 	COMPV_ERROR_CODE computeVariation(const int& delta) {
+		CompVConnectedComponentLmserRef ptr = nullptr;
+		auto funcPtrComputeVariation = [&](const size_t start, const size_t end) -> COMPV_ERROR_CODE {
+			for (size_t ii = start; ii < end; ++ii) {
+#if 0
+				ptr[ii].computeVariation(delta);
+#else
+				CompVConnectedComponentLmser& cc = ptr[ii];
+				const int deltaPlus = (cc.greyLevel + delta);
+				struct CompVConnectedComponentLmser* parent_;
+				for (parent_ = &cc; parent_->parent && (parent_->parent->greyLevel <= deltaPlus); parent_ = parent_->parent)
+					/* do nothing */;
+
+				cc.variation = (parent_->area - cc.area) / static_cast<double>(cc.area);
+#endif
+			}
+			return COMPV_ERROR_CODE_S_OK;
+		};
 		for (std::vector<CompVMemZeroCompVConnectedComponentLmserPtr>::const_iterator i = m_vecMem.begin(); i < m_vecMem.end(); ++i) {
 			const size_t count = (i == (m_vecMem.end() - 1)) ? m_nItemIdx : (*i)->cols();
-			CompVConnectedComponentLmserRef ptr = (*i)->ptr();
-			auto funcPtrComputeVariation = [&](const size_t start, const size_t end) -> COMPV_ERROR_CODE {
-				for (size_t ii = start; ii < end; ++ii) {
-					ptr[ii].computeVariation(delta);
-				}
-				return COMPV_ERROR_CODE_S_OK;
-			};
+			ptr = (*i)->ptr();
 			COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
 				funcPtrComputeVariation,
 				1,
@@ -256,7 +267,27 @@ public:
 		auto funcPtrComputeStability = [&](CompVConnectedComponentLmserRef ptr, const size_t start, const size_t end, size_t* numStableRegions) -> COMPV_ERROR_CODE {
 			size_t& numStableRegions_ = *numStableRegions;
 			for (size_t ii = start; ii < end; ++ii) {
+#if 0
 				ptr[ii].computeStability(min_area, max_area, max_variation);
+#else
+				CompVConnectedComponentLmser& cc = ptr[ii];
+				const int8_t stable_ = (!cc.parent || (cc.parent->variation >= cc.variation)) &&
+					(cc.variation <= max_variation) && (min_area <= cc.area && cc.area <= max_area);
+				struct CompVConnectedComponentLmser* child_ = cc.child;
+				if (child_) {
+					if (stable_) {
+						do {
+							if (cc.variation < child_->variation) {
+								cc.stable = 1;
+								break;
+							}
+						} while ((child_ = child_->sister));
+					}
+				}
+				else {
+					cc.stable = stable_;
+				}
+#endif
 				numStableRegions_ += ptr[ii].stable;
 			}
 			return COMPV_ERROR_CODE_S_OK;
