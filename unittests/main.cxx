@@ -13,8 +13,8 @@ using namespace compv;
 #define UNITTEST_THRESHOLD_OTSU					0
 #define UNITTEST_HOUGHSHT						0
 #define UNITTEST_HOUGHKHT						0
-#define UNITTEST_CCL_BINAR						1
-#define UNITTEST_CCL_MSER						0
+#define UNITTEST_CCL_BINAR						0
+#define UNITTEST_CCL_MSER						1
 
 #define UNITTEST_FEATURE_FAST					0
 #define UNITTEST_CHROMA_CONV					0

@@ -23,19 +23,46 @@ COMPV_NAMESPACE_BEGIN()
 #define COMPV_CORE_LMSER_RESULT_COMPUTE_VARIATION_SAMPLES_PER_THREAD				(256)
 #define COMPV_CORE_LMSER_RESULT_COMPUTE_STABILITY_AND_POINTS_SAMPLES_PER_THREAD		(1) // very intensive function where regions' stability is computed and all points are built
 
-struct CompVConnectedComponentLmserLinkedListNodePixelIdx {
-	int32_t data;
-	struct CompVConnectedComponentLmserLinkedListNodePixelIdx* next;
+template<typename T>
+struct CompVConnectedComponentLmserLinkedListNode {
+	T data;
+	struct CompVConnectedComponentLmserLinkedListNode<T>* link; // "next" for "frw" and "prev" for "FrwBkw"
 };
-struct CompVConnectedComponentLmserLinkedListPixelIdx {
-	CompVConnectedComponentLmserLinkedListPixelIdx()
+
+template<typename T>
+struct CompVConnectedComponentLmserLinkedListFrwOnly {
+	CompVConnectedComponentLmserLinkedListFrwOnly()
 		: head(nullptr)
 	{ }
-	COMPV_ALWAYS_INLINE void push_front(CompVConnectedComponentLmserLinkedListNodePixelIdx* node) {
-		node->next = head, head = node;
+	COMPV_ALWAYS_INLINE void push_front(CompVConnectedComponentLmserLinkedListNode<T>* node) {
+		node->link = head, head = node; // node->next = head, head = node;
 	}
-	CompVConnectedComponentLmserLinkedListNodePixelIdx* head;
+	CompVConnectedComponentLmserLinkedListNode<T>* head;
 };
+
+template<typename T>
+struct CompVConnectedComponentLmserLinkedListFrwBkw {
+	CompVConnectedComponentLmserLinkedListFrwBkw()
+		: tail(nullptr)
+	{ }
+	COMPV_ALWAYS_INLINE bool empty()const {
+		return !tail;
+	}
+	COMPV_ALWAYS_INLINE void push_back(CompVConnectedComponentLmserLinkedListNode<T>* node) {
+		node->link = tail, tail = node; // node->prev = tail, tail = node;
+	}
+	COMPV_ALWAYS_INLINE void pop_back() {
+#if 0 // tail never null -> checked by the caller
+		tail = tail ? tail->link : nullptr;
+#else
+		tail = tail->link; // tail = tail->prev;
+#endif
+	}
+	CompVConnectedComponentLmserLinkedListNode<T>* tail;
+};
+
+typedef CompVConnectedComponentLmserLinkedListNode<int32_t> CompVConnectedComponentLmserLinkedListNodePixelIdx;
+typedef CompVConnectedComponentLmserLinkedListFrwOnly<int32_t> CompVConnectedComponentLmserLinkedListPixelIdx;
 
 typedef const struct CompVConnectedComponentLmser* CompVConnectedComponentLmserNode;
 typedef std::vector<CompVConnectedComponentLmserNode, CompVAllocatorNoDefaultConstruct<CompVConnectedComponentLmserNode> > CompVConnectedComponentLmserNodesVector;
@@ -55,7 +82,9 @@ struct CompVConnectedComponentLmser {
 	int16_t greyLevel; // int16_t instead of uint8_t because the highest value is #256
 	int area;
 	CompVConnectedComponentLmserNodesVector merge_nodes;
-	CompVConnectedComponentLmserLinkedListPixelIdx points;
+	struct {
+		CompVConnectedComponentLmserLinkedListNodePixelIdx* head;
+	} points; /* CompVConnectedComponentLmserLinkedListFrwOnly */
 
 	CompVConnectedComponentLmser(const int16_t greyLevel_ = 0)
 		: greyLevel(greyLevel_) {
@@ -103,7 +132,7 @@ struct CompVConnectedComponentLmser {
 		if (!index) {
 			points_final.resize(static_cast<size_t>(area));
 		}
-		for (const CompVConnectedComponentLmserLinkedListNodePixelIdx* node = points.head; node; node = node->next) {
+		for (const CompVConnectedComponentLmserLinkedListNodePixelIdx* node = points.head; node; node = node->link) {
 			CompVPoint2DInt16& point = points_final[index++];
 			point.y = static_cast<int16_t>(node->data * stride_scale);
 			point.x = static_cast<int16_t>(node->data - (point.y * stride));

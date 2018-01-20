@@ -18,6 +18,7 @@
 
 */
 #include "compv/base/compv_config.h"
+#if COMPV_TBBMALLOC
 COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-private-field")
 #include "tbbmalloc_internal.h"
 
@@ -976,3 +977,4 @@ void *ExtMemoryPool::remap(void *ptr, size_t oldSize, size_t newSize, size_t ali
 } // namespace rml
 
 COMPV_GCC_DISABLE_WARNINGS_END()
+#endif /* COMPV_TBBMALLOC */

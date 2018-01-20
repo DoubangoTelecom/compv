@@ -20,6 +20,9 @@
 
 #if COMPV_TBBMALLOC
 #include "compv/base/tbbmalloc/scalable_allocator.h"
+#	if !defined(COMPV_TBBMALLOC_HEAP_LIMIT)
+#		define COMPV_TBBMALLOC_HEAP_LIMIT	256 // In Mo
+#	endif
 #endif /* COMPV_TBBMALLOC */
 
 #include <stdio.h>
@@ -105,7 +108,8 @@ COMPV_ERROR_CODE CompVMem::init()
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Memory check enabled for debugging, this may slowdown the code");
 #endif
 #if COMPV_TBBMALLOC
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Intel tbbmalloc is enabled and activated, this a good news");
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Intel tbbmalloc is enabled and activated, this a good news0. Heap limit=%d", COMPV_TBBMALLOC_HEAP_LIMIT);
+		CompVMem::setHeapLimit(COMPV_TBBMALLOC_HEAP_LIMIT); // Do not exit even if it fails
 #else
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Intel tbbmalloc not enabled. You may have some perf issues on memory allocation and cache management. Sad!");
 #endif
@@ -669,6 +673,18 @@ bool CompVMem::isGpuFriendly(const void* mem, size_t size)
 {
 	return COMPV_IS_ALIGNED(reinterpret_cast<uintptr_t>(mem), COMPV_ALIGNV_GPU_PAGE)
 		&& COMPV_IS_ALIGNED(size, COMPV_ALIGNV_GPU_LINE);
+}
+
+// https://software.intel.com/en-us/articles/controlling-memory-consumption-with-intel-threading-building-blocks-intel-tbb-scalable
+COMPV_ERROR_CODE CompVMem::setHeapLimit(const size_t sizeInMo)
+{
+	COMPV_CHECK_EXP_RETURN(!sizeInMo || sizeInMo > 512, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Value must be within ]0, 512] range");
+#if COMPV_TBBMALLOC
+	const size_t soft_limit = sizeInMo * (1024*1024);
+	COMPV_CHECK_EXP_RETURN((scalable_allocation_mode(TBBMALLOC_SET_SOFT_HEAP_LIMIT, soft_limit) != TBBMALLOC_OK),
+		COMPV_ERROR_CODE_E_INTEL_TBB, "scalable_allocation_mode failed");
+#endif
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 // Allocated using mallocAligned, callocAligned or reallocAligned

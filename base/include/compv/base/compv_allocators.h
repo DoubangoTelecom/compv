@@ -9,7 +9,7 @@
 
 #include "compv/base/compv_config.h"
 
-#if COMPV_TBBMALLOC
+#if COMPV_TBBMALLOC && 0 // Memory leaks when data is allocated/freed fast (check with LMSER "unitest") -> https://software.intel.com/en-us/forums/intel-threading-building-blocks/topic/296353
 #include "compv/base/tbbmalloc/scalable_allocator.h"
 #define CompVAllocator tbb::scalable_allocator
 #else

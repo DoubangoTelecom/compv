@@ -60,6 +60,8 @@ public:
 
 	static bool isGpuFriendly(const void* mem, size_t size);
 
+	static COMPV_ERROR_CODE setHeapLimit(const size_t sizeInMo);
+
 	static bool isTbbMallocEnabled();
     static int bestAlignment();
     static bool isSpecial(void* ptr);

@@ -18,6 +18,7 @@
 
 */
 #include "compv/base/compv_config.h"
+#if COMPV_TBBMALLOC
 COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-private-field")
 #include "TypeDefinitions.h" // Customize.h and proxy.h get included
 #include "tbbmalloc_internal_api.h"
@@ -122,3 +123,4 @@ extern "C" intptr_t __TBB_machine_lockbyte( volatile unsigned char& flag ) {
 }
 #endif
 COMPV_GCC_DISABLE_WARNINGS_END()
+#endif /* COMPV_TBBMALLOC */

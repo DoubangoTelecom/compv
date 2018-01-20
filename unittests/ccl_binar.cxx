@@ -1,6 +1,6 @@
 #include "../tests/tests_common.h"
 
-#define TAG_TEST							"UnitTestConnectedComponentLabeling"
+#define TAG_TEST							"UnitTestConnectedComponentLabelingLSL"
 #if COMPV_OS_WINDOWS
 #	define COMPV_TEST_IMAGE_FOLDER			"C:/Projects/GitHub/data/morpho"
 #elif COMPV_OS_OSX

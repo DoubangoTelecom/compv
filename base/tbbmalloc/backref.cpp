@@ -18,6 +18,7 @@
 
 */
 #include "compv/base/compv_config.h"
+#if COMPV_TBBMALLOC
 COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-private-field")
 #include "tbbmalloc_internal.h"
 #include <new>        /* for placement new */
@@ -342,3 +343,4 @@ void removeBackRef(BackRefIdx backRefIdx)
 } // namespace rml
 
 COMPV_GCC_DISABLE_WARNINGS_END()
+#endif /* COMPV_TBBMALLOC */

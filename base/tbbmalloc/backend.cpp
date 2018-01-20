@@ -18,6 +18,7 @@
 
 */
 #include "compv/base/compv_config.h"
+#if COMPV_TBBMALLOC
 COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-private-field")
 #include <string.h>   /* for memset */
 #include <errno.h>
@@ -1555,3 +1556,4 @@ void Backend::reportStat(FILE *f)
 
 } } // namespaces
 COMPV_GCC_DISABLE_WARNINGS_END()
+#endif /* COMPV_TBBMALLOC */
