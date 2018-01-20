@@ -119,10 +119,25 @@ struct CompVConnectedComponentLmser {
 
 	// MT-friendly
 	void computeFinalPoints(CompVConnectedComponentLabelingRegionMser& cc_final, size_t& index, const int16_t& stride, const float& stride_scale) const {
+#if 0 // Non-recurssive call
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Recurssive call faster");
 		CompVConnectedComponentPoints& points_final = cc_final.points;
-		if (!index) {
-			points_final.resize(static_cast<size_t>(area));
+		std::vector<const struct CompVConnectedComponentLmser*, CompVAllocatorNoDefaultConstruct<const struct CompVConnectedComponentLmser* > > stack(area);
+		size_t ii = 0;
+		stack[ii++] = this;
+		while (ii) {
+			const struct CompVConnectedComponentLmser* cc = stack[--ii];
+			for (const CompVConnectedComponentLmserLinkedListNodePixelIdx* node = cc->linked_list_points_head; node; node = node->link) {
+				CompVPoint2DInt16& point = points_final[index++];
+				point.y = static_cast<int16_t>(node->data * stride_scale);
+				point.x = static_cast<int16_t>(node->data - (point.y * stride));
+			}
+			for (const CompVConnectedComponentLmserLinkedListNodeMerge* node = cc->linked_list_merges_head; node; node = node->link) {
+				stack[ii++] = node->data;
+			}
 		}
+#elif 1	// Recurssive call
+		CompVConnectedComponentPoints& points_final = cc_final.points;
 		for (const CompVConnectedComponentLmserLinkedListNodePixelIdx* node = linked_list_points_head; node; node = node->link) {
 			CompVPoint2DInt16& point = points_final[index++];
 			point.y = static_cast<int16_t>(node->data * stride_scale);
@@ -131,6 +146,7 @@ struct CompVConnectedComponentLmser {
 		for (const CompVConnectedComponentLmserLinkedListNodeMerge* node = linked_list_merges_head; node; node = node->link) {
 			node->data->computeFinalPoints(cc_final, index, stride, stride_scale);
 		}
+#endif
 	}
 
 private:

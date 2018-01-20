@@ -371,6 +371,7 @@ __________________________we_are_done__________________________:
 		auto funcPtrFill = [&](const size_t start, const size_t end) -> COMPV_ERROR_CODE {
 			for (size_t i = start; i < end; ++i) {
 				size_t index = 0;
+				it_dst[i].points.resize(static_cast<size_t>(it_src[i]->area));
 				it_src[i]->computeFinalPoints(it_dst[i], index, stride, stride_scale);
 			}
 			return COMPV_ERROR_CODE_S_OK;
