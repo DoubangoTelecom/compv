@@ -72,14 +72,6 @@ COMPV_NAMESPACE_BEGIN()
 typedef CompVConnectedComponentLmserLinkedListNode<int32_t> CompVConnectedComponentLmserLinkedListNodeBoundaryPixel;
 typedef CompVConnectedComponentLmserLinkedListFrwBkw<int32_t> CompVConnectedComponentLmserLinkedListBoundaryPixel;
 
-typedef CompVMemPoolLightUnstructured<CompVConnectedComponentLmserLinkedListNodeBoundaryPixel > CompVMemPoolLightUnstructuredBoundaryPixel;
-typedef CompVPtr<CompVMemPoolLightUnstructuredBoundaryPixel* > CompVMemPoolLightUnstructuredBoundaryPixelPtr;
-typedef CompVMemPoolLightUnstructuredBoundaryPixelPtr* CompVMemPoolLightUnstructuredBoundaryPixelPtrPtr;
-
-typedef CompVMemPoolLightUnstructured<CompVConnectedComponentLmserLinkedListNodePixelIdx > CompVMemPoolLightUnstructuredPixelIdx;
-typedef CompVPtr<CompVMemPoolLightUnstructuredPixelIdx* > CompVMemPoolLightUnstructuredPixelIdxPtr;
-typedef CompVMemPoolLightUnstructuredPixelIdxPtr* CompVMemPoolLightUnstructuredPixelIdxPtrPtr;
-
 static const uint8_t LMSER_EDGES_MASKS_8[8] = {
 	// Must not change the order: more cache_friendly and 'LMSER_EDGES_OFFSETS' depends on it
 	LMSER_EDGE_RIGHT,
@@ -171,14 +163,19 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLMSER::process(const CompVMatPtr
 	}
 	
 	// Create a pool of points to speedup allocation
-	CompVMemPoolLightUnstructuredPixelIdxPtr poolPoints;
-	COMPV_CHECK_CODE_RETURN(CompVMemPoolLightUnstructuredPixelIdx::newObj(&poolPoints, (width * height)));
-	CompVConnectedComponentLmserLinkedListNodePixelIdx* poolPointsPtr = poolPoints->ptr();
+	CompVMatPtr poolPoints;
+	COMPV_CHECK_CODE_RETURN((CompVMat::newObjAligned<CompVConnectedComponentLmserLinkedListNodePixelIdx, COMPV_MAT_TYPE_STRUCT>(&poolPoints, 1, (width * height))));
+	CompVConnectedComponentLmserLinkedListNodePixelIdx* poolPointsPtr = poolPoints->ptr<CompVConnectedComponentLmserLinkedListNodePixelIdx>();
 
-	//Create a poll of boundary pixels to speedup allocation
-	CompVMemPoolLightUnstructuredBoundaryPixelPtr poolBoundaryPixels;
-	COMPV_CHECK_CODE_RETURN(CompVMemPoolLightUnstructuredBoundaryPixel::newObj(&poolBoundaryPixels, (width * height)));
-	CompVConnectedComponentLmserLinkedListNodeBoundaryPixel* poolBoundaryPixelsPtr = poolBoundaryPixels->ptr();
+	// Create a pool of boundary pixels to speedup allocation
+	CompVMatPtr poolBoundaryPixels;
+	COMPV_CHECK_CODE_RETURN((CompVMat::newObjAligned<CompVConnectedComponentLmserLinkedListNodeBoundaryPixel, COMPV_MAT_TYPE_STRUCT>(&poolBoundaryPixels, 1, (width * height))));
+	CompVConnectedComponentLmserLinkedListNodeBoundaryPixel* poolBoundaryPixelsPtr = poolBoundaryPixels->ptr<CompVConnectedComponentLmserLinkedListNodeBoundaryPixel>();
+
+	// Create a pool of merges to speedup allocation. A region cannot be merged more than once which means: "max-merges = image size"
+	CompVMatPtr poolMerges;
+	COMPV_CHECK_CODE_RETURN((CompVMat::newObjAligned<CompVConnectedComponentLmserLinkedListNodeMerge, COMPV_MAT_TYPE_STRUCT>(&poolMerges, 1, (width * height))));
+	CompVConnectedComponentLmserLinkedListNodeMerge* poolMergesPtr = poolMerges->ptr<CompVConnectedComponentLmserLinkedListNodeMerge>();
 
 	// A binary mask of accessible pixels. These are the pixels to which the water
 	// already has access.
@@ -290,7 +287,7 @@ __________________________step3__________________________:
 		CompVConnectedComponentLmserRef& top = stackC.back();
 		++top->area;
 		poolPointsPtr->data = current_pixel;
-		poolPointsPtr->link = top->points.head, top->points.head = poolPointsPtr++; // push_front(current_pixel)
+		poolPointsPtr->link = top->linked_list_points_head, top->linked_list_points_head = poolPointsPtr++; // push_front(current_pixel)
 
 		// 6. Pop the heap of boundary pixels. If the heap is empty, we are done. If the
 		// 	returned pixel is at the same grey - level as the previous, go to 4.
@@ -331,7 +328,7 @@ __________________________step3__________________________:
 				// level by just changing its grey - level.
 				if (new_pixel_grey_level < stackC.back()->greyLevel) {
 					COMPV_CHECK_CODE_RETURN(stackMem.requestNewItem(&stackMemRef_, new_pixel_grey_level));
-					stackMemRef_->merge(top);
+					stackMemRef_->merge(poolMergesPtr, top);
 					stackC.push_back(stackMemRef_);
 					break;
 				}
@@ -344,7 +341,7 @@ __________________________step3__________________________:
 				// top of stack would be the winner if its current size is larger than the previous
 				// size of second on stack.
 				CompVConnectedComponentLmserRef back = stackC.back();
-				back->merge(top);
+				back->merge(poolMergesPtr, top);
 
 			} while (new_pixel_grey_level > stackC.back()->greyLevel); // 4. If(new pixel grey level>top of stack grey level) go to 1.
 		}

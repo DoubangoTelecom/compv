@@ -64,13 +64,12 @@ struct CompVConnectedComponentLmserLinkedListFrwBkw {
 typedef CompVConnectedComponentLmserLinkedListNode<int32_t> CompVConnectedComponentLmserLinkedListNodePixelIdx;
 typedef CompVConnectedComponentLmserLinkedListFrwOnly<int32_t> CompVConnectedComponentLmserLinkedListPixelIdx;
 
-typedef const struct CompVConnectedComponentLmser* CompVConnectedComponentLmserNode;
-typedef std::vector<CompVConnectedComponentLmserNode, CompVAllocatorNoDefaultConstruct<CompVConnectedComponentLmserNode> > CompVConnectedComponentLmserNodesVector;
+typedef CompVConnectedComponentLmserLinkedListNode<const struct CompVConnectedComponentLmser*> CompVConnectedComponentLmserLinkedListNodeMerge;
+typedef CompVConnectedComponentLmserLinkedListFrwOnly<int32_t> CompVConnectedComponentLmserLinkedListMerge;
 
 typedef struct CompVConnectedComponentLmser* CompVConnectedComponentLmserRef;
 typedef std::vector<CompVConnectedComponentLmserRef, CompVAllocatorNoDefaultConstruct<CompVConnectedComponentLmserRef> > CompVConnectedComponentLmserRefVector;
 typedef std::vector<struct CompVConnectedComponentLmser, CompVAllocatorNoDefaultConstruct<struct CompVConnectedComponentLmser> > CompVConnectedComponentLmserVector;
-
 
 struct CompVConnectedComponentLmser {
 	friend struct CompVConnectedComponentLabelingLMSERStackMem;
@@ -81,22 +80,14 @@ struct CompVConnectedComponentLmser {
 	int8_t stable;
 	int16_t greyLevel; // int16_t instead of uint8_t because the highest value is #256
 	int area;
-	CompVConnectedComponentLmserNodesVector merge_nodes;
-	struct {
-		CompVConnectedComponentLmserLinkedListNodePixelIdx* head;
-	} points; /* CompVConnectedComponentLmserLinkedListFrwOnly */
+	CompVConnectedComponentLmserLinkedListNodeMerge* linked_list_merges_head; /* CompVConnectedComponentLmserLinkedListFrwOnly */
+	CompVConnectedComponentLmserLinkedListNodePixelIdx* linked_list_points_head; /* CompVConnectedComponentLmserLinkedListFrwOnly */
 
-	CompVConnectedComponentLmser(const int16_t greyLevel_ = 0)
-		: greyLevel(greyLevel_) {
-	}
-
-	virtual ~CompVConnectedComponentLmser() {
-	}
-
-	COMPV_INLINE void merge(struct CompVConnectedComponentLmser* b) {
+	COMPV_ALWAYS_INLINE void merge(CompVConnectedComponentLmserLinkedListNodeMerge*& pool, struct CompVConnectedComponentLmser* b) {
 		area += b->area;
 		b->sister = this->child, this->child = b, b->parent = this;
-		merge_nodes.push_back(b);
+		pool->data = b;
+		pool->link = linked_list_merges_head, linked_list_merges_head = pool++; // push_front(b)
 	}
 
 	// Not MT-friendly
@@ -132,13 +123,13 @@ struct CompVConnectedComponentLmser {
 		if (!index) {
 			points_final.resize(static_cast<size_t>(area));
 		}
-		for (const CompVConnectedComponentLmserLinkedListNodePixelIdx* node = points.head; node; node = node->link) {
+		for (const CompVConnectedComponentLmserLinkedListNodePixelIdx* node = linked_list_points_head; node; node = node->link) {
 			CompVPoint2DInt16& point = points_final[index++];
 			point.y = static_cast<int16_t>(node->data * stride_scale);
 			point.x = static_cast<int16_t>(node->data - (point.y * stride));
 		}
-		for (CompVConnectedComponentLmserNodesVector::const_iterator merge_node = merge_nodes.begin(); merge_node < merge_nodes.end(); ++merge_node) {
-			(*merge_node)->computeFinalPoints(cc_final, index, stride, stride_scale);
+		for (const CompVConnectedComponentLmserLinkedListNodeMerge* node = linked_list_merges_head; node; node = node->link) {
+			node->data->computeFinalPoints(cc_final, index, stride, stride_scale);
 		}
 	}
 
@@ -220,12 +211,18 @@ public:
 		return total;
 	}
 	
-	// https://en.wikipedia.org/wiki/Placement_syntax
 	COMPV_INLINE COMPV_ERROR_CODE requestNewItem(CompVConnectedComponentLmserRef* item, const int16_t greyLevel_ = 0) {
 		if (m_nItemIdx >= m_nLastVecSize) {
 			COMPV_CHECK_CODE_RETURN(pushNewMem());
 		}
+#if 0
+		// https://en.wikipedia.org/wiki/Placement_syntax
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No need to call the ctors as the is no structured element (e.g. std::vector)");
 		*item = new(&m_ptrMem[m_nItemIdx++])CompVConnectedComponentLmser(greyLevel_);
+#else
+		*item = &m_ptrMem[m_nItemIdx++];
+		(*item)->greyLevel = greyLevel_;
+#endif
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
@@ -296,6 +293,8 @@ public:
 
 private:
 	COMPV_INLINE COMPV_ERROR_CODE release() {
+#if 0
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No need to call the dtors as the is no structured element (e.g. std::vector)");
 		if (!m_vecMem.empty()) {
 			// Margaret Thatcher: "I want my memory back"
 			for (std::vector<CompVMemZeroCompVConnectedComponentLmserPtr>::iterator i = m_vecMem.begin(); i < m_vecMem.end(); ++i) {
@@ -315,6 +314,7 @@ private:
 				));
 			}
 		}
+#endif
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	COMPV_INLINE COMPV_ERROR_CODE reset() {
