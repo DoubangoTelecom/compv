@@ -25,7 +25,7 @@ Some literature about MSER:
 #define LMSER_GOTO(stepx) goto __________________________##stepx##__________________________
 #define LMSER_POOL_ADD_BOUNDARY_PIXEL_TO_LINKED_LIST(poolBoundaryPixelsPtr, linked_list, boundary_pixel) { \
 	poolBoundaryPixelsPtr->data = boundary_pixel; \
-	(linked_list).push_back(poolBoundaryPixelsPtr++); \
+	poolBoundaryPixelsPtr->link = linked_list.tail, linked_list.tail = poolBoundaryPixelsPtr++; \
 }
 #define LMSER_CHECK_EDGE() { \
 		if (current_edge < maxEdges) { \
