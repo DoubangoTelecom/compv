@@ -136,7 +136,7 @@ static COMPV_ERROR_CODE check_boxes(const CompVConnectedComponentLabelingResultP
 		CompVConnectedComponentLabeling::reinterpret_castr<CompVConnectedComponentLabelingResultLMSER>(result);
 
 	const CompVConnectedComponentLabelingRegionMserVector& regions = result_lmser->boundingBoxes();
-	const size_t count = regions.size();
+	//const size_t count = regions.size();
 
 	for (CompVConnectedComponentLabelingRegionMserVector::const_iterator i = regions.begin(); i < regions.end(); ++i) {
 		const CompVConnectedComponentBoundingBox& bb = i->boundingBox;
@@ -168,10 +168,11 @@ static COMPV_ERROR_CODE check_boxes(const CompVConnectedComponentLabelingResultP
 
 static COMPV_ERROR_CODE check_moments(const CompVConnectedComponentLabelingResultPtr result, const compv_unittest_ccl* test)
 {
+#if 0
 	const CompVConnectedComponentLabelingResultLMSER* result_lmser =
 		CompVConnectedComponentLabeling::reinterpret_castr<CompVConnectedComponentLabelingResultLMSER>(result);
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Moments checking disabled");
-#if 0
+
 	const CompVConnectedComponentMomentsVector& moments = result_lmser->moments();
 	const size_t count = moments.size();
 

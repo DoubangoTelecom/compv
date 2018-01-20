@@ -46,8 +46,8 @@ COMPV_UNITTEST_CCL[] =
 };
 static const size_t COMPV_UNITTEST_CCL_COUNT = sizeof(COMPV_UNITTEST_CCL) / sizeof(COMPV_UNITTEST_CCL[0]);
 
-#define LOOP_COUNT		100
-#define TEST_TYPE		TEST_TYPE_OCR2
+#define LOOP_COUNT		1
+#define TEST_TYPE		TEST_TYPE_OCR1
 
 #define DELTA			2
 #define MIN_AREA		(0.0055 * 0.0055)
@@ -144,7 +144,7 @@ static COMPV_ERROR_CODE check_boxes(const CompVConnectedComponentLabelingResultP
 		CompVConnectedComponentLabeling::reinterpret_castr<CompVConnectedComponentLabelingResultLMSER>(result);
 
 	const CompVConnectedComponentLabelingRegionMserVector& regions = result_lmser->boundingBoxes();
-	const size_t count = regions.size();
+	//const size_t count = regions.size();
 	
 	for (CompVConnectedComponentLabelingRegionMserVector::const_iterator i = regions.begin(); i < regions.end(); ++i) {
 		const CompVConnectedComponentBoundingBox& bb = i->boundingBox;
@@ -176,10 +176,11 @@ static COMPV_ERROR_CODE check_boxes(const CompVConnectedComponentLabelingResultP
 
 static COMPV_ERROR_CODE check_moments(const CompVConnectedComponentLabelingResultPtr result, const compv_unittest_ccl* test)
 {
+#if 0
 	const CompVConnectedComponentLabelingResultLMSER* result_lmser =
 		CompVConnectedComponentLabeling::reinterpret_castr<CompVConnectedComponentLabelingResultLMSER>(result);
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Moments checking disabled");
-#if 0
+
 	const CompVConnectedComponentMomentsVector& moments = result_lmser->moments();
 	const size_t count = moments.size();
 

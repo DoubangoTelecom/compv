@@ -28,6 +28,7 @@
     <ClCompile Include="..\..\split.cxx" />
     <ClCompile Include="..\..\math_convlt.cxx" />
     <ClCompile Include="..\..\math_morph.cxx" />
-    <ClCompile Include="..\..\ccl.cxx" />
+    <ClCompile Include="..\..\ccl_binar.cxx" />
+    <ClCompile Include="..\..\ccl_mser.cxx" />
   </ItemGroup>
 </Project>

@@ -173,6 +173,18 @@
       <Link>assets\text_1122x1182_white_gray.yuv</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="..\..\..\..\..\data\ocr\ocr0_826x633_gray.yuv">
+      <Link>assets\ocr0_826x633_gray.yuv</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\..\..\..\data\ocr\ocr1_354x328_gray.yuv">
+      <Link>assets\ocr1_354x328_gray.yuv</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\..\..\..\data\ocr\ocr2_1122x1182_gray.yuv">
+      <Link>assets\ocr2_1122x1182_gray.yuv</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="..\..\..\..\..\data\test_images\equirectangular_1282x720_gray.yuv">
       <Link>assets\equirectangular_1282x720_gray.yuv</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
