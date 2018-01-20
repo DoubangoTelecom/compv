@@ -40,10 +40,19 @@ public:
 // "bsf" is the same as "ctz" on x86
 #if defined(_MSC_VER)
 #	define compv_bsf(val, ret)			_BitScanForward(ret, (val))
+#	define compv_bsf64(val, ret)		_BitScanForward64(ret, (val))
 typedef DWORD compv_bsf_t;
+typedef DWORD64 compv_bsf64_t;
 #else
-#	define compv_bsf(val, ret)		*(ret) = __builtin_ffs((val)) /* do not use '__builtin_ctz' which could lead to 'tzcnt' (requires 'BMI1' CPU flags, faster) instead of 'bsf' */
+#	if COMPV_ARCH_ARM
+#		define compv_bsf(val, ret)		*(ret) = __builtin_ctz((val))
+#		define compv_bsf64(val, ret)	*(ret) = __builtin_ctzll((val))
+#	else
+#		define compv_bsf(val, ret)		*(ret) = (__builtin_ffs((val))-1) /* do not use '__builtin_ctz' which could lead to 'tzcnt' (requires 'BMI1' CPU flags, faster) instead of 'bsf' */
+#		define compv_bsf64(val, ret)	*(ret) = (__builtin_ffsll((val))-1)
+#	endif /* COMPV_ARCH_ARM */
 typedef int compv_bsf_t;
+typedef uint64_t compv_bsf64_t;
 #endif /* !defined(_MSC_VER) */
 
 COMPV_NAMESPACE_END()

@@ -17,16 +17,17 @@ Some literature about MSER:
 #include "compv/base/compv_cpu.h"
 #include "compv/base/compv_memz.h"
 #include "compv/base/compv_mem_pool_light.h"
+#include "compv/base/compv_bits.h"
 
 #define COMPV_CORE_LMSER_ACCESSIBILITY_BUILD_SAMPLES_PER_THREAD		(40 * 40)
 #define COMPV_CORE_LMSER_FILL_REGIONS_SAMPLES_PER_THREAD			(1 * 1) // This is the number of regions -> use max threads
 
+#if COMPV_ARCH_X64 || COMPV_ARCH_ARM64
+#	define LMSER_USE_BSF	1
+#endif /* 64bits arch */
+
 #define LMSER_HIGHEST_GREYLEVEL		256
 #define LMSER_GOTO(stepx) goto __________________________##stepx##__________________________
-#define LMSER_POOL_ADD_BOUNDARY_PIXEL_TO_LINKED_LIST(poolBoundaryPixelsPtr, linked_list, boundary_pixel) { \
-	poolBoundaryPixelsPtr->data = boundary_pixel; \
-	poolBoundaryPixelsPtr->link = linked_list.tail, linked_list.tail = poolBoundaryPixelsPtr++; \
-}
 #define LMSER_CHECK_EDGE() { \
 		if (current_edge < maxEdges) { \
 			const uint8_t edge_mask = LMSER_EDGES_MASKS[current_edge]; \
@@ -36,11 +37,11 @@ Some literature about MSER:
 					ptr8uAccessibleRef[neighbor_pixel] |= 1; \
 					const uint8_t neighbor_level = ptr8uPixelsRef[neighbor_pixel]; \
 					if (neighbor_level >= current_level) { \
-						LMSER_POOL_ADD_BOUNDARY_PIXEL_TO_LINKED_LIST(poolBoundaryPixelsPtr, boundaryPixels[neighbor_level], (neighbor_pixel << 4)); \
+						boundaryPixelsMgr.push_back(poolBoundaryPixelsPtr, neighbor_level, (neighbor_pixel << 4)); \
 						if (neighbor_level < current_priority) current_priority = neighbor_level; \
 					} \
 					else { \
-						LMSER_POOL_ADD_BOUNDARY_PIXEL_TO_LINKED_LIST(poolBoundaryPixelsPtr, boundaryPixels[current_level], ((current_pixel << 4) | ++current_edge)); \
+						boundaryPixelsMgr.push_back(poolBoundaryPixelsPtr, current_level, ((current_pixel << 4) | ++current_edge)); \
 						if (current_level < current_priority) current_priority = current_level; \
 						current_edge = 0; \
 						current_pixel = neighbor_pixel; \
@@ -92,6 +93,54 @@ static const uint8_t LMSER_EDGES_MASKS_4[4] = {
 	LMSER_EDGE_BOTTOM,
 };
 
+struct CompVConnectedComponentLabelingLmserBoundaryPixelsMgr {
+	CompVConnectedComponentLabelingLmserBoundaryPixelsMgr(CompVConnectedComponentLmserLinkedListBoundaryPixel* boundaryPixels_)
+	: boundaryPixels(boundaryPixels_) {
+#if LMSER_USE_BSF
+		flags[0] = 0;
+		flags[1] = 0;
+		flags[2] = 0;
+		flags[3] = 0;
+#endif /* LMSER_USE_BSF */
+	}
+	COMPV_ALWAYS_INLINE void push_back(CompVConnectedComponentLmserLinkedListNodeBoundaryPixel*& pool, const uint8_t level, const int32_t pixel) {
+		CompVConnectedComponentLmserLinkedListBoundaryPixel& boundaryPixels_ = boundaryPixels[level];
+		pool->data = pixel;
+		pool->link = boundaryPixels_.tail, boundaryPixels_.tail = pool++;
+#if LMSER_USE_BSF
+		flags[level >> 6] |= (1ull << (level & 63));
+#endif /* LMSER_USE_BSF */
+	}
+	COMPV_ALWAYS_INLINE void pop_back(int16_t& current_priority) {
+		CompVConnectedComponentLmserLinkedListNodeBoundaryPixel*& tail = boundaryPixels[current_priority].tail;
+		tail = tail->link; // pop_back()
+		if (!tail) {
+#if LMSER_USE_BSF
+			// Clear flag
+			flags[current_priority >> 6] ^= (1ull << (current_priority & 63));
+			// Move to the next priority
+			int16_t prio64 = (current_priority >> 6);
+			for (; prio64 < 4; ++prio64) {
+				if (flags[prio64]) {
+					compv_bsf_t ret;
+					compv_bsf64(flags[prio64], &ret);
+					current_priority = static_cast<int16_t>(ret + (prio64 << 6));
+					return;
+				}
+			}
+			current_priority = LMSER_HIGHEST_GREYLEVEL;
+#else
+			for (; current_priority < LMSER_HIGHEST_GREYLEVEL && !boundaryPixels[current_priority].tail; ++current_priority)
+				/* do nothing */;
+#endif /* LMSER_USE_BSF */
+		}
+	}
+	CompVConnectedComponentLmserLinkedListBoundaryPixel* boundaryPixels;
+#if LMSER_USE_BSF
+	uint64_t flags[4];
+#endif /* LMSER_USE_BSF */
+};
+
 CompVConnectedComponentLabelingLMSER::CompVConnectedComponentLabelingLMSER()
 	: CompVConnectedComponentLabeling(COMPV_LMSER_ID)
 {
@@ -117,6 +166,8 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLMSER::process(const CompVMatPtr
 {
 	COMPV_CHECK_EXP_RETURN(!ptr8uImage || ptr8uImage->isEmpty() || ptr8uImage->planeCount() != 1 || ptr8uImage->elmtInBytes() != sizeof(uint8_t) || !result
 		, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("On ARM64 (MediaPad2), ST faster than MT");
 
 	/* Create result */
 	CompVConnectedComponentLabelingResultLMSERImplPtr result_;
@@ -231,6 +282,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLMSER::process(const CompVMatPtr
 	// not yet explored all the edges out from the pixel. Along with the pixel id,
 	// an edge number indicating the next edge to be explored can be stored.
 	CompVConnectedComponentLmserLinkedListBoundaryPixel boundaryPixels[256];
+	CompVConnectedComponentLabelingLmserBoundaryPixelsMgr boundaryPixelsMgr(boundaryPixels);
 	int16_t current_priority = LMSER_HIGHEST_GREYLEVEL;
 
 	// A stack C of component information.Each entry holds the pixels in a component
@@ -295,13 +347,10 @@ __________________________step3__________________________:
 			LMSER_GOTO(we_are_done);
 		}
 
-		CompVConnectedComponentLmserLinkedListNodeBoundaryPixel*& tail = boundaryPixels[current_priority].tail;
+		CompVConnectedComponentLmserLinkedListNodeBoundaryPixel* tail = boundaryPixels[current_priority].tail;
 		current_pixel = tail->data >> 4;
 		current_edge = tail->data & 0x0f;
-		tail = tail->link; // pop_back()
-
-		for (; current_priority < LMSER_HIGHEST_GREYLEVEL && !boundaryPixels[current_priority].tail; ++current_priority)
-			/* do nothing */;
+		boundaryPixelsMgr.pop_back(current_priority);
 
 		// 7. The returned pixel is at a higher grey - level, so we must now process all
 		// 	components on the component stack until we reach the higher grey - level.
