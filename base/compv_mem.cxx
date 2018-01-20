@@ -109,7 +109,10 @@ COMPV_ERROR_CODE CompVMem::init()
 #endif
 #if COMPV_TBBMALLOC
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Intel tbbmalloc is enabled and activated, this a good news0. Heap limit=%d", COMPV_TBBMALLOC_HEAP_LIMIT);
-		CompVMem::setHeapLimit(COMPV_TBBMALLOC_HEAP_LIMIT); // Do not exit even if it fails
+		if (COMPV_ERROR_CODE_IS_NOK(CompVMem::setHeapLimit(COMPV_TBBMALLOC_HEAP_LIMIT))) {
+			COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASSNAME, "Setting memory heap limit to #%dMo failed", COMPV_TBBMALLOC_HEAP_LIMIT);
+			// Do not exit even if it fails
+		}
 #else
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Intel tbbmalloc not enabled. You may have some perf issues on memory allocation and cache management. Sad!");
 #endif
