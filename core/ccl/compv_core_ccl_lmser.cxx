@@ -215,29 +215,21 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLMSER::process(const CompVMatPtr
 	// Finally, to avoid having to perform explicit checks for the image boundary, a
 	// 	border of one pixel around the image is used, and the accessible mask is always
 	// 	set when a sweep starts.
-	const size_t accessibleWidth = std::max(static_cast<int16_t>(width + 2), stride); // '(width + 2)' could be > 'stride', this is why we cannot create the accessible memory using stride
+	const size_t accessibleWidth = stride + 1;
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<uint8_t>(&ptr8uAccessible, height + 2, accessibleWidth));
-	uint8_t* ptr8uAccessibleRef = ptr8uAccessible->ptr<uint8_t>(1, 1);
+	COMPV_CHECK_CODE_RETURN(CompVMem::set(ptr8uAccessible->ptr<uint8_t>(), 1, ptr8uAccessible->dataSizeInBytes()));
+	uint8_t* ptr8uAccessibleRef = ptr8uAccessible->ptr<uint8_t>() + accessibleWidth;
 	auto funcPtrSetAccessibility = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
-		/* TOP and BOTTOM line */
-		if (!ystart) {
-			COMPV_CHECK_CODE_RETURN(CompVMem::set(ptr8uAccessible->ptr<uint8_t>(), 1, accessibleWidth));
-			COMPV_CHECK_CODE_RETURN(CompVMem::set(ptr8uAccessible->ptr<uint8_t>() + ((ptr8uAccessible->rows() - 1) * accessibleWidth), 1, accessibleWidth));
-		}
-		/* OTHER lines */
 		uint8_t* mt_ptr8uAccessibleRef = ptr8uAccessibleRef + (ystart * stride);
-		const int16_t widthPlus1 = (width + 1);
 		const int16_t width64_ = (width & -8);
 		int16_t x;
 		for (size_t y = ystart; y < yend; ++y) {
-			mt_ptr8uAccessibleRef[-1] = 1;
 			for (x = 0; x < width64_; x += 8) {
 				*reinterpret_cast<uint64_t*>(&mt_ptr8uAccessibleRef[x]) = 0ull;
 			}
 			for (; x < width; ++x) {
 				mt_ptr8uAccessibleRef[x] = 0;
 			}
-			mt_ptr8uAccessibleRef[width] = 1;
 			mt_ptr8uAccessibleRef += stride;
 		}
 		return COMPV_ERROR_CODE_S_OK;
