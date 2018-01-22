@@ -1,4 +1,4 @@
-/* Copyright (C) 2016-2018 Doubango Telecom <https://www.doubango.org>
+ï»¿/* Copyright (C) 2016-2018 Doubango Telecom <https://www.doubango.org>
 * File author: Mamadou DIOP (Doubango Telecom, France).
 * License: GPLv3. For commercial license please contact us.
 * Source code: https://github.com/DoubangoTelecom/compv
@@ -222,7 +222,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLMSER::process(const CompVMatPtr
 		/* TOP and BOTTOM line */
 		if (!ystart) {
 			COMPV_CHECK_CODE_RETURN(CompVMem::set(ptr8uAccessible->ptr<uint8_t>(), 1, accessibleWidth));
-			COMPV_CHECK_CODE_RETURN(CompVMem::set(ptr8uAccessible->ptr<uint8_t>() + ((ptr8uAccessible->rows() - 1) * stride), 1, accessibleWidth));
+			COMPV_CHECK_CODE_RETURN(CompVMem::set(ptr8uAccessible->ptr<uint8_t>() + ((ptr8uAccessible->rows() - 1) * accessibleWidth), 1, accessibleWidth));
 		}
 		/* OTHER lines */
 		uint8_t* mt_ptr8uAccessibleRef = ptr8uAccessibleRef + (ystart * stride);
@@ -360,7 +360,7 @@ __________________________step3__________________________:
 				// as follows : Add the first and second moment accumulators together and / or
 				// join the pixel lists.Either merge the histories of the components, or take the
 				// history from the winner.Note here that the top of stack should be considered
-				// one ’time - step’ back, so its current size is part of the history.Therefore the
+				// one â€™time - stepâ€™ back, so its current size is part of the history.Therefore the
 				// top of stack would be the winner if its current size is larger than the previous
 				// size of second on stack.
 				CompVConnectedComponentLmserRef back = stackC.back();
