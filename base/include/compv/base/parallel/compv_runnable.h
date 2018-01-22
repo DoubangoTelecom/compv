@@ -27,9 +27,7 @@ protected:
 	CompVRunnable(CompVRunnableCallbackOnRunning cbOnRunning);
 public:
 	virtual ~CompVRunnable();
-	virtual COMPV_INLINE const char* getObjectId() {
-		return "CompVRunnable";
-	};
+	COMPV_OBJECT_GET_ID(CompVRunnable);
 
 	virtual COMPV_ERROR_CODE start();
 	virtual COMPV_ERROR_CODE stop();

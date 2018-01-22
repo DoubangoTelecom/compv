@@ -12,6 +12,8 @@
 #include "compv/base/compv_errno.h"
 #include "compv/base/compv_debug.h"
 
+#include "compv/base/parallel/compv_parallel_asm_armv7.h"
+
 /* Apple claims that they fully support POSIX semaphore but ...
 */
 #if COMPV_OS_APPLE /* Mac OSX/Darwin/Iphone/Ipod Touch */
@@ -62,32 +64,10 @@ typedef sem_t* SEMAPHORE_T;
 
 COMPV_NAMESPACE_BEGIN()
 
-CompVSemaphore::CompVSemaphore(int initialVal /*= 0*/)
-    : m_pHandle(NULL)
+CompVSemaphore::CompVSemaphore()
+    : m_pHandle(nullptr)
 {
-#if COMPV_OS_WINDOWS
-#	if TSK_UNDER_WINDOWS_RT
-    m_pHandle = CreateSemaphoreEx(NULL, initialVal, 0x7FFFFFFF, NULL, 0x00000000, SEMAPHORE_ALL_ACCESS);
-#	else
-    m_pHandle = CreateSemaphore(NULL, initialVal, 0x7FFFFFFF, NULL);
-#	endif
-#else
-    m_pHandle = CompVMem::calloc(1, sizeof(SEMAPHORE_S));
-#if COMPV_USE_NAMED_SEM
-    static long nsemi = 0;
-    named_sem_t * nsem = (named_sem_t*)m_pHandle;
-    snprintf(nsem->name, (sizeof(nsem->name) / sizeof(nsem->name[0])) - 1, "/sem/%llu/%ld.", CompVTime::epochMillis(), compv_atomic_inc(&nsemi));
-    if ((nsem->sem = sem_open(nsem->name, O_CREAT /*| O_EXCL*/, S_IRUSR | S_IWUSR, initialVal)) == SEM_FAILED) {
-#else
-    if (sem_init((SEMAPHORE_T)m_pHandle, 0, initialVal)) {
-#endif
-        CompVMem::free(&m_pHandle);
-        COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Failed to initialize the new semaphore (errno=%d).", errno);
-    }
-#endif
-    if (!m_pHandle) {
-		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Failed to create new semaphore");
-    }
+	/* Must not initialize data here: ctor called by childs like "CompVSemaphoreAsmARMv7" which don't need init() to be called */
 }
 
 CompVSemaphore::~CompVSemaphore()
@@ -108,6 +88,35 @@ CompVSemaphore::~CompVSemaphore()
     }
 }
 
+COMPV_ERROR_CODE CompVSemaphore::init(int initialVal COMPV_DEFAULT(0))
+{
+#if COMPV_OS_WINDOWS
+#	if TSK_UNDER_WINDOWS_RT
+	m_pHandle = CreateSemaphoreEx(NULL, initialVal, 0x7FFFFFFF, NULL, 0x00000000, SEMAPHORE_ALL_ACCESS);
+#	else
+	m_pHandle = CreateSemaphore(NULL, initialVal, 0x7FFFFFFF, NULL);
+#	endif
+#else
+	m_pHandle = CompVMem::calloc(1, sizeof(SEMAPHORE_S));
+#if COMPV_USE_NAMED_SEM
+	static long nsemi = 0;
+	named_sem_t * nsem = (named_sem_t*)m_pHandle;
+	snprintf(nsem->name, (sizeof(nsem->name) / sizeof(nsem->name[0])) - 1, "/sem/%llu/%ld.", CompVTime::epochMillis(), compv_atomic_inc(&nsemi));
+	if ((nsem->sem = sem_open(nsem->name, O_CREAT /*| O_EXCL*/, S_IRUSR | S_IWUSR, initialVal)) == SEM_FAILED) {
+#else
+	if (sem_init((SEMAPHORE_T)m_pHandle, 0, initialVal)) {
+#endif
+		CompVMem::free(&m_pHandle);
+		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Failed to initialize the new semaphore (errno=%d).", errno);
+	}
+#endif
+	if (!m_pHandle) {
+		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Failed to create new semaphore");
+		return COMPV_ERROR_CODE_E_OUT_OF_MEMORY;
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 /**
 * Increments a semaphore.
 * @retval Zero if succeed and otherwise the function returns -1 and sets errno to indicate the error.
@@ -115,7 +124,6 @@ CompVSemaphore::~CompVSemaphore()
 */
 COMPV_ERROR_CODE CompVSemaphore::increment()
 {
-	COMPV_CHECK_EXP_RETURN(!m_pHandle, COMPV_ERROR_CODE_E_INVALID_STATE, "Semaphore hanldle is null");
     int ret = EINVAL;
 #if COMPV_OS_WINDOWS
     if ((ret = ReleaseSemaphore((SEMAPHORE_T)m_pHandle, 1L, NULL) ? 0 : -1))
@@ -136,9 +144,7 @@ COMPV_ERROR_CODE CompVSemaphore::increment()
 */
 COMPV_ERROR_CODE CompVSemaphore::decrement()
 {
-	COMPV_CHECK_EXP_RETURN(!m_pHandle, COMPV_ERROR_CODE_E_INVALID_STATE, "Semaphore hanldle is null");
     int ret = EINVAL;
-
 #if COMPV_OS_WINDOWS
 #	if TSK_UNDER_WINDOWS_RT
     ret = (WaitForSingleObjectEx((SEMAPHORE_T)m_pHandle, INFINITE, TRUE) == WAIT_OBJECT_0) ? 0 : -1;
@@ -162,12 +168,22 @@ COMPV_ERROR_CODE CompVSemaphore::decrement()
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVSemaphore::newObj(CompVPtr<CompVSemaphore*>* sem, int initialVal /*= 0*/)
+COMPV_ERROR_CODE CompVSemaphore::newObj(CompVSemaphorePtrPtr sem, int initialVal /*= 0*/)
 {
     COMPV_CHECK_CODE_RETURN(CompVBase::init());
-    COMPV_CHECK_EXP_RETURN(sem == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-    CompVPtr<CompVSemaphore*> sem_ = new CompVSemaphore(initialVal);
-    COMPV_CHECK_EXP_RETURN(*sem_ == NULL, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+    COMPV_CHECK_EXP_RETURN(!sem, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	CompVSemaphorePtr sem_;
+#if COMPV_ASM && COMPV_ARCH_ARM32 && 0 // Must not use: pthread is faster
+	if (CompVCpu::isAsmEnabled() && CompVCpu::isEnabled(kCpuFlagARM_NEON)) { // NEON introduced in ARMv7 (https://developer.arm.com/technologies/neon)
+		sem_ = new CompVSemaphoreAsmARMv7();
+		// do nothing if it fails -> fallback to pthread-based semaphore
+	}
+#endif /* COMPV_ASM && COMPV_ARCH_ARM */
+	if (!sem_) {
+		sem_ = new CompVSemaphore(); // create pthread-based semaphore
+	}
+	COMPV_CHECK_CODE_RETURN(sem_->init(initialVal));
+    COMPV_CHECK_EXP_RETURN(!sem_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
     *sem = sem_;
     return COMPV_ERROR_CODE_S_OK;
 }

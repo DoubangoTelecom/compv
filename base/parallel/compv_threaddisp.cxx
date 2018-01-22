@@ -44,7 +44,10 @@ size_t CompVThreadDispatcher::guessNumThreadsDividingAcrossY(const size_t xcount
 	return divCount;
 #else
 	const size_t threadsCount = (xcount * ycount) / minSamplesPerThread;
-	return COMPV_MATH_MIN_3(threadsCount, maxThreads, ycount);
+	return COMPV_MATH_MAX(
+		1,
+		COMPV_MATH_MIN_3(threadsCount, maxThreads, ycount)
+	);
 #endif
 }
 

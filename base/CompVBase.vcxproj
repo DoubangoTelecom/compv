@@ -156,6 +156,7 @@
     <ClInclude Include="include\compv\base\parallel\compv_condvar.h" />
     <ClInclude Include="include\compv\base\parallel\compv_mutex.h" />
     <ClInclude Include="include\compv\base\parallel\compv_parallel.h" />
+    <ClInclude Include="include\compv\base\parallel\compv_parallel_asm_armv7.h" />
     <ClInclude Include="include\compv\base\parallel\compv_runnable.h" />
     <ClInclude Include="include\compv\base\parallel\compv_semaphore.h" />
     <ClInclude Include="include\compv\base\parallel\compv_thread.h" />
@@ -467,6 +468,7 @@
     <ClCompile Include="parallel\compv_condvar.cxx" />
     <ClCompile Include="parallel\compv_mutex.cxx" />
     <ClCompile Include="parallel\compv_parallel.cxx" />
+    <ClCompile Include="parallel\compv_parallel_asm_armv7.cxx" />
     <ClCompile Include="parallel\compv_runnable.cxx" />
     <ClCompile Include="parallel\compv_semaphore.cxx" />
     <ClCompile Include="parallel\compv_thread.cxx" />

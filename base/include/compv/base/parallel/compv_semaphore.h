@@ -14,21 +14,19 @@
 COMPV_NAMESPACE_BEGIN()
 
 COMPV_OBJECT_DECLARE_PTRS(Semaphore)
-
 class COMPV_BASE_API CompVSemaphore : public CompVObj
 {
 protected:
-    CompVSemaphore(int initialVal = 0);
+    CompVSemaphore();
 public:
     virtual ~CompVSemaphore();
-    virtual COMPV_INLINE const char* getObjectId() {
-        return "CompVSemaphore";
-    };
+	COMPV_OBJECT_GET_ID(CompVRunnable);
 
-    COMPV_ERROR_CODE increment();
-    COMPV_ERROR_CODE decrement();
+	virtual COMPV_ERROR_CODE init(int initialVal = 0);
+	virtual COMPV_ERROR_CODE increment();
+    virtual COMPV_ERROR_CODE decrement();
 
-    static COMPV_ERROR_CODE newObj(CompVPtr<CompVSemaphore*>* sem, int initialVal = 0);
+    static COMPV_ERROR_CODE newObj(CompVSemaphorePtrPtr sem, int initialVal = 0);
 
 private:
     void* m_pHandle;

@@ -651,6 +651,9 @@
     <ClInclude Include="include\compv\base\compv_mem_pool_light.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\parallel\compv_parallel_asm_armv7.h">
+      <Filter>include\parallel</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx">
@@ -1084,6 +1087,9 @@
     </ClCompile>
     <ClCompile Include="compv_mem_pool_light.cxx">
       <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="parallel\compv_parallel_asm_armv7.cxx">
+      <Filter>source\parallel</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

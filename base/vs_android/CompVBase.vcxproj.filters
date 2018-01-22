@@ -139,6 +139,12 @@
     <Filter Include="include\tbbmalloc">
       <UniqueIdentifier>{250c7687-e906-4d81-bb4b-41b91e1b029d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="source\parallel\asm">
+      <UniqueIdentifier>{a83eb185-fce4-47f1-be6f-1639aa54c558}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\parallel\asm\arm">
+      <UniqueIdentifier>{846dba6c-6fbe-4198-9869-32d4844fde5d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\compv\base\compv_base.h">
@@ -651,6 +657,9 @@
     <ClInclude Include="..\include\compv\base\compv_mem_pool_light.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\compv\base\parallel\compv_parallel_asm_armv7.h">
+      <Filter>include\parallel</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_base.cxx">
@@ -1079,6 +1088,9 @@
     <ClCompile Include="..\compv_mem_pool_light.cxx">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="..\parallel\compv_parallel_asm_armv7.cxx">
+      <Filter>source\parallel</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\asm\x86\compv_bits_macros_x86.s">
@@ -1155,6 +1167,9 @@
     </None>
     <None Include="..\image\asm\x86\compv_image_scale_bilinear_x86_sse.s">
       <Filter>source\image\asm\x86</Filter>
+    </None>
+    <None Include="..\parallel\asm\arm\compv_semaphore_arm32.S">
+      <Filter>source\parallel\asm\arm</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
