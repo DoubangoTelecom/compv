@@ -30,24 +30,21 @@ Some literature about MSER:
 #define LMSER_GOTO(stepx) goto __________________________##stepx##__________________________
 #define LMSER_CHECK_EDGE() { \
 		if (current_edge < maxEdges) { \
-			const uint8_t edge_mask = LMSER_EDGES_MASKS[current_edge]; \
-			if ((ptr8uAccessibleRef[current_pixel] & edge_mask) == edge_mask) { \
-				const int32_t neighbor_pixel = current_pixel + LMSER_EDGES_OFFSETS[current_edge]; \
-				if (!(ptr8uAccessibleRef[neighbor_pixel] & 1)) { \
-					ptr8uAccessibleRef[neighbor_pixel] |= 1; \
-					const uint8_t neighbor_level = ptr8uPixelsRef[neighbor_pixel]; \
-					if (neighbor_level >= current_level) { \
-						boundaryPixelsMgr.push_back(poolBoundaryPixelsPtr, neighbor_level, (neighbor_pixel << 4)); \
-						if (neighbor_level < current_priority) current_priority = neighbor_level; \
-					} \
-					else { \
-						boundaryPixelsMgr.push_back(poolBoundaryPixelsPtr, current_level, ((current_pixel << 4) | ++current_edge)); \
-						if (current_level < current_priority) current_priority = current_level; \
-						current_edge = 0; \
-						current_pixel = neighbor_pixel; \
-						current_level = neighbor_level; \
-						LMSER_GOTO(step3); \
-					} \
+			const int32_t neighbor_pixel = current_pixel + LMSER_EDGES_OFFSETS[current_edge]; \
+			if (!ptr8uAccessibleRef[neighbor_pixel]) { \
+				ptr8uAccessibleRef[neighbor_pixel] = 1; \
+				const uint8_t neighbor_level = ptr8uPixelsRef[neighbor_pixel]; \
+				if (neighbor_level >= current_level) { \
+					boundaryPixelsMgr.push_back(poolBoundaryPixelsPtr, neighbor_level, (neighbor_pixel << 4)); \
+					if (neighbor_level < current_priority) current_priority = neighbor_level; \
+				} \
+				else { \
+					boundaryPixelsMgr.push_back(poolBoundaryPixelsPtr, current_level, ((current_pixel << 4) | ++current_edge)); \
+					if (current_level < current_priority) current_priority = current_level; \
+					current_edge = 0; \
+					current_pixel = neighbor_pixel; \
+					current_level = neighbor_level; \
+					LMSER_GOTO(step3); \
 				} \
 			} \
 			++current_edge; \
@@ -57,41 +54,12 @@ Some literature about MSER:
 		} \
 }
 
-#define LMSER_EDGE_RIGHT		16	// 0b000 1000 0
-#define LMSER_EDGE_BOTTOM		8	// 0b000 0100 0
-#define LMSER_EDGE_LEFT			4	// 0b000 0010 0
-#define LMSER_EDGE_TOP			2	// 0b000 0001 0
-#define LMSER_EDGE_RIGHT_TOP	18  // (RIGTH | TOP)
-#define LMSER_EDGE_LEFT_TOP		6	// (LEFT | TOP)
-#define LMSER_EDGE_LEFT_BOTTOM	12	// (LEFT | BOTTOM)
-#define LMSER_EDGE_RIGHT_BOTTOM	24	// (RIGHT | BOTTOM)
-
 #define COMPV_THIS_CLASSNAME	"CompVConnectedComponentLabelingLMSER"
 
 COMPV_NAMESPACE_BEGIN()
 
 typedef CompVConnectedComponentLmserLinkedListNode<int32_t> CompVConnectedComponentLmserLinkedListNodeBoundaryPixel;
 typedef CompVConnectedComponentLmserLinkedListFrwBkw<int32_t> CompVConnectedComponentLmserLinkedListBoundaryPixel;
-
-static const uint8_t LMSER_EDGES_MASKS_8[8] = {
-	// Must not change the order: more cache_friendly and 'LMSER_EDGES_OFFSETS' depends on it
-	LMSER_EDGE_RIGHT,
-	LMSER_EDGE_RIGHT_TOP,
-	LMSER_EDGE_TOP,
-	LMSER_EDGE_LEFT_TOP,
-	LMSER_EDGE_LEFT,
-	LMSER_EDGE_LEFT_BOTTOM,
-	LMSER_EDGE_RIGHT_BOTTOM,
-	LMSER_EDGE_BOTTOM,
-};
-
-static const uint8_t LMSER_EDGES_MASKS_4[4] = {
-	// Must not change the order: more cache_friendly and 'LMSER_EDGES_OFFSETS' depends on it
-	LMSER_EDGE_RIGHT,
-	LMSER_EDGE_TOP,
-	LMSER_EDGE_LEFT,
-	LMSER_EDGE_BOTTOM,
-};
 
 // A bitmask is keeping track of which out of the 256 greylevels
 // have pixels waiting.This allows us to use a single instruction to find
@@ -206,27 +174,23 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLMSER::process(const CompVMatPtr
 	const int8_t maxEdges = b8Connectivity 
 		? 8 
 		: 4;
-	const uint8_t* LMSER_EDGES_MASKS = b8Connectivity 
-		? &LMSER_EDGES_MASKS_8[0]
-		: &LMSER_EDGES_MASKS_4[0];
 	int16_t LMSER_EDGES_OFFSETS[8];
 	if (b8Connectivity) {
-		// Same order as 'LMSER_EDGES_MASKS_8'
-		LMSER_EDGES_OFFSETS[0] = 1;
-		LMSER_EDGES_OFFSETS[1] = 1 - stride;
-		LMSER_EDGES_OFFSETS[2] = -stride;
-		LMSER_EDGES_OFFSETS[3] = -stride - 1;
-		LMSER_EDGES_OFFSETS[4] = -1;
-		LMSER_EDGES_OFFSETS[5] = stride - 1;
-		LMSER_EDGES_OFFSETS[6] = stride + 1;
-		LMSER_EDGES_OFFSETS[7] = stride;
+		//!\\ Keep this order because it's more cache-friendly
+		LMSER_EDGES_OFFSETS[0] = 1; // RIGHT
+		LMSER_EDGES_OFFSETS[1] = 1 - stride; // RIGHT_TOP
+		LMSER_EDGES_OFFSETS[2] = -stride; // TOP
+		LMSER_EDGES_OFFSETS[3] = -stride - 1; // LEFT_TOP
+		LMSER_EDGES_OFFSETS[4] = -1; // LEFT
+		LMSER_EDGES_OFFSETS[5] = stride - 1; // LEFT_BOTTOM
+		LMSER_EDGES_OFFSETS[6] = stride + 1; // RIGHT_BOTTOM
+		LMSER_EDGES_OFFSETS[7] = stride; // BOTTOM
 	}
 	else {
-		// Same order as 'LMSER_EDGES_MASKS_4'
-		LMSER_EDGES_OFFSETS[0] = 1;
-		LMSER_EDGES_OFFSETS[1] = -stride;
-		LMSER_EDGES_OFFSETS[2] = -1;
-		LMSER_EDGES_OFFSETS[3] = stride;
+		LMSER_EDGES_OFFSETS[0] = 1; // RIGHT
+		LMSER_EDGES_OFFSETS[1] = -stride; // TOP
+		LMSER_EDGES_OFFSETS[2] = -1; // LEFT
+		LMSER_EDGES_OFFSETS[3] = stride; // BOTTOM
 	}
 	
 	// Create a pool of points to speedup allocation
@@ -247,40 +211,32 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLMSER::process(const CompVMatPtr
 	// A binary mask of accessible pixels. These are the pixels to which the water
 	// already has access.
 	CompVMatPtr ptr8uAccessible;
-	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<uint8_t>(&ptr8uAccessible, height, width, stride));
-	uint8_t* ptr8uAccessibleRef = ptr8uAccessible->ptr<uint8_t>();
+	// Finally, to avoid having to perform explicit checks for the image boundary, a
+	// 	border of one pixel around the image is used, and the accessible mask is always
+	// 	set when a sweep starts.
+	const size_t accessibleWidth = std::max(static_cast<int16_t>(width + 2), stride); // '(width + 2)' could be > 'stride', this is why we cannot create the accessible memory using stride
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<uint8_t>(&ptr8uAccessible, height + 2, accessibleWidth));
+	uint8_t* ptr8uAccessibleRef = ptr8uAccessible->ptr<uint8_t>(1, 1);
 	auto funcPtrSetAccessibility = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
-		size_t ystart_ = ystart;
-		size_t yend_ = yend;
-		/* TOP line */
+		/* TOP and BOTTOM line */
 		if (!ystart) {
-			uint8_t* mt_ptr8u = ptr8uAccessible->ptr<uint8_t>(0);
-			CompVMem::set(&mt_ptr8u[1], 28, (width - 2), sizeof(uint8_t));
-			mt_ptr8u[0] = 24;
-			mt_ptr8u[widthMinus1] = 12;
-			ystart_ = 1;
-		}
-		/* BOTTOM line */
-		if (yend == height) {
-			uint8_t* mt_ptr8u = ptr8uAccessible->ptr<uint8_t>(heightMinus1);
-			CompVMem::set(&mt_ptr8u[1], 22, (width - 2), sizeof(uint8_t));
-			mt_ptr8u[0] = 18;
-			mt_ptr8u[widthMinus1] = 6;
-			yend_ = heightMinus1;
+			COMPV_CHECK_CODE_RETURN(CompVMem::set(ptr8uAccessible->ptr<uint8_t>(), 1, accessibleWidth));
+			COMPV_CHECK_CODE_RETURN(CompVMem::set(ptr8uAccessible->ptr<uint8_t>() + ((ptr8uAccessible->rows() - 1) * stride), 1, accessibleWidth));
 		}
 		/* OTHER lines */
-		uint8_t* mt_ptr8uAccessibleRef = ptr8uAccessible->ptr<uint8_t>(ystart_);
-		const int16_t width64_ = (widthMinus1 < 8) ? 0 : ((widthMinus1 - 8) & -8);
+		uint8_t* mt_ptr8uAccessibleRef = ptr8uAccessibleRef + (ystart * stride);
+		const int16_t widthPlus1 = (width + 1);
+		const int16_t width64_ = (width & -8);
 		int16_t x;
-		for (size_t y = ystart_; y < yend_; ++y) {
-			*reinterpret_cast<uint64_t*>(&mt_ptr8uAccessibleRef[0]) = 2170205185142300186ull;
-			for (x = 8; x < width64_; x += 8) {
-				*reinterpret_cast<uint64_t*>(&mt_ptr8uAccessibleRef[x]) = 2170205185142300190ull;
+		for (size_t y = ystart; y < yend; ++y) {
+			mt_ptr8uAccessibleRef[-1] = 1;
+			for (x = 0; x < width64_; x += 8) {
+				*reinterpret_cast<uint64_t*>(&mt_ptr8uAccessibleRef[x]) = 0ull;
 			}
-			for (; x < widthMinus1; ++x) {
-				mt_ptr8uAccessibleRef[x] = 30;
+			for (; x < width; ++x) {
+				mt_ptr8uAccessibleRef[x] = 0;
 			}
-			mt_ptr8uAccessibleRef[widthMinus1] = 14;
+			mt_ptr8uAccessibleRef[width] = 1;
 			mt_ptr8uAccessibleRef += stride;
 		}
 		return COMPV_ERROR_CODE_S_OK;
@@ -289,8 +245,9 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLMSER::process(const CompVMatPtr
 		funcPtrSetAccessibility,
 		width,
 		height,
-		std::max(COMPV_CORE_LMSER_ACCESSIBILITY_BUILD_SAMPLES_PER_THREAD, (width << 1)) // At least #2 lines per thread
+		std::max(static_cast<size_t>(COMPV_CORE_LMSER_ACCESSIBILITY_BUILD_SAMPLES_PER_THREAD), static_cast<size_t>(width << 2)) // At least #4 lines per thread
 	));
+	
 
 	// A priority queue of boundary pixels, where priority is minus the grey - level.
 	// These pixels can be thought of as partially flooded pixels in the sense that
