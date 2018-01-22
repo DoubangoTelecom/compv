@@ -115,23 +115,23 @@ public:
     }
 
     static uint64_t uniqueTokenId();
-    static COMPV_ERROR_CODE newObj(CompVPtr<CompVAsyncTask11*>* asyncTask);
+    static COMPV_ERROR_CODE newObj(CompVAsyncTask11PtrPtr asyncTask);
 
 private:
     static void* COMPV_STDCALL run(void *pcArg);
 
 private:
     COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
-    CompVPtr<CompVThread* >m_Thread;
+    CompVThreadPtr m_Thread;
 #if COMPV_PARALLEL_SEMA11
     std::shared_ptr<CompVSemaphore11> m_SemRun;
     std::shared_ptr<CompVSemaphore11> m_SemExec;
 #else
-    CompVPtr<CompVSemaphore* >m_SemRun;
-    CompVPtr<CompVSemaphore* >m_SemExec;
+    CompVSemaphorePtr m_SemRun;
+	CompVSemaphorePtr m_SemExec;
 #endif
 #if COMPV_ASYNCTASK11_CHAIN_ENABLED
-    CompVPtr<CompVMutex* >m_MutexTokens;
+    CompVMutexPtr m_MutexTokens;
 #endif
     CompVAsyncToken m_Tokens[COMPV_ASYNCTASK11_MAX_TOKEN_COUNT];
     COMPV_VS_DISABLE_WARNINGS_END()
