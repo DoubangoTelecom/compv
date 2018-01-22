@@ -9,6 +9,8 @@
 #include "compv/base/compv_cpu.h"
 #include "compv/base/compv_memz.h"
 
+#define COMPV_CORE_LMSER_REGIONS_BOUNDING_BOXES_SAMPLES_PER_THREAD			(1 * 1) // This is per region (each one contains serveral points) -> use max threads
+
 #define COMPV_THIS_CLASSNAME	"ConnectedComponentLabelingResultLMSERImpl"
 
 COMPV_NAMESPACE_BEGIN()
@@ -48,8 +50,7 @@ const CompVConnectedComponentLabelingRegionMserVector& CompVConnectedComponentLa
 
 const CompVConnectedComponentLabelingRegionMserVector& CompVConnectedComponentLabelingResultLMSERImpl::boundingBoxes() const /*override*/
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation could be found");
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found (add CompVMath::MinMax)");
 
 	if (m_bBoundingBoxesComputed || m_vecRegions.empty()) {
 		return m_vecRegions;
@@ -58,20 +59,29 @@ const CompVConnectedComponentLabelingRegionMserVector& CompVConnectedComponentLa
 	CompVConnectedComponentLabelingResultLMSERImplPtr This = const_cast<CompVConnectedComponentLabelingResultLMSERImpl*>(this);
 	CompVConnectedComponentLabelingRegionMserVector& vecRegions = This->vecRegions();
 
-	for (CompVConnectedComponentLabelingRegionMserVector::iterator i = vecRegions.begin(); i < vecRegions.end(); ++i) {
-		CompVConnectedComponentBoundingBox& bb = i->boundingBox;
-		const CompVConnectedComponentPoints& pp = i->points;
-		bb.left = pp.begin()->x;
-		bb.right = pp.begin()->x;
-		bb.top = pp.begin()->y;
-		bb.bottom = pp.begin()->y;
-		for (CompVConnectedComponentPoints::const_iterator j = pp.begin() + 1; j < pp.end(); ++j) {
-			bb.left = COMPV_MATH_MIN(bb.left, j->x);
-			bb.top = COMPV_MATH_MIN(bb.top, j->y);
-			bb.right = COMPV_MATH_MAX(bb.right, j->x);
-			bb.bottom = COMPV_MATH_MAX(bb.bottom, j->y);
+	auto funcPtrBoundingBoxes = [&](const size_t start, const size_t end) -> COMPV_ERROR_CODE {
+		for (size_t i = start; i < end; ++i) {
+			CompVConnectedComponentBoundingBox& bb = vecRegions[i].boundingBox;
+			const CompVConnectedComponentPoints& pp = vecRegions[i].points;
+			bb.left = pp.begin()->x;
+			bb.right = pp.begin()->x;
+			bb.top = pp.begin()->y;
+			bb.bottom = pp.begin()->y;
+			for (CompVConnectedComponentPoints::const_iterator j = pp.begin() + 1; j < pp.end(); ++j) {
+				bb.left = COMPV_MATH_MIN(bb.left, j->x);
+				bb.top = COMPV_MATH_MIN(bb.top, j->y);
+				bb.right = COMPV_MATH_MAX(bb.right, j->x);
+				bb.bottom = COMPV_MATH_MAX(bb.bottom, j->y);
+			}
 		}
-	}
+		return COMPV_ERROR_CODE_S_OK;
+	};
+	COMPV_CHECK_CODE_ASSERT(CompVThreadDispatcher::dispatchDividingAcrossY(
+		funcPtrBoundingBoxes,
+		1,
+		vecRegions.size(),
+		COMPV_CORE_LMSER_REGIONS_BOUNDING_BOXES_SAMPLES_PER_THREAD
+	));
 	
 	This->m_bBoundingBoxesComputed = true;
 
