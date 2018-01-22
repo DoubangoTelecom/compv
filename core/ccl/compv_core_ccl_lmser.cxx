@@ -149,6 +149,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLMSER::process(const CompVMatPtr
 	COMPV_CHECK_EXP_RETURN(!ptr8uImage || ptr8uImage->isEmpty() || ptr8uImage->planeCount() != 1 || ptr8uImage->elmtInBytes() != sizeof(uint8_t) || !result
 		, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
+    // Using ANDROID guard instead of ARM because the issue doesn't happen on iOS (tested on iPad2(ARM64) and MT is faster than ST)
 #if COMPV_OS_ANDROID
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("On ARM64/32 (MediaPad2), ST faster than MT. Not the case for Galaxy Tab6 ARM32.");
 #endif /* COMPV_OS_ANDROID */
@@ -368,8 +369,6 @@ __________________________step3__________________________:
 			} while (new_pixel_grey_level > stackC.back()->greyLevel); // 4. If(new pixel grey level>top of stack grey level) go to 1.
 		}
 	} while (true);
-
-	ptr8uAccessible = nullptr;
 
 __________________________we_are_done__________________________:
 	// Compute stability and collect regions
