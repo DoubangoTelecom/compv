@@ -93,6 +93,12 @@ static const uint8_t LMSER_EDGES_MASKS_4[4] = {
 	LMSER_EDGE_BOTTOM,
 };
 
+// A bitmask is keeping track of which out of the 256 greylevels
+// have pixels waiting.This allows us to use a single instruction to find
+// which is the smallest(or largest) occupied grey - level by using a machine instruction
+// that retrieves the id number of the least significant or most significant
+// bit set(for x86 platforms bsf and bsr, or the more general 64 - bit compliant
+//	BitScanForward, BitScanReverse).
 struct CompVConnectedComponentLabelingLmserBoundaryPixelsMgr {
 	CompVConnectedComponentLabelingLmserBoundaryPixelsMgr(CompVConnectedComponentLmserLinkedListBoundaryPixel* boundaryPixels_)
 	: boundaryPixels(boundaryPixels_) {
@@ -108,7 +114,11 @@ struct CompVConnectedComponentLabelingLmserBoundaryPixelsMgr {
 		pool->data = pixel;
 		pool->link = boundaryPixels_.tail, boundaryPixels_.tail = pool++;
 #if LMSER_USE_BSF
+#	if defined(_MSC_VER)
+		_bittestandset64(reinterpret_cast<LONG64*>(&flags[level >> 6]), (level & 63));
+#	else
 		flags[level >> 6] |= (1ull << (level & 63));
+#	endif /* defined(_MSC_VER) */		
 #endif /* LMSER_USE_BSF */
 	}
 	COMPV_ALWAYS_INLINE void pop_back(int16_t& current_priority) {
@@ -117,7 +127,11 @@ struct CompVConnectedComponentLabelingLmserBoundaryPixelsMgr {
 		if (!tail) {
 #if LMSER_USE_BSF
 			// Clear flag
+#	if defined(_MSC_VER)
+			_bittestandreset64(reinterpret_cast<LONG64*>(&flags[current_priority >> 6]), (current_priority & 63));
+#	else
 			flags[current_priority >> 6] ^= (1ull << (current_priority & 63));
+#	endif /* defined(_MSC_VER) */	
 			// Move to the next priority
 			int16_t prio64 = (current_priority >> 6);
 			for (; prio64 < 4; ++prio64) {
