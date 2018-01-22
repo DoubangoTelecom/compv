@@ -157,7 +157,7 @@ void CompVCannyHysteresisRow_16mpw_Intrin_NEON(size_t row, size_t colStart, size
 				continue;
 			}
 			e[col + i] = 0xff;
-			edges.push_back(rowlsl16 | (col + i));
+			edges.push_back(rowlsl16 | static_cast<int32_t>(col + i));
 			while (!edges.empty()) {
 				edge = edges.back();
 				edges.pop_back();

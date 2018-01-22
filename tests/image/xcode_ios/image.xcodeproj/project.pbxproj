@@ -25,7 +25,6 @@
 		159A2D4D1E7DAC2F000FEBE5 /* canny.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 159A2D4C1E7DAC2F000FEBE5 /* canny.cxx */; };
 		159A2D661E7E3465000FEBE5 /* mandekalou_480x640_gray.yuv in Resources */ = {isa = PBXBuildFile; fileRef = 159A2D641E7E3465000FEBE5 /* mandekalou_480x640_gray.yuv */; };
 		159A2D671E7E3465000FEBE5 /* opengl_programming_guide_8th_edition_200x258_gray.yuv in Resources */ = {isa = PBXBuildFile; fileRef = 159A2D651E7E3465000FEBE5 /* opengl_programming_guide_8th_edition_200x258_gray.yuv */; };
-		159A9C911FE9C2D30080DB32 /* ccl.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 159A9C8E1FE9C2D30080DB32 /* ccl.cxx */; };
 		159A9C921FE9C2D30080DB32 /* split.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 159A9C8F1FE9C2D30080DB32 /* split.cxx */; };
 		159A9C931FE9C2D30080DB32 /* threshold.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 159A9C901FE9C2D30080DB32 /* threshold.cxx */; };
 		159A9C9D1FE9C3280080DB32 /* checker_800x600_gray.yuv in Resources */ = {isa = PBXBuildFile; fileRef = 159A9C961FE9C3280080DB32 /* checker_800x600_gray.yuv */; };
@@ -35,6 +34,11 @@
 		159A9CA11FE9C3280080DB32 /* shape_960x720_gray.yuv in Resources */ = {isa = PBXBuildFile; fileRef = 159A9C9A1FE9C3280080DB32 /* shape_960x720_gray.yuv */; };
 		159A9CA21FE9C3280080DB32 /* text_1122x1182_black_gray.yuv in Resources */ = {isa = PBXBuildFile; fileRef = 159A9C9B1FE9C3280080DB32 /* text_1122x1182_black_gray.yuv */; };
 		159A9CA31FE9C3280080DB32 /* text_1122x1182_white_gray.yuv in Resources */ = {isa = PBXBuildFile; fileRef = 159A9C9C1FE9C3280080DB32 /* text_1122x1182_white_gray.yuv */; };
+		159D71E12015A624005AE171 /* ocr0_826x633_gray.yuv in Resources */ = {isa = PBXBuildFile; fileRef = 159D71DE2015A624005AE171 /* ocr0_826x633_gray.yuv */; };
+		159D71E22015A625005AE171 /* ocr1_354x328_gray.yuv in Resources */ = {isa = PBXBuildFile; fileRef = 159D71DF2015A624005AE171 /* ocr1_354x328_gray.yuv */; };
+		159D71E32015A625005AE171 /* ocr2_1122x1182_gray.yuv in Resources */ = {isa = PBXBuildFile; fileRef = 159D71E02015A624005AE171 /* ocr2_1122x1182_gray.yuv */; };
+		159D71ED2015A63A005AE171 /* ccl_binar.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 159D71EB2015A63A005AE171 /* ccl_binar.cxx */; };
+		159D71EE2015A63A005AE171 /* ccl_mser.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 159D71EC2015A63A005AE171 /* ccl_mser.cxx */; };
 		159E15721E5DA5DF00D8CE75 /* feature_orb.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 159E15711E5DA5DF00D8CE75 /* feature_orb.cxx */; };
 		15AA06C21E36CED50058D1F1 /* libCompVBase.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 157840B11E36CC9A00955396 /* libCompVBase.a */; };
 		15AA06C31E36CED50058D1F1 /* libCompVCamera.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 157840B91E36CC9A00955396 /* libCompVCamera.a */; };
@@ -131,7 +135,6 @@
 		159A2D4C1E7DAC2F000FEBE5 /* canny.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = canny.cxx; path = ../../canny.cxx; sourceTree = "<group>"; };
 		159A2D641E7E3465000FEBE5 /* mandekalou_480x640_gray.yuv */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = mandekalou_480x640_gray.yuv; path = ../../../../../data/test_images/mandekalou_480x640_gray.yuv; sourceTree = "<group>"; };
 		159A2D651E7E3465000FEBE5 /* opengl_programming_guide_8th_edition_200x258_gray.yuv */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = opengl_programming_guide_8th_edition_200x258_gray.yuv; path = ../../../../../data/test_images/opengl_programming_guide_8th_edition_200x258_gray.yuv; sourceTree = "<group>"; };
-		159A9C8E1FE9C2D30080DB32 /* ccl.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ccl.cxx; path = ../../ccl.cxx; sourceTree = "<group>"; };
 		159A9C8F1FE9C2D30080DB32 /* split.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = split.cxx; path = ../../split.cxx; sourceTree = "<group>"; };
 		159A9C901FE9C2D30080DB32 /* threshold.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = threshold.cxx; path = ../../threshold.cxx; sourceTree = "<group>"; };
 		159A9C961FE9C3280080DB32 /* checker_800x600_gray.yuv */ = {isa = PBXFileReference; lastKnownFileType = file; name = checker_800x600_gray.yuv; path = ../../../../../data/morpho/checker_800x600_gray.yuv; sourceTree = "<group>"; };
@@ -141,6 +144,11 @@
 		159A9C9A1FE9C3280080DB32 /* shape_960x720_gray.yuv */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = shape_960x720_gray.yuv; path = ../../../../../data/morpho/shape_960x720_gray.yuv; sourceTree = "<group>"; };
 		159A9C9B1FE9C3280080DB32 /* text_1122x1182_black_gray.yuv */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = text_1122x1182_black_gray.yuv; path = ../../../../../data/morpho/text_1122x1182_black_gray.yuv; sourceTree = "<group>"; };
 		159A9C9C1FE9C3280080DB32 /* text_1122x1182_white_gray.yuv */ = {isa = PBXFileReference; lastKnownFileType = file; name = text_1122x1182_white_gray.yuv; path = ../../../../../data/morpho/text_1122x1182_white_gray.yuv; sourceTree = "<group>"; };
+		159D71DE2015A624005AE171 /* ocr0_826x633_gray.yuv */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = ocr0_826x633_gray.yuv; path = ../../../../../data/ocr/ocr0_826x633_gray.yuv; sourceTree = "<group>"; };
+		159D71DF2015A624005AE171 /* ocr1_354x328_gray.yuv */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = ocr1_354x328_gray.yuv; path = ../../../../../data/ocr/ocr1_354x328_gray.yuv; sourceTree = "<group>"; };
+		159D71E02015A624005AE171 /* ocr2_1122x1182_gray.yuv */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = ocr2_1122x1182_gray.yuv; path = ../../../../../data/ocr/ocr2_1122x1182_gray.yuv; sourceTree = "<group>"; };
+		159D71EB2015A63A005AE171 /* ccl_binar.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ccl_binar.cxx; path = ../../ccl_binar.cxx; sourceTree = "<group>"; };
+		159D71EC2015A63A005AE171 /* ccl_mser.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ccl_mser.cxx; path = ../../ccl_mser.cxx; sourceTree = "<group>"; };
 		159E15711E5DA5DF00D8CE75 /* feature_orb.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = feature_orb.cxx; path = ../../feature_orb.cxx; sourceTree = "<group>"; };
 		15AA06C81E36E29E0058D1F1 /* main.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = main.cxx; path = ../../main.cxx; sourceTree = "<group>"; };
 		15AA06CA1E36E8480058D1F1 /* equirectangular_1282x720_gray.yuv */ = {isa = PBXFileReference; lastKnownFileType = file; name = equirectangular_1282x720_gray.yuv; path = ../../../../../data/colorspace/equirectangular_1282x720_gray.yuv; sourceTree = "<group>"; };
@@ -201,6 +209,9 @@
 		1578408E1E36CC2E00955396 /* image */ = {
 			isa = PBXGroup;
 			children = (
+				159D71DE2015A624005AE171 /* ocr0_826x633_gray.yuv */,
+				159D71DF2015A624005AE171 /* ocr1_354x328_gray.yuv */,
+				159D71E02015A624005AE171 /* ocr2_1122x1182_gray.yuv */,
 				159A9C961FE9C3280080DB32 /* checker_800x600_gray.yuv */,
 				159A9C971FE9C3280080DB32 /* diffract_1285x1285_gray.yuv */,
 				159A9C981FE9C3280080DB32 /* dummy_1285x803_gray.yuv */,
@@ -265,7 +276,8 @@
 		157840D01E36CCDE00955396 /* source */ = {
 			isa = PBXGroup;
 			children = (
-				159A9C8E1FE9C2D30080DB32 /* ccl.cxx */,
+				159D71EB2015A63A005AE171 /* ccl_binar.cxx */,
+				159D71EC2015A63A005AE171 /* ccl_mser.cxx */,
 				159A9C8F1FE9C2D30080DB32 /* split.cxx */,
 				159A9C901FE9C2D30080DB32 /* threshold.cxx */,
 				152BA3791F05711F0024C7A9 /* houghkht.cxx */,
@@ -410,6 +422,7 @@
 				15AA06F61E38F0ED0058D1F1 /* equirectangular_1282x720_bgr565be.rgb in Resources */,
 				15AA06FE1E38F0ED0058D1F1 /* equirectangular_1282x720_yuv420p.yuv in Resources */,
 				15AA06F81E38F0ED0058D1F1 /* equirectangular_1282x720_bgra.rgb in Resources */,
+				159D71E22015A625005AE171 /* ocr1_354x328_gray.yuv in Resources */,
 				15AA06E31E38A94F0058D1F1 /* equirectangular_1282x720_uyvy422.yuv in Resources */,
 				159A9C9D1FE9C3280080DB32 /* checker_800x600_gray.yuv in Resources */,
 				159A9C9F1FE9C3280080DB32 /* dummy_1285x803_gray.yuv in Resources */,
@@ -421,7 +434,9 @@
 				159A9CA11FE9C3280080DB32 /* shape_960x720_gray.yuv in Resources */,
 				159A9CA01FE9C3280080DB32 /* labyrinth_800x600_gray.yuv in Resources */,
 				1578409A1E36CC2E00955396 /* Main.storyboard in Resources */,
+				159D71E32015A625005AE171 /* ocr2_1122x1182_gray.yuv in Resources */,
 				15AA06F41E38F0ED0058D1F1 /* equirectangular_1282x720_argb.rgb in Resources */,
+				159D71E12015A624005AE171 /* ocr0_826x633_gray.yuv in Resources */,
 				15AA06FA1E38F0ED0058D1F1 /* equirectangular_1282x720_nv21.yuv in Resources */,
 				15AA06FF1E38F0ED0058D1F1 /* equirectangular_1282x720_yuv444p.yuv in Resources */,
 				15AA06E41E38A94F0058D1F1 /* equirectangular_1282x720_yuv422p.yuv in Resources */,
@@ -446,13 +461,14 @@
 				157840C61E36CCD800955396 /* feature_fast.cxx in Sources */,
 				159A9C921FE9C2D30080DB32 /* split.cxx in Sources */,
 				157840941E36CC2E00955396 /* AppDelegate.mm in Sources */,
-				159A9C911FE9C2D30080DB32 /* ccl.cxx in Sources */,
 				157840911E36CC2E00955396 /* main.m in Sources */,
 				159A9C931FE9C2D30080DB32 /* threshold.cxx in Sources */,
 				159E15721E5DA5DF00D8CE75 /* feature_orb.cxx in Sources */,
+				159D71EE2015A63A005AE171 /* ccl_mser.cxx in Sources */,
 				15AE9FFB1E644FC40030D908 /* patch.cxx in Sources */,
 				156E41B51E7118F900DF9950 /* sobel.cxx in Sources */,
 				157840C31E36CCD800955396 /* chroma_conv.cxx in Sources */,
+				159D71ED2015A63A005AE171 /* ccl_binar.cxx in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
