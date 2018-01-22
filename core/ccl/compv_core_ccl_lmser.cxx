@@ -231,17 +231,17 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLMSER::process(const CompVMatPtr
 	
 	// Create a pool of points to speedup allocation
 	CompVMatPtr poolPoints;
-	COMPV_CHECK_CODE_RETURN((CompVMat::newObjAligned<CompVConnectedComponentLmserLinkedListNodePixelIdx, COMPV_MAT_TYPE_STRUCT>(&poolPoints, 1, (width * height))));
+	COMPV_CHECK_CODE_RETURN((CompVMat::newObjStrideless<CompVConnectedComponentLmserLinkedListNodePixelIdx, COMPV_MAT_TYPE_STRUCT>(&poolPoints, 1, (width * height))));
 	CompVConnectedComponentLmserLinkedListNodePixelIdx* poolPointsPtr = poolPoints->ptr<CompVConnectedComponentLmserLinkedListNodePixelIdx>();
 
 	// Create a pool of boundary pixels to speedup allocation
 	CompVMatPtr poolBoundaryPixels;
-	COMPV_CHECK_CODE_RETURN((CompVMat::newObjAligned<CompVConnectedComponentLmserLinkedListNodeBoundaryPixel, COMPV_MAT_TYPE_STRUCT>(&poolBoundaryPixels, 1, (width * height))));
+	COMPV_CHECK_CODE_RETURN((CompVMat::newObjStrideless<CompVConnectedComponentLmserLinkedListNodeBoundaryPixel, COMPV_MAT_TYPE_STRUCT>(&poolBoundaryPixels, 1, (width * height))));
 	CompVConnectedComponentLmserLinkedListNodeBoundaryPixel* poolBoundaryPixelsPtr = poolBoundaryPixels->ptr<CompVConnectedComponentLmserLinkedListNodeBoundaryPixel>();
 
 	// Create a pool of merges to speedup allocation. A region cannot be merged more than once which means: "max-merges = image size"
 	CompVMatPtr poolMerges;
-	COMPV_CHECK_CODE_RETURN((CompVMat::newObjAligned<CompVConnectedComponentLmserLinkedListNodeMerge, COMPV_MAT_TYPE_STRUCT>(&poolMerges, 1, (width * height))));
+	COMPV_CHECK_CODE_RETURN((CompVMat::newObjStrideless<CompVConnectedComponentLmserLinkedListNodeMerge, COMPV_MAT_TYPE_STRUCT>(&poolMerges, 1, (width * height))));
 	CompVConnectedComponentLmserLinkedListNodeMerge* poolMergesPtr = poolMerges->ptr<CompVConnectedComponentLmserLinkedListNodeMerge>();
 
 	// A binary mask of accessible pixels. These are the pixels to which the water

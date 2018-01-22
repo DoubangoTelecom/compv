@@ -152,4 +152,11 @@ Remarque: We're 274% (almost #3 times) faster.
 Our implementation is single-threaded. Must provide MT implementation to improve performances.
 OpenCV uses SSE42.
 
-
+=== MSER (ocr2_1122x1182_gray.yuv, delta=2, min_area=(0.0055 * 0.0055), max_area=(0.8 * 0.15), max_variation=0.3, min_diversity=0.2, connectivity=8) (#1k times) ===
+CompV(LMSER): 32192.ms(full optiz)
+OpenCV: 651744.ms(full optiz)
+[1] https://github.com/idiap/mser: 49779.ms(full optiz)
+Remarque: We're 2024% (#20 times) faster than OpenCV and 154% faster than [1].
+This is more than HD image with many regions and low params to stress the implementation.
+Please note that comparison against [1] is useless as they don't extract the points (moments only). Extracting all the points (what we and OpenCV are doing)
+is the bottleneck.
