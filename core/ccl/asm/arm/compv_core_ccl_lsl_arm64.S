@@ -50,8 +50,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVConnectedComponentLabelingLSL_Step20Algo14Equiva
 	eor zero, zero, zero
 	sub wminus1, width, #1
 	lsl width, width, #COMPV_GAS_INT16_SHIFT_BYTES
-	lsl RLCi_stride, RLCi_stride, #COMPV_GAS_INT16_SHIFT_BYTES
-	lsl ERAi_stride, ERAi_stride, #COMPV_GAS_INT32_SHIFT_BYTES
+	lsl RLCi_stride, RLCi_stride, #(COMPV_GAS_INT16_SHIFT_BYTES)
+	lsl ERAi_stride, ERAi_stride, #(COMPV_GAS_INT32_SHIFT_BYTES)
 
 	######################################################
 	# for (compv_uscalar_t j = 0; j < height; ++j)
@@ -77,8 +77,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVConnectedComponentLabelingLSL_Step20Algo14Equiva
 			cmp j1, wminus1
 			sub j0, j0, f0
 			cinc j1, j1, lt
-			ldrh j0w, [ERiminus1, j0, LSL #COMPV_GAS_INT16_SHIFT_BYTES]
-			ldrh j1w, [ERiminus1, j1, LSL #COMPV_GAS_INT16_SHIFT_BYTES]
+			ldrh j0w, [ERiminus1, j0, LSL #(COMPV_GAS_INT16_SHIFT_BYTES)]
+			ldrh j1w, [ERiminus1, j1, LSL #(COMPV_GAS_INT16_SHIFT_BYTES)]
 			tst j0, #1
 			cinc j0, j0, eq
 			tst j1, #1
