@@ -35,11 +35,11 @@ Some literature about MSER:
 				ptr8uAccessibleRef[neighbor_pixel] = 1; \
 				const uint8_t neighbor_level = ptr8uPixelsRef[neighbor_pixel]; \
 				if (neighbor_level >= current_level) { \
-					boundaryPixelsMgr.push_back(poolBoundaryPixelsPtr, neighbor_level, (neighbor_pixel << 4)); \
+					boundaryPixelsMgr.push_back(poolBoundaryPixelsPtr, neighbor_level, neighbor_pixel); \
 					if (neighbor_level < current_priority) current_priority = neighbor_level; \
 				} \
 				else { \
-					boundaryPixelsMgr.push_back(poolBoundaryPixelsPtr, current_level, ((current_pixel << 4) | ++current_edge)); \
+					boundaryPixelsMgr.push_back(poolBoundaryPixelsPtr, current_level, (current_pixel | (static_cast<int32_t>(current_edge + 1) << 28))); \
 					if (current_level < current_priority) current_priority = current_level; \
 					current_edge = 0; \
 					current_pixel = neighbor_pixel; \
@@ -58,8 +58,8 @@ Some literature about MSER:
 
 COMPV_NAMESPACE_BEGIN()
 
-typedef CompVConnectedComponentLmserLinkedListNode<int32_t> CompVConnectedComponentLmserLinkedListNodeBoundaryPixel;
-typedef CompVConnectedComponentLmserLinkedListFrwBkw<int32_t> CompVConnectedComponentLmserLinkedListBoundaryPixel;
+typedef CompVConnectedComponentLmserLinkedListNode<uint32_t> CompVConnectedComponentLmserLinkedListNodeBoundaryPixel;
+typedef CompVConnectedComponentLmserLinkedListFrwBkw<uint32_t> CompVConnectedComponentLmserLinkedListBoundaryPixel;
 
 // A bitmask is keeping track of which out of the 256 greylevels
 // have pixels waiting.This allows us to use a single instruction to find
@@ -314,8 +314,8 @@ __________________________step3__________________________:
 		}
 
 		CompVConnectedComponentLmserLinkedListNodeBoundaryPixel* tail = boundaryPixels[current_priority].tail;
-		current_pixel = tail->data >> 4;
-		current_edge = tail->data & 0x0f;
+		current_pixel = tail->data & 0xfffffff;
+		current_edge = tail->data >> 28;
 		boundaryPixelsMgr.pop_back(current_priority);
 
 		// 7. The returned pixel is at a higher grey - level, so we must now process all
