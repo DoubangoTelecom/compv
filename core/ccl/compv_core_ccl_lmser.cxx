@@ -278,7 +278,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLMSER::process(const CompVMatPtr
 	const uint8_t* ptr8uPixelsRef = ptr8uImage->ptr<const uint8_t>();
 	int32_t current_pixel = 0;
 	int8_t current_edge = 0;
-	ptr8uAccessibleRef[0] |= 1;
+	ptr8uAccessibleRef[0] = 1;
 	uint8_t current_level = ptr8uPixelsRef[0];
 
 __________________________step3__________________________:
