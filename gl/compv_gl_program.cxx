@@ -122,7 +122,6 @@ bail:
 
 COMPV_ERROR_CODE CompVGLProgram::newObj(CompVGLProgramPtrPtr program)
 {
-    COMPV_CHECK_CODE_RETURN(CompVGL::init());
     COMPV_CHECK_EXP_RETURN(!program, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     CompVGLProgramPtr program_ = new CompVGLProgram();
     COMPV_CHECK_EXP_RETURN(!program_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);

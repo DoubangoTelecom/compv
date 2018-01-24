@@ -88,7 +88,7 @@ bail:
 
 COMPV_ERROR_CODE CompVGLContextSDL::newObj(CompVGLContextSDLPtrPtr context, SDL_Window *pSDLWindow, SDL_GLContext pSDLContext)
 {
-    COMPV_CHECK_CODE_RETURN(CompVDrawing::init());
+	COMPV_CHECK_EXP_RETURN(!CompVDrawing::isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
     COMPV_CHECK_EXP_RETURN(!context || !pSDLWindow || !pSDLContext, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     CompVGLContextSDLPtr context_ = new CompVGLContextSDL(pSDLWindow, pSDLContext);
     COMPV_CHECK_EXP_RETURN(!context_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
@@ -185,7 +185,7 @@ CompVGLContextPtr CompVWindowSDL::context()
 
 COMPV_ERROR_CODE CompVWindowSDL::newObj(CompVWindowSDLPtrPtr sdlWindow, size_t width, size_t height, const char* title)
 {
-    COMPV_CHECK_CODE_RETURN(CompVDrawing::init());
+	COMPV_CHECK_EXP_RETURN(!CompVDrawing::isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
     COMPV_CHECK_EXP_RETURN(sdlWindow == NULL || !width || !height || !title || !::strlen(title), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     CompVWindowSDLPtr sdlWindow_ = new CompVWindowSDL(width, height, title);
     COMPV_CHECK_EXP_RETURN(!sdlWindow_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);

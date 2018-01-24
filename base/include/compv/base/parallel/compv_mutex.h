@@ -21,9 +21,7 @@ protected:
     CompVMutex(bool recursive = true);
 public:
     virtual ~CompVMutex();
-    virtual COMPV_INLINE const char* getObjectId() {
-        return "CompVMutex";
-    };
+	COMPV_OBJECT_GET_ID(CompVMutex);
 
     COMPV_ERROR_CODE lock();
     COMPV_ERROR_CODE unlock();

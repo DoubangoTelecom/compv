@@ -46,8 +46,8 @@ COMPV_UNITTEST_CCL[] =
 };
 static const size_t COMPV_UNITTEST_CCL_COUNT = sizeof(COMPV_UNITTEST_CCL) / sizeof(COMPV_UNITTEST_CCL[0]);
 
-#define LOOP_COUNT		100
-#define TEST_TYPE		TEST_TYPE_OCR2
+#define LOOP_COUNT		1
+#define TEST_TYPE		TEST_TYPE_OCR1
 
 #define DELTA			2
 #define MIN_AREA		(0.0055 * 0.0055)

@@ -742,7 +742,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 
 COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::newObj(CompVConnectedComponentLabelingPtrPtr ccl)
 {
-	COMPV_CHECK_CODE_RETURN(CompVCore::init());
+	COMPV_CHECK_EXP_RETURN(!CompVCore::isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
 	COMPV_CHECK_EXP_RETURN(!ccl, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	CompVConnectedComponentLabelingPtr _ccl = new CompVConnectedComponentLabelingLSL();
 	COMPV_CHECK_EXP_RETURN(!_ccl, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);

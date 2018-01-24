@@ -99,7 +99,7 @@ COMPV_ERROR_CODE CompVThreadDispatcher::dispatchDividingAcrossY(std::function<CO
 
 COMPV_ERROR_CODE CompVThreadDispatcher::newObj(CompVThreadDispatcherPtrPtr disp, int32_t numThreads /*= -1*/)
 {
-	COMPV_CHECK_CODE_RETURN(CompVBase::init(), "Failed to initialize base module");
+	COMPV_CHECK_EXP_RETURN(!CompVBase::isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
 	COMPV_CHECK_EXP_RETURN(disp == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
 	const int32_t numCores = CompVCpu::coresCount();

@@ -34,14 +34,13 @@ CompVCamera::~CompVCamera()
 
 COMPV_ERROR_CODE CompVCamera::init()
 {
-    if (s_bInitialized) {
+	COMPV_CHECK_EXP_RETURN(!CompVBase::isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
+    if (isInitialized()) {
         return COMPV_ERROR_CODE_S_OK;
     }
     COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 
     COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASS_NAME, "Initializing [camera] module (v %s)...", COMPV_VERSION_STRING);
-
-    COMPV_CHECK_CODE_BAIL(err = CompVBase::init());
 
 #if COMPV_OS_WINDOWS
 	{
@@ -86,8 +85,8 @@ COMPV_ERROR_CODE CompVCamera::deInit()
 
 COMPV_ERROR_CODE CompVCamera::newObj(CompVCameraPtrPtr camera)
 {
+	COMPV_CHECK_EXP_RETURN(!CompVCamera::isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
     COMPV_CHECK_EXP_RETURN(!camera, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-    COMPV_CHECK_CODE_RETURN(CompVCamera::init());
     CompVCameraPtr camera_;
 
     // Create camera using the factory (dynamic plugins)

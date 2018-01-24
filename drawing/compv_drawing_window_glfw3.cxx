@@ -176,7 +176,7 @@ COMPV_ERROR_CODE CompVGLWindowFW3::draw(CompVMatPtr mat)
 
 COMPV_ERROR_CODE CompVGLWindowFW3::newObj(CompVGLWindowFW3PtrPtr glfwWindow, int width, int height, const char* title)
 {
-    COMPV_CHECK_CODE_RETURN(CompVDrawing::init());
+	COMPV_CHECK_EXP_RETURN(!CompVDrawing::isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
     COMPV_CHECK_EXP_RETURN(glfwWindow == NULL || width <= 0 || height <= 0 || !title || !::strlen(title), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     CompVGLWindowFW3Ptr glfwWindow_ = new CompVGLWindowFW3(width, height, title);
     COMPV_CHECK_EXP_RETURN(!glfwWindow_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);

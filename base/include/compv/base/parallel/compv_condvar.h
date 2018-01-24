@@ -14,21 +14,21 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+COMPV_OBJECT_DECLARE_PTRS(Condvar)
+
 class COMPV_BASE_API CompVCondvar : public CompVObj
 {
 protected:
     CompVCondvar();
 public:
     virtual ~CompVCondvar();
-    virtual COMPV_INLINE const char* getObjectId() {
-        return "CompVCondvar";
-    };
+	COMPV_OBJECT_GET_ID(CompVCondvar);
 
     COMPV_ERROR_CODE wait(uint64_t millis = 0);
     COMPV_ERROR_CODE signal();
     COMPV_ERROR_CODE broadcast();
 
-    static COMPV_ERROR_CODE newObj(CompVPtr<CompVCondvar*>* condvar);
+    static COMPV_ERROR_CODE newObj(CompVCondvarPtrPtr condvar);
 
 private:
     COMPV_ERROR_CODE waitWithoutTimeout();

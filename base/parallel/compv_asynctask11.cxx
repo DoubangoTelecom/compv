@@ -194,7 +194,7 @@ uint64_t CompVAsyncTask11::uniqueTokenId()
 
 COMPV_ERROR_CODE CompVAsyncTask11::newObj(CompVPtr<CompVAsyncTask11*>* asyncTask)
 {
-    COMPV_CHECK_CODE_RETURN(CompVBase::init());
+	COMPV_CHECK_EXP_RETURN(!CompVBase::isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
     COMPV_CHECK_EXP_RETURN(asyncTask == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     CompVPtr<CompVAsyncTask11*> asyncTask_ = new CompVAsyncTask11();
     COMPV_CHECK_EXP_RETURN(*asyncTask_ == NULL, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);

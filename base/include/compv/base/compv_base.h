@@ -8,7 +8,7 @@
 #define _COMPV_BASE_BASE_H_
 
 #include "compv/base/compv_config.h"
-#include "compv/base/compv_obj.h"
+#include "compv/base/compv_common.h"
 
 #include <string>
 #if COMPV_OS_ANDROID

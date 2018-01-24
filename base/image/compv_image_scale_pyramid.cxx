@@ -169,7 +169,7 @@ COMPV_ERROR_CODE CompVImageScalePyramid::processLevel(const CompVMatPtr& inImage
 
 COMPV_ERROR_CODE CompVImageScalePyramid::newObj(CompVImageScalePyramidPtrPtr pyramid, float fScaleFactor COMPV_DEFAULT(0.83f), size_t nLevels COMPV_DEFAULT(8), COMPV_INTERPOLATION_TYPE eScaleType COMPV_DEFAULT(COMPV_INTERPOLATION_TYPE_BILINEAR))
 {
-	COMPV_CHECK_CODE_RETURN(CompVBase::init());
+	COMPV_CHECK_EXP_RETURN(!CompVBase::isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
 	COMPV_CHECK_EXP_RETURN(pyramid == NULL || nLevels <= 0 || fScaleFactor <= 0, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	CompVImageScalePyramidPtr pyramid_ = new CompVImageScalePyramid(fScaleFactor, nLevels, eScaleType);
 	COMPV_CHECK_EXP_RETURN(!pyramid_ || !pyramid_->m_bValid, COMPV_ERROR_CODE_E_OUT_OF_MEMORY, "Out of memory");

@@ -189,7 +189,6 @@ COMPV_ERROR_CODE CompVGLFbo::close()
 
 COMPV_ERROR_CODE CompVGLFbo::newObj(CompVGLFboPtrPtr fbo, size_t width, size_t height)
 {
-    COMPV_CHECK_CODE_RETURN(CompVGL::init());
     COMPV_CHECK_EXP_RETURN(!fbo || !width || !height, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
     CompVGLFboPtr fbo_ = new CompVGLFbo(width, height);

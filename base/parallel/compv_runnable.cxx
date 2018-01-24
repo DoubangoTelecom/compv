@@ -57,7 +57,7 @@ COMPV_ERROR_CODE CompVRunnable::stop()
 
 COMPV_ERROR_CODE CompVRunnable::newObj(CompVRunnablePtrPtr runnable, CompVRunnableCallbackOnRunning cbOnRunning)
 {
-	COMPV_CHECK_CODE_RETURN(CompVBase::init());
+	COMPV_CHECK_EXP_RETURN(!CompVBase::isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
 	COMPV_CHECK_EXP_RETURN(!runnable || !cbOnRunning, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	CompVRunnablePtr runnable_ = new CompVRunnable(cbOnRunning);
 	COMPV_CHECK_EXP_RETURN(!runnable_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);

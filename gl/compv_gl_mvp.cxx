@@ -53,7 +53,6 @@ COMPV_ERROR_CODE CompVGLMat4f::rotate(float angle, const CompVVec3f& vec3f) /*Ov
 
 COMPV_ERROR_CODE CompVGLMat4f::newObj(CompVGLMat4fPtrPtr mat4f, const glm::mat4& mat4 /*= glm::mat4(1.0f)*/)
 {
-    COMPV_CHECK_CODE_RETURN(CompVGL::init());
     COMPV_CHECK_EXP_RETURN(!mat4f, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     CompVGLMat4fPtr mat4f_ = new CompVGLMat4f(mat4);
     COMPV_CHECK_EXP_RETURN(!mat4f_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
@@ -94,7 +93,6 @@ COMPV_ERROR_CODE CompVGLModel::reset() /*Overrides(CompVModel)*/
 
 COMPV_ERROR_CODE CompVGLModel::newObj(CompVGLModelPtrPtr model)
 {
-    COMPV_CHECK_CODE_RETURN(CompVGL::init());
     COMPV_CHECK_EXP_RETURN(!model, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     CompVGLModelPtr model_ = new CompVGLModel();
     COMPV_CHECK_EXP_RETURN(!model_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
@@ -142,7 +140,6 @@ COMPV_ERROR_CODE CompVGLView::reset() /*Overrides(CompVView)*/
 
 COMPV_ERROR_CODE CompVGLView::newObj(CompVGLViewPtrPtr view)
 {
-    COMPV_CHECK_CODE_RETURN(CompVGL::init());
     COMPV_CHECK_EXP_RETURN(!view, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     CompVGLViewPtr view_ = new CompVGLView();
     COMPV_CHECK_EXP_RETURN(!view_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
@@ -191,7 +188,6 @@ COMPV_ERROR_CODE CompVGLProj3D::reset() /*Overrides(CompVProj3D)*/
 
 COMPV_ERROR_CODE CompVGLProj3D::newObj(CompVGLProj3DPtrPtr proj)
 {
-    COMPV_CHECK_CODE_RETURN(CompVGL::init());
     COMPV_CHECK_EXP_RETURN(!proj, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     CompVGLProj3DPtr proj_ = new CompVGLProj3D();
     COMPV_CHECK_EXP_RETURN(!proj_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
@@ -239,7 +235,6 @@ COMPV_ERROR_CODE CompVGLProj2D::reset() /*Overrides(CompVProj2D)*/
 
 COMPV_ERROR_CODE CompVGLProj2D::newObj(CompVGLProj2DPtrPtr proj)
 {
-    COMPV_CHECK_CODE_RETURN(CompVGL::init());
     COMPV_CHECK_EXP_RETURN(!proj, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     CompVGLProj2DPtr proj_ = new CompVGLProj2D();
     COMPV_CHECK_EXP_RETURN(!proj_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
@@ -316,7 +311,6 @@ COMPV_ERROR_CODE CompVGLMVP::reset() /*Overrides(CompVMVP)*/
 
 COMPV_ERROR_CODE CompVGLMVP::newObj(CompVGLMVPPtrPtr mvp, COMPV_PROJECTION eProjectionType)
 {
-    COMPV_CHECK_CODE_RETURN(CompVGL::init());
     COMPV_CHECK_EXP_RETURN(!mvp, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     CompVGLMVPPtr mvp_ = new CompVGLMVP();
     COMPV_CHECK_EXP_RETURN(!mvp_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);

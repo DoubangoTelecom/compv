@@ -384,7 +384,7 @@ COMPV_ERROR_CODE CompVCanvasImplSkia::close() /*Overrides(CompVCanvasImpl)*/
 
 COMPV_ERROR_CODE CompVCanvasImplSkia::newObj(CompVCanvasImplSkiaPtrPtr skiaCanvas)
 {
-    COMPV_CHECK_CODE_RETURN(CompVBase::init());
+	COMPV_CHECK_EXP_RETURN(!CompVBase::isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
     COMPV_CHECK_EXP_RETURN(!skiaCanvas, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
     CompVCanvasImplSkiaPtr skiaCanvas_ = new CompVCanvasImplSkia();

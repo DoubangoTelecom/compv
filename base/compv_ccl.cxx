@@ -67,7 +67,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabeling::newObj(CompVConnectedComponent
 	double min_diversity COMPV_DEFAULT(kCompVConnectedComponentMinDiversityDefault),
 	int connectivity COMPV_DEFAULT(kCompVConnectedComponentConnectivity))
 {
-	COMPV_CHECK_CODE_RETURN(CompVBase::init());
+	COMPV_CHECK_EXP_RETURN(!CompVBase::isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
 	COMPV_CHECK_EXP_RETURN(!ccl || 
 		delta <= 0 || delta > 255 ||
 		min_area < 0.0 || min_area > 1.0 || min_area > max_area ||

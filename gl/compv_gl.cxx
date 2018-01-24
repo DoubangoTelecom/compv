@@ -22,7 +22,7 @@ bool CompVGL::s_bInitialized = false;
 
 COMPV_ERROR_CODE CompVGL::init()
 {
-    if (CompVGL::s_bInitialized) {
+    if (CompVGL::isInitialized()) {
         return COMPV_ERROR_CODE_S_OK;
     }
 
@@ -33,8 +33,6 @@ COMPV_ERROR_CODE CompVGL::init()
 #if COMPV_GL_DEBUG
     COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("COMPV_GL_DEBUG enabled, OpenGL operations will be very slooooow. Sad!!");
 #endif
-
-    COMPV_CHECK_CODE_BAIL(err = CompVBase::init());
 
     /* Print Android API version */
 #if COMPV_OS_ANDROID

@@ -245,11 +245,10 @@ COMPV_ERROR_CODE CompVCondvar::waitWithTimeout(uint64_t millis)
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVCondvar::newObj(CompVPtr<CompVCondvar*>* condvar)
+COMPV_ERROR_CODE CompVCondvar::newObj(CompVCondvarPtrPtr condvar)
 {
-    COMPV_CHECK_CODE_RETURN(CompVBase::init());
     COMPV_CHECK_EXP_RETURN(condvar == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-    CompVPtr<CompVCondvar*> condvar_ = new CompVCondvar();
+    CompVCondvarPtr condvar_ = new CompVCondvar();
     COMPV_CHECK_EXP_RETURN(*condvar_ == NULL, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
     *condvar = condvar_;
     return COMPV_ERROR_CODE_S_OK;

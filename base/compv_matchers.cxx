@@ -64,7 +64,7 @@ const CompVMatcherFactory* CompVMatcher::findFactory(int deteId)
 
 COMPV_ERROR_CODE CompVMatcher::newObj(CompVMatcherPtrPtr matcher, int matcherId)
 {
-	COMPV_CHECK_CODE_RETURN(CompVBase::init());
+	COMPV_CHECK_EXP_RETURN(!CompVBase::isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
 	COMPV_CHECK_EXP_RETURN(!matcher, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	const CompVMatcherFactory* factory_ = CompVMatcher::findFactory(matcherId);
 	if (!factory_) {

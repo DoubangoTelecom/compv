@@ -170,7 +170,7 @@ COMPV_ERROR_CODE CompVSemaphore::decrement()
 
 COMPV_ERROR_CODE CompVSemaphore::newObj(CompVSemaphorePtrPtr sem, int initialVal /*= 0*/)
 {
-    COMPV_CHECK_CODE_RETURN(CompVBase::init());
+	COMPV_CHECK_EXP_RETURN(!CompVBase::isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
     COMPV_CHECK_EXP_RETURN(!sem, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	CompVSemaphorePtr sem_;
 #if COMPV_ASM && COMPV_ARCH_ARM32 && 0 // Must not use: pthread is faster

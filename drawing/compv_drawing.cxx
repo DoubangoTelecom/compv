@@ -57,7 +57,8 @@ CompVDrawing::~CompVDrawing()
 
 COMPV_ERROR_CODE CompVDrawing::init()
 {
-    if (s_bInitialized) {
+	COMPV_CHECK_EXP_RETURN(!CompVBase::isInitialized() || !CompVGL::isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
+    if (CompVDrawing::isInitialized()) {
         return COMPV_ERROR_CODE_S_OK;
     }
     COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
@@ -66,9 +67,6 @@ COMPV_ERROR_CODE CompVDrawing::init()
 #endif
 
     COMPV_DEBUG_INFO("Initializing [drawing] module (v %s)...", COMPV_VERSION_STRING);
-
-    COMPV_CHECK_CODE_BAIL(err = CompVBase::init());
-    COMPV_CHECK_CODE_BAIL(err = CompVGL::init());
 
     /* Android */
 #if COMPV_OS_ANDROID

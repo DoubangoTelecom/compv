@@ -215,7 +215,7 @@ COMPV_ERROR_CODE CompVGLSurface::deInit()
 COMPV_ERROR_CODE CompVGLSurface::newObj(CompVGLSurfacePtrPtr glSurface, size_t width, size_t height)
 {
     COMPV_CHECK_EXP_RETURN(!glSurface || !width || !height, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-    COMPV_CHECK_CODE_RETURN(CompVGL::init());
+	COMPV_CHECK_EXP_RETURN(!CompVGL::isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
 
     CompVGLSurfacePtr glSurface_ = new CompVGLSurface(width, height);
     COMPV_CHECK_EXP_RETURN(!glSurface_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);

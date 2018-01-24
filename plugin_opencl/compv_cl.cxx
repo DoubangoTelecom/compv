@@ -21,7 +21,7 @@ cl_command_queue CompVCL::s_clQueue = NULL;
 
 COMPV_ERROR_CODE CompVCL::init()
 {
-	if (s_bInitialized) {
+	if (isInitialized()) {
 		return COMPV_ERROR_CODE_S_OK;
 	}
 

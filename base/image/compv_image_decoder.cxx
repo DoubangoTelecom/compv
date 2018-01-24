@@ -75,7 +75,7 @@ COMPV_ERROR_CODE CompVImageDecoder::setFuncPtrs(COMPV_IMAGE_FORMAT format, CompV
 
 COMPV_ERROR_CODE CompVImageDecoder::decodeFile(const char* filePath, CompVMatPtrPtr mat)
 {
-    COMPV_CHECK_CODE_RETURN(CompVBase::init());
+    COMPV_CHECK_EXP_RETURN(!CompVBase::isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
     if (CompVFileUtils::empty(filePath) || !CompVFileUtils::exists(filePath)) {
         COMPV_DEBUG_ERROR_EX(kModuleNameImageDecoder, "File is empty or doesn't exist: %s", filePath);
         return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
@@ -107,7 +107,7 @@ bail:
 
 COMPV_ERROR_CODE  CompVImageDecoder::decodeInfo(const char* filePath, CompVImageInfo& info)
 {
-    COMPV_CHECK_CODE_RETURN(CompVBase::init());
+	COMPV_CHECK_EXP_RETURN(!CompVBase::isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
     if (CompVFileUtils::empty(filePath) || !CompVFileUtils::exists(filePath)) {
         COMPV_DEBUG_ERROR_EX(kModuleNameImageDecoder, "File is empty or doesn't exist: %s", filePath);
         return COMPV_ERROR_CODE_E_INVALID_PARAMETER;

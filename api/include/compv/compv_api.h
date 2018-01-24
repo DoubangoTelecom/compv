@@ -104,9 +104,6 @@
 COMPV_NAMESPACE_BEGIN()
 COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-function")
 
-// Optional
-// TODO(dmi): add a param defining which modules to initialize. For example, chroma conversion
-// testing requires 'COMPV_MODULE_BASE' only
 static COMPV_ERROR_CODE CompVInit(int numThreads = -1)
 {
     COMPV_CHECK_CODE_RETURN(CompVBase::init(numThreads));
@@ -118,7 +115,6 @@ static COMPV_ERROR_CODE CompVInit(int numThreads = -1)
     return COMPV_ERROR_CODE_S_OK;
 }
 
-// Optional (used for debugging to make sure all memory will be freed)
 static COMPV_ERROR_CODE CompVDeInit()
 {
 	COMPV_CHECK_CODE_RETURN(CompVDrawing::deInit());

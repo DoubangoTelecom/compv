@@ -110,7 +110,7 @@ COMPV_ERROR_CODE CompVWindowEGLAndroid::priv_updateState(COMPV_WINDOW_STATE newS
 
 COMPV_ERROR_CODE CompVWindowEGLAndroid::newObj(CompVWindowEGLAndroidPtrPtr eglWindow, size_t width, size_t height, const char* title)
 {
-    COMPV_CHECK_CODE_RETURN(CompVDrawing::init());
+	COMPV_CHECK_EXP_RETURN(!CompVDrawing::isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
     COMPV_CHECK_EXP_RETURN(eglWindow == NULL || width <= 0 || height <= 0 || !title || !::strlen(title), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     struct android_app* app = AndroidApp_get();
     COMPV_CHECK_EXP_RETURN(!app, COMPV_ERROR_CODE_E_INVALID_STATE);

@@ -20,6 +20,9 @@ public:
 #	if defined(HAVE_GL_GLEW_H)
     static COMPV_ERROR_CODE glewInit();
 #endif
+	static COMPV_INLINE bool isInitialized() {
+		return s_bInitialized;
+	}
 
 private:
     static bool s_bInitialized;

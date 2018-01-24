@@ -79,7 +79,7 @@ CompVCornerDete::~CompVCornerDete()
 
 COMPV_ERROR_CODE CompVCornerDete::newObj(CompVCornerDetePtrPtr dete, int deteId)
 {
-	COMPV_CHECK_CODE_RETURN(CompVBase::init());
+	COMPV_CHECK_EXP_RETURN(!CompVBase::isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
 	COMPV_CHECK_EXP_RETURN(!dete, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	const CompVFeatureFactory* factory_ = CompVFeature::findFactory(deteId);
 	if (!factory_) {
@@ -111,7 +111,7 @@ CompVCornerDesc::~CompVCornerDesc()
 
 COMPV_ERROR_CODE CompVCornerDesc::newObj(CompVCornerDescPtrPtr desc, int descId, CompVCornerDetePtr dete COMPV_DEFAULT(NULL))
 {
-	COMPV_CHECK_CODE_RETURN(CompVBase::init());
+	COMPV_CHECK_EXP_RETURN(!CompVBase::isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
 	COMPV_CHECK_EXP_RETURN(!desc, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	const CompVFeatureFactory* factory_ = CompVFeature::findFactory(descId);
 	if (!factory_) {
@@ -145,7 +145,7 @@ CompVEdgeDete::~CompVEdgeDete()
 
 COMPV_ERROR_CODE CompVEdgeDete::newObj(CompVEdgeDetePtrPtr dete, int deteId, float tLow COMPV_DEFAULT(COMPV_FEATURE_DETE_EDGE_THRESHOLD_LOW), float tHigh COMPV_DEFAULT(COMPV_FEATURE_DETE_EDGE_THRESHOLD_HIGH), size_t kernSize COMPV_DEFAULT(3))
 {
-	COMPV_CHECK_CODE_RETURN(CompVBase::init());
+	COMPV_CHECK_EXP_RETURN(!CompVBase::isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
 	COMPV_CHECK_EXP_RETURN(!dete, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	const CompVFeatureFactory* factory_ = CompVFeature::findFactory(deteId);
 	if (!factory_) {
@@ -175,7 +175,7 @@ CompVHough::~CompVHough()
 
 COMPV_ERROR_CODE CompVHough::newObj(CompVHoughPtrPtr hough, int id, float rho COMPV_DEFAULT(1.f), float theta COMPV_DEFAULT(1.f), size_t threshold COMPV_DEFAULT(1))
 {
-	COMPV_CHECK_CODE_RETURN(CompVBase::init());
+	COMPV_CHECK_EXP_RETURN(!CompVBase::isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
 	COMPV_CHECK_EXP_RETURN(!hough, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	const CompVFeatureFactory* factory_ = CompVFeature::findFactory(id);
 	if (!factory_) {

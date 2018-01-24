@@ -121,7 +121,8 @@ static const CompVConnectedComponentLabelingFactory lmserFactory = {
 
 COMPV_ERROR_CODE CompVCore::init()
 {
-	if (s_bInitialized) {
+	COMPV_CHECK_EXP_RETURN(!CompVBase::isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
+	if (isInitialized()) {
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
@@ -132,8 +133,6 @@ COMPV_ERROR_CODE CompVCore::init()
 #if defined(HAVE_FFMPEG)
 	av_register_all();
 #endif /* HAVE_FFMPEG */
-
-	COMPV_CHECK_CODE_BAIL(err = CompVBase::init());
 
 	// Features
 	COMPV_CHECK_CODE_BAIL(err = CompVFeature::addFactory(&fastFactory), "Failed to add FAST feature factory");
