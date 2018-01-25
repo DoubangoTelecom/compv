@@ -11,6 +11,7 @@
 #include "compv/base/compv_debug.h"
 #include "compv/base/android/compv_android_cpu-features.h"
 #include "compv/base/compv_fileutils.h"
+#include "compv/base/compv_mem.h"
 
 #define COMPV_THIS_CLASSNAME	"CompVCpu"
 
@@ -43,6 +44,78 @@ COMPV_EXTERNC long long compv_utils_rdtsc_x86_asm();
 #endif
 
 COMPV_NAMESPACE_BEGIN()
+
+// http://nadeausoftware.com/articles/2012/09/c_c_tip_how_get_physical_memory_size_system
+static size_t CompVGetMemorySize()
+{
+#if defined(_WIN32) && (defined(__CYGWIN__) || defined(__CYGWIN32__))
+	/* Cygwin under Windows. ------------------------------------ */
+	/* New 64-bit MEMORYSTATUSEX isn't available.  Use old 32.bit */
+	MEMORYSTATUS status;
+	status.dwLength = sizeof(status);
+	GlobalMemoryStatus(&status);
+	return (size_t)status.dwTotalPhys;
+
+#elif defined(_WIN32)
+	/* Windows. ------------------------------------------------- */
+	/* Use new 64-bit MEMORYSTATUSEX, not old 32-bit MEMORYSTATUS */
+	MEMORYSTATUSEX status;
+	status.dwLength = sizeof(status);
+	GlobalMemoryStatusEx(&status);
+	return (size_t)status.ullTotalPhys;
+
+#elif defined(__unix__) || defined(__unix) || defined(unix) || (defined(__APPLE__) && defined(__MACH__))
+	/* UNIX variants. ------------------------------------------- */
+	/* Prefer sysctl() over sysconf() except sysctl() HW_REALMEM and HW_PHYSMEM */
+
+#if defined(CTL_HW) && (defined(HW_MEMSIZE) || defined(HW_PHYSMEM64))
+	int mib[2];
+	mib[0] = CTL_HW;
+#if defined(HW_MEMSIZE)
+	mib[1] = HW_MEMSIZE;            /* OSX. --------------------- */
+#elif defined(HW_PHYSMEM64)
+	mib[1] = HW_PHYSMEM64;          /* NetBSD, OpenBSD. --------- */
+#endif
+	int64_t size = 0;               /* 64-bit */
+	size_t len = sizeof(size);
+	if (sysctl(mib, 2, &size, &len, NULL, 0) == 0)
+		return (size_t)size;
+	return 0L;			/* Failed? */
+
+#elif defined(_SC_AIX_REALMEM)
+	/* AIX. ----------------------------------------------------- */
+	return (size_t)sysconf(_SC_AIX_REALMEM) * (size_t)1024L;
+
+#elif defined(_SC_PHYS_PAGES) && defined(_SC_PAGESIZE)
+	/* FreeBSD, Linux, OpenBSD, and Solaris. -------------------- */
+	return (size_t)sysconf(_SC_PHYS_PAGES) *
+		(size_t)sysconf(_SC_PAGESIZE);
+
+#elif defined(_SC_PHYS_PAGES) && defined(_SC_PAGE_SIZE)
+	/* Legacy. -------------------------------------------------- */
+	return (size_t)sysconf(_SC_PHYS_PAGES) *
+		(size_t)sysconf(_SC_PAGE_SIZE);
+
+#elif defined(CTL_HW) && (defined(HW_PHYSMEM) || defined(HW_REALMEM))
+	/* DragonFly BSD, FreeBSD, NetBSD, OpenBSD, and OSX. -------- */
+	int mib[2];
+	mib[0] = CTL_HW;
+#if defined(HW_REALMEM)
+	mib[1] = HW_REALMEM;		/* FreeBSD. ----------------- */
+#elif defined(HW_PYSMEM)
+	mib[1] = HW_PHYSMEM;		/* Others. ------------------ */
+#endif
+	unsigned int size = 0;		/* 32-bit */
+	size_t len = sizeof(size);
+	if (sysctl(mib, 2, &size, &len, NULL, 0) == 0)
+		return (size_t)size;
+	return 0L;			/* Failed? */
+#endif /* sysctl and sysconf variants */
+
+#else
+	return 0L;			/* Unknown OS. */
+#endif
+}
 
 // Low level cpuid for X86. Returns zeros on other CPUs.
 #if !defined(__pnacl__) && !defined(__CLR_VER) &&  (defined(_M_IX86) || defined(_M_X64) || defined(__i386__) || defined(__x86_64__))
@@ -187,9 +260,10 @@ static uint64_t CompVMipsCaps(const char* search_string)
 uint64_t CompVCpu::s_uFlags = 0;
 uint64_t CompVCpu::s_uFlagsDisabled = 0;
 uint64_t CompVCpu::s_uFlagsEnabled = 0;
-int CompVCpu::s_iCores = 0;
-int CompVCpu::s_iCache1LineSize = 0;
-int CompVCpu::s_iCache1Size = 0;
+size_t CompVCpu::s_iCores = 0;
+size_t CompVCpu::s_iCache1LineSize = 0;
+size_t CompVCpu::s_iCache1Size = 0;
+size_t CompVCpu::s_iPhysMemSize = 0;
 bool CompVCpu::s_bInitialized = false;
 #if COMPV_ASM
 bool CompVCpu::s_bAsmEnabled = true;
@@ -224,7 +298,7 @@ CompVCpu::~CompVCpu()
 
 COMPV_ERROR_CODE CompVCpu::init()
 {
-	if (s_bInitialized) {
+	if (isInitialized()) {
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
@@ -471,7 +545,7 @@ COMPV_ERROR_CODE CompVCpu::init()
 #if COMPV_OS_WINDOWS
     DWORD bs = 0;
     if (!GetLogicalProcessorInformation(0, &bs)) {
-        SYSTEM_LOGICAL_PROCESSOR_INFORMATION *buff = (SYSTEM_LOGICAL_PROCESSOR_INFORMATION *)malloc(bs);
+        SYSTEM_LOGICAL_PROCESSOR_INFORMATION *buff = reinterpret_cast<SYSTEM_LOGICAL_PROCESSOR_INFORMATION*>(CompVMem::malloc(bs));
         DWORD i;
         GetLogicalProcessorInformation(buff, &bs);
         for (i = 0; i != bs / sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION); ++i) {
@@ -481,16 +555,13 @@ COMPV_ERROR_CODE CompVCpu::init()
                 break;
             }
         }
-        if (buff) {
-            free(buff);
-        }
+		CompVMem::free(reinterpret_cast<void**>(&buff));
     }
     else {
         COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "GetLogicalProcessorInformation() failed with error code = %08x", GetLastError());
-        s_iCache1LineSize = 64;
-        s_iCache1Size = 4096;
+        s_iCache1LineSize = 64; // KB
+        s_iCache1Size = 4096; // KB
     }
-
 #elif COMPV_OS_APPLE
     size_t sizeof_cls = sizeof(s_iCache1LineSize);
     size_t sizeof_cs = sizeof(s_iCache1Size);
@@ -507,6 +578,12 @@ COMPV_ERROR_CODE CompVCpu::init()
     s_iCache1LineSize = (int)sysconf(_SC_LEVEL1_DCACHE_LINESIZE);
     s_iCache1Size = (int)sysconf(_SC_LEVEL1_DCACHE_SIZE);
 #endif
+
+	//
+	// Phys mem size
+	//
+	s_iPhysMemSize = CompVGetMemorySize();
+
 
 	s_bInitialized = true;
 

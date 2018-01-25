@@ -98,17 +98,20 @@ protected:
 public:
     virtual ~CompVCpu();
     static COMPV_ERROR_CODE init();
-    static int coresCount() {
+    static size_t coresCount() {
         return s_iCores;
     }
     static compv_core_id_t validCoreId(compv_core_id_t coreId);
     static uint64_t cyclesCountGlobal();
-    static int cache1LineSize() {
+    static size_t cache1LineSize() { // In Bytes
         return s_iCache1LineSize;
     }
-    static int cache1Size() {
+    static size_t cache1Size() { // In Bytes
         return s_iCache1Size;
     }
+	static size_t physMemSize() { // In Bytes
+		return s_iPhysMemSize;
+	}
     static uint64_t timeProcess();
     static uint64_t getFlags() {
         return s_uFlags;
@@ -143,6 +146,7 @@ public:
 	static bool isMathTrigFastEnabled() { return s_bMathTrigFast; }
 	static bool isMathFixedPointEnabled() { return s_bMathFixedPoint; }
 	static bool isIntelIppEnabled() { return s_bIntelIpp; }
+	static bool isInitialized() { return s_bInitialized; }
 
 private:
 	static bool s_bInitialized;
@@ -155,9 +159,10 @@ private:
 	static bool s_bMathTrigFast;
 	static bool s_bMathFixedPoint;
 	static bool s_bIntelIpp;
-    static int32_t s_iCores;
-    static int32_t s_iCache1LineSize;
-    static int32_t s_iCache1Size;
+    static size_t s_iCores;
+    static size_t s_iCache1LineSize; // In Bytes
+    static size_t s_iCache1Size; // In Bytes
+	static size_t s_iPhysMemSize; // In Bytes
 };
 
 COMPV_NAMESPACE_END()

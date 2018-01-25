@@ -65,7 +65,6 @@ COMPV_ERROR_CODE CompVCamera::init()
 
     s_bInitialized = true;
 
-bail:
     if (COMPV_ERROR_CODE_IS_NOK(err)) {
         COMPV_CHECK_CODE_NOP(deInit());
     }

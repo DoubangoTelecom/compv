@@ -20,9 +20,6 @@
 
 #if COMPV_TBBMALLOC
 #include "compv/base/tbbmalloc/scalable_allocator.h"
-#	if !defined(COMPV_TBBMALLOC_HEAP_LIMIT)
-#		define COMPV_TBBMALLOC_HEAP_LIMIT	256 // In Mo
-#	endif
 #endif /* COMPV_TBBMALLOC */
 
 #include <stdio.h>
@@ -90,7 +87,7 @@ COMPV_EXTERNC void CompVMemCopy3_Asm_NEON64(COMPV_ALIGNED(NEON) uint8_t* dstPt0,
 
 std::map<uintptr_t, compv_special_mem_t > CompVMem::s_Specials;
 CompVMutexPtr CompVMem::s_SpecialsMutex;
-bool CompVMem::s_bInitialize = false;
+bool CompVMem::s_bInitialized = false;
 void(*CompVMem::MemSetDword)(void* dstPtr, compv_scalar_t val, compv_uscalar_t count) = nullptr;
 void(*CompVMem::MemSetQword)(void* dstPtr, compv_scalar_t val, compv_uscalar_t count) = nullptr;
 void(*CompVMem::MemSetDQword)(void* dstPtr, compv_scalar_t val, compv_uscalar_t count) = nullptr;
@@ -102,18 +99,12 @@ static void CompVMemCopy3_C(uint8_t* dstPt0, uint8_t* dstPt1, uint8_t* dstPt2, c
 
 COMPV_ERROR_CODE CompVMem::init()
 {
-    if (!s_bInitialize) {
+    if (!isInitialized()) {
 #if COMPV_MEM_CHECK
         COMPV_CHECK_CODE_RETURN(CompVMutex::newObj(&s_SpecialsMutex));
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Memory check enabled for debugging, this may slowdown the code");
 #endif
-#if COMPV_TBBMALLOC
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Intel tbbmalloc is enabled and activated, this a good news0. Heap limit=%d", COMPV_TBBMALLOC_HEAP_LIMIT);
-		if (COMPV_ERROR_CODE_IS_NOK(CompVMem::setHeapLimit(COMPV_TBBMALLOC_HEAP_LIMIT))) {
-			COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASSNAME, "Setting memory heap limit to #%dMo failed", COMPV_TBBMALLOC_HEAP_LIMIT);
-			// Do not exit even if it fails
-		}
-#else
+#if !COMPV_TBBMALLOC
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Intel tbbmalloc not enabled. You may have some perf issues on memory allocation and cache management. Sad!");
 #endif
         COMPV_EXEC_IFDEF_ASM_X86(CompVMem::MemSetDword = CompVMemSetDword_Asm_X86);
@@ -122,7 +113,7 @@ COMPV_ERROR_CODE CompVMem::init()
             COMPV_EXEC_IFDEF_ASM_X86(CompVMem::MemSetQword = CompVMemSetQword_Asm_X86_SSE2);
             COMPV_EXEC_IFDEF_ASM_X86(CompVMem::MemSetDQword = CompVMemSetDQword_Asm_X86_SSE2);
         }
-        s_bInitialize = true;
+        s_bInitialized = true;
     }
     return COMPV_ERROR_CODE_S_OK;
 }
@@ -130,7 +121,7 @@ COMPV_ERROR_CODE CompVMem::init()
 COMPV_ERROR_CODE CompVMem::deInit()
 {
     s_SpecialsMutex = NULL;
-    s_bInitialize = false;
+    s_bInitialized = false;
     return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -656,7 +647,7 @@ int CompVMem::bestAlignment()
     static int _bestAlignment = 0;
     if (_bestAlignment == 0) {
         _bestAlignment = COMPV_ALIGNV_SIMD_DEFAULT;
-        const int L1CacheLineSize = CompVCpu::cache1LineSize(); // probably #64 or #128
+        const int L1CacheLineSize = static_cast<int>(CompVCpu::cache1LineSize()); // probably #64 or #128
         if (L1CacheLineSize > _bestAlignment && L1CacheLineSize <= 128 && (L1CacheLineSize & (_bestAlignment - 1)) == 0) {
             _bestAlignment = L1CacheLineSize;
         }
@@ -679,12 +670,12 @@ bool CompVMem::isGpuFriendly(const void* mem, size_t size)
 }
 
 // https://software.intel.com/en-us/articles/controlling-memory-consumption-with-intel-threading-building-blocks-intel-tbb-scalable
-COMPV_ERROR_CODE CompVMem::setHeapLimit(const size_t sizeInMo)
+COMPV_ERROR_CODE CompVMem::setHeapLimit(const size_t sizeInBytes)
 {
-	COMPV_CHECK_EXP_RETURN(!sizeInMo || sizeInMo > 512, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Value must be within ]0, 512] range");
 #if COMPV_TBBMALLOC
-	const size_t soft_limit = sizeInMo * (1024*1024);
-	COMPV_CHECK_EXP_RETURN((scalable_allocation_mode(TBBMALLOC_SET_SOFT_HEAP_LIMIT, soft_limit) != TBBMALLOC_OK),
+	const size_t physMemSize = CompVCpu::physMemSize();
+	COMPV_CHECK_EXP_RETURN(!sizeInBytes || (physMemSize && sizeInBytes > physMemSize), COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Value must be within ]0, RAM] range");
+	COMPV_CHECK_EXP_RETURN((scalable_allocation_mode(TBBMALLOC_SET_SOFT_HEAP_LIMIT, sizeInBytes) != TBBMALLOC_OK),
 		COMPV_ERROR_CODE_E_INTEL_TBB, "scalable_allocation_mode failed");
 #endif
 	return COMPV_ERROR_CODE_S_OK;
@@ -737,6 +728,11 @@ size_t CompVMem::specialsCount()
 bool CompVMem::isEmpty()
 {
     return CompVMem::specialsCount() == 0;
+}
+
+bool CompVMem::isInitialized()
+{
+	return s_bInitialized;
 }
 
 void CompVMem::specialsLock()

@@ -191,8 +191,9 @@ COMPV_ERROR_CODE CompVBase::init(int numThreads COMPV_DEFAULT(-1))
     /* CPU features initialization */
     COMPV_CHECK_CODE_BAIL(err_ = CompVCpu::init());
     COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "CPU features: %s", CompVCpu::flagsAsString(CompVCpu::getFlags()).c_str());
-    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "CPU cores: #%d", CompVCpu::coresCount());
-    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "CPU cache1: line size: #%dB, size :#%dKB", CompVCpu::cache1LineSize(), CompVCpu::cache1Size() >> 10);
+    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "CPU cores: #%zu", CompVCpu::coresCount());
+    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "CPU cache1: line size: #%zuB, size :#%zuKB", CompVCpu::cache1LineSize(), CompVCpu::cache1Size() >> 10);
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "CPU Phys RAM size: #%zuGB", (CompVCpu::physMemSize() >> 20));
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "CPU endianness: %s", CompVCpu::isBigEndian() ? "BIG" : "LITTLE");
 #if COMPV_ARCH_X86
     // even if we are on X64 CPU it's possible that we're running a 32-bit binary
@@ -272,6 +273,12 @@ COMPV_ERROR_CODE CompVBase::init(int numThreads COMPV_DEFAULT(-1))
 
     /* Memory management */
     COMPV_CHECK_CODE_BAIL(err_ = CompVMem::init());
+	if (CompVMem::isTbbMallocEnabled()) {
+		const size_t physMemSizeInBytesTenth = CompVCpu::physMemSize() / 10;
+		const size_t heapLimitInBytes = COMPV_MATH_MAX(COMPV_HEAP_LIMIT, physMemSizeInBytesTenth);
+		COMPV_CHECK_CODE_BAIL(err_ = CompVMem::setHeapLimit(heapLimitInBytes), "Failed to set heap limit");
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Heap limit: #%zuKB (#%zuMB)", (heapLimitInBytes >> 10), (heapLimitInBytes >> 20));
+	}
 
 	/* Intel IPP */
 #if COMPV_HAVE_INTEL_IPP

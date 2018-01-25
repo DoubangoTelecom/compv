@@ -328,19 +328,29 @@
 #define COMPV_ALIGNV_SIMD_DEFAULT	64 // This is max to make sure all requirements will work (also equal to expected cache line)
 
 // GPU Alignment
-#define COMPV_ALIGNV_GPU_PAGE		4096
-#define COMPV_ALIGNV_GPU_LINE		64
+#define COMPV_ALIGNV_GPU_PAGE		4096 // In Bytes
+#define COMPV_ALIGNV_GPU_LINE		64 // In Bytes
 
-// Defaul cache line
+// Default cache line
 #if !defined(COMPV_CACHE1_LINE_SIZE)
-#	define COMPV_CACHE1_LINE_SIZE	64
+#	define COMPV_CACHE1_LINE_SIZE	64 // In Bytes
 #endif
 #if !defined(COMPV_PREFETCH_DISTANCE)
 #	if COMPV_ARCH_ARM
-#		define COMPV_PREFETCH_DISTANCE (COMPV_CACHE1_LINE_SIZE * 3)
+#		define COMPV_PREFETCH_DISTANCE (COMPV_CACHE1_LINE_SIZE * 3) // In Bytes
 #	else
-#		define COMPV_PREFETCH_DISTANCE (COMPV_CACHE1_LINE_SIZE << 2)
+#		define COMPV_PREFETCH_DISTANCE (COMPV_CACHE1_LINE_SIZE << 2) // In Bytes
 #	endif
+#endif
+
+// Default Phys mem size (RAM)
+#if !defined(COMPV_PHYS_MEM_SIZE)
+#	define COMPV_PHYS_MEM_SIZE	(1024 << 20) // In Bytes -> 1GB
+#endif
+
+// Default heap limit (used ny tbbMalloc)
+#if !defined(COMPV_HEAP_LIMIT)
+#	define COMPV_HEAP_LIMIT	(256 << 20) // In Bytes -> 256MB
 #endif
 
 #if !defined (HAVE_GETTIMEOFDAY)

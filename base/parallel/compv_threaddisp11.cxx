@@ -19,7 +19,7 @@ CompVThreadDispatcher11::CompVThreadDispatcher11(int32_t numThreads)
 	, m_bValid(false)
 {
 	COMPV_ASSERT(numThreads > 1); // never happen, we already checked it in newObj()
-	m_ppTasks = (CompVAsyncTask11PtrPtr)CompVMem::calloc(numThreads, sizeof(CompVAsyncTask11Ptr));
+	m_ppTasks = reinterpret_cast<CompVAsyncTask11PtrPtr>(CompVMem::calloc(numThreads, sizeof(CompVAsyncTask11Ptr)));
 	if (!m_ppTasks) {
 		COMPV_DEBUG_ERROR("Failed to allocate the asynctasks");
 		return;

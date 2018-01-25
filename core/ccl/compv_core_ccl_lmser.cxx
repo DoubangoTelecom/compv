@@ -166,9 +166,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLMSER::process(const CompVMatPtr
 	CompVConnectedComponentLabelingRegionMserVector& vecRegions_final = result_->vecRegions();
 
 	const int16_t width = static_cast<int16_t>(ptr8uImage->cols());
-	const int16_t widthMinus1 = width - 1;
 	const int16_t height = static_cast<int16_t>(ptr8uImage->rows());
-	const int16_t heightMinus1 = height - 1;
 	const int16_t stride = static_cast<int16_t>(ptr8uImage->stride());
 
 	const bool b8Connectivity = (connectivity() == 8);

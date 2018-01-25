@@ -52,10 +52,12 @@ size_t CompVThreadDispatcher::guessNumThreadsDividingAcrossY(const size_t xcount
 }
 
 #if COMPV_CPP11
-COMPV_ERROR_CODE CompVThreadDispatcher::dispatchDividingAcrossY(std::function<COMPV_ERROR_CODE(const size_t ystart, const size_t yend)> funcPtr, const size_t xcount, const size_t ycount, const size_t minSamplesPerThread)
+COMPV_ERROR_CODE CompVThreadDispatcher::dispatchDividingAcrossY(std::function<COMPV_ERROR_CODE(const size_t ystart, const size_t yend)> funcPtr, const size_t xcount, const size_t ycount, const size_t minSamplesPerThread, CompVThreadDispatcherPtr threadDisp COMPV_DEFAULT(nullptr))
 {
 	/* Get Number of threads */
-	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
+	if (!threadDisp) {
+		threadDisp = CompVParallel::threadDispatcher();
+	}
 	const size_t maxThreads = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
 	const size_t threadsCount = (threadDisp && !threadDisp->isMotherOfTheCurrentThread())
 		? CompVThreadDispatcher::guessNumThreadsDividingAcrossY(xcount, ycount, maxThreads, minSamplesPerThread)
@@ -64,15 +66,18 @@ COMPV_ERROR_CODE CompVThreadDispatcher::dispatchDividingAcrossY(std::function<CO
 	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
 		funcPtr,
 		ycount,
-		threadsCount
+		threadsCount,
+		threadDisp
 	));
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVThreadDispatcher::dispatchDividingAcrossY(std::function<COMPV_ERROR_CODE(const size_t ystart, const size_t yend)> funcPtr, const size_t ycount, const size_t threadsCount)
+COMPV_ERROR_CODE CompVThreadDispatcher::dispatchDividingAcrossY(std::function<COMPV_ERROR_CODE(const size_t ystart, const size_t yend)> funcPtr, const size_t ycount, const size_t threadsCount, CompVThreadDispatcherPtr threadDisp COMPV_DEFAULT(nullptr))
 {
 	/* Get max number of threads */
-	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
+	if (!threadDisp) {
+		threadDisp = CompVParallel::threadDispatcher();
+	}
 	const size_t maxThreads = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
 	COMPV_CHECK_EXP_RETURN(threadsCount > maxThreads || threadsCount > ycount, COMPV_ERROR_CODE_E_OUT_OF_BOUND);
 	COMPV_CHECK_EXP_RETURN(threadsCount > 1 && threadDisp && threadDisp->isMotherOfTheCurrentThread(), COMPV_ERROR_CODE_E_RECURSIVE_CALL);
@@ -102,7 +107,7 @@ COMPV_ERROR_CODE CompVThreadDispatcher::newObj(CompVThreadDispatcherPtrPtr disp,
 	COMPV_CHECK_EXP_RETURN(!CompVBase::isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
 	COMPV_CHECK_EXP_RETURN(disp == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
-	const int32_t numCores = CompVCpu::coresCount();
+	const int32_t numCores = static_cast<int32_t>(CompVCpu::coresCount());
 
 #if COMPV_PARALLEL_THREAD_SET_AFFINITY
 	const int32_t maxCores = numCores > 0 ? (numCores - 1) : 0; // To avoid overusing all cores

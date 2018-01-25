@@ -60,7 +60,7 @@ public:
 
 	static bool isGpuFriendly(const void* mem, size_t size);
 
-	static COMPV_ERROR_CODE setHeapLimit(const size_t sizeInMo);
+	static COMPV_ERROR_CODE setHeapLimit(const size_t sizeInBytes);
 
 	static bool isTbbMallocEnabled();
     static int bestAlignment();
@@ -68,6 +68,7 @@ public:
     static size_t specialTotalMemSize();
     static size_t specialsCount();
     static bool isEmpty();
+	static bool isInitialized();
 
 private:
     static void specialsLock();
@@ -75,7 +76,7 @@ private:
 
 private:
     COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
-    static bool s_bInitialize;
+    static bool s_bInitialized;
     static std::map<uintptr_t, compv_special_mem_t > s_Specials;
     static CompVPtr<CompVMutex* >s_SpecialsMutex;
     static void(*MemSetDword)(void* dstPtr, compv_scalar_t val, compv_uscalar_t count);

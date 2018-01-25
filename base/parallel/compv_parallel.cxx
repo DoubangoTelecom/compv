@@ -16,7 +16,7 @@ COMPV_NAMESPACE_BEGIN()
 bool CompVParallel::s_bInitialized = false;
 bool CompVParallel::s_bInitializing = false;
 bool CompVParallel::s_bIntelTbbEnabled = false;
-CompVThreadDispatcherPtr CompVParallel::s_ThreadDisp = NULL;
+CompVThreadDispatcherPtr CompVParallel::s_ThreadDisp = nullptr;
 
 CompVParallel::CompVParallel()
 {
@@ -47,7 +47,7 @@ bail:
     s_bInitializing = false;
     // cleanup if initialization failed
     if (!s_bInitialized) {
-        s_ThreadDisp = NULL;
+        s_ThreadDisp = nullptr;
     }
     else {
         // The next functions are called here because they recursively call "CompVParallel::init()"

@@ -173,7 +173,7 @@ COMPV_ERROR_CODE CompVThread::setAffinity(compv_core_id_t coreId)
 {
     COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 
-    if (!m_pHandle || coreId < 0 || coreId > CompVCpu::coresCount()) {
+    if (!m_pHandle || coreId < 0 || coreId > static_cast<compv_core_id_t>(CompVCpu::coresCount())) {
         COMPV_DEBUG_ERROR_EX(kModuleNameThread, "Invalid parameter");
         COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_INVALID_PARAMETER, "CoreId parameter of of bound");
     }
