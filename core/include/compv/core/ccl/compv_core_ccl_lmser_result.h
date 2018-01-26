@@ -61,11 +61,11 @@ struct CompVConnectedComponentLmserLinkedListFrwBkw {
 	CompVConnectedComponentLmserLinkedListNode<T>* tail;
 };
 
-typedef CompVConnectedComponentLmserLinkedListNode<int32_t> CompVConnectedComponentLmserLinkedListNodePixelIdx;
-typedef CompVConnectedComponentLmserLinkedListFrwOnly<int32_t> CompVConnectedComponentLmserLinkedListPixelIdx;
+typedef CompVConnectedComponentLmserLinkedListNode<int> CompVConnectedComponentLmserLinkedListNodePixelIdx;
+typedef CompVConnectedComponentLmserLinkedListFrwOnly<int> CompVConnectedComponentLmserLinkedListPixelIdx;
 
 typedef CompVConnectedComponentLmserLinkedListNode<const struct CompVConnectedComponentLmser*> CompVConnectedComponentLmserLinkedListNodeMerge;
-typedef CompVConnectedComponentLmserLinkedListFrwOnly<int32_t> CompVConnectedComponentLmserLinkedListMerge;
+typedef CompVConnectedComponentLmserLinkedListFrwOnly<int> CompVConnectedComponentLmserLinkedListMerge;
 
 typedef struct CompVConnectedComponentLmser* CompVConnectedComponentLmserRef;
 typedef std::vector<CompVConnectedComponentLmserRef, CompVAllocatorNoDefaultConstruct<CompVConnectedComponentLmserRef> > CompVConnectedComponentLmserRefVector;
@@ -77,7 +77,7 @@ struct CompVConnectedComponentLmser {
 	struct CompVConnectedComponentLmser* child;
 	struct CompVConnectedComponentLmser* parent;
 	double variation;
-	int8_t stable;
+	bool stable;
 	uint16_t greyLevel; // uint16_t instead of uint8_t because the highest value is #256
 	int area;
 	CompVConnectedComponentLmserLinkedListNodeMerge* linked_list_merges_head; /* CompVConnectedComponentLmserLinkedListFrwOnly */
@@ -92,7 +92,7 @@ struct CompVConnectedComponentLmser {
 
 	// Not MT-friendly
 	void collectStableRegions(const double& one_minus_min_diversity, const double& one_minus_min_diversity_scale, CompVConnectedComponentLmserRefVector& vecRegions_stable, size_t& index) {
-		int8_t& stable_ = stable;
+		bool& stable_ = stable;
 		if (stable_) {
 			const int min_parent_area = COMPV_MATH_ROUNDFU_2_NEAREST_INT((area * one_minus_min_diversity_scale), int);
 			for (struct CompVConnectedComponentLmser* parent_ = parent;
@@ -162,14 +162,14 @@ private:
 
 	// MT-friendly
 	COMPV_INLINE void computeStability(const int& min_area, const int& max_area, const double& max_variation) {
-		const int8_t stable_ = (!parent || (parent->variation >= variation)) &&
+		const bool stable_ = (!parent || (parent->variation >= variation)) &&
 			(variation <= max_variation) && (min_area <= area && area <= max_area);
 		struct CompVConnectedComponentLmser* child_ = child;
 		if (child_) {
 			if (stable_) {
 				do {
 					if (variation < child_->variation) {
-						stable = 1;
+						stable = true;
 						break;
 					}
 				} while ((child_ = child_->sister));
@@ -287,14 +287,14 @@ public:
 				ptr[ii].computeStability(min_area, max_area, max_variation);
 #else
 				CompVConnectedComponentLmser& cc = ptr[ii];
-				const int8_t stable_ = (!cc.parent || (cc.parent->variation >= cc.variation)) &&
+				const bool stable_ = (!cc.parent || (cc.parent->variation >= cc.variation)) &&
 					(cc.variation <= max_variation) && (min_area <= cc.area && cc.area <= max_area);
 				struct CompVConnectedComponentLmser* child_ = cc.child;
 				if (child_) {
 					if (stable_) {
 						do {
 							if (cc.variation < child_->variation) {
-								cc.stable = 1;
+								cc.stable = true;
 								break;
 							}
 						} while ((child_ = child_->sister));

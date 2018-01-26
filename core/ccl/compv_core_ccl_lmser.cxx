@@ -29,7 +29,7 @@ Some literature about MSER:
 #define LMSER_HIGHEST_GREYLEVEL		256
 #define LMSER_GOTO(stepx) goto __________________________##stepx##__________________________
 #define LMSER_CHECK_EDGE() { \
-	const int32_t neighbor_pixel = current_pixel + LMSER_EDGES_OFFSETS[current_edge]; \
+	const int neighbor_pixel = current_pixel + LMSER_EDGES_OFFSETS[current_edge]; \
 	if (!ptr8uAccessibleRef[neighbor_pixel]) { \
 		ptr8uAccessibleRef[neighbor_pixel] = 1; \
 		const uint8_t neighbor_level = ptr8uPixelsRef[neighbor_pixel]; \
@@ -81,7 +81,7 @@ struct CompVConnectedComponentLabelingLmserBoundaryPixelsMgr {
 		flags[3] = 0;
 #endif /* LMSER_USE_BSF */
 	}
-	COMPV_ALWAYS_INLINE void push_back(CompVConnectedComponentLmserLinkedListNodeBoundaryPixel*& pool, const uint8_t level, const int32_t pixel) {
+	COMPV_ALWAYS_INLINE void push_back(CompVConnectedComponentLmserLinkedListNodeBoundaryPixel*& pool, const uint8_t level, const uint32_t pixel) {
 		CompVConnectedComponentLmserLinkedListBoundaryPixel& boundaryPixels_ = boundaryPixels[level];
 		pool->data = pixel;
 		pool->link = boundaryPixels_.tail, boundaryPixels_.tail = pool++;
@@ -171,7 +171,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLMSER::process(const CompVMatPtr
 	const int16_t stride = static_cast<int16_t>(ptr8uImage->stride());
 
 	const bool b8Connectivity = (connectivity() == 8);
-	const int8_t maxEdges = b8Connectivity
+	const int maxEdges = b8Connectivity
 		? 8
 		: 4;
 	int16_t LMSER_EDGES_OFFSETS[8];
@@ -275,8 +275,8 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLMSER::process(const CompVMatPtr
 	// 2. Make the source pixel(with its first edge) the current pixel, mark it as
 	// 	accessible and store the grey - level of it in the variable current_level.
 	const uint8_t* ptr8uPixelsRef = ptr8uImage->ptr<const uint8_t>();
-	int32_t current_pixel = 0;
-	int8_t current_edge = 0;
+	int current_pixel = 0;
+	int current_edge = 0;
 	ptr8uAccessibleRef[0] = 1;
 	uint8_t current_level = ptr8uPixelsRef[0];
 
