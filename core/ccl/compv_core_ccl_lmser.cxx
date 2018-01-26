@@ -29,29 +29,24 @@ Some literature about MSER:
 #define LMSER_HIGHEST_GREYLEVEL		256
 #define LMSER_GOTO(stepx) goto __________________________##stepx##__________________________
 #define LMSER_CHECK_EDGE() { \
-		if (current_edge < maxEdges) { \
-			const int32_t neighbor_pixel = current_pixel + LMSER_EDGES_OFFSETS[current_edge]; \
-			if (!ptr8uAccessibleRef[neighbor_pixel]) { \
-				ptr8uAccessibleRef[neighbor_pixel] = 1; \
-				const uint8_t neighbor_level = ptr8uPixelsRef[neighbor_pixel]; \
-				if (neighbor_level >= current_level) { \
-					boundaryPixelsMgr.push_back(poolBoundaryPixelsPtr, neighbor_level, neighbor_pixel); \
-					if (neighbor_level < current_priority) current_priority = neighbor_level; \
-				} \
-				else { \
-					boundaryPixelsMgr.push_back(poolBoundaryPixelsPtr, current_level, (current_pixel | (static_cast<int32_t>(current_edge + 1) << 28))); \
-					if (current_level < current_priority) current_priority = current_level; \
-					current_edge = 0; \
-					current_pixel = neighbor_pixel; \
-					current_level = neighbor_level; \
-					LMSER_GOTO(step3); \
-				} \
-			} \
-			++current_edge; \
+	const int32_t neighbor_pixel = current_pixel + LMSER_EDGES_OFFSETS[current_edge]; \
+	if (!ptr8uAccessibleRef[neighbor_pixel]) { \
+		ptr8uAccessibleRef[neighbor_pixel] = 1; \
+		const uint8_t neighbor_level = ptr8uPixelsRef[neighbor_pixel]; \
+		if (neighbor_level >= current_level) { \
+			boundaryPixelsMgr.push_back(poolBoundaryPixelsPtr, neighbor_level, neighbor_pixel); \
+			if (neighbor_level < current_priority) current_priority = neighbor_level; \
 		} \
 		else { \
-			break; /* break do{...} while(0) */ \
+			boundaryPixelsMgr.push_back(poolBoundaryPixelsPtr, current_level, (current_pixel | (static_cast<int32_t>(current_edge + 1) << 28))); \
+			if (current_level < current_priority) current_priority = current_level; \
+			current_edge = 0; \
+			current_pixel = neighbor_pixel; \
+			current_level = neighbor_level; \
+			LMSER_GOTO(step3); \
 		} \
+	} \
+	++current_edge; \
 }
 
 #define COMPV_THIS_CLASSNAME	"CompVConnectedComponentLabelingLMSER"
@@ -292,12 +287,16 @@ __________________________step3__________________________:
 	// pixel back into the queue of boundary pixels for later processing(with the
 	// next edge number), consider the new pixel and its grey - level and go to 3.
 	do {
-		do {
-			/* No need to check if we're using 4-connectivity or 8-connectivity (thanks to maxEdges) */
-			LMSER_CHECK_EDGE(); LMSER_CHECK_EDGE(); LMSER_CHECK_EDGE(); LMSER_CHECK_EDGE(); // 4-connectivity
-			LMSER_CHECK_EDGE(); LMSER_CHECK_EDGE(); LMSER_CHECK_EDGE(); LMSER_CHECK_EDGE(); // 8-connectivity
-		} while (0);
-
+		switch (current_edge) {
+			case 0: LMSER_CHECK_EDGE();
+			case 1: LMSER_CHECK_EDGE();
+			case 2: LMSER_CHECK_EDGE();
+			case 3: LMSER_CHECK_EDGE(); if (!b8Connectivity) break;
+			case 4: LMSER_CHECK_EDGE();
+			case 5: LMSER_CHECK_EDGE();
+			case 6: LMSER_CHECK_EDGE();
+			case 7: LMSER_CHECK_EDGE();
+		}
 		  // 5. Accumulate the current pixel to the component at the top of the stack(water
 		  // 	saturates the current pixel).
 		CompVConnectedComponentLmserRef& top = stackC.back();

@@ -114,10 +114,11 @@ COMPV_ERROR_CODE CompVAsyncTask11::waitOne(long childId, uint64_t u_timeout /* =
 {
     COMPV_CHECK_EXP_RETURN(!m_bStarted, COMPV_ERROR_CODE_E_INVALID_STATE);
     uint64_t u_end = (CompVTime::nowMillis() + u_timeout);
-	bool running = true;
+	bool running;
     do {
 		COMPV_CHECK_CODE_RETURN(m_SemExec->decrement());
 		//CompVThread::sleep(0);
+		//_mm_pause();
 		COMPV_CHECK_CODE_RETURN(m_MutexChilds->lock());
 		running = (m_Childs.find(childId) != m_Childs.end());
 		COMPV_CHECK_CODE_RETURN(m_MutexChilds->unlock());
