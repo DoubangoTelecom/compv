@@ -171,8 +171,8 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLMSER::process(const CompVMatPtr
 	const int16_t stride = static_cast<int16_t>(ptr8uImage->stride());
 
 	const bool b8Connectivity = (connectivity() == 8);
-	const int8_t maxEdges = b8Connectivity 
-		? 8 
+	const int8_t maxEdges = b8Connectivity
+		? 8
 		: 4;
 	int16_t LMSER_EDGES_OFFSETS[8];
 	if (b8Connectivity) {
@@ -293,7 +293,8 @@ __________________________step3__________________________:
 	// pixel back into the queue of boundary pixels for later processing(with the
 	// next edge number), consider the new pixel and its grey - level and go to 3.
 	do {
-		switch (current_edge) {
+		if (current_edge < maxEdges) {
+			switch (current_edge) {
 			case 0: LMSER_CHECK_EDGE();
 			case 1: LMSER_CHECK_EDGE();
 			case 2: LMSER_CHECK_EDGE();
@@ -302,6 +303,7 @@ __________________________step3__________________________:
 			case 5: LMSER_CHECK_EDGE();
 			case 6: LMSER_CHECK_EDGE();
 			case 7: LMSER_CHECK_EDGE();
+			}
 		}
 		  // 5. Accumulate the current pixel to the component at the top of the stack(water
 		  // 	saturates the current pixel).
