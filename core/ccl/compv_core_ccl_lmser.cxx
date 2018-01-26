@@ -49,6 +49,15 @@ Some literature about MSER:
 	++current_edge; \
 }
 
+#define LMSER_BSF_UPDATE_PRIO(_prio_) { \
+	if (flags[_prio_]) { \
+		compv_bsf_t ret; \
+		compv_bsf64(flags[_prio_], &ret); \
+		current_priority = static_cast<int16_t>(ret + (_prio_ << 6)); \
+		return; \
+	} \
+}
+
 #define COMPV_THIS_CLASSNAME	"CompVConnectedComponentLabelingLMSER"
 
 COMPV_NAMESPACE_BEGIN()
@@ -96,14 +105,11 @@ struct CompVConnectedComponentLabelingLmserBoundaryPixelsMgr {
 			flags[current_priority >> 6] ^= (1ull << (current_priority & 63));
 #	endif /* defined(_MSC_VER) */	
 			// Move to the next priority
-			int16_t prio64 = (current_priority >> 6);
-			for (; prio64 < 4; ++prio64) {
-				if (flags[prio64]) {
-					compv_bsf_t ret;
-					compv_bsf64(flags[prio64], &ret);
-					current_priority = static_cast<int16_t>(ret + (prio64 << 6));
-					return;
-				}
+			switch ((current_priority >> 6)) {
+				case 0: LMSER_BSF_UPDATE_PRIO(0);
+				case 1: LMSER_BSF_UPDATE_PRIO(1);
+				case 2: LMSER_BSF_UPDATE_PRIO(2);
+				case 3: LMSER_BSF_UPDATE_PRIO(3);
 			}
 			current_priority = LMSER_HIGHEST_GREYLEVEL;
 #else
