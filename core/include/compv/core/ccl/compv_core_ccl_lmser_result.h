@@ -78,7 +78,7 @@ struct CompVConnectedComponentLmser {
 	struct CompVConnectedComponentLmser* parent;
 	double variation;
 	int8_t stable;
-	int16_t greyLevel; // int16_t instead of uint8_t because the highest value is #256
+	uint16_t greyLevel; // uint16_t instead of uint8_t because the highest value is #256
 	int area;
 	CompVConnectedComponentLmserLinkedListNodeMerge* linked_list_merges_head; /* CompVConnectedComponentLmserLinkedListFrwOnly */
 	CompVConnectedComponentLmserLinkedListNodePixelIdx* linked_list_points_head; /* CompVConnectedComponentLmserLinkedListFrwOnly */

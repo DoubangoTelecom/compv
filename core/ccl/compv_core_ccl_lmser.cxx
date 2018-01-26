@@ -38,7 +38,7 @@ Some literature about MSER:
 			if (neighbor_level < current_priority) current_priority = neighbor_level; \
 		} \
 		else { \
-			boundaryPixelsMgr.push_back(poolBoundaryPixelsPtr, current_level, (current_pixel | (static_cast<int32_t>(current_edge + 1) << 28))); \
+			boundaryPixelsMgr.push_back(poolBoundaryPixelsPtr, current_level, (current_pixel | (static_cast<uint32_t>(current_edge + 1) << 28))); \
 			if (current_level < current_priority) current_priority = current_level; \
 			current_edge = 0; \
 			current_pixel = neighbor_pixel; \
@@ -53,7 +53,7 @@ Some literature about MSER:
 	if (flags[_prio_]) { \
 		compv_bsf_t ret; \
 		compv_bsf64(flags[_prio_], &ret); \
-		current_priority = static_cast<int16_t>(ret + (_prio_ << 6)); \
+		current_priority = static_cast<uint16_t>(ret + (_prio_ << 6)); \
 		return; \
 	} \
 }
@@ -93,7 +93,7 @@ struct CompVConnectedComponentLabelingLmserBoundaryPixelsMgr {
 #	endif /* defined(_MSC_VER) */		
 #endif /* LMSER_USE_BSF */
 	}
-	COMPV_ALWAYS_INLINE void pop_back(int16_t& current_priority) {
+	COMPV_ALWAYS_INLINE void pop_back(uint16_t& current_priority) {
 		CompVConnectedComponentLmserLinkedListNodeBoundaryPixel*& tail = boundaryPixels[current_priority].tail;
 		tail = tail->link; // pop_back()
 		if (!tail) {
@@ -248,7 +248,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLMSER::process(const CompVMatPtr
 	// an edge number indicating the next edge to be explored can be stored.
 	CompVConnectedComponentLmserLinkedListBoundaryPixel boundaryPixels[256];
 	CompVConnectedComponentLabelingLmserBoundaryPixelsMgr boundaryPixelsMgr(boundaryPixels);
-	int16_t current_priority = LMSER_HIGHEST_GREYLEVEL;
+	uint16_t current_priority = LMSER_HIGHEST_GREYLEVEL;
 
 	// A stack C of component information.Each entry holds the pixels in a component
 	// and / or the first and second order moments of the pixels in the component,
