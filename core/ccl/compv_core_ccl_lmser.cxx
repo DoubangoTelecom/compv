@@ -220,8 +220,8 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLMSER::process(const CompVMatPtr
 	uint8_t* ptr8uAccessibleRef = ptr8uAccessible->ptr<uint8_t>() + accessibleWidth;
 	auto funcPtrSetAccessibility = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
 		uint8_t* mt_ptr8uAccessibleRef = ptr8uAccessibleRef + (ystart * stride);
-		const size_t width64_ = (width & -8);
-		size_t x;
+		const int width64_ = (width & -8);
+		int x;
 		for (size_t y = ystart; y < yend; ++y) {
 			for (x = 0; x < width64_; x += 8) {
 				*reinterpret_cast<uint64_t*>(&mt_ptr8uAccessibleRef[x]) = 0ull;
