@@ -72,10 +72,10 @@ compv_main()
 			// TODO(dmi): 'drawImage' is a pure GPU function while 'FAST->process' is a pure CPU function -> can be done on parallel
 			if (CompVDrawing::isLoopRunning()) {
 				COMPV_CHECK_CODE_BAIL(err = window->beginDraw());
-				COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->surface()->drawImage(image));
+				COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->cover()->drawImage(image));
 				COMPV_CHECK_CODE_BAIL(err = CompVImage::convertGrayscale(image, &imageGray));
 				COMPV_CHECK_CODE_BAIL(err = ptrFAST->process(imageGray, vecInterestPoints));
-				COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->surface()->renderer()->canvas()->drawInterestPoints(vecInterestPoints)); // TODO(dmi): canvas should be at surface()
+				COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->cover()->renderer()->canvas()->drawInterestPoints(vecInterestPoints)); // TODO(dmi): canvas should be at surface()
 				COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->blit());
 			bail:
 				COMPV_CHECK_CODE_NOP(err = window->endDraw()); // Make sure 'endDraw()' will be called regardless the result

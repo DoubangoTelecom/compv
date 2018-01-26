@@ -15,6 +15,7 @@
 #include "compv/base/compv_obj.h"
 #include "compv/base/compv_common.h"
 
+#include <map>
 #include <vector>
 #include <functional>
 
@@ -27,40 +28,8 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-#if !defined (COMPV_ASYNCTASK11_CHAIN_ENABLED)
-#	define COMPV_ASYNCTASK11_CHAIN_ENABLED	0
-#endif /* COMPV_ASYNCTASK11_CHAIN_ENABLED */
-
-// Maximum number of mt functions you can have on the callstack for each thread
-// For example, if A, B, C, D... are mt functions and have a single thread then, A->B->C->D forms 4 tokens.
-// This number is per thread wich means the total tokens will be "COMPV_ASYNCTASK11_MAX_TOKEN_COUNT * numThreads"
-// This means we can have up to 64 mt functions on our callstack for each thread
-#if !defined(COMPV_ASYNCTASK11_MAX_TOKEN_COUNT)
-#	if COMPV_ASYNCTASK11_CHAIN_ENABLED
-#		define COMPV_ASYNCTASK11_MAX_TOKEN_COUNT				16
-#	else
-#		define COMPV_ASYNCTASK11_MAX_TOKEN_COUNT				1
-#	endif
-#endif /* COMPV_ASYNCTASK11_MAX_TOKEN_COUNT */
-
-struct CompVAsyncTask11Id {
-    uint64_t uTaskId;
-    uint64_t uTokenId;
-public:
-    CompVAsyncTask11Id() : uTaskId(0), uTokenId(0) { }
-    CompVAsyncTask11Id(uint64_t taskId, uint64_t tokenId) : uTaskId(taskId), uTokenId(tokenId) { }
-};
-typedef std::vector<CompVAsyncTask11Id> CompVAsyncTaskIds;
-
-struct CompVAsyncToken {
-    bool bExecute;
-    std::function<void()> fFunc;
-public:
-    void init() {
-        fFunc = nullptr;
-        bExecute = false;
-    }
-};
+typedef std::pair<long/*TaskId*/, long/*ChildId*/> CompVAsyncTask11Id;
+typedef std::vector<CompVAsyncTask11Id > CompVAsyncTaskIds;
 
 #if COMPV_PARALLEL_SEMA11
 class CompVSemaphore11
@@ -103,9 +72,8 @@ public:
 
     COMPV_ERROR_CODE start();
     COMPV_ERROR_CODE setAffinity(compv_core_id_t core_id);
-    COMPV_ERROR_CODE invoke(std::function<void()> fFunc, uint64_t *tokenId = NULL);
-    COMPV_ERROR_CODE waitAll(uint64_t u_timeout = 86400000/* 1 day */);
-    COMPV_ERROR_CODE waitOne(uint64_t tokenId, uint64_t u_timeout = 86400000/* 1 day */);
+    COMPV_ERROR_CODE invoke(std::function<void()> fFunc, long* tokenId = nullptr);
+    COMPV_ERROR_CODE waitOne(long childId, uint64_t u_timeout = 86400000/* 1 day */);
     COMPV_ERROR_CODE stop();
     COMPV_INLINE CompVThreadPtr thread() {
         return m_Thread;
@@ -114,7 +82,7 @@ public:
         return m_iCoreId;
     }
 
-    static uint64_t uniqueTokenId();
+    static long uniqueId();
     static COMPV_ERROR_CODE newObj(CompVAsyncTask11PtrPtr asyncTask);
 
 private:
@@ -130,14 +98,11 @@ private:
     CompVSemaphorePtr m_SemRun;
 	CompVSemaphorePtr m_SemExec;
 #endif
-#if COMPV_ASYNCTASK11_CHAIN_ENABLED
-    CompVMutexPtr m_MutexTokens;
-#endif
-    CompVAsyncToken m_Tokens[COMPV_ASYNCTASK11_MAX_TOKEN_COUNT];
-    COMPV_VS_DISABLE_WARNINGS_END()
-
+    CompVMutexPtr m_MutexChilds;
+	std::map<long, std::function<void()> > m_Childs;
     bool m_bStarted;
     compv_core_id_t m_iCoreId;
+	COMPV_VS_DISABLE_WARNINGS_END()
 };
 
 COMPV_NAMESPACE_END()

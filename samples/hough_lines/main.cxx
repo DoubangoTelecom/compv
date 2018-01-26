@@ -100,7 +100,7 @@ compv_main()
 			COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 			if (CompVDrawing::isLoopRunning()) {
 				COMPV_CHECK_CODE_RETURN(CompVImage::convertGrayscale(image, &imageGray));
-				COMPV_CHECK_CODE_RETURN(CompVImageThreshold::otsu(imageGray, threshold));
+				COMPV_CHECK_CODE_RETURN(CompVImage::thresholdOtsu(imageGray, threshold));
 				COMPV_CHECK_CODE_RETURN(ptrCanny->setFloat32(COMPV_CANNY_SET_FLT32_THRESHOLD_LOW, static_cast<compv_float32_t>(threshold * 0.5)));
 				COMPV_CHECK_CODE_RETURN(ptrCanny->setFloat32(COMPV_CANNY_SET_FLT32_THRESHOLD_HIGH, static_cast<compv_float32_t>(threshold)));
 				COMPV_CHECK_CODE_RETURN(ptrCanny->process(imageGray, &edges));

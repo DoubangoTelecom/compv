@@ -12,6 +12,8 @@
 #include "compv/base/compv_mem.h"
 #include "compv/base/compv_debug.h"
 
+#define COMPV_THIS_CLASSNAME "CompVAsyncTask11"
+
 COMPV_NAMESPACE_BEGIN()
 
 CompVAsyncTask11::CompVAsyncTask11()
@@ -47,12 +49,10 @@ COMPV_ERROR_CODE CompVAsyncTask11::start()
         COMPV_CHECK_CODE_RETURN(CompVSemaphore::newObj(&m_SemExec));
     }
 #endif
-#if COMPV_ASYNCTASK11_CHAIN_ENABLED
-    if (!m_MutexTokens) {
-        COMPV_CHECK_CODE_RETURN(CompVMutex::newObj(&m_MutexTokens));
+    if (!m_MutexChilds) {
+        COMPV_CHECK_CODE_RETURN(CompVMutex::newObj(&m_MutexChilds));
     }
-#endif
-    m_Thread = NULL; // join the thread
+    m_Thread = nullptr; // join the thread
     m_bStarted = true; // must be here to make sure the run thread will have it equal to true
     err_ = CompVThread::newObj(&m_Thread, CompVAsyncTask11::run, this);
     if (COMPV_ERROR_CODE_IS_NOK(err_)) {
@@ -71,14 +71,8 @@ COMPV_ERROR_CODE CompVAsyncTask11::start()
 
     err_ = m_Thread->setPriority(COMPV_THREAD_PRIORITY_TIME_CRITICAL);
     if (COMPV_ERROR_CODE_IS_NOK(err_)) {
-        COMPV_DEBUG_ERROR("Failed to set thread priority value to %d with error code = %d", COMPV_THREAD_PRIORITY_TIME_CRITICAL, err_);
+        COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Failed to set thread priority value to %d with error code = %d", COMPV_THREAD_PRIORITY_TIME_CRITICAL, err_);
         err_ = COMPV_ERROR_CODE_S_OK; // not fatal error, once the user is alerted continue
-    }
-
-    // Init tokens
-    CompVAsyncToken* token = &m_Tokens[0];
-    for (unsigned i = 0; i < COMPV_ASYNCTASK11_MAX_TOKEN_COUNT; ++i) {
-        token->init();
     }
 
     return err_;
@@ -95,78 +89,43 @@ COMPV_ERROR_CODE CompVAsyncTask11::setAffinity(compv_core_id_t coreId)
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVAsyncTask11::invoke(std::function<void()> fFunc, uint64_t *tokenId /*= NULL*/)
+COMPV_ERROR_CODE CompVAsyncTask11::invoke(std::function<void()> fFunc, long* tokenId COMPV_DEFAULT(nullptr))
 {
     COMPV_CHECK_EXP_RETURN(!m_bStarted, COMPV_ERROR_CODE_E_INVALID_STATE);
     COMPV_CHECK_EXP_RETURN(!fFunc, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
-    // Init tokens
-    CompVAsyncToken* tokens = &m_Tokens[0];
-    CompVAsyncToken* token = NULL;
-#if COMPV_ASYNCTASK11_CHAIN_ENABLED
-    // We need to lock the tokens for acquisitions for conccurent call when mt functions are chained
-    // Locking isn't needed for token release (done in run())
-    COMPV_CHECK_CODE_RETURN(m_MutexTokens->lock());
-#endif
-    for (unsigned i = 0; i < COMPV_ASYNCTASK11_MAX_TOKEN_COUNT; ++i) {
-        if (!tokens[i].bExecute) {
-            token = &tokens[i];
-            token->init();
-            token->bExecute = true;
-            if (tokenId) {
-                *tokenId = i;
-            }
-            break;
-        }
-    }
-#if COMPV_ASYNCTASK11_CHAIN_ENABLED
-    COMPV_CHECK_CODE_RETURN(m_MutexTokens->unlock());
-#endif
+	long newId = CompVAsyncTask11::uniqueId();
 
-    if (!token) {
-        COMPV_DEBUG_ERROR("Running out of tokens. You should increment COMPV_ASYNCTASK11_MAX_TOKEN_COUNT(%d)", COMPV_ASYNCTASK11_MAX_TOKEN_COUNT);
-        COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_CALL);
-    }
-    token->fFunc = fFunc;
-    COMPV_ERROR_CODE err = m_SemRun->increment();
-    if (COMPV_ERROR_CODE_IS_NOK(err)) {
-        token->bExecute = false;
-        COMPV_CHECK_CODE_RETURN(err);
-    }
+    COMPV_CHECK_CODE_RETURN(m_MutexChilds->lock());
+	COMPV_ASSERT(m_Childs.find(newId) == m_Childs.end());
+	m_Childs[newId] = fFunc;
+    COMPV_CHECK_CODE_RETURN(m_MutexChilds->unlock());
+	
+	COMPV_CHECK_CODE_RETURN(m_SemRun->increment());
+
+	if (tokenId) {
+		*tokenId = newId;
+	}
+
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVAsyncTask11::waitAll(uint64_t u_timeout /* = 86400000 -> 1 day */)
+COMPV_ERROR_CODE CompVAsyncTask11::waitOne(long childId, uint64_t u_timeout /* = 86400000 -> 1 day */)
 {
-    COMPV_DEBUG_INFO_CODE_FOR_TESTING("Deadlock when mt functions are chained");
-    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("We check all tokens");
     COMPV_CHECK_EXP_RETURN(!m_bStarted, COMPV_ERROR_CODE_E_INVALID_STATE);
     uint64_t u_end = (CompVTime::nowMillis() + u_timeout);
-    bool empty;
+	bool running = true;
     do {
-        empty = true;
-        for (int i = 0; i < COMPV_ASYNCTASK11_MAX_TOKEN_COUNT; ++i) {
-            const CompVAsyncToken* token = &m_Tokens[i];
-            if (token->bExecute && u_end > CompVTime::nowMillis()) {
-                m_SemExec->decrement();
-                empty &= !token->bExecute;
-            }
-        }
-    }
-    while (!empty);
-    return COMPV_ERROR_CODE_S_OK;
-}
+		COMPV_CHECK_CODE_RETURN(m_SemExec->decrement());
+		//CompVThread::sleep(0);
+		COMPV_CHECK_CODE_RETURN(m_MutexChilds->lock());
+		running = (m_Childs.find(childId) != m_Childs.end());
+		COMPV_CHECK_CODE_RETURN(m_MutexChilds->unlock());
+	} 
+	while (running && u_end > CompVTime::nowMillis());
 
-COMPV_ERROR_CODE CompVAsyncTask11::waitOne(uint64_t tokenId, uint64_t u_timeout /* = 86400000 -> 1 day */)
-{
-    COMPV_CHECK_EXP_RETURN(!m_bStarted || tokenId >= COMPV_ASYNCTASK11_MAX_TOKEN_COUNT, COMPV_ERROR_CODE_E_INVALID_STATE);
-    CompVAsyncToken* token = &m_Tokens[tokenId];
-    uint64_t u_end = (CompVTime::nowMillis() + u_timeout);
-    while (token->bExecute && u_end > CompVTime::nowMillis()) {
-		m_SemExec->decrement();
-    }
-    if (token->bExecute) {
-        COMPV_DEBUG_WARN("Async token with id = %" PRIu64 " timedout", tokenId);
+    if (running) {
+        COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASSNAME, "Async token with id = %ld timedout", childId);
         return COMPV_ERROR_CODE_E_TIMEDOUT;
     }
     return COMPV_ERROR_CODE_S_OK;
@@ -182,14 +141,14 @@ COMPV_ERROR_CODE CompVAsyncTask11::stop()
     if (m_SemRun) {
         m_SemRun->increment();
     }
-    m_Thread = NULL; // join()
+    m_Thread = nullptr; // join()
     return COMPV_ERROR_CODE_S_OK;
 }
 
-uint64_t CompVAsyncTask11::uniqueTokenId()
+long CompVAsyncTask11::uniqueId()
 {
-    static long uniqueId = 0;
-    return compv_atomic_inc(&uniqueId);
+    static long s_UniqueId = 0;
+    return compv_atomic_inc(&s_UniqueId);
 }
 
 COMPV_ERROR_CODE CompVAsyncTask11::newObj(CompVPtr<CompVAsyncTask11*>* asyncTask)
@@ -210,9 +169,7 @@ void* COMPV_STDCALL CompVAsyncTask11::run(void *pcArg)
     // This is why we use "CompVAsyncTask11*" instead of "CompVPtr<CompVAsyncTask11 *>". We're sure that the object cannot be destroyed while
     // we're running the below code because the destructor() calls stop() and wait the exit
     CompVAsyncTask11* Self_ = static_cast<CompVAsyncTask11*>(pcArg);
-    CompVAsyncToken* pToken_;
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
-    size_t size_;
     compv_thread_id_t threadId = CompVThread::idCurrent();
 
     // Make sure the affinity is defined. This function is called in start() but after thread creation which means we could miss it if this function is called very fast
@@ -220,9 +177,9 @@ void* COMPV_STDCALL CompVAsyncTask11::run(void *pcArg)
     if (Self_->m_iCoreId >= 0) {
         COMPV_CHECK_CODE_BAIL(err_ = Self_->m_Thread->setAffinity(Self_->m_iCoreId));
     }
-    COMPV_DEBUG_INFO("%s(coreId:requested=%d,set=%d, threadId:%p, kThreadSetAffinity:true) - ENTER", __FUNCTION__, Self_->m_iCoreId, CompVThread::getCoreId(), (void*)threadId);
+    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "%s(coreId:requested=%d,set=%d, threadId:%p, kThreadSetAffinity:true) - ENTER", __FUNCTION__, Self_->m_iCoreId, CompVThread::getCoreId(), (void*)threadId);
 #else
-    COMPV_DEBUG_INFO("%s(coreId:requested=%d,set=useless, threadId:%p, kThreadSetAffinity:false) - ENTER", __FUNCTION__, Self_->m_iCoreId, (void*)threadId);
+    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "%s(coreId:requested=%d,set=useless, threadId:%p, kThreadSetAffinity:false) - ENTER", __FUNCTION__, Self_->m_iCoreId, (void*)threadId);
 #endif
 
     while (Self_->m_bStarted) {
@@ -230,19 +187,29 @@ void* COMPV_STDCALL CompVAsyncTask11::run(void *pcArg)
         if (!Self_->m_bStarted) {
             break;
         }
-        for (size_ = 0; size_ < COMPV_ASYNCTASK11_MAX_TOKEN_COUNT; ++size_) {
-            pToken_ = &Self_->m_Tokens[size_];
-            if (pToken_->bExecute) {
-                pToken_->fFunc();
-                pToken_->bExecute = false;
-                COMPV_CHECK_CODE_BAIL(err_ = Self_->m_SemExec->increment());
-            }
-        }
+		
+		COMPV_CHECK_CODE_BAIL(err_ = Self_->m_MutexChilds->lock());
+		std::function<void()> ex_fun = nullptr;
+		long ex_id = 0;
+		std::map<long, std::function<void()> >::iterator begin = Self_->m_Childs.begin();
+		if (begin != Self_->m_Childs.end()) {
+			ex_fun = begin->second;
+			ex_id = begin->first;
+		}
+		COMPV_CHECK_CODE_BAIL(err_ = Self_->m_MutexChilds->unlock());
+
+		if (ex_fun) {
+			ex_fun();
+			COMPV_CHECK_CODE_BAIL(err_ = Self_->m_MutexChilds->lock());
+			Self_->m_Childs.erase(ex_id);
+			COMPV_CHECK_CODE_BAIL(err_ = Self_->m_MutexChilds->unlock());
+			COMPV_CHECK_CODE_BAIL(err_ = Self_->m_SemExec->increment());
+		}
     }
 
 bail:
-    COMPV_DEBUG_INFO("%s(threadId:%p) - EXIT", __FUNCTION__, (void*)threadId);
-    return NULL;
+    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "%s(threadId:%p) - EXIT", __FUNCTION__, reinterpret_cast<void*>(threadId));
+    return nullptr;
 }
 
 COMPV_NAMESPACE_END()
