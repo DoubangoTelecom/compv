@@ -118,7 +118,7 @@ struct CompVConnectedComponentLmser {
 	}
 
 	// MT-friendly
-	void computeFinalPoints(CompVConnectedComponentLabelingRegionMser& cc_final, size_t& index, const int16_t& stride, const float& stride_scale) const {
+	void computeFinalPoints(CompVConnectedComponentLabelingRegionMser& cc_final, size_t& index, const int& stride, const float& stride_scale) const {
 #if 0 // Non-recurssive call
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Recurssive call faster");
 		CompVConnectedComponentPoints& points_final = cc_final.points;

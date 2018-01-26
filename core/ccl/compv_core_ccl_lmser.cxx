@@ -166,15 +166,15 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLMSER::process(const CompVMatPtr
 	COMPV_CHECK_CODE_RETURN(result_->reset());
 	CompVConnectedComponentLabelingRegionMserVector& vecRegions_final = result_->vecRegions();
 
-	const int16_t width = static_cast<int16_t>(ptr8uImage->cols());
-	const int16_t height = static_cast<int16_t>(ptr8uImage->rows());
-	const int16_t stride = static_cast<int16_t>(ptr8uImage->stride());
+	const int width = static_cast<int>(ptr8uImage->cols());
+	const int height = static_cast<int>(ptr8uImage->rows());
+	const int stride = static_cast<int>(ptr8uImage->stride());
 
 	const bool b8Connectivity = (connectivity() == 8);
 	const int maxEdges = b8Connectivity
 		? 8
 		: 4;
-	int16_t LMSER_EDGES_OFFSETS[8];
+	int LMSER_EDGES_OFFSETS[8];
 	if (b8Connectivity) {
 		//!\\ Keep this order because it's more cache-friendly
 		LMSER_EDGES_OFFSETS[0] = 1; // RIGHT
@@ -220,8 +220,8 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLMSER::process(const CompVMatPtr
 	uint8_t* ptr8uAccessibleRef = ptr8uAccessible->ptr<uint8_t>() + accessibleWidth;
 	auto funcPtrSetAccessibility = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
 		uint8_t* mt_ptr8uAccessibleRef = ptr8uAccessibleRef + (ystart * stride);
-		const int16_t width64_ = (width & -8);
-		int16_t x;
+		const size_t width64_ = (width & -8);
+		size_t x;
 		for (size_t y = ystart; y < yend; ++y) {
 			for (x = 0; x < width64_; x += 8) {
 				*reinterpret_cast<uint64_t*>(&mt_ptr8uAccessibleRef[x]) = 0ull;
