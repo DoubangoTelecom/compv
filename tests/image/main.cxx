@@ -11,7 +11,7 @@ using namespace compv;
 #define TEST_FEATURE_ORB			0
 #define TEST_PATCH_MOMENTS			0
 #define TEST_CCL_BINAR				0
-#define TEST_CCL_MSER				0
+#define TEST_CCL_MSER				1
 #define TEST_SOBEL					0
 #define TEST_CANNY					0
 #define TEST_ADAPT_THRESH			0
@@ -20,7 +20,7 @@ using namespace compv;
 #define TEST_HOUGHKHT				0
 #define TEST_BRUTEFORCE				0
 #define TEST_SPLIT3					0
-#define TEST_BITS					1
+#define TEST_BITS					0
 
 /* Entry point function */
 compv_main()

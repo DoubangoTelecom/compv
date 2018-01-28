@@ -26,6 +26,10 @@
 #	include <memory>
 #endif
 
+#if !defined (COMPV_PARALLEL_ASCTASK11_SPIN)
+#	define COMPV_PARALLEL_ASCTASK11_SPIN 0
+#endif /* COMPV_PARALLEL_ASCTASK11_SPIN */
+
 COMPV_NAMESPACE_BEGIN()
 
 typedef std::pair<long/*TaskId*/, long/*ChildId*/> CompVAsyncTask11Id;
@@ -93,10 +97,14 @@ private:
     CompVThreadPtr m_Thread;
 #if COMPV_PARALLEL_SEMA11
     std::shared_ptr<CompVSemaphore11> m_SemRun;
+#	if !COMPV_PARALLEL_ASCTASK11_SPIN
     std::shared_ptr<CompVSemaphore11> m_SemExec;
+#	endif /* !COMPV_PARALLEL_ASCTASK11_SPIN */
 #else
     CompVSemaphorePtr m_SemRun;
+#	if !COMPV_PARALLEL_ASCTASK11_SPIN
 	CompVSemaphorePtr m_SemExec;
+#	endif /* !COMPV_PARALLEL_ASCTASK11_SPIN */
 #endif
     CompVMutexPtr m_MutexChilds;
 	std::map<long, std::function<void()> > m_Childs;

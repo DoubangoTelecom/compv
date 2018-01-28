@@ -11,6 +11,9 @@
 #include "compv/base/compv_cpu.h"
 #include "compv/base/compv_mem.h"
 #include "compv/base/compv_debug.h"
+#if COMPV_PARALLEL_ASCTASK11_SPIN
+#	include <thread> /* std::this_thread::yield() */
+#endif /* COMPV_PARALLEL_ASCTASK11_SPIN */
 
 #define COMPV_THIS_CLASSNAME "CompVAsyncTask11"
 
@@ -20,7 +23,9 @@ CompVAsyncTask11::CompVAsyncTask11()
     : m_bStarted(false)
     , m_iCoreId(-1)
 {
-
+#if COMPV_PARALLEL_ASCTASK11_SPIN
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING("SpinWait not fully tested. Should use semaphore");
+#endif /* COMPV_PARALLEL_ASCTASK11_SPIN */
 }
 
 CompVAsyncTask11::~CompVAsyncTask11()
@@ -45,9 +50,11 @@ COMPV_ERROR_CODE CompVAsyncTask11::start()
     if (!m_SemRun) {
         COMPV_CHECK_CODE_RETURN(CompVSemaphore::newObj(&m_SemRun));
     }
+#	if !COMPV_PARALLEL_ASCTASK11_SPIN
     if (!m_SemExec) {
         COMPV_CHECK_CODE_RETURN(CompVSemaphore::newObj(&m_SemExec));
     }
+#	endif /* !COMPV_PARALLEL_ASCTASK11_SPIN */
 #endif
     if (!m_MutexChilds) {
         COMPV_CHECK_CODE_RETURN(CompVMutex::newObj(&m_MutexChilds));
@@ -116,9 +123,11 @@ COMPV_ERROR_CODE CompVAsyncTask11::waitOne(long childId, uint64_t u_timeout /* =
     uint64_t u_end = (CompVTime::nowMillis() + u_timeout);
 	bool running;
     do {
+#if COMPV_PARALLEL_ASCTASK11_SPIN
+		std::this_thread::yield();
+#else
 		COMPV_CHECK_CODE_RETURN(m_SemExec->decrement());
-		//CompVThread::sleep(0);
-		//_mm_pause();
+#endif
 		COMPV_CHECK_CODE_RETURN(m_MutexChilds->lock());
 		running = (m_Childs.find(childId) != m_Childs.end());
 		COMPV_CHECK_CODE_RETURN(m_MutexChilds->unlock());
@@ -135,10 +144,11 @@ COMPV_ERROR_CODE CompVAsyncTask11::waitOne(long childId, uint64_t u_timeout /* =
 COMPV_ERROR_CODE CompVAsyncTask11::stop()
 {
     m_bStarted = false;
-
+#if !COMPV_PARALLEL_ASCTASK11_SPIN
     if (m_SemExec) {
         m_SemExec->increment();
     }
+#endif /* COMPV_PARALLEL_ASCTASK11_SPIN */
     if (m_SemRun) {
         m_SemRun->increment();
     }
@@ -204,7 +214,9 @@ void* COMPV_STDCALL CompVAsyncTask11::run(void *pcArg)
 			COMPV_CHECK_CODE_BAIL(err_ = Self_->m_MutexChilds->lock());
 			Self_->m_Childs.erase(ex_id);
 			COMPV_CHECK_CODE_BAIL(err_ = Self_->m_MutexChilds->unlock());
+#if !COMPV_PARALLEL_ASCTASK11_SPIN
 			COMPV_CHECK_CODE_BAIL(err_ = Self_->m_SemExec->increment());
+#endif /* COMPV_PARALLEL_ASCTASK11_SPIN */
 		}
     }
 
