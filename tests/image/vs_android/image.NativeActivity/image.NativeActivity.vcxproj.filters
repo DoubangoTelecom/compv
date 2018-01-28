@@ -18,6 +18,7 @@
     <ClCompile Include="..\..\split.cxx" />
     <ClCompile Include="..\..\ccl_binar.cxx" />
     <ClCompile Include="..\..\ccl_mser.cxx" />
+    <ClCompile Include="..\..\bits.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\tests_common.h" />

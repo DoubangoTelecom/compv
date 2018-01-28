@@ -57,14 +57,14 @@ COMPV_ERROR_CODE unittest_bits()
 		switch (test->op) {
 		case BITS_OP_AND:
 			COMPV_CHECK_CODE_RETURN(__build_mat(&imageOp, test));
-			COMPV_CHECK_CODE_RETURN(CompVBits::and(imageIn, imageOp, &imageOut));
+			COMPV_CHECK_CODE_RETURN(CompVBits::logical_and(imageIn, imageOp, &imageOut));
 			break;
 		case BITS_OP_NOT_AND:
 			COMPV_CHECK_CODE_RETURN(__build_mat(&imageOp, test));
-			COMPV_CHECK_CODE_RETURN(CompVBits::not_and(imageIn, imageOp, &imageOut));
+			COMPV_CHECK_CODE_RETURN(CompVBits::logical_not_and(imageIn, imageOp, &imageOut));
 			break;
 		case BITS_OP_NOT:
-			COMPV_CHECK_CODE_RETURN(CompVBits::not(imageIn, &imageOut));
+			COMPV_CHECK_CODE_RETURN(CompVBits::logical_not(imageIn, &imageOut));
 			break;
 		default:
 			COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED, "Op not implemented");

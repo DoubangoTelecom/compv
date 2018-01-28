@@ -11,7 +11,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-void CompVBitsAnd_8u_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* Aptr, COMPV_ALIGNED(SSE) const uint8_t* Bptr, uint8_t* Rptr, compv_uscalar_t width, COMPV_ALIGNED(SSE) compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t Astride, COMPV_ALIGNED(SSE) compv_uscalar_t Bstride, COMPV_ALIGNED(SSE) compv_uscalar_t Rstride)
+void CompVBitsLogicalAnd_8u_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* Aptr, COMPV_ALIGNED(SSE) const uint8_t* Bptr, uint8_t* Rptr, compv_uscalar_t width, COMPV_ALIGNED(SSE) compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t Astride, COMPV_ALIGNED(SSE) compv_uscalar_t Bstride, COMPV_ALIGNED(SSE) compv_uscalar_t Rstride)
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
 	compv_uscalar_t width64 = (width & -64);
@@ -49,7 +49,7 @@ void CompVBitsAnd_8u_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* Aptr, COMPV_A
 	}
 }
 
-void CompVBitsNotAnd_8u_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* Aptr, COMPV_ALIGNED(SSE) const uint8_t* Bptr, uint8_t* Rptr, compv_uscalar_t width, COMPV_ALIGNED(SSE) compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t Astride, COMPV_ALIGNED(SSE) compv_uscalar_t Bstride, COMPV_ALIGNED(SSE) compv_uscalar_t Rstride)
+void CompVBitsLogicalNotAnd_8u_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* Aptr, COMPV_ALIGNED(SSE) const uint8_t* Bptr, uint8_t* Rptr, compv_uscalar_t width, COMPV_ALIGNED(SSE) compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t Astride, COMPV_ALIGNED(SSE) compv_uscalar_t Bstride, COMPV_ALIGNED(SSE) compv_uscalar_t Rstride)
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
 	compv_uscalar_t width64 = (width & -64);
@@ -87,7 +87,7 @@ void CompVBitsNotAnd_8u_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* Aptr, COMP
 	}
 }
 
-void CompVBitsNot_8u_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* Aptr, COMPV_ALIGNED(SSE) uint8_t* Rptr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t Astride, COMPV_ALIGNED(SSE) compv_uscalar_t Rstride)
+void CompVBitsLogicalNot_8u_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* Aptr, COMPV_ALIGNED(SSE) uint8_t* Rptr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t Astride, COMPV_ALIGNED(SSE) compv_uscalar_t Rstride)
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
 	compv_uscalar_t width64 = (width & -64);

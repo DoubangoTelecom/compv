@@ -30,5 +30,6 @@
     <ClCompile Include="..\..\math_morph.cxx" />
     <ClCompile Include="..\..\ccl_binar.cxx" />
     <ClCompile Include="..\..\ccl_mser.cxx" />
+    <ClCompile Include="..\..\bits.cxx" />
   </ItemGroup>
 </Project>

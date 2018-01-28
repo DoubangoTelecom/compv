@@ -12,9 +12,9 @@
 
 COMPV_YASM_DEFAULT_REL
 
-global sym(CompVBitsAnd_8u_Asm_X64_SSE2)
-global sym(CompVBitsNotAnd_8u_Asm_X64_SSE2)
-global sym(CompVBitsNot_8u_Asm_X64_SSE2)
+global sym(CompVBitsLogicalAnd_8u_Asm_X64_SSE2)
+global sym(CompVBitsLogicalNotAnd_8u_Asm_X64_SSE2)
+global sym(CompVBitsLogicalNot_8u_Asm_X64_SSE2)
 
 section .data
 
@@ -29,7 +29,7 @@ section .text
 ; arg(5) -> COMPV_ALIGNED(SSE) compv_uscalar_t Astride
 ; arg(6) -> COMPV_ALIGNED(SSE) compv_uscalar_t Bstride
 ; arg(7) -> COMPV_ALIGNED(SSE) compv_uscalar_t Rstride
-sym(CompVBitsAnd_8u_Asm_X64_SSE2):
+sym(CompVBitsLogicalAnd_8u_Asm_X64_SSE2):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 8
@@ -68,6 +68,8 @@ sym(CompVBitsAnd_8u_Asm_X64_SSE2):
 		; for (i = 0; i < width64; i += 64)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		xor i, i
+		test width64, width64
+		je .LoopWidth16
 		.LoopWidth64:
 			movdqa xmm0, [Aptr + (i + 0)*COMPV_YASM_UINT8_SZ_BYTES]
 			movdqa xmm1, [Aptr + (i + 16)*COMPV_YASM_UINT8_SZ_BYTES]
@@ -136,7 +138,7 @@ sym(CompVBitsAnd_8u_Asm_X64_SSE2):
 ; arg(5) -> COMPV_ALIGNED(SSE) compv_uscalar_t Astride
 ; arg(6) -> COMPV_ALIGNED(SSE) compv_uscalar_t Bstride
 ; arg(7) -> COMPV_ALIGNED(SSE) compv_uscalar_t Rstride
-sym(CompVBitsNotAnd_8u_Asm_X64_SSE2):
+sym(CompVBitsLogicalNotAnd_8u_Asm_X64_SSE2):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 8
@@ -175,6 +177,8 @@ sym(CompVBitsNotAnd_8u_Asm_X64_SSE2):
 		; for (i = 0; i < width64; i += 64)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		xor i, i
+		test width64, width64
+		je .LoopWidth16
 		.LoopWidth64:
 			movdqa xmm0, [Aptr + (i + 0)*COMPV_YASM_UINT8_SZ_BYTES]
 			movdqa xmm1, [Aptr + (i + 16)*COMPV_YASM_UINT8_SZ_BYTES]
@@ -240,7 +244,7 @@ sym(CompVBitsNotAnd_8u_Asm_X64_SSE2):
 ; arg(3) -> COMPV_ALIGNED(SSE) compv_uscalar_t height
 ; arg(4) -> COMPV_ALIGNED(SSE) compv_uscalar_t Astride
 ; arg(5) -> COMPV_ALIGNED(SSE) compv_uscalar_t Rstride
-sym(CompVBitsNot_8u_Asm_X64_SSE2):
+sym(CompVBitsLogicalNot_8u_Asm_X64_SSE2):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 6
@@ -275,6 +279,8 @@ sym(CompVBitsNot_8u_Asm_X64_SSE2):
 		; for (i = 0; i < width64; i += 64)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		xor i, i
+		test width64, width64
+		je .LoopWidth16
 		.LoopWidth64:
 			movdqa xmm0, [Aptr + (i + 0)*COMPV_YASM_UINT8_SZ_BYTES]
 			movdqa xmm1, [Aptr + (i + 16)*COMPV_YASM_UINT8_SZ_BYTES]

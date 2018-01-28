@@ -18,10 +18,6 @@
 #define BITS_OP_NOT_AND					1
 #define BITS_OP_NOT						2
 
-
-
-
-
 #define LOOP_COUNT			1
 #define FILE_NAME			FILE_NAME_EQUIRECTANGULAR
 #define BITS_OP				BITS_OP_NOT_AND
@@ -86,17 +82,17 @@ COMPV_ERROR_CODE bits_ops()
 	const uint64_t timeStart = CompVTime::nowMillis();
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
 #if BITS_OP == BITS_OP_AND
-		COMPV_CHECK_CODE_RETURN(CompVBits::and(imageIn, imageOp, &imageOut));
+		COMPV_CHECK_CODE_RETURN(CompVBits::logical_and(imageIn, imageOp, &imageOut));
 #elif BITS_OP == BITS_OP_NOT_AND
-		COMPV_CHECK_CODE_RETURN(CompVBits::not_and(imageIn, imageOp, &imageOut));
+		COMPV_CHECK_CODE_RETURN(CompVBits::logical_not_and(imageIn, imageOp, &imageOut));
 #elif BITS_OP == BITS_OP_NOT
-		COMPV_CHECK_CODE_RETURN(CompVBits::not(imageIn, &imageOut));
+		COMPV_CHECK_CODE_RETURN(CompVBits::logical_not(imageIn, &imageOut));
 #else 
 #error "Not implemented"
 #endif
 	}
 	const uint64_t timeEnd = CompVTime::nowMillis();
-	COMPV_DEBUG_INFO("Elapsed time (bits_ops()) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
+	COMPV_DEBUG_INFO("Elapsed time (bits_ops(%d)) = [[[ %" PRIu64 " millis ]]]", BITS_OP, (timeEnd - timeStart));
 
 #if COMPV_OS_WINDOWS && 0
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Do not write the file to the hd");
