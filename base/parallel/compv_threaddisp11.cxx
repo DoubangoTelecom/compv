@@ -61,7 +61,7 @@ COMPV_ERROR_CODE CompVThreadDispatcher11::invoke(std::function<void()> fFunc, Co
 	long childId_ = 0;
 	CompVAsyncTask11Ptr  asyncTask = m_ppTasks[taskId_];
 	COMPV_CHECK_EXP_RETURN(!asyncTask, COMPV_ERROR_CODE_E_INVALID_STATE);
-	COMPV_CHECK_EXP_RETURN(isMotherOfTheCurrentThread(), COMPV_ERROR_CODE_E_RECURSIVE_CALL); // Do not allow forking from the same dispatcher
+	COMPV_CHECK_EXP_RETURN(isMotherOfTheCurrentThread(), COMPV_ERROR_CODE_E_THREAD_FORKING); // Do not allow forking from the same dispatcher
 	COMPV_CHECK_CODE_RETURN(asyncTask->invoke(fFunc, &childId_));
 	taskIds.push_back(std::make_pair(taskId_, childId_));
 	return COMPV_ERROR_CODE_S_OK;

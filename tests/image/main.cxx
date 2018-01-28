@@ -11,7 +11,7 @@ using namespace compv;
 #define TEST_FEATURE_ORB			0
 #define TEST_PATCH_MOMENTS			0
 #define TEST_CCL_BINAR				0
-#define TEST_CCL_MSER				1
+#define TEST_CCL_MSER				0
 #define TEST_SOBEL					0
 #define TEST_CANNY					0
 #define TEST_ADAPT_THRESH			0
@@ -20,6 +20,7 @@ using namespace compv;
 #define TEST_HOUGHKHT				0
 #define TEST_BRUTEFORCE				0
 #define TEST_SPLIT3					0
+#define TEST_BITS					1
 
 /* Entry point function */
 compv_main()
@@ -97,6 +98,11 @@ compv_main()
 #if TEST_SPLIT3
 		extern COMPV_ERROR_CODE split3();
 		COMPV_CHECK_CODE_BAIL(err = split3(), TAG_TEST_IMAGE "Split3 test failed");
+#endif
+
+#if TEST_BITS
+		extern COMPV_ERROR_CODE bits_ops();
+		COMPV_CHECK_CODE_BAIL(err = bits_ops(), TAG_TEST_IMAGE "Bits ops test failed");
 #endif
 
 	bail:

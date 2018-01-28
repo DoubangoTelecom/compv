@@ -14,7 +14,8 @@ using namespace compv;
 #define UNITTEST_HOUGHSHT						0
 #define UNITTEST_HOUGHKHT						0
 #define UNITTEST_CCL_BINAR						0
-#define UNITTEST_CCL_MSER						1
+#define UNITTEST_CCL_MSER						0
+#define UNITTEST_CCL_BITS						1
 
 #define UNITTEST_FEATURE_FAST					0
 #define UNITTEST_CHROMA_CONV					0
@@ -143,6 +144,12 @@ compv_main()
 								extern COMPV_ERROR_CODE unittest_ccl_mser();
 								COMPV_CHECK_CODE_BAIL(err = unittest_ccl_mser(), "CCL(MSER) unittest failed");
 #endif
+
+#if UNITTEST_CCL_BITS || !defined(COMPV_TEST_LOCAL)
+								extern COMPV_ERROR_CODE unittest_bits();
+								COMPV_CHECK_CODE_BAIL(err = unittest_bits(), "Bits unittest failed");
+#endif
+								
 								
 								
 #if UNITTEST_FEATURE_FAST || !defined(COMPV_TEST_LOCAL)

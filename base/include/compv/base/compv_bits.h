@@ -9,6 +9,7 @@
 
 #include "compv/base/compv_config.h"
 #include "compv/base/compv_common.h"
+#include "compv/base/compv_mat.h"
 
 COMPV_EXTERNC_BEGIN()
 
@@ -21,6 +22,9 @@ COMPV_NAMESPACE_BEGIN()
 class COMPV_BASE_API CompVBits
 {
 public:
+	static COMPV_ERROR_CODE and(const CompVMatPtr& A, const CompVMatPtr& B, CompVMatPtrPtr R);
+	static COMPV_ERROR_CODE not_and(const CompVMatPtr& A, const CompVMatPtr& B, CompVMatPtrPtr R);
+	static COMPV_ERROR_CODE not(const CompVMatPtr& A, CompVMatPtrPtr R);
 };
 
 #if defined(_MSC_VER)

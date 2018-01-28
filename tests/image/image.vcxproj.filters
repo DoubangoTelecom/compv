@@ -62,6 +62,9 @@
     <ClCompile Include="ccl_mser.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="bits.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\tests_common.h">

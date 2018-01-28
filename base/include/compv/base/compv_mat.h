@@ -203,25 +203,14 @@ public:
 		return false;
 	}
 
-	COMPV_ERROR_CODE clone(CompVMatPtrPtr clone)const {
+	COMPV_ERROR_CODE clone(CompVMatPtrPtr clone) const {
 		COMPV_CHECK_EXP_RETURN(!clone, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 		CompVMatPtr clone_ = *clone;
-		if (!clone_) {
-			clone_ = new CompVMat();
-			COMPV_CHECK_EXP_RETURN(!clone_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-			*clone = clone_;
-		}
-		COMPV_CHECK_CODE_RETURN(clone_->__alloc_priv(this->rows(), this->cols(), this->alignment(), this->stride(), this->elmtInBytes(), this->type(), this->subType()));
-		const uint8_t* src = this->ptr<const uint8_t>();
-		uint8_t* dst = clone_->ptr<uint8_t>();
-		const size_t rowInBytes = this->rowInBytes();
-		const size_t strideInBytes = this->strideInBytes();
-		const size_t rows = this->rows();
-		for (size_t row = 0; row < rows; ++row) {
-			CompVMem::copy(dst, src, rowInBytes);
-			dst += strideInBytes;
-			src += strideInBytes;
-		}
+		const CompVMatPtr& model = const_cast<CompVMat*>(this);
+		COMPV_CHECK_CODE_RETURN(CompVMat::newObj(&clone_, model));
+		COMPV_CHECK_EXP_RETURN(this->dataSizeInBytes() != clone_->dataSizeInBytes(), COMPV_ERROR_CODE_E_INVALID_CALL);
+		COMPV_CHECK_CODE_RETURN(CompVMem::copy(clone_->ptr<void>(), this->ptr<const void>(), this->dataSizeInBytes()));
+		*clone = clone_;
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
@@ -379,6 +368,18 @@ public:
 	template<class elmType = uint8_t, COMPV_MAT_TYPE dataType = COMPV_MAT_TYPE_RAW, COMPV_SUBTYPE dataSubType = COMPV_SUBTYPE_RAW_OPAQUE>
 	static COMPV_ERROR_CODE newObjAligned(CompVMatPtrPtr mat, size_t rows, size_t cols, size_t stride = 0) {
 		return CompVMat::newObj<elmType, dataType, dataSubType>(mat, rows, cols, CompVMem::bestAlignment(), stride);
+	}
+
+	static COMPV_ERROR_CODE newObj(CompVMatPtrPtr mat, const CompVMatPtr& model) {
+		COMPV_CHECK_EXP_RETURN(!mat || !model, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		CompVMatPtr mat_ = *mat;
+		if (!mat_) {
+			mat_ = new CompVMat();
+			COMPV_CHECK_EXP_RETURN(!mat_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+		}
+		COMPV_CHECK_CODE_RETURN(mat_->__alloc_priv(model->rows(), model->cols(), model->alignment(), model->stride(), model->elmtInBytes(), model->type(), model->subType()));
+		*mat = mat_;
+		return COMPV_ERROR_CODE_S_OK;
 	}
 
 protected:

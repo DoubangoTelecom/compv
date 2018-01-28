@@ -159,6 +159,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\tests\tests_common.cxx" />
+    <ClCompile Include="bits.cxx" />
     <ClCompile Include="canny.cxx" />
     <ClCompile Include="ccl_binar.cxx" />
     <ClCompile Include="ccl_mser.cxx" />
