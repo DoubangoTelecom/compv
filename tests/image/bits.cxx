@@ -24,7 +24,7 @@
 
 #define LOOP_COUNT			1
 #define FILE_NAME			FILE_NAME_EQUIRECTANGULAR
-#define BITS_OP				BITS_OP_NOT
+#define BITS_OP				BITS_OP_NOT_AND
 
 static const struct compv_unittest_bits {
 	const char* filename;

@@ -5,7 +5,10 @@
 * WebSite: http://compv.org
 */
 #include "compv/base/compv_bits.h"
+#include "compv/base/compv_cpu.h"
 #include "compv/base/parallel/compv_parallel.h"
+
+#include "compv/base/intrin/x86/compv_bits_intrin_sse2.h"
 
 #define COMPV_BITS_AND_SAMPLES_PER_THREAD		(100 * 100)
 #define COMPV_BITS_NOT_AND_SAMPLES_PER_THREAD	(100 * 100)
@@ -26,8 +29,14 @@ COMPV_BASE_API compv::compv_uscalar_t kPopcnt256[] = {
 
 COMPV_NAMESPACE_BEGIN()
 
-static void CompVBitsAnd_8u_C(const uint8_t* Aptr, const uint8_t* BPtr, uint8_t* Rptr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t Astride, compv_uscalar_t Bstride, compv_uscalar_t Rstride);
-static void CompVBitsNotAnd_8u_C(const uint8_t* Aptr, const uint8_t* BPtr, uint8_t* Rptr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t Astride, compv_uscalar_t Bstride, compv_uscalar_t Rstride);
+#if COMPV_ASM && COMPV_ARCH_X64
+COMPV_EXTERNC void CompVBitsAnd_8u_Asm_X64_SSE2(COMPV_ALIGNED(SSE) const uint8_t* Aptr, COMPV_ALIGNED(SSE) const uint8_t* Bptr, uint8_t* Rptr, compv_uscalar_t width, COMPV_ALIGNED(SSE) compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t Astride, COMPV_ALIGNED(SSE) compv_uscalar_t Bstride, COMPV_ALIGNED(SSE) compv_uscalar_t Rstride);
+COMPV_EXTERNC void CompVBitsNotAnd_8u_Asm_X64_SSE2(COMPV_ALIGNED(SSE) const uint8_t* Aptr, COMPV_ALIGNED(SSE) const uint8_t* Bptr, uint8_t* Rptr, compv_uscalar_t width, COMPV_ALIGNED(SSE) compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t Astride, COMPV_ALIGNED(SSE) compv_uscalar_t Bstride, COMPV_ALIGNED(SSE) compv_uscalar_t Rstride);
+COMPV_EXTERNC void CompVBitsNot_8u_Asm_X64_SSE2(COMPV_ALIGNED(SSE) const uint8_t* Aptr, COMPV_ALIGNED(SSE) uint8_t* Rptr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t Astride, COMPV_ALIGNED(SSE) compv_uscalar_t Rstride);
+#endif /* COMPV_ARCH_X64 */
+
+static void CompVBitsAnd_8u_C(const uint8_t* Aptr, const uint8_t* Bptr, uint8_t* Rptr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t Astride, compv_uscalar_t Bstride, compv_uscalar_t Rstride);
+static void CompVBitsNotAnd_8u_C(const uint8_t* Aptr, const uint8_t* Bptr, uint8_t* Rptr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t Astride, compv_uscalar_t Bstride, compv_uscalar_t Rstride);
 static void CompVBitsNot_8u_C(const uint8_t* Aptr, uint8_t* Rptr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t Astride, compv_uscalar_t Rstride);
 
 // R = (A & B)
@@ -40,8 +49,20 @@ COMPV_ERROR_CODE CompVBits::and(const CompVMatPtr& A, const CompVMatPtr& B, Comp
 		COMPV_CHECK_CODE_RETURN(CompVMat::newObj(&R_, A));
 	}
 
-	void(*CompVBitsAnd_8u)(const uint8_t* Aptr, const uint8_t* BPtr, uint8_t* Rptr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t Astride, compv_uscalar_t Bstride, compv_uscalar_t Rstride)
+	void(*CompVBitsAnd_8u)(const uint8_t* Aptr, const uint8_t* Bptr, uint8_t* Rptr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t Astride, compv_uscalar_t Bstride, compv_uscalar_t Rstride)
 		= CompVBitsAnd_8u_C;
+#if COMPV_ARCH_X86
+	if (CompVCpu::isEnabled(kCpuFlagSSE2) && A->isAlignedSSE() && B->isAlignedSSE() && R_->isAlignedSSE()) {
+		COMPV_EXEC_IFDEF_INTRIN_X86(CompVBitsAnd_8u = CompVBitsAnd_8u_Intrin_SSE2);
+		COMPV_EXEC_IFDEF_ASM_X64(CompVBitsAnd_8u = CompVBitsAnd_8u_Asm_X64_SSE2);
+	}
+#elif COMPV_ARCH_ARM
+	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && A->isAlignedNEON() && B->isAlignedNEON() && R_->isAlignedNEON()) {
+		//COMPV_EXEC_IFDEF_INTRIN_ARM(CompVBitsAnd_8u = CompVBitsAnd_8u_Intrin_NEON);
+		//COMPV_EXEC_IFDEF_ASM_ARM32(CompVBitsAnd_8u = CompVBitsAnd_8u_Asm_NEON32);
+		//COMPV_EXEC_IFDEF_ASM_ARM64(CompVBitsAnd_8u = CompVBitsAnd_8u_Asm_NEON64);
+	}
+#endif
 
 	int planeId = 0;
 	auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
@@ -77,11 +98,22 @@ COMPV_ERROR_CODE CompVBits::not_and(const CompVMatPtr& A, const CompVMatPtr& B, 
 		COMPV_CHECK_CODE_RETURN(CompVMat::newObj(&R_, A));
 	}
 
-	// TODO(dmi): SSE -> _mm_andnot_si128
 	// TODO(dmi): NEON -> vbic_u8
 
-	void(*CompVBitsNotAnd_8u)(const uint8_t* Aptr, const uint8_t* BPtr, uint8_t* Rptr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t Astride, compv_uscalar_t Bstride, compv_uscalar_t Rstride)
+	void(*CompVBitsNotAnd_8u)(const uint8_t* Aptr, const uint8_t* Bptr, uint8_t* Rptr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t Astride, compv_uscalar_t Bstride, compv_uscalar_t Rstride)
 		= CompVBitsNotAnd_8u_C;
+#if COMPV_ARCH_X86
+	if (CompVCpu::isEnabled(kCpuFlagSSE2) && A->isAlignedSSE() && B->isAlignedSSE() && R_->isAlignedSSE()) {
+		COMPV_EXEC_IFDEF_INTRIN_X86(CompVBitsNotAnd_8u = CompVBitsNotAnd_8u_Intrin_SSE2);
+		COMPV_EXEC_IFDEF_ASM_X64(CompVBitsNotAnd_8u = CompVBitsNotAnd_8u_Asm_X64_SSE2);
+	}
+#elif COMPV_ARCH_ARM
+	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && A->isAlignedNEON() && B->isAlignedNEON() && R_->isAlignedNEON()) {
+		//COMPV_EXEC_IFDEF_INTRIN_ARM(CompVBitsNotAnd_8u = CompVBitsNotAnd_8u_Intrin_NEON);
+		//COMPV_EXEC_IFDEF_ASM_ARM32(CompVBitsNotAnd_8u = CompVBitsNotAnd_8u_Asm_NEON32);
+		//COMPV_EXEC_IFDEF_ASM_ARM64(CompVBitsNotAnd_8u = CompVBitsNotAnd_8u_Asm_NEON64);
+	}
+#endif
 
 	int planeId = 0;
 	auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
@@ -117,6 +149,18 @@ COMPV_ERROR_CODE CompVBits::not(const CompVMatPtr& A, CompVMatPtrPtr R)
 
 	void(*CompVBitsNot_8u)(const uint8_t* Aptr, uint8_t* Rptr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t Astride, compv_uscalar_t Rstride)
 		= CompVBitsNot_8u_C;
+#if COMPV_ARCH_X86
+	if (CompVCpu::isEnabled(kCpuFlagSSE2) && A->isAlignedSSE() && R_->isAlignedSSE()) {
+		COMPV_EXEC_IFDEF_INTRIN_X86(CompVBitsNot_8u = CompVBitsNot_8u_Intrin_SSE2);
+		COMPV_EXEC_IFDEF_ASM_X64(CompVBitsNot_8u = CompVBitsNot_8u_Asm_X64_SSE2);
+	}
+#elif COMPV_ARCH_ARM
+	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && A->isAlignedNEON() && R_->isAlignedNEON()) {
+		//COMPV_EXEC_IFDEF_INTRIN_ARM(CompVBitsNot_8u = CompVBitsNot_8u_Intrin_NEON);
+		//COMPV_EXEC_IFDEF_ASM_ARM32(CompVBitsNot_8u = CompVBitsNot_8u_Asm_NEON32);
+		//COMPV_EXEC_IFDEF_ASM_ARM64(CompVBitsNot_8u = CompVBitsNot_8u_Asm_NEON64);
+	}
+#endif
 
 	int planeId = 0;
 	auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
@@ -142,29 +186,29 @@ COMPV_ERROR_CODE CompVBits::not(const CompVMatPtr& A, CompVMatPtrPtr R)
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-static void CompVBitsAnd_8u_C(const uint8_t* Aptr, const uint8_t* BPtr, uint8_t* Rptr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t Astride, compv_uscalar_t Bstride, compv_uscalar_t Rstride)
+static void CompVBitsAnd_8u_C(const uint8_t* Aptr, const uint8_t* Bptr, uint8_t* Rptr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t Astride, compv_uscalar_t Bstride, compv_uscalar_t Rstride)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
 	for (compv_uscalar_t j = 0; j < height; ++j) {
 		for (compv_uscalar_t i = 0; i < width; ++i) {
-			Rptr[i] = (Aptr[i] & BPtr[i]);
+			Rptr[i] = (Aptr[i] & Bptr[i]);
 		}
 		Rptr += Rstride;
 		Aptr += Astride;
-		BPtr += Bstride;
+		Bptr += Bstride;
 	}
 }
 
-static void CompVBitsNotAnd_8u_C(const uint8_t* Aptr, const uint8_t* BPtr, uint8_t* Rptr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t Astride, compv_uscalar_t Bstride, compv_uscalar_t Rstride)
+static void CompVBitsNotAnd_8u_C(const uint8_t* Aptr, const uint8_t* Bptr, uint8_t* Rptr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t Astride, compv_uscalar_t Bstride, compv_uscalar_t Rstride)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
 	for (compv_uscalar_t j = 0; j < height; ++j) {
 		for (compv_uscalar_t i = 0; i < width; ++i) {
-			Rptr[i] = (~Aptr[i] & BPtr[i]);
+			Rptr[i] = (~Aptr[i] & Bptr[i]);
 		}
 		Rptr += Rstride;
 		Aptr += Astride;
-		BPtr += Bstride;
+		Bptr += Bstride;
 	}
 }
 
