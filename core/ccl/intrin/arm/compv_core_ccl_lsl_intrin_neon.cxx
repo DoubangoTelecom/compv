@@ -139,7 +139,7 @@ void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Intrin
 )
 {
 	COMPV_DEBUG_INFO_CHECK_NEON();
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM version faster is #2 times faster (thanks to 'rbit' and 'clz' instructions)");
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM version is #2 times faster (thanks to 'rbit' and 'clz' instructions)");
 
 	const int16_t width1 = static_cast<int16_t>(width);
 	const int16_t width16 = (width1 - 1) & -16; // width > 16 (at least 17) which means never equal to zero
