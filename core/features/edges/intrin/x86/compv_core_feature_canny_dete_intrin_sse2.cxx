@@ -49,12 +49,12 @@ void CompVCannyHysteresisRow_8mpw_Intrin_SSE2(size_t row, size_t colStart, size_
 	size_t c, r, s;
 	uint8_t *pb, *pt;
 	CompVMatIndex edge;
-	bool lookingForStringEdges;
+	bool lookingForStrongEdges;
 	// std::vector is faster than std::list, std::dequeue and std::stack (perf. done using Intel VTune on core i7)
 	// also, check https://baptiste-wicht.com/posts/2012/11/cpp-benchmark-vector-vs-list.html
 	std::vector<CompVMatIndex> edges;
 	while (colStart < width - 7 || !edges.empty()) { // width is already >=8 (checked by the caller)
-		if ((lookingForStringEdges = edges.empty())) { // looking for string edges if there is no pending edge in the vector
+		if ((lookingForStrongEdges = edges.empty())) { // looking for strong edges if there is no pending edge in the vector
 			c = colStart;
 			r = row;
 			p = &e[colStart];
@@ -72,7 +72,7 @@ void CompVCannyHysteresisRow_8mpw_Intrin_SSE2(size_t row, size_t colStart, size_
 		}
 		if (r && c && r < height && c < width) {
 			vecp = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(p)); // high 64bits set to zero
-			if (lookingForStringEdges) {
+			if (lookingForStrongEdges) {
 				vecGrad = _mm_loadu_si128(reinterpret_cast<const __m128i*>(g));
 				vecStrong = _mm_and_si128(_mm_cmpeq_epi16(_mm_unpacklo_epi8(vecp, vecp), vecZero), _mm_cmpgt_epi16(vecGrad, vecTHigh));
 				if (_mm_movemask_epi8(vecStrong)) {

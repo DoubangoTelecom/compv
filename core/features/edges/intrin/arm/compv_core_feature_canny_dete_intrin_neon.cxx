@@ -60,7 +60,7 @@ void CompVCannyHysteresisRow_8mpw_Intrin_NEON(size_t row, size_t colStart, size_
 	// also, check https://baptiste-wicht.com/posts/2012/11/cpp-benchmark-vector-vs-list.html
 	std::vector<CompVMatIndex> edges;
 	while (colStart < width - 7 || !edges.empty()) { // width is already >=8 (checked by the caller)
-		if ((lookingForStrongEdges = edges.empty())) { // looking for string edges if there is no pending edge in the vector
+		if ((lookingForStrongEdges = edges.empty())) { // looking for strong edges if there is no pending edge in the vector
 			c = colStart;
 			r = row;
 			p = &e[colStart];

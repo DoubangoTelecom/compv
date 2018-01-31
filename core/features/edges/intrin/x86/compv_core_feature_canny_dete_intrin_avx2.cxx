@@ -56,12 +56,12 @@ void CompVCannyHysteresisRow_16mpw_Intrin_AVX2(size_t row, size_t colStart, size
 	size_t c, r, s;
 	uint8_t *pb, *pt;
 	CompVMatIndex edge;
-	bool lookingForStringEdges;
+	bool lookingForStrongEdges;
 	// std::vector is faster than std::list, std::dequeue and std::stack (perf. done using Intel VTune on core i7)
 	// also, check https://baptiste-wicht.com/posts/2012/11/cpp-benchmark-vector-vs-list.html
 	std::vector<CompVMatIndex> edges;
 	while (colStart < width - 7 || !edges.empty()) { // width is already >=8 (checked by the caller)
-		if ((lookingForStringEdges = edges.empty())) { // looking for string edges if there is no pending edge in the vector
+		if ((lookingForStrongEdges = edges.empty())) { // looking for strong edges if there is no pending edge in the vector
 			c = colStart;
 			r = row;
 			p = &e[colStart];
@@ -79,7 +79,7 @@ void CompVCannyHysteresisRow_16mpw_Intrin_AVX2(size_t row, size_t colStart, size
 		}
 		if (r && c && r < height && c < width) {
 			vecpn = _mm_loadu_si128(reinterpret_cast<const __m128i*>(p)); // high 128bits set to zero
-			if (lookingForStringEdges) {
+			if (lookingForStrongEdges) {
 				vecGrad = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(g));
 				vecp = _mm256_broadcastsi128_si256(vecpn);
 				vecp = _mm256_permute4x64_epi64(vecp, 0xD8);

@@ -412,7 +412,10 @@
 #	if COMPV_ARCH_X86
 #		if defined(_MSC_VER)
 #			include <intrin.h>
-#			pragma intrinsic(_BitScanForward, _BitScanForward64, _InterlockedIncrement, _InterlockedDecrement)
+#			pragma intrinsic(_BitScanForward, _bittestandreset, _InterlockedIncrement, _InterlockedDecrement)
+#			if COMPV_ARCH_X64
+#			pragma intrinsic(_bittestandreset64, _BitScanForward64)
+#			endif
 #		elif defined(__GNUC__)
 #			include <x86intrin.h>
 #		endif
