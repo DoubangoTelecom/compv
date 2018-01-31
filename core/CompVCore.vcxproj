@@ -206,6 +206,7 @@
     <ClCompile Include="ccl\compv_core_ccl_lmser_result.cxx" />
     <ClCompile Include="ccl\compv_core_ccl_lsl.cxx" />
     <ClCompile Include="ccl\compv_core_ccl_lsl_result.cxx" />
+    <ClCompile Include="ccl\intrin\arm\compv_core_ccl_lsl_intrin_neon.cxx" />
     <ClCompile Include="ccl\intrin\x86\compv_core_ccl_lsl_intrin_avx2.cxx">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
@@ -303,6 +304,7 @@
     <ClInclude Include="include\compv\core\ccl\compv_core_ccl_lmser_result.h" />
     <ClInclude Include="include\compv\core\ccl\compv_core_ccl_lsl.h" />
     <ClInclude Include="include\compv\core\ccl\compv_core_ccl_lsl_result.h" />
+    <ClInclude Include="include\compv\core\ccl\intrin\arm\compv_core_ccl_lsl_intrin_neon.h" />
     <ClInclude Include="include\compv\core\ccl\intrin\x86\compv_core_ccl_lsl_intrin_avx2.h" />
     <ClInclude Include="include\compv\core\ccl\intrin\x86\compv_core_ccl_lsl_intrin_sse2.h" />
     <ClInclude Include="include\compv\core\ccl\intrin\x86\compv_core_ccl_lsl_intrin_ssse3.h" />

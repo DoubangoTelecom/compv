@@ -565,7 +565,7 @@ static COMPV_ERROR_CODE addBordersVt(const CompVMatPtr input, CompVMatPtr output
 		CompVMem::zero(outPtr, bSizeInSamples * sizeof(T));
 	}
 	else if (borderTypeTop == COMPV_BORDER_TYPE_REPLICATE) {
-		memcpy(outPtr, inPtr, bSizeInSamples * sizeof(T));
+		CompVMem::copy(outPtr, inPtr, bSizeInSamples * sizeof(T));
 	}
 	else if (borderTypeTop != COMPV_BORDER_TYPE_IGNORE) {
 		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
@@ -578,7 +578,7 @@ static COMPV_ERROR_CODE addBordersVt(const CompVMatPtr input, CompVMatPtr output
 	}
 	else if (borderTypeBottom == COMPV_BORDER_TYPE_REPLICATE) {
 		const size_t offsetInSamples = ((height - strelHeightDiv2) * stride);
-		memcpy(&outPtr[offsetInSamples], &inPtr[offsetInSamples], bSizeInSamples * sizeof(T));
+		CompVMem::copy(&outPtr[offsetInSamples], &inPtr[offsetInSamples], bSizeInSamples * sizeof(T));
 	}
 	else if (borderTypeBottom != COMPV_BORDER_TYPE_IGNORE) {
 		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);

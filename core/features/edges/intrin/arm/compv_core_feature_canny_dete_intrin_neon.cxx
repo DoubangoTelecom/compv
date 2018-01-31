@@ -126,12 +126,12 @@ void CompVCannyHysteresisRow_16mpw_Intrin_NEON(size_t row, size_t colStart, size
 	int16_t c, r;
 	size_t s;
 	uint8_t *pb, *pt;
-	int32_t edge;
+	uint32_t edge;
 	// std::vector is faster than std::list, std::dequeue and std::stack (perf. done using Intel VTune on core i7)
 	// also, check https://baptiste-wicht.com/posts/2012/11/cpp-benchmark-vector-vs-list.html
-	std::vector<int32_t> edges;
+	std::vector<uint32_t> edges;
 	const int16_t maxWidth = static_cast<int16_t>(width - 15);
-	const int32_t rowlsl16 = static_cast<int32_t>(row << 16);
+	const uint32_t rowlsl16 = static_cast<int32_t>(row << 16);
 
 	for (col = static_cast<int16_t>(colStart); col < maxWidth; col += 16) { // width is alredy >=8 (checked by the caller)
 		vec0 = vceqq_u8(vld1q_u8(&e[col]), vecZero); // high 64bits then extend to 128bits (unaligned load)

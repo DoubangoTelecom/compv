@@ -479,7 +479,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::hysteresis(CompVMatPtr edges, uint16_t tLow
 		= NULL;
 
 #if COMPV_ARCH_X86
-	if (CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
+	if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
 		if (imageWidthMinus1 >= 8) {
 			COMPV_EXEC_IFDEF_INTRIN_X86((CompVCannyHysteresis_xmpw = CompVCannyHysteresisRow_8mpw_Intrin_SSE2, mpw = 8));
 		}
@@ -493,7 +493,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::hysteresis(CompVMatPtr edges, uint16_t tLow
 	}
 #	endif
 #elif COMPV_ARCH_ARM
-	if (CompVCpu::isEnabled(compv::kCpuFlagARM_NEON)) {
+	if (CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
 		if (imageWidthMinus1 >= 8) {
 			COMPV_EXEC_IFDEF_INTRIN_ARM((CompVCannyHysteresis_xmpw = CompVCannyHysteresisRow_8mpw_Intrin_NEON, mpw = 8));
 		}
@@ -604,17 +604,17 @@ static void CompVCannyHysteresisRow_C(size_t row, size_t colStart, size_t width,
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
 	}
 #endif
-	int32_t edge;
+	uint32_t edge;
 	uint8_t* p;
 	const uint16_t *g, *gb, *gt;
 	int16_t c, r;
 	size_t s;
 	uint8_t *pb, *pt;
 	uint32_t cmp32;
-	std::vector<int32_t> edges;
+	std::vector<uint32_t> edges;
 	const int16_t height_ = static_cast<int16_t>(height);
 	const int16_t width_ = static_cast<int16_t>(width);
-	const int32_t rowlsl16 = static_cast<int32_t>(row << 16);
+	const uint32_t rowlsl16 = static_cast<int32_t>(row << 16);
 
 	for (int16_t col = static_cast<int16_t>(colStart); col < width_; ++col) {
 		if (grad[col] > tHigh && !e[col]) { // strong edge and not connected yet

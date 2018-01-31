@@ -177,6 +177,12 @@
     <Filter Include="Source Files\ccl\asm\x86">
       <UniqueIdentifier>{2ecf519d-d78a-4966-94ea-43062f2ce7f4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\ccl\intrin\arm">
+      <UniqueIdentifier>{dd12e864-3079-4755-916f-3d2f752e00dd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ccl\intrin\arm">
+      <UniqueIdentifier>{b29e38eb-2499-45f3-a922-40fdd3924c72}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_core.cxx">
@@ -308,6 +314,9 @@
     <ClCompile Include="compv_core_simd_globals.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ccl\intrin\arm\compv_core_ccl_lsl_intrin_neon.cxx">
+      <Filter>Source Files\ccl\intrin\arm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\core\compv_core.h">
@@ -438,6 +447,9 @@
     </ClInclude>
     <ClInclude Include="include\compv\core\ccl\compv_core_ccl_lmser_result.h">
       <Filter>Header Files\ccl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\core\ccl\intrin\arm\compv_core_ccl_lsl_intrin_neon.h">
+      <Filter>Header Files\ccl\intrin\arm</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

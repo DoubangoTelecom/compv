@@ -7,6 +7,11 @@ movsx eax, word ptr [rax+rcx*2]
 vmovd xmm0, eax  
 vpbroadcastw ymm0, xmm0
 
+*** _mm256_set1_epi8(a) ***
+movsx eax, byte ptr [mem]  
+movd xmm0, eax  
+vpbroadcastb ymm0, xmm0
+
 *** _mm256_set1_epu16(a) ***
 movzx eax, word ptr [rax+rcx*2]  
 vmovd xmm0, eax  
