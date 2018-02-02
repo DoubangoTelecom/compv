@@ -123,7 +123,7 @@ static COMPV_ERROR_CODE CompVDeInit()
 	COMPV_CHECK_CODE_ASSERT(CompVGL::deInit());
 	COMPV_CHECK_CODE_ASSERT(CompVGpu::deInit());
 	COMPV_CHECK_CODE_RETURN(CompVCore::deInit());
-    COMPV_CHECK_CODE_ASSERT(CompVBase::deInit()); 
+    COMPV_CHECK_CODE_ASSERT(CompVBase::deInit());
     return COMPV_ERROR_CODE_S_OK;
 }
 
