@@ -122,6 +122,45 @@ void CompVBitsLogicalNot_8u_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* Aptr,
 	}
 }
 
+void CompVBitsLogicalXorHz_8u_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* Aptr, COMPV_ALIGNED(NEON) const uint8_t* A_Minus1_ptr, COMPV_ALIGNED(NEON) uint8_t* Rptr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t Astride, COMPV_ALIGNED(NEON) compv_uscalar_t Rstride)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM code faster");
+	COMPV_DEBUG_INFO_CHECK_NEON();
+	compv_uscalar_t width64 = (width & -64);
+	compv_uscalar_t i;
+
+	for (compv_uscalar_t j = 0; j < height; ++j) {
+		for (i = 0; i < width64; i += 64) {
+			vst1q_u8(&Rptr[i], veorq_u8(
+				vld1q_u8(&A_Minus1_ptr[i]),
+				vld1q_u8(&Aptr[i])
+			));
+			vst1q_u8(&Rptr[i + 16], veorq_u8(
+				vld1q_u8(&A_Minus1_ptr[i + 16]),
+				vld1q_u8(&Aptr[i + 16])
+			));
+			vst1q_u8(&Rptr[i + 32], veorq_u8(
+				vld1q_u8(&A_Minus1_ptr[i + 32]),
+				vld1q_u8(&Aptr[i + 32])
+			));
+			vst1q_u8(&Rptr[i + 48], veorq_u8(
+				vld1q_u8(&A_Minus1_ptr[i + 48]),
+				vld1q_u8(&Aptr[i + 48])
+			));
+		}
+		for (; i < width; i += 16) {
+			vst1q_u8(&Rptr[i], veorq_u8(
+				vld1q_u8(&A_Minus1_ptr[i]),
+				vld1q_u8(&Aptr[i])
+			));
+		}
+
+		Rptr += Rstride;
+		Aptr += Astride;
+		A_Minus1_ptr += Astride;
+	}
+}
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */

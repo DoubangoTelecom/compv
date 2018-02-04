@@ -25,6 +25,7 @@ public:
 	static COMPV_ERROR_CODE logical_and(const CompVMatPtr& A, const CompVMatPtr& B, CompVMatPtrPtr R);
 	static COMPV_ERROR_CODE logical_not_and(const CompVMatPtr& A, const CompVMatPtr& B, CompVMatPtrPtr R);
 	static COMPV_ERROR_CODE logical_not(const CompVMatPtr& A, CompVMatPtrPtr R);
+	static COMPV_ERROR_CODE logical_xorhz(const CompVMatPtr& A, CompVMatPtrPtr R);
 };
 
 #if defined(_MSC_VER)

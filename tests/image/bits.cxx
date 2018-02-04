@@ -17,10 +17,11 @@
 #define BITS_OP_AND						0
 #define BITS_OP_NOT_AND					1
 #define BITS_OP_NOT						2
+#define BITS_OP_XORHZ					3
 
 #define LOOP_COUNT			1
 #define FILE_NAME			FILE_NAME_EQUIRECTANGULAR
-#define BITS_OP				BITS_OP_NOT_AND
+#define BITS_OP				BITS_OP_XORHZ
 
 static const struct compv_unittest_bits {
 	const char* filename;
@@ -37,6 +38,8 @@ COMPV_UNITTEST_BITS[] =
 	{ FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, "e631fc32b9ed1a4f87689905de5d30e9" },
 #elif BITS_OP == BITS_OP_NOT
 	{ FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, "836a66d41cab3dec2ad185e220feeeb7" },
+#elif BITS_OP == BITS_OP_XORHZ
+	{ FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, "08a2051f98d6d9be070be75b528df3fb" },
 #else 
 #error "Not implemented"
 #endif
@@ -87,6 +90,8 @@ COMPV_ERROR_CODE bits_ops()
 		COMPV_CHECK_CODE_RETURN(CompVBits::logical_not_and(imageIn, imageOp, &imageOut));
 #elif BITS_OP == BITS_OP_NOT
 		COMPV_CHECK_CODE_RETURN(CompVBits::logical_not(imageIn, &imageOut));
+#elif BITS_OP == BITS_OP_XORHZ
+		COMPV_CHECK_CODE_RETURN(CompVBits::logical_xorhz(imageIn, &imageOut));
 #else 
 #error "Not implemented"
 #endif

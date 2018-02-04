@@ -14,6 +14,7 @@
 #define COMPV_BITS_AND_SAMPLES_PER_THREAD		(100 * 100)
 #define COMPV_BITS_NOT_AND_SAMPLES_PER_THREAD	(100 * 100)
 #define COMPV_BITS_NOT_SAMPLES_PER_THREAD		(100 * 100)
+#define COMPV_BITS_XORHZ_SAMPLES_PER_THREAD		(100 * 100)
 
 COMPV_BASE_API compv::compv_uscalar_t kPopcnt256[] = {
 	0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3,
@@ -34,24 +35,27 @@ COMPV_NAMESPACE_BEGIN()
 COMPV_EXTERNC void CompVBitsLogicalAnd_8u_Asm_X64_SSE2(COMPV_ALIGNED(SSE) const uint8_t* Aptr, COMPV_ALIGNED(SSE) const uint8_t* Bptr, uint8_t* Rptr, compv_uscalar_t width, COMPV_ALIGNED(SSE) compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t Astride, COMPV_ALIGNED(SSE) compv_uscalar_t Bstride, COMPV_ALIGNED(SSE) compv_uscalar_t Rstride);
 COMPV_EXTERNC void CompVBitsLogicalNotAnd_8u_Asm_X64_SSE2(COMPV_ALIGNED(SSE) const uint8_t* Aptr, COMPV_ALIGNED(SSE) const uint8_t* Bptr, uint8_t* Rptr, compv_uscalar_t width, COMPV_ALIGNED(SSE) compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t Astride, COMPV_ALIGNED(SSE) compv_uscalar_t Bstride, COMPV_ALIGNED(SSE) compv_uscalar_t Rstride);
 COMPV_EXTERNC void CompVBitsLogicalNot_8u_Asm_X64_SSE2(COMPV_ALIGNED(SSE) const uint8_t* Aptr, COMPV_ALIGNED(SSE) uint8_t* Rptr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t Astride, COMPV_ALIGNED(SSE) compv_uscalar_t Rstride);
+COMPV_EXTERNC void CompVBitsLogicalXorHz_8u_Asm_X64_SSE2(COMPV_ALIGNED(SSE) const uint8_t* Aptr, COMPV_ALIGNED(SSE) const uint8_t* A_Minus1_ptr, COMPV_ALIGNED(SSE) uint8_t* Rptr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t Astride, COMPV_ALIGNED(SSE) compv_uscalar_t Rstride);
 #endif /* COMPV_ARCH_X64 */
 
 #if COMPV_ASM && COMPV_ARCH_ARM32
 COMPV_EXTERNC void CompVBitsLogicalAnd_8u_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* Aptr, COMPV_ALIGNED(NEON) const uint8_t* Bptr, uint8_t* Rptr, compv_uscalar_t width, COMPV_ALIGNED(NEON) compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t Astride, COMPV_ALIGNED(NEON) compv_uscalar_t Bstride, COMPV_ALIGNED(NEON) compv_uscalar_t Rstride);
 COMPV_EXTERNC void CompVBitsLogicalNotAnd_8u_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* Aptr, COMPV_ALIGNED(NEON) const uint8_t* Bptr, uint8_t* Rptr, compv_uscalar_t width, COMPV_ALIGNED(NEON) compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t Astride, COMPV_ALIGNED(NEON) compv_uscalar_t Bstride, COMPV_ALIGNED(NEON) compv_uscalar_t Rstride);
 COMPV_EXTERNC void CompVBitsLogicalNot_8u_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* Aptr, COMPV_ALIGNED(NEON) uint8_t* Rptr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t Astride, COMPV_ALIGNED(NEON) compv_uscalar_t Rstride);
+COMPV_EXTERNC void CompVBitsLogicalXorHz_8u_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* Aptr, COMPV_ALIGNED(SSE) const uint8_t* A_Minus1_ptr, COMPV_ALIGNED(NEON) uint8_t* Rptr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t Astride, COMPV_ALIGNED(NEON) compv_uscalar_t Rstride);
 #endif /* COMPV_ARCH_ARM32 */
 
 #if COMPV_ASM && COMPV_ARCH_ARM64
 COMPV_EXTERNC void CompVBitsLogicalAnd_8u_Asm_NEON64(COMPV_ALIGNED(NEON) const uint8_t* Aptr, COMPV_ALIGNED(NEON) const uint8_t* Bptr, uint8_t* Rptr, compv_uscalar_t width, COMPV_ALIGNED(NEON) compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t Astride, COMPV_ALIGNED(NEON) compv_uscalar_t Bstride, COMPV_ALIGNED(NEON) compv_uscalar_t Rstride);
 COMPV_EXTERNC void CompVBitsLogicalNotAnd_8u_Asm_NEON64(COMPV_ALIGNED(NEON) const uint8_t* Aptr, COMPV_ALIGNED(NEON) const uint8_t* Bptr, uint8_t* Rptr, compv_uscalar_t width, COMPV_ALIGNED(NEON) compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t Astride, COMPV_ALIGNED(NEON) compv_uscalar_t Bstride, COMPV_ALIGNED(NEON) compv_uscalar_t Rstride);
 COMPV_EXTERNC void CompVBitsLogicalNot_8u_Asm_NEON64(COMPV_ALIGNED(NEON) const uint8_t* Aptr, COMPV_ALIGNED(NEON) uint8_t* Rptr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t Astride, COMPV_ALIGNED(NEON) compv_uscalar_t Rstride);
+COMPV_EXTERNC void CompVBitsLogicalXorHz_8u_Asm_NEON64(COMPV_ALIGNED(NEON) const uint8_t* Aptr, COMPV_ALIGNED(SSE) const uint8_t* A_Minus1_ptr, COMPV_ALIGNED(NEON) uint8_t* Rptr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t Astride, COMPV_ALIGNED(NEON) compv_uscalar_t Rstride);
 #endif /* COMPV_ARCH_ARM64 */
-
 
 static void CompVBitsLogicalAnd_8u_C(const uint8_t* Aptr, const uint8_t* Bptr, uint8_t* Rptr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t Astride, compv_uscalar_t Bstride, compv_uscalar_t Rstride);
 static void CompVBitsLogicalNotAnd_8u_C(const uint8_t* Aptr, const uint8_t* Bptr, uint8_t* Rptr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t Astride, compv_uscalar_t Bstride, compv_uscalar_t Rstride);
 static void CompVBitsLogicalNot_8u_C(const uint8_t* Aptr, uint8_t* Rptr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t Astride, compv_uscalar_t Rstride);
+static void CompVBitsLogicalXorHz_8u_C(const uint8_t* Aptr, const uint8_t* A_Minus1_ptr, uint8_t* Rptr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t Astride, compv_uscalar_t Rstride);
 
 // R = (A & B)
 // Supports and type (float, double, uint8, uint16....)
@@ -200,6 +204,64 @@ COMPV_ERROR_CODE CompVBits::logical_not(const CompVMatPtr& A, CompVMatPtrPtr R)
 	return COMPV_ERROR_CODE_S_OK;
 }
 
+// Horizontal xor
+// Line[n] ^= Line[n-1]
+COMPV_ERROR_CODE CompVBits::logical_xorhz(const CompVMatPtr& A, CompVMatPtrPtr R)
+{
+	COMPV_CHECK_EXP_RETURN(!A || !R, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+	CompVMatPtr R_ = (A == *R) ? nullptr : *R; // This function doesn't allow R to be equal to A
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObj(&R_, A));
+
+	void(*CompVBitsLogicalXorHz_8u)(const uint8_t* Aptr, const uint8_t* A_Minus1_ptr, uint8_t* Rptr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t Astride, compv_uscalar_t Rstride)
+		= CompVBitsLogicalXorHz_8u_C;
+#if COMPV_ARCH_X86
+	if (CompVCpu::isEnabled(kCpuFlagSSE2) && A->isAlignedSSE() && R_->isAlignedSSE()) {
+		COMPV_EXEC_IFDEF_INTRIN_X86(CompVBitsLogicalXorHz_8u = CompVBitsLogicalXorHz_8u_Intrin_SSE2);
+		COMPV_EXEC_IFDEF_ASM_X64(CompVBitsLogicalXorHz_8u = CompVBitsLogicalXorHz_8u_Asm_X64_SSE2);
+	}
+#elif COMPV_ARCH_ARM
+	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && A->isAlignedNEON() && R_->isAlignedNEON()) {
+		COMPV_EXEC_IFDEF_INTRIN_ARM(CompVBitsLogicalXorHz_8u = CompVBitsLogicalXorHz_8u_Intrin_NEON);
+		COMPV_EXEC_IFDEF_ASM_ARM32(CompVBitsLogicalXorHz_8u = CompVBitsLogicalXorHz_8u_Asm_NEON32);
+		COMPV_EXEC_IFDEF_ASM_ARM64(CompVBitsLogicalXorHz_8u = CompVBitsLogicalXorHz_8u_Asm_NEON64);
+	}
+#endif
+	
+	int planeId = 0;
+	auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
+		size_t ystart_ = ystart;
+		if (!ystart_) {
+			COMPV_CHECK_CODE_RETURN(CompVMem::copy(R_->ptr<void>(0, 0, planeId), A->ptr<const void>(ystart_, 0, planeId), A->rowInBytes(planeId)));
+			++ystart_;
+		}
+		CompVBitsLogicalXorHz_8u(
+			A->ptr<const uint8_t>(ystart_, 0, planeId), A->ptr<const uint8_t>(ystart_ - 1, 0, planeId), R_->ptr<uint8_t>(ystart_, 0, planeId),
+			static_cast<compv_uscalar_t>(A->cols(planeId)), static_cast<compv_uscalar_t>(yend - ystart_),
+			static_cast<compv_uscalar_t>(A->strideInBytes(planeId)), static_cast<compv_uscalar_t>(R_->strideInBytes(planeId))
+		);
+		return COMPV_ERROR_CODE_S_OK;
+	};
+
+	const int planesCount = static_cast<int>(A->planeCount());
+	for (planeId = 0; planeId < planesCount; ++planeId) {
+#if 1
+		COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+			funcPtr,
+			A->cols(planeId),
+			A->rows(planeId),
+			COMPV_BITS_XORHZ_SAMPLES_PER_THREAD
+		));
+#else
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation could be found");
+		COMPV_CHECK_CODE_RETURN(funcPtr(0, A->rows(planeId)));
+#endif
+	}
+
+	*R = R_;
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 static void CompVBitsLogicalAnd_8u_C(const uint8_t* Aptr, const uint8_t* Bptr, uint8_t* Rptr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t Astride, compv_uscalar_t Bstride, compv_uscalar_t Rstride)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
@@ -235,6 +297,19 @@ static void CompVBitsLogicalNot_8u_C(const uint8_t* Aptr, uint8_t* Rptr, compv_u
 		}
 		Rptr += Rstride;
 		Aptr += Astride;
+	}
+}
+
+static void CompVBitsLogicalXorHz_8u_C(const uint8_t* Aptr, const uint8_t* A_Minus1_ptr, uint8_t* Rptr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t Astride, compv_uscalar_t Rstride)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
+	for (compv_uscalar_t j = 0; j < height; ++j) {
+		for (compv_uscalar_t i = 0; i < width; ++i) {
+			Rptr[i] = Aptr[i] ^ A_Minus1_ptr[i];
+		}
+		Rptr += Rstride;
+		Aptr += Astride;
+		A_Minus1_ptr += Astride;
 	}
 }
 

@@ -21,6 +21,8 @@ COMPV_ERROR_CODE compv_tests_write_to_file(const CompVMatPtr& mat, const char* f
 
 const std::string compv_tests_md5(const CompVMatPtr& mat);
 
+COMPV_ERROR_CODE compv_tests_draw_bbox(CompVMatPtr mat, const CompVConnectedComponentBoundingBox& bb, const uint8_t color);
+
 bool compv_tests_is_fma_enabled();
 
 bool compv_tests_is_rcp();

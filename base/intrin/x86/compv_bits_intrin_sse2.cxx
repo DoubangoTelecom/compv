@@ -125,6 +125,44 @@ void CompVBitsLogicalNot_8u_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* Aptr, 
 	}
 }
 
+void CompVBitsLogicalXorHz_8u_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* Aptr, COMPV_ALIGNED(SSE) const uint8_t* A_Minus1_ptr, COMPV_ALIGNED(SSE) uint8_t* Rptr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t Astride, COMPV_ALIGNED(SSE) compv_uscalar_t Rstride)
+{
+	COMPV_DEBUG_INFO_CHECK_SSE2();
+	compv_uscalar_t width64 = (width & -64);
+	compv_uscalar_t i;
+
+	for (compv_uscalar_t j = 0; j < height; ++j) {
+		for (i = 0; i < width64; i += 64) {
+			_mm_store_si128(reinterpret_cast<__m128i*>(&Rptr[i]), _mm_xor_si128(
+				_mm_load_si128(reinterpret_cast<const __m128i*>(&Aptr[i])),
+				_mm_load_si128(reinterpret_cast<const __m128i*>(&A_Minus1_ptr[i]))
+			));
+			_mm_store_si128(reinterpret_cast<__m128i*>(&Rptr[i + 16]), _mm_xor_si128(
+				_mm_load_si128(reinterpret_cast<const __m128i*>(&Aptr[i + 16])),
+				_mm_load_si128(reinterpret_cast<const __m128i*>(&A_Minus1_ptr[i + 16]))
+			));
+			_mm_store_si128(reinterpret_cast<__m128i*>(&Rptr[i + 32]), _mm_xor_si128(
+				_mm_load_si128(reinterpret_cast<const __m128i*>(&Aptr[i + 32])),
+				_mm_load_si128(reinterpret_cast<const __m128i*>(&A_Minus1_ptr[i + 32]))
+			));
+			_mm_store_si128(reinterpret_cast<__m128i*>(&Rptr[i + 48]), _mm_xor_si128(
+				_mm_load_si128(reinterpret_cast<const __m128i*>(&Aptr[i + 48])),
+				_mm_load_si128(reinterpret_cast<const __m128i*>(&A_Minus1_ptr[i + 48]))
+			));
+		}
+		for (; i < width; i += 16) {
+			_mm_store_si128(reinterpret_cast<__m128i*>(&Rptr[i]), _mm_xor_si128(
+				_mm_load_si128(reinterpret_cast<const __m128i*>(&Aptr[i])),
+				_mm_load_si128(reinterpret_cast<const __m128i*>(&A_Minus1_ptr[i]))
+			));
+		}
+
+		Rptr += Rstride;
+		Aptr += Astride;
+		A_Minus1_ptr += Astride;
+	}
+}
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */

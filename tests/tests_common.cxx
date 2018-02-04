@@ -8,7 +8,7 @@
 
 #define TAG_TESTS_COMMON	"TESTS_COMMON"
 
-#define COMPV_numThreads			COMPV_NUM_THREADS_SINGLE
+#define COMPV_numThreads			COMPV_NUM_THREADS_MULTI
 #define COMPV_enableIntrinsics		true
 #define COMPV_enableAsm				true
 #define COMPV_enableGPU				true
@@ -110,6 +110,25 @@ const std::string compv_tests_md5(const CompVMatPtr& mat)
 		return md5->compute();
 	}
 	return COMPV_MD5_EMPTY;
+}
+
+COMPV_ERROR_CODE compv_tests_draw_bbox(CompVMatPtr mat, const CompVConnectedComponentBoundingBox& bb, const uint8_t color)
+{
+	COMPV_CHECK_EXP_RETURN(!mat || mat->planeCount() != 1 || mat->elmtInBytes() != sizeof(uint8_t), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	uint8_t* top = mat->ptr<uint8_t>(static_cast<size_t>(bb.top));
+	uint8_t* bottom = mat->ptr<uint8_t>(static_cast<size_t>(bb.bottom));
+	// top and bottom hz lines
+	for (int16_t k = bb.left; k <= bb.right; ++k) {
+		top[k] = color;
+		bottom[k] = color;
+	}
+	// vt lines
+	const size_t stride = mat->stride();
+	for (top = top + 1; top < bottom; top += stride) {
+		top[bb.left] = color;
+		top[bb.right] = color;
+	}
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 // Fused-Multiply-Add

@@ -499,17 +499,17 @@ public:
 	static CompVRect makeFromWidthHeight(T x, T y, T width, T height) {
 		return CompVRect(x, y, x + width, y + height);
 	}
-	COMPV_INLINE bool isEmpty()const { return (left == right) && (top == bottom); }
-	COMPV_INLINE T width()const { return (right - left) + 1; }
-	COMPV_INLINE T height()const { return (bottom - top) + 1; }
-	COMPV_INLINE bool contains(const CompVPoint2D<T>& point)const {
+	COMPV_ALWAYS_INLINE bool isEmpty()const { return (left == right) && (top == bottom); }
+	COMPV_ALWAYS_INLINE T width()const { return (right - left) + 1; }
+	COMPV_ALWAYS_INLINE T height()const { return (bottom - top) + 1; }
+	COMPV_ALWAYS_INLINE bool contains(const CompVPoint2D<T>& point)const {
 		return (left <= point.x && point.x <= right && top <= point.y && point.y <= bottom);
 	}
-	COMPV_INLINE bool contains(const CompVRect<T>& other)const {
+	COMPV_ALWAYS_INLINE bool contains(const CompVRect<T>& other)const {
 		return ((other.left >= left) && (other.right <= right) && (other.top >= top) && (other.bottom <= bottom));
 	}
-	COMPV_INLINE bool overlap(const CompVRect<T>& other)const {
-		return !((left >= other.right) || (right <= other.left) || (top >= other.bottom) || (bottom <= other.top));
+	COMPV_ALWAYS_INLINE bool overlap(const CompVRect<T>& other)const {
+		return ((left <= other.right) && (right >= other.left) && (top <= other.bottom) && (bottom >= other.top));
 	}
 };
 typedef CompVRect<compv_float32_t> CompVRectFloat32;
