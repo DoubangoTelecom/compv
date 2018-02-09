@@ -2,6 +2,6 @@
   - SIMD (SSE, AVX, NEON)
   - GPGPU
   - Smart multithreading (minimal context switch, no false-sharing, no boundaries crossing..)
-  - Smart memory access (data alignment, cache pre-load, cache blocking, smart reference counting...)
+  - Smart memory access (data alignment, cache pre-load, cache blocking, non-temporal load/store for minimal cache pollution, smart reference counting...)
   - Fixed-point math
   - ... and many more 
