@@ -32,7 +32,8 @@ static COMPV_ERROR_CODE count_points_segments(
 );
 
 CompVConnectedComponentLabelingResultLSLImpl::CompVConnectedComponentLabelingResultLSLImpl()
-	: m_szInput(CompVSizeSz(0, 0))
+	: m_bSortSegements(false) // should be false to have extraction done using MT
+	, m_szInput(CompVSizeSz(0, 0))
 {
 }
 
@@ -109,13 +110,12 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::extract(CompVConn
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
-	// LSL can compute the blob features without extracting the points
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("You don't need to extract the points in order to compute the blob features (bounding boxes, moments...)");
-
 	CompVConnectedComponentLabelingResultLSLImplPtr hackedThis = const_cast<CompVConnectedComponentLabelingResultLSLImpl*>(this);
 
 	switch (type) {
 	case COMPV_CCL_EXTRACT_TYPE_BLOB:
+		// LSL can compute the blob features without extracting the points
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("You don't need to extract the points in order to compute the blob features (bounding boxes, moments...)");
 		COMPV_CHECK_CODE_RETURN(hackedThis->extract_blobs(points));
 		break;
 	case COMPV_CCL_EXTRACT_TYPE_SEGMENT:
@@ -395,13 +395,19 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::extract_segments(
 		}
 		return COMPV_ERROR_CODE_S_OK;
 	};
-
-	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
-		funcPtrFill,
-		m_szInput.width,
-		m_szInput.height,
-		COMPV_CCL_LSL_EXTRACT_FILL_CONTOURS_MIN_SAMPLES_PER_THREAD
-	));
+	if (m_bSortSegements) {
+		// Disable MT to have segments sorted (top->down, left->right) - required by ultimateText
+		// Performance comparison done and this is not a big deal because this function is CPU-friendly.
+		COMPV_CHECK_CODE_RETURN(funcPtrFill(0, m_szInput.height));
+	}
+	else {
+		COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+			funcPtrFill,
+			m_szInput.width,
+			m_szInput.height,
+			COMPV_CCL_LSL_EXTRACT_FILL_CONTOURS_MIN_SAMPLES_PER_THREAD
+		));
+	}
 
 	return COMPV_ERROR_CODE_S_OK;
 }

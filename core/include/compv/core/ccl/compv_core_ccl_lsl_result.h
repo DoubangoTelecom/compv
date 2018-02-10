@@ -63,6 +63,7 @@ public:
 	COMPV_INLINE compv_ccl_lea_n_t& vecLEA() { return m_vecLEA; }
 	COMPV_INLINE CompVSizeSz& szInput() { return m_szInput; }
 	COMPV_INLINE std::vector<int32_t>& vecIds() { return m_vecIds; }
+	COMPV_INLINE bool& sortSegments() { return m_bSortSegements; }
 
 	COMPV_ERROR_CODE reset();
 
@@ -73,6 +74,7 @@ private:
 	COMPV_ERROR_CODE extract_segments(CompVConnectedComponentPointsVector& points);
 
 private:
+	bool m_bSortSegements;
 	int32_t m_nNa1; // final number of absolute labels
 	compv_ccl_lea_n_t m_vecLEA; // an associative table holding the association between er and ea: ea = ERAi[er]
 	CompVSizeSz m_szInput;

@@ -124,9 +124,21 @@ COMPV_ERROR_CODE compv_tests_draw_bbox(CompVMatPtr mat, const CompVConnectedComp
 	}
 	// vt lines
 	const size_t stride = mat->stride();
-	for (top = top + 1; top < bottom; top += stride) {
+	for (top = top + stride; top < bottom; top += stride) {
 		top[bb.left] = color;
 		top[bb.right] = color;
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE compv_tests_draw_segments(CompVMatPtr mat, const CompVConnectedComponentPoints& ccl_segments, const uint8_t color)
+{
+	COMPV_CHECK_EXP_RETURN(!mat || mat->planeCount() != 1 || mat->elmtInBytes() != sizeof(uint8_t) || (ccl_segments.size() & 1), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	for (CompVConnectedComponentPoints::const_iterator i = ccl_segments.begin(); i < ccl_segments.end(); i += 2) {
+		uint8_t* ptr = mat->ptr<uint8_t>(static_cast<size_t>(i->y));
+		for (int16_t x = i->x; x <= i[1].x; ++x) {
+			ptr[x] = color;
+		}
 	}
 	return COMPV_ERROR_CODE_S_OK;
 }

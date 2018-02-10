@@ -34,6 +34,7 @@ public:
 
 private:
 	int m_nType;
+	bool m_bSortSegments;
 };
 
 COMPV_NAMESPACE_END()

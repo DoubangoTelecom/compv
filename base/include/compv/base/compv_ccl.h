@@ -61,6 +61,7 @@ enum {
 	/* Parallel Light Speed Labeling */
 	COMPV_PLSL_ID, // Binary image
 	COMPV_PLSL_SET_INT_TYPE,
+	COMPV_PLSL_SET_BOOL_SORT_SEGMENTS, // tie(y, x) < tie(y, x) - "TOP->DOWN" then "LEFT->RIGHT"
 	COMPV_PLSL_TYPE_STD,
 	COMPV_PLSL_TYPE_STDZ,
 	COMPV_PLSL_TYPE_RLC,

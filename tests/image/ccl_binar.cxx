@@ -206,6 +206,8 @@ static COMPV_ERROR_CODE check_boxes(const CompVConnectedComponentLabelingResultP
 			bottom[k] = 0xff;
 		}
 		// vt lines
+		// TODO(dmi): not correct, must be "for (top = top + stride". MD5 will change if you change this line (not a big deal for now)
+		// use "compv_tests_draw_bbox" to avoid reproducing such errors
 		for (top = top + 1; top < bottom; top += stride) {
 			top[i->left] = 0xff;
 			top[i->right] = 0xff;

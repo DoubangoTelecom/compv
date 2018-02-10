@@ -118,6 +118,7 @@ COMPV_EXTERNC void CompVConnectedComponentLabelingLSL_Step20Algo14EquivalenceBui
 CompVConnectedComponentLabelingLSL::CompVConnectedComponentLabelingLSL()
 	: CompVConnectedComponentLabeling(COMPV_PLSL_ID)
 	, m_nType(COMPV_PLSL_TYPE_XRLEZ)
+	, m_bSortSegments(false) // false by default to save CPU-cycles. Enable it using "COMPV_PLSL_SET_BOOL_SORT_SEGMENTS" option if you need it
 {
 
 }
@@ -136,6 +137,11 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::set(int id, const void* val
 		const int type = *reinterpret_cast<const int*>(valuePtr);
 		COMPV_CHECK_EXP_RETURN(type != COMPV_PLSL_TYPE_XRLEZ, COMPV_ERROR_CODE_E_NOT_IMPLEMENTED, "Only XRLEZ type is supported in the current version");
 		m_nType = type;
+		return COMPV_ERROR_CODE_S_OK;
+	}
+	case COMPV_PLSL_SET_BOOL_SORT_SEGMENTS: {
+		COMPV_CHECK_EXP_RETURN(valueSize != sizeof(bool), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		m_bSortSegments = *reinterpret_cast<const bool*>(valuePtr);
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	default:
@@ -613,6 +619,10 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 	int32_t nea1 = 0; // the current number of absolute labels, update of EQ and ERAi
 	int32_t& na1 = result_->na1(); // final number of absolute labels
 	std::vector<int32_t>& vecIds = result_->vecIds(); // List of absolute label ids (one-based)
+	bool& sortSegements = result_->sortSegments();
+
+	/* Define whether to sort segments when the user calls extract(SEGMENTS) */
+	sortSegements = m_bSortSegments;
 
 	/* Create some local variables */
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int16_t>(&ptr16sER, szInputSize.height, szInputSize.width));
