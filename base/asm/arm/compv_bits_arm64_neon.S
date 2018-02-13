@@ -352,7 +352,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVBitsLogicalNot_8u_Asm_NEON64
 # arg(4) -> COMPV_ALIGNED(SSE) compv_uscalar_t height
 # arg(5) -> COMPV_ALIGNED(SSE) compv_uscalar_t Astride
 # arg(6) -> COMPV_ALIGNED(SSE) compv_uscalar_t Rstride
-COMPV_GAS_FUNCTION_DECLARE CompVBitsLogicalXorHz_8u_Asm_NEON64
+COMPV_GAS_FUNCTION_DECLARE CompVBitsLogicalXorVt_8u_Asm_NEON64
 	COMPV_GAS_FUNCTION_PROLOG
 	COMPV_GAS_SAVE_NEON_REGS
 
@@ -393,13 +393,13 @@ COMPV_GAS_FUNCTION_DECLARE CompVBitsLogicalXorHz_8u_Asm_NEON64
     ###########################################################
     # for (compv_uscalar_t j = 0; j < height; ++j)
     ###########################################################
-	LoopHeight_CompVBitsLogicalXorHz_8u_Asm_NEON64:
-		cbz width64, EndOf_LoopWidth64_CompVBitsLogicalXorHz_8u_Asm_NEON64
+	LoopHeight_CompVBitsLogicalXorVt_8u_Asm_NEON64:
+		cbz width64, EndOf_LoopWidth64_CompVBitsLogicalXorVt_8u_Asm_NEON64
 		mov i, width64
 		###########################################################
 		# for (i = 0; i < width64; i += 64)
 		###########################################################
-		LoopWidth64_CompVBitsLogicalXorHz_8u_Asm_NEON64:
+		LoopWidth64_CompVBitsLogicalXorVt_8u_Asm_NEON64:
 			prfm pldl1keep, [Aptr, #(CACHE_LINE_SIZE*3)]
 			prfm pldl1keep, [A_Minus1_ptr, #(CACHE_LINE_SIZE*3)]
 			//prfm pstl1keep, [Rptr, #(CACHE_LINE_SIZE*3)]
@@ -414,29 +414,29 @@ COMPV_GAS_FUNCTION_DECLARE CompVBitsLogicalXorHz_8u_Asm_NEON64
 			stp q0, q1, [Rptr], #(2*COMPV_GAS_Q_SZ_BYTES)
 			stp q2, q3, [Rptr], #(2*COMPV_GAS_Q_SZ_BYTES)
 			subs i, i, #64
-			bne LoopWidth64_CompVBitsLogicalXorHz_8u_Asm_NEON64
-		EndOf_LoopWidth64_CompVBitsLogicalXorHz_8u_Asm_NEON64:
+			bne LoopWidth64_CompVBitsLogicalXorVt_8u_Asm_NEON64
+		EndOf_LoopWidth64_CompVBitsLogicalXorVt_8u_Asm_NEON64:
 
 		###########################################################
 		# for (; i < width; i += 16)
 		###########################################################
-		cbz width16, EndOf_LoopWidth16_CompVBitsLogicalXorHz_8u_Asm_NEON64
+		cbz width16, EndOf_LoopWidth16_CompVBitsLogicalXorVt_8u_Asm_NEON64
 		mov i, width16
-		LoopWidth16_CompVBitsLogicalXorHz_8u_Asm_NEON64:
+		LoopWidth16_CompVBitsLogicalXorVt_8u_Asm_NEON64:
 			ldr q0, [Aptr], #(1*COMPV_GAS_Q_SZ_BYTES)
 			ldr q4, [A_Minus1_ptr], #(1*COMPV_GAS_Q_SZ_BYTES)
 			eor v0.16b, v0.16b, v4.16b
 			str q0, [Rptr], #(1*COMPV_GAS_Q_SZ_BYTES)
 			subs i, i, #16
-			bne LoopWidth16_CompVBitsLogicalXorHz_8u_Asm_NEON64
-		EndOf_LoopWidth16_CompVBitsLogicalXorHz_8u_Asm_NEON64:
+			bne LoopWidth16_CompVBitsLogicalXorVt_8u_Asm_NEON64
+		EndOf_LoopWidth16_CompVBitsLogicalXorVt_8u_Asm_NEON64:
 
 		add Rptr, Rptr, Rstride
 		add Aptr, Aptr, Astride
 		add A_Minus1_ptr, A_Minus1_ptr, Astride
 		subs height, height, #1
-		bne LoopHeight_CompVBitsLogicalXorHz_8u_Asm_NEON64
-	EndOf_LoopHeight_CompVBitsLogicalXorHz_8u_Asm_NEON64:
+		bne LoopHeight_CompVBitsLogicalXorVt_8u_Asm_NEON64
+	EndOf_LoopHeight_CompVBitsLogicalXorVt_8u_Asm_NEON64:
 
 	## UnDefines ##
 	.unreq Aptr

@@ -17,7 +17,7 @@
 #define BITS_OP_AND						0
 #define BITS_OP_NOT_AND					1
 #define BITS_OP_NOT						2
-#define BITS_OP_XORHZ					3
+#define BITS_OP_XORVT					3
 
 static const struct compv_unittest_bits {
 	const char* filename;
@@ -32,7 +32,7 @@ COMPV_UNITTEST_BITS[] =
 	{ FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, BITS_OP_AND, "0d5f7f7b0cd1dce06243c62282cced51" },
 	{ FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, BITS_OP_NOT_AND, "e631fc32b9ed1a4f87689905de5d30e9" },
 	{ FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, BITS_OP_NOT, "836a66d41cab3dec2ad185e220feeeb7" },
-	{ FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, BITS_OP_XORHZ, "08a2051f98d6d9be070be75b528df3fb" },
+	{ FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, BITS_OP_XORVT, "08a2051f98d6d9be070be75b528df3fb" },
 };
 static const size_t COMPV_UNITTEST_BITS_COUNT = sizeof(COMPV_UNITTEST_BITS) / sizeof(COMPV_UNITTEST_BITS[0]);
 
@@ -41,7 +41,7 @@ static const std::string compv_unittest_bits_to_string(const compv_unittest_bits
 		"BITS_OP_AND",
 		"BITS_OP_NOT_AND",
 		"BITS_OP_NOT",
-		"BITS_OP_XORHZ"
+		"BITS_OP_XORVT"
 	};
 	return std::string("filename:") + std::string(test->filename)
 		+ std::string(", operation=") + std::string(ops_string[test->op]);
@@ -69,8 +69,8 @@ COMPV_ERROR_CODE unittest_bits()
 		case BITS_OP_NOT:
 			COMPV_CHECK_CODE_RETURN(CompVBits::logical_not(imageIn, &imageOut));
 			break;
-		case BITS_OP_XORHZ:
-			COMPV_CHECK_CODE_RETURN(CompVBits::logical_xorhz(imageIn, &imageOut));
+		case BITS_OP_XORVT:
+			COMPV_CHECK_CODE_RETURN(CompVBits::logical_xorvt(imageIn, &imageOut));
 			break;
 		default:
 			COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED, "Op not implemented");

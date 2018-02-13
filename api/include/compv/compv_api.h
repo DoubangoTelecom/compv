@@ -25,6 +25,7 @@
 #include <compv/base/compv_matchers.h>
 #include <compv/base/compv_md5.h>
 #include <compv/base/compv_mem.h>
+#include <compv/base/compv_memz.h>
 #include <compv/base/compv_obj.h>
 #include <compv/base/compv_patch.h>
 #include <compv/base/compv_points_transform.h>

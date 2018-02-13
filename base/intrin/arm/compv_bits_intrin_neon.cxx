@@ -122,7 +122,7 @@ void CompVBitsLogicalNot_8u_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* Aptr,
 	}
 }
 
-void CompVBitsLogicalXorHz_8u_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* Aptr, COMPV_ALIGNED(NEON) const uint8_t* A_Minus1_ptr, COMPV_ALIGNED(NEON) uint8_t* Rptr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t Astride, COMPV_ALIGNED(NEON) compv_uscalar_t Rstride)
+void CompVBitsLogicalXorVt_8u_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* Aptr, COMPV_ALIGNED(NEON) const uint8_t* A_Minus1_ptr, COMPV_ALIGNED(NEON) uint8_t* Rptr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t Astride, COMPV_ALIGNED(NEON) compv_uscalar_t Rstride)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM code faster");
 	COMPV_DEBUG_INFO_CHECK_NEON();

@@ -15,7 +15,7 @@ COMPV_YASM_DEFAULT_REL
 global sym(CompVBitsLogicalAnd_8u_Asm_X64_SSE2)
 global sym(CompVBitsLogicalNotAnd_8u_Asm_X64_SSE2)
 global sym(CompVBitsLogicalNot_8u_Asm_X64_SSE2)
-global sym(CompVBitsLogicalXorHz_8u_Asm_X64_SSE2)
+global sym(CompVBitsLogicalXorVt_8u_Asm_X64_SSE2)
 
 section .data
 
@@ -343,7 +343,7 @@ sym(CompVBitsLogicalNot_8u_Asm_X64_SSE2):
 ; arg(4) -> COMPV_ALIGNED(SSE) compv_uscalar_t height
 ; arg(5) -> COMPV_ALIGNED(SSE) compv_uscalar_t Astride
 ; arg(6) -> COMPV_ALIGNED(SSE) compv_uscalar_t Rstride
-sym(CompVBitsLogicalXorHz_8u_Asm_X64_SSE2):
+sym(CompVBitsLogicalXorVt_8u_Asm_X64_SSE2):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 7

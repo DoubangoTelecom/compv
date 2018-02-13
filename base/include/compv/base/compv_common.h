@@ -545,6 +545,9 @@ public:
 	bool operator==(const CompVSize &other) const {
 		return width == other.width && height == other.height;
 	}
+	bool operator!=(const CompVSize &other) const {
+		return !(*this == other);
+	}
 	T width, height;
 };
 typedef CompVSize<compv_float32_t> CompVSizeFloat32;
