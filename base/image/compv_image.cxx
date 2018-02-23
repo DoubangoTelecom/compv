@@ -12,6 +12,7 @@
 #include "compv/base/image/compv_image_conv_hsv.h"
 #include "compv/base/image/compv_image_scale_bilinear.h"
 #include "compv/base/image/compv_image_threshold.h"
+#include "compv/base/image/compv_image_remap.h"
 #include "compv/base/parallel/compv_parallel.h"
 #include "compv/base/math/compv_math_utils.h"
 #include "compv/base/math/compv_math_histogram.h"
@@ -338,6 +339,14 @@ COMPV_ERROR_CODE CompVImage::split(const CompVMatPtr& imageIn, CompVMatPtrVector
 		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Splitting %s not supported yet", CompVGetSubtypeString(imageIn->subType()));
 		return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
 	}
+}
+
+// map = (x, y) values
+// map must contain at least #2 rows (x, y) or (x, y, z) and with exactly n elements (n = (outSize.w*outSize.h)
+COMPV_ERROR_CODE CompVImage::remap(const CompVMatPtr& imageIn, CompVMatPtrPtr output, const CompVMatPtr& map, COMPV_INTERPOLATION_TYPE interType COMPV_DEFAULT(COMPV_INTERPOLATION_TYPE_BILINEAR), const CompVRectFloat32* inputROI COMPV_DEFAULT(nullptr))
+{
+	COMPV_CHECK_CODE_RETURN(CompVImageRemap::process(imageIn, output, map, interType, inputROI));
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVImage::convert(const CompVMatPtr& imageIn, COMPV_SUBTYPE pixelFormatOut, CompVMatPtrPtr imageOut)
