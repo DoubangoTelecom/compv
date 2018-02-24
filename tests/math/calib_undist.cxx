@@ -29,8 +29,8 @@
 #define LOOP_COUNT				1
 #define INTERP_TYPE				COMPV_INTERPOLATION_TYPE_BILINEAR
 
-#define EXPECTED_MD5_BILINEAR	"2e41e846611ef2bb78914327a8f98480"
-#define EXPECTED_MD5_NEAREST	"b727a212ead362cd276314e8ed067fab"
+#define EXPECTED_MD5_BILINEAR	"2e41e846611ef2bb78914327a8f98480" // TODO(dmi): "CompVImageRemap::process" changed which means the MD5 is invalid
+#define EXPECTED_MD5_NEAREST	"b727a212ead362cd276314e8ed067fab" // TODO(dmi): "CompVImageRemap::process" changed which means the MD5 is invalid
 
 COMPV_ERROR_CODE calib_undist()
 {
@@ -68,6 +68,7 @@ COMPV_ERROR_CODE calib_undist()
 	uint64_t timeEnd = CompVTime::nowMillis();
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "Elapsed time(undist2DImage) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 
+	// TODO(dmi): "CompVImageRemap::process" changed which means the MD5 is invalid
 	COMPV_CHECK_EXP_RETURN(compv_tests_md5(undistortedImage).compare((INTERP_TYPE == COMPV_INTERPOLATION_TYPE_NEAREST) ? EXPECTED_MD5_NEAREST : EXPECTED_MD5_BILINEAR) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "MD5 mismatch");
 
 	// dump latest image to file

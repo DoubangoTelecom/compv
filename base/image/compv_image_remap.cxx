@@ -12,8 +12,8 @@
 
 #define COMPV_THIS_CLASSNAME	"CompVImageRemap"
 
-#define COMPV_IMAGE_REMAP_BILINEAR_SAMPLES_PER_THREAD (20 * 20)
-#define COMPV_IMAGE_REMAP_NEAREST_SAMPLES_PER_THREAD (40 * 40)
+#define COMPV_IMAGE_REMAP_BILINEAR_SAMPLES_PER_THREAD (40 * 40) // CPU-friendly
+#define COMPV_IMAGE_REMAP_NEAREST_SAMPLES_PER_THREAD (50 * 50) // CPU-friendly
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -89,34 +89,48 @@ private:
 			const uint8_t* inputPtr = input->ptr<uint8_t>();
 			const size_t stride = input->stride();
 			size_t i, j, k;
-			T x, y;
-			int x1, x2, y1, y2;
-			T xfractpart, one_minus_xfractpart, yfractpart, one_minus_yfractpart;
-			const uint8_t *inputY1, *inputY2;
 			for (j = ystart, k = (ystart * outputWidth); j < yend; ++j) {
 				for (i = 0; i < outputWidth; ++i, ++k) {
-					x = mapXPtr[k];
-					y = mapYPtr[k];
+					const T& x = mapXPtr[k];
+					const T& y = mapYPtr[k];
 					if (x < roi_left || x > roi_right || y < roi_top || y > roi_bottom) {
 						outputPtr[i] = 0; // TODO(dmi): or mean
 					}
 					else {
-						x1 = static_cast<int>(x);
-						x2 = static_cast<int>(x + 1.f);
-						xfractpart = x - x1;
-						one_minus_xfractpart = 1.f - xfractpart;
-						y1 = static_cast<int>(y);
-						y2 = static_cast<int>(y + 1.f);
-						yfractpart = y - y1;
-						one_minus_yfractpart = 1.f - yfractpart;
-						inputY1 = &inputPtr[y1 * stride];
-						inputY2 = &inputPtr[y2 * stride];
+#if 0
+						const int x1 = static_cast<int>(x);
+						const int x2 = static_cast<int>(x + 1.f);
+						const T xfractpart = x - x1;
+						const T one_minus_xfractpart = 1.f - xfractpart;
+						const int y1 = static_cast<int>(y);
+						const int y2 = static_cast<int>(y + 1.f);
+						const T yfractpart = y - y1;
+						const T one_minus_yfractpart = 1.f - yfractpart;
+						const uint8_t* inputY1 = &inputPtr[y1 * stride];
+						const uint8_t* inputY2 = &inputPtr[y2 * stride];
 						outputPtr[i] = static_cast<uint8_t>(
 							(inputY1[x1] * one_minus_yfractpart * one_minus_xfractpart)
 							+ (inputY1[x2] * one_minus_yfractpart * xfractpart)
 							+ (inputY2[x1] * yfractpart * one_minus_xfractpart)
 							+ (inputY2[x2] * yfractpart * xfractpart)
 						);
+#else // Next code is faster (less multiplications)
+						const int x1 = static_cast<int>(x);
+						const int x2 = static_cast<int>(x + 1.f);
+						const T xfractpart = x - x1;
+						const int y1 = static_cast<int>(y);
+						const int y2 = static_cast<int>(y + 1.f);
+						const T yfractpart = y - y1;
+						const T xyfractpart = (xfractpart * yfractpart);
+						const uint8_t* inputY1 = &inputPtr[y1 * stride];
+						const uint8_t* inputY2 = &inputPtr[y2 * stride];
+						outputPtr[i] = static_cast<uint8_t>(
+							(inputY1[x1] * (1.f - xfractpart - yfractpart + xyfractpart))
+							+ (inputY1[x2] * (xfractpart - xyfractpart))
+							+ (inputY2[x1] * (yfractpart - xyfractpart))
+							+ (inputY2[x2] * xyfractpart)
+							);
+#endif
 					}
 				}
 				outputPtr += outputStride;
