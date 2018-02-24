@@ -15,7 +15,7 @@ using namespace compv;
 #define UNITTEST_HOUGHKHT						0
 #define UNITTEST_CCL_BINAR						0
 #define UNITTEST_CCL_MSER						0
-#define UNITTEST_CCL_BITS						1
+#define UNITTEST_CCL_BITS						0
 
 #define UNITTEST_FEATURE_FAST					0
 #define UNITTEST_CHROMA_CONV					0
@@ -37,6 +37,7 @@ using namespace compv;
 #define UNITTEST_MATH_DISTANCE_PARABOLA			0
 #define UNITTEST_MATH_HISTOGRAM_BUILD			0
 #define UNITTEST_MATH_HISTOGRAM_EQUALIZ			0
+#define UNITTEST_MATH_HISTOGRAM_PROJ			1
 #define UNITTEST_MATH_CONVOLUTION				0
 #define UNITTEST_MATH_MORPH						0
 
@@ -227,6 +228,10 @@ compv_main()
 #if UNITTEST_MATH_HISTOGRAM_EQUALIZ || !defined(COMPV_TEST_LOCAL)
 								extern COMPV_ERROR_CODE unittest_histogram_equaliz();
 								COMPV_CHECK_CODE_BAIL(err = unittest_histogram_equaliz(), "Math histogram equaliz unittest failed");
+#endif
+#if UNITTEST_MATH_HISTOGRAM_PROJ || !defined(COMPV_TEST_LOCAL)
+								extern COMPV_ERROR_CODE unittest_histogram_proj();
+								COMPV_CHECK_CODE_BAIL(err = unittest_histogram_proj(), "Math histogram proj unittest failed");
 #endif
 #if UNITTEST_MATH_CONVOLUTION || !defined(COMPV_TEST_LOCAL)
 								extern COMPV_ERROR_CODE unittest_math_convlt();

@@ -21,8 +21,9 @@
 #define TEST_DISTANCE_HAMMING				0
 #define TEST_DISTANCE_LINE					0
 #define TEST_DISTANCE_PARABOLA				0
-#define TEST_HISTOGRAM_BUILD				1
+#define TEST_HISTOGRAM_BUILD				0
 #define TEST_HISTOGRAM_EQUALIZ				0
+#define TEST_HISTOGRAM_PROJ					1
 #define TEST_CONVLT							0
 #define TEST_MORPH							0
 
@@ -120,6 +121,10 @@ compv_main()
 #if TEST_HISTOGRAM_EQUALIZ
 		extern COMPV_ERROR_CODE histogram_equaliz();
 		COMPV_CHECK_CODE_BAIL(err = histogram_equaliz(), TAG_TEST "Math histogram equaliz test failed");
+#endif
+#if TEST_HISTOGRAM_PROJ
+		extern COMPV_ERROR_CODE histogram_proj();
+		COMPV_CHECK_CODE_BAIL(err = histogram_proj(), TAG_TEST "Math histogram proj test failed");
 #endif
 
 #if TEST_CONVLT

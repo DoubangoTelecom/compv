@@ -49,7 +49,7 @@ COMPV_ERROR_CODE morph()
 	// Read image and thresholding to binar (morph ops work on grayscale but binar for fun)
 	CompVMatPtr imageIn, imageOut;
 	COMPV_CHECK_CODE_RETURN(CompVImage::read(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &imageIn));
-	COMPV_CHECK_CODE_RETURN(CompVImage::thesholdGlobal(imageIn, &imageIn, 128.0));
+	COMPV_CHECK_CODE_RETURN(CompVImage::thresholdGlobal(imageIn, &imageIn, 128.0));
 
 	uint64_t timeStart = CompVTime::nowMillis();
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
