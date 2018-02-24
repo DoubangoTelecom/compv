@@ -12,7 +12,7 @@
 
 #define COMPV_THIS_CLASSNAME	"CompVImageRemap"
 
-#define COMPV_IMAGE_REMAP_BILINEAR_SAMPLES_PER_THREAD (40 * 20)
+#define COMPV_IMAGE_REMAP_BILINEAR_SAMPLES_PER_THREAD (20 * 20)
 #define COMPV_IMAGE_REMAP_NEAREST_SAMPLES_PER_THREAD (40 * 40)
 
 COMPV_NAMESPACE_BEGIN()
@@ -37,14 +37,7 @@ private:
 		const size_t outputHeight = output->rows();
 		const size_t  outputStride = output->stride();
 
-		// Compute number of threads
-		CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
-		const size_t maxThreads = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
-		const size_t threadsCount = (threadDisp && !threadDisp->isMotherOfTheCurrentThread())
-			? CompVThreadDispatcher::guessNumThreadsDividingAcrossY(outputWidth, outputHeight, maxThreads, COMPV_IMAGE_REMAP_NEAREST_SAMPLES_PER_THREAD)
-			: 1;
-
-		auto funcPtr = [&](const size_t ystart, const size_t yend) -> void {
+		auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
 			uint8_t* outputPtr = output->ptr<uint8_t>(ystart);
 			size_t i, j, k;
 			T x, y;
@@ -64,23 +57,14 @@ private:
 				}
 				outputPtr += outputStride;
 			}
+			return COMPV_ERROR_CODE_S_OK;
 		};
-
-		if (threadsCount > 1) {
-			CompVAsyncTaskIds taskIds;
-			taskIds.reserve(threadsCount);
-			const size_t heights = (outputHeight / threadsCount);
-			size_t YStart = 0, YEnd;
-			for (size_t threadIdx = 0; threadIdx < threadsCount; ++threadIdx) {
-				YEnd = (threadIdx == (threadsCount - 1)) ? outputHeight : (YStart + heights);
-				COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, YStart, YEnd), taskIds), "Dispatching task failed");
-				YStart += heights;
-			}
-			COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds), "Failed to wait for tasks execution");
-		}
-		else {
-			funcPtr(0, outputHeight);
-		}
+		COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+			funcPtr,
+			outputWidth,
+			outputHeight,
+			COMPV_IMAGE_REMAP_NEAREST_SAMPLES_PER_THREAD
+		));
 
 		return COMPV_ERROR_CODE_S_OK;
 	}
@@ -99,16 +83,11 @@ private:
 		const size_t outputHeight = output->rows();
 		const size_t  outputStride = output->stride();
 
-		// Compute number of threads
-		CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
-		const size_t maxThreads = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
-		const size_t threadsCount = (threadDisp && !threadDisp->isMotherOfTheCurrentThread())
-			? CompVThreadDispatcher::guessNumThreadsDividingAcrossY(outputWidth, outputHeight, maxThreads, COMPV_IMAGE_REMAP_BILINEAR_SAMPLES_PER_THREAD)
-			: 1;
-
-		auto funcPtr = [&](const size_t ystart, const size_t yend) -> void {
+		auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
 			// Bilinear filtering: https://en.wikipedia.org/wiki/Bilinear_interpolation#Unit_square
 			uint8_t* outputPtr = output->ptr<uint8_t>(ystart);
+			const uint8_t* inputPtr = input->ptr<uint8_t>();
+			const size_t stride = input->stride();
 			size_t i, j, k;
 			T x, y;
 			int x1, x2, y1, y2;
@@ -130,8 +109,8 @@ private:
 						y2 = static_cast<int>(y + 1.f);
 						yfractpart = y - y1;
 						one_minus_yfractpart = 1.f - yfractpart;
-						inputY1 = input->ptr<const uint8_t>(y1);
-						inputY2 = input->ptr<const uint8_t>(y2);
+						inputY1 = &inputPtr[y1 * stride];
+						inputY2 = &inputPtr[y2 * stride];
 						outputPtr[i] = static_cast<uint8_t>(
 							(inputY1[x1] * one_minus_yfractpart * one_minus_xfractpart)
 							+ (inputY1[x2] * one_minus_yfractpart * xfractpart)
@@ -142,22 +121,14 @@ private:
 				}
 				outputPtr += outputStride;
 			}
+			return COMPV_ERROR_CODE_S_OK;
 		};
-		if (threadsCount > 1) {
-			CompVAsyncTaskIds taskIds;
-			taskIds.reserve(threadsCount);
-			const size_t heights = (outputHeight / threadsCount);
-			size_t YStart = 0, YEnd;
-			for (size_t threadIdx = 0; threadIdx < threadsCount; ++threadIdx) {
-				YEnd = (threadIdx == (threadsCount - 1)) ? outputHeight : (YStart + heights);
-				COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, YStart, YEnd), taskIds), "Dispatching task failed");
-				YStart += heights;
-			}
-			COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds), "Failed to wait for tasks execution");
-		}
-		else {
-			funcPtr(0, outputHeight);
-		}
+		COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+			funcPtr,
+			outputWidth,
+			outputHeight,
+			COMPV_IMAGE_REMAP_BILINEAR_SAMPLES_PER_THREAD
+		));
 
 		return COMPV_ERROR_CODE_S_OK;
 	}

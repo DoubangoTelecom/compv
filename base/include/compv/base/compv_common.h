@@ -481,6 +481,7 @@ public:
 	T x, y;
 };
 typedef CompVPoint2D<compv_float32_t> CompVPoint2DFloat32;
+typedef CompVPoint2D<compv_float64_t> CompVPoint2DFloat64;
 typedef CompVPoint2D<int16_t> CompVPoint2DInt16;
 typedef std::vector<CompVPoint2DFloat32, CompVAllocatorNoDefaultConstruct<CompVPoint2DFloat32> > CompVPoint2DFloat32Vector;
 typedef std::vector<CompVPoint2DInt16, CompVAllocatorNoDefaultConstruct<CompVPoint2DInt16> > CompVPoint2DInt16Vector;
