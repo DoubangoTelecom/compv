@@ -11,7 +11,7 @@
 
 #define COMPV_HISTOGRAM_BUILD_MIN_SAMPLES_PER_THREAD		(256 * 5)
 #define COMPV_HISTOGRAM_EQUALIZ_MIN_SAMPLES_PER_THREAD		(256 * 4)
-#define COMPV_HISTOGRAM_PROJX_MIN_SAMPLES_PER_THREAD		(128 * 128) // CPU-friendly
+#define COMPV_HISTOGRAM_PROJX_MIN_SAMPLES_PER_THREAD		(256 * 256) // CPU-friendly and temporary values added at the end
 #define COMPV_HISTOGRAM_PROJY_MIN_SAMPLES_PER_THREAD		(128 * 128) // CPU-friendly
 
 COMPV_NAMESPACE_BEGIN()
@@ -46,6 +46,8 @@ COMPV_ERROR_CODE CompVMathHistogram::build(const CompVMatPtr& data, CompVMatPtrP
 	return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
 }
 
+static void CompVMathHistogramBuildProjectionY_8u32s_C(const uint8_t* ptrIn, int32_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride);
+
 // Project the image on the vertical axis (sum non zero bytes per rows)
 COMPV_ERROR_CODE CompVMathHistogram::buildProjectionY(const CompVMatPtr& dataIn, CompVMatPtrPtr ptr32sProjection)
 {
@@ -59,20 +61,14 @@ COMPV_ERROR_CODE CompVMathHistogram::buildProjectionY(const CompVMatPtr& dataIn,
 	CompVMatPtr ptr32sProjection_ = (*ptr32sProjection == dataIn) ? nullptr : *ptr32sProjection;
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<int32_t>(&ptr32sProjection_, 1, height));
 
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found"); // SIMD-friendly (for each row read (to avoid latency process per #4 rows) #32 bytes in #2 xmm registers and sum them)
+	void (*CompVMathHistogramBuildProjectionY_8u32s)(const uint8_t* ptrIn, int32_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride)
+		= CompVMathHistogramBuildProjectionY_8u32s_C;
 
 	auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
-		const uint8_t* ptrIn = dataIn->ptr<const uint8_t>(ystart);
-		int32_t* ptrOut = ptr32sProjection_->ptr<int32_t>(0, ystart);
-		const size_t count = (yend - ystart);
-		for (size_t j = 0; j < count; ++j) {
-			*ptrOut = *ptrIn; // int32_t <- uint8_t
-			for (size_t i = 1; i < width; ++i) {
-				*ptrOut += ptrIn[i]; // int32_t <- uint8_t
-			}
-			ptrIn += stride;
-			++ptrOut;
-		}
+		CompVMathHistogramBuildProjectionY_8u32s(
+			dataIn->ptr<const uint8_t>(ystart), ptr32sProjection_->ptr<int32_t>(0, ystart),
+			static_cast<compv_uscalar_t>(width), static_cast<compv_uscalar_t>(yend - ystart), static_cast<compv_uscalar_t>(stride)
+		);
 		return COMPV_ERROR_CODE_S_OK;
 	};
 	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
@@ -85,6 +81,8 @@ COMPV_ERROR_CODE CompVMathHistogram::buildProjectionY(const CompVMatPtr& dataIn,
 	*ptr32sProjection = ptr32sProjection_;
 	return COMPV_ERROR_CODE_S_OK;
 }
+
+static void CompVMathHistogramBuildProjectionX_8u32s_C(const uint8_t* ptrIn, int32_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride);
 
 // Project the image on the horizontal axis (sum non zero bytes per cols)
 COMPV_ERROR_CODE CompVMathHistogram::buildProjectionX(const CompVMatPtr& dataIn, CompVMatPtrPtr ptr32sProjection)
@@ -99,24 +97,56 @@ COMPV_ERROR_CODE CompVMathHistogram::buildProjectionX(const CompVMatPtr& dataIn,
 	CompVMatPtr ptr32sProjection_ = (*ptr32sProjection == dataIn) ? nullptr : *ptr32sProjection;
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<int32_t>(&ptr32sProjection_, 1, width));
 
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation could be found");
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found"); // SIMD-friendly process per #4 rows and sum them
+	void(*CompVMathHistogramBuildProjectionX_8u32s)(const uint8_t* ptrIn, int32_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride)
+		= CompVMathHistogramBuildProjectionX_8u32s_C;
 
-	const uint8_t* ptrIn = dataIn->ptr<const uint8_t>();
-	int32_t* ptrOut = ptr32sProjection_->ptr<int32_t>();
-	/* First row (to avoid using memset(0)) */
-	for (size_t i = 0; i < width; ++i) {
-		ptrOut[i] = ptrIn[i]; // int32_t <- uint8_t
-	}
-	ptrIn += stride;
-	/* Other rows */
-	for (size_t j = 1; j < height; ++j) {
-		for (size_t i = 0; i < width; ++i) {
-			ptrOut[i] += ptrIn[i]; // int32_t <- uint8_t
+	// Compute number of threads
+	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
+	const size_t maxThreads = (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
+	const size_t threadsCount = CompVThreadDispatcher::guessNumThreadsDividingAcrossY(width, height, maxThreads, COMPV_HISTOGRAM_PROJX_MIN_SAMPLES_PER_THREAD);
+
+	if (threadsCount > 1) {
+		CompVAsyncTaskIds taskIds;
+		taskIds.reserve(threadsCount);
+		CompVMatPtrVector mt_vecPtrOut(threadsCount - 1);
+		auto funcPtr = [&](const size_t ystart, const size_t yend, const size_t threadIdx) -> COMPV_ERROR_CODE {
+			const uint8_t* ptrIn = dataIn->ptr<const uint8_t>(ystart);
+			int32_t* ptrOut;
+			if (threadIdx) {
+				COMPV_CHECK_CODE_RETURN(CompVMat::newObj(&mt_vecPtrOut[threadIdx - 1], ptr32sProjection_));
+				ptrOut = mt_vecPtrOut[threadIdx - 1]->ptr<int32_t>();
+			}
+			else {
+				ptrOut = ptr32sProjection_->ptr<int32_t>();
+			}
+			CompVMathHistogramBuildProjectionX_8u32s(
+				ptrIn, ptrOut,
+				static_cast<compv_uscalar_t>(width), static_cast<compv_uscalar_t>(yend - ystart), static_cast<compv_uscalar_t>(stride)
+			);
+			return COMPV_ERROR_CODE_S_OK;
+		};
+		
+		const size_t heights = (height / threadsCount);
+		size_t YStart = 0, YEnd;
+		for (size_t threadIdx = 0; threadIdx < threadsCount; ++threadIdx) {
+			YEnd = (threadIdx == (threadsCount - 1)) ? height : (YStart + heights);
+			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, YStart, YEnd, threadIdx), taskIds), "Dispatching task failed");
+			YStart += heights;
 		}
-		ptrIn += stride;
+		// Wait and sum the histograms
+		COMPV_CHECK_CODE_RETURN(threadDisp->waitOne(taskIds[0]));
+		for (size_t threadIdx = 1; threadIdx < threadsCount; ++threadIdx) {
+			COMPV_CHECK_CODE_RETURN(threadDisp->waitOne(taskIds[threadIdx]));
+			COMPV_CHECK_CODE_RETURN((CompVMathUtils::sum2<uint32_t, uint32_t>(mt_vecPtrOut[threadIdx - 1]->ptr<const uint32_t>(), ptr32sProjection_->ptr<const uint32_t>(), ptr32sProjection_->ptr<uint32_t>(), width, 1, stride))); // stride is useless as height is equal to 1
+		}
 	}
-
+	else {
+		CompVMathHistogramBuildProjectionX_8u32s(
+			dataIn->ptr<const uint8_t>(), ptr32sProjection_->ptr<int32_t>(),
+			static_cast<compv_uscalar_t>(width), static_cast<compv_uscalar_t>(height), static_cast<compv_uscalar_t>(stride)
+		);
+	}
+	
 	*ptr32sProjection = ptr32sProjection_;
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -286,6 +316,36 @@ static void CompVMathHistogramEqualiz_32u8u_C(const uint32_t* ptr32uHistogram, u
 	for (size_t i = 0; i < 256; ++i) {
 		sum += ptr32uHistogram[i];
 		ptr8uLut[i] = static_cast<uint8_t>(sum * scale); // no need for saturation (thanks to scaling factor)
+	}
+}
+
+static void CompVMathHistogramBuildProjectionY_8u32s_C(const uint8_t* ptrIn, int32_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
+	for (compv_uscalar_t j = 0; j < height; ++j) {
+		*ptrOut = *ptrIn; // int32_t <- uint8_t
+		for (compv_uscalar_t i = 1; i < width; ++i) {
+			*ptrOut += ptrIn[i]; // int32_t <- uint8_t
+		}
+		ptrIn += stride;
+		++ptrOut;
+	}
+}
+
+static void CompVMathHistogramBuildProjectionX_8u32s_C(const uint8_t* ptrIn, int32_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
+	/* Copy first row (to avoid using memset(0)) */
+	for (compv_uscalar_t i = 0; i < width; ++i) {
+		ptrOut[i] = ptrIn[i]; // int32_t <- uint8_t
+	}
+	ptrIn += stride;
+	/* Other rows */
+	for (compv_uscalar_t j = 1; j < height; ++j) {
+		for (compv_uscalar_t i = 0; i < width; ++i) {
+			ptrOut[i] += ptrIn[i]; // int32_t <- uint8_t
+		}
+		ptrIn += stride;
 	}
 }
 
