@@ -109,6 +109,13 @@ COMPV_ERROR_CODE CompVMathHistogram::buildProjectionX(const CompVMatPtr& dataIn,
 	void(*CompVMathHistogramBuildProjectionX_8u32s)(const uint8_t* ptrIn, int32_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride)
 		= CompVMathHistogramBuildProjectionX_8u32s_C;
 
+#if COMPV_ARCH_X86
+	if (width >= 16 && CompVCpu::isEnabled(kCpuFlagSSE2) && dataIn->isAlignedSSE() && ptr32sProjection_->isAlignedSSE()) {
+		COMPV_EXEC_IFDEF_INTRIN_X86((CompVMathHistogramBuildProjectionX_8u32s = CompVMathHistogramBuildProjectionX_8u32s_Intrin_SSE2));
+	}
+#elif COMPV_ARCH_ARM
+#endif
+
 	// Compute number of threads
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
 	const size_t maxThreads = (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) ? static_cast<size_t>(threadDisp->threadsCount()) : 1;

@@ -18,7 +18,61 @@ void CompVMathHistogramBuildProjectionX_8u32s_Intrin_SSE2(COMPV_ALIGNED(SSE) con
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
 	COMPV_ASSERT(width >= 16);
+	COMPV_DEBUG_INFO_CODE_TODO("Add ASM implementation");
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM/AVX2 faster (ptrOut not loaded)");
+	const compv_uscalar_t width16 = width & -16;
+	compv_uscalar_t i;
+	const __m128i vecZero = _mm_setzero_si128();
+	__m128i vec0, vec1;
 
+	/* Copy first row (to avoid using memset(0)) */
+	for (i = 0; i < width16; i += 16) {
+		// int32_t <- uint8_t
+		vec1 = _mm_load_si128(reinterpret_cast<const __m128i*>(&ptrIn[i]));
+		vec0 = _mm_unpacklo_epi8(vec1, vecZero);
+		vec1 = _mm_unpackhi_epi8(vec1, vecZero);
+		_mm_store_si128(reinterpret_cast<__m128i*>(&ptrOut[i]), _mm_unpacklo_epi16(vec0, vecZero));
+		_mm_store_si128(reinterpret_cast<__m128i*>(&ptrOut[i + 4]), _mm_unpackhi_epi16(vec0, vecZero));
+		_mm_store_si128(reinterpret_cast<__m128i*>(&ptrOut[i + 8]), _mm_unpacklo_epi16(vec1, vecZero));
+		_mm_store_si128(reinterpret_cast<__m128i*>(&ptrOut[i + 12]), _mm_unpackhi_epi16(vec1, vecZero));
+	}
+	for (; i < width; ++i) {
+		ptrOut[i] = ptrIn[i]; // int32_t <- uint8_t
+	}
+	ptrIn += stride;
+	/* Other rows */
+	for (compv_uscalar_t j = 1; j < height; ++j) {
+		for (i = 0; i < width16; i += 16) {
+			vec1 = _mm_load_si128(reinterpret_cast<const __m128i*>(&ptrIn[i]));
+			vec0 = _mm_unpacklo_epi8(vec1, vecZero);
+			vec1 = _mm_unpackhi_epi8(vec1, vecZero);
+			// TODO(dmi): for ASM/AVX not need to load "ptrOut" for the sum, use it as 3rd operator
+			_mm_store_si128(reinterpret_cast<__m128i*>(&ptrOut[i]),
+				_mm_add_epi32(
+					_mm_load_si128(reinterpret_cast<const __m128i*>(&ptrOut[i])),
+					_mm_unpacklo_epi16(vec0, vecZero))
+			);
+			_mm_store_si128(reinterpret_cast<__m128i*>(&ptrOut[i + 4]),
+				_mm_add_epi32(
+					_mm_load_si128(reinterpret_cast<const __m128i*>(&ptrOut[i + 4])),
+					_mm_unpackhi_epi16(vec0, vecZero))
+			);
+			_mm_store_si128(reinterpret_cast<__m128i*>(&ptrOut[i + 8]),
+				_mm_add_epi32(
+					_mm_load_si128(reinterpret_cast<const __m128i*>(&ptrOut[i + 8])),
+					_mm_unpacklo_epi16(vec1, vecZero))
+			);
+			_mm_store_si128(reinterpret_cast<__m128i*>(&ptrOut[i + 12]),
+				_mm_add_epi32(
+					_mm_load_si128(reinterpret_cast<const __m128i*>(&ptrOut[i + 12])),
+					_mm_unpackhi_epi16(vec1, vecZero))
+			);
+		}
+		for (; i < width; ++i) {
+			ptrOut[i] += ptrIn[i]; // int32_t <- uint8_t
+		}
+		ptrIn += stride;
+	}
 }
 
 // width must be >= 16
