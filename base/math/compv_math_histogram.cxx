@@ -9,6 +9,8 @@
 #include "compv/base/image/compv_image.h"
 #include "compv/base/parallel/compv_parallel.h"
 
+#include "compv/base/math//intrin/x86/compv_math_histogram_intrin_sse2.h"
+
 #define COMPV_HISTOGRAM_BUILD_MIN_SAMPLES_PER_THREAD		(256 * 5)
 #define COMPV_HISTOGRAM_EQUALIZ_MIN_SAMPLES_PER_THREAD		(256 * 4)
 #define COMPV_HISTOGRAM_PROJX_MIN_SAMPLES_PER_THREAD		(256 * 256) // CPU-friendly and temporary values added at the end
@@ -63,6 +65,13 @@ COMPV_ERROR_CODE CompVMathHistogram::buildProjectionY(const CompVMatPtr& dataIn,
 
 	void (*CompVMathHistogramBuildProjectionY_8u32s)(const uint8_t* ptrIn, int32_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride)
 		= CompVMathHistogramBuildProjectionY_8u32s_C;
+
+#if COMPV_ARCH_X86
+	if (width >= 16 && CompVCpu::isEnabled(kCpuFlagSSE2) && dataIn->isAlignedSSE() && ptr32sProjection_->isAlignedSSE()) {
+		COMPV_EXEC_IFDEF_INTRIN_X86((CompVMathHistogramBuildProjectionY_8u32s = CompVMathHistogramBuildProjectionY_8u32s_Intrin_SSE2));
+	}
+#elif COMPV_ARCH_ARM
+#endif
 
 	auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
 		CompVMathHistogramBuildProjectionY_8u32s(
@@ -323,12 +332,12 @@ static void CompVMathHistogramBuildProjectionY_8u32s_C(const uint8_t* ptrIn, int
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
 	for (compv_uscalar_t j = 0; j < height; ++j) {
-		*ptrOut = *ptrIn; // int32_t <- uint8_t
+		int32_t sum = *ptrIn; // int32_t <- uint8_t
 		for (compv_uscalar_t i = 1; i < width; ++i) {
-			*ptrOut += ptrIn[i]; // int32_t <- uint8_t
+			sum += ptrIn[i]; // int32_t <- uint8_t
 		}
 		ptrIn += stride;
-		++ptrOut;
+		ptrOut[j] = sum;
 	}
 }
 
