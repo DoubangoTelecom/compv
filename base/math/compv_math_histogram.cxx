@@ -50,7 +50,7 @@ COMPV_ERROR_CODE CompVMathHistogram::build(const CompVMatPtr& data, CompVMatPtrP
 
 static void CompVMathHistogramBuildProjectionY_8u32s_C(const uint8_t* ptrIn, int32_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride);
 
-// Project the image on the vertical axis (sum non zero bytes per rows)
+// Project the image on the vertical axis (sum cols)
 COMPV_ERROR_CODE CompVMathHistogram::buildProjectionY(const CompVMatPtr& dataIn, CompVMatPtrPtr ptr32sProjection)
 {
 	COMPV_CHECK_EXP_RETURN(!dataIn || !dataIn || dataIn->isEmpty() || dataIn->elmtInBytes() != sizeof(uint8_t) || dataIn->planeCount() != 1 || !ptr32sProjection,
@@ -93,7 +93,7 @@ COMPV_ERROR_CODE CompVMathHistogram::buildProjectionY(const CompVMatPtr& dataIn,
 
 static void CompVMathHistogramBuildProjectionX_8u32s_C(const uint8_t* ptrIn, int32_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride);
 
-// Project the image on the horizontal axis (sum non zero bytes per cols)
+// Project the image on the horizontal axis (sum rows)
 COMPV_ERROR_CODE CompVMathHistogram::buildProjectionX(const CompVMatPtr& dataIn, CompVMatPtrPtr ptr32sProjection)
 {
 	COMPV_CHECK_EXP_RETURN(!dataIn || !dataIn || dataIn->isEmpty() || dataIn->elmtInBytes() != sizeof(uint8_t) || dataIn->planeCount() != 1 || !ptr32sProjection,

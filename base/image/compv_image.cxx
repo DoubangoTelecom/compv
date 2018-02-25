@@ -395,14 +395,14 @@ COMPV_ERROR_CODE CompVImage::histogramBuild(const CompVMatPtr& input, CompVMatPt
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-// Project the image on the vertical axis (sum non zero bytes per rows)
+// Project the image on the vertical axis (sum cols)
 COMPV_ERROR_CODE CompVImage::histogramBuildProjectionY(const CompVMatPtr& dataIn, CompVMatPtrPtr ptr32sProjection)
 {
 	COMPV_CHECK_CODE_RETURN(CompVMathHistogram::buildProjectionY(dataIn, ptr32sProjection));
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-// Project the image on the horizontal axis (sum non zero bytes per cols)
+// Project the image on the horizontal axis (sum rows)
 COMPV_ERROR_CODE CompVImage::histogramBuildProjectionX(const CompVMatPtr& dataIn, CompVMatPtrPtr ptr32sProjection)
 {
 	COMPV_CHECK_CODE_RETURN(CompVMathHistogram::buildProjectionX(dataIn, ptr32sProjection));
