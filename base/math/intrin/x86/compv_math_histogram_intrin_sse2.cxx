@@ -18,8 +18,7 @@ void CompVMathHistogramBuildProjectionX_8u32s_Intrin_SSE2(COMPV_ALIGNED(SSE) con
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
 	COMPV_ASSERT(width >= 16);
-	COMPV_DEBUG_INFO_CODE_TODO("Add ASM implementation");
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM/AVX2 faster (ptrOut not loaded)");
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM/AVX2 faster");
 	const compv_uscalar_t width16 = width & -16;
 	compv_uscalar_t i;
 	const __m128i vecZero = _mm_setzero_si128();
