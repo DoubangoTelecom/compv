@@ -142,8 +142,6 @@ sym(CompVMathHistogramProcess_8u32s_Asm_X64_SSE2)
 	ret
 
 
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; arg(0) -> COMPV_ALIGNED(SSE) const uint8_t* ptrIn
 ; arg(1) -> COMPV_ALIGNED(SSE) int32_t* ptrOut
@@ -261,6 +259,27 @@ sym(CompVMathHistogramBuildProjectionY_8u32s_Asm_X64_SSE2)
 		lea ptrOut, [ptrOut + 1*COMPV_YASM_INT32_SZ_BYTES]
 		jnz .LoopHeight
 	.EndOf_LoopHeight:
+
+	%undef ptrIn			
+	%undef ptrOut			
+	%undef width			
+	%undef height			
+	%undef stride			
+	%undef sum				
+	%undef sumd			
+	%undef i				
+	%undef width16			
+	%undef tmp				
+
+	%undef vec0			
+	%undef vec1			
+	%undef vec2			
+	%undef vec3			
+	%undef vec4			
+	%undef vec5			
+	%undef vec6			
+	%undef vec7			
+	%undef vecZero			
 
 	;; begin epilog ;;
 	pop rbx

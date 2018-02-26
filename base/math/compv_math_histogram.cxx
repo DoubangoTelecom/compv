@@ -23,6 +23,7 @@ COMPV_NAMESPACE_BEGIN()
 COMPV_EXTERNC void CompVMathHistogramProcess_8u32s_Asm_X64_SSE2(COMPV_ALIGNED(SSE) const uint8_t* dataPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride, COMPV_ALIGNED(SSE) uint32_t* histogramPtr);
 COMPV_EXTERNC void CompVMathHistogramProcess_8u32s_Asm_X64(const uint8_t* dataPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, uint32_t* histogramPtr);
 COMPV_EXTERNC void CompVMathHistogramBuildProjectionY_8u32s_Asm_X64_SSE2(COMPV_ALIGNED(SSE) const uint8_t* ptrIn, COMPV_ALIGNED(SSE) int32_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, COMPV_ALIGNED(SSE) const compv_uscalar_t stride);
+COMPV_EXTERNC void CompVMathHistogramBuildProjectionY_8u32s_Asm_X64_AVX2(COMPV_ALIGNED(AVX) const uint8_t* ptrIn, COMPV_ALIGNED(AVX) int32_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, COMPV_ALIGNED(AVX) const compv_uscalar_t stride);
 #endif /* COMPV_ASM && COMPV_ARCH_X64 */
 
 #if COMPV_ASM && COMPV_ARCH_ARM32
@@ -74,6 +75,9 @@ COMPV_ERROR_CODE CompVMathHistogram::buildProjectionY(const CompVMatPtr& dataIn,
 	if (width >= 16 && CompVCpu::isEnabled(kCpuFlagSSE2) && dataIn->isAlignedSSE() && ptr32sProjection_->isAlignedSSE()) {
 		COMPV_EXEC_IFDEF_INTRIN_X86((CompVMathHistogramBuildProjectionY_8u32s = CompVMathHistogramBuildProjectionY_8u32s_Intrin_SSE2));
 		COMPV_EXEC_IFDEF_ASM_X64((CompVMathHistogramBuildProjectionY_8u32s = CompVMathHistogramBuildProjectionY_8u32s_Asm_X64_SSE2));
+	}
+	if (width >= 32 && CompVCpu::isEnabled(kCpuFlagAVX2) && dataIn->isAlignedAVX() && ptr32sProjection_->isAlignedAVX()) {
+		COMPV_EXEC_IFDEF_ASM_X64((CompVMathHistogramBuildProjectionY_8u32s = CompVMathHistogramBuildProjectionY_8u32s_Asm_X64_AVX2));
 	}
 #elif COMPV_ARCH_ARM
 #endif
