@@ -181,6 +181,11 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathHistogramBuildProjectionY_8u32s_Asm_NEON32
 	vec5x .req q5x
 	vec5y .req q5y
 
+	pld [ptrIn, #(CACHE_LINE_SIZE*0)]
+	pld [ptrIn, #(CACHE_LINE_SIZE*1)]
+	pld [ptrIn, #(CACHE_LINE_SIZE*2)]
+	pld [ptrIn, #(CACHE_LINE_SIZE*3)]
+
 	and width16, width, #-16
 	sub stride, stride, width @ stride now contains padding
 
@@ -189,6 +194,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathHistogramBuildProjectionY_8u32s_Asm_NEON32
 	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	LoopHeight_CompVMathHistogramBuildProjectionY_8u32s_Asm_NEON32:
 		vld1.u8 { vec1 }, [ptrIn :128]!
+		pld [ptrIn, #(CACHE_LINE_SIZE*4)]
 		vmovl.u8 vec3, vec1y
 		vmovl.u8 vec1, vec1x
 		vmovl.u16 vec0, vec1x
