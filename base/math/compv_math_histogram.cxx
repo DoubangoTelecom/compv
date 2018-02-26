@@ -10,6 +10,7 @@
 #include "compv/base/parallel/compv_parallel.h"
 
 #include "compv/base/math//intrin/x86/compv_math_histogram_intrin_sse2.h"
+#include "compv/base/math/intrin/arm/compv_math_histogram_intrin_neon.h"
 
 #define COMPV_HISTOGRAM_BUILD_MIN_SAMPLES_PER_THREAD		(256 * 5)
 #define COMPV_HISTOGRAM_EQUALIZ_MIN_SAMPLES_PER_THREAD		(256 * 4)
@@ -82,6 +83,10 @@ COMPV_ERROR_CODE CompVMathHistogram::buildProjectionY(const CompVMatPtr& dataIn,
 		COMPV_EXEC_IFDEF_ASM_X64((CompVMathHistogramBuildProjectionY_8u32s = CompVMathHistogramBuildProjectionY_8u32s_Asm_X64_AVX2));
 	}
 #elif COMPV_ARCH_ARM
+	if (width >= 16 && CompVCpu::isEnabled(kCpuFlagARM_NEON) && dataIn->isAlignedNEON() && ptr32sProjection_->isAlignedNEON()) {
+		COMPV_EXEC_IFDEF_INTRIN_ARM((CompVMathHistogramBuildProjectionY_8u32s = CompVMathHistogramBuildProjectionY_8u32s_Intrin_NEON));
+		//COMPV_EXEC_IFDEF_ASM_ARM32((CompVMathHistogramBuildProjectionY_8u32s = CompVMathHistogramBuildProjectionY_8u32s_Asm_X64_SSE2));
+	}
 #endif
 
 	auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
@@ -129,6 +134,10 @@ COMPV_ERROR_CODE CompVMathHistogram::buildProjectionX(const CompVMatPtr& dataIn,
 		COMPV_EXEC_IFDEF_ASM_X64((CompVMathHistogramBuildProjectionX_8u32s = CompVMathHistogramBuildProjectionX_8u32s_Asm_X64_AVX2));
 	}
 #elif COMPV_ARCH_ARM
+	if (width >= 16 && CompVCpu::isEnabled(kCpuFlagARM_NEON) && dataIn->isAlignedNEON() && ptr32sProjection_->isAlignedNEON()) {
+		COMPV_EXEC_IFDEF_INTRIN_ARM((CompVMathHistogramBuildProjectionX_8u32s = CompVMathHistogramBuildProjectionX_8u32s_Intrin_NEON));
+		//COMPV_EXEC_IFDEF_ASM_ARM32((CompVMathHistogramBuildProjectionX_8u32s = CompVMathHistogramBuildProjectionX_8u32s_Asm_X64_SSE2));
+	}
 #endif
 
 	// Compute number of threads

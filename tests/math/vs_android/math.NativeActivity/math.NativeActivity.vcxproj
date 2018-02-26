@@ -56,7 +56,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\tests_common.cxx" />
+    <ClCompile Include="..\..\calib_camera.cxx" />
     <ClCompile Include="..\..\calib_homography.cxx" />
+    <ClCompile Include="..\..\calib_undist.cxx" />
     <ClCompile Include="..\..\convlt.cxx" />
     <ClCompile Include="..\..\distance.cxx" />
     <ClCompile Include="..\..\eigen.cxx" />
@@ -67,6 +69,7 @@
     <ClCompile Include="..\..\morph.cxx" />
     <ClCompile Include="..\..\stats_mse.cxx" />
     <ClCompile Include="..\..\stats_normalize.cxx" />
+    <ClCompile Include="..\..\stats_ransac.cxx" />
     <ClCompile Include="..\..\stats_variance.cxx" />
     <ClCompile Include="..\..\svd.cxx" />
     <ClCompile Include="..\..\transform.cxx" />

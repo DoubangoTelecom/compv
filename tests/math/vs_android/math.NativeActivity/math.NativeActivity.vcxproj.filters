@@ -16,6 +16,9 @@
     <ClCompile Include="..\..\histogram.cxx" />
     <ClCompile Include="..\..\convlt.cxx" />
     <ClCompile Include="..\..\morph.cxx" />
+    <ClCompile Include="..\..\calib_camera.cxx" />
+    <ClCompile Include="..\..\calib_undist.cxx" />
+    <ClCompile Include="..\..\stats_ransac.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\tests_common.h" />
