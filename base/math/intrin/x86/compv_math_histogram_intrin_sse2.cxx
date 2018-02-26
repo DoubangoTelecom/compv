@@ -46,10 +46,10 @@ void CompVMathHistogramBuildProjectionX_8u32s_Intrin_SSE2(COMPV_ALIGNED(SSE) con
 			vec1 = _mm_load_si128(reinterpret_cast<const __m128i*>(&ptrIn[i]));
 			vec0 = _mm_unpacklo_epi8(vec1, vecZero);
 			vec1 = _mm_unpackhi_epi8(vec1, vecZero);
-			// TODO(dmi): for ASM/AVX not need to load "ptrOut" for the sum, use it as 3rd operator
+			// TODO(dmi): for ASM/AVX no need to load "ptrOut" for the sum, use it as 3rd operator
 			_mm_store_si128(reinterpret_cast<__m128i*>(&ptrOut[i]),
 				_mm_add_epi32(
-					_mm_load_si128(reinterpret_cast<const __m128i*>(&ptrOut[i])),
+					_mm_load_si128(reinterpret_cast<const __m128i*>(&ptrOut[i])), // Perf issue, do not load ptrOut -> see ASM/AVX2 code
 					_mm_unpacklo_epi16(vec0, vecZero))
 			);
 			_mm_store_si128(reinterpret_cast<__m128i*>(&ptrOut[i + 4]),
@@ -80,6 +80,7 @@ void CompVMathHistogramBuildProjectionY_8u32s_Intrin_SSE2(COMPV_ALIGNED(SSE) con
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
 	COMPV_ASSERT(width >= 16);
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM/AVX2 faster");
 	COMPV_DEBUG_INFO_CODE_TODO("Add ASM implementation");
 	int32_t sum;
 	compv_uscalar_t i;

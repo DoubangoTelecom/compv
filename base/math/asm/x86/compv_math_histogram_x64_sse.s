@@ -13,6 +13,7 @@
 COMPV_YASM_DEFAULT_REL
 
 global sym(CompVMathHistogramProcess_8u32s_Asm_X64_SSE2)
+global sym(CompVMathHistogramBuildProjectionY_8u32s_Asm_X64_SSE2)
 
 section .data
 	
@@ -131,6 +132,137 @@ sym(CompVMathHistogramProcess_8u32s_Asm_X64_SSE2)
 	pop r14
 	pop r13
 	pop r12
+	pop rbx
+	pop rdi
+	pop rsi
+	COMPV_YASM_RESTORE_XMM
+	COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	ret
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> COMPV_ALIGNED(SSE) const uint8_t* ptrIn
+; arg(1) -> COMPV_ALIGNED(SSE) int32_t* ptrOut
+; arg(2) -> const compv_uscalar_t width
+; arg(3) -> const compv_uscalar_t height
+; arg(4) -> COMPV_ALIGNED(SSE) const compv_uscalar_t stride
+sym(CompVMathHistogramBuildProjectionY_8u32s_Asm_X64_SSE2)
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 5
+	COMPV_YASM_SAVE_XMM 8
+	push rsi
+	push rdi
+	push rbx
+	;; end prolog ;;
+
+	%define ptrIn			rax
+	%define ptrOut			rcx
+	%define width			rdx
+	%define height			rsi
+	%define stride			rdi
+	%define sum				rbx
+	%define sumd			ebx
+	%define i				r8
+	%define width16			r9
+	%define tmp				r10
+
+	%define vec0			xmm0
+	%define vec1			xmm1
+	%define vec2			xmm2
+	%define vec3			xmm3
+	%define vec4			xmm4
+	%define vec5			xmm5
+	%define vec6			xmm6
+	%define vec7			xmm7
+	%define vecZero			xmm8
+
+	mov ptrIn, arg(0)
+	mov ptrOut, arg(1)
+	mov width, arg(2)
+	mov height, arg(3)
+	mov stride, arg(4)
+	mov width16, width
+	and width16, -16
+
+	pxor vecZero, vecZero
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	; for (compv_uscalar_t j = 0; j < height; ++j)
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	.LoopHeight:
+		; int32_t <- uint8_t
+		movdqa vec1, [ptrIn + 0*COMPV_YASM_UINT8_SZ_BYTES]
+		movdqa vec3, vec1
+		punpckhbw vec3, vecZero
+		punpcklbw vec1, vecZero
+		movdqa vec2, vec3
+		movdqa vec0, vec1
+		punpcklwd vec0, vecZero
+		punpckhwd vec1, vecZero
+		punpcklwd vec2, vecZero
+		punpckhwd vec3, vecZero
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; for (i = 16; i < width16; i += 16)
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		cmp width16, 16
+		mov i, 16
+		jle .EndOf_LoopWidth16
+		.LoopWidth16:
+			movdqa vec5, [ptrIn + (i*COMPV_YASM_UINT8_SZ_BYTES)]
+			movdqa vec7, vec5
+			punpckhbw vec7, vecZero
+			punpcklbw vec5, vecZero
+			movdqa vec6, vec7
+			movdqa vec4, vec5
+			punpcklwd vec4, vecZero
+			punpckhwd vec5, vecZero
+			punpcklwd vec6, vecZero
+			punpckhwd vec7, vecZero
+			paddd vec0, vec4
+			paddd vec1, vec5
+			paddd vec2, vec6
+			paddd vec3, vec7
+			add i, 16
+			cmp i, width16
+			jl .LoopWidth16
+		.EndOf_LoopWidth16:
+
+		paddd vec0, vec2
+		paddd vec1, vec3
+		paddd vec0, vec1
+
+		pshufd vec1, vec0, 0xE
+		paddd vec0, vec1
+		pshufd vec1, vec0, 0x1
+		paddd vec0, vec1
+		movd sum, vec0
+
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; for (; i < width; ++i)
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		cmp i, width
+		jge .EndOf_LoopWidth1
+		.LoopWidth1:
+			movzx tmp, byte [ptrIn + (i*COMPV_YASM_UINT8_SZ_BYTES)]
+			inc i
+			add sum, tmp
+			cmp i, width
+			jl .LoopWidth1
+		.EndOf_LoopWidth1:
+
+		dec height
+		lea ptrIn, [ptrIn + stride*COMPV_YASM_UINT8_SZ_BYTES]
+		mov dword [ptrOut], sumd
+		lea ptrOut, [ptrOut + 1*COMPV_YASM_INT32_SZ_BYTES]
+		jnz .LoopHeight
+	.EndOf_LoopHeight:
+
+	;; begin epilog ;;
 	pop rbx
 	pop rdi
 	pop rsi
