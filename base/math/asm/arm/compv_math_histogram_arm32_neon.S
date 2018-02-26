@@ -137,6 +137,177 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathHistogramProcess_8u32s_Asm_NEON32
 	COMPV_GAS_FUNCTION_EPILOG
 	COMPV_GAS_FUNCTION_RETURN
 
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@ arg(0) -> COMPV_ALIGNED(NEON) const uint8_t* ptrIn
+@ arg(1) -> COMPV_ALIGNED(NEON) int32_t* ptrOut
+@ arg(2) -> const compv_uscalar_t width
+@ arg(3) -> const compv_uscalar_t height
+@ arg(4) -> COMPV_ALIGNED(NEON) const compv_uscalar_t stride
+COMPV_GAS_FUNCTION_DECLARE CompVMathHistogramBuildProjectionX_8u32s_Asm_NEON32
+	COMPV_GAS_FUNCTION_PROLOG
+	COMPV_GAS_SHADOW_ARGS_TO_STACK 5
+	COMPV_GAS_SAVE_NEON_REGS
+	@@ end prolog @@
+
+	@ Load arguments @
+	ldm_args r0-r4
+	ptrIn .req r0
+	ptrOut .req r1
+	width .req r2
+	height .req r3
+	stride .req r4
+
+	@ Local Variables @
+    i .req r5
+	width16 .req r6
+	rollback .req r7
+	vec0 .req q0
+	vec0x .req q0x
+	vec0y .req q0y
+	vec1 .req q1
+	vec1x .req q1x
+	vec1y .req q1y
+	vec2 .req q2
+	vec2x .req q2x
+	vec2y .req q2y
+	vec3 .req q3
+	vec3x .req q3x
+	vec3y .req q3y
+	vec4 .req q4
+	vec4x .req q4x
+	vec4y .req q4y
+	vec5 .req q5
+	vec5x .req q5x
+	vec5y .req q5y
+
+	pld [ptrIn, #(CACHE_LINE_SIZE*0)]
+	pld [ptrIn, #(CACHE_LINE_SIZE*1)]
+	pld [ptrIn, #(CACHE_LINE_SIZE*2)]
+	pld [ptrIn, #(CACHE_LINE_SIZE*3)]
+
+	and width16, width, #-16
+	sub stride, stride, width @ stride now contains padding
+	mov rollback, #-(2*COMPV_GAS_Q_SZ_BYTES)
+
+	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	@ for (i = 0; i < width16; i += 16)
+	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	mov i, #0
+	LoopMemsetWidth16_CompVMathHistogramBuildProjectionX_8u32s_Asm_NEON32:
+		vld1.u8 { vec1 }, [ptrIn :128]!
+		pld [ptrIn, #(CACHE_LINE_SIZE*4)]
+		vmovl.u8 vec3, vec1y
+		vmovl.u8 vec1, vec1x
+		vmovl.u16 vec0, vec1x
+		vmovl.u16 vec1, vec1y
+		vmovl.u16 vec2, vec3x
+		vmovl.u16 vec3, vec3y
+		vst1.u32 { vec0, vec1 }, [ptrOut]!
+		vst1.u32 { vec2, vec3 }, [ptrOut]!
+		add i, i, #16
+		cmp i, width16
+		blt LoopMemsetWidth16_CompVMathHistogramBuildProjectionX_8u32s_Asm_NEON32
+	EndOf_LoopMemsetWidth16_CompVMathHistogramBuildProjectionX_8u32s_Asm_NEON32:
+
+	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	@ for (; i < width; ++i)
+	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	cmp i, width
+	bge EndOf_LoopMemsetWidth1_CompVMathHistogramBuildProjectionX_8u32s_Asm_NEON32
+	LoopMemsetWidth1_CompVMathHistogramBuildProjectionX_8u32s_Asm_NEON32:
+		ldrb r11, [ptrIn], #(1*COMPV_GAS_UINT8_SZ_BYTES)
+		str r11, [ptrOut], #(1*COMPV_GAS_UINT32_SZ_BYTES)
+		add i, i, #1
+		cmp i, width
+		blt LoopMemsetWidth1_CompVMathHistogramBuildProjectionX_8u32s_Asm_NEON32
+	EndOf_LoopMemsetWidth1_CompVMathHistogramBuildProjectionX_8u32s_Asm_NEON32:
+
+	sub ptrOut, ptrOut, width, LSL #(COMPV_GAS_UINT32_SHIFT_BYTES)
+	add ptrIn, ptrIn, stride
+	subs height, height, #1
+	beq EndOf_LoopHeight_CompVMathHistogramBuildProjectionX_8u32s_Asm_NEON32
+
+	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	@ for (compv_uscalar_t j = 1; j < height; ++j) 
+	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	LoopHeight_CompVMathHistogramBuildProjectionX_8u32s_Asm_NEON32:
+		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+		@ for (i = 16; i < width16; i += 16)
+		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+		mov i, #0
+		LoopWidth16_CompVMathHistogramBuildProjectionX_8u32s_Asm_NEON32:
+			vld1.u8 { vec4 }, [ptrIn :128]!
+			vmovl.u8 vec5, vec4y
+			vmovl.u8 vec4, vec4x
+			vld1.u32 { vec0,vec1 }, [ptrOut :128]!
+			vld1.u32 { vec2,vec3 }, [ptrOut :128], rollback
+			vaddw.u16 vec0, vec4x
+			vaddw.u16 vec1, vec4y
+			vaddw.u16 vec2, vec5x
+			vaddw.u16 vec3, vec5y
+			vst1.u32 { vec0, vec1 }, [ptrOut]!
+			vst1.u32 { vec2, vec3 }, [ptrOut]!
+			add i, i, #16
+			cmp i, width16
+			blt LoopWidth16_CompVMathHistogramBuildProjectionX_8u32s_Asm_NEON32
+		EndOf_LoopWidth16_CompVMathHistogramBuildProjectionX_8u32s_Asm_NEON32:
+
+		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+		@ for (; i < width; ++i)
+		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+		cmp i, width
+		bge EndOf_LoopWidth1_CompVMathHistogramBuildProjectionX_8u32s_Asm_NEON32
+		LoopWidth1_CompVMathHistogramBuildProjectionX_8u32s_Asm_NEON32:
+			ldrb r11, [ptrIn], #(1*COMPV_GAS_UINT8_SZ_BYTES)
+			ldr r10, [ptrOut]
+			add r10, r10, r11
+			add i, i, #1
+			cmp i, width
+			str r10, [ptrOut], #(1*COMPV_GAS_UINT32_SZ_BYTES)
+			blt LoopWidth1_CompVMathHistogramBuildProjectionX_8u32s_Asm_NEON32
+		EndOf_LoopWidth1_CompVMathHistogramBuildProjectionX_8u32s_Asm_NEON32:
+
+		add ptrIn, ptrIn, stride
+		sub ptrOut, ptrOut, width, LSL #(COMPV_GAS_UINT32_SHIFT_BYTES)
+
+		subs height, height, #1
+		bne LoopHeight_CompVMathHistogramBuildProjectionX_8u32s_Asm_NEON32
+	EndOf_LoopHeight_CompVMathHistogramBuildProjectionX_8u32s_Asm_NEON32:
+
+	.unreq ptrIn
+	.unreq ptrOut
+	.unreq width
+	.unreq height
+	.unreq stride
+
+    .unreq i
+	.unreq width16
+	.unreq rollback
+	.unreq vec0
+	.unreq vec0x
+	.unreq vec0y
+	.unreq vec1
+	.unreq vec1x
+	.unreq vec1y
+	.unreq vec2
+	.unreq vec2x
+	.unreq vec2y
+	.unreq vec3
+	.unreq vec3x
+	.unreq vec3y
+	.unreq vec4
+	.unreq vec4x
+	.unreq vec4y
+	.unreq vec5
+	.unreq vec5x
+	.unreq vec5y
+
+	@@ begin epilog @@
+	COMPV_GAS_RESTORE_NEON_REGS
+	COMPV_GAS_UNSHADOW_ARGS 5
+	COMPV_GAS_FUNCTION_EPILOG
+	COMPV_GAS_FUNCTION_RETURN
+
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @ arg(0) -> COMPV_ALIGNED(NEON) const uint8_t* ptrIn
