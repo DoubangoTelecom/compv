@@ -31,10 +31,14 @@ COMPV_EXTERNC void CompVMathHistogramBuildProjectionY_8u32s_Asm_X64_AVX2(COMPV_A
 
 #if COMPV_ASM && COMPV_ARCH_ARM32
 COMPV_EXTERNC void CompVMathHistogramProcess_8u32s_Asm_NEON32(const uint8_t* dataPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, uint32_t* histogramPtr);
+COMPV_EXTERNC void CompVMathHistogramBuildProjectionX_8u32s_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* ptrIn, COMPV_ALIGNED(NEON) int32_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, COMPV_ALIGNED(NEON) const compv_uscalar_t stride);
+COMPV_EXTERNC void CompVMathHistogramBuildProjectionY_8u32s_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* ptrIn, COMPV_ALIGNED(NEON) int32_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, COMPV_ALIGNED(NEON) const compv_uscalar_t stride);
 #endif /* COMPV_ASM && COMPV_ARCH_ARM32 */
 
 #if COMPV_ASM && COMPV_ARCH_ARM64
 COMPV_EXTERNC void CompVMathHistogramProcess_8u32s_Asm_NEON64(const uint8_t* dataPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, uint32_t* histogramPtr);
+COMPV_EXTERNC void CompVMathHistogramBuildProjectionX_8u32s_Asm_NEON64(COMPV_ALIGNED(NEON) const uint8_t* ptrIn, COMPV_ALIGNED(NEON) int32_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, COMPV_ALIGNED(NEON) const compv_uscalar_t stride);
+COMPV_EXTERNC void CompVMathHistogramBuildProjectionY_8u32s_Asm_NEON64(COMPV_ALIGNED(NEON) const uint8_t* ptrIn, COMPV_ALIGNED(NEON) int32_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, COMPV_ALIGNED(NEON) const compv_uscalar_t stride);
 #endif /* COMPV_ASM && COMPV_ARCH_ARM64 */
 
 COMPV_ERROR_CODE CompVMathHistogram::build(const CompVMatPtr& data, CompVMatPtrPtr histogram)
@@ -85,7 +89,7 @@ COMPV_ERROR_CODE CompVMathHistogram::buildProjectionY(const CompVMatPtr& dataIn,
 #elif COMPV_ARCH_ARM
 	if (width >= 16 && CompVCpu::isEnabled(kCpuFlagARM_NEON) && dataIn->isAlignedNEON() && ptr32sProjection_->isAlignedNEON()) {
 		COMPV_EXEC_IFDEF_INTRIN_ARM((CompVMathHistogramBuildProjectionY_8u32s = CompVMathHistogramBuildProjectionY_8u32s_Intrin_NEON));
-		//COMPV_EXEC_IFDEF_ASM_ARM32((CompVMathHistogramBuildProjectionY_8u32s = CompVMathHistogramBuildProjectionY_8u32s_Asm_X64_SSE2));
+		COMPV_EXEC_IFDEF_ASM_ARM32((CompVMathHistogramBuildProjectionY_8u32s = CompVMathHistogramBuildProjectionY_8u32s_Asm_NEON32));
 	}
 #endif
 
