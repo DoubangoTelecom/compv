@@ -151,5 +151,239 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathHistogramProcess_8u32s_Asm_NEON64
 	COMPV_GAS_FUNCTION_EPILOG
 	COMPV_GAS_FUNCTION_RETURN
 
+#########################################################
+# arg(0) -> COMPV_ALIGNED(NEON) const uint8_t* ptrIn
+# arg(1) -> COMPV_ALIGNED(NEON) int32_t* ptrOut
+# arg(2) -> const compv_uscalar_t width
+# arg(3) -> const compv_uscalar_t height
+# arg(4) -> COMPV_ALIGNED(NEON) const compv_uscalar_t stride
+COMPV_GAS_FUNCTION_DECLARE CompVMathHistogramBuildProjectionX_8u32s_Asm_NEON64
+	COMPV_GAS_FUNCTION_PROLOG
+	COMPV_GAS_SAVE_NEON_REGS
+	## end prolog ##
+
+	# Load arguments #
+	ptrIn .req r0
+	ptrOut .req r1
+	width .req r2
+	height .req r3
+	stride .req r4
+
+	# Local Variables #
+    i .req r5
+	width16 .req r6
+
+	prfm pldl1keep, [ptrIn, #(CACHE_LINE_SIZE*0)]
+	prfm pldl1keep, [ptrIn, #(CACHE_LINE_SIZE*1)]
+	prfm pldl1keep, [ptrIn, #(CACHE_LINE_SIZE*2)]
+	prfm pldl1keep, [ptrIn, #(CACHE_LINE_SIZE*3)]
+
+	and width16, width, #-16
+	sub stride, stride, width // stride now contains padding
+
+	########################################################
+	# for (i = 0; i < width16; i += 16)
+	########################################################
+	mov i, #0
+	LoopMemsetWidth16_CompVMathHistogramBuildProjectionX_8u32s_Asm_NEON64:
+		ldr q1, [ptrIn], #(1*COMPV_GAS_Q_SZ_BYTES)
+		prfm pldl1keep, [ptrIn, #(CACHE_LINE_SIZE*4)]
+		uxtl2 v3.8h, v1.16b
+		uxtl v1.8h, v1.8b
+		uxtl v0.4s, v1.4h
+		uxtl2 v1.4s, v1.8h
+		uxtl v2.4s, v3.4h
+		uxtl2 v3.4s, v3.8h
+		stp q0, q1, [ptrOut], #(2*COMPV_GAS_Q_SZ_BYTES) 
+		stp q2, q3, [ptrOut], #(2*COMPV_GAS_Q_SZ_BYTES) 
+		add i, i, #16
+		cmp i, width16
+		blt LoopMemsetWidth16_CompVMathHistogramBuildProjectionX_8u32s_Asm_NEON64
+	EndOf_LoopMemsetWidth16_CompVMathHistogramBuildProjectionX_8u32s_Asm_NEON64:
+
+	########################################################
+	# for (; i < width; ++i)
+	########################################################
+	cmp i, width
+	bge EndOf_LoopMemsetWidth1_CompVMathHistogramBuildProjectionX_8u32s_Asm_NEON64
+	LoopMemsetWidth1_CompVMathHistogramBuildProjectionX_8u32s_Asm_NEON64:
+		ldrb r11w, [ptrIn], #(1*COMPV_GAS_UINT8_SZ_BYTES)
+		str r11w, [ptrOut], #(1*COMPV_GAS_UINT32_SZ_BYTES)
+		add i, i, #1
+		cmp i, width
+		blt LoopMemsetWidth1_CompVMathHistogramBuildProjectionX_8u32s_Asm_NEON64
+	EndOf_LoopMemsetWidth1_CompVMathHistogramBuildProjectionX_8u32s_Asm_NEON64:
+
+	sub ptrOut, ptrOut, width, LSL #(COMPV_GAS_UINT32_SHIFT_BYTES)
+	add ptrIn, ptrIn, stride
+	subs height, height, #1
+	beq EndOf_LoopHeight_CompVMathHistogramBuildProjectionX_8u32s_Asm_NEON64
+
+	########################################################
+	# for (compv_uscalar_t j = 1; j < height; ++j) 
+	########################################################
+	LoopHeight_CompVMathHistogramBuildProjectionX_8u32s_Asm_NEON64:
+		########################################################
+		# for (i = 16; i < width16; i += 16)
+		########################################################
+		mov i, #0
+		LoopWidth16_CompVMathHistogramBuildProjectionX_8u32s_Asm_NEON64:
+			ldr q4, [ptrIn], #(1*COMPV_GAS_Q_SZ_BYTES)
+			uxtl2 v5.8h, v4.16b
+			uxtl v4.8h, v4.8b
+			ldp q0, q1, [ptrOut, #(0*COMPV_GAS_Q_SZ_BYTES)]
+			ldp q2, q3, [ptrOut, #(2*COMPV_GAS_Q_SZ_BYTES)]
+			uaddw v0.4s, v0.4s, v4.4h
+			uaddw2 v1.4s, v1.4s, v4.8h
+			uaddw v2.4s, v2.4s, v5.4h
+			uaddw2 v3.4s, v3.4s, v5.8h
+			stp q0, q1, [ptrOut], #(2*COMPV_GAS_Q_SZ_BYTES)
+			stp q2, q3, [ptrOut], #(2*COMPV_GAS_Q_SZ_BYTES)
+			add i, i, #16
+			cmp i, width16
+			blt LoopWidth16_CompVMathHistogramBuildProjectionX_8u32s_Asm_NEON64
+		EndOf_LoopWidth16_CompVMathHistogramBuildProjectionX_8u32s_Asm_NEON64:
+
+		########################################################
+		# for (; i < width; ++i)
+		########################################################
+		cmp i, width
+		bge EndOf_LoopWidth1_CompVMathHistogramBuildProjectionX_8u32s_Asm_NEON64
+		LoopWidth1_CompVMathHistogramBuildProjectionX_8u32s_Asm_NEON64:
+			ldrb r11w, [ptrIn], #(1*COMPV_GAS_UINT8_SZ_BYTES)
+			ldr r10w, [ptrOut]
+			add r10, r10, r11
+			add i, i, #1
+			cmp i, width
+			str r10w, [ptrOut], #(1*COMPV_GAS_UINT32_SZ_BYTES)
+			blt LoopWidth1_CompVMathHistogramBuildProjectionX_8u32s_Asm_NEON64
+		EndOf_LoopWidth1_CompVMathHistogramBuildProjectionX_8u32s_Asm_NEON64:
+
+		add ptrIn, ptrIn, stride
+		sub ptrOut, ptrOut, width, LSL #(COMPV_GAS_UINT32_SHIFT_BYTES)
+
+		subs height, height, #1
+		bne LoopHeight_CompVMathHistogramBuildProjectionX_8u32s_Asm_NEON64
+	EndOf_LoopHeight_CompVMathHistogramBuildProjectionX_8u32s_Asm_NEON64:
+
+	.unreq ptrIn
+	.unreq ptrOut
+	.unreq width
+	.unreq height
+	.unreq stride
+
+    .unreq i
+	.unreq width16
+
+	## begin epilog ##
+	COMPV_GAS_RESTORE_NEON_REGS
+	COMPV_GAS_FUNCTION_EPILOG
+	COMPV_GAS_FUNCTION_RETURN
+
+
+#########################################################
+# arg(0) -> COMPV_ALIGNED(NEON) const uint8_t* ptrIn
+# arg(1) -> COMPV_ALIGNED(NEON) int32_t* ptrOut
+# arg(2) -> const compv_uscalar_t width
+# arg(3) -> const compv_uscalar_t height
+# arg(4) -> COMPV_ALIGNED(NEON) const compv_uscalar_t stride
+COMPV_GAS_FUNCTION_DECLARE CompVMathHistogramBuildProjectionY_8u32s_Asm_NEON64
+	COMPV_GAS_FUNCTION_PROLOG
+	COMPV_GAS_SAVE_NEON_REGS
+	## end prolog ##
+
+	# Load arguments #
+	ptrIn .req r0
+	ptrOut .req r1
+	width .req r2
+	height .req r3
+	stride .req r4
+
+	# Local Variables #
+    i .req r5
+	sum .req r6w
+	width16 .req r7
+
+	prfm pldl1keep, [ptrIn, #(CACHE_LINE_SIZE*0)]
+	prfm pldl1keep, [ptrIn, #(CACHE_LINE_SIZE*1)]
+	prfm pldl1keep, [ptrIn, #(CACHE_LINE_SIZE*2)]
+	prfm pldl1keep, [ptrIn, #(CACHE_LINE_SIZE*3)]
+
+	and width16, width, #-16
+	sub stride, stride, width // stride now contains padding
+
+	########################################################
+	# for (compv_uscalar_t j = 0; j < height; ++j) 
+	########################################################
+	LoopHeight_CompVMathHistogramBuildProjectionY_8u32s_Asm_NEON64:
+		ldr q1, [ptrIn], #(1*COMPV_GAS_Q_SZ_BYTES)
+		prfm pldl1keep, [ptrIn, #(CACHE_LINE_SIZE*4)]
+		uxtl2 v3.8h, v1.16b
+		uxtl v1.8h, v1.8b
+		uxtl v0.4s, v1.4h
+		uxtl2 v1.4s, v1.8h
+		uxtl v2.4s, v3.4h
+		uxtl2 v3.4s, v3.8h
+		########################################################
+		# for (i = 16; i < width16; i += 16)
+		########################################################
+		cmp width16, #16
+		mov i, #16
+		ble EndOf_LoopWidth16_CompVMathHistogramBuildProjectionY_8u32s_Asm_NEON64
+		LoopWidth16_CompVMathHistogramBuildProjectionY_8u32s_Asm_NEON64:
+			ldr q4, [ptrIn], #(1*COMPV_GAS_Q_SZ_BYTES)
+			uxtl2 v5.8h, v4.16b
+			uxtl v4.8h, v4.8b
+			uaddw v0.4s, v0.4s, v4.4h
+			uaddw2 v1.4s, v1.4s, v4.8h
+			uaddw v2.4s, v2.4s, v5.4h
+			uaddw2 v3.4s, v3.4s, v5.8h
+			add i, i, #16
+			cmp i, width16
+			blt LoopWidth16_CompVMathHistogramBuildProjectionY_8u32s_Asm_NEON64
+		EndOf_LoopWidth16_CompVMathHistogramBuildProjectionY_8u32s_Asm_NEON64:
+
+		add v0.4s, v0.4s, v2.4s
+		add v1.4s, v1.4s, v3.4s
+		add v0.4s, v0.4s, v1.4s
+
+		addp v0.4s, v0.4s, v0.4s
+		addp v0.2s, v0.2s, v0.2s
+		mov sum, v0.s[0]
+
+		########################################################
+		# for (; i < width; ++i)
+		########################################################
+		cmp i, width
+		bge EndOf_LoopWidth1_CompVMathHistogramBuildProjectionY_8u32s_Asm_NEON64
+		LoopWidth1_CompVMathHistogramBuildProjectionY_8u32s_Asm_NEON64:
+			ldrb r11w, [ptrIn], #(1*COMPV_GAS_UINT8_SZ_BYTES)
+			add sum, sum, r11w
+			add i, i, #1
+			cmp i, width
+			blt LoopWidth1_CompVMathHistogramBuildProjectionY_8u32s_Asm_NEON64
+		EndOf_LoopWidth1_CompVMathHistogramBuildProjectionY_8u32s_Asm_NEON64:
+
+		add ptrIn, ptrIn, stride
+		str sum, [ptrOut], #(1*COMPV_GAS_UINT32_SZ_BYTES)
+
+		subs height, height, #1
+		bne LoopHeight_CompVMathHistogramBuildProjectionY_8u32s_Asm_NEON64
+	EndOf_LoopHeight_CompVMathHistogramBuildProjectionY_8u32s_Asm_NEON64:
+
+	.unreq ptrIn
+	.unreq ptrOut
+	.unreq width
+	.unreq height
+	.unreq stride
+
+    .unreq i
+	.unreq sum
+	.unreq width16
+
+	## begin epilog ##
+	COMPV_GAS_RESTORE_NEON_REGS
+	COMPV_GAS_FUNCTION_EPILOG
+	COMPV_GAS_FUNCTION_RETURN
 
 #endif /* defined(__aarch64__) */
