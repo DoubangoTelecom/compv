@@ -207,17 +207,7 @@ class CompVMathStatsGeneric {
 		{
 			COMPV_CHECK_EXP_RETURN(!aPoints || !bPoints || aPoints->cols() != bPoints->cols() || aPoints->rows() != bPoints->rows() || aPoints->rows() < 2 || aPoints->subType() != bPoints->subType(),
 				COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-			switch (aPoints->subType()) {
-			case COMPV_SUBTYPE_RAW_FLOAT64:
-				COMPV_CHECK_EXP_RETURN((!std::is_same<T, compv_float64_t>::value), COMPV_ERROR_CODE_E_INVALID_SUBTYPE);
-				break;
-			case COMPV_SUBTYPE_RAW_FLOAT32:
-				COMPV_CHECK_EXP_RETURN((!std::is_same<T, compv_float32_t>::value), COMPV_ERROR_CODE_E_INVALID_SUBTYPE);
-				break;
-			default:
-				COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
-				break;
-			}
+			COMPV_CHECK_EXP_RETURN(!aPoints->isRawTypeMatch<T>(), COMPV_ERROR_CODE_E_INVALID_CALL);
 
 			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
 			error = 0;
@@ -292,6 +282,49 @@ class CompVMathStatsGeneric {
 			*std1 = static_cast<T>(COMPV_MATH_SQRT(var));
 			return COMPV_ERROR_CODE_S_OK;
 		}
+
+		template<typename T>
+		static COMPV_ERROR_CODE normL2(const CompVMatPtr& ptrIn, CompVMatPtrPtr ptrOut, const double maxVal COMPV_DEFAULT(1.0))
+		{
+			COMPV_CHECK_EXP_RETURN(!ptrIn || !ptrOut, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+			COMPV_CHECK_EXP_RETURN(!ptrIn->isRawTypeMatch<T>(), COMPV_ERROR_CODE_E_INVALID_CALL);
+
+			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
+
+			CompVMatPtr ptrOut_ = *ptrOut;
+			if (ptrOut_ != ptrIn) { // This function allows ptrIn to be equal to ptrOut
+				COMPV_CHECK_CODE_RETURN(CompVMat::newObj(&ptrOut_, ptrIn));
+			}
+			const size_t width = ptrIn->cols();
+			const size_t height = ptrIn->rows();
+			const size_t stride = ptrIn->stride();
+
+			T* inPtr = ptrIn->ptr<T>();
+			T* outPtr = ptrOut_->ptr<T>();
+
+			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
+			
+			double sum = 0;
+			for (size_t j = 0; j < height; ++j) {
+				for (size_t i = 0; i < width; ++i) {
+					sum += (inPtr[i] * inPtr[i]);
+				}
+				inPtr += stride;
+			}
+			const T scale = static_cast<T>((sum > DBL_EPSILON) ? (maxVal / std::sqrt(sum)) : 0.);
+
+			inPtr = ptrIn->ptr<T>(); // restore
+			for (size_t j = 0; j < height; ++j) {
+				for (size_t i = 0; i < width; ++i) {
+					outPtr[i] = inPtr[i] * scale;
+				}
+				inPtr += stride;
+				outPtr += stride;
+			}
+
+			*ptrOut = ptrOut_;
+			return COMPV_ERROR_CODE_S_OK;
+		}
 };
 
 
@@ -356,6 +389,22 @@ template<> COMPV_BASE_API COMPV_ERROR_CODE CompVMathStats::stdev(const compv_flo
 template<> COMPV_BASE_API COMPV_ERROR_CODE CompVMathStats::stdev(const compv_float64_t* data, size_t count, compv_float64_t mean, compv_float64_t* std1) {
 	COMPV_CHECK_CODE_RETURN((CompVMathStatsGeneric::stdev<compv_float64_t>(data, count, mean, std1)));
 	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVMathStats::normL2(const CompVMatPtr& ptrIn, CompVMatPtrPtr ptrOut, const double maxVal COMPV_DEFAULT(1.0))
+{
+	COMPV_CHECK_EXP_RETURN(!ptrIn || !ptrOut, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	switch (ptrIn->subType()) {
+	case COMPV_SUBTYPE_RAW_FLOAT64:
+		COMPV_CHECK_CODE_RETURN((CompVMathStatsGeneric::normL2<compv_float64_t>(ptrIn, ptrOut, maxVal)));
+		return COMPV_ERROR_CODE_S_OK;
+	case COMPV_SUBTYPE_RAW_FLOAT32:
+		COMPV_CHECK_CODE_RETURN((CompVMathStatsGeneric::normL2<compv_float32_t>(ptrIn, ptrOut, maxVal)));
+		return COMPV_ERROR_CODE_S_OK;
+	default:
+		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
+		return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
+	}
 }
 
 COMPV_NAMESPACE_END()

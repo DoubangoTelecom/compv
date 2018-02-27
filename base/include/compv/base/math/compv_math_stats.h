@@ -21,6 +21,7 @@ public:
 	static COMPV_ERROR_CODE mse2D(const CompVMatPtr& aPoints, const CompVMatPtr& bPoints, double& error);
 	template<typename T> static COMPV_ERROR_CODE variance(const T* data, size_t count, T mean, T* var1);
 	template<typename T> static COMPV_ERROR_CODE stdev(const T* data, size_t count, T mean, T* std1);
+	static COMPV_ERROR_CODE normL2(const CompVMatPtr& ptrIn, CompVMatPtrPtr ptrOut, const double maxVal = 1.0);
 };
 
 COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathStats::normalize2D_hartley(const compv_float32_t* x, const compv_float32_t* y, size_t numPoints, compv_float32_t* tx1, compv_float32_t* ty1, compv_float32_t* s1);
