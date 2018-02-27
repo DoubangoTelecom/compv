@@ -55,7 +55,7 @@ COMPV_ERROR_CODE stats_mse2D_homogeneous()
 	CompVMatPtr mse;
 	uint64_t timeStart = CompVTime::nowMillis();
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
-		COMPV_CHECK_CODE_RETURN(CompVMathStats<TYP>::mse2D_homogeneous(&mse, paX_h, paY_h, paZ_h, pbX, pbY, test->numpoints));
+		COMPV_CHECK_CODE_RETURN(CompVMathStats::mse2D_homogeneous<TYP>(&mse, paX_h, paY_h, paZ_h, pbX, pbY, test->numpoints));
 	}
 	uint64_t timeEnd = CompVTime::nowMillis();
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "Elapsed time(StatsMSE) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));

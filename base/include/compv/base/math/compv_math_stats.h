@@ -13,16 +13,27 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-template<class T>
 class COMPV_BASE_API CompVMathStats
 {
 public:
-	static COMPV_ERROR_CODE normalize2D_hartley(const T* x, const T* y, size_t numPoints, T* tx1, T* ty1, T* s1);
-	static COMPV_ERROR_CODE mse2D_homogeneous(CompVMatPtrPtr mse, const T* aX_h, const T* aY_h, const T* aZ_h, const T* bX, const T* bY, size_t numPoints);
-	static COMPV_ERROR_CODE mse2D(const CompVMatPtr& aPoints, const CompVMatPtr& bPoints, T& error);
-	static COMPV_ERROR_CODE variance(const T* data, size_t count, T mean, T* var1);
-	static COMPV_ERROR_CODE stdev(const T* data, size_t count, T mean, T* std1);
+	template<typename T> static COMPV_ERROR_CODE normalize2D_hartley(const T* x, const T* y, size_t numPoints, T* tx1, T* ty1, T* s1);
+	template<typename T> static COMPV_ERROR_CODE mse2D_homogeneous(CompVMatPtrPtr mse, const T* aX_h, const T* aY_h, const T* aZ_h, const T* bX, const T* bY, size_t numPoints);
+	static COMPV_ERROR_CODE mse2D(const CompVMatPtr& aPoints, const CompVMatPtr& bPoints, double& error);
+	template<typename T> static COMPV_ERROR_CODE variance(const T* data, size_t count, T mean, T* var1);
+	template<typename T> static COMPV_ERROR_CODE stdev(const T* data, size_t count, T mean, T* std1);
 };
+
+COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathStats::normalize2D_hartley(const compv_float32_t* x, const compv_float32_t* y, size_t numPoints, compv_float32_t* tx1, compv_float32_t* ty1, compv_float32_t* s1);
+COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathStats::normalize2D_hartley(const compv_float64_t* x, const compv_float64_t* y, size_t numPoints, compv_float64_t* tx1, compv_float64_t* ty1, compv_float64_t* s1);
+
+COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathStats::mse2D_homogeneous(CompVMatPtrPtr mse, const compv_float32_t* aX_h, const compv_float32_t* aY_h, const compv_float32_t* aZ_h, const compv_float32_t* bX, const compv_float32_t* bY, size_t numPoints);
+COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathStats::mse2D_homogeneous(CompVMatPtrPtr mse, const compv_float64_t* aX_h, const compv_float64_t* aY_h, const compv_float64_t* aZ_h, const compv_float64_t* bX, const compv_float64_t* bY, size_t numPoints);
+
+COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathStats::variance(const compv_float32_t* data, size_t count, compv_float32_t mean, compv_float32_t* var1);
+COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathStats::variance(const compv_float64_t* data, size_t count, compv_float64_t mean, compv_float64_t* var1);
+
+COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathStats::stdev(const compv_float32_t* data, size_t count, compv_float32_t mean, compv_float32_t* std1);
+COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathStats::stdev(const compv_float64_t* data, size_t count, compv_float64_t mean, compv_float64_t* std1);
 
 COMPV_NAMESPACE_END()
 

@@ -367,8 +367,8 @@ static COMPV_ERROR_CODE computeH(CompVMatPtrPtr H, const CompVMatPtr &src, const
 	/* Normalize the points as described at https://en.wikipedia.org/wiki/Eight-point_algorithm#How_it_can_be_solved */
 	T srcTX_, srcTY_, dstTX_, dstTY_; // translation (to the centroid) values
 	T srcScale_, dstScale_; // scaling factors to have mean distance to the centroid = sqrt(2)
-	COMPV_CHECK_CODE_RETURN(CompVMathStats<T>::normalize2D_hartley(srcX_, srcY_, numPoints_, &srcTX_, &srcTY_, &srcScale_));
-	COMPV_CHECK_CODE_RETURN(CompVMathStats<T>::normalize2D_hartley(dstX_, dstY_, numPoints_, &dstTX_, &dstTY_, &dstScale_));
+	COMPV_CHECK_CODE_RETURN(CompVMathStats::normalize2D_hartley<T>(srcX_, srcY_, numPoints_, &srcTX_, &srcTY_, &srcScale_));
+	COMPV_CHECK_CODE_RETURN(CompVMathStats::normalize2D_hartley<T>(dstX_, dstY_, numPoints_, &dstTX_, &dstTY_, &dstScale_));
 
 	/* Build transformation matrixes (T1 and T2) using the translation and scaling values from the normalization process */
 	// Translation(t) to centroid then scaling(s) operation:
@@ -500,7 +500,7 @@ static COMPV_ERROR_CODE countInliers(CompVTempArraysCountInliers& tempArrays, si
 
 	// Apply H to the source and compute mse: Ha = b, mse(Ha, b)
 	COMPV_CHECK_CODE_RETURN(CompVMatrix::mulAB(H, src, &tempArrays.b_));
-	COMPV_CHECK_CODE_RETURN(CompVMathStats<T>::mse2D_homogeneous(&tempArrays.mseb_, tempArrays.b_->ptr<T>(0), tempArrays.b_->ptr<T>(1), tempArrays.b_->ptr<T>(2), dst->ptr<T>(0), dst->ptr<T>(1), numPoints_));
+	COMPV_CHECK_CODE_RETURN(CompVMathStats::mse2D_homogeneous<T>(&tempArrays.mseb_, tempArrays.b_->ptr<T>(0), tempArrays.b_->ptr<T>(1), tempArrays.b_->ptr<T>(2), dst->ptr<T>(0), dst->ptr<T>(1), numPoints_));
 
 	// Apply H* to the destination and compute mse: a = H*b, mse(a, H*b)
 	COMPV_CHECK_CODE_RETURN(CompVMatrix::invA3x3(H, &tempArrays.Hinv_, pseudoInverseIfSingular, &isSingular));
@@ -510,7 +510,7 @@ static COMPV_ERROR_CODE countInliers(CompVTempArraysCountInliers& tempArrays, si
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	COMPV_CHECK_CODE_RETURN(CompVMatrix::mulAB(tempArrays.Hinv_, dst, &tempArrays.a_));
-	COMPV_CHECK_CODE_RETURN(CompVMathStats<T>::mse2D_homogeneous(&tempArrays.msea_, tempArrays.a_->ptr<T>(0), tempArrays.a_->ptr<T>(1), tempArrays.a_->ptr<T>(2), src->ptr<T>(0), src->ptr<T>(1), numPoints_));
+	COMPV_CHECK_CODE_RETURN(CompVMathStats::mse2D_homogeneous<T>(&tempArrays.msea_, tempArrays.a_->ptr<T>(0), tempArrays.a_->ptr<T>(1), tempArrays.a_->ptr<T>(2), src->ptr<T>(0), src->ptr<T>(1), numPoints_));
 
 	// Sum the MSE values and build the inliers
 	const T* mseaPtr_ = tempArrays.msea_->ptr<const T>();
@@ -532,7 +532,7 @@ static COMPV_ERROR_CODE countInliers(CompVTempArraysCountInliers& tempArrays, si
 	// Compute standard deviation (or variance)
 	if (inliersCount > 1) {
 		T mean_ = T(sumd_ / inliersCount);
-		CompVMathStats<T>::variance(distancesPtr_, inliersCount, mean_, &variance);
+		CompVMathStats::variance<T>(distancesPtr_, inliersCount, mean_, &variance);
 	}
 
 	return COMPV_ERROR_CODE_S_OK;

@@ -325,7 +325,7 @@ COMPV_ERROR_CODE CompVCalibUtils::proj2D(const CompVMatPtr& inPoints, const Comp
 // aPoints and bPoints must be 2D homogeneous coord. 
 COMPV_ERROR_CODE CompVCalibUtils::proj2DError(const CompVMatPtr& aPoints, const CompVMatPtr& bPoints, compv_float64_t& error)
 {
-	CompVMathStats<compv_float64_t>::mse2D(aPoints, bPoints, error); // Mean Square Error
+	CompVMathStats::mse2D(aPoints, bPoints, error); // Mean Square Error
 	error = std::sqrt(error / static_cast<compv_float64_t>(aPoints->cols())); // mean(sqrt)
 	return COMPV_ERROR_CODE_S_OK;
 }

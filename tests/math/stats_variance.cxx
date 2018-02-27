@@ -48,7 +48,7 @@ COMPV_ERROR_CODE stats_variance()
 	TYP var = 0;
 	uint64_t timeStart = CompVTime::nowMillis();
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
-		COMPV_CHECK_CODE_RETURN(CompVMathStats<TYP>::variance(pdata, test->numpoints, mean, &var));
+		COMPV_CHECK_CODE_RETURN(CompVMathStats::variance<TYP>(pdata, test->numpoints, mean, &var));
 	}
 	uint64_t timeEnd = CompVTime::nowMillis();
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "Elapsed time(StatsVariance) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));

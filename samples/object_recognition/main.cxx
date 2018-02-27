@@ -114,7 +114,7 @@ compv_main()
 				path = std::string(COMPV_SAMPLE_IMAGE_FOLDER) + std::string("/") + std::string(TRAIN_FILE_NAME);
 			}
 			// Build interest points and descriptions
-			COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_RGB24, TRAIN_WIDTH, TRAIN_HEIGHT, TRAIN_STRIDE, path.c_str(), &ptrImageTrain));
+			COMPV_CHECK_CODE_BAIL(err = CompVImage::read(COMPV_SUBTYPE_PIXELS_RGB24, TRAIN_WIDTH, TRAIN_HEIGHT, TRAIN_STRIDE, path.c_str(), &ptrImageTrain));
 			COMPV_CHECK_CODE_BAIL(err = CompVImage::convertGrayscale(ptrImageTrain, &ptrImageGrayTrain), "Failed to convert the image to grayscale");
 			COMPV_CHECK_CODE_BAIL(err = ptrDeteORB->process(ptrImageGrayTrain, vecInterestPointsTrain));
 			COMPV_CHECK_CODE_BAIL(err = ptrDescORB->process(ptrImageGrayTrain, vecInterestPointsTrain, &ptrDescriptionsTrain));
@@ -263,7 +263,7 @@ compv_main()
 					line3.a.x = static_cast<compv_float32_t>(x[3] + xoffset), line3.a.y = static_cast<compv_float32_t>(y[3]), line3.b.x = static_cast<compv_float32_t>(x[0] + xoffset), line3.b.y = static_cast<compv_float32_t>(y[0]);
 					COMPV_CHECK_CODE_BAIL(err = matchingSurfaceLayer->surface()->canvas()->drawLines(lines, &drawingOptions));
 					if (matchingSurfaceLayer->surface()->canvas()->haveDrawTexts()) {
-						CompVStringVector text(1);
+						CompVVecString text(1);
 						CompVPointFloat32Vector pos(1);
 						text[0] = std::string("Object Recognized(") + CompVBase::to_string(num++) + std::string(")!");
 						pos[0] = line0.a;
