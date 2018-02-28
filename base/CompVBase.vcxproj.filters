@@ -136,6 +136,15 @@
     <Filter Include="source\tbbmalloc">
       <UniqueIdentifier>{20c5da7e-dbbd-4e4b-90d4-ea11bdf15931}</UniqueIdentifier>
     </Filter>
+    <Filter Include="source\ml">
+      <UniqueIdentifier>{8f1ff3b4-6a78-4aa8-9f49-afa8e3fdfb91}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\ml">
+      <UniqueIdentifier>{fc06bc5e-5499-4734-92d0-823885048f4f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\ml\annoy-1.11.4">
+      <UniqueIdentifier>{6ddee03b-9e9c-40f8-8639-bcfd9886f95d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\base\compv_base.h">
@@ -663,6 +672,18 @@
     <ClInclude Include="include\compv\base\math\compv_math_moments.h">
       <Filter>include\math</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\ml\compv_base_ml_knn.h">
+      <Filter>include\ml</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\ml\annoy-1.11.4\annoylib.h">
+      <Filter>include\ml\annoy-1.11.4</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\ml\annoy-1.11.4\kissrandom.h">
+      <Filter>include\ml\annoy-1.11.4</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\ml\annoy-1.11.4\mman.h">
+      <Filter>include\ml\annoy-1.11.4</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx">
@@ -1108,6 +1129,9 @@
     </ClCompile>
     <ClCompile Include="math\compv_math_moments.cxx">
       <Filter>source\math</Filter>
+    </ClCompile>
+    <ClCompile Include="ml\compv_base_ml_knn.cxx">
+      <Filter>source\ml</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
