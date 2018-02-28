@@ -145,6 +145,15 @@
     <Filter Include="source\parallel\asm\arm">
       <UniqueIdentifier>{846dba6c-6fbe-4198-9869-32d4844fde5d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\ml">
+      <UniqueIdentifier>{c1154f69-de56-4ec8-8e09-5360b51e3b63}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\ml\annoy-1.11.4">
+      <UniqueIdentifier>{289ceebc-90d7-45e0-8822-dd9ec6a60139}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\ml">
+      <UniqueIdentifier>{868332c5-9176-47d7-83ba-7673242d58e0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\compv\base\compv_base.h">
@@ -672,6 +681,21 @@
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_histogram_intrin_neon.h">
       <Filter>include\math\intrin\arm</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\compv\base\ml\annoy-1.11.4\annoylib.h">
+      <Filter>include\ml\annoy-1.11.4</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\ml\annoy-1.11.4\kissrandom.h">
+      <Filter>include\ml\annoy-1.11.4</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\ml\annoy-1.11.4\mman.h">
+      <Filter>include\ml\annoy-1.11.4</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\ml\compv_base_ml_knn.h">
+      <Filter>include\ml</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\math\compv_math_moments.h">
+      <Filter>include\math</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_base.cxx">
@@ -1114,6 +1138,12 @@
     </ClCompile>
     <ClCompile Include="..\math\intrin\arm\compv_math_histogram_intrin_neon.cxx">
       <Filter>source\math\intrin\arm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ml\compv_base_ml_knn.cxx">
+      <Filter>source\ml</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\compv_math_moments.cxx">
+      <Filter>source\math</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

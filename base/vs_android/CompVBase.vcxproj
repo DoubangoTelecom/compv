@@ -133,6 +133,7 @@
     <ClInclude Include="..\include\compv\base\math\compv_math_histogram.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_lines.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_matrix.h" />
+    <ClInclude Include="..\include\compv\base\math\compv_math_moments.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_morph.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_stats.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_stats_fit.h" />
@@ -172,6 +173,10 @@
     <ClInclude Include="..\include\compv\base\math\lmfit-6.1\lmcurve_tyd.h" />
     <ClInclude Include="..\include\compv\base\math\lmfit-6.1\lmmin.h" />
     <ClInclude Include="..\include\compv\base\math\lmfit-6.1\lmstruct.h" />
+    <ClInclude Include="..\include\compv\base\ml\annoy-1.11.4\annoylib.h" />
+    <ClInclude Include="..\include\compv\base\ml\annoy-1.11.4\kissrandom.h" />
+    <ClInclude Include="..\include\compv\base\ml\annoy-1.11.4\mman.h" />
+    <ClInclude Include="..\include\compv\base\ml\compv_base_ml_knn.h" />
     <ClInclude Include="..\include\compv\base\parallel\compv_asynctask10.h" />
     <ClInclude Include="..\include\compv\base\parallel\compv_asynctask11.h" />
     <ClInclude Include="..\include\compv\base\parallel\compv_condvar.h" />
@@ -329,6 +334,7 @@
     <ClCompile Include="..\math\compv_math_histogram.cxx" />
     <ClCompile Include="..\math\compv_math_lines.cxx" />
     <ClCompile Include="..\math\compv_math_matrix.cxx" />
+    <ClCompile Include="..\math\compv_math_moments.cxx" />
     <ClCompile Include="..\math\compv_math_morph.cxx" />
     <ClCompile Include="..\math\compv_math_stats.cxx" />
     <ClCompile Include="..\math\compv_math_stats_fit.cxx" />
@@ -367,6 +373,7 @@
     <ClCompile Include="..\math\lmfit-6.1\lmcurve.cxx" />
     <ClCompile Include="..\math\lmfit-6.1\lmcurve_tyd.cxx" />
     <ClCompile Include="..\math\lmfit-6.1\lmmin.cxx" />
+    <ClCompile Include="..\ml\compv_base_ml_knn.cxx" />
     <ClCompile Include="..\parallel\compv_asynctask10.cxx" />
     <ClCompile Include="..\parallel\compv_asynctask11.cxx" />
     <ClCompile Include="..\parallel\compv_condvar.cxx" />

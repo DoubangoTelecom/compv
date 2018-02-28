@@ -82,7 +82,7 @@ public:
 
 	virtual COMPV_ERROR_CODE addVector(const CompVMatPtr& vector, const size_t name) override
 	{
-		COMPV_CHECK_EXP_RETURN(!vector || !vector->isRawTypeMatch<T>() || vector->rows() != 1 || vector->cols() != vectorLength(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		COMPV_CHECK_EXP_RETURN(!vector || !vector->isRawTypeMatch<T>() || vector->rows() != 1 || vector->cols() != vectorLength() || m_vecNames.size() >= INT32_MAX, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 		m_ptrAnnoy->add_item(m_vecNames.size(), vector->ptr<const T>());
 		m_vecNames.push_back(name);
 		return COMPV_ERROR_CODE_S_OK;

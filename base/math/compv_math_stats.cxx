@@ -6,10 +6,13 @@
 */
 #include "compv/base/math/compv_math_stats.h"
 #include "compv/base/math/compv_math_utils.h"
+#include "compv/base/math/compv_math.h"
 
 #include "compv/base/math/intrin/x86/compv_math_stats_intrin_sse2.h"
 #include "compv/base/math/intrin/x86/compv_math_stats_intrin_avx.h"
 #include "compv/base/math/intrin/arm/compv_math_stats_intrin_neon64.h"
+
+#include <float.h> /* DBL_EPSILON */
 
 #define COMPV_THIS_CLASSNAME	"CompVMathStats"
 

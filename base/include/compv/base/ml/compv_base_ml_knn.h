@@ -17,6 +17,7 @@ COMPV_OBJECT_DECLARE_PTRS(MachineLearningKNN)
 
 class CompVMachineLearningKNNGenericInterface {
 public:
+	virtual ~CompVMachineLearningKNNGenericInterface() {  }
 	virtual bool isValid() const = 0;
 	virtual COMPV_ERROR_CODE addVector(const CompVMatPtr& vector, const size_t name) = 0;
 };
