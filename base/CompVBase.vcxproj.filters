@@ -660,6 +660,9 @@
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_histogram_intrin_sse2.h">
       <Filter>include\math\intrin\x86</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\math\compv_math_moments.h">
+      <Filter>include\math</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx">
@@ -1102,6 +1105,9 @@
     </ClCompile>
     <ClCompile Include="math\intrin\x86\compv_math_histogram_intrin_sse2.cxx">
       <Filter>source\math\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="math\compv_math_moments.cxx">
+      <Filter>source\math</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
