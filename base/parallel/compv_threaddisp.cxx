@@ -124,6 +124,11 @@ COMPV_ERROR_CODE CompVThreadDispatcher::newObj(CompVThreadDispatcherPtrPtr disp,
 
 	// numThreads: <= 0 means choose the best one, ==1 means disable, > 1 means enable
 	numThreads = (numThreads <= 0) ? numThreadsBest : numThreads;
+
+	// Check if we're using all available cores
+	if (numThreads < numCores) {
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Not optimized -> Your system have #%d cores but you're only using #%d. Sad!!", maxCores, numThreads);
+	}
 	
 	if (numThreads < 2) {
 		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Multi-threading requires at least #2 threads but you're requesting #%d", numThreads);
