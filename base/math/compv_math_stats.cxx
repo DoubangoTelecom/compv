@@ -290,7 +290,7 @@ class CompVMathStatsGeneric {
 		static COMPV_ERROR_CODE normL2(const CompVMatPtr& ptrIn, CompVMatPtrPtr ptrOut, const double maxVal COMPV_DEFAULT(1.0))
 		{
 			COMPV_CHECK_EXP_RETURN(!ptrIn || !ptrOut, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-			COMPV_CHECK_EXP_RETURN(!ptrIn->isRawTypeMatch<T>(), COMPV_ERROR_CODE_E_INVALID_CALL);
+			COMPV_CHECK_EXP_RETURN(!ptrIn->isRawTypeMatch<T>(), COMPV_ERROR_CODE_E_INVALID_SUBTYPE);
 
 			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
 

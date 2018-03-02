@@ -26,6 +26,7 @@
 
 #include <algorithm> // std::transform(), ...
 #include <sys/stat.h>
+#include <dirent.h>
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -278,6 +279,33 @@ FILE* CompVFileUtils::open(const char* fname, const char* mode)
     }
 #endif /* COMPV_OS_ANDROID */
     return fopen(fname, mode);
+}
+
+// Get list of files in the directory
+COMPV_ERROR_CODE CompVFileUtils::getFilesInDir(const char* dir, std::vector<std::string>& paths)
+{
+	COMPV_CHECK_EXP_RETURN(!dir, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	paths.clear();
+	// Collect files
+	DIR *dir_ = opendir(dir);
+	if (!dir_) {
+		COMPV_DEBUG_ERROR_EX(kModuleNameFileUtils, "opendir(%s) failed", dir);
+		return COMPV_ERROR_CODE_E_FAILED_TO_OPEN_FILE;
+	}
+	struct dirent *ent;
+	std::string dir_path = std::string(dir);
+	if (dir_path.back() != '/') {
+		dir_path += "/";
+	}
+	while ((ent = readdir(dir_))) {
+		const std::string filename = std::string(ent->d_name);
+		if (filename == "." || filename == "..") {
+			continue;
+		}
+		paths.push_back(dir_path + std::string(filename));
+	}
+	closedir(dir_);
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_NAMESPACE_END()

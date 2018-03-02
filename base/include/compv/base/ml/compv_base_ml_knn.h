@@ -10,6 +10,7 @@
 #include "compv/base/compv_config.h"
 #include "compv/base/compv_common.h"
 #include "compv/base/compv_mat.h"
+#include "compv/base/compv_lock.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -19,10 +20,16 @@ class CompVMachineLearningKNNGenericInterface {
 public:
 	virtual ~CompVMachineLearningKNNGenericInterface() {  }
 	virtual bool isValid() const = 0;
+	virtual bool isLoaded() const = 0;
+	virtual bool isBuilt() const = 0;
 	virtual COMPV_ERROR_CODE addVector(const CompVMatPtr& vector, const size_t name) = 0;
+	virtual COMPV_ERROR_CODE build(const int n_trees) = 0;
+	virtual COMPV_ERROR_CODE save(const char* path) = 0;
+	virtual COMPV_ERROR_CODE load(const char* path) = 0;
+	virtual COMPV_ERROR_CODE search(const CompVMatPtr& vector, std::vector<size_t>& result, const size_t k, std::vector<double>* distances) = 0;
 };
 
-class CompVMachineLearningKNN : public CompVObj {
+class COMPV_BASE_API CompVMachineLearningKNN : public CompVObj, public CompVLock {
 protected:
 	CompVMachineLearningKNN(const size_t vectorLength, const COMPV_SUBTYPE vectorType = COMPV_SUBTYPE_RAW_FLOAT32, const COMPV_DISTANCE_TYPE distanceType = COMPV_DISTANCE_TYPE_EUCLIDEAN);
 public:
@@ -32,6 +39,9 @@ public:
 	bool isValid() const;
 
 	COMPV_ERROR_CODE addVector(const CompVMatPtr& vector, const size_t name);
+	COMPV_ERROR_CODE save(const char* path, const int n_trees = 10);
+	COMPV_ERROR_CODE load(const char* path);
+	COMPV_ERROR_CODE search(const CompVMatPtr& vector, std::vector<size_t>& result, const size_t k = 1, std::vector<double>* distances = nullptr);
 
 	static COMPV_ERROR_CODE newObj(CompVMachineLearningKNNPtrPtr knn, const size_t vectorLength, const COMPV_SUBTYPE vectorType = COMPV_SUBTYPE_RAW_FLOAT32, const COMPV_DISTANCE_TYPE distanceType = COMPV_DISTANCE_TYPE_EUCLIDEAN);
 

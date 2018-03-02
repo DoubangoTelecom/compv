@@ -35,7 +35,12 @@ template<class T>
 class CompVMachineLearningKNNGeneric : public CompVMachineLearningKNNGenericInterface {
 public:
 	CompVMachineLearningKNNGeneric(const size_t vectorLength, const COMPV_SUBTYPE vectorType = COMPV_SUBTYPE_RAW_FLOAT32, const COMPV_DISTANCE_TYPE distanceType = COMPV_DISTANCE_TYPE_EUCLIDEAN)
-		: m_ptrAnnoy(nullptr)
+		: m_nVectorLength(vectorLength)
+		, m_eVectorType(vectorType)
+		, m_ptrAnnoy(nullptr)
+		, m_eDistanceType(distanceType)
+		, m_bLoaded(false)
+		, m_bBuilt(false)
 	{
 		COMPV_ASSERT((vectorType == COMPV_SUBTYPE_RAW_FLOAT32 && std::is_same<T, compv_float32_t>::value) || (vectorType == COMPV_SUBTYPE_RAW_FLOAT64 && std::is_same<T, compv_float64_t>::value));
 		switch (distanceType) {
@@ -72,14 +77,18 @@ public:
 	COMPV_INLINE COMPV_DISTANCE_TYPE distanceType() const {
 		return m_eDistanceType;
 	}
-	COMPV_INLINE bool isLoaded()const {
-		return m_bLoaded;
-	}
 
 	virtual bool isValid() const override {
 		return (m_ptrAnnoy != nullptr);
 	}
+	virtual bool isLoaded() const override {
+		return m_bLoaded;
+	}
+	virtual bool isBuilt() const override {
+		return m_bBuilt;
+	}
 
+	// Not thread-safe
 	virtual COMPV_ERROR_CODE addVector(const CompVMatPtr& vector, const size_t name) override
 	{
 		COMPV_CHECK_EXP_RETURN(!vector || !vector->isRawTypeMatch<T>() || vector->rows() != 1 || vector->cols() != vectorLength() || m_vecNames.size() >= INT32_MAX, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -88,11 +97,66 @@ public:
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
+	// Not thread-safe
+	virtual COMPV_ERROR_CODE build(const int n_trees) override
+	{
+		if (!isBuilt()) {
+			m_ptrAnnoy->build(n_trees);
+			m_bBuilt = true;
+		}
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
+	// Not thread-safe
+	virtual COMPV_ERROR_CODE save(const char* path) override
+	{
+		if (!m_ptrAnnoy->save(path)) {
+			COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Failed to save to %s", path);
+			return COMPV_ERROR_CODE_E_FAILED_TO_OPEN_FILE;
+		}
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
+	// Not thread-safe
+	virtual COMPV_ERROR_CODE load(const char* path) override
+	{
+		if (!isLoaded()) {
+			if (!m_ptrAnnoy->load(path)) {
+				COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Failed to load from %s", path);
+				return COMPV_ERROR_CODE_E_FAILED_TO_OPEN_FILE;
+			}
+			m_bLoaded = true;
+		}
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
+	virtual COMPV_ERROR_CODE search(const CompVMatPtr& vector, std::vector<size_t>& result, const size_t k, std::vector<double>* distances) override
+	{
+		std::vector<T> distances_;
+		COMPV_CHECK_EXP_RETURN(!vector || !vector->isRawTypeMatch<T>() || vector->rows() != 1 || vector->cols() != vectorLength(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		result.clear();
+		m_ptrAnnoy->get_nns_by_vector(vector->ptr<const T>(), k, (size_t)-1, &result, (distances ? &distances_ : nullptr));
+		if (distances) {
+			if (std::is_same<T, double>::value) {
+				*distances = *reinterpret_cast<std::vector<double>*>(&distances_);
+			}
+			else {
+				const size_t count = distances_.size();
+				*distances = std::vector<double>(count);
+				for (size_t i = 0; i < count; ++i) {
+					(*distances)[i] = static_cast<double>(distances_[i]);
+				}
+			}
+		}
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
 private:
 	size_t m_nVectorLength;
 	COMPV_SUBTYPE m_eVectorType;
 	COMPV_DISTANCE_TYPE m_eDistanceType;
 	bool m_bLoaded;
+	bool m_bBuilt;
 	std::vector<size_t> m_vecNames;
 	AnnoyIndexInterface<size_t, T>* m_ptrAnnoy;
 }; 
@@ -127,11 +191,38 @@ CompVMachineLearningKNN::~CompVMachineLearningKNN()
 	}
 }
 
-// Function called in learning phase.
-// This function isn't thread-safe.
+// Function called in training phase.
 COMPV_ERROR_CODE CompVMachineLearningKNN::addVector(const CompVMatPtr& vector, const size_t name)
 {
+	CompVAutoLock<CompVMachineLearningKNN>(this); // Adding vector not thread-safe -> lock
+	COMPV_CHECK_EXP_RETURN(m_ptrGeneric->isBuilt(), COMPV_ERROR_CODE_E_INVALID_CALL, "No vector could be added after building the tree");
 	COMPV_CHECK_CODE_RETURN(m_ptrGeneric->addVector(vector, name));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVMachineLearningKNN::save(const char* path, const int n_trees COMPV_DEFAULT(10))
+{
+	CompVAutoLock<CompVMachineLearningKNN>(this);
+	if (!m_ptrGeneric->isBuilt()) {
+		COMPV_CHECK_CODE_RETURN(m_ptrGeneric->build(n_trees));
+	}
+	COMPV_CHECK_CODE_RETURN(m_ptrGeneric->save(path));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVMachineLearningKNN::load(const char* path)
+{
+	CompVAutoLock<CompVMachineLearningKNN>(this);
+	COMPV_CHECK_CODE_RETURN(m_ptrGeneric->load(path));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// Thread-safe
+COMPV_ERROR_CODE CompVMachineLearningKNN::search(const CompVMatPtr& vector, std::vector<size_t>& result, const size_t k COMPV_DEFAULT(1), std::vector<double>* distances COMPV_DEFAULT(nullptr))
+{
+	// "MUST NOT LOCK" -> called by many threads
+	COMPV_CHECK_EXP_RETURN(!m_ptrGeneric->isLoaded(), COMPV_ERROR_CODE_E_INVALID_CALL, "Must load first");
+	COMPV_CHECK_CODE_RETURN(m_ptrGeneric->search(vector, result, k, distances));
 	return COMPV_ERROR_CODE_S_OK;
 }
 

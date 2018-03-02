@@ -31,6 +31,7 @@ public:
     static COMPV_IMAGE_FORMAT getImageFormat(const char* pcPath);
     static COMPV_ERROR_CODE read(const char* pcPath, CompVBufferPtrPtr buffer);
     static FILE* open(const char* fname, const char* mode);
+	static COMPV_ERROR_CODE getFilesInDir(const char* dir, std::vector<std::string>& paths);
 };
 
 COMPV_NAMESPACE_END()
