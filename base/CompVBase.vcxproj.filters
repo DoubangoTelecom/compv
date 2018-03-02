@@ -145,6 +145,18 @@
     <Filter Include="include\ml\annoy-1.11.4">
       <UniqueIdentifier>{6ddee03b-9e9c-40f8-8639-bcfd9886f95d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="source\jsoncpp-1.8.4">
+      <UniqueIdentifier>{5831dc58-9df4-4a25-8791-14ed607d81cb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\jsoncpp-1.8.4">
+      <UniqueIdentifier>{bbeac524-247e-40e8-b681-313bf135832f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\zlib-1.2.8">
+      <UniqueIdentifier>{569c8acc-2466-4d52-a12d-f247a7e367b6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\zlib-1.2.8">
+      <UniqueIdentifier>{ac6125f9-c968-4f07-b099-efeba67cbaac}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\base\compv_base.h">
@@ -684,6 +696,15 @@
     <ClInclude Include="include\compv\base\ml\annoy-1.11.4\mman.h">
       <Filter>include\ml\annoy-1.11.4</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\jsoncpp-1.8.4\json.h">
+      <Filter>include\jsoncpp-1.8.4</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\jsoncpp-1.8.4\json-forwards.h">
+      <Filter>include\jsoncpp-1.8.4</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\zlib-1.2.8\zlib.h">
+      <Filter>include\zlib-1.2.8</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx">
@@ -1132,6 +1153,12 @@
     </ClCompile>
     <ClCompile Include="ml\compv_base_ml_knn.cxx">
       <Filter>source\ml</Filter>
+    </ClCompile>
+    <ClCompile Include="jsoncpp-1.8.4\jsoncpp.cxx">
+      <Filter>source\jsoncpp-1.8.4</Filter>
+    </ClCompile>
+    <ClCompile Include="zlib-1.2.8\zlib.c">
+      <Filter>source\zlib-1.2.8</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

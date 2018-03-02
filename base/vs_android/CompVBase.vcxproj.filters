@@ -154,6 +154,18 @@
     <Filter Include="source\ml">
       <UniqueIdentifier>{868332c5-9176-47d7-83ba-7673242d58e0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\jsoncpp-1.8.4">
+      <UniqueIdentifier>{7db7290a-c350-4663-9b13-7472165ae88d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\jsoncpp-1.8.4">
+      <UniqueIdentifier>{792cb387-205a-4e34-b824-9b7afaa36d8a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\zlib-1.2.8">
+      <UniqueIdentifier>{aa622ba7-f0b3-4ede-85af-f696f2f82992}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\zlib-1.2.8">
+      <UniqueIdentifier>{ee697d1c-a157-48e8-a140-560f50902830}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\compv\base\compv_base.h">
@@ -696,6 +708,15 @@
     <ClInclude Include="..\include\compv\base\math\compv_math_moments.h">
       <Filter>include\math</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\compv\base\jsoncpp-1.8.4\json.h">
+      <Filter>include\jsoncpp-1.8.4</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\jsoncpp-1.8.4\json-forwards.h">
+      <Filter>include\jsoncpp-1.8.4</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\zlib-1.2.8\zlib.h">
+      <Filter>include\zlib-1.2.8</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_base.cxx">
@@ -1144,6 +1165,12 @@
     </ClCompile>
     <ClCompile Include="..\math\compv_math_moments.cxx">
       <Filter>source\math</Filter>
+    </ClCompile>
+    <ClCompile Include="..\jsoncpp-1.8.4\jsoncpp.cxx">
+      <Filter>source\jsoncpp-1.8.4</Filter>
+    </ClCompile>
+    <ClCompile Include="..\zlib-1.2.8\zlib.c">
+      <Filter>source\zlib-1.2.8</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

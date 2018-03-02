@@ -40,6 +40,7 @@ COMPV_ERROR_CODE CompVMathMoments::centralFirstOrder(const CompVMatPtr& ptrIn, d
 {
 	COMPV_CHECK_EXP_RETURN(!ptrIn || ptrIn->elmtInBytes() != sizeof(uint8_t), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation could be found");
 	moments[0] = 0.0;
 	moments[1] = 0.0;
 	moments[2] = 0.0;

@@ -125,6 +125,8 @@
     <ClInclude Include="..\include\compv\base\intrin\x86\compv_mem_intrin_ssse3.h" />
     <ClInclude Include="..\include\compv\base\intrin\x86\compv_patch_intrin_avx2.h" />
     <ClInclude Include="..\include\compv\base\intrin\x86\compv_patch_intrin_sse2.h" />
+    <ClInclude Include="..\include\compv\base\jsoncpp-1.8.4\json-forwards.h" />
+    <ClInclude Include="..\include\compv\base\jsoncpp-1.8.4\json.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_convlt.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_distance.h" />
@@ -215,6 +217,7 @@
     <ClInclude Include="..\include\compv\base\utf8\core.h" />
     <ClInclude Include="..\include\compv\base\utf8\unchecked.h" />
     <ClInclude Include="..\include\compv\base\utf8\utf8.h" />
+    <ClInclude Include="..\include\compv\base\zlib-1.2.8\zlib.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\android\compv_android_cpu-features.cxx" />
@@ -326,6 +329,7 @@
     <ClCompile Include="..\intrin\x86\compv_mem_intrin_ssse3.cxx" />
     <ClCompile Include="..\intrin\x86\compv_patch_intrin_avx2.cxx" />
     <ClCompile Include="..\intrin\x86\compv_patch_intrin_sse2.cxx" />
+    <ClCompile Include="..\jsoncpp-1.8.4\jsoncpp.cxx" />
     <ClCompile Include="..\math\compv_math.cxx" />
     <ClCompile Include="..\math\compv_math_convlt.cxx" />
     <ClCompile Include="..\math\compv_math_distance.cxx" />
@@ -394,6 +398,7 @@
     <ClCompile Include="..\tbbmalloc\tbbmalloc.cpp" />
     <ClCompile Include="..\time\compv_time.cxx" />
     <ClCompile Include="..\time\compv_timer.cxx" />
+    <ClCompile Include="..\zlib-1.2.8\zlib.c" />
   </ItemGroup>
   <ItemGroup>
     <GAS Include="..\asm\arm\compv_test_arm.S">
