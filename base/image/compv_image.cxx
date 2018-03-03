@@ -524,7 +524,9 @@ COMPV_ERROR_CODE CompVImage::scale(const CompVMatPtr& imageIn, CompVMatPtrPtr im
 	CompVMatPtr imageOut_ = (imageIn == *imageOut) ? nullptr : *imageOut; // When (imageIn == imageOut) we have to save imageIn
 	size_t strideOut = widthOut;
 	COMPV_CHECK_CODE_RETURN(CompVImageUtils::bestStride(strideOut, &strideOut));
-	COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&imageOut_, imageIn->subType(), widthOut, heightOut, strideOut));
+	COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&imageOut_, 
+		((imageIn->planeCount() == 1 && imageIn->subType() == COMPV_SUBTYPE_RAW_UINT8) ? COMPV_SUBTYPE_PIXELS_Y : imageIn->subType()),
+		widthOut, heightOut, strideOut));
 
 	if (bScaleFactor1 & !CompVBase::isTestingMode()) { // In testing mode we may want to encode the same image several times to check CPU, Memory, Latency...
 		if (bSelfTransfer) {
