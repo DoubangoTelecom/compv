@@ -523,10 +523,9 @@ COMPV_ERROR_CODE CompVImage::scale(const CompVMatPtr& imageIn, CompVMatPtrPtr im
 
 	CompVMatPtr imageOut_ = (imageIn == *imageOut) ? nullptr : *imageOut; // When (imageIn == imageOut) we have to save imageIn
 	size_t strideOut = widthOut;
+	const COMPV_SUBTYPE subType = ((imageIn->planeCount() == 1 && imageIn->subType() == COMPV_SUBTYPE_RAW_UINT8) ? COMPV_SUBTYPE_PIXELS_Y : imageIn->subType());
 	COMPV_CHECK_CODE_RETURN(CompVImageUtils::bestStride(strideOut, &strideOut));
-	COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&imageOut_, 
-		((imageIn->planeCount() == 1 && imageIn->subType() == COMPV_SUBTYPE_RAW_UINT8) ? COMPV_SUBTYPE_PIXELS_Y : imageIn->subType()),
-		widthOut, heightOut, strideOut));
+	COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&imageOut_, subType, widthOut, heightOut, strideOut));
 
 	if (bScaleFactor1 & !CompVBase::isTestingMode()) { // In testing mode we may want to encode the same image several times to check CPU, Memory, Latency...
 		if (bSelfTransfer) {
@@ -534,7 +533,7 @@ COMPV_ERROR_CODE CompVImage::scale(const CompVMatPtr& imageIn, CompVMatPtrPtr im
 			return COMPV_ERROR_CODE_S_OK;
 		}
 		COMPV_CHECK_CODE_RETURN(CompVImageUtils::copy(
-			imageIn->subType(), imageIn->ptr(), imageIn->cols(), imageIn->rows(), imageIn->stride(),
+			subType, imageIn->ptr(), imageIn->cols(), imageIn->rows(), imageIn->stride(),
 			imageOut_->ptr<void>(), imageOut_->cols(), imageOut_->rows(), imageOut_->stride()
 		));
 		*imageOut = imageOut_;
