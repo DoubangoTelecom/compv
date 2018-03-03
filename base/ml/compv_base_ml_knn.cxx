@@ -87,6 +87,9 @@ public:
 	virtual bool isBuilt() const override {
 		return m_bBuilt;
 	}
+	virtual const std::vector<size_t>& names() const override {
+		return m_vecNames;
+	}
 
 	// Not thread-safe
 	virtual COMPV_ERROR_CODE addVector(const CompVMatPtr& vector, const size_t name) override

@@ -268,7 +268,7 @@ FILE* CompVFileUtils::open(const char* fname, const char* mode)
 {
     if (!fname || !mode) {
         COMPV_DEBUG_ERROR_EX(kModuleNameFileUtils, "Invalid parameter");
-        return NULL;
+        return nullptr;
     }
 #if COMPV_OS_ANDROID
     if (compv_android_have_assetmgr()) {
@@ -279,6 +279,23 @@ FILE* CompVFileUtils::open(const char* fname, const char* mode)
     }
 #endif /* COMPV_OS_ANDROID */
     return fopen(fname, mode);
+}
+
+COMPV_ERROR_CODE CompVFileUtils::write(const char* pcPath, const void* data, size_t count)
+{
+	COMPV_CHECK_EXP_RETURN(!pcPath || !data || !count, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	FILE* file = CompVFileUtils::open(pcPath, "wb+");
+	if (!file) {
+		COMPV_DEBUG_ERROR_EX(kModuleNameFileUtils, "open(%s) failed", pcPath);
+		return COMPV_ERROR_CODE_E_FAILED_TO_OPEN_FILE;
+	}
+	const size_t wrote = fwrite(data, 1, count, file);
+	fclose(file);
+	if (wrote != count) {
+		COMPV_DEBUG_ERROR_EX(kModuleNameFileUtils, "fwrite(%s) returned %zu instead of %zu", pcPath, wrote, count);
+		return COMPV_ERROR_CODE_E_INVALID_STATE;
+	}
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 // Get list of files in the directory

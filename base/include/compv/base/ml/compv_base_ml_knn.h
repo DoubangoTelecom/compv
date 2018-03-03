@@ -22,6 +22,7 @@ public:
 	virtual bool isValid() const = 0;
 	virtual bool isLoaded() const = 0;
 	virtual bool isBuilt() const = 0;
+	virtual const std::vector<size_t>& names() const = 0;
 	virtual COMPV_ERROR_CODE addVector(const CompVMatPtr& vector, const size_t name) = 0;
 	virtual COMPV_ERROR_CODE build(const int n_trees) = 0;
 	virtual COMPV_ERROR_CODE save(const char* path) = 0;
