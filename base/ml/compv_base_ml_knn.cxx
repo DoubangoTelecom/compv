@@ -87,16 +87,16 @@ public:
 	virtual bool isBuilt() const override {
 		return m_bBuilt;
 	}
-	virtual const std::vector<size_t>& names() const override {
-		return m_vecNames;
+	virtual const std::vector<size_t>& labels() const override {
+		return m_vecLabels;
 	}
 
 	// Not thread-safe
-	virtual COMPV_ERROR_CODE addVector(const CompVMatPtr& vector, const size_t name) override
+	virtual COMPV_ERROR_CODE addVector(const CompVMatPtr& vector, const size_t label) override
 	{
-		COMPV_CHECK_EXP_RETURN(!vector || !vector->isRawTypeMatch<T>() || vector->rows() != 1 || vector->cols() != vectorLength() || m_vecNames.size() >= INT32_MAX, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-		m_ptrAnnoy->add_item(m_vecNames.size(), vector->ptr<const T>());
-		m_vecNames.push_back(name);
+		COMPV_CHECK_EXP_RETURN(!vector || !vector->isRawTypeMatch<T>() || vector->rows() != 1 || vector->cols() != vectorLength() || m_vecLabels.size() >= INT32_MAX, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		m_ptrAnnoy->add_item(m_vecLabels.size(), vector->ptr<const T>());
+		m_vecLabels.push_back(label);
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
@@ -121,7 +121,7 @@ public:
 	}
 
 	// Not thread-safe
-	virtual COMPV_ERROR_CODE load(const char* path) override
+	virtual COMPV_ERROR_CODE load(const char* path, const std::vector<size_t>& labels) override
 	{
 		if (!isLoaded()) {
 			if (!m_ptrAnnoy->load(path)) {
@@ -129,6 +129,7 @@ public:
 				return COMPV_ERROR_CODE_E_FAILED_TO_OPEN_FILE;
 			}
 			m_bLoaded = true;
+			m_vecLabels = labels;
 		}
 		return COMPV_ERROR_CODE_S_OK;
 	}
@@ -139,6 +140,12 @@ public:
 		COMPV_CHECK_EXP_RETURN(!vector || !vector->isRawTypeMatch<T>() || vector->rows() != 1 || vector->cols() != vectorLength(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 		result.clear();
 		m_ptrAnnoy->get_nns_by_vector(vector->ptr<const T>(), k, (size_t)-1, &result, (distances ? &distances_ : nullptr));
+		// Convert indexes to labels
+		const size_t labels_count = m_vecLabels.size();
+		for (std::vector<size_t>::iterator i = result.begin(); i < result.end(); ++i) {
+			COMPV_CHECK_EXP_RETURN(*i >= labels_count, COMPV_ERROR_CODE_E_OUT_OF_BOUND);
+			*i = m_vecLabels[*i];
+		}
 		if (distances) {
 			if (std::is_same<T, double>::value) {
 				*distances = *reinterpret_cast<std::vector<double>*>(&distances_);
@@ -160,7 +167,7 @@ private:
 	COMPV_DISTANCE_TYPE m_eDistanceType;
 	bool m_bLoaded;
 	bool m_bBuilt;
-	std::vector<size_t> m_vecNames;
+	std::vector<size_t> m_vecLabels;
 	AnnoyIndexInterface<size_t, T>* m_ptrAnnoy;
 }; 
 
@@ -194,12 +201,17 @@ CompVMachineLearningKNN::~CompVMachineLearningKNN()
 	}
 }
 
+const std::vector<size_t>& CompVMachineLearningKNN::labels() const
+{
+	return m_ptrGeneric->labels();
+}
+
 // Function called in training phase.
-COMPV_ERROR_CODE CompVMachineLearningKNN::addVector(const CompVMatPtr& vector, const size_t name)
+COMPV_ERROR_CODE CompVMachineLearningKNN::addVector(const CompVMatPtr& vector, const size_t label)
 {
 	CompVAutoLock<CompVMachineLearningKNN>(this); // Adding vector not thread-safe -> lock
 	COMPV_CHECK_EXP_RETURN(m_ptrGeneric->isBuilt(), COMPV_ERROR_CODE_E_INVALID_CALL, "No vector could be added after building the tree");
-	COMPV_CHECK_CODE_RETURN(m_ptrGeneric->addVector(vector, name));
+	COMPV_CHECK_CODE_RETURN(m_ptrGeneric->addVector(vector, label));
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -213,10 +225,10 @@ COMPV_ERROR_CODE CompVMachineLearningKNN::save(const char* path, const int n_tre
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVMachineLearningKNN::load(const char* path)
+COMPV_ERROR_CODE CompVMachineLearningKNN::load(const char* path, const std::vector<size_t>& labels)
 {
 	CompVAutoLock<CompVMachineLearningKNN>(this);
-	COMPV_CHECK_CODE_RETURN(m_ptrGeneric->load(path));
+	COMPV_CHECK_CODE_RETURN(m_ptrGeneric->load(path, labels));
 	return COMPV_ERROR_CODE_S_OK;
 }
 
