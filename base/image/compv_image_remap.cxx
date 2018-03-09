@@ -40,11 +40,10 @@ private:
 		auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
 			uint8_t* outputPtr = output->ptr<uint8_t>(ystart);
 			size_t i, j, k;
-			T x, y;
 			for (j = ystart, k = (ystart * outputWidth); j < yend; ++j) {
 				for (i = 0; i < outputWidth; ++i, ++k) {
-					x = mapXPtr[k];
-					y = mapYPtr[k];
+					const T x = mapXPtr[k];
+					const T y = mapYPtr[k];
 					if (x < roi_left || x > roi_right || y < roi_top || y > roi_bottom) {
 						outputPtr[i] = 0; // TODO(dmi): or mean
 					}
@@ -82,6 +81,9 @@ private:
 		const size_t outputWidth = output->cols();
 		const size_t outputHeight = output->rows();
 		const size_t  outputStride = output->stride();
+
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
+		COMPV_DEBUG_INFO_CODE_TODO("Clip x2 and y2: std::min(x2, widithMinus1)");
 
 		auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
 			// Bilinear filtering: https://en.wikipedia.org/wiki/Bilinear_interpolation#Unit_square
@@ -185,7 +187,8 @@ public:
 		COMPV_CHECK_EXP_RETURN(map->rows() < 2 || map->cols() != outputElmtCount, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Invalid map size");
 
 		// Create output
-		COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&output_, input->subType(), outputSize_.width, outputSize_.height, input->stride()));
+		const COMPV_SUBTYPE subType = ((input->planeCount() == 1 && input->subType() == COMPV_SUBTYPE_RAW_UINT8) ? COMPV_SUBTYPE_PIXELS_Y : input->subType());
+		COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&output_, subType, outputSize_.width, outputSize_.height, input->stride()));
 
 		// Perform interpolation
 		switch (interType) {

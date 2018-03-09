@@ -27,10 +27,12 @@ static void CompVMathMomentsCentralFirstOrder(const T* data, const size_t width,
 	const int32_t height_ = static_cast<int32_t>(height);
 	for (int32_t j = 0; j < height_; j++) {
 		for (int32_t i = 0; i < width_; i++) {
-			const double pixel = data[i];
-			m00_ += pixel;
-			m01_ += (j * pixel);
-			m10_ += (i * pixel);
+			if (data[i]) {
+				const double pixel = data[i];
+				m00_ += pixel;
+				m01_ += (j * pixel);
+				m10_ += (i * pixel);
+			}
 		}
 		data += stride;
 	}

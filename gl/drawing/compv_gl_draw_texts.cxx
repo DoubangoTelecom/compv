@@ -340,6 +340,7 @@ COMPV_ERROR_CODE CompVGLDrawTexts::freeTypeCreateFace(const std::string fontFull
 		return COMPV_ERROR_CODE_E_FREETYPE;
 	}
 	if ((ft_err = FT_Set_Pixel_Sizes(m_face, 0, static_cast<FT_UInt>(fontSize)))) {
+		COMPV_CHECK_EXP_NOP(FT_Done_Face(m_face) == 0, COMPV_ERROR_CODE_E_FREETYPE);
 		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASS_NAME, "FT_Set_Pixel_Sizes(face, 0, %zu) failed with error '%s'", fontSize, CompVGLFreeType::errorMessage(ft_err));
 		return COMPV_ERROR_CODE_E_FREETYPE;
 	}

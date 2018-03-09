@@ -218,6 +218,7 @@ COMPV_ERROR_CODE CompVMachineLearningKNN::addVector(const CompVMatPtr& vector, c
 COMPV_ERROR_CODE CompVMachineLearningKNN::save(const char* path, const int n_trees COMPV_DEFAULT(10))
 {
 	CompVAutoLock<CompVMachineLearningKNN>(this);
+	COMPV_CHECK_EXP_RETURN(m_ptrGeneric->labels().empty(), COMPV_ERROR_CODE_E_INVALID_CALL, "Nothing to save");
 	if (!m_ptrGeneric->isBuilt()) {
 		COMPV_CHECK_CODE_RETURN(m_ptrGeneric->build(n_trees));
 	}
