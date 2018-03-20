@@ -16,7 +16,7 @@ COMPV_NAMESPACE_BEGIN()
 class COMPV_BASE_API CompVMathMoments
 {
 public:
-	static COMPV_ERROR_CODE centralFirstOrder(const CompVMatPtr& ptrIn, double(&moments)[3], bool binar = false);
+	static COMPV_ERROR_CODE rawFirstOrder(const CompVMatPtr& ptrIn, double(&moments)[3], bool binar = false);
 };
 
 COMPV_NAMESPACE_END()

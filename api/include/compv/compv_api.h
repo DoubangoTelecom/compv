@@ -54,6 +54,7 @@
 #include <compv/base/math/compv_math_utils.h>
 
 #include <compv/base/ml/compv_base_ml_knn.h>
+#include <compv/base/ml/compv_base_ml_svm.h>
 
 #include <compv/base/parallel/compv_condvar.h>
 #include <compv/base/parallel/compv_mutex.h>

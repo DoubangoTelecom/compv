@@ -37,10 +37,10 @@ public:
 	CompVMachineLearningKNNGeneric(const size_t vectorLength, const COMPV_SUBTYPE vectorType = COMPV_SUBTYPE_RAW_FLOAT32, const COMPV_DISTANCE_TYPE distanceType = COMPV_DISTANCE_TYPE_EUCLIDEAN)
 		: m_nVectorLength(vectorLength)
 		, m_eVectorType(vectorType)
-		, m_ptrAnnoy(nullptr)
 		, m_eDistanceType(distanceType)
 		, m_bLoaded(false)
 		, m_bBuilt(false)
+		, m_ptrAnnoy(nullptr)		
 	{
 		COMPV_ASSERT((vectorType == COMPV_SUBTYPE_RAW_FLOAT32 && std::is_same<T, compv_float32_t>::value) || (vectorType == COMPV_SUBTYPE_RAW_FLOAT64 && std::is_same<T, compv_float64_t>::value));
 		switch (distanceType) {

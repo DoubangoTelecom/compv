@@ -11,7 +11,7 @@
 COMPV_NAMESPACE_BEGIN()
 
 template<typename T>
-static void CompVMathMomentsCentralFirstOrder(const T* data, const size_t width, const size_t height, const size_t stride, double* m00, double* m01, double* m10)
+static void CompVMathMomentsRawFirstOrder(const T* data, const size_t width, const size_t height, const size_t stride, double* m00, double* m01, double* m10)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("SUM per row and using int32 then add to double");
@@ -38,16 +38,16 @@ static void CompVMathMomentsCentralFirstOrder(const T* data, const size_t width,
 	}
 }
 
-COMPV_ERROR_CODE CompVMathMoments::centralFirstOrder(const CompVMatPtr& ptrIn, double(&moments)[3], bool binar COMPV_DEFAULT(false))
+COMPV_ERROR_CODE CompVMathMoments::rawFirstOrder(const CompVMatPtr& ptrIn, double(&moments)[3], bool binar COMPV_DEFAULT(false))
 {
 	COMPV_CHECK_EXP_RETURN(!ptrIn || ptrIn->elmtInBytes() != sizeof(uint8_t), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation could be found");
-	moments[0] = 0.0;
-	moments[1] = 0.0;
-	moments[2] = 0.0;
+	moments[0] = 0.0; // M00(area)
+	moments[1] = 0.0; // M01(y)
+	moments[2] = 0.0; // M10(x)
 	for (int plane = 0; plane < ptrIn->planeCount(); ++plane) {
-		CompVMathMomentsCentralFirstOrder(
+		CompVMathMomentsRawFirstOrder(
 			ptrIn->ptr<const uint8_t>(0, 0, plane),
 			ptrIn->cols(plane), ptrIn->rows(plane), ptrIn->stride(plane),
 			&moments[0], &moments[1], &moments[2]

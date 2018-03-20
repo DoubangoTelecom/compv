@@ -157,6 +157,12 @@
     <Filter Include="source\zlib-1.2.8">
       <UniqueIdentifier>{ac6125f9-c968-4f07-b099-efeba67cbaac}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\ml\libsvm-322">
+      <UniqueIdentifier>{c21e9fb7-bf05-4d93-9688-abf6e1726c12}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\ml\libsvm-322">
+      <UniqueIdentifier>{22abc91c-5578-4526-bef8-f4308b0d2378}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\base\compv_base.h">
@@ -705,6 +711,12 @@
     <ClInclude Include="include\compv\base\zlib-1.2.8\zlib.h">
       <Filter>include\zlib-1.2.8</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\ml\libsvm-322\libsvm.h">
+      <Filter>include\ml\libsvm-322</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\ml\compv_base_ml_svm.h">
+      <Filter>include\ml</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx">
@@ -1159,6 +1171,12 @@
     </ClCompile>
     <ClCompile Include="zlib-1.2.8\zlib.c">
       <Filter>source\zlib-1.2.8</Filter>
+    </ClCompile>
+    <ClCompile Include="ml\libsvm-322\libsvm.cxx">
+      <Filter>source\ml\libsvm-322</Filter>
+    </ClCompile>
+    <ClCompile Include="ml\compv_base_ml_svm.cxx">
+      <Filter>source\ml</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

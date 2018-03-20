@@ -148,6 +148,9 @@ bail:
 	if (COMPV_ERROR_CODE_IS_OK(err)) {
 		*image = image_;
 	}
+	else {
+		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Failed to decode %s", filePath);
+	}
 	stbi_image_free(data);
 	fclose(file_);
 	return err;
