@@ -25,7 +25,7 @@ template <class T> static inline void swap(T& x, T& y) { T t=x; x=y; y=t; }
 template <class S, class T> static inline void clone(T*& dst, S* src, int n)
 {
 	dst = new T[n];
-	memcpy((void *)dst,(void *)src,sizeof(T)*n);
+	COMPV_NAMESPACE::CompVMem::copy((void *)dst,(void *)src,sizeof(T)*n);
 }
 static inline double powi(double base, int times)
 {
@@ -42,6 +42,7 @@ static inline double powi(double base, int times)
 #define TAU 1e-12
 #define Malloc(type,n)	reinterpret_cast<type *>(COMPV_NAMESPACE::CompVMem::malloc((n)*sizeof(type)))
 #define Free(ptr)		COMPV_NAMESPACE::CompVMem::free(reinterpret_cast<void**>(&(ptr)))
+#define Realloc(p,n)	COMPV_NAMESPACE::CompVMem::realloc((p), (n))
 
 //
 // Kernel Cache
@@ -128,7 +129,7 @@ int Cache::get_data(const int index, Qfloat **data, int len)
 		}
 
 		// allocate new space
-		h->data = (Qfloat *)realloc(h->data,sizeof(Qfloat)*len);
+		h->data = (Qfloat *)Realloc(h->data,sizeof(Qfloat)*len);
 		size -= more;
 		swap(h->len,len);
 	}
@@ -2024,8 +2025,8 @@ static void svm_group_classes(const svm_problem *prob, int *nr_class_ret, int **
 			if(nr_class == max_nr_class)
 			{
 				max_nr_class *= 2;
-				label = (int *)realloc(label,max_nr_class*sizeof(int));
-				count = (int *)realloc(count,max_nr_class*sizeof(int));
+				label = (int *)Realloc(label,max_nr_class*sizeof(int));
+				count = (int *)Realloc(count,max_nr_class*sizeof(int));
 			}
 			label[nr_class] = this_label;
 			count[nr_class] = 1;
@@ -2741,7 +2742,7 @@ static char* readline(FILE *input)
 	while(strrchr(line,'\n') == NULL)
 	{
 		max_line_len *= 2;
-		line = (char *) realloc(line,max_line_len);
+		line = (char *)Realloc(line,max_line_len);
 		len = (int) strlen(line);
 		if(fgets(line+len,max_line_len-len,input) == NULL)
 			break;
@@ -3123,8 +3124,8 @@ const char *svm_check_parameter(const svm_problem *prob, const svm_parameter *pa
 				if(nr_class == max_nr_class)
 				{
 					max_nr_class *= 2;
-					label = (int *)realloc(label,max_nr_class*sizeof(int));
-					count = (int *)realloc(count,max_nr_class*sizeof(int));
+					label = (int *)Realloc(label,max_nr_class*sizeof(int));
+					count = (int *)Realloc(count,max_nr_class*sizeof(int));
 				}
 				label[nr_class] = this_label;
 				count[nr_class] = 1;
