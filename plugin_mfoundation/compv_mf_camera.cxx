@@ -43,7 +43,7 @@ CompVMFCamera::~CompVMFCamera()
 
 COMPV_ERROR_CODE CompVMFCamera::devices(CompVCameraDeviceInfoList& list) /* Overrides(CompVCamera) */
 {
-	CompVAutoLock<CompVMFCamera>(this);
+	COMPV_AUTOLOCK_THIS(CompVMFCamera);
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "%s", __FUNCTION__);
 	CompVCameraDeviceInfoList list_;
 	HRESULT hr = S_OK;
@@ -102,7 +102,7 @@ bail:
 	
 COMPV_ERROR_CODE CompVMFCamera::start(const std::string& deviceId COMPV_DEFAULT("")) /* Overrides(CompVCamera) */
 {
-	CompVAutoLock<CompVMFCamera>(this);
+	COMPV_AUTOLOCK_THIS(CompVMFCamera);
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "%s(%s)", __FUNCTION__, deviceId.c_str());
 	if (m_bStarted) {
 		return COMPV_ERROR_CODE_S_OK;
@@ -129,7 +129,7 @@ bail:
 	
 COMPV_ERROR_CODE CompVMFCamera::stop() /* Overrides(CompVCamera) */
 {
-	CompVAutoLock<CompVMFCamera>(this);
+	COMPV_AUTOLOCK_THIS(CompVMFCamera);
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "%s", __FUNCTION__);
 	
 #if 0 // TODO(dmi): MF_E_MULTIPLE_SUBSCRIBERS
@@ -154,7 +154,7 @@ COMPV_ERROR_CODE CompVMFCamera::stop() /* Overrides(CompVCamera) */
 	
 COMPV_ERROR_CODE CompVMFCamera::set(int id, const void* valuePtr, size_t valueSize) /* Overrides(CompVCaps) */
 {
-	CompVAutoLock<CompVMFCamera>(this);
+	COMPV_AUTOLOCK_THIS(CompVMFCamera);
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "%s(%d, %p, %zu)", __FUNCTION__, id, valuePtr, valueSize);
 	COMPV_CHECK_EXP_RETURN(!valuePtr || !valueSize, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	switch (id) {
@@ -192,7 +192,7 @@ COMPV_ERROR_CODE CompVMFCamera::set(int id, const void* valuePtr, size_t valueSi
 	
 COMPV_ERROR_CODE CompVMFCamera::get(int id, const void** valuePtrPtr, size_t valueSize) /* Overrides(CompVCaps) */
 {
-	CompVAutoLock<CompVMFCamera>(this);
+	COMPV_AUTOLOCK_THIS(CompVMFCamera);
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "%s(%d, %p, %zu)", __FUNCTION__, id, valuePtrPtr, valueSize);
 	COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
 	return COMPV_ERROR_CODE_S_OK;
@@ -200,7 +200,7 @@ COMPV_ERROR_CODE CompVMFCamera::get(int id, const void** valuePtrPtr, size_t val
 
 COMPV_ERROR_CODE CompVMFCamera::device(__in const char* pszId, __out IMFActivate **ppActivate)
 {
-	CompVAutoLock<CompVMFCamera>(this);
+	COMPV_AUTOLOCK_THIS(CompVMFCamera);
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "%s(%s)", __FUNCTION__, pszId);
 	COMPV_CHECK_EXP_RETURN(!ppActivate, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_CHECK_EXP_RETURN(!m_ptrDeviceListVideo, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -497,7 +497,7 @@ HRESULT STDMETHODCALLTYPE CompVMFCamera::BufferCB(REFGUID guidMajorMediaType, DW
 {
 	COMPV_CHECK_HRESULT_EXP_RETURN(!pSampleBuffer || !dwSampleSiz, E_POINTER);
 	CompVMFCameraPtr camera = const_cast<CompVMFCamera*>(static_cast<const CompVMFCamera*>(pcUserData));
-	CompVAutoLock<CompVMFCamera> autoLock(*camera);
+	COMPV_AUTOLOCK_OBJ(CompVMFCamera, *camera);
 	CompVCameraCallbackOnNewFrame& callback = camera->callbackOnNewFrame();
 	if (!callback) {
 		return S_OK;
@@ -546,7 +546,7 @@ void *COMPV_STDCALL CompVMFCamera::RunSessionThread(void * arg)
 
 bail:
 	if (FAILED(hr) && ptrCamera->m_bStarted) {
-		CompVAutoLock<CompVMFCamera> autoLock(*ptrCamera);
+		COMPV_AUTOLOCK_OBJ(CompVMFCamera, *ptrCamera);
 		CompVCameraCallbackOnError& callback = ptrCamera->callbackOnError();
 		if (callback) {
 			callback(std::string("Media foundation error:") + std::to_string(hr)); // TODO(dmi): set the correct error message

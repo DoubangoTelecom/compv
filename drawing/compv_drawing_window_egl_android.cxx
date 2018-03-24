@@ -88,7 +88,7 @@ COMPV_ERROR_CODE CompVWindowEGLAndroid::attachToSurface(JNIEnv* jniEnv, jobject 
 
 COMPV_ERROR_CODE CompVWindowEGLAndroid::priv_updateState(COMPV_WINDOW_STATE newState) /*Overrides(CompVWindowPriv)*/
 {
-	CompVAutoLock<CompVWindowEGLAndroid>(this);
+	COMPV_AUTOLOCK_THIS(CompVWindowEGLAndroid);
 	// The base class implementation will close the context handlers and free the GL context. It must
 	// be called before releasing the window handler as the context is based on it.
 	COMPV_CHECK_CODE_NOP(CompVWindowEGL::priv_updateState(newState)); // call base class implementation

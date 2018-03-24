@@ -207,7 +207,7 @@ bool CompVWindowEGL::isClosed() const /* Overrides(CompVGLWindow) */
 
 COMPV_ERROR_CODE CompVWindowEGL::close() /* Overrides(CompVGLWindow) */
 {
-    CompVAutoLock<CompVWindowEGL>(this);
+	COMPV_AUTOLOCK_THIS(CompVWindowEGL);
     COMPV_CHECK_CODE_NOP(CompVGLWindow::close()); // base class implementation
     COMPV_CHECK_CODE_RETURN(deInit());
     return COMPV_ERROR_CODE_S_OK;
@@ -215,7 +215,7 @@ COMPV_ERROR_CODE CompVWindowEGL::close() /* Overrides(CompVGLWindow) */
 
 COMPV_ERROR_CODE CompVWindowEGL::beginDraw() /* Overrides(CompVGLWindow) */
 {
-    CompVAutoLock<CompVWindowEGL>(this);
+	COMPV_AUTOLOCK_THIS(CompVWindowEGL);
     COMPV_CHECK_CODE_RETURN(init());
     COMPV_CHECK_CODE_RETURN(CompVGLWindow::beginDraw()); // Base class implementation
     return COMPV_ERROR_CODE_S_OK;
@@ -223,7 +223,7 @@ COMPV_ERROR_CODE CompVWindowEGL::beginDraw() /* Overrides(CompVGLWindow) */
 
 COMPV_ERROR_CODE CompVWindowEGL::priv_updateState(COMPV_WINDOW_STATE newState) /*Overrides(CompVWindowPriv)*/
 {
-	CompVAutoLock<CompVWindowEGL>(this);
+	COMPV_AUTOLOCK_THIS(CompVWindowEGL);
 	COMPV_CHECK_CODE_NOP(CompVGLWindow::priv_updateState(newState)); // call base class implementation (*must* be call first)
 	switch (newState){
 	case COMPV_WINDOW_STATE_CONTEXT_DESTROYED:

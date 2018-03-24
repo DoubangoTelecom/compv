@@ -20,19 +20,19 @@ public:
     CompVLock();
     virtual ~CompVLock();
     COMPV_INLINE bool isInitialized()const {
-        return !!m_ptrSDLMutex;
+        return !!m_ptrMutex;
     }
     COMPV_INLINE COMPV_ERROR_CODE lock() {
-        COMPV_CHECK_CODE_RETURN(m_ptrSDLMutex->lock());
+        COMPV_CHECK_CODE_RETURN(m_ptrMutex->lock());
         return COMPV_ERROR_CODE_S_OK;
     }
     COMPV_INLINE COMPV_ERROR_CODE unlock() {
-        COMPV_CHECK_CODE_RETURN(m_ptrSDLMutex->unlock());
+        COMPV_CHECK_CODE_RETURN(m_ptrMutex->unlock());
         return COMPV_ERROR_CODE_S_OK;
     }
 private:
     COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
-    CompVMutexPtr m_ptrSDLMutex;
+    CompVMutexPtr m_ptrMutex;
     COMPV_VS_DISABLE_WARNINGS_END()
 };
 
@@ -51,6 +51,9 @@ private:
     T* m_pThis;
     COMPV_VS_DISABLE_WARNINGS_END()
 };
+
+#define COMPV_AUTOLOCK_OBJ(T, obj)	CompVAutoLock<T> __COMPV_autoLock__((obj))
+#define COMPV_AUTOLOCK_THIS(T)		COMPV_AUTOLOCK_OBJ(T, this)
 
 COMPV_NAMESPACE_END()
 

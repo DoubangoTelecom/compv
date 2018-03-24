@@ -19,6 +19,7 @@
     <ClCompile Include="..\..\calib_camera.cxx" />
     <ClCompile Include="..\..\calib_undist.cxx" />
     <ClCompile Include="..\..\stats_ransac.cxx" />
+    <ClCompile Include="..\..\ml_svm.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\tests_common.h" />

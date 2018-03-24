@@ -209,7 +209,7 @@ const std::vector<size_t>& CompVMachineLearningKNN::labels() const
 // Function called in training phase.
 COMPV_ERROR_CODE CompVMachineLearningKNN::addVector(const CompVMatPtr& vector, const size_t label)
 {
-	CompVAutoLock<CompVMachineLearningKNN>(this); // Adding vector not thread-safe -> lock
+	COMPV_AUTOLOCK_THIS(CompVMachineLearningKNN); // Adding vector not thread-safe -> lock
 	COMPV_CHECK_EXP_RETURN(m_ptrGeneric->isBuilt(), COMPV_ERROR_CODE_E_INVALID_CALL, "No vector could be added after building the tree");
 	COMPV_CHECK_CODE_RETURN(m_ptrGeneric->addVector(vector, label));
 	return COMPV_ERROR_CODE_S_OK;
@@ -217,7 +217,7 @@ COMPV_ERROR_CODE CompVMachineLearningKNN::addVector(const CompVMatPtr& vector, c
 
 COMPV_ERROR_CODE CompVMachineLearningKNN::save(const char* path, const int n_trees COMPV_DEFAULT(10))
 {
-	CompVAutoLock<CompVMachineLearningKNN>(this);
+	COMPV_AUTOLOCK_THIS(CompVMachineLearningKNN);
 	COMPV_CHECK_EXP_RETURN(m_ptrGeneric->labels().empty(), COMPV_ERROR_CODE_E_INVALID_CALL, "Nothing to save");
 	if (!m_ptrGeneric->isBuilt()) {
 		COMPV_CHECK_CODE_RETURN(m_ptrGeneric->build(n_trees));
@@ -228,7 +228,7 @@ COMPV_ERROR_CODE CompVMachineLearningKNN::save(const char* path, const int n_tre
 
 COMPV_ERROR_CODE CompVMachineLearningKNN::load(const char* path, const std::vector<size_t>& labels)
 {
-	CompVAutoLock<CompVMachineLearningKNN>(this);
+	COMPV_AUTOLOCK_THIS(CompVMachineLearningKNN);
 	COMPV_CHECK_CODE_RETURN(m_ptrGeneric->load(path, labels));
 	return COMPV_ERROR_CODE_S_OK;
 }

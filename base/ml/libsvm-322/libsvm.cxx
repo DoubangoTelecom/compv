@@ -1,6 +1,7 @@
 #include "compv/base/compv_config.h"
 #include "compv/base/compv_debug.h"
 #include "compv/base/compv_mem.h"
+#include "compv/base/compv_fileutils.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -43,6 +44,7 @@ static inline double powi(double base, int times)
 #define Malloc(type,n)	reinterpret_cast<type *>(COMPV_NAMESPACE::CompVMem::malloc((n)*sizeof(type)))
 #define Free(ptr)		COMPV_NAMESPACE::CompVMem::free(reinterpret_cast<void**>(&(ptr)))
 #define Realloc(p,n)	COMPV_NAMESPACE::CompVMem::realloc((p), (n))
+#define Calloc(n,sz)	COMPV_NAMESPACE::CompVMem::calloc((n), (sz))
 
 //
 // Kernel Cache
@@ -79,7 +81,7 @@ private:
 
 Cache::Cache(int l_, long int size_) :l(l_), size(size_)
 {
-	head = (head_t *)calloc(l, sizeof(head_t));	// initialized to 0
+	head = (head_t *)Calloc(l, sizeof(head_t));	// initialized to 0
 	size /= sizeof(Qfloat);
 	size -= l * sizeof(head_t) / sizeof(Qfloat);
 	size = max(size, 2 * (long int)l);	// cache must be large enough for two columns
@@ -555,7 +557,7 @@ void Solver::Solve(int l, const QMatrix& Q, const double *p_, const schar *y_,
 		{
 			counter = min(l, 1000);
 			if (shrinking) do_shrinking();
-			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, ".");
+			COMPV_DEBUG_VERBOSE_EX(COMPV_THIS_CLASSNAME, ".");
 		}
 
 		int i, j;
@@ -565,7 +567,7 @@ void Solver::Solve(int l, const QMatrix& Q, const double *p_, const schar *y_,
 			reconstruct_gradient();
 			// reset active set size and check
 			active_size = l;
-			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "*");
+			COMPV_DEBUG_VERBOSE_EX(COMPV_THIS_CLASSNAME, "*");
 			if (select_working_set(i, j) != 0)
 				break;
 			else
@@ -721,7 +723,7 @@ void Solver::Solve(int l, const QMatrix& Q, const double *p_, const schar *y_,
 			// reconstruct the whole gradient to calculate objective value
 			reconstruct_gradient();
 			active_size = l;
-			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "*");
+			COMPV_DEBUG_VERBOSE_EX(COMPV_THIS_CLASSNAME, "*");
 		}
 		COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASSNAME, "WARNING: reaching max number of iterations");
 	}
@@ -757,7 +759,7 @@ void Solver::Solve(int l, const QMatrix& Q, const double *p_, const schar *y_,
 	si->upper_bound_p = Cp;
 	si->upper_bound_n = Cn;
 
-	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "optimization finished, #iter = %d", iter);
+	COMPV_DEBUG_VERBOSE_EX(COMPV_THIS_CLASSNAME, "optimization finished, #iter = %d", iter);
 
 	delete[] p;
 	delete[] y;
@@ -930,7 +932,7 @@ void Solver::do_shrinking()
 		unshrink = true;
 		reconstruct_gradient();
 		active_size = l;
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "*");
+		COMPV_DEBUG_VERBOSE_EX(COMPV_THIS_CLASSNAME, "*");
 	}
 
 	for (i = 0; i < active_size; i++)
@@ -1449,7 +1451,7 @@ static void solve_c_svc(
 		sum_alpha += alpha[i];
 
 	if (Cp == Cn)
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "nu = %f", sum_alpha / (Cp*prob->l));
+		COMPV_DEBUG_VERBOSE_EX(COMPV_THIS_CLASSNAME, "nu = %f", sum_alpha / (Cp*prob->l));
 
 	for (i = 0; i < l; i++)
 		alpha[i] *= y[i];
@@ -1499,7 +1501,7 @@ static void solve_nu_svc(
 		alpha, 1.0, 1.0, param->eps, si, param->shrinking);
 	double r = si->r;
 
-	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "C = %f", 1 / r);
+	COMPV_DEBUG_VERBOSE_EX(COMPV_THIS_CLASSNAME, "C = %f", 1 / r);
 
 	for (i = 0; i < l; i++)
 		alpha[i] *= y[i] / r;
@@ -1576,7 +1578,7 @@ static void solve_epsilon_svr(
 		alpha[i] = alpha2[i] - alpha2[i + l];
 		sum_alpha += fabs(alpha[i]);
 	}
-	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "nu = %f", sum_alpha / (param->C*l));
+	COMPV_DEBUG_VERBOSE_EX(COMPV_THIS_CLASSNAME, "nu = %f", sum_alpha / (param->C*l));
 
 	delete[] alpha2;
 	delete[] linear_term;
@@ -1655,7 +1657,7 @@ static decision_function svm_train_one(
 		break;
 	}
 
-	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "obj = %f, rho = %f", si.obj, si.rho);
+	COMPV_DEBUG_VERBOSE_EX(COMPV_THIS_CLASSNAME, "obj = %f, rho = %f", si.obj, si.rho);
 
 	// output SVs
 
@@ -1679,7 +1681,7 @@ static decision_function svm_train_one(
 		}
 	}
 
-	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "nSV = %d, nBSV = %d", nSV, nBSV);
+	COMPV_DEBUG_VERBOSE_EX(COMPV_THIS_CLASSNAME, "nSV = %d, nBSV = %d", nSV, nBSV);
 
 	decision_function f;
 	f.alpha = alpha;
@@ -2255,7 +2257,7 @@ svm_model *svm_train(const svm_problem *prob, const svm_parameter *param)
 			nz_count[i] = nSV;
 		}
 
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Total nSV = %d", total_sv);
+		COMPV_DEBUG_VERBOSE_EX(COMPV_THIS_CLASSNAME, "Total nSV = %d", total_sv);
 
 		model->l = total_sv;
 		model->SV = Malloc(svm_node *, total_sv);
@@ -2499,10 +2501,12 @@ double svm_predict_values(const svm_model *model, const svm_node *x, double* dec
 		sum -= model->rho[0];
 		*dec_values = sum;
 
-		if (model->param.svm_type == ONE_CLASS)
+		if (model->param.svm_type == ONE_CLASS) {
 			return (sum > 0) ? 1 : -1;
-		else
+		}
+		else {
 			return sum;
+		}
 	}
 	else
 	{
@@ -2545,10 +2549,12 @@ double svm_predict_values(const svm_model *model, const svm_node *x, double* dec
 				sum -= model->rho[p];
 				dec_values[p] = sum;
 
-				if (dec_values[p] > 0)
+				if (dec_values[p] > 0) {
 					++vote[i];
-				else
+				}
+				else {
 					++vote[j];
+				}
 				p++;
 			}
 		}
@@ -2646,7 +2652,7 @@ static const char *kernel_type_table[] =
 
 int svm_save_model(const char *model_file_name, const svm_model *model)
 {
-	FILE *fp = fopen(model_file_name, "w");
+	FILE *fp = COMPV_NAMESPACE::CompVFileUtils::open(model_file_name, "w");
 	if (fp == NULL) return -1;
 
 	char *old_locale = setlocale(LC_ALL, NULL);
@@ -2735,9 +2741,9 @@ int svm_save_model(const char *model_file_name, const svm_model *model)
 	}
 
 	setlocale(LC_ALL, old_locale);
-	Free(old_locale);
+	::free(old_locale); // allocate using "strdup", so use standard free
 
-	if (ferror(fp) != 0 || fclose(fp) != 0) return -1;
+	if (ferror(fp) != 0 || (COMPV_NAMESPACE::CompVFileUtils::close(&fp) != COMPV_NAMESPACE::COMPV_ERROR_CODE_S_OK)) return -1;
 	else return 0;
 }
 
@@ -2886,7 +2892,7 @@ bool read_model_header(FILE *fp, svm_model* model)
 
 svm_model *svm_load_model(const char *model_file_name)
 {
-	FILE *fp = fopen(model_file_name, "rb");
+	FILE *fp = COMPV_NAMESPACE::CompVFileUtils::open(model_file_name, "rb");
 	if (fp == NULL) return NULL;
 
 	char *old_locale = setlocale(LC_ALL, NULL);
@@ -2910,7 +2916,7 @@ svm_model *svm_load_model(const char *model_file_name)
 	{
 		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "ERROR: fscanf failed to read model");
 		setlocale(LC_ALL, old_locale);
-		Free(old_locale);
+		::free(old_locale); // Allocated using "strdup" which means must use standard "free"
 		Free(model->rho);
 		Free(model->label);
 		Free(model->nSV);
@@ -2983,9 +2989,9 @@ svm_model *svm_load_model(const char *model_file_name)
 	Free(line);
 
 	setlocale(LC_ALL, old_locale);
-	Free(old_locale);
+	::free(old_locale); // Allocated using "strdup" which means must use standard "free"
 
-	if (ferror(fp) != 0 || fclose(fp) != 0)
+	if (ferror(fp) != 0 || (COMPV_NAMESPACE::CompVFileUtils::close(&fp) != COMPV_NAMESPACE::COMPV_ERROR_CODE_S_OK))
 		return NULL;
 
 	model->free_sv = 1;	// XXX
@@ -3000,42 +3006,26 @@ void svm_free_model_content(svm_model* model_ptr)
 	}
 	if (model_ptr->sv_coef)
 	{
-		for (int i = 0; i < model_ptr->nr_class - 1; i++)
+		for (int i = 0; i < model_ptr->nr_class - 1; i++) {
 			Free(model_ptr->sv_coef[i]);
+		}
 	}
 
 	Free(model_ptr->SV);
-	model_ptr->SV = NULL;
-
 	Free(model_ptr->sv_coef);
-	model_ptr->sv_coef = NULL;
-
 	Free(model_ptr->rho);
-	model_ptr->rho = NULL;
-
 	Free(model_ptr->label);
-	model_ptr->label = NULL;
-
 	Free(model_ptr->probA);
-	model_ptr->probA = NULL;
-
 	Free(model_ptr->probB);
-	model_ptr->probB = NULL;
-
 	Free(model_ptr->sv_indices);
-	model_ptr->sv_indices = NULL;
-
 	Free(model_ptr->nSV);
-	model_ptr->nSV = NULL;
 }
 
 void svm_free_and_destroy_model(svm_model** model_ptr_ptr)
 {
-	if (model_ptr_ptr != NULL && *model_ptr_ptr != NULL)
-	{
+	if (model_ptr_ptr && *model_ptr_ptr) {
 		svm_free_model_content(*model_ptr_ptr);
 		Free(*model_ptr_ptr);
-		*model_ptr_ptr = NULL;
 	}
 }
 

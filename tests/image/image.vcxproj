@@ -196,15 +196,6 @@
     <ProjectReference Include="..\..\gpu\CompVGPU.vcxproj">
       <Project>{f3fdf15a-8ae4-4d9d-aa7b-0b7f6e940146}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\plugin_directshow\CompVPluginDirectShow.vcxproj">
-      <Project>{09f89651-7ca8-4382-9e8b-272c3eb1291c}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\plugin_mfoundation\CompVPluginMFoundation.vcxproj">
-      <Project>{f9006758-f433-4f8a-a12d-6f0ff4131a74}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\plugin_opencl\CompVPluginOpenCL.vcxproj">
-      <Project>{8dffe598-89e4-4dc0-af73-8e879d7d4530}</Project>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\tests_common.h" />

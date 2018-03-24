@@ -64,7 +64,7 @@ CompVCameraAndroid::~CompVCameraAndroid()
 
 COMPV_ERROR_CODE CompVCameraAndroid::devices(CompVCameraDeviceInfoList& list) /* Overrides(CompVCamera) */
 {
-	CompVAutoLock<CompVCameraAndroid>(this);
+	COMPV_AUTOLOCK_THIS(CompVCameraAndroid);
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "%s", __FUNCTION__);
 	COMPV_CHECK_EXP_RETURN(!s_bJniInitialized, COMPV_ERROR_CODE_E_INVALID_STATE, "JNI not initialized");
 	CompVCameraDeviceInfoList list_;
@@ -99,7 +99,7 @@ bail:
 
 COMPV_ERROR_CODE CompVCameraAndroid::start(const std::string& deviceId COMPV_DEFAULT("")) /* Overrides(CompVCamera) */
 {
-	CompVAutoLock<CompVCameraAndroid>(this);
+	COMPV_AUTOLOCK_THIS(CompVCameraAndroid);
 	if (m_bStarted) {
 		return COMPV_ERROR_CODE_S_OK;
 	}
@@ -151,7 +151,7 @@ bail:
 
 COMPV_ERROR_CODE CompVCameraAndroid::stop() /* Overrides(CompVCamera) */
 {
-	CompVAutoLock<CompVCameraAndroid>(this);
+	COMPV_AUTOLOCK_THIS(CompVCameraAndroid);
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "%s", __FUNCTION__);
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	JNIEnv* jEnv = NULL;
@@ -175,7 +175,7 @@ bail:
 
 COMPV_ERROR_CODE CompVCameraAndroid::set(int id, const void* valuePtr, size_t valueSize) /* Overrides(CompVCaps) */
 {
-	CompVAutoLock<CompVCameraAndroid>(this);
+	COMPV_AUTOLOCK_THIS(CompVCameraAndroid);
 	COMPV_CHECK_EXP_RETURN(!valuePtr || !valueSize, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "%s(%d, %p, %zu)", __FUNCTION__, id, valuePtr, valueSize);
 	switch (id) {
@@ -212,7 +212,7 @@ COMPV_ERROR_CODE CompVCameraAndroid::set(int id, const void* valuePtr, size_t va
 
 COMPV_ERROR_CODE CompVCameraAndroid::get(int id, const void** valuePtrPtr, size_t valueSize) /* Overrides(CompVCaps) */
 {
-	CompVAutoLock<CompVCameraAndroid>(this);
+	COMPV_AUTOLOCK_THIS(CompVCameraAndroid);
 	COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED, "CompVCaps::get not implemented for Android camera implementation.");
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -458,7 +458,7 @@ COMPV_ERROR_CODE CompVCameraAndroid::detachCurrentThread(JavaVM* jVM, JNIEnv* jE
 bool CompVCameraAndroid::onPreviewFrame(const void* frameDataPtr, size_t frameDataSize, size_t frameWidth, size_t frameHeight, int frameFps, int framePixelFormat, const void* userData)
 {
 	CompVCameraAndroidPtr camera = const_cast<CompVCameraAndroid*>(static_cast<const CompVCameraAndroid*>(userData));
-	CompVAutoLock<CompVCameraAndroid> autoLock(*camera);
+	COMPV_AUTOLOCK_OBJ(CompVCameraAndroid, *camera);
 	CompVCameraCallbackOnNewFrame& callback = camera->callbackOnNewFrame();
 	if (!callback) {
 		return true;

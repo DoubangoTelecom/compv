@@ -10,7 +10,7 @@ COMPV_NAMESPACE_BEGIN()
 
 CompVLock::CompVLock()
 {
-    COMPV_CHECK_CODE_ASSERT(CompVMutex::newObj(&m_ptrSDLMutex));
+    COMPV_CHECK_CODE_ASSERT(CompVMutex::newObj(&m_ptrMutex));
 }
 
 CompVLock::~CompVLock()

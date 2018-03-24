@@ -45,7 +45,7 @@ bool CompVGLWindow::isGLEnabled() const /*Overrides(CompVWindow)*/
 
 COMPV_ERROR_CODE CompVGLWindow::close() /*Overrides(CompVWindow)*/
 {
-	CompVAutoLock<CompVGLWindow>(this);
+	COMPV_AUTOLOCK_THIS(CompVGLWindow);
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASS_NAME, "%s", __FUNCTION__);
 
     // Closing layers require a valid GL context
@@ -74,7 +74,7 @@ COMPV_ERROR_CODE CompVGLWindow::close() /*Overrides(CompVWindow)*/
 
 COMPV_ERROR_CODE CompVGLWindow::beginDraw() /*Overrides(CompVWindow)*/
 {
-    CompVAutoLock<CompVGLWindow>(this);
+    COMPV_AUTOLOCK_THIS(CompVGLWindow);
     COMPV_CHECK_EXP_RETURN(isClosed(), COMPV_ERROR_CODE_W_WINDOW_CLOSED);
     COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
     COMPV_CHECK_EXP_BAIL(m_bDrawing || !context(), (err = COMPV_ERROR_CODE_E_INVALID_STATE));
@@ -119,7 +119,7 @@ bail:
 
 COMPV_ERROR_CODE CompVGLWindow::endDraw() /*Overrides(CompVWindow)*/
 {
-    CompVAutoLock<CompVGLWindow>(this);
+    COMPV_AUTOLOCK_THIS(CompVGLWindow);
     COMPV_CHECK_EXP_RETURN(isClosed(), COMPV_ERROR_CODE_W_WINDOW_CLOSED);
     COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
     COMPV_CHECK_EXP_BAIL(!m_bDrawing || !context(), (err = COMPV_ERROR_CODE_E_INVALID_STATE));
@@ -149,7 +149,7 @@ bail:
 
 COMPV_ERROR_CODE CompVGLWindow::addSingleLayerSurface(CompVSingleSurfaceLayerPtrPtr layer) /*Overrides(CompVWindow)*/
 {
-    CompVAutoLock<CompVGLWindow>(this);
+    COMPV_AUTOLOCK_THIS(CompVGLWindow);
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASS_NAME, "%s(%p)", __FUNCTION__, layer);
     COMPV_CHECK_EXP_RETURN(!layer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     CompVGLSingleSurfaceLayerPtr layer_;
@@ -161,7 +161,7 @@ COMPV_ERROR_CODE CompVGLWindow::addSingleLayerSurface(CompVSingleSurfaceLayerPtr
 
 COMPV_ERROR_CODE CompVGLWindow::removeSingleLayerSurface(const CompVSingleSurfaceLayerPtr& layer) /*Overrides(CompVWindow)*/
 {
-    CompVAutoLock<CompVGLWindow>(this);
+    COMPV_AUTOLOCK_THIS(CompVGLWindow);
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASS_NAME, "%s(%p)", __FUNCTION__, *layer);
     COMPV_CHECK_EXP_RETURN(!layer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     m_mapSingleSurfaceLayers.erase(layer->id());
@@ -170,7 +170,7 @@ COMPV_ERROR_CODE CompVGLWindow::removeSingleLayerSurface(const CompVSingleSurfac
 
 COMPV_ERROR_CODE CompVGLWindow::addMatchingLayerSurface(CompVMatchingSurfaceLayerPtrPtr layer) /*Overrides(CompVWindow)*/
 {
-    CompVAutoLock<CompVGLWindow>(this);
+    COMPV_AUTOLOCK_THIS(CompVGLWindow);
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASS_NAME, "%s(%p)", __FUNCTION__, layer);
     COMPV_CHECK_EXP_RETURN(!layer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     CompVGLMatchingSurfaceLayerPtr layer_;
@@ -182,7 +182,7 @@ COMPV_ERROR_CODE CompVGLWindow::addMatchingLayerSurface(CompVMatchingSurfaceLaye
 
 COMPV_ERROR_CODE CompVGLWindow::removeMatchingLayerSurface(const CompVMatchingSurfaceLayerPtr& layer) /*Overrides(CompVWindow)*/
 {
-    CompVAutoLock<CompVGLWindow>(this);
+    COMPV_AUTOLOCK_THIS(CompVGLWindow);
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASS_NAME, "%s(%p)", __FUNCTION__, *layer);
     COMPV_CHECK_EXP_RETURN(!layer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     m_mapMatchingSurfaceLayers.erase(layer->id());
@@ -191,7 +191,7 @@ COMPV_ERROR_CODE CompVGLWindow::removeMatchingLayerSurface(const CompVMatchingSu
 
 COMPV_ERROR_CODE CompVGLWindow::addMultiLayerSurface(CompVMultiSurfaceLayerPtrPtr layer) /*Overrides(CompVWindow)*/
 {
-    CompVAutoLock<CompVGLWindow>(this);
+    COMPV_AUTOLOCK_THIS(CompVGLWindow);
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASS_NAME, "%s(%p)", __FUNCTION__, layer);
     COMPV_CHECK_EXP_RETURN(!layer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     CompVGLMultiSurfaceLayerPtr layer_;
@@ -203,7 +203,7 @@ COMPV_ERROR_CODE CompVGLWindow::addMultiLayerSurface(CompVMultiSurfaceLayerPtrPt
 
 COMPV_ERROR_CODE CompVGLWindow::removeMultiLayerSurface(const CompVMultiSurfaceLayerPtr& layer) /*Overrides(CompVWindow)*/
 {
-    CompVAutoLock<CompVGLWindow>(this);
+    COMPV_AUTOLOCK_THIS(CompVGLWindow);
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASS_NAME, "%s(%p)", __FUNCTION__, *layer);
     COMPV_CHECK_EXP_RETURN(!layer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     m_mapMultiSurfaceLayers.erase(layer->id());
@@ -212,7 +212,9 @@ COMPV_ERROR_CODE CompVGLWindow::removeMultiLayerSurface(const CompVMultiSurfaceL
 
 COMPV_ERROR_CODE CompVGLWindow::priv_updateSize(size_t newWidth, size_t newHeight) /* Overrides(CompVWindowPriv) */
 {
-    CompVAutoLock<CompVGLWindow>(this);
+#if 0 // DeadLock -> sub-functions alread thread-sfae
+    COMPV_AUTOLOCK_THIS(CompVGLWindow);
+#endif
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASS_NAME, "%s(%zu, %zu)", __FUNCTION__, newWidth, newHeight);
     COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 
@@ -250,7 +252,9 @@ bail:
 
 COMPV_ERROR_CODE CompVGLWindow::priv_updateState(COMPV_WINDOW_STATE newState) /*Overrides(CompVWindowPriv)*/
 {
-	CompVAutoLock<CompVGLWindow>(this);
+#if 1 // DeadLock -> sub-functions alread thread-sfae
+	COMPV_AUTOLOCK_THIS(CompVGLWindow);
+#endif
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 
 	// When the GL context is no longer valid then, we must free the resources by closing the handlers

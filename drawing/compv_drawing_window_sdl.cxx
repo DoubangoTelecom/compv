@@ -158,7 +158,7 @@ bool CompVWindowSDL::isClosed()const
 // Overrides 'CompVWindow::close'
 COMPV_ERROR_CODE CompVWindowSDL::close()
 {
-    CompVAutoLock<CompVWindowSDL>(this);
+	COMPV_AUTOLOCK_THIS(CompVWindowSDL);
     if (!isClosed()) {
         COMPV_CHECK_CODE_ASSERT(unregister());
         COMPV_CHECK_CODE_ASSERT(CompVGLWindow::close()); // base class implementation

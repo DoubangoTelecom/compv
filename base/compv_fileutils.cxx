@@ -264,12 +264,18 @@ COMPV_ERROR_CODE CompVFileUtils::read(const char* pcPath, CompVBufferPtrPtr buff
     return COMPV_ERROR_CODE_S_OK;
 }
 
+// Unlike standard "fopen", this function can deal with
+// Android's assets and iOS' bundles.
 FILE* CompVFileUtils::open(const char* fname, const char* mode)
 {
     if (!fname || !mode) {
-        COMPV_DEBUG_ERROR_EX(kModuleNameFileUtils, "Invalid parameter");
+        COMPV_DEBUG_ERROR_EX(kModuleNameFileUtils, "Invalid parameter (%s, %s)", fname, mode);
         return nullptr;
     }
+	if (!CompVFileUtils::exists(fname)) {
+		COMPV_DEBUG_ERROR_EX(kModuleNameFileUtils, "File doesn't exist (%s)", fname);
+		return nullptr;
+	}
 #if COMPV_OS_ANDROID
     if (compv_android_have_assetmgr()) {
         return compv_android_asset_fopen(fname, mode);
@@ -279,6 +285,15 @@ FILE* CompVFileUtils::open(const char* fname, const char* mode)
     }
 #endif /* COMPV_OS_ANDROID */
     return fopen(fname, mode);
+}
+
+COMPV_ERROR_CODE CompVFileUtils::close(FILE** file)
+{
+	if (file && *file) {
+		fclose(*file);
+		*file = nullptr;
+	}
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVFileUtils::write(const char* pcPath, const void* data, size_t count)

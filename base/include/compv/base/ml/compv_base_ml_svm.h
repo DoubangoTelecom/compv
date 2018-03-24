@@ -12,24 +12,27 @@
 #include "compv/base/compv_mat.h"
 #include "compv/base/compv_lock.h"
 
+#define COMPV_LIBSVM_NFOLDS_DEFAULT		5 // For cross-validation, use "4/5" of the train data for training and "1/5" for testing (a.k.a prediction)
+
 struct svm_parameter;
 struct svm_model;
+struct svm_problem;
 
 COMPV_NAMESPACE_BEGIN()
 
 /* svm_type  */
-extern const int kLibSVM_svm_type_C_SVC;
-extern const int kLibSVM_svm_type_NU_SVC;
-extern const int kLibSVM_svm_type_ONE_CLASS;
-extern const int kLibSVM_svm_type_EPSILON_SVR;
-extern const int kLibSVM_svm_type_NU_SVR;
+COMPV_BASE_API extern const int kLibSVM_svm_type_C_SVC;
+COMPV_BASE_API extern const int kLibSVM_svm_type_NU_SVC;
+COMPV_BASE_API extern const int kLibSVM_svm_type_ONE_CLASS;
+COMPV_BASE_API extern const int kLibSVM_svm_type_EPSILON_SVR;
+COMPV_BASE_API extern const int kLibSVM_svm_type_NU_SVR;
 
 /* kernel_type */
-extern const int kLibSVM_kernel_type_LINEAR;
-extern const int kLibSVM_kernel_type_POLY;
-extern const int kLibSVM_kernel_type_RBF;
-extern const int kLibSVM_kernel_type_SIGMOID;
-extern const int kLibSVM_kernel_type_PRECOMPUTED;
+COMPV_BASE_API extern const int kLibSVM_kernel_type_LINEAR;
+COMPV_BASE_API extern const int kLibSVM_kernel_type_POLY;
+COMPV_BASE_API extern const int kLibSVM_kernel_type_RBF;
+COMPV_BASE_API extern const int kLibSVM_kernel_type_SIGMOID;
+COMPV_BASE_API extern const int kLibSVM_kernel_type_PRECOMPUTED;
 
 #define COMPV_SVM_TYPE_C_SVC				kLibSVM_svm_type_C_SVC // multi-class classification
 #define COMPV_SVM_TYPE_NU_SVC				kLibSVM_svm_type_NU_SVC // multi-class classification
@@ -65,12 +68,35 @@ public:
 	virtual ~CompVMachineLearningSVM();
 	COMPV_OBJECT_GET_ID(CompVMachineLearningSVM);
 
+	COMPV_INLINE bool isPredictProbEnabled()const {
+		return m_bPredictProbEnabled;
+	}
+	COMPV_INLINE size_t vectorSize()const {
+		return m_nVectorSize;
+	}
+
+	COMPV_ERROR_CODE predict(const CompVMatPtr& vector, int& label);
+	COMPV_ERROR_CODE addVector(const int label, const CompVMatPtr& vector);
+	COMPV_ERROR_CODE train(const std::vector<int>& trainLabels, const CompVMatPtrVector& trainVectors, const bool _crossValidation = false, const int _nfolds = COMPV_LIBSVM_NFOLDS_DEFAULT);
+	COMPV_ERROR_CODE train(const bool _crossValidation = false, const int _nfolds = COMPV_LIBSVM_NFOLDS_DEFAULT);
+	COMPV_ERROR_CODE save(const char* filePath, const bool releaseVectors_ = true);
+
+	static COMPV_ERROR_CODE load(const char* filePath, CompVMachineLearningSVMPtrPtr mlSVM);
 	static COMPV_ERROR_CODE newObj(CompVMachineLearningSVMPtrPtr mlSVM, const MachineLearningSVMParams& params);
+
+private:
+	COMPV_ERROR_CODE crossValidation(const struct svm_problem* problem, const struct svm_parameter* params, const int _nfolds);
+	static COMPV_ERROR_CODE rawToNode(const CompVMatPtr& rawVector, CompVMatPtrPtr nodeVector);
 
 private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
 	struct svm_parameter* m_ptrLibsvmParams;
-	MachineLearningSVMParams m_CompVParams;
+	struct svm_model* m_ptrLibsvmModel;
+	bool m_bPredictProbEnabled;
+	size_t m_nVectorSize;
+	CompVMatPtrVector m_vecTrainVectors;
+	std::vector<int> m_vecTrainLabels;
+	CompVMatPtrVector m_vecNodeVectors;
 	COMPV_VS_DISABLE_WARNINGS_END()
 };
 

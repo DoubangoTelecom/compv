@@ -534,31 +534,19 @@ void* CompVMem::reallocAligned(void* ptr, size_t size, size_t alignment/*= CompV
 	pMem = dlrealloc(ptr, size);
 #elif COMPV_OS_WINDOWS && !COMPV_OS_WINDOWS_CE && !COMPV_OS_WINDOWS_RT
     pMem = _aligned_realloc(ptr, size, alignment);
-#	if COMPV_MEM_CHECK
-    if (pMem != ptr) {
-        CompVMem::specialsLock();
-        CompVMem::s_Specials.erase(reinterpret_cast<uintptr_t>(ptr));
-        if (pMem) {
-            CompVMem::s_Specials.insert(std::pair<uintptr_t, compv_special_mem_t>(reinterpret_cast<uintptr_t>(pMem), compv_special_mem_t(reinterpret_cast<uintptr_t>(pMem), size, alignment)));
-        }
-        CompVMem::specialsUnLock();
-    }
-#	endif
 #else
-    pMem = CompVMem::mallocAligned(size);
-    if (pMem && ptr) {
-#	if COMPV_MEM_CHECK
-        CompVMem::specialsLock();
-        std::map<uintptr_t, compv_special_mem_t >::iterator it = CompVMem::s_Specials.find(reinterpret_cast<uintptr_t>(ptr));
-        COMPV_ASSERT(it != CompVMem::s_Specials.end());
-		CompVMem::copy(pMem, ptr, COMPV_MATH_MIN(it->second.size, size));
-        CompVMem::specialsUnLock();
-#	else
-		COMPV_DEBUG_FATAL_EX(COMPV_THIS_CLASSNAME, "Data lost");
-#	endif
-    }
-    CompVMem::freeAligned(&ptr);
+	COMPV_ASSERT(false); // Not implemented
 #endif
+#	if COMPV_MEM_CHECK
+	if (pMem != ptr) {
+		CompVMem::specialsLock();
+		CompVMem::s_Specials.erase(reinterpret_cast<uintptr_t>(ptr));
+		if (pMem) {
+			CompVMem::s_Specials.insert(std::pair<uintptr_t, compv_special_mem_t>(reinterpret_cast<uintptr_t>(pMem), compv_special_mem_t(reinterpret_cast<uintptr_t>(pMem), size, alignment)));
+		}
+		CompVMem::specialsUnLock();
+	}
+#	endif
     return pMem;
 }
 

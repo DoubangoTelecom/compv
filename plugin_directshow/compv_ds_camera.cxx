@@ -27,7 +27,7 @@ CompVDSCamera::~CompVDSCamera()
 
 COMPV_ERROR_CODE CompVDSCamera::devices(CompVCameraDeviceInfoList& list) /* Overrides(CompVCamera) */
 {
-	CompVAutoLock<CompVDSCamera>(this);
+	COMPV_AUTOLOCK_THIS(CompVDSCamera);
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "devices");
     list.clear();
     CompVDSCameraDeviceInfoList list_;
@@ -40,7 +40,7 @@ COMPV_ERROR_CODE CompVDSCamera::devices(CompVCameraDeviceInfoList& list) /* Over
 
 COMPV_ERROR_CODE CompVDSCamera::start(const std::string& deviceId COMPV_DEFAULT("")) /* Overrides(CompVCamera) */
 {
-	CompVAutoLock<CompVDSCamera>(this);
+	COMPV_AUTOLOCK_THIS(CompVDSCamera);
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "start");
     COMPV_CHECK_CODE_RETURN(m_pGrabber->start(deviceId, m_Caps));
     return COMPV_ERROR_CODE_S_OK;
@@ -48,7 +48,7 @@ COMPV_ERROR_CODE CompVDSCamera::start(const std::string& deviceId COMPV_DEFAULT(
 
 COMPV_ERROR_CODE CompVDSCamera::stop() /* Overrides(CompVCamera) */
 {
-	CompVAutoLock<CompVDSCamera>(this);
+	COMPV_AUTOLOCK_THIS(CompVDSCamera);
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "stop");
     COMPV_CHECK_CODE_RETURN(m_pGrabber->stop());
     return COMPV_ERROR_CODE_S_OK;
@@ -56,7 +56,7 @@ COMPV_ERROR_CODE CompVDSCamera::stop() /* Overrides(CompVCamera) */
 
 COMPV_ERROR_CODE CompVDSCamera::set(int id, const void* valuePtr, size_t valueSize) /* Overrides(CompVCaps) */
 {
-	CompVAutoLock<CompVDSCamera>(this);
+	COMPV_AUTOLOCK_THIS(CompVDSCamera);
 	COMPV_CHECK_EXP_RETURN(!valuePtr || !valueSize, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "%s(%d, %p, %zu)", __FUNCTION__, id, valuePtr, valueSize);
 	switch (id) {
@@ -93,7 +93,7 @@ COMPV_ERROR_CODE CompVDSCamera::set(int id, const void* valuePtr, size_t valueSi
 
 COMPV_ERROR_CODE CompVDSCamera::get(int id, const void** valuePtrPtr, size_t valueSize) /* Overrides(CompVCaps) */
 {
-	CompVAutoLock<CompVDSCamera>(this);
+	COMPV_AUTOLOCK_THIS(CompVDSCamera);
 	COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED, "CompVCaps::get not implemented for DirectShow camera implementation.");
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -114,7 +114,7 @@ COMPV_ERROR_CODE CompVDSCamera::newObj(CompVDSCameraPtrPtr camera)
 HRESULT STDMETHODCALLTYPE CompVDSCamera::DSBufferCB(const CompVMatPtr image, const void *pcUserData)
 {
 	CompVDSCameraPtr camera = const_cast<CompVDSCamera*>(static_cast<const CompVDSCamera*>(pcUserData));
-	CompVAutoLock<CompVDSCamera> autoLock(*camera);
+	COMPV_AUTOLOCK_OBJ(CompVDSCamera, *camera);
 	CompVCameraCallbackOnNewFrame& callback = camera->callbackOnNewFrame();
 	if (!callback) {
 		return S_OK;

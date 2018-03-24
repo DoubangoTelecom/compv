@@ -717,6 +717,9 @@
     <ClInclude Include="include\compv\base\ml\compv_base_ml_svm.h">
       <Filter>include\ml</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\math\compv_math_cast.h">
+      <Filter>include\math</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx">
@@ -1177,6 +1180,9 @@
     </ClCompile>
     <ClCompile Include="ml\compv_base_ml_svm.cxx">
       <Filter>source\ml</Filter>
+    </ClCompile>
+    <ClCompile Include="math\compv_math_cast.cxx">
+      <Filter>source\math</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
