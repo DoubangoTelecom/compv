@@ -205,8 +205,10 @@ COMPV_ERROR_CODE CompVMachineLearningSVM::trainEx(const struct svm_problem* prob
 	// Create cross-validation grid
 	static const size_t kMaxgrid = 10000; // To avoid endless loops
 	std::vector<CompVMachineLearningSVMCrossValidationRound> rounds;
-	for (int log2c = crossValidation->log2c[0]; log2c != crossValidation->log2c[1]; log2c += crossValidation->log2c[2]) {
-		for (int log2g = crossValidation->log2g[0]; log2g != crossValidation->log2g[1]; log2g += crossValidation->log2g[2]) {
+	const bool log2c0LessThan1 = (crossValidation->log2c[0] < crossValidation->log2c[1]);
+	const bool log2g0LessThan1 = (crossValidation->log2g[0] < crossValidation->log2g[1]);
+	for (int log2c = crossValidation->log2c[0]; (log2c0LessThan1 ? log2c <= crossValidation->log2c[1] : log2c >= crossValidation->log2c[1]); log2c += crossValidation->log2c[2]) {
+		for (int log2g = crossValidation->log2g[0]; (log2g0LessThan1 ? log2g <= crossValidation->log2g[1] : log2g >= crossValidation->log2g[1]); log2g += crossValidation->log2g[2]) {
 			rounds.push_back(CompVMachineLearningSVMCrossValidationRound(std::pow(2.0, log2g), std::pow(2.0, log2c)));
 		}
 		COMPV_CHECK_EXP_RETURN(rounds.size() >= kMaxgrid, COMPV_ERROR_CODE_E_OUT_OF_BOUND);
