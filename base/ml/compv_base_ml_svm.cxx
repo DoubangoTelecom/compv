@@ -102,10 +102,10 @@ COMPV_ERROR_CODE CompVMachineLearningSVM::addVector(const int label, const CompV
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVMachineLearningSVM::train(const std::vector<int>& trainLabels, const CompVMatPtrVector& trainVectors, const bool _crossValidation COMPV_DEFAULT(false), const int _nfolds COMPV_DEFAULT(COMPV_LIBSVM_NFOLDS_DEFAULT))
+COMPV_ERROR_CODE CompVMachineLearningSVM::train(const std::vector<int>& trainLabels, const CompVMatPtrVector& trainVectors, const CompVMachineLearningSVMCrossValidation* crossValidation COMPV_DEFAULT(nullptr))
 {
 	COMPV_CHECK_EXP_RETURN(trainLabels.empty() || trainLabels.size() != trainVectors.size(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_CHECK_EXP_RETURN(_crossValidation && _nfolds < 2, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "n-folds must be >= 2");
+	COMPV_CHECK_EXP_RETURN(crossValidation && !crossValidation->isValid(), COMPV_ERROR_CODE_E_INVALID_PARAMETER, "crossValidation params are incorrect");
 	COMPV_AUTOLOCK_THIS(CompVMachineLearningSVM);
 
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
@@ -145,13 +145,9 @@ COMPV_ERROR_CODE CompVMachineLearningSVM::train(const std::vector<int>& trainLab
 
 	// Train and build model
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Training started...");
-	model = svm_train(&problem, m_ptrLibsvmParams);
+	COMPV_CHECK_CODE_BAIL(err = CompVMachineLearningSVM::trainEx(&problem, m_ptrLibsvmParams, crossValidation, &m_ptrLibsvmModel));
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Training finished!!");
-	COMPV_CHECK_EXP_BAIL(!model, err = COMPV_ERROR_CODE_E_LIBSVM, "svm_train failed");
-	if (m_ptrLibsvmModel) {
-		svm_free_and_destroy_model(&m_ptrLibsvmModel);
-	}
-	m_ptrLibsvmModel = model;
+	COMPV_CHECK_EXP_BAIL(!m_ptrLibsvmModel, err = COMPV_ERROR_CODE_E_LIBSVM, "svm_train failed");
 
 bail:
 	CompVMem::free(reinterpret_cast<void**>(&problem.y));
@@ -159,11 +155,11 @@ bail:
 	return err;
 }
 
-COMPV_ERROR_CODE CompVMachineLearningSVM::train(const bool _crossValidation COMPV_DEFAULT(false), const int _nfolds COMPV_DEFAULT(COMPV_LIBSVM_NFOLDS_DEFAULT))
+COMPV_ERROR_CODE CompVMachineLearningSVM::train(const CompVMachineLearningSVMCrossValidation* crossValidation COMPV_DEFAULT(nullptr))
 {
 	COMPV_AUTOLOCK_THIS(CompVMachineLearningSVM);
 	// Train using local labels and vectors
-	COMPV_CHECK_CODE_RETURN(train(m_vecTrainLabels, m_vecTrainVectors, _crossValidation, _nfolds));
+	COMPV_CHECK_EXP_RETURN(crossValidation && !crossValidation->isValid(), COMPV_ERROR_CODE_E_INVALID_PARAMETER, "crossValidation params are incorrect");
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -184,7 +180,80 @@ COMPV_ERROR_CODE CompVMachineLearningSVM::save(const char* filePath, const bool 
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVMachineLearningSVM::crossValidation(const struct svm_problem* problem, const struct svm_parameter* params, const int _nfolds)
+COMPV_ERROR_CODE CompVMachineLearningSVM::trainEx(const struct svm_problem* problem, struct svm_parameter* params, const CompVMachineLearningSVMCrossValidation* crossValidation, struct svm_model** model)
+{
+	struct CompVMachineLearningSVMCrossValidationRound {
+		double accuracy = 0.0;
+		double gamma;
+		double C;
+		CompVMachineLearningSVMCrossValidationRound(const double gamma_, const double C_) :
+			gamma(gamma_), C(C_) { }
+	};
+
+	// Private function, do not check input parameters
+	struct svm_model*& model_ = *model;
+	if (model_) {
+		svm_free_and_destroy_model(&model_);
+	}
+	
+	if (!crossValidation) {
+		model_ = svm_train(problem, params);
+		COMPV_CHECK_EXP_RETURN(!model_, COMPV_ERROR_CODE_E_LIBSVM, "svm_train failed");
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
+	// Create cross-validation grid
+	static const size_t kMaxgrid = 10000; // To avoid endless loops
+	std::vector<CompVMachineLearningSVMCrossValidationRound> rounds;
+	for (int log2c = crossValidation->log2c[0]; log2c != crossValidation->log2c[1]; log2c += crossValidation->log2c[2]) {
+		for (int log2g = crossValidation->log2g[0]; log2g != crossValidation->log2g[1]; log2g += crossValidation->log2g[2]) {
+			rounds.push_back(CompVMachineLearningSVMCrossValidationRound(std::pow(2.0, log2g), std::pow(2.0, log2c)));
+		}
+		COMPV_CHECK_EXP_RETURN(rounds.size() >= kMaxgrid, COMPV_ERROR_CODE_E_OUT_OF_BOUND);
+	}
+	const size_t count = rounds.size();
+	COMPV_CHECK_EXP_RETURN(!count, COMPV_ERROR_CODE_E_INVALID_CALL);
+	
+	// Run cross validation on the grid
+	unsigned progress = 0;
+	const float progress_scale = 1.f / float(count);
+	auto funcPtr = [&](const size_t start, const size_t end) -> COMPV_ERROR_CODE {
+		for (size_t i = start; i < end; i++) {
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Cross Validation progress: %f%%", compv_atomic_inc(&progress) * progress_scale);
+			CompVMachineLearningSVMCrossValidationRound& round = rounds[i];
+			svm_parameter mt_params = *params;
+			mt_params.C = round.C;
+			mt_params.gamma = round.gamma;
+			COMPV_CHECK_CODE_RETURN(CompVMachineLearningSVM::crossValidation(problem, &mt_params, crossValidation->kfold, round.accuracy));
+		}
+		return COMPV_ERROR_CODE_S_OK;
+	};
+	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
+	const size_t maxThreadsCount = threadDisp ? threadDisp->threadsCount() : 1;
+	const size_t threadsCount = maxThreadsCount > 1 ? COMPV_MATH_MIN(count, (maxThreadsCount - 1)) : 1; // Do not use all threads -> your PC will freeze ("I neva freeze" <- BLACK PANTHER)
+	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+		funcPtr,
+		count,
+		threadsCount,
+		threadDisp
+	));
+
+	// Sort rounds
+	std::sort(rounds.begin(), rounds.end(), [](const CompVMachineLearningSVMCrossValidationRound &a, const CompVMachineLearningSVMCrossValidationRound &b) { 
+		return a.accuracy > b.accuracy; 
+	});
+
+	// Train now using best params and all data
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Cross Validation Best: C=%g, gamma=%g, accuracy = %g%%", rounds[0].C, rounds[0].gamma, rounds[0].accuracy);
+	params->C = rounds[0].C;
+	params->gamma = rounds[0].gamma;
+	model_ = svm_train(problem, params);
+	COMPV_CHECK_EXP_RETURN(!model_, COMPV_ERROR_CODE_E_LIBSVM, "svm_train failed");
+
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVMachineLearningSVM::crossValidation(const struct svm_problem* problem, const struct svm_parameter* params, const int _kfolds, double& accuracy)
 {
 	// Private function, do not check input parameters
 
@@ -194,7 +263,7 @@ COMPV_ERROR_CODE CompVMachineLearningSVM::crossValidation(const struct svm_probl
 	double *target = reinterpret_cast<double*>(CompVMem::malloc(sizeof(double) * problem->l));
 	COMPV_CHECK_EXP_RETURN(!target, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 
-	svm_cross_validation(problem, params, _nfolds, target);
+	svm_cross_validation(problem, params, _kfolds, target);
 	if (params->svm_type == EPSILON_SVR || params->svm_type == NU_SVR) {
 		for (int i = 0; i< problem->l; i++) {
 			double y = problem->y[i];
@@ -211,6 +280,7 @@ COMPV_ERROR_CODE CompVMachineLearningSVM::crossValidation(const struct svm_probl
 			((problem->l*sumvy - sumv*sumy)*(problem->l*sumvy - sumv*sumy)) /
 			((problem->l*sumvv - sumv*sumv)*(problem->l*sumyy - sumy*sumy))
 		);
+		accuracy = total_error / problem->l;
 	}
 	else {
 		for (int i = 0; i < problem->l; i++) {
@@ -218,7 +288,8 @@ COMPV_ERROR_CODE CompVMachineLearningSVM::crossValidation(const struct svm_probl
 				++total_correct;
 			}
 		}
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Cross Validation Accuracy = %g%%", 100.0*total_correct / problem->l);
+		accuracy = (100.0* (total_correct / double(problem->l)));
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Cross Validation Accuracy (C=%g, gamma=%g) = %g%%", params->C, params->gamma, accuracy);
 	}
 	CompVMem::free(reinterpret_cast<void**>(&target));
 
@@ -292,7 +363,7 @@ bail:
 	return err;
 }
 
-COMPV_ERROR_CODE CompVMachineLearningSVM::newObj(CompVMachineLearningSVMPtrPtr mlSVM, const MachineLearningSVMParams& params)
+COMPV_ERROR_CODE CompVMachineLearningSVM::newObj(CompVMachineLearningSVMPtrPtr mlSVM, const CompVMachineLearningSVMParams& params)
 {
 	COMPV_CHECK_EXP_RETURN(!mlSVM, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_CHECK_EXP_RETURN(params.svm_type != COMPV_SVM_TYPE_C_SVC, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Only classification is supported in this beta version");

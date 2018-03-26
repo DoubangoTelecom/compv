@@ -12,7 +12,7 @@
 #include "compv/base/compv_mat.h"
 #include "compv/base/compv_lock.h"
 
-#define COMPV_LIBSVM_NFOLDS_DEFAULT		5 // For cross-validation, use "4/5" of the train data for training and "1/5" for testing (a.k.a prediction)
+#define COMPV_LIBSVM_KFOLDS_DEFAULT		5 // For cross-validation, use "4/5" of the train data for training and "1/5" for testing (a.k.a prediction)
 
 struct svm_parameter;
 struct svm_model;
@@ -46,7 +46,7 @@ COMPV_BASE_API extern const int kLibSVM_kernel_type_PRECOMPUTED;
 #define COMPV_SVM_KERNEL_TYPE_SIGMOID		kLibSVM_kernel_type_SIGMOID // sigmoid: tanh(gamma*u'*v + coef0)
 #define COMPV_SVM_KERNEL_TYPE_PRECOMPUTED	kLibSVM_kernel_type_PRECOMPUTED // precomputed kernel (kernel values in training_set_file)
 
-struct MachineLearningSVMParams {
+struct CompVMachineLearningSVMParams {
 	int svm_type = COMPV_SVM_TYPE_C_SVC;
 	int kernel_type = COMPV_SVM_KERNEL_TYPE_RBF;
 	int degree = 3; // set degree in kernel function (default 3)
@@ -57,6 +57,18 @@ struct MachineLearningSVMParams {
 	double eps = 1e-3; // epsilon, set tolerance of termination criterion (default 0.001)
 	double P = 0.1; // set the epsilon in loss function of epsilon-SVR (default 0.1)
 	int probability_estimates = 0; // whether to train a SVC or SVR model for probability estimates, 0 or 1 (default 0)
+};
+
+struct CompVMachineLearningSVMCrossValidation{
+	int kfold = COMPV_LIBSVM_KFOLDS_DEFAULT; // use "(k-1)/k" for training and "1/k" for testing. For k=5(default), use "4/5" for training and "1/5" for testing
+	int log2c[3] = { -5,  15,  1 }; // C: begin, end, step. See "https://www.csie.ntu.edu.tw/~cjlin/papers/guide/guide.pdf" section 3.2 for range values.
+	int log2g[3] = { 4, -15, -1 }; // Gamma: begin, end, step. See "https://www.csie.ntu.edu.tw/~cjlin/papers/guide/guide.pdf" section 3.2 for range values.
+
+	COMPV_INLINE bool isValid() const {
+		return kfold >= 2 &&
+			(log2c[3] > 0 ? log2c[0] < log2c[1] : log2c[0] > log2c[1]) &&
+			(log2g[3] > 0 ? log2g[0] < log2g[1] : log2g[0] > log2g[1]);
+	}
 };
 
 COMPV_OBJECT_DECLARE_PTRS(MachineLearningSVM)
@@ -77,15 +89,16 @@ public:
 
 	COMPV_ERROR_CODE predict(const CompVMatPtr& vector, int& label);
 	COMPV_ERROR_CODE addVector(const int label, const CompVMatPtr& vector);
-	COMPV_ERROR_CODE train(const std::vector<int>& trainLabels, const CompVMatPtrVector& trainVectors, const bool _crossValidation = false, const int _nfolds = COMPV_LIBSVM_NFOLDS_DEFAULT);
-	COMPV_ERROR_CODE train(const bool _crossValidation = false, const int _nfolds = COMPV_LIBSVM_NFOLDS_DEFAULT);
+	COMPV_ERROR_CODE train(const std::vector<int>& trainLabels, const CompVMatPtrVector& trainVectors, const CompVMachineLearningSVMCrossValidation* crossValidation = nullptr);
+	COMPV_ERROR_CODE train(const CompVMachineLearningSVMCrossValidation* crossValidation = nullptr);
 	COMPV_ERROR_CODE save(const char* filePath, const bool releaseVectors_ = true);
 
 	static COMPV_ERROR_CODE load(const char* filePath, CompVMachineLearningSVMPtrPtr mlSVM);
-	static COMPV_ERROR_CODE newObj(CompVMachineLearningSVMPtrPtr mlSVM, const MachineLearningSVMParams& params);
+	static COMPV_ERROR_CODE newObj(CompVMachineLearningSVMPtrPtr mlSVM, const CompVMachineLearningSVMParams& params);
 
 private:
-	COMPV_ERROR_CODE crossValidation(const struct svm_problem* problem, const struct svm_parameter* params, const int _nfolds);
+	static COMPV_ERROR_CODE trainEx(const struct svm_problem* problem, struct svm_parameter* params, const CompVMachineLearningSVMCrossValidation* crossValidation, struct svm_model** model);
+	static COMPV_ERROR_CODE crossValidation(const struct svm_problem* problem, const struct svm_parameter* params, const int _kfolds, double& accuracy);
 	static COMPV_ERROR_CODE rawToNode(const CompVMatPtr& rawVector, CompVMatPtrPtr nodeVector);
 
 private:
