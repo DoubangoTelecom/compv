@@ -216,15 +216,15 @@ COMPV_ERROR_CODE CompVMachineLearningSVM::trainEx(const struct svm_problem* prob
 	
 	// Run cross validation on the grid
 	unsigned progress = 0;
-	const float progress_scale = 1.f / float(count);
+	const float progress_scale = 100.f / float(count);
 	auto funcPtr = [&](const size_t start, const size_t end) -> COMPV_ERROR_CODE {
 		for (size_t i = start; i < end; i++) {
-			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Cross Validation progress: %f%%", compv_atomic_inc(&progress) * progress_scale);
 			CompVMachineLearningSVMCrossValidationRound& round = rounds[i];
 			svm_parameter mt_params = *params;
 			mt_params.C = round.C;
 			mt_params.gamma = round.gamma;
 			COMPV_CHECK_CODE_RETURN(CompVMachineLearningSVM::crossValidation(problem, &mt_params, crossValidation->kfold, round.accuracy));
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Cross Validation progress: %f%%", compv_atomic_inc(&progress) * progress_scale);
 		}
 		return COMPV_ERROR_CODE_S_OK;
 	};
