@@ -61,13 +61,13 @@ struct CompVMachineLearningSVMParams {
 
 struct CompVMachineLearningSVMCrossValidation{
 	int kfold = COMPV_LIBSVM_KFOLDS_DEFAULT; // use "(k-1)/k" for training and "1/k" for testing. For k=5(default), use "4/5" for training and "1/5" for testing
-	int log2c[3] = { -5,  15,  1 }; // C: begin, end, step. See "https://www.csie.ntu.edu.tw/~cjlin/papers/guide/guide.pdf" section 3.2 for range values.
-	int log2g[3] = { 4, -15, -1 }; // Gamma: begin, end, step. See "https://www.csie.ntu.edu.tw/~cjlin/papers/guide/guide.pdf" section 3.2 for range values.
+	int log2c[3] = { -5,  15,  2 }; // C: begin, end, step. See "https://www.csie.ntu.edu.tw/~cjlin/papers/guide/guide.pdf" section 3.2 for range values.
+	int log2g[3] = { 4, -15, -2 }; // Gamma: begin, end, step. See "https://www.csie.ntu.edu.tw/~cjlin/papers/guide/guide.pdf" section 3.2 for range values.
 
 	COMPV_INLINE bool isValid() const {
 		return kfold >= 2 &&
-			(log2c[3] > 0 ? log2c[0] < log2c[1] : log2c[0] > log2c[1]) &&
-			(log2g[3] > 0 ? log2g[0] < log2g[1] : log2g[0] > log2g[1]);
+			(log2c[2] > 0 ? log2c[0] < log2c[1] : log2c[0] > log2c[1]) &&
+			(log2g[2] > 0 ? log2g[0] < log2g[1] : log2g[0] > log2g[1]);
 	}
 };
 
