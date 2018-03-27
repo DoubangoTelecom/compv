@@ -87,7 +87,7 @@ public:
 		return m_nVectorSize;
 	}
 
-	COMPV_ERROR_CODE predict(const CompVMatPtr& vector, int& label);
+	COMPV_ERROR_CODE predict(const CompVMatPtr& vector, int& label, double* distance = nullptr);
 	COMPV_ERROR_CODE addVector(const int label, const CompVMatPtr& vector);
 	COMPV_ERROR_CODE train(const std::vector<int>& trainLabels, const CompVMatPtrVector& trainVectors, const CompVMachineLearningSVMCrossValidation* crossValidation = nullptr);
 	COMPV_ERROR_CODE train(const CompVMachineLearningSVMCrossValidation* crossValidation = nullptr);

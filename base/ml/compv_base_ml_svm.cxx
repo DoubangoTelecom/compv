@@ -52,7 +52,7 @@ CompVMachineLearningSVM::~CompVMachineLearningSVM()
 }
 
 // Must be MT-friendly
-COMPV_ERROR_CODE CompVMachineLearningSVM::predict(const CompVMatPtr& vector, int& label)
+COMPV_ERROR_CODE CompVMachineLearningSVM::predict(const CompVMatPtr& vector, int& label, double* distance COMPV_DEFAULT(nullptr))
 {
 	// Must not lock, function will be called from different threads
 	// For example, when called by ultimateText, the MT-decision is per Char
@@ -60,8 +60,9 @@ COMPV_ERROR_CODE CompVMachineLearningSVM::predict(const CompVMatPtr& vector, int
 	COMPV_CHECK_EXP_RETURN(!vector || vector->rows() != 1 ||
 		(vector->subType() != COMPV_SUBTYPE_RAW_FLOAT64 && vector->subType() != COMPV_SUBTYPE_RAW_FLOAT32),
 		COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_CHECK_EXP_RETURN(!m_ptrLibsvmModel, COMPV_ERROR_CODE_E_INVALID_STATE, "No model associated to this object. Are you calling CompVMachineLearningSVM::load to create the SVM object?");
-	
+	COMPV_CHECK_EXP_RETURN(!m_ptrLibsvmModel, COMPV_ERROR_CODE_E_INVALID_CALL, "No model associated to this object. Are you calling CompVMachineLearningSVM::load to create the SVM object?");
+	COMPV_CHECK_EXP_RETURN(distance && !isPredictProbEnabled(), COMPV_ERROR_CODE_E_INVALID_CALL, "Model not trained with probabilities enabled. No way to get distances in this case");
+
 	// Make sure the vector size is correct
 	if (vector->cols() != vectorSize()) {
 		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Invalid vector size: %zu # %zu", vector->cols(), vectorSize());
@@ -71,7 +72,27 @@ COMPV_ERROR_CODE CompVMachineLearningSVM::predict(const CompVMatPtr& vector, int
 	// Create a node containing the vector data
 	CompVMatPtr nodeVector;
 	COMPV_CHECK_CODE_RETURN(CompVMachineLearningSVM::rawToNode(vector, &nodeVector));
-	label = static_cast<int>(svm_predict(m_ptrLibsvmModel, nodeVector->ptr<const svm_node>()));
+	if (distance) {
+#if 1
+		label = static_cast<int>(svm_predict_distance(m_ptrLibsvmModel, nodeVector->ptr<const svm_node>(), distance));
+#else
+		COMPV_DEBUG_INFO_CODE_FOR_TESTING("Computing probabilities instead of distances");
+		const int nr_class = m_ptrLibsvmModel->nr_class;
+		double *prob_estimates = reinterpret_cast<double*>(CompVMem::malloc(sizeof(double) * nr_class));
+		COMPV_CHECK_EXP_RETURN(!prob_estimates, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+		label = static_cast<int>(svm_predict_probability(m_ptrLibsvmModel, nodeVector->ptr<const svm_node>(), prob_estimates));
+		for (int i = 0; i < nr_class; i++) {
+			if (m_ptrLibsvmModel->label[i] == label) {
+				*distance = 1.0 - prob_estimates[i];
+				break;
+			}
+		}
+		CompVMem::free(reinterpret_cast<void**>(&prob_estimates));
+#endif
+	}
+	else {
+		label = static_cast<int>(svm_predict(m_ptrLibsvmModel, nodeVector->ptr<const svm_node>()));
+	}
 
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -231,7 +252,7 @@ COMPV_ERROR_CODE CompVMachineLearningSVM::trainEx(const struct svm_problem* prob
 		return COMPV_ERROR_CODE_S_OK;
 	};
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
-	const size_t maxThreadsCount = threadDisp ? threadDisp->threadsCount() : 1;
+	const size_t maxThreadsCount = (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) ? threadDisp->threadsCount() : 1;
 	const size_t threadsCount = maxThreadsCount > 1 ? COMPV_MATH_MIN(count, (maxThreadsCount - 1)) : 1; // Do not use all threads -> your PC will freeze ("I neva freeze" <- BLACK PANTHER)
 	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
 		funcPtr,

@@ -1858,18 +1858,21 @@ static void multiclass_probability(int k, double **r, double *p)
 
 		for (t = 0; t < k; t++) {
 			const double diff = (-Qp[t] + pQp) / Q[t][t];
+			const double scale = 1.0 / (1 + diff);
 			p[t] += diff;
-			pQp = (pQp + diff*(diff*Q[t][t] + 2 * Qp[t])) / (1 + diff) / (1 + diff);
+			pQp = (pQp + diff*(diff*Q[t][t] + 2 * Qp[t])) * scale * scale;
 			for (j = 0; j < k; j++) {
-				Qp[j] = (Qp[j] + diff*Q[t][j]) / (1 + diff);
-				p[j] /= (1 + diff);
+				Qp[j] = (Qp[j] + diff*Q[t][j]) * scale;
+				p[j] *= scale;
 			}
 		}
 	}
 	if (iter >= max_iter) {
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Exceeds max_iter in multiclass_prob");
 	}
-	for (t = 0; t < k; t++) Free(Q[t]);
+	for (t = 0; t < k; t++) {
+		Free(Q[t]);
+	}
 	Free(Q);
 	Free(Qp);
 }
@@ -2586,6 +2589,52 @@ double svm_predict(const svm_model *model, const svm_node *x)
 	double pred_result = svm_predict_values(model, x, dec_values);
 	Free(dec_values);
 	return pred_result;
+}
+
+double svm_predict_distance(const svm_model *model, const svm_node *x, double *distance)
+{
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Not fully tested yet");
+	if ((model->param.svm_type == C_SVC || model->param.svm_type == NU_SVC) && model->probA && model->probB) {
+		int nr_class = model->nr_class;
+		double *dec_values = Malloc(double, nr_class*(nr_class - 1) / 2);
+		const int pred_label = static_cast<int>(svm_predict_values(model, x, dec_values)); // this the label (model->label[x]), not the class
+		int pred_class = INT_MAX;
+		for (int i = 0; i < nr_class; i++) {
+			if (model->label[i] == pred_label) {
+				pred_class = i;
+				break;
+			}
+		}
+		COMPV_ASSERT(pred_class < nr_class);
+
+		double prob_sum = 0.0;
+		int FIXME_COUNT = 0;
+		for (int i = 0, k = 0; i < nr_class; i++) {
+			const bool bi = (i == pred_class);
+			for (int j = i + 1; j < nr_class; j++, k++) {
+				const bool bj = (j == pred_class);
+				if (bi || bj) {
+					const double fApB = dec_values[k] * model->probA[k] + model->probB[k];
+					const double prob = (fApB >= 0)
+						? std::exp(-fApB) / (1.0 + std::exp(-fApB))
+						: 1.0 / (1.0 + exp(fApB));
+					prob_sum += (dec_values[k] < 0)
+						? prob
+						: (1 - prob);
+					++FIXME_COUNT;
+				}
+			}
+		}
+		COMPV_ASSERT(FIXME_COUNT == (nr_class - 1));
+		
+		*distance =  (prob_sum / double(FIXME_COUNT));
+
+		Free(dec_values);
+		return pred_label;
+	}
+	else {
+		return svm_predict(model, x);
+	}
 }
 
 double svm_predict_probability(
