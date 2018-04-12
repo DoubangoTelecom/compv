@@ -15,6 +15,11 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+#if COMPV_CPP11
+typedef std::function<COMPV_ERROR_CODE(const size_t ystart, const size_t yend)> CompVThreadDispatcherDividingAcrossYCallback2;
+typedef std::function<COMPV_ERROR_CODE(const size_t ystart, const size_t yend, const size_t threadIdx)> CompVThreadDispatcherDividingAcrossYCallback3;
+#endif /* COMPV_CPP11 */
+
 COMPV_OBJECT_DECLARE_PTRS(ThreadDispatcher)
 
 class COMPV_BASE_API CompVThreadDispatcher : public CompVObj
@@ -37,10 +42,14 @@ public:
 #endif
 	virtual bool isMotherOfTheCurrentThread() = 0;
 	
+	static size_t guessNumThreadsDividingAcrossY(const size_t xcount, const size_t ycount, const size_t minSamplesPerThread, CompVThreadDispatcherPtr threadDisp = nullptr);
 	static size_t guessNumThreadsDividingAcrossY(const size_t xcount, const size_t ycount, const size_t maxThreads, const size_t minSamplesPerThread);
+
 #if COMPV_CPP11
-	static COMPV_ERROR_CODE dispatchDividingAcrossY(std::function<COMPV_ERROR_CODE(const size_t ystart, const size_t yend)> funcPtr, const size_t xcount, const size_t ycount, const size_t minSamplesPerThread, CompVThreadDispatcherPtr threadDisp = nullptr);
-	static COMPV_ERROR_CODE dispatchDividingAcrossY(std::function<COMPV_ERROR_CODE(const size_t ystart, const size_t yend)> funcPtr, const size_t ycount, const size_t threadsCount, CompVThreadDispatcherPtr threadDisp = nullptr);
+	static COMPV_ERROR_CODE dispatchDividingAcrossY(CompVThreadDispatcherDividingAcrossYCallback2 funcPtr, const size_t xcount, const size_t ycount, const size_t minSamplesPerThread, CompVThreadDispatcherPtr threadDisp = nullptr);
+	static COMPV_ERROR_CODE dispatchDividingAcrossY(CompVThreadDispatcherDividingAcrossYCallback2 funcPtr, const size_t ycount, const size_t threadsCount, CompVThreadDispatcherPtr threadDisp = nullptr);
+	static COMPV_ERROR_CODE dispatchDividingAcrossY(CompVThreadDispatcherDividingAcrossYCallback3 funcPtr, const size_t xcount, const size_t ycount, const size_t minSamplesPerThread, CompVThreadDispatcherPtr threadDisp = nullptr);
+	static COMPV_ERROR_CODE dispatchDividingAcrossY(CompVThreadDispatcherDividingAcrossYCallback3 funcPtr, const size_t ycount, const size_t threadsCount, CompVThreadDispatcherPtr threadDisp = nullptr);
 #endif
 
 	static COMPV_ERROR_CODE newObj(CompVThreadDispatcherPtrPtr disp, int32_t numThreads = -1);

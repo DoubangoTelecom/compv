@@ -31,6 +31,18 @@ CompVThreadDispatcher::~CompVThreadDispatcher()
 	
 }
 
+size_t CompVThreadDispatcher::guessNumThreadsDividingAcrossY(const size_t xcount, const size_t ycount, const size_t minSamplesPerThread, CompVThreadDispatcherPtr threadDisp COMPV_DEFAULT(nullptr))
+{
+	if (!threadDisp) {
+		threadDisp = CompVParallel::threadDispatcher();
+	}
+	return CompVThreadDispatcher::guessNumThreadsDividingAcrossY(
+		xcount,
+		ycount,
+		((threadDisp && !threadDisp->isMotherOfTheCurrentThread()) ? static_cast<size_t>(threadDisp->threadsCount()) : 1),
+		minSamplesPerThread);
+}
+
 size_t CompVThreadDispatcher::guessNumThreadsDividingAcrossY(const size_t xcount, const size_t ycount, const size_t maxThreads, const size_t minSamplesPerThread)
 {
 #if 0
@@ -52,8 +64,36 @@ size_t CompVThreadDispatcher::guessNumThreadsDividingAcrossY(const size_t xcount
 }
 
 #if COMPV_CPP11
-COMPV_ERROR_CODE CompVThreadDispatcher::dispatchDividingAcrossY(std::function<COMPV_ERROR_CODE(const size_t ystart, const size_t yend)> funcPtr, const size_t xcount, const size_t ycount, const size_t minSamplesPerThread, CompVThreadDispatcherPtr threadDisp COMPV_DEFAULT(nullptr))
+COMPV_ERROR_CODE CompVThreadDispatcher::dispatchDividingAcrossY(CompVThreadDispatcherDividingAcrossYCallback2 funcPtr, const size_t xcount, const size_t ycount, const size_t minSamplesPerThread, CompVThreadDispatcherPtr threadDisp COMPV_DEFAULT(nullptr))
 {
+	COMPV_CHECK_EXP_RETURN(!funcPtr, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+		[&funcPtr](const size_t ystart, const size_t yend, const size_t threadIdx) -> COMPV_ERROR_CODE {
+			COMPV_CHECK_CODE_RETURN(funcPtr(ystart, yend));
+			return COMPV_ERROR_CODE_S_OK;
+		},
+		xcount, ycount, minSamplesPerThread, threadDisp
+	));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVThreadDispatcher::dispatchDividingAcrossY(CompVThreadDispatcherDividingAcrossYCallback2 funcPtr, const size_t ycount, const size_t threadsCount, CompVThreadDispatcherPtr threadDisp COMPV_DEFAULT(nullptr))
+{
+	COMPV_CHECK_EXP_RETURN(!funcPtr, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+		[&funcPtr](const size_t ystart, const size_t yend, const size_t threadIdx) -> COMPV_ERROR_CODE {
+			COMPV_CHECK_CODE_RETURN(funcPtr(ystart, yend));
+			return COMPV_ERROR_CODE_S_OK;
+		},
+		ycount, threadsCount, threadDisp
+	));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVThreadDispatcher::dispatchDividingAcrossY(CompVThreadDispatcherDividingAcrossYCallback3 funcPtr, const size_t xcount, const size_t ycount, const size_t minSamplesPerThread, CompVThreadDispatcherPtr threadDisp COMPV_DEFAULT(nullptr))
+{
+	COMPV_CHECK_EXP_RETURN(!funcPtr, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
 	/* Get Number of threads */
 	if (!threadDisp) {
 		threadDisp = CompVParallel::threadDispatcher();
@@ -72,8 +112,10 @@ COMPV_ERROR_CODE CompVThreadDispatcher::dispatchDividingAcrossY(std::function<CO
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVThreadDispatcher::dispatchDividingAcrossY(std::function<COMPV_ERROR_CODE(const size_t ystart, const size_t yend)> funcPtr, const size_t ycount, const size_t threadsCount, CompVThreadDispatcherPtr threadDisp COMPV_DEFAULT(nullptr))
+COMPV_ERROR_CODE CompVThreadDispatcher::dispatchDividingAcrossY(CompVThreadDispatcherDividingAcrossYCallback3 funcPtr, const size_t ycount, const size_t threadsCount, CompVThreadDispatcherPtr threadDisp COMPV_DEFAULT(nullptr))
 {
+	COMPV_CHECK_EXP_RETURN(!funcPtr, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
 	/* Get max number of threads */
 	if (!threadDisp) {
 		threadDisp = CompVParallel::threadDispatcher();
@@ -90,17 +132,18 @@ COMPV_ERROR_CODE CompVThreadDispatcher::dispatchDividingAcrossY(std::function<CO
 		size_t YStart = 0, YEnd;
 		for (size_t threadIdx = 0; threadIdx < threadsCount; ++threadIdx) {
 			YEnd = (threadIdx == (threadsCount - 1)) ? ycount : (YStart + heights);
-			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, YStart, YEnd), taskIds), "Dispatching task failed");
+			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, YStart, YEnd, threadIdx), taskIds), "Dispatching task failed");
 			YStart += heights;
 		}
 		COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds), "Failed to wait for tasks execution");
 	}
 	else {
-		COMPV_CHECK_CODE_RETURN(funcPtr(0, ycount));
+		COMPV_CHECK_CODE_RETURN(funcPtr(0, ycount, 0));
 	}
 	return COMPV_ERROR_CODE_S_OK;
 }
-#endif
+
+#endif /* COMPV_CPP11 */
 
 COMPV_ERROR_CODE CompVThreadDispatcher::newObj(CompVThreadDispatcherPtrPtr disp, int32_t numThreads /*= -1*/)
 {
