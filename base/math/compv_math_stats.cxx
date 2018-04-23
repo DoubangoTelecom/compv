@@ -328,6 +328,128 @@ class CompVMathStatsGeneric {
 			*ptrOut = ptrOut_;
 			return COMPV_ERROR_CODE_S_OK;
 		}
+
+		template<typename T>
+		static COMPV_ERROR_CODE normMinmax(const CompVMatPtr& ptrIn, CompVMatPtrPtr ptrOut, const double maxVal COMPV_DEFAULT(1.0))
+		{
+			COMPV_CHECK_EXP_RETURN(!ptrIn || !ptrOut, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+			COMPV_CHECK_EXP_RETURN(!ptrIn->isRawTypeMatch<T>(), COMPV_ERROR_CODE_E_INVALID_SUBTYPE);
+
+			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
+
+			CompVMatPtr ptrOut_ = *ptrOut;
+			if (ptrOut_ != ptrIn) { // This function allows ptrIn to be equal to ptrOut
+				COMPV_CHECK_CODE_RETURN(CompVMat::newObj(&ptrOut_, ptrIn));
+			}
+			const size_t width = ptrIn->cols();
+			const size_t height = ptrIn->rows();
+			const size_t stride = ptrIn->stride();
+			const size_t count = (width * height);
+
+			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
+			
+			T* inPtr = ptrIn->ptr<T>();
+			T minn = inPtr[0];
+			T maxx = inPtr[0];
+			for (size_t j = 0; j < height; ++j) {
+				for (size_t i = 0; i < width; ++i) {
+					const T v = inPtr[i];
+					minn = COMPV_MATH_MIN(minn, v);
+					maxx = COMPV_MATH_MAX(maxx, v);
+				}
+				inPtr += stride;
+			}
+
+			const T diff = (maxx - minn);
+			const T scale = (std::abs(diff) < std::numeric_limits<T>::epsilon())
+				? 0
+				: static_cast<T>((1 / diff) * maxVal);
+
+			if (!scale) {
+				COMPV_CHECK_CODE_RETURN(ptrOut_->zero_all());
+			}
+			else {
+				inPtr = ptrIn->ptr<T>();
+				T* outPtr = ptrOut_->ptr<T>();
+				for (size_t j = 0; j < height; ++j) {
+					for (size_t i = 0; i < width; ++i) {
+						outPtr[i] = (inPtr[i] - minn) * scale;
+					}
+					inPtr += stride;
+					outPtr += stride;
+				}
+			}
+
+			*ptrOut = ptrOut_;
+			return COMPV_ERROR_CODE_S_OK;
+		}
+
+		// https://docs.tibco.com/pub/spotfire/6.5.1/doc/html/norm/norm_z_score.htm
+		template<typename T>
+		static COMPV_ERROR_CODE normZscore(const CompVMatPtr& ptrIn, CompVMatPtrPtr ptrOut, const double maxVal COMPV_DEFAULT(1.0))
+		{
+			COMPV_CHECK_EXP_RETURN(!ptrIn || !ptrOut, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+			COMPV_CHECK_EXP_RETURN(!ptrIn->isRawTypeMatch<T>(), COMPV_ERROR_CODE_E_INVALID_SUBTYPE);
+
+			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
+
+			CompVMatPtr ptrOut_ = *ptrOut;
+			if (ptrOut_ != ptrIn) { // This function allows ptrIn to be equal to ptrOut
+				COMPV_CHECK_CODE_RETURN(CompVMat::newObj(&ptrOut_, ptrIn));
+			}
+			const size_t width = ptrIn->cols();
+			const size_t height = ptrIn->rows();
+			const size_t stride = ptrIn->stride();
+			const size_t count = (height * width);
+
+			T* inPtr = nullptr;
+			T* outPtr = nullptr;
+
+			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
+
+			double sum = 0.0;
+			inPtr = ptrIn->ptr<T>();
+			for (size_t j = 0; j < height; ++j) {
+				for (size_t i = 0; i < width; ++i) {
+					sum += (inPtr[i] * inPtr[i]);
+				}
+				inPtr += stride;
+			}
+			const T mean = static_cast<T>(sum / static_cast<T>(count));
+
+			double std = 0.0;
+			inPtr = ptrIn->ptr<T>();
+			outPtr = ptrOut_->ptr<T>();
+			for (size_t j = 0; j < height; ++j) {
+				for (size_t i = 0; i < width; ++i) {
+					const T v = (inPtr[i] - mean);
+					outPtr[i] = v;
+					std += (v * v);
+				}
+				inPtr += stride;
+				outPtr += stride;
+			}
+			
+			std = std::sqrt(std / double(1 - count));
+			const T std_ = static_cast<T>(std);
+
+			if (std::abs(std_) < std::numeric_limits<T>::epsilon()) {
+				COMPV_CHECK_CODE_RETURN(ptrOut_->zero_all());
+			}
+			else {
+				const T scale = static_cast<T>((1. / std_) * maxVal);
+				outPtr = ptrOut_->ptr<T>();
+				for (size_t j = 0; j < height; ++j) {
+					for (size_t i = 0; i < width; ++i) {
+						outPtr[i] *= scale;
+					}
+					outPtr += stride;
+				}
+			}
+
+			*ptrOut = ptrOut_;
+			return COMPV_ERROR_CODE_S_OK;
+		}
 };
 
 
@@ -403,6 +525,38 @@ COMPV_ERROR_CODE CompVMathStats::normL2(const CompVMatPtr& ptrIn, CompVMatPtrPtr
 		return COMPV_ERROR_CODE_S_OK;
 	case COMPV_SUBTYPE_RAW_FLOAT32:
 		COMPV_CHECK_CODE_RETURN((CompVMathStatsGeneric::normL2<compv_float32_t>(ptrIn, ptrOut, maxVal)));
+		return COMPV_ERROR_CODE_S_OK;
+	default:
+		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
+		return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
+	}
+}
+
+COMPV_ERROR_CODE CompVMathStats::normMinmax(const CompVMatPtr& ptrIn, CompVMatPtrPtr ptrOut, const double maxVal COMPV_DEFAULT(1.0))
+{
+	COMPV_CHECK_EXP_RETURN(!ptrIn || !ptrOut, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	switch (ptrIn->subType()) {
+	case COMPV_SUBTYPE_RAW_FLOAT64:
+		COMPV_CHECK_CODE_RETURN((CompVMathStatsGeneric::normMinmax<compv_float64_t>(ptrIn, ptrOut, maxVal)));
+		return COMPV_ERROR_CODE_S_OK;
+	case COMPV_SUBTYPE_RAW_FLOAT32:
+		COMPV_CHECK_CODE_RETURN((CompVMathStatsGeneric::normMinmax<compv_float32_t>(ptrIn, ptrOut, maxVal)));
+		return COMPV_ERROR_CODE_S_OK;
+	default:
+		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
+		return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
+	}
+}
+
+COMPV_ERROR_CODE CompVMathStats::normZscore(const CompVMatPtr& ptrIn, CompVMatPtrPtr ptrOut, const double maxVal COMPV_DEFAULT(1.0))
+{
+	COMPV_CHECK_EXP_RETURN(!ptrIn || !ptrOut, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	switch (ptrIn->subType()) {
+	case COMPV_SUBTYPE_RAW_FLOAT64:
+		COMPV_CHECK_CODE_RETURN((CompVMathStatsGeneric::normZscore<compv_float64_t>(ptrIn, ptrOut, maxVal)));
+		return COMPV_ERROR_CODE_S_OK;
+	case COMPV_SUBTYPE_RAW_FLOAT32:
+		COMPV_CHECK_CODE_RETURN((CompVMathStatsGeneric::normZscore<compv_float32_t>(ptrIn, ptrOut, maxVal)));
 		return COMPV_ERROR_CODE_S_OK;
 	default:
 		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
