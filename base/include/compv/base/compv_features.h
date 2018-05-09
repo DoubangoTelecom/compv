@@ -31,6 +31,7 @@ COMPV_OBJECT_DECLARE_PTRS(CornerDete)
 COMPV_OBJECT_DECLARE_PTRS(CornerDesc)
 COMPV_OBJECT_DECLARE_PTRS(EdgeDete)
 COMPV_OBJECT_DECLARE_PTRS(Hough)
+COMPV_OBJECT_DECLARE_PTRS(HOG)
 
 struct CompVFeatureFactory {
 	int id;
@@ -39,6 +40,7 @@ struct CompVFeatureFactory {
 	COMPV_ERROR_CODE(*newObjCornerDesc)(CompVCornerDescPtrPtr desc);
 	COMPV_ERROR_CODE(*newObjEdgeDete)(CompVEdgeDetePtrPtr dete, float tLow COMPV_DEFAULT(COMPV_FEATURE_DETE_EDGE_THRESHOLD_LOW), float tHigh COMPV_DEFAULT(COMPV_FEATURE_DETE_EDGE_THRESHOLD_HIGH), size_t kernSize COMPV_DEFAULT(3));
 	COMPV_ERROR_CODE(*newObjHough)(CompVHoughPtrPtr hough, float rho COMPV_DEFAULT(1.f), float theta COMPV_DEFAULT(1.f), size_t threshold COMPV_DEFAULT(1));
+	COMPV_ERROR_CODE(*newObjHOG)(CompVHOGPtrPtr hog, const CompVSizeSz& blockSize COMPV_DEFAULT(CompVSizeSz(16, 16)), const CompVSizeSz& blockStride COMPV_DEFAULT(CompVSizeSz(8, 8)), const CompVSizeSz& cellSize COMPV_DEFAULT(CompVSizeSz(8, 8)), const size_t nbins COMPV_DEFAULT(9), const int blockNorm COMPV_DEFAULT(COMPV_HOG_BLOCK_NORM_L2HYST), const bool gradientSigned COMPV_DEFAULT(true));
 };
 
 /* Feature detectors and descriptors setters and getters */
@@ -88,8 +90,8 @@ enum {
 	COMPV_PREWITT_ID,
 
 	/* HoughLines */
-	COMPV_HOUGHSHT_ID,
-	COMPV_HOUGHKHT_ID,
+	COMPV_HOUGHSHT_ID, // Standard HOUGH
+	COMPV_HOUGHKHT_ID, // KHT (Kernel-based) HOUGH
 	COMPV_HOUGH_SET_FLT32_RHO,
 	COMPV_HOUGH_SET_FLT32_THETA,
 	COMPV_HOUGH_SET_INT_THRESHOLD,
@@ -99,6 +101,19 @@ enum {
 	COMPV_HOUGHKHT_SET_FLT32_KERNEL_MIN_HEIGTH,
 	COMPV_HOUGHKHT_SET_BOOL_OVERRIDE_INPUT_EDGES,
 	COMPV_HOUGHKHT_GET_FLT64_GS,
+
+	/* HOG (Histogram of Oriented Gradients) */
+	COMPV_HOGS_ID, // Standard HOG
+	COMPV_HOGT_ID, // T-HOG
+	COMPV_HOGR_ID, // S-HOG
+	COMPV_HOG_SET_BOOL_GRADIENT_SIGNED,
+	COMPV_HOG_SET_INT_BLOCK_NORM,
+	COMPV_HOG_SET_INT_NBINS,
+	COMPV_HOG_BLOCK_NORM_NONE,
+	COMPV_HOG_BLOCK_NORM_L1,
+	COMPV_HOG_BLOCK_NORM_L1SQRT,
+	COMPV_HOG_BLOCK_NORM_L2,
+	COMPV_HOG_BLOCK_NORM_L2HYST,
 };
 
 // https://en.wikipedia.org/wiki/Sobel_operator#Alternative_operators
@@ -207,6 +222,30 @@ public:
 	static COMPV_ERROR_CODE newObj(CompVHoughPtrPtr hough, int id, float rho = 1.f, float theta = 1.f, size_t threshold = 1);
 };
 
+// Class: CompVHOG
+class COMPV_BASE_API CompVHOG : public CompVFeatureBase
+{
+protected:
+	CompVHOG(int id);
+public:
+	virtual ~CompVHOG();
+	virtual COMPV_ERROR_CODE process(const CompVMatPtr& input, CompVMatPtrPtr output) = 0;
+	static COMPV_ERROR_CODE newObj(
+		CompVHOGPtrPtr hog,
+		int id,
+		const CompVSizeSz& blockSize = CompVSizeSz(16, 16), 
+		const CompVSizeSz& blockStride = CompVSizeSz(8, 8),
+		const CompVSizeSz& cellSize = CompVSizeSz(8, 8),
+		const size_t nbins = 9,
+		const int blockNorm = COMPV_HOG_BLOCK_NORM_L2HYST,
+		const bool gradientSigned = true);
+	static COMPV_ERROR_CODE checkParams(const CompVSizeSz& blockSize,
+		const CompVSizeSz& blockStride,
+		const CompVSizeSz& cellSize,
+		const size_t nbins,
+		const int blockNorm,
+		const bool gradientSigned);
+};
 
 COMPV_NAMESPACE_END()
 

@@ -65,6 +65,9 @@
     <ClCompile Include="bits.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="hog_std.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\tests_common.h">

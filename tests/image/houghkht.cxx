@@ -66,7 +66,7 @@ COMPV_ERROR_CODE houghkht()
 	CompVHoughPtr houghkht;
 	CompVMatPtr image, edges, directions;
 	CompVHoughLineVector lines;
-	const compv_unittest_houghkht* test = NULL;
+	const compv_unittest_houghkht* test = nullptr;
 
 	// Find test
 	for (size_t i = 0; i < COMPV_UNITTEST_HOUGHKHT_COUNT; ++i) {
@@ -89,11 +89,11 @@ COMPV_ERROR_CODE houghkht()
 	COMPV_CHECK_CODE_RETURN(CompVImage::read(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &image));
 	COMPV_CHECK_CODE_RETURN(canny->process(image, &edges, &directions));
 
-	uint64_t timeStart = CompVTime::nowMillis();
+	const uint64_t timeStart = CompVTime::nowMillis();
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
 		COMPV_CHECK_CODE_RETURN(houghkht->process(edges, lines, directions));
 	}
-	uint64_t timeEnd = CompVTime::nowMillis();
+	const uint64_t timeEnd = CompVTime::nowMillis();
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "HoughKht Elapsed time = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 
 	compv_float32_t sum_rho = 0.f;

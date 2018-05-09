@@ -136,7 +136,6 @@ CompVHoughKht:: ~CompVHoughKht()
 
 }
 
-// override CompVSettable::set
 COMPV_ERROR_CODE CompVHoughKht::set(int id, const void* valuePtr, size_t valueSize) /*Overrides(CompVCaps)*/
 {
 	COMPV_CHECK_EXP_RETURN(!valuePtr || !valueSize, COMPV_ERROR_CODE_E_INVALID_PARAMETER);

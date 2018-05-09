@@ -183,6 +183,12 @@
     <Filter Include="Header Files\ccl\intrin\arm">
       <UniqueIdentifier>{b29e38eb-2499-45f3-a922-40fdd3924c72}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\features\hog">
+      <UniqueIdentifier>{38d62d4e-2924-4af5-ba5c-f51d843aa2df}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\features\hog">
+      <UniqueIdentifier>{f1fc489e-ec16-44f7-bfbf-28fbd19bde3f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_core.cxx">
@@ -317,6 +323,12 @@
     <ClCompile Include="ccl\intrin\arm\compv_core_ccl_lsl_intrin_neon.cxx">
       <Filter>Source Files\ccl\intrin\arm</Filter>
     </ClCompile>
+    <ClCompile Include="features\hog\compv_core_feature_hog_std.cxx">
+      <Filter>Source Files\features\hog</Filter>
+    </ClCompile>
+    <ClCompile Include="features\hog\compv_core_feature_hog_t.cxx">
+      <Filter>Source Files\features\hog</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\core\compv_core.h">
@@ -450,6 +462,12 @@
     </ClInclude>
     <ClInclude Include="include\compv\core\ccl\intrin\arm\compv_core_ccl_lsl_intrin_neon.h">
       <Filter>Header Files\ccl\intrin\arm</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\core\features\hog\compv_core_feature_hog_std.h">
+      <Filter>Header Files\features\hog</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\core\features\hog\compv_core_feature_hog_t.h">
+      <Filter>Header Files\features\hog</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

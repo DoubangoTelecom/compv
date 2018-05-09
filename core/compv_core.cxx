@@ -8,6 +8,8 @@
 #include "compv/core/compv_core_common.h"
 #include "compv/core/features/hough/compv_core_feature_houghsht.h"
 #include "compv/core/features/hough/compv_core_feature_houghkht.h"
+#include "compv/core/features/hog/compv_core_feature_hog_std.h"
+#include "compv/core/features/hog/compv_core_feature_hog_t.h"
 #include "compv/core/features/edges/compv_core_feature_canny_dete.h"
 #include "compv/core/features/edges/compv_core_feature_edge_dete.h"
 #include "compv/core/features/fast/compv_core_feature_fast_dete.h"
@@ -40,65 +42,75 @@ static const CompVFeatureFactory fastFactory = {
 	COMPV_FAST_ID,
 	"FAST (Features from Accelerated Segment Test)",
 	CompVCornerDeteFAST::newObj,
-	NULL,
-	NULL,
-	NULL,
+	nullptr,
+	nullptr,
+	nullptr,
 };
 static const CompVFeatureFactory orbFactory = {
 	COMPV_ORB_ID,
 	"ORB (Oriented FAST and Rotated BRIEF)",
 	CompVCornerDeteORB::newObj,
 	CompVCornerDescORB::newObj,
-	NULL,
-	NULL,
+	nullptr,
+	nullptr,
 };
 static const CompVFeatureFactory cannyFactory = {
 	COMPV_CANNY_ID,
 	"Canny edge detector",
-	NULL,
-	NULL,
+	nullptr,
+	nullptr,
 	CompVEdgeDeteCanny::newObj,
-	NULL,
+	nullptr,
 };
 static const CompVFeatureFactory sobelFactory = {
 	COMPV_SOBEL_ID,
 	"Sobel edge detector",
-	NULL,
-	NULL,
+	nullptr,
+	nullptr,
 	CompVCornerDeteEdgeBase::newObjSobel,
-	NULL,
+	nullptr,
 };
 static const CompVFeatureFactory scharrFactory = {
 	COMPV_SCHARR_ID,
 	"Scharr edge detector",
-	NULL,
-	NULL,
+	nullptr,
+	nullptr,
 	CompVCornerDeteEdgeBase::newObjScharr,
-	NULL,
+	nullptr,
 };
 static const CompVFeatureFactory prewittFactory = {
 	COMPV_PREWITT_ID,
 	"Prewitt edge detector",
-	NULL,
-	NULL,
+	nullptr,
+	nullptr,
 	CompVCornerDeteEdgeBase::newObjPrewitt,
-	NULL,
+	nullptr,
 };
 static const CompVFeatureFactory houghStdFactory = {
 	COMPV_HOUGHSHT_ID,
 	"Hough standard (STD)",
-	NULL,
-	NULL,
-	NULL,
+	nullptr,
+	nullptr,
+	nullptr,
 	CompVHoughSht::newObj,
 };
 static const CompVFeatureFactory houghKhtFactory = {
 	COMPV_HOUGHKHT_ID,
 	"Kernel-based Hough transform (KHT)",
-	NULL,
-	NULL,
-	NULL,
+	nullptr,
+	nullptr,
+	nullptr,
 	CompVHoughKht::newObj,
+};
+
+static const CompVFeatureFactory hogStdFactory = {
+	COMPV_HOGS_ID,
+	"Standard Histogram of oriented gradients (S-HOG)",
+	nullptr,
+	nullptr,
+	nullptr,
+	nullptr,
+	CompVHogStd::newObj,
 };
 
 static const CompVMatcherFactory bruteForceFactory = {
@@ -143,6 +155,7 @@ COMPV_ERROR_CODE CompVCore::init()
 	COMPV_CHECK_CODE_RETURN(err = CompVFeature::addFactory(&cannyFactory), "Failed to add Canny edge detector factory");
 	COMPV_CHECK_CODE_RETURN(err = CompVFeature::addFactory(&houghStdFactory), "Failed to add Hough standard line detector factory");
 	COMPV_CHECK_CODE_RETURN(err = CompVFeature::addFactory(&houghKhtFactory), "Failed to add Hough kht line detector factory");
+	COMPV_CHECK_CODE_RETURN(err = CompVFeature::addFactory(&hogStdFactory), "Failed to add HOG standard descriptor factory");
 
 	// Matchers
 	COMPV_CHECK_CODE_BAIL(err = CompVMatcher::addFactory(&bruteForceFactory), "Failed to add bruteforce matcher factory");

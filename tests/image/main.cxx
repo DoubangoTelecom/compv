@@ -18,9 +18,10 @@ using namespace compv;
 #define TEST_OTSU_THRESH			0
 #define TEST_HOUGHSHT				0
 #define TEST_HOUGHKHT				0
+#define TEST_HOGSTD					1
 #define TEST_BRUTEFORCE				0
 #define TEST_SPLIT3					0
-#define TEST_BITS					1
+#define TEST_BITS					0
 
 /* Entry point function */
 compv_main()
@@ -85,6 +86,11 @@ compv_main()
 #if TEST_HOUGHKHT
 		extern COMPV_ERROR_CODE houghkht();
 		COMPV_CHECK_CODE_BAIL(err = houghkht(), TAG_TEST_IMAGE "HoughKht line dete test failed");
+#endif
+
+#if TEST_HOGSTD
+		extern COMPV_ERROR_CODE hogstd();
+		COMPV_CHECK_CODE_BAIL(err = hogstd(), TAG_TEST_IMAGE "HogStd desc test failed");
 #endif
 
 		

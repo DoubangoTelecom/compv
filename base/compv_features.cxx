@@ -175,7 +175,7 @@ CompVHough::~CompVHough()
 
 COMPV_ERROR_CODE CompVHough::newObj(CompVHoughPtrPtr hough, int id, float rho COMPV_DEFAULT(1.f), float theta COMPV_DEFAULT(1.f), size_t threshold COMPV_DEFAULT(1))
 {
-	COMPV_CHECK_EXP_RETURN(!CompVBase::isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
+	COMPV_CHECK_EXP_RETURN(!CompVBase::isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED, "Not initialized");
 	COMPV_CHECK_EXP_RETURN(!hough, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	const CompVFeatureFactory* factory_ = CompVFeature::findFactory(id);
 	if (!factory_) {
@@ -187,6 +187,80 @@ COMPV_ERROR_CODE CompVHough::newObj(CompVHoughPtrPtr hough, int id, float rho CO
 		return COMPV_ERROR_CODE_E_INVALID_CALL;
 	}
 	COMPV_CHECK_CODE_RETURN(factory_->newObjHough(hough, rho, theta, threshold), "Failed to create hough transform context");
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+
+
+//
+// Class: CompVHOG
+//
+
+CompVHOG::CompVHOG(int id)
+	: CompVFeatureBase(id)
+{
+
+}
+
+CompVHOG::~CompVHOG()
+{
+
+}
+
+COMPV_ERROR_CODE CompVHOG::newObj(
+	CompVHOGPtrPtr hog,
+	int id,
+	const CompVSizeSz& blockSize COMPV_DEFAULT(CompVSizeSz(16, 16)),
+	const CompVSizeSz& blockStride COMPV_DEFAULT(CompVSizeSz(8, 8)),
+	const CompVSizeSz& cellSize COMPV_DEFAULT(CompVSizeSz(8, 8)),
+	const size_t nbins COMPV_DEFAULT(9),
+	const int blockNorm COMPV_DEFAULT(COMPV_HOG_BLOCK_NORM_L2HYST),
+	const bool gradientSigned COMPV_DEFAULT(true))
+{
+	COMPV_CHECK_EXP_RETURN(!CompVBase::isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED, "Not initialized");
+	COMPV_CHECK_EXP_RETURN(!hog, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	const CompVFeatureFactory* factory_ = CompVFeature::findFactory(id);
+	if (!factory_) {
+		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Failed to find feature factory with id = %d", id);
+		return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
+	}
+	if (!factory_->newObjHOG) {
+		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Factory with id = %d and name = '%s' doesn't have a constructor for HOG ctor", factory_->id, factory_->name);
+		return COMPV_ERROR_CODE_E_INVALID_CALL;
+	}
+	COMPV_CHECK_CODE_RETURN(CompVHOG::checkParams(blockSize, blockStride, cellSize, nbins, blockNorm, gradientSigned));
+	COMPV_CHECK_CODE_RETURN(factory_->newObjHOG(hog, blockSize, blockStride, cellSize, nbins, blockNorm, gradientSigned), "Failed to create HOG transform context");
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVHOG::checkParams(const CompVSizeSz& blockSize,
+	const CompVSizeSz& blockStride,
+	const CompVSizeSz& cellSize,
+	const size_t nbins,
+	const int blockNorm,
+	const bool gradientSigned)
+{
+	COMPV_CHECK_EXP_RETURN(
+		!blockSize.width || !blockSize.height ||
+		!blockStride.width || !blockStride.height ||
+		!cellSize.width || !cellSize.height ||
+		!nbins,
+		COMPV_ERROR_CODE_E_INVALID_PARAMETER,
+		"Empty or null"
+	);
+	COMPV_CHECK_EXP_RETURN(nbins > 32, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "nbins must be within [1,32]");
+	COMPV_CHECK_EXP_RETURN(
+		blockNorm != COMPV_HOG_BLOCK_NORM_NONE &&
+		blockNorm != COMPV_HOG_BLOCK_NORM_L1 &&
+		blockNorm != COMPV_HOG_BLOCK_NORM_L1SQRT &&
+		blockNorm != COMPV_HOG_BLOCK_NORM_L2 &&
+		blockNorm != COMPV_HOG_BLOCK_NORM_L2HYST,
+		COMPV_ERROR_CODE_E_INVALID_PARAMETER,
+		"blockNorm must be equal to COMPV_HOG_BLOCK_NORM_xxxx"
+	);
+
+	COMPV_DEBUG_INFO_CODE_TODO("Not complete");
+
 	return COMPV_ERROR_CODE_S_OK;
 }
 
