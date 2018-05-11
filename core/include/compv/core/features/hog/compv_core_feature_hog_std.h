@@ -19,6 +19,9 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+typedef compv_float32_t compv_hog_floattype_t;
+typedef std::vector<compv_hog_floattype_t> compv_hog_vector_t;
+
 class CompVHogStd : public CompVHOG
 {
 protected:
@@ -45,7 +48,11 @@ public:
 		const bool gradientSigned = true);
 
 private:
-	
+	static COMPV_ERROR_CODE buildCellHist(const compv_hog_floattype_t* magPtr, const compv_hog_floattype_t* dirPtr,
+		const size_t& cellWidth, const size_t& cellHeight, const size_t& magStride, const size_t& dirStride,
+		const bool gradientSigned, const int binWidth, const int binCount, compv_hog_vector_t& cellHist
+	);
+
 private:
 	CompVSizeSz m_szBlockSize;
 	CompVSizeSz m_szBlockStride;

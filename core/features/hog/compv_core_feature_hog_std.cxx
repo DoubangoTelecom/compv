@@ -11,6 +11,8 @@
 
 #define COMPV_THIS_CLASSNAME	"CompVHogStd"
 
+#define COMPV_HOG_BUILD_CELL_HIST_SAMPLES_PER_THREAD			(4 * 4) // unit=cells
+
 // Documentation (HOG Standard):
 //	- https://en.wikipedia.org/wiki/Histogram_of_oriented_gradients
 //  - https://www2.cs.duke.edu/courses/fall15/compsci527/notes/hog.pdf
@@ -98,17 +100,84 @@ COMPV_ERROR_CODE CompVHogStd::process(const CompVMatPtr& input, CompVMatPtrPtr o
 		&nOutSize));
 	COMPV_DEBUG_VERBOSE_EX(COMPV_THIS_CLASSNAME, "Descriptor size = %zu", nOutSize);
 
-	// Compute magnitude for X and Y directions
+	// Compute bin width
+	const int nBinWidth = static_cast<int>((m_bGradientSigned ? 360 : 180) / m_nbins);
+
+	// Compute magnitudes and directions: 
+	//	- https://en.wikipedia.org/wiki/Histogram_of_oriented_gradients#Gradient_computation
+	//	- https://www2.cs.duke.edu/courses/fall15/compsci527/notes/hog.pdf, Gradient
 	CompVMatPtr gx, gy, magnitude, direction;
-	COMPV_CHECK_CODE_RETURN(CompVGradientFast::gradX<compv_float32_t>(input, &gx));
-	COMPV_CHECK_CODE_RETURN(CompVGradientFast::gradY<compv_float32_t>(input, &gy));
+	COMPV_CHECK_CODE_RETURN(CompVGradientFast::gradX<compv_hog_floattype_t>(input, &gx));
+	COMPV_CHECK_CODE_RETURN(CompVGradientFast::gradY<compv_hog_floattype_t>(input, &gy));
 	COMPV_CHECK_CODE_RETURN(CompVGradientFast::magnitude(gx, gy, &magnitude));
 	COMPV_CHECK_CODE_RETURN(CompVGradientFast::direction(gx, gy, &direction, true));
+	const size_t magnitudeStride = magnitude->stride();
+	const size_t directionStride = direction->stride();
+	gx = nullptr;
+	gy = nullptr;
+
+	// Compute Orientation binning: 
+	//	- https://en.wikipedia.org/wiki/Histogram_of_oriented_gradients#Orientation_binning
+	//	- https://www2.cs.duke.edu/courses/fall15/compsci527/notes/hog.pdf, Cell Orientation Histograms
+	const int numCellsY = static_cast<int>(szWinSize.height / m_szCellSize.height);
+	const int numCellsX = static_cast<int>(szWinSize.width / m_szCellSize.width);
+	std::vector<std::vector<compv_hog_vector_t> > vecCellsHist(numCellsY);
+	auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
+		const compv_hog_floattype_t* magPtr = magnitude->ptr<compv_hog_floattype_t>(ystart);
+		const compv_hog_floattype_t* dirPtr = direction->ptr<compv_hog_floattype_t>(ystart);
+		int i;
+		size_t x;
+		for (size_t j = ystart; j < yend; ++j) {
+			vecCellsHist[j].resize(numCellsX);
+			for (i = 0, x = 0; i < numCellsX; ++i, x += m_szCellSize.width) {
+				COMPV_CHECK_CODE_RETURN(
+					CompVHogStd::buildCellHist(&magPtr[x], &dirPtr[x],
+						m_szCellSize.width, m_szCellSize.height, magnitudeStride, directionStride,
+					m_bGradientSigned, nBinWidth, static_cast<int>(m_nbins), vecCellsHist[j][i]
+				));
+			}
+		}
+		return COMPV_ERROR_CODE_S_OK;
+	};
+	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+		funcPtr,
+		numCellsX,
+		numCellsY,
+		COMPV_HOG_BUILD_CELL_HIST_SAMPLES_PER_THREAD
+	));
 	
 	// FIXME(dmi):
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Remove next code");
 	*output = direction;
 
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+//	- https://www2.cs.duke.edu/courses/fall15/compsci527/notes/hog.pdf, Cell Orientation Histograms
+COMPV_ERROR_CODE CompVHogStd::buildCellHist(const compv_hog_floattype_t* magPtr, const compv_hog_floattype_t* dirPtr,
+	const size_t& cellWidth, const size_t& cellHeight, const size_t& magStride, const size_t& dirStride,
+	const bool gradientSigned, const int binWidth, const int binCount, compv_hog_vector_t& cellHist)
+{
+	// Private function, do not check input params
+
+	cellHist.resize(binCount, 0);
+
+	COMPV_DEBUG_INFO_CODE_TODO("Compute histogram according to //	- https://www2.cs.duke.edu/courses/fall15/compsci527/notes/hog.pdf, Cell Orientation Histograms");
+	const compv_hog_floattype_t dirMax = static_cast<compv_hog_floattype_t>(gradientSigned ? 360 : 180);
+
+	for (size_t j = 0; j < cellHeight; ++j) {
+		for (size_t i = 0; i < cellWidth; ++i) {
+			const int binIdx = static_cast<int>(((dirPtr[i] >= dirMax)
+				? (dirPtr[i] - dirMax)
+				: dirPtr[i]) / binWidth);
+#if ((defined(_DEBUG) && _DEBUG != 0) || (defined(DEBUG) && DEBUG != 0))
+			COMPV_ASSERT(binIdx >= 0 && binIdx < binCount);
+#endif
+			cellHist[binIdx] += magPtr[i];
+		}
+		magPtr += magStride;
+		dirPtr += dirStride;
+	}
 	return COMPV_ERROR_CODE_S_OK;
 }
 
