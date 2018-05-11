@@ -21,6 +21,8 @@ public:
 
 	template<typename FloatType>
 	static COMPV_ERROR_CODE rodriguesMatrixToVector(const CompVMatPtr& matrix, FloatType(&vector)[3]);
+
+	static COMPV_ERROR_CODE fastAtan2(const CompVMatPtr& y, const CompVMatPtr& x, CompVMatPtrPtr r, const bool angleInDeg);
 };
 
 COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathTrig::rodriguesVectorToMatrix(const compv_float64x3_t &vector, CompVMatPtrPtr matrix);

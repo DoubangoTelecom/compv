@@ -239,12 +239,20 @@ public:
 		const size_t nbins = 9,
 		const int blockNorm = COMPV_HOG_BLOCK_NORM_L2HYST,
 		const bool gradientSigned = true);
-	static COMPV_ERROR_CODE checkParams(const CompVSizeSz& blockSize,
+	static COMPV_ERROR_CODE checkParams(
+		const CompVSizeSz& blockSize,
 		const CompVSizeSz& blockStride,
 		const CompVSizeSz& cellSize,
 		const size_t nbins,
 		const int blockNorm,
 		const bool gradientSigned);
+	static COMPV_ERROR_CODE descriptorSize(
+		const CompVSizeSz& winSize,
+		const CompVSizeSz& blockSize,
+		const CompVSizeSz& blockStride,
+		const CompVSizeSz& cellSize,
+		const size_t nbins,
+		size_t* size);
 };
 
 COMPV_NAMESPACE_END()

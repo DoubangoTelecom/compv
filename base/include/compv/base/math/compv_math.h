@@ -59,7 +59,7 @@ COMPV_NAMESPACE_BEGIN()
 #define COMPV_MATH_HYPOT_NAIVE(x, y)				COMPV_MATH_SQRT((x)*(x) + (y)*(y))
 
 #if !defined(M_PI)
-#	define M_PI 3.14159265358979323846
+#	define M_PI 3.1415926535897932384626433832795
 #endif
 #define COMPV_MATH_PI	(M_PI)
 #define COMPV_MATH_DEGREE_TO_RADIAN(deg_)			(((deg_) * COMPV_MATH_PI) / 180.0)

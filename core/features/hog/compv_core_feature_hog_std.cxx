@@ -5,8 +5,7 @@
 * WebSite: http://compv.org
 */
 #include "compv/core/features/hog/compv_core_feature_hog_std.h"
-#include "compv/base/time/compv_time.h"
-#include "compv/base/image/compv_image.h"
+#include "compv/base/compv_gradient_fast.h"
 #include "compv/base/math/compv_math_utils.h"
 #include "compv/base/parallel/compv_parallel.h"
 
@@ -85,7 +84,32 @@ COMPV_ERROR_CODE CompVHogStd::process(const CompVMatPtr& input, CompVMatPtrPtr o
 	COMPV_CHECK_EXP_RETURN(!input || !output, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_CHECK_EXP_RETURN(input->elmtInBytes() != sizeof(uint8_t) || input->planeCount() != 1, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "input must be 8U_1D (e.g. grayscale image)");
 
-	return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
+	const CompVSizeSz szWinSize = CompVSizeSz(input->cols(), input->rows());
+	COMPV_CHECK_EXP_RETURN(szWinSize.width < m_szBlockSize.width || szWinSize.height < m_szBlockSize.height, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "winSize < blockSize");
+
+	// Compute output (features/descriptor) size
+	size_t nOutSize;
+	COMPV_CHECK_CODE_RETURN(CompVHOG::descriptorSize(
+		szWinSize, // winSize
+		m_szBlockSize, // blockSize,
+		m_szBlockStride, // blockStride,
+		m_szCellSize, // cellSize,
+		m_nbins,
+		&nOutSize));
+	COMPV_DEBUG_VERBOSE_EX(COMPV_THIS_CLASSNAME, "Descriptor size = %zu", nOutSize);
+
+	// Compute magnitude for X and Y directions
+	CompVMatPtr gx, gy, magnitude, direction;
+	COMPV_CHECK_CODE_RETURN(CompVGradientFast::gradX<compv_float32_t>(input, &gx));
+	COMPV_CHECK_CODE_RETURN(CompVGradientFast::gradY<compv_float32_t>(input, &gy));
+	COMPV_CHECK_CODE_RETURN(CompVGradientFast::magnitude(gx, gy, &magnitude));
+	COMPV_CHECK_CODE_RETURN(CompVGradientFast::direction(gx, gy, &direction, true));
+	
+	// FIXME(dmi):
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Remove next code");
+	*output = direction;
+
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVHogStd::newObj(

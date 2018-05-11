@@ -233,7 +233,8 @@ COMPV_ERROR_CODE CompVHOG::newObj(
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVHOG::checkParams(const CompVSizeSz& blockSize,
+COMPV_ERROR_CODE CompVHOG::checkParams(
+	const CompVSizeSz& blockSize,
 	const CompVSizeSz& blockStride,
 	const CompVSizeSz& cellSize,
 	const size_t nbins,
@@ -248,7 +249,16 @@ COMPV_ERROR_CODE CompVHOG::checkParams(const CompVSizeSz& blockSize,
 		COMPV_ERROR_CODE_E_INVALID_PARAMETER,
 		"Empty or null"
 	);
-	COMPV_CHECK_EXP_RETURN(nbins > 32, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "nbins must be within [1,32]");
+
+	COMPV_CHECK_EXP_RETURN(blockSize.width % cellSize.width ||
+		blockSize.height % cellSize.height,
+		COMPV_ERROR_CODE_E_INVALID_PARAMETER,
+		"blockSize modulo cellSize must be equal to zero");
+
+	COMPV_CHECK_EXP_RETURN(nbins > 32, 
+		COMPV_ERROR_CODE_E_INVALID_PARAMETER, 
+		"nbins must be within [1,32]");
+
 	COMPV_CHECK_EXP_RETURN(
 		blockNorm != COMPV_HOG_BLOCK_NORM_NONE &&
 		blockNorm != COMPV_HOG_BLOCK_NORM_L1 &&
@@ -261,6 +271,26 @@ COMPV_ERROR_CODE CompVHOG::checkParams(const CompVSizeSz& blockSize,
 
 	COMPV_DEBUG_INFO_CODE_TODO("Not complete");
 
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVHOG::descriptorSize(
+	const CompVSizeSz& winSize,
+	const CompVSizeSz& blockSize,
+	const CompVSizeSz& blockStride,
+	const CompVSizeSz& cellSize,
+	const size_t nbins,
+	size_t* size)
+{
+	COMPV_CHECK_EXP_RETURN(!size, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(winSize.width < blockSize.width || winSize.height < blockSize.height, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "winSize must be >= blockSize");
+	COMPV_CHECK_CODE_RETURN(CompVHOG::checkParams(blockSize, blockStride, cellSize, nbins, COMPV_HOG_BLOCK_NORM_NONE, true));
+
+	// https://books.google.fr/books?id=m9ByCwAAQBAJ&pg=PA223&lpg=PA223&dq=hog+cell+stride+bin+block&source=bl&ots=JLlVe4OZGQ&sig=BcJnu9ShbtMtlI8XdoYCTRNzVRw&hl=en&sa=X&ved=2ahUKEwi0xeiZ5_TaAhWD0RQKHVPAAdo4ChDoATAFegQIABBH#v=onepage&q=hog%20cell%20stride%20bin%20block&f=false
+	*size = nbins *
+		((blockSize.width / cellSize.width) * (blockSize.height / cellSize.height)) * // [BS/CD]^2
+		(((winSize.width - blockSize.width) / blockStride.width + 1) * ((winSize.height - blockSize.height) / blockStride.height + 1)) // [(WS-BS)/SZ+1]^2
+		;
 	return COMPV_ERROR_CODE_S_OK;
 }
 

@@ -19,6 +19,7 @@
 #include <compv/base/compv_debug.h>
 #include <compv/base/compv_features.h>
 #include <compv/base/compv_fileutils.h>
+#include <compv/base/compv_gradient_fast.h>
 #include <compv/base/compv_kernel.h>
 #include <compv/base/compv_lock.h>
 #include <compv/base/compv_mat.h>
