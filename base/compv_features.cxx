@@ -255,6 +255,11 @@ COMPV_ERROR_CODE CompVHOG::checkParams(
 		COMPV_ERROR_CODE_E_INVALID_PARAMETER,
 		"blockSize modulo cellSize must be equal to zero");
 
+	COMPV_CHECK_EXP_RETURN(cellSize.width % blockStride.width ||
+		cellSize.height % blockStride.height,
+		COMPV_ERROR_CODE_E_INVALID_PARAMETER,
+		"cellSize modulo blockStride must be equal to zero");
+
 	COMPV_CHECK_EXP_RETURN(nbins > 32, 
 		COMPV_ERROR_CODE_E_INVALID_PARAMETER, 
 		"nbins must be within [1,32]");

@@ -12,6 +12,7 @@
 #define COMPV_THIS_CLASSNAME	"CompVHogStd"
 
 #define COMPV_HOG_BUILD_CELL_HIST_SAMPLES_PER_THREAD			(4 * 4) // unit=cells
+#define COMPV_HOG_BUILD_BLOCK_DESC_SAMPLES_PER_THREAD			(1 * 1) // unit=cells
 
 // Documentation (HOG Standard):
 //	- https://en.wikipedia.org/wiki/Histogram_of_oriented_gradients
@@ -89,17 +90,6 @@ COMPV_ERROR_CODE CompVHogStd::process(const CompVMatPtr& input, CompVMatPtrPtr o
 	const CompVSizeSz szWinSize = CompVSizeSz(input->cols(), input->rows());
 	COMPV_CHECK_EXP_RETURN(szWinSize.width < m_szBlockSize.width || szWinSize.height < m_szBlockSize.height, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "winSize < blockSize");
 
-	// Compute output (features/descriptor) size
-	size_t nOutSize;
-	COMPV_CHECK_CODE_RETURN(CompVHOG::descriptorSize(
-		szWinSize, // winSize
-		m_szBlockSize, // blockSize,
-		m_szBlockStride, // blockStride,
-		m_szCellSize, // cellSize,
-		m_nbins,
-		&nOutSize));
-	COMPV_DEBUG_VERBOSE_EX(COMPV_THIS_CLASSNAME, "Descriptor size = %zu", nOutSize);
-
 	// Compute bin width
 	const int nBinWidth = static_cast<int>((m_bGradientSigned ? 360 : 180) / m_nbins);
 
@@ -111,56 +101,148 @@ COMPV_ERROR_CODE CompVHogStd::process(const CompVMatPtr& input, CompVMatPtrPtr o
 	COMPV_CHECK_CODE_RETURN(CompVGradientFast::gradY<compv_hog_floattype_t>(input, &gy));
 	COMPV_CHECK_CODE_RETURN(CompVGradientFast::magnitude(gx, gy, &magnitude));
 	COMPV_CHECK_CODE_RETURN(CompVGradientFast::direction(gx, gy, &direction, true));
-	const size_t magnitudeStride = magnitude->stride();
-	const size_t directionStride = direction->stride();
+	const size_t nMagnitudeStride = magnitude->stride();
+	const size_t nDirectionStride = direction->stride();
 	gx = nullptr;
 	gy = nullptr;
 
 	// Compute Orientation binning: 
 	//	- https://en.wikipedia.org/wiki/Histogram_of_oriented_gradients#Orientation_binning
 	//	- https://www2.cs.duke.edu/courses/fall15/compsci527/notes/hog.pdf, Cell Orientation Histograms
-	const int numCellsY = static_cast<int>(szWinSize.height / m_szCellSize.height);
 	const int numCellsX = static_cast<int>(szWinSize.width / m_szCellSize.width);
-	std::vector<std::vector<compv_hog_vector_t> > vecCellsHist(numCellsY);
-	auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
-		const compv_hog_floattype_t* magPtr = magnitude->ptr<compv_hog_floattype_t>(ystart);
-		const compv_hog_floattype_t* dirPtr = direction->ptr<compv_hog_floattype_t>(ystart);
+	const int numCellsY = static_cast<int>(szWinSize.height / m_szCellSize.height);
+	CompVMatPtr mapHist;
+	const size_t nMapWidth = numCellsX * m_nbins;
+	const size_t nMapHeight = numCellsY;
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_hog_floattype_t>(&mapHist, nMapHeight, nMapWidth)); // numCellsY * numBinsX
+	const size_t nMapHistStride = mapHist->stride();
+	// Multithreading - Process
+	auto funcPtrOrientationBinning = [&](const size_t cellYstart, const size_t cellYend) -> COMPV_ERROR_CODE {
+		const compv_hog_floattype_t* magPtr = magnitude->ptr<compv_hog_floattype_t>(cellYstart * m_szCellSize.height);
+		const compv_hog_floattype_t* dirPtr = direction->ptr<compv_hog_floattype_t>(cellYstart * m_szCellSize.height);
+		compv_hog_floattype_t* mapHistPtr = mapHist->ptr<compv_hog_floattype_t>(cellYstart);
+		const size_t nMagnitudeOffset = nMagnitudeStride * m_szCellSize.height;
+		const size_t nDirectionOffset = nDirectionStride * m_szCellSize.height;
 		int i;
 		size_t x;
-		for (size_t j = ystart; j < yend; ++j) {
-			vecCellsHist[j].resize(numCellsX);
+		for (size_t j = cellYstart; j < cellYend; ++j) {
 			for (i = 0, x = 0; i < numCellsX; ++i, x += m_szCellSize.width) {
 				COMPV_CHECK_CODE_RETURN(
-					CompVHogStd::buildCellHist(&magPtr[x], &dirPtr[x],
-						m_szCellSize.width, m_szCellSize.height, magnitudeStride, directionStride,
-					m_bGradientSigned, nBinWidth, static_cast<int>(m_nbins), vecCellsHist[j][i]
+					CompVHogStd::buildMapHistForSingleCell(&mapHistPtr[i * m_nbins], &magPtr[x], &dirPtr[x],
+						m_szCellSize.width, m_szCellSize.height, nMagnitudeStride, nDirectionStride,
+						m_bGradientSigned, nBinWidth, static_cast<int>(m_nbins)
 				));
 			}
+			mapHistPtr += nMapHistStride;
+			magPtr += nMagnitudeOffset;
+			dirPtr += nDirectionOffset;
 		}
 		return COMPV_ERROR_CODE_S_OK;
 	};
+#if 1
 	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
-		funcPtr,
+		funcPtrOrientationBinning,
 		numCellsX,
 		numCellsY,
 		COMPV_HOG_BUILD_CELL_HIST_SAMPLES_PER_THREAD
 	));
-	
-	// FIXME(dmi):
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Remove next code");
-	*output = direction;
+#else
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT-implementation could be found");
+	COMPV_CHECK_CODE_RETURN(funcPtrOrientationBinning(
+		0, numCellsY
+	));
+#endif
 
+	// Compute output (features/descriptor) size
+	size_t nOutSize;
+	COMPV_CHECK_CODE_RETURN(CompVHOG::descriptorSize(
+		szWinSize, // winSize
+		m_szBlockSize, // blockSize,
+		m_szBlockStride, // blockStride,
+		m_szCellSize, // cellSize,
+		m_nbins,
+		&nOutSize));
+	COMPV_DEBUG_VERBOSE_EX(COMPV_THIS_CLASSNAME, "Descriptor size = %zu", nOutSize);
+
+	// Descriptor blocks + Block normalization
+	//	- https://en.wikipedia.org/wiki/Histogram_of_oriented_gradients#Descriptor_blocks
+	//	- https://en.wikipedia.org/wiki/Histogram_of_oriented_gradients#Block_normalization
+	//	- https://www2.cs.duke.edu/courses/fall15/compsci527/notes/hog.pdf - Block Normalization
+	int numBlocksX = 0;
+	int numBlocksY = 0;
+	for (size_t blockX = 0; blockX <= szWinSize.width - m_szBlockSize.width; blockX += m_szBlockStride.width) ++numBlocksX;
+	for (size_t blockY = 0; blockY <= szWinSize.height - m_szBlockSize.height; blockY += m_szBlockStride.height) ++numBlocksY;
+	const size_t numBlocks = numBlocksX * numBlocksY;
+	COMPV_ASSERT(numBlocks > 0);
+
+	COMPV_ASSERT(!(m_szBlockSize.width % m_szCellSize.width));
+	COMPV_ASSERT(!(m_szBlockSize.height % m_szCellSize.height));
+	const size_t numCellsPerBlockX = (m_szBlockSize.width / m_szCellSize.width);
+	const size_t numCellsPerBlockY = (m_szBlockSize.height / m_szCellSize.height);
+	const size_t numBinsPerBlockX = (numCellsPerBlockX * m_nbins);
+	const size_t nBlockBinsCount = numCellsPerBlockY * numBinsPerBlockX;
+	const size_t nBlocksTotalBinsCount = numBlocks * nBlockBinsCount;
+	COMPV_ASSERT(nBlocksTotalBinsCount == nOutSize);
+	const size_t nMaxBlockX = szWinSize.width - m_szBlockSize.width;
+
+	COMPV_ASSERT(!(m_szCellSize.width % m_szBlockStride.width) && !(m_szCellSize.height % m_szBlockStride.height));
+	const CompVSizeSz szBlockStrideInCellsCount = { (m_szCellSize.width / m_szBlockStride.width), (m_szCellSize.height / m_szBlockStride.height) };
+
+	// Create output
+	CompVMatPtr output_ = *output;
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_hog_floattype_t>(&output_, 1, nOutSize));
+	
+	// Multithreading - Process
+	auto funcPtrBlockDescriptorAndNorm = [&](const size_t blockYstart, const size_t blockYend) -> COMPV_ERROR_CODE {
+		compv_hog_floattype_t* outputPtr = output_->ptr<compv_hog_floattype_t>(0, (blockYstart * (numBlocksX * nBlockBinsCount)));
+		const compv_hog_floattype_t* mapHistPtr = mapHist->ptr<const compv_hog_floattype_t>((blockYstart * szBlockStrideInCellsCount.height));
+		const size_t nBlockStrideInBinsXCount = szBlockStrideInCellsCount.width * m_nbins;
+		const size_t nMapHistStrideBlock = nMapHistStride * szBlockStrideInCellsCount.height;
+		for (size_t blockY = blockYstart; blockY < blockYend; ++blockY) {
+			for (size_t blockX = 0, binX = 0; blockX <= nMaxBlockX; blockX += m_szBlockStride.width, binX += nBlockStrideInBinsXCount) {
+				// Process a block at position (blocX, blockY)
+				COMPV_CHECK_CODE_RETURN(CompVHogStd::buildOutputForSingleBlock(
+					&mapHistPtr[binX], outputPtr,
+					numCellsPerBlockY, numBinsPerBlockX, nMapHistStride
+				));
+				outputPtr += nBlockBinsCount;
+			}
+			mapHistPtr += nMapHistStrideBlock;
+		}
+		return COMPV_ERROR_CODE_S_OK;
+	};
+#if 1
+	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+		funcPtrBlockDescriptorAndNorm,
+		numBlocksX,
+		numBlocksY,
+		COMPV_HOG_BUILD_BLOCK_DESC_SAMPLES_PER_THREAD
+	));
+#else
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT-implementation could be found");
+	COMPV_CHECK_CODE_RETURN(funcPtrBlockDescriptorAndNorm(
+		0, numBlocksY
+	));
+#endif
+
+	*output = output_;
 	return COMPV_ERROR_CODE_S_OK;
 }
 
+// Compute Orientation binning: 
+//	- https://en.wikipedia.org/wiki/Histogram_of_oriented_gradients#Orientation_binning
 //	- https://www2.cs.duke.edu/courses/fall15/compsci527/notes/hog.pdf, Cell Orientation Histograms
-COMPV_ERROR_CODE CompVHogStd::buildCellHist(const compv_hog_floattype_t* magPtr, const compv_hog_floattype_t* dirPtr,
+COMPV_ERROR_CODE CompVHogStd::buildMapHistForSingleCell(compv_hog_floattype_t* mapHistPtr, const compv_hog_floattype_t* magPtr, const compv_hog_floattype_t* dirPtr,
 	const size_t& cellWidth, const size_t& cellHeight, const size_t& magStride, const size_t& dirStride,
-	const bool gradientSigned, const int binWidth, const int binCount, compv_hog_vector_t& cellHist)
+	const bool gradientSigned, const int binWidth, const int binCount
+)
 {
 	// Private function, do not check input params
 
-	cellHist.resize(binCount, 0);
+	// Reset histogram for the current cell
+	for (int i = 0; i < binCount; ++i) {
+		mapHistPtr[i] = 0;
+	}
 
 	COMPV_DEBUG_INFO_CODE_TODO("Compute histogram according to //	- https://www2.cs.duke.edu/courses/fall15/compsci527/notes/hog.pdf, Cell Orientation Histograms");
 	const compv_hog_floattype_t dirMax = static_cast<compv_hog_floattype_t>(gradientSigned ? 360 : 180);
@@ -173,10 +255,34 @@ COMPV_ERROR_CODE CompVHogStd::buildCellHist(const compv_hog_floattype_t* magPtr,
 #if ((defined(_DEBUG) && _DEBUG != 0) || (defined(DEBUG) && DEBUG != 0))
 			COMPV_ASSERT(binIdx >= 0 && binIdx < binCount);
 #endif
-			cellHist[binIdx] += magPtr[i];
+			mapHistPtr[binIdx] += magPtr[i];
 		}
 		magPtr += magStride;
 		dirPtr += dirStride;
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// Descriptor blocks + Block normalization
+//	- https://en.wikipedia.org/wiki/Histogram_of_oriented_gradients#Descriptor_blocks
+//	- https://en.wikipedia.org/wiki/Histogram_of_oriented_gradients#Block_normalization
+//	- https://www2.cs.duke.edu/courses/fall15/compsci527/notes/hog.pdf - Block Normalization
+COMPV_ERROR_CODE CompVHogStd::buildOutputForSingleBlock(
+	const compv_hog_floattype_t* mapHistPtr, compv_hog_floattype_t* outputPtr,
+	const size_t& numCellsPerBlockY, const size_t& numBinsPerBlockX, const size_t& mapHistStride
+)
+{
+	// Private function, do not check input params
+
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
+
+	for (size_t blockCellY = 0; blockCellY < numCellsPerBlockY; ++blockCellY) {
+		for (size_t binX = 0; binX < numBinsPerBlockX; ++binX) {
+			// TODO(dmi): norm
+			outputPtr[binX] = mapHistPtr[binX];
+		}
+		outputPtr += numBinsPerBlockX;
+		mapHistPtr += mapHistStride;
 	}
 	return COMPV_ERROR_CODE_S_OK;
 }

@@ -48,9 +48,13 @@ public:
 		const bool gradientSigned = true);
 
 private:
-	static COMPV_ERROR_CODE buildCellHist(const compv_hog_floattype_t* magPtr, const compv_hog_floattype_t* dirPtr,
+	static COMPV_ERROR_CODE buildMapHistForSingleCell(compv_hog_floattype_t* mapHistPtr, const compv_hog_floattype_t* magPtr, const compv_hog_floattype_t* dirPtr,
 		const size_t& cellWidth, const size_t& cellHeight, const size_t& magStride, const size_t& dirStride,
-		const bool gradientSigned, const int binWidth, const int binCount, compv_hog_vector_t& cellHist
+		const bool gradientSigned, const int binWidth, const int binCount
+	);
+	static COMPV_ERROR_CODE buildOutputForSingleBlock(
+		const compv_hog_floattype_t* mapHistPtr, compv_hog_floattype_t* outputPtr,
+		const size_t& numCellsPerBlockY, const size_t& numBinsPerBlockX, const size_t& mapHistStride
 	);
 
 private:

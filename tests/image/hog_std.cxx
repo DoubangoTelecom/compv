@@ -19,19 +19,20 @@
 
 #define LOOP_COUNT				1
 #define FILE_NAME				FILE_NAME_OPENGLBOOK
+#define NORM					COMPV_HOG_BLOCK_NORM_NONE
 
 static const struct compv_unittest_hogstd {
 	const char* filename;
 	size_t width;
 	size_t height;
 	size_t stride;
+	int norm;
 	const char* md5;
 }
 COMPV_UNITTEST_HOGSTD[] =
 {
-	{ FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, "" },
-	{ FILE_NAME_OPENGLBOOK, 200, 258, 200, "88828412a7b186f2ff9052d24366e34b" }, // gradX="30745c448a624e231b0c07e4d9df5dcf", gradY="b4fd82a74781cf2c030b22a0279e85db", mag="265f046667311421979d0a7a0be266ef", dir="88828412a7b186f2ff9052d24366e34b"
-	{ FILE_NAME_GRIOTS, 480, 640, 480, "" },
+	{ FILE_NAME_OPENGLBOOK, 200, 258, 200, COMPV_HOG_BLOCK_NORM_NONE, "695f3d2cf36e5162ba88d94c042d03e2" },
+	{ FILE_NAME_OPENGLBOOK, 200, 258, 200, COMPV_HOG_BLOCK_NORM_L1, "-" },
 };
 static const size_t COMPV_UNITTEST_HOGSTD_COUNT = sizeof(COMPV_UNITTEST_HOGSTD) / sizeof(COMPV_UNITTEST_HOGSTD[0]);
 
@@ -43,7 +44,7 @@ COMPV_ERROR_CODE hogstd()
 
 	// Find test
 	for (size_t i = 0; i < COMPV_UNITTEST_HOGSTD_COUNT; ++i) {
-		if (std::string(COMPV_UNITTEST_HOGSTD[i].filename).compare(FILE_NAME) == 0) {
+		if (COMPV_UNITTEST_HOGSTD[i].norm == NORM && std::string(COMPV_UNITTEST_HOGSTD[i].filename).compare(FILE_NAME) == 0) {
 			test = &COMPV_UNITTEST_HOGSTD[i];
 			break;
 		}
@@ -58,7 +59,7 @@ COMPV_ERROR_CODE hogstd()
 		CompVSizeSz(4, 4), // blockStride,
 		CompVSizeSz(4, 4), // cellSize,
 		9, // nbins
-		COMPV_HOG_BLOCK_NORM_L2HYST, // blockNorm
+		test->norm, // blockNorm
 		true // gradientSigned
 		));
 	COMPV_CHECK_CODE_RETURN(CompVImage::read(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &image));
