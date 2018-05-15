@@ -44,7 +44,7 @@ public:
 		const CompVSizeSz& blockStride = CompVSizeSz(8, 8),
 		const CompVSizeSz& cellSize = CompVSizeSz(8, 8),
 		const size_t nbins = 9,
-		const int blockNorm = COMPV_HOG_BLOCK_NORM_L2HYST,
+		const int blockNorm = COMPV_HOG_BLOCK_NORM_L2HYS,
 		const bool gradientSigned = true);
 
 private:
@@ -56,6 +56,10 @@ private:
 		const compv_hog_floattype_t* mapHistPtr, compv_hog_floattype_t* outputPtr,
 		const size_t& numCellsPerBlockY, const size_t& numBinsPerBlockX, const size_t& mapHistStride
 	);
+	static COMPV_ERROR_CODE normL1(compv_hog_floattype_t* inOutPtr, const size_t& count);
+	static COMPV_ERROR_CODE normL1Sqrt(compv_hog_floattype_t* inOutPtr, const size_t& count);
+	static COMPV_ERROR_CODE normL2(compv_hog_floattype_t* inOutPtr, const size_t& count);
+	static COMPV_ERROR_CODE normL2Hys(compv_hog_floattype_t* inOutPtr, const size_t& count);
 
 private:
 	CompVSizeSz m_szBlockSize;

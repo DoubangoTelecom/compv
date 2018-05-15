@@ -214,7 +214,7 @@ COMPV_ERROR_CODE CompVHOG::newObj(
 	const CompVSizeSz& blockStride COMPV_DEFAULT(CompVSizeSz(8, 8)),
 	const CompVSizeSz& cellSize COMPV_DEFAULT(CompVSizeSz(8, 8)),
 	const size_t nbins COMPV_DEFAULT(9),
-	const int blockNorm COMPV_DEFAULT(COMPV_HOG_BLOCK_NORM_L2HYST),
+	const int blockNorm COMPV_DEFAULT(COMPV_HOG_BLOCK_NORM_L2HYS),
 	const bool gradientSigned COMPV_DEFAULT(true))
 {
 	COMPV_CHECK_EXP_RETURN(!CompVBase::isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED, "Not initialized");
@@ -269,7 +269,7 @@ COMPV_ERROR_CODE CompVHOG::checkParams(
 		blockNorm != COMPV_HOG_BLOCK_NORM_L1 &&
 		blockNorm != COMPV_HOG_BLOCK_NORM_L1SQRT &&
 		blockNorm != COMPV_HOG_BLOCK_NORM_L2 &&
-		blockNorm != COMPV_HOG_BLOCK_NORM_L2HYST,
+		blockNorm != COMPV_HOG_BLOCK_NORM_L2HYS,
 		COMPV_ERROR_CODE_E_INVALID_PARAMETER,
 		"blockNorm must be equal to COMPV_HOG_BLOCK_NORM_xxxx"
 	);

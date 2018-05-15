@@ -21,6 +21,9 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+static const compv_hog_floattype_t COMPV_HOG_EPSILON = compv_hog_floattype_t(1e-6);
+static const compv_hog_floattype_t COMPV_HOG_EPSILON2 = COMPV_HOG_EPSILON * COMPV_HOG_EPSILON;
+
 CompVHogStd::CompVHogStd(const CompVSizeSz& blockSize,
 	const CompVSizeSz& blockStride,
 	const CompVSizeSz& cellSize,
@@ -191,6 +194,17 @@ COMPV_ERROR_CODE CompVHogStd::process(const CompVMatPtr& input, CompVMatPtrPtr o
 	// Create output
 	CompVMatPtr output_ = *output;
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_hog_floattype_t>(&output_, 1, nOutSize));
+
+	// Set norm function
+	COMPV_ERROR_CODE(*normFunc)(compv_hog_floattype_t* inOutPtr, const size_t& count) = nullptr;
+	switch (m_nBlockNorm) {
+	case COMPV_HOG_BLOCK_NORM_L1: normFunc = CompVHogStd::normL1; break;
+	case COMPV_HOG_BLOCK_NORM_L1SQRT: normFunc = CompVHogStd::normL1Sqrt; break;
+	case COMPV_HOG_BLOCK_NORM_L2: normFunc = CompVHogStd::normL2; break;
+	case COMPV_HOG_BLOCK_NORM_L2HYS: normFunc = CompVHogStd::normL2Hys; break;
+	case COMPV_HOG_BLOCK_NORM_NONE: break;
+	default: COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED, "Supported norm functions: none,L1"); break;
+	}
 	
 	// Multithreading - Process
 	auto funcPtrBlockDescriptorAndNorm = [&](const size_t blockYstart, const size_t blockYend) -> COMPV_ERROR_CODE {
@@ -200,11 +214,15 @@ COMPV_ERROR_CODE CompVHogStd::process(const CompVMatPtr& input, CompVMatPtrPtr o
 		const size_t nMapHistStrideBlock = nMapHistStride * szBlockStrideInCellsCount.height;
 		for (size_t blockY = blockYstart; blockY < blockYend; ++blockY) {
 			for (size_t blockX = 0, binX = 0; blockX <= nMaxBlockX; blockX += m_szBlockStride.width, binX += nBlockStrideInBinsXCount) {
-				// Process a block at position (blocX, blockY)
+				// Build vector for a block at position (blocX, blockY)
 				COMPV_CHECK_CODE_RETURN(CompVHogStd::buildOutputForSingleBlock(
 					&mapHistPtr[binX], outputPtr,
 					numCellsPerBlockY, numBinsPerBlockX, nMapHistStride
 				));
+				// Normalize the output vector
+				if (normFunc) {
+					COMPV_CHECK_CODE_RETURN(normFunc(outputPtr, nBlockBinsCount));
+				}
 				outputPtr += nBlockBinsCount;
 			}
 			mapHistPtr += nMapHistStrideBlock;
@@ -273,17 +291,92 @@ COMPV_ERROR_CODE CompVHogStd::buildOutputForSingleBlock(
 )
 {
 	// Private function, do not check input params
-
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
-
+	
+	const size_t numBinsPerBlockX8 = numBinsPerBlockX & -8;
+	size_t binX;
 	for (size_t blockCellY = 0; blockCellY < numCellsPerBlockY; ++blockCellY) {
-		for (size_t binX = 0; binX < numBinsPerBlockX; ++binX) {
-			// TODO(dmi): norm
+		// TODO(dmi): norm : none
+		for (binX = 0; binX < numBinsPerBlockX8; binX += 8) {
+			outputPtr[binX] = mapHistPtr[binX];
+			outputPtr[binX + 1] = mapHistPtr[binX + 1];
+			outputPtr[binX + 2] = mapHistPtr[binX + 2];
+			outputPtr[binX + 3] = mapHistPtr[binX + 3];
+			outputPtr[binX + 4] = mapHistPtr[binX + 4];
+			outputPtr[binX + 5] = mapHistPtr[binX + 5];
+			outputPtr[binX + 6] = mapHistPtr[binX + 6];
+			outputPtr[binX + 7] = mapHistPtr[binX + 7];
+		}
+		for (; binX < numBinsPerBlockX; ++binX) {
 			outputPtr[binX] = mapHistPtr[binX];
 		}
 		outputPtr += numBinsPerBlockX;
 		mapHistPtr += mapHistStride;
 	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVHogStd::normL1(compv_hog_floattype_t* inOutPtr, const size_t& count)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
+
+	// Compute den = sum(vector) + eps
+	compv_hog_floattype_t den = 0; // vector contains small values -> no need to use double for accumulation
+	for (size_t i = 0; i < count; ++i) {
+		den += inOutPtr[i]; // no need for abs because hist are always >= 0
+	}
+	den = 1 / (den + COMPV_HOG_EPSILON);
+	// Compute norm = v * (1 / den)
+	for (size_t i = 0; i < count; ++i) {
+		inOutPtr[i] *= den;
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVHogStd::normL1Sqrt(compv_hog_floattype_t* inOutPtr, const size_t& count)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
+
+	// Compute den = sum(vector) + eps
+	compv_hog_floattype_t den = 0; // vector contains small values -> no need to use double for accumulation
+	for (size_t i = 0; i < count; ++i) {
+		den += inOutPtr[i]; // no need for abs because hist are always >= 0
+	}
+	den = 1 / (den + COMPV_HOG_EPSILON);
+	// Compute norm = sqrt(v * (1 / den))
+	for (size_t i = 0; i < count; ++i) {
+		inOutPtr[i] = std::sqrt(inOutPtr[i] * den);
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVHogStd::normL2(compv_hog_floattype_t* inOutPtr, const size_t& count)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
+
+	// Compute den = L2(vector)^2 + eps^2
+	compv_hog_floattype_t den = 0; // vector contains small values -> no need to use double for accumulation
+	for (size_t i = 0; i < count; ++i) {
+		den += inOutPtr[i] * inOutPtr[i];
+	}
+	den = 1 / std::sqrt(den + COMPV_HOG_EPSILON2);
+	// Compute norm = v * (1 / den)
+	for (size_t i = 0; i < count; ++i) {
+		inOutPtr[i] *= den;
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVHogStd::normL2Hys(compv_hog_floattype_t* inOutPtr, const size_t& count)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
+
+	COMPV_CHECK_CODE_RETURN(CompVHogStd::normL2(inOutPtr, count));
+	for (size_t i = 0; i < count; ++i) {
+		if (inOutPtr[i] > 0.2f) {
+			inOutPtr[i] = 0.2f;
+		}
+	}
+	COMPV_CHECK_CODE_RETURN(CompVHogStd::normL2(inOutPtr, count));
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -293,7 +386,7 @@ COMPV_ERROR_CODE CompVHogStd::newObj(
 	const CompVSizeSz& blockStride COMPV_DEFAULT(CompVSizeSz(8, 8)),
 	const CompVSizeSz& cellSize COMPV_DEFAULT(CompVSizeSz(8, 8)),
 	const size_t nbins COMPV_DEFAULT(9),
-	const int blockNorm COMPV_DEFAULT(COMPV_HOG_BLOCK_NORM_L2HYST),
+	const int blockNorm COMPV_DEFAULT(COMPV_HOG_BLOCK_NORM_L2HYS),
 	const bool gradientSigned COMPV_DEFAULT(true))
 {
 	COMPV_CHECK_EXP_RETURN(!hog, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
