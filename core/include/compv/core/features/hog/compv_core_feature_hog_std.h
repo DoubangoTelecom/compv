@@ -30,7 +30,8 @@ protected:
 		const CompVSizeSz& cellSize,
 		const size_t nbins,
 		const int blockNorm,
-		const bool gradientSigned);
+		const bool gradientSigned,
+		const int interp);
 public:
 	virtual ~CompVHogStd();
 	COMPV_OBJECT_GET_ID(CompVHogStd);
@@ -45,12 +46,13 @@ public:
 		const CompVSizeSz& cellSize = CompVSizeSz(8, 8),
 		const size_t nbins = 9,
 		const int blockNorm = COMPV_HOG_BLOCK_NORM_L2HYS,
-		const bool gradientSigned = true);
+		const bool gradientSigned = true,
+		const int interp = COMPV_HOG_INTERPOLATION_BILINEAR);
 
 private:
 	static COMPV_ERROR_CODE buildMapHistForSingleCell(compv_hog_floattype_t* mapHistPtr, const compv_hog_floattype_t* magPtr, const compv_hog_floattype_t* dirPtr,
 		const size_t& cellWidth, const size_t& cellHeight, const size_t& magStride, const size_t& dirStride,
-		const bool gradientSigned, const int binWidth, const int binCount
+		const bool gradientSigned, const int binWidth, const int binCount, const int interp
 	);
 	static COMPV_ERROR_CODE buildOutputForSingleBlock(
 		const compv_hog_floattype_t* mapHistPtr, compv_hog_floattype_t* outputPtr,
@@ -68,6 +70,7 @@ private:
 	size_t m_nbins;
 	int m_nBlockNorm;
 	bool m_bGradientSigned;
+	int m_nInterp;
 };
 
 COMPV_NAMESPACE_END()

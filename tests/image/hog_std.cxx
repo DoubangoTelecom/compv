@@ -19,7 +19,7 @@
 
 #define LOOP_COUNT				1
 #define FILE_NAME				FILE_NAME_OPENGLBOOK
-#define NORM					COMPV_HOG_BLOCK_NORM_L2HYS
+#define NORM					COMPV_HOG_BLOCK_NORM_NONE
 
 static const struct compv_unittest_hogstd {
 	const char* filename;
@@ -35,7 +35,7 @@ COMPV_UNITTEST_HOGSTD[] =
 	{ FILE_NAME_OPENGLBOOK, 200, 258, 200, COMPV_HOG_BLOCK_NORM_L1, "7aeee2ea738f2da7d54cab508a19e447" },
 	{ FILE_NAME_OPENGLBOOK, 200, 258, 200, COMPV_HOG_BLOCK_NORM_L1SQRT, "6dd694e63e9ab479e5584ebe5ecc7c37" },
 	{ FILE_NAME_OPENGLBOOK, 200, 258, 200, COMPV_HOG_BLOCK_NORM_L2, "a59312a721197708c302cde3eda574f4" },
-	{ FILE_NAME_OPENGLBOOK, 200, 258, 200, COMPV_HOG_BLOCK_NORM_L2HYS, "2534c9ab47b3e0e19457760b9cc56844" },
+	{ FILE_NAME_OPENGLBOOK, 200, 258, 200, COMPV_HOG_BLOCK_NORM_L2HYS, "f7d78940be79c9ebe115965e39626b7e" },
 };
 static const size_t COMPV_UNITTEST_HOGSTD_COUNT = sizeof(COMPV_UNITTEST_HOGSTD) / sizeof(COMPV_UNITTEST_HOGSTD[0]);
 
@@ -58,13 +58,14 @@ COMPV_ERROR_CODE hogstd()
 	}
 
 	COMPV_CHECK_CODE_RETURN(CompVHOG::newObj(&hogStd, COMPV_HOGS_ID,
-		CompVSizeSz(8, 8), // blockSize,
-		CompVSizeSz(4, 4), // blockStride,
-		CompVSizeSz(4, 4), // cellSize,
+		CompVSizeSz(8, 8), // blockSize(8, 8),
+		CompVSizeSz(4, 4), // blockStride(4, 4),
+		CompVSizeSz(4, 4), // cellSize(8, 8),
 		9, // nbins
 		test->norm, // blockNorm
-		true // gradientSigned
-		));
+		true, // gradientSigned
+		COMPV_HOG_INTERPOLATION_BILINEAR // interpolation
+	));
 	COMPV_CHECK_CODE_RETURN(CompVImage::read(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &image));
 	
 	const uint64_t timeStart = CompVTime::nowMillis();

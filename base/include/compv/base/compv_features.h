@@ -40,7 +40,7 @@ struct CompVFeatureFactory {
 	COMPV_ERROR_CODE(*newObjCornerDesc)(CompVCornerDescPtrPtr desc);
 	COMPV_ERROR_CODE(*newObjEdgeDete)(CompVEdgeDetePtrPtr dete, float tLow COMPV_DEFAULT(COMPV_FEATURE_DETE_EDGE_THRESHOLD_LOW), float tHigh COMPV_DEFAULT(COMPV_FEATURE_DETE_EDGE_THRESHOLD_HIGH), size_t kernSize COMPV_DEFAULT(3));
 	COMPV_ERROR_CODE(*newObjHough)(CompVHoughPtrPtr hough, float rho COMPV_DEFAULT(1.f), float theta COMPV_DEFAULT(1.f), size_t threshold COMPV_DEFAULT(1));
-	COMPV_ERROR_CODE(*newObjHOG)(CompVHOGPtrPtr hog, const CompVSizeSz& blockSize COMPV_DEFAULT(CompVSizeSz(16, 16)), const CompVSizeSz& blockStride COMPV_DEFAULT(CompVSizeSz(8, 8)), const CompVSizeSz& cellSize COMPV_DEFAULT(CompVSizeSz(8, 8)), const size_t nbins COMPV_DEFAULT(9), const int blockNorm COMPV_DEFAULT(COMPV_HOG_BLOCK_NORM_L2HYS), const bool gradientSigned COMPV_DEFAULT(true));
+	COMPV_ERROR_CODE(*newObjHOG)(CompVHOGPtrPtr hog, const CompVSizeSz& blockSize COMPV_DEFAULT(CompVSizeSz(16, 16)), const CompVSizeSz& blockStride COMPV_DEFAULT(CompVSizeSz(8, 8)), const CompVSizeSz& cellSize COMPV_DEFAULT(CompVSizeSz(8, 8)), const size_t nbins COMPV_DEFAULT(9), const int blockNorm COMPV_DEFAULT(COMPV_HOG_BLOCK_NORM_L2HYS), const bool gradientSigned COMPV_DEFAULT(true), const int interp COMPV_DEFAULT(COMPV_HOG_INTERPOLATION_BILINEAR));
 };
 
 /* Feature detectors and descriptors setters and getters */
@@ -109,11 +109,14 @@ enum {
 	COMPV_HOG_SET_BOOL_GRADIENT_SIGNED,
 	COMPV_HOG_SET_INT_BLOCK_NORM,
 	COMPV_HOG_SET_INT_NBINS,
+	COMPV_HOG_SET_INT_INTERPOLATION,
 	COMPV_HOG_BLOCK_NORM_NONE,
 	COMPV_HOG_BLOCK_NORM_L1,
 	COMPV_HOG_BLOCK_NORM_L1SQRT,
 	COMPV_HOG_BLOCK_NORM_L2,
 	COMPV_HOG_BLOCK_NORM_L2HYS,
+	COMPV_HOG_INTERPOLATION_NEAREST,
+	COMPV_HOG_INTERPOLATION_BILINEAR,
 };
 
 // https://en.wikipedia.org/wiki/Sobel_operator#Alternative_operators
@@ -238,7 +241,8 @@ public:
 		const CompVSizeSz& cellSize = CompVSizeSz(8, 8),
 		const size_t nbins = 9,
 		const int blockNorm = COMPV_HOG_BLOCK_NORM_L2HYS,
-		const bool gradientSigned = true);
+		const bool gradientSigned = true,
+		const int interp = COMPV_HOG_INTERPOLATION_BILINEAR);
 	static COMPV_ERROR_CODE checkParams(
 		const CompVSizeSz& blockSize,
 		const CompVSizeSz& blockStride,

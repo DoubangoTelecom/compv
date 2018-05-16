@@ -215,7 +215,8 @@ COMPV_ERROR_CODE CompVHOG::newObj(
 	const CompVSizeSz& cellSize COMPV_DEFAULT(CompVSizeSz(8, 8)),
 	const size_t nbins COMPV_DEFAULT(9),
 	const int blockNorm COMPV_DEFAULT(COMPV_HOG_BLOCK_NORM_L2HYS),
-	const bool gradientSigned COMPV_DEFAULT(true))
+	const bool gradientSigned COMPV_DEFAULT(true),
+	const int interp COMPV_DEFAULT(COMPV_HOG_INTERPOLATION_BILINEAR))
 {
 	COMPV_CHECK_EXP_RETURN(!CompVBase::isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED, "Not initialized");
 	COMPV_CHECK_EXP_RETURN(!hog, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -229,7 +230,7 @@ COMPV_ERROR_CODE CompVHOG::newObj(
 		return COMPV_ERROR_CODE_E_INVALID_CALL;
 	}
 	COMPV_CHECK_CODE_RETURN(CompVHOG::checkParams(blockSize, blockStride, cellSize, nbins, blockNorm, gradientSigned));
-	COMPV_CHECK_CODE_RETURN(factory_->newObjHOG(hog, blockSize, blockStride, cellSize, nbins, blockNorm, gradientSigned), "Failed to create HOG transform context");
+	COMPV_CHECK_CODE_RETURN(factory_->newObjHOG(hog, blockSize, blockStride, cellSize, nbins, blockNorm, gradientSigned, interp), "Failed to create HOG transform context");
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -260,9 +261,9 @@ COMPV_ERROR_CODE CompVHOG::checkParams(
 		COMPV_ERROR_CODE_E_INVALID_PARAMETER,
 		"cellSize modulo blockStride must be equal to zero");
 
-	COMPV_CHECK_EXP_RETURN(nbins > 32, 
+	COMPV_CHECK_EXP_RETURN(nbins < 2 || nbins > 64,
 		COMPV_ERROR_CODE_E_INVALID_PARAMETER, 
-		"nbins must be within [1,32]");
+		"nbins must be within [2,64]");
 
 	COMPV_CHECK_EXP_RETURN(
 		blockNorm != COMPV_HOG_BLOCK_NORM_NONE &&
