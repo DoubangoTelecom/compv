@@ -732,6 +732,9 @@
     <ClInclude Include="..\include\compv\base\math\compv_math_cast.h">
       <Filter>include\math</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\compv\base\compv_gradient_fast.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_base.cxx">
@@ -1195,6 +1198,9 @@
     </ClCompile>
     <ClCompile Include="..\math\compv_math_cast.cxx">
       <Filter>source\math</Filter>
+    </ClCompile>
+    <ClCompile Include="..\compv_gradient_fast.cxx">
+      <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

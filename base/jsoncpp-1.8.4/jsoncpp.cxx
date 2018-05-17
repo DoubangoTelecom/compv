@@ -114,8 +114,12 @@ static char getDecimalPoint() {
 #ifdef JSONCPP_NO_LOCALE_SUPPORT
   return '\0';
 #else
+#	if defined(__ANDROID__) || defined(ANDROID)
+	return '.';
+#	else
   struct lconv* lc = localeconv();
   return lc ? *(lc->decimal_point) : '\0';
+#	endif
 #endif
 }
 

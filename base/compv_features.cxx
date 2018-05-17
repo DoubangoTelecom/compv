@@ -261,7 +261,7 @@ COMPV_ERROR_CODE CompVHOG::checkParams(
 		COMPV_ERROR_CODE_E_INVALID_PARAMETER,
 		"cellSize modulo blockStride must be equal to zero");
 
-	COMPV_CHECK_EXP_RETURN(nbins < 2 || nbins > 64,
+	COMPV_CHECK_EXP_RETURN(nbins < 2 || nbins > 360,
 		COMPV_ERROR_CODE_E_INVALID_PARAMETER, 
 		"nbins must be within [2,64]");
 
@@ -274,8 +274,6 @@ COMPV_ERROR_CODE CompVHOG::checkParams(
 		COMPV_ERROR_CODE_E_INVALID_PARAMETER,
 		"blockNorm must be equal to COMPV_HOG_BLOCK_NORM_xxxx"
 	);
-
-	COMPV_DEBUG_INFO_CODE_TODO("Not complete");
 
 	return COMPV_ERROR_CODE_S_OK;
 }

@@ -165,6 +165,8 @@
     <ClCompile Include="ccl_mser.cxx" />
     <ClCompile Include="chroma_conv.cxx" />
     <ClCompile Include="feature_fast.cxx" />
+    <ClCompile Include="hog_s.cxx" />
+    <ClCompile Include="hog_t.cxx" />
     <ClCompile Include="houghkht.cxx" />
     <ClCompile Include="houghsht.cxx" />
     <ClCompile Include="main.cxx" />

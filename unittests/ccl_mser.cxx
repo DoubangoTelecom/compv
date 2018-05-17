@@ -64,7 +64,6 @@ static COMPV_ERROR_CODE check_moments(const CompVConnectedComponentLabelingResul
 
 COMPV_ERROR_CODE unittest_ccl_mser()
 {
-	const compv_unittest_ccl* test;
 	CompVMatPtr image;
 	CompVConnectedComponentLabelingResultPtr result;
 
@@ -80,7 +79,7 @@ COMPV_ERROR_CODE unittest_ccl_mser()
 	);
 
 	for (size_t i = 0; i < COMPV_UNITTEST_CCL_COUNT; ++i) {
-		test = &COMPV_UNITTEST_CCL[i];
+		const compv_unittest_ccl* test = &COMPV_UNITTEST_CCL[i];
 		COMPV_DEBUG_INFO_EX(TAG_TEST, "== Trying new test: CCL(MSER) -> %s ==", compv_unittest_ccl_to_string(test).c_str());
 		COMPV_CHECK_CODE_RETURN(CompVImage::read(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &image));
 		COMPV_CHECK_CODE_RETURN(ccl_obj->process(image, &result));

@@ -226,6 +226,7 @@ COMPV_ERROR_CODE CompVMathTrig::fastAtan2(const CompVMatPtr& y, const CompVMatPt
 	return COMPV_ERROR_CODE_S_OK;
 }
 
+static const  compv_float64_t atan2_eps = 2.2204460492503131e-016;
 static const compv_float32_t atan2_p1 = 0.9997878412794807f*(compv_float32_t)(180 / M_PI);
 static const compv_float32_t atan2_p3 = -0.3258083974640975f*(compv_float32_t)(180 / M_PI);
 static const compv_float32_t atan2_p5 = 0.1555786518463281f*(compv_float32_t)(180 / M_PI);
@@ -241,12 +242,12 @@ static void CompVMathTrigFastAtan2_X_C(const FloatType* y, const FloatType* x, F
 			const FloatType ax = std::abs(x[i]), ay = std::abs(y[i]);
 			FloatType a, c, c2;
 			if (ax >= ay) {
-				c = ay / (ax + static_cast<FloatType>(DBL_EPSILON));
+				c = ay / (ax + static_cast<FloatType>(atan2_eps));
 				c2 = c*c;
 				a = (((atan2_p7*c2 + atan2_p5)*c2 + atan2_p3)*c2 + atan2_p1)*c;
 			}
 			else {
-				c = ax / (ay + static_cast<FloatType>(DBL_EPSILON));
+				c = ax / (ay + static_cast<FloatType>(atan2_eps));
 				c2 = c*c;
 				a = 90.f - (((atan2_p7*c2 + atan2_p5)*c2 + atan2_p3)*c2 + atan2_p1)*c;
 			}

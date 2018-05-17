@@ -65,6 +65,8 @@
     <ClInclude Include="..\include\compv\core\features\fast\intrin\arm\compv_core_feature_fast_dete_intrin_neon.h" />
     <ClInclude Include="..\include\compv\core\features\fast\intrin\x86\compv_core_feature_fast_dete_intrin_avx2.h" />
     <ClInclude Include="..\include\compv\core\features\fast\intrin\x86\compv_core_feature_fast_dete_intrin_sse2.h" />
+    <ClInclude Include="..\include\compv\core\features\hog\compv_core_feature_hog_std.h" />
+    <ClInclude Include="..\include\compv\core\features\hog\compv_core_feature_hog_t.h" />
     <ClInclude Include="..\include\compv\core\features\hough\compv_core_feature_houghkht.h" />
     <ClInclude Include="..\include\compv\core\features\hough\compv_core_feature_houghsht.h" />
     <ClInclude Include="..\include\compv\core\features\hough\intrin\arm\compv_core_feature_houghkht_intrin_neon.h" />
@@ -118,6 +120,8 @@
     </ClCompile>
     <ClCompile Include="..\features\fast\intrin\x86\compv_core_feature_fast_dete_intrin_avx2.cxx" />
     <ClCompile Include="..\features\fast\intrin\x86\compv_core_feature_fast_dete_intrin_sse2.cxx" />
+    <ClCompile Include="..\features\hog\compv_core_feature_hog_std.cxx" />
+    <ClCompile Include="..\features\hog\compv_core_feature_hog_t.cxx" />
     <ClCompile Include="..\features\hough\compv_core_feature_houghkht.cxx" />
     <ClCompile Include="..\features\hough\compv_core_feature_houghsht.cxx" />
     <ClCompile Include="..\features\hough\intrin\arm\compv_core_feature_houghkht_intrin_neon.cxx" />

@@ -18,6 +18,7 @@
 //	- https://en.wikipedia.org/wiki/Histogram_of_oriented_gradients
 //  - https://www2.cs.duke.edu/courses/fall15/compsci527/notes/hog.pdf
 //	- http://lear.inrialpes.fr/people/triggs/pubs/Dalal-cvpr05.pdf
+//	- https://www.learnopencv.com/histogram-of-oriented-gradients/
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -54,18 +55,42 @@ COMPV_ERROR_CODE CompVHogStd::set(int id, const void* valuePtr, size_t valueSize
 	switch (id) {
 	case COMPV_HOG_SET_BOOL_GRADIENT_SIGNED: {
 		COMPV_CHECK_EXP_RETURN(valueSize != sizeof(bool), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-		/* *reinterpret_cast<const bool*>(valuePtr); */
-		return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
+		m_bGradientSigned = *reinterpret_cast<const bool*>(valuePtr);
+		return COMPV_ERROR_CODE_S_OK;
 	}
 	case COMPV_HOG_SET_INT_BLOCK_NORM: {
 		COMPV_CHECK_EXP_RETURN(valueSize != sizeof(int), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 		const int blockNorm = *reinterpret_cast<const int*>(valuePtr);
-		return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
+		COMPV_CHECK_EXP_RETURN(
+			blockNorm != COMPV_HOG_BLOCK_NORM_NONE &&
+			blockNorm != COMPV_HOG_BLOCK_NORM_L1 &&
+			blockNorm != COMPV_HOG_BLOCK_NORM_L1SQRT &&
+			blockNorm != COMPV_HOG_BLOCK_NORM_L2 &&
+			blockNorm != COMPV_HOG_BLOCK_NORM_L2HYS,
+			COMPV_ERROR_CODE_E_INVALID_PARAMETER,
+			"blockNorm must be equal to COMPV_HOG_BLOCK_NORM_xxxx"
+		);
+		m_nBlockNorm = blockNorm;
+		return COMPV_ERROR_CODE_S_OK;
 	}
 	case COMPV_HOG_SET_INT_NBINS: {
-		COMPV_CHECK_EXP_RETURN(valueSize != sizeof(int) || *reinterpret_cast<const int*>(valuePtr) <= 0, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		COMPV_CHECK_EXP_RETURN(valueSize != sizeof(int), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 		const int nbins = *reinterpret_cast<const int*>(valuePtr);
-		return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
+		COMPV_CHECK_EXP_RETURN(nbins <= 1 || nbins > 360, COMPV_ERROR_CODE_E_OUT_OF_BOUND, "NBINS must be within [2-360]");
+		m_nbins = nbins;
+		return COMPV_ERROR_CODE_S_OK;
+	}
+	case COMPV_HOG_SET_INT_INTERPOLATION: {
+		COMPV_CHECK_EXP_RETURN(valueSize != sizeof(int), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		const int interp = *reinterpret_cast<const int*>(valuePtr);
+		COMPV_CHECK_EXP_RETURN(
+			interp != COMPV_HOG_INTERPOLATION_NEAREST &&
+			interp != COMPV_HOG_INTERPOLATION_BILINEAR,
+			COMPV_ERROR_CODE_E_INVALID_PARAMETER,
+			"interp must be equal to COMPV_HOG_INTERPOLATION_xxxx"
+		);
+		m_nInterp = interp;
+		return COMPV_ERROR_CODE_S_OK;
 	}
 	default: {
 		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Set with id %d not implemented", id);
@@ -95,8 +120,12 @@ COMPV_ERROR_CODE CompVHogStd::process(const CompVMatPtr& input, CompVMatPtrPtr o
 	const CompVSizeSz szWinSize = CompVSizeSz(input->cols(), input->rows());
 	COMPV_CHECK_EXP_RETURN(szWinSize.width < m_szBlockSize.width || szWinSize.height < m_szBlockSize.height, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "winSize < blockSize");
 
-	// Compute bin width
+	// Compute bin width associated values
 	const int nBinWidth = static_cast<int>((m_bGradientSigned ? 360 : 180) / m_nbins);
+	const compv_hog_floattype_t fBinWidth = static_cast<compv_hog_floattype_t>(nBinWidth);
+	const compv_hog_floattype_t fBinWidthScale = 1 / fBinWidth;
+
+	const compv_hog_floattype_t thetaMax = static_cast<compv_hog_floattype_t>(m_bGradientSigned ? 360 : 180);
 
 	COMPV_ASSERT(!(m_szCellSize.width % m_szBlockStride.width) && !(m_szCellSize.height % m_szBlockStride.height));
 	const CompVSizeFloat32 szStrideInCellsCount = { (m_szBlockStride.width / float(m_szCellSize.width)), (m_szBlockStride.height / float(m_szCellSize.height)) };
@@ -144,7 +173,7 @@ COMPV_ERROR_CODE CompVHogStd::process(const CompVMatPtr& input, CompVMatPtrPtr o
 				COMPV_CHECK_CODE_RETURN(
 					CompVHogStd::buildMapHistForSingleCell(&mapHistPtr[i * m_nbins], &magPtr[x], &dirPtr[x],
 						m_szCellSize.width, m_szCellSize.height, nMagnitudeStride, nDirectionStride,
-						m_bGradientSigned, nBinWidth, static_cast<int>(m_nbins), m_nInterp
+						thetaMax, fBinWidth, fBinWidthScale, m_nbins, m_nInterp
 				));
 			}
 			mapHistPtr += nMapHistStride;
@@ -262,34 +291,31 @@ COMPV_ERROR_CODE CompVHogStd::process(const CompVMatPtr& input, CompVMatPtrPtr o
 //	- https://www2.cs.duke.edu/courses/fall15/compsci527/notes/hog.pdf, Cell Orientation Histograms
 COMPV_ERROR_CODE CompVHogStd::buildMapHistForSingleCell(compv_hog_floattype_t* mapHistPtr, const compv_hog_floattype_t* magPtr, const compv_hog_floattype_t* dirPtr,
 	const size_t& cellWidth, const size_t& cellHeight, const size_t& magStride, const size_t& dirStride,
-	const bool gradientSigned, const int binWidth, const int binCount, const int interp
+	const compv_hog_floattype_t& thetaMax, const compv_hog_floattype_t& binWidth, const compv_hog_floattype_t& scaleBinWidth, const size_t& binCount, const int& interp
 )
 {
 	// Private function, do not check input params
 
 	// Reset histogram for the current cell
-	for (int i = 0; i < binCount; ++i) {
+	for (size_t i = 0; i < binCount; ++i) {
 		mapHistPtr[i] = 0;
 	}
 
-	const compv_hog_floattype_t thetaMax = static_cast<compv_hog_floattype_t>(gradientSigned ? 360 : 180);
-
 	if (interp == COMPV_HOG_INTERPOLATION_BILINEAR) {
-		const int binIdxMax = binCount - 1;
-		const compv_hog_floattype_t fBinWidth = static_cast<compv_hog_floattype_t>(binWidth);
-		const compv_hog_floattype_t scaleBinWidth = 1 / fBinWidth;
+#		if ((defined(_DEBUG) && _DEBUG != 0) || (defined(DEBUG) && DEBUG != 0))
+		const int binIdxMax = static_cast<int>(binCount - 1);
+#		endif
 		for (size_t j = 0; j < cellHeight; ++j) {
 			for (size_t i = 0; i < cellWidth; ++i) {
-				const compv_hog_floattype_t theta = ((dirPtr[i] >= thetaMax)
-					? (dirPtr[i] - thetaMax)
-					: dirPtr[i]);
+				const compv_hog_floattype_t theta = std::fmod(dirPtr[i], thetaMax);
 #				if ((defined(_DEBUG) && _DEBUG != 0) || (defined(DEBUG) && DEBUG != 0))
 				COMPV_ASSERT(theta >= 0 && theta <= thetaMax);
 #				endif
 				// Bilinear interpolation: https://www2.cs.duke.edu/courses/fall15/compsci527/notes/hog.pdf, Cell Orientation Histograms
+				// Also see: https://www.learnopencv.com/histogram-of-oriented-gradients/, Step 3 : Calculate Histogram of Gradients in 8×8 cells
 				// Signed grad with 9 bins (width = 40) :  
 				//	- legs:	[20, 60, 100, 140, 180, 220, 260, 300, 340]
-				//	- leg 20:  [0   -  40]
+				//	- leg 20:  [0   -  40] , note: 0 is same as 360 (wraps around)
 				//	- leg 60:  [40  -  80]
 				//	- leg 100: [80  - 120]
 				//	- leg 140: [120 - 160]
@@ -297,22 +323,22 @@ COMPV_ERROR_CODE CompVHogStd::buildMapHistForSingleCell(compv_hog_floattype_t* m
 				//	- leg 220: [200 - 240]
 				//	- leg 260: [240 - 280]
 				//	- leg 300: [280 - 320]
-				//	- leg 340: [320 - 360]
+				//	- leg 340: [320 - 360] , note: 360 is the same as 0 (wraps around)
 				//	with 20 degrees on the right and left of each leg				
-
-				int binIdx = static_cast<int>((theta * scaleBinWidth) - 0.5f);
-				binIdx = COMPV_MATH_CLIP3(0, binIdxMax, binIdx);
-				if (!binIdx || binIdx == binIdxMax) {
-					mapHistPtr[binIdx] += magPtr[i];
-				}
-				else {
-					const compv_hog_floattype_t diff = ((theta - (binIdx * fBinWidth)) * scaleBinWidth) - 0.5f;
-					const int sign = diff >= 0 ? 1 : -1;
-					const compv_hog_floattype_t v0 = std::abs(diff);
-					const compv_hog_floattype_t v1 = 1 - v0;
-					mapHistPtr[binIdx + sign] += magPtr[i] * v0;
-					mapHistPtr[binIdx] += magPtr[i] * v1;
-				}
+				const int binIdx = static_cast<int>((theta * scaleBinWidth) - 0.5f);
+#				if ((defined(_DEBUG) && _DEBUG != 0) || (defined(DEBUG) && DEBUG != 0))
+				// binIdx = COMPV_MATH_CLIP3(0, binIdxMax, binIdx);
+				COMPV_ASSERT(binIdx >= 0 && binIdx <= binIdxMax);
+#				endif
+				const compv_hog_floattype_t diff = ((theta - (binIdx * binWidth)) * scaleBinWidth) - 0.5f;
+				const int sign = diff >= 0 ? 1 : -1;
+				const compv_hog_floattype_t v0 = diff * sign;
+				const compv_hog_floattype_t v1 = 1 - v0;
+				// "((binIdx + sign) + binCount) % binCount":
+				//	- "+binCount" to get ride of negative values (e.g. when binIdx is equal to 0 and sign equal to 1)
+				//	- "%binCount" to wrap around
+				mapHistPtr[((binIdx + sign) + binCount) % binCount] += magPtr[i] * v0;
+				mapHistPtr[binIdx] += magPtr[i] * v1;
 			}
 			magPtr += magStride;
 			dirPtr += dirStride;
@@ -321,15 +347,8 @@ COMPV_ERROR_CODE CompVHogStd::buildMapHistForSingleCell(compv_hog_floattype_t* m
 	else if (interp == COMPV_HOG_INTERPOLATION_NEAREST) {
 		for (size_t j = 0; j < cellHeight; ++j) {
 			for (size_t i = 0; i < cellWidth; ++i) {
-				const compv_hog_floattype_t theta = ((dirPtr[i] >= thetaMax)
-					? (dirPtr[i] - thetaMax)
-					: dirPtr[i]);
-
-				const int binIdx = static_cast<int>(theta / binWidth);
-#				if ((defined(_DEBUG) && _DEBUG != 0) || (defined(DEBUG) && DEBUG != 0))
-				COMPV_ASSERT(theta >= 0 && theta <= thetaMax);
-				COMPV_ASSERT(binIdx >= 0 && binIdx < binCount);
-#				endif
+				const compv_hog_floattype_t theta = std::fmod(dirPtr[i], thetaMax);
+				const int binIdx = static_cast<int>(theta * scaleBinWidth);
 				mapHistPtr[binIdx] += magPtr[i];
 			}
 			magPtr += magStride;

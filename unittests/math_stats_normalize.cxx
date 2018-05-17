@@ -39,7 +39,7 @@ static COMPV_ERROR_CODE __math_stats_normalize2D_hartley()
 		}
 
 		T tx, ty, scale;
-		COMPV_CHECK_CODE_RETURN(CompVMathStats<T>::normalize2D_hartley(px, py, test->numpoints, &tx, &ty, &scale));
+		COMPV_CHECK_CODE_RETURN(CompVMathStats::normalize2D_hartley<T>(px, py, test->numpoints, &tx, &ty, &scale));
 
 		//COMPV_DEBUG_INFO("%lf, %lf, %lf", tx, ty, scale);
 

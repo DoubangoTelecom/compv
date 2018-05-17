@@ -44,7 +44,7 @@ static COMPV_ERROR_CODE __math_stats_mse2D_homogeneous()
 			paZ_h[i] = static_cast<T>((i * 0.3) + i + 0.4);
 		}
 
-		COMPV_CHECK_CODE_RETURN(CompVMathStats<T>::mse2D_homogeneous(&mse, paX_h, paY_h, paZ_h, pbX, pbY, test->numpoints));
+		COMPV_CHECK_CODE_RETURN(CompVMathStats::mse2D_homogeneous<T>(&mse, paX_h, paY_h, paZ_h, pbX, pbY, test->numpoints));
 
 		T mse_sum = 0;
 		const T* msePtr = mse->ptr<T>();

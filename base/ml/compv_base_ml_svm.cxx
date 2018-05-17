@@ -131,7 +131,6 @@ COMPV_ERROR_CODE CompVMachineLearningSVM::train(const std::vector<int>& trainLab
 
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	svm_problem problem = { 0 };
-	svm_model* model = nullptr;
 	const char* error_msg = nullptr;
 	std::function<COMPV_ERROR_CODE(const size_t ystart, const size_t yend)> funcPtr;
 	m_vecNodeVectors.resize(trainVectors.size(), nullptr); // member variable because model use it as reference pointer

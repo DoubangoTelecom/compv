@@ -105,5 +105,11 @@
     <ClCompile Include="bits.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="hog_s.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hog_t.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

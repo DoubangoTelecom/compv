@@ -297,8 +297,10 @@ static void CompVGradientFastMagnitude_X_C(const FloatType* gx, const FloatType*
 static void CompVGradientFastMagnitude_32f_C(const compv_float32_t* gx, const compv_float32_t* gy, compv_float32_t* mag, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride) {
 	CompVGradientFastMagnitude_X_C<compv_float32_t>(gx, gy, mag, width, height, stride);
 }
+COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-function")
 static void CompVGradientFastMagnitude_64f_C(const compv_float64_t* gx, const compv_float64_t* gy, compv_float64_t* mag, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride) {
 	CompVGradientFastMagnitude_X_C<compv_float64_t>(gx, gy, mag, width, height, stride);
 }
+COMPV_GCC_DISABLE_WARNINGS_END()
 
 COMPV_NAMESPACE_END()

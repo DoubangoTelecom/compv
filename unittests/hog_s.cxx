@@ -1,6 +1,6 @@
-#include "../tests_common.h"
+#include "../tests/tests_common.h"
 
-#define TAG_TEST								"TestHogStd"
+#define TAG_TEST								"UnitTestHogStandard"
 #if COMPV_OS_WINDOWS
 #	define COMPV_TEST_IMAGE_FOLDER				"C:/Projects/GitHub/data/test_images"
 #elif COMPV_OS_OSX
@@ -13,10 +13,6 @@
 #define FILE_NAME_EQUIRECTANGULAR		"equirectangular_1282x720_gray.yuv"
 #define FILE_NAME_OPENGLBOOK			"opengl_programming_guide_8th_edition_200x258_gray.yuv"
 #define FILE_NAME_GRIOTS				"mandekalou_480x640_gray.yuv"
-
-#define LOOP_COUNT				1
-#define FILE_NAME				FILE_NAME_EQUIRECTANGULAR
-#define NORM					COMPV_HOG_BLOCK_NORM_L2HYS
 
 static const struct compv_unittest_hogstd {
 	const char* filename;
@@ -36,44 +32,43 @@ COMPV_UNITTEST_HOGSTD[] =
 };
 static const size_t COMPV_UNITTEST_HOGSTD_COUNT = sizeof(COMPV_UNITTEST_HOGSTD) / sizeof(COMPV_UNITTEST_HOGSTD[0]);
 
-COMPV_ERROR_CODE hogstd()
+static const std::string compv_unittest_norm_to_string(const int& norm) {
+	switch (norm) {
+	case COMPV_HOG_BLOCK_NORM_NONE: return "none";
+	case COMPV_HOG_BLOCK_NORM_L1: return "L1";
+	case COMPV_HOG_BLOCK_NORM_L1SQRT: return "L1Sqrt";
+	case COMPV_HOG_BLOCK_NORM_L2: return "L2";
+	case COMPV_HOG_BLOCK_NORM_L2HYS: return "L2Hyst";
+	default: return "Unknown";
+	}
+}
+static const std::string compv_unittest_hogs_to_string(const compv_unittest_hogstd* test) {
+	return std::string("filename:") + std::string(test->filename) + std::string(", norm:") + compv_unittest_norm_to_string(test->norm);
+}
+
+COMPV_ERROR_CODE unittest_hog_s()
 {
-	CompVHOGPtr hogStd;
-	const compv_unittest_hogstd* test = nullptr;
 	CompVMatPtr image, features;
-
-	// Find test
-	for (size_t i = 0; i < COMPV_UNITTEST_HOGSTD_COUNT; ++i) {
-		if (COMPV_UNITTEST_HOGSTD[i].norm == NORM && std::string(COMPV_UNITTEST_HOGSTD[i].filename).compare(FILE_NAME) == 0) {
-			test = &COMPV_UNITTEST_HOGSTD[i];
-			break;
-		}
-	}
-	if (!test) {
-		COMPV_DEBUG_ERROR_EX(TAG_TEST, "Failed to find test");
-		return COMPV_ERROR_CODE_E_NOT_FOUND;
-	}
-
+	CompVHOGPtr hogStd;
 	COMPV_CHECK_CODE_RETURN(CompVHOG::newObj(&hogStd, COMPV_HOGS_ID,
 		CompVSizeSz(8, 8), // blockSize(8, 8),
 		CompVSizeSz(4, 4), // blockStride(4, 4),
 		CompVSizeSz(8, 8), // cellSize(8, 8),
 		9, // nbins
-		test->norm, // blockNorm
+		COMPV_HOG_BLOCK_NORM_NONE, // blockNorm
 		true, // gradientSigned
 		COMPV_HOG_INTERPOLATION_BILINEAR // interpolation
 	));
-	COMPV_CHECK_CODE_RETURN(CompVImage::read(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &image));
-	
-	const uint64_t timeStart = CompVTime::nowMillis();
-	for (size_t i = 0; i < LOOP_COUNT; ++i) {
-		COMPV_CHECK_CODE_RETURN(hogStd->process(image, &features));
-	}
-	const uint64_t timeEnd = CompVTime::nowMillis();
-	COMPV_DEBUG_INFO_EX(TAG_TEST, "HogStd Elapsed time = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 
-	COMPV_DEBUG_INFO_EX(TAG_TEST, "MD5:%s", compv_tests_md5(features).c_str());
-	COMPV_CHECK_EXP_RETURN(compv_tests_md5(features).compare(test->md5) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "S-HOG failed");
+	for (size_t i = 0; i < COMPV_UNITTEST_HOGSTD_COUNT; ++i) {
+		const compv_unittest_hogstd* test = &COMPV_UNITTEST_HOGSTD[i];
+		COMPV_DEBUG_INFO_EX(TAG_TEST, "== Trying new test: HOG(STD) -> %s ==", compv_unittest_hogs_to_string(test).c_str());
+		COMPV_CHECK_CODE_RETURN(CompVImage::read(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &image));
+		COMPV_CHECK_CODE_RETURN(hogStd->setInt(COMPV_HOG_SET_INT_BLOCK_NORM, test->norm));
+		COMPV_CHECK_CODE_RETURN(hogStd->process(image, &features));
+		COMPV_CHECK_EXP_RETURN(std::string(test->md5).compare(compv_tests_md5(features)) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "HOG(STD) MD5 mismatch");
+		COMPV_DEBUG_INFO_EX(TAG_TEST, "** Test OK **");
+	}
 
 	return COMPV_ERROR_CODE_S_OK;
 }

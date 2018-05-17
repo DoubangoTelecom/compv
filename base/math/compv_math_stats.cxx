@@ -344,7 +344,6 @@ class CompVMathStatsGeneric {
 			const size_t width = ptrIn->cols();
 			const size_t height = ptrIn->rows();
 			const size_t stride = ptrIn->stride();
-			const size_t count = (width * height);
 
 			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
 			

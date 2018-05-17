@@ -52,7 +52,7 @@ public:
 private:
 	static COMPV_ERROR_CODE buildMapHistForSingleCell(compv_hog_floattype_t* mapHistPtr, const compv_hog_floattype_t* magPtr, const compv_hog_floattype_t* dirPtr,
 		const size_t& cellWidth, const size_t& cellHeight, const size_t& magStride, const size_t& dirStride,
-		const bool gradientSigned, const int binWidth, const int binCount, const int interp
+		const compv_hog_floattype_t& thetaMax, const compv_hog_floattype_t& binWidth, const compv_hog_floattype_t& scaleBinWidth, const size_t& binCount, const int& interp
 	);
 	static COMPV_ERROR_CODE buildOutputForSingleBlock(
 		const compv_hog_floattype_t* mapHistPtr, compv_hog_floattype_t* outputPtr,

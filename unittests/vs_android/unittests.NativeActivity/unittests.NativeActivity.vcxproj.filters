@@ -31,5 +31,7 @@
     <ClCompile Include="..\..\ccl_binar.cxx" />
     <ClCompile Include="..\..\ccl_mser.cxx" />
     <ClCompile Include="..\..\bits.cxx" />
+    <ClCompile Include="..\..\hog_s.cxx" />
+    <ClCompile Include="..\..\hog_t.cxx" />
   </ItemGroup>
 </Project>

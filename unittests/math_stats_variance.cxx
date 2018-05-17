@@ -41,7 +41,7 @@ static COMPV_ERROR_CODE __math_stats_variance()
 		}
 
 		T var;		
-		COMPV_CHECK_CODE_RETURN(CompVMathStats<T>::variance(pdata, test->numpoints, mean, &var));
+		COMPV_CHECK_CODE_RETURN(CompVMathStats::variance<T>(pdata, test->numpoints, mean, &var));
 
 		//COMPV_DEBUG_INFO("%lf", var);
 

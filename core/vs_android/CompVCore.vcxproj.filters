@@ -184,6 +184,12 @@
     <Filter Include="source\ccl\asm\x86">
       <UniqueIdentifier>{cb84671b-8c09-4a2f-b1ad-6083cf45cf07}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\features\hog">
+      <UniqueIdentifier>{aa0b1203-8227-449b-8771-cfe9f40e457a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\features\hog">
+      <UniqueIdentifier>{c384ef19-829a-4780-9af6-eb85e50e01ae}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\compv\core\compv_core.h">
@@ -318,6 +324,12 @@
     <ClInclude Include="..\include\compv\core\ccl\compv_core_ccl_lmser_result.h">
       <Filter>include\ccl</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\compv\core\features\hog\compv_core_feature_hog_std.h">
+      <Filter>include\features\hog</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\core\features\hog\compv_core_feature_hog_t.h">
+      <Filter>include\features\hog</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_core.cxx">
@@ -445,6 +457,12 @@
     </ClCompile>
     <ClCompile Include="..\ccl\compv_core_ccl_lmser_result.cxx">
       <Filter>source\ccl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\features\hog\compv_core_feature_hog_std.cxx">
+      <Filter>source\features\hog</Filter>
+    </ClCompile>
+    <ClCompile Include="..\features\hog\compv_core_feature_hog_t.cxx">
+      <Filter>source\features\hog</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
