@@ -336,15 +336,23 @@ COMPV_ERROR_CODE CompVHogStd::buildMapHistForSingleCell(compv_hog_floattype_t* m
 				COMPV_ASSERT(binIdx >= 0 && binIdx <= binIdxMax);
 #				endif
 				const compv_hog_floattype_t diff = ((theta - (binIdx * binWidth)) * scaleBinWidth) - 0.5f;
+#				if 0
+				COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Next (see #else) code faster");
+				const compv_hog_floattype_t avv = std::abs(magPtr[i] * diff);
+				const int binIdxNext = binIdx + ((diff >= 0) ? 1 : -1);
+				mapHistPtr[binIdxNext < 0 ? binIdxMax : (binIdxNext > binIdxMax ? 0 : binIdxNext)] += avv;
+				mapHistPtr[binIdx] += (magPtr[i] - avv);
+#				else
 				const compv_hog_floattype_t vv = magPtr[i] * diff;
 				if (diff >= 0) {
 					mapHistPtr[binIdx == binIdxMax ? 0 : (binIdx + 1)] += vv;
-					mapHistPtr[binIdx] += magPtr[i] * (1 - diff);
+					mapHistPtr[binIdx] += (magPtr[i] - vv);
 				}
 				else {
 					mapHistPtr[binIdx ? (binIdx - 1) : binIdxMax] -= vv;
-					mapHistPtr[binIdx] += magPtr[i] * (1 + diff);
+					mapHistPtr[binIdx] += (magPtr[i] + vv);
 				}
+#				endif
 			}
 			magPtr += magStride;
 			dirPtr += dirStride;

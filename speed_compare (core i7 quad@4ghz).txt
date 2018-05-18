@@ -160,3 +160,9 @@ Remarque: We're 2407% (#24 times) faster than OpenCV and 183% faster than [1].
 This is more than HD image with many regions and low params to stress the implementation.
 Please note that comparison against [1] is useless as they don't extract the points (moments only). Extracting all the points (what we and OpenCV are doing)
 is the bottleneck.
+
+=== HOG (input=equirectangular_1282x720.jpg, winSize=inputSize, blockSize=(8,8), blockStride=(4,4), cellSize=(8,8), nBins=9, norm=L2Hyst, gammaCorrection=false, nlevels=64) (1282, 720) (#1k times) ===
+CompV: 8353.ms(full optiz)
+OpenCV: 29356.ms(full optiz)
+Remarque: We're x% (almost #y times) faster.
+OpenCV uses SSE2 and pre-computed indices for the indexes. To be fair we have created the HOG descriptor outside of the loop
