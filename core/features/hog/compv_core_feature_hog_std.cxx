@@ -112,11 +112,16 @@ COMPV_ERROR_CODE CompVHogStd::get(int id, const void** valuePtrPtr, size_t value
 #endif
 }
 
+// IMPORTANT: this function *must be* thread-safe (do not modify members) as the HOG descriptor
+// instance will be shared (see ultimateText and ultimateADAS projects)
 COMPV_ERROR_CODE CompVHogStd::process(const CompVMatPtr& input, CompVMatPtrPtr output) /*Overrides(CompVHOG)*/
 {
 	COMPV_CHECK_EXP_RETURN(!input || !output, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_CHECK_EXP_RETURN(input->elmtInBytes() != sizeof(uint8_t) || input->planeCount() != 1, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "input must be 8U_1D (e.g. grayscale image)");
 
+	// TODO(dmi): for now we only support winSize = full image. In ultimateADAS and ultimateText the input already contains the full image to identify (thanks to connected components)
+	// To add support for slidding window just split the code: "pre-process" to compute mapHist and "post-process" to compute the features.
+	//		make sure not to compute the histogram map (requires magnitude and direction) several times when the windows are overlapping.
 	const CompVSizeSz szWinSize = CompVSizeSz(input->cols(), input->rows());
 	COMPV_CHECK_EXP_RETURN(szWinSize.width < m_szBlockSize.width || szWinSize.height < m_szBlockSize.height, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "winSize < blockSize");
 
@@ -307,7 +312,7 @@ COMPV_ERROR_CODE CompVHogStd::buildMapHistForSingleCell(compv_hog_floattype_t* m
 #		endif
 		for (size_t j = 0; j < cellHeight; ++j) {
 			for (size_t i = 0; i < cellWidth; ++i) {
-				const compv_hog_floattype_t theta = std::fmod(dirPtr[i], thetaMax);
+				const compv_hog_floattype_t theta = (dirPtr[i] > thetaMax) ? (dirPtr[i] - thetaMax) : dirPtr[i];
 #				if ((defined(_DEBUG) && _DEBUG != 0) || (defined(DEBUG) && DEBUG != 0))
 				COMPV_ASSERT(theta >= 0 && theta <= thetaMax);
 #				endif
@@ -347,7 +352,7 @@ COMPV_ERROR_CODE CompVHogStd::buildMapHistForSingleCell(compv_hog_floattype_t* m
 	else if (interp == COMPV_HOG_INTERPOLATION_NEAREST) {
 		for (size_t j = 0; j < cellHeight; ++j) {
 			for (size_t i = 0; i < cellWidth; ++i) {
-				const compv_hog_floattype_t theta = std::fmod(dirPtr[i], thetaMax);
+				const compv_hog_floattype_t theta = (dirPtr[i] > thetaMax) ? (dirPtr[i] - thetaMax) : dirPtr[i];
 				const int binIdx = static_cast<int>(theta * scaleBinWidth);
 				mapHistPtr[binIdx] += magPtr[i];
 			}
