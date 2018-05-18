@@ -307,7 +307,7 @@ COMPV_ERROR_CODE CompVHogStd::buildMapHistForSingleCell(compv_hog_floattype_t* m
 	}
 
 	if (interp == COMPV_HOG_INTERPOLATION_BILINEAR) {
-#		if ((defined(_DEBUG) && _DEBUG != 0) || (defined(DEBUG) && DEBUG != 0))
+#		if ((defined(_DEBUG) && _DEBUG != 0) || (defined(DEBUG) && DEBUG != 0)) || 1
 		const int binIdxMax = static_cast<int>(binCount - 1);
 #		endif
 		for (size_t j = 0; j < cellHeight; ++j) {
@@ -336,14 +336,15 @@ COMPV_ERROR_CODE CompVHogStd::buildMapHistForSingleCell(compv_hog_floattype_t* m
 				COMPV_ASSERT(binIdx >= 0 && binIdx <= binIdxMax);
 #				endif
 				const compv_hog_floattype_t diff = ((theta - (binIdx * binWidth)) * scaleBinWidth) - 0.5f;
-				const int sign = diff >= 0 ? 1 : -1;
-				const compv_hog_floattype_t v0 = diff * sign;
-				const compv_hog_floattype_t v1 = 1 - v0;
-				// "((binIdx + sign) + binCount) % binCount":
-				//	- "+binCount" to get ride of negative values (e.g. when binIdx is equal to 0 and sign equal to 1)
-				//	- "%binCount" to wrap around
-				mapHistPtr[((binIdx + sign) + binCount) % binCount] += magPtr[i] * v0;
-				mapHistPtr[binIdx] += magPtr[i] * v1;
+				const compv_hog_floattype_t vv = magPtr[i] * diff;
+				if (diff >= 0) {
+					mapHistPtr[binIdx == binIdxMax ? 0 : (binIdx + 1)] += vv;
+					mapHistPtr[binIdx] += magPtr[i] * (1 - diff);
+				}
+				else {
+					mapHistPtr[binIdx ? (binIdx - 1) : binIdxMax] -= vv;
+					mapHistPtr[binIdx] += magPtr[i] * (1 + diff);
+				}
 			}
 			magPtr += magStride;
 			dirPtr += dirStride;
