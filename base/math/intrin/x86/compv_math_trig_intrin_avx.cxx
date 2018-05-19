@@ -28,11 +28,11 @@ void CompVMathTrigFastAtan2_32f_Intrin_AVX(COMPV_ALIGNED(AVX) const compv_float3
 	static const __m256 vecAtan2_p5 = _mm256_load_ps(kAtan2P5_32f);
 	static const __m256 vecAtan2_p7 = _mm256_load_ps(kAtan2P7_32f);
 	static const __m256 vecAtan2_zero = _mm256_setzero_ps();
-	static const __m256 vecAtan2_plus90 = _mm256_set1_ps(90.f);
-	static const __m256 vecAtan2_plus180 = _mm256_set1_ps(180.f);
-	static const __m256 vecAtan2_plus360 = _mm256_set1_ps(360.f);
+	static const __m256 vecAtan2_plus90 = _mm256_load_ps(k90_32f);
+	static const __m256 vecAtan2_plus180 = _mm256_load_ps(k180_32f);
+	static const __m256 vecAtan2_plus360 = _mm256_load_ps(k360_32f);
 	static const __m256 vecAtan2_sign = _mm256_castsi256_ps(_mm256_set1_epi32(0x7fffffff)); // used to compute fabs, not needed for ARM NEON
-	const __m256 vecScale = _mm256_set1_ps(*scale1);
+	const __m256 vecAtan2_scale = _mm256_set1_ps(*scale1);
 	for (compv_uscalar_t j = 0; j < height; ++j) {
 		for (compv_uscalar_t i = 0; i < width; i += 8) {
 			// ax = std::abs(x[i]), ay = std::abs(y[i]);
@@ -73,7 +73,7 @@ void CompVMathTrigFastAtan2_32f_Intrin_AVX(COMPV_ALIGNED(AVX) const compv_float3
 			vec0 = _mm256_or_ps(_mm256_andnot_ps(vecMask, vec0), vec1);
 
 			// r[i] = a * scale
-			_mm256_store_ps(&r[i], _mm256_mul_ps(vec0, vecScale));
+			_mm256_store_ps(&r[i], _mm256_mul_ps(vec0, vecAtan2_scale));
 		}
 		y += stride;
 		x += stride;
