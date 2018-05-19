@@ -16,8 +16,15 @@ COMPV_BASE_API const float kfMathTrigPiTimes2 = 2.f * kfMathTrigPi; // PI * 2
 COMPV_BASE_API const float kfMathTrigPiOver2 = kfMathTrigPi / 2.f; // PI / 2
 COMPV_BASE_API const float kfMathTrigPiOver180 = kfMathTrigPi / 180.f; // PI/180
 COMPV_BASE_API const float kfMathTrig180OverPi = 180.f / kfMathTrigPi; // 180/PI
+
 COMPV_BASE_API const float kMathTrigC1 = 0.99940307f;
 COMPV_BASE_API const float kMathTrigC2 = -0.49558072f;
 COMPV_BASE_API const float kMathTrigC3 = 0.03679168f;
+
+COMPV_BASE_API const double kMathTrigAtan2Eps = 2.2204460492503131e-016;
+COMPV_BASE_API const float kMathTrigAtan2P1 = 57.2836266f;
+COMPV_BASE_API const float kMathTrigAtan2P3 = -18.6674461f;
+COMPV_BASE_API const float kMathTrigAtan2P5 = 8.91400051f;
+COMPV_BASE_API const float kMathTrigAtan2P7 = -2.53972459f;
 
 COMPV_NAMESPACE_END()

@@ -136,6 +136,32 @@ COMPV_BASE_API COMPV_ALIGN_DEFAULT() int16_t k4400_16s[] = {
 	4400, 4400, 4400, 4400, 4400, 4400, 4400, 4400, 4400, 4400, 4400, 4400, 4400, 4400, 4400, 4400,
 };
 
+static const COMPV_NAMESPACE::compv_float32_t atan2_eps = static_cast<COMPV_NAMESPACE::compv_float32_t>(COMPV_NAMESPACE::kMathTrigAtan2Eps);
+static const COMPV_NAMESPACE::compv_float32_t atan2_p1 = static_cast<COMPV_NAMESPACE::compv_float32_t>(COMPV_NAMESPACE::kMathTrigAtan2P1);
+static const COMPV_NAMESPACE::compv_float32_t atan2_p3 = static_cast<COMPV_NAMESPACE::compv_float32_t>(COMPV_NAMESPACE::kMathTrigAtan2P3);
+static const COMPV_NAMESPACE::compv_float32_t atan2_p5 = static_cast<COMPV_NAMESPACE::compv_float32_t>(COMPV_NAMESPACE::kMathTrigAtan2P5);
+static const COMPV_NAMESPACE::compv_float32_t atan2_p7 = static_cast<COMPV_NAMESPACE::compv_float32_t>(COMPV_NAMESPACE::kMathTrigAtan2P7);
+COMPV_BASE_API COMPV_ALIGN_DEFAULT() COMPV_NAMESPACE::compv_float32_t kAtan2Eps_32f[] = {
+	atan2_eps, atan2_eps, atan2_eps, atan2_eps,
+	atan2_eps, atan2_eps, atan2_eps, atan2_eps,
+};
+COMPV_BASE_API COMPV_ALIGN_DEFAULT() COMPV_NAMESPACE::compv_float32_t kAtan2P1_32f[] = {
+	atan2_p1, atan2_p1, atan2_p1, atan2_p1,
+	atan2_p1, atan2_p1, atan2_p1, atan2_p1,
+};
+COMPV_BASE_API COMPV_ALIGN_DEFAULT() COMPV_NAMESPACE::compv_float32_t kAtan2P3_32f[] = {
+	atan2_p3, atan2_p3, atan2_p3, atan2_p3,
+	atan2_p3, atan2_p3, atan2_p3, atan2_p3,
+};
+COMPV_BASE_API COMPV_ALIGN_DEFAULT() COMPV_NAMESPACE::compv_float32_t kAtan2P5_32f[] = {
+	atan2_p5, atan2_p5, atan2_p5, atan2_p5,
+	atan2_p5, atan2_p5, atan2_p5, atan2_p5,
+};
+COMPV_BASE_API COMPV_ALIGN_DEFAULT() COMPV_NAMESPACE::compv_float32_t kAtan2P7_32f[] = {
+	atan2_p7, atan2_p7, atan2_p7, atan2_p7,
+	atan2_p7, atan2_p7, atan2_p7, atan2_p7,
+};
+
 COMPV_BASE_API COMPV_ALIGN_DEFAULT() COMPV_NAMESPACE::compv_float32_t k43_32f[] = {
 	43.f, 43.f, 43.f, 43.f,
 	43.f, 43.f, 43.f, 43.f,

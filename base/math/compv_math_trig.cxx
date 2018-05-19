@@ -7,6 +7,10 @@
 #include "compv/base/math/compv_math_trig.h"
 #include "compv/base/math/compv_math_utils.h"
 #include "compv/base/parallel/compv_parallel.h"
+#include "compv/base/compv_cpu.h"
+
+#include "compv/base/math/intrin/x86/compv_math_trig_intrin_sse2.h"
+#include "compv/base/math/intrin/x86/compv_math_trig_intrin_avx.h"
 
 #define COMPV_THIS_CLASSNAME	"CompVMathStats"
 
@@ -216,6 +220,12 @@ COMPV_ERROR_CODE CompVMathTrig::fastAtan2(const CompVMatPtr& y, const CompVMatPt
 		void(*CompVMathTrigFastAtan2_32f)(const compv_float32_t* y, const compv_float32_t* x, compv_float32_t* r, const compv_float32_t* scale1, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
 			= CompVMathTrigFastAtan2_32f_C;
 #if COMPV_ARCH_X86
+		if (width >= 4 && CompVCpu::isEnabled(compv::kCpuFlagSSE2) && x->isAlignedSSE() && y->isAlignedSSE() && r_->isAlignedSSE()) {
+			COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathTrigFastAtan2_32f = CompVMathTrigFastAtan2_32f_Intrin_SSE2);
+		}
+		if (width >= 8 && CompVCpu::isEnabled(compv::kCpuFlagAVX) && x->isAlignedAVX() && y->isAlignedAVX() && r_->isAlignedAVX()) {
+			COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathTrigFastAtan2_32f = CompVMathTrigFastAtan2_32f_Intrin_AVX);
+		}
 #elif COMPV_ARCH_ARM
 #endif
 		COMPV_CHECK_CODE_RETURN((CompVMathTrigFastAtan2_X<compv_float32_t>(y->ptr<const compv_float32_t>(), x->ptr<const compv_float32_t>(), r_->ptr<compv_float32_t>(), static_cast<compv_float32_t>(angleInDeg ? 1.0 : M_PI / 180.0),
@@ -226,35 +236,37 @@ COMPV_ERROR_CODE CompVMathTrig::fastAtan2(const CompVMatPtr& y, const CompVMatPt
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-static const  compv_float64_t atan2_eps = 2.2204460492503131e-016;
-static const compv_float32_t atan2_p1 = 0.9997878412794807f*(compv_float32_t)(180 / M_PI);
-static const compv_float32_t atan2_p3 = -0.3258083974640975f*(compv_float32_t)(180 / M_PI);
-static const compv_float32_t atan2_p5 = 0.1555786518463281f*(compv_float32_t)(180 / M_PI);
-static const compv_float32_t atan2_p7 = -0.04432655554792128f*(compv_float32_t)(180 / M_PI);
-
+// Copyright: Un-optimised code based on OpenCV - Not used at all unless SIMD and GPU are disabled (must never happen)
 template<typename FloatType>
 static void CompVMathTrigFastAtan2_X_C(const FloatType* y, const FloatType* x, FloatType* r, const FloatType* scale1, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
+	static const FloatType atan2_eps = static_cast<FloatType>(kMathTrigAtan2Eps);
+	static const FloatType atan2_p1 = static_cast<FloatType>(kMathTrigAtan2P1);
+	static const FloatType atan2_p3 = static_cast<FloatType>(kMathTrigAtan2P3);
+	static const FloatType atan2_p5 = static_cast<FloatType>(kMathTrigAtan2P5);
+	static const FloatType atan2_p7 = static_cast<FloatType>(kMathTrigAtan2P7);
 	const FloatType& scale = *scale1;
 	for (compv_uscalar_t j = 0; j < height; ++j) {
 		for (compv_uscalar_t i = 0; i < width; ++i) {
 			const FloatType ax = std::abs(x[i]), ay = std::abs(y[i]);
 			FloatType a, c, c2;
 			if (ax >= ay) {
-				c = ay / (ax + static_cast<FloatType>(atan2_eps));
+				c = ay / (ax + atan2_eps);
 				c2 = c*c;
 				a = (((atan2_p7*c2 + atan2_p5)*c2 + atan2_p3)*c2 + atan2_p1)*c;
 			}
 			else {
-				c = ax / (ay + static_cast<FloatType>(atan2_eps));
+				c = ax / (ay + atan2_eps);
 				c2 = c*c;
 				a = 90.f - (((atan2_p7*c2 + atan2_p5)*c2 + atan2_p3)*c2 + atan2_p1)*c;
 			}
-			if (x[i] < 0)
+			if (x[i] < 0) {
 				a = 180.f - a;
-			if (y[i] < 0)
+			}
+			if (y[i] < 0) {
 				a = 360.f - a;
+			}
 			r[i] = a * scale;
 		}
 		y += stride;
