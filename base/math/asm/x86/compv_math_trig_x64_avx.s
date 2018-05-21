@@ -13,6 +13,7 @@
 COMPV_YASM_DEFAULT_REL
 
 global sym(CompVMathTrigFastAtan2_32f_Asm_X64_AVX)
+global sym(CompVMathTrigFastAtan2_32f_Asm_X64_FMA3_AVX)
 
 section .data
 	extern sym(kAtan2Eps_32f)
@@ -34,7 +35,8 @@ section .text
 ; arg(4) -> compv_uscalar_t width
 ; arg(5) -> compv_uscalar_t height
 ; arg(6) -> COMPV_ALIGNED(AVX) compv_uscalar_t stride
-sym(CompVMathTrigFastAtan2_32f_Asm_X64_AVX)
+; %1 -> 0: FMA3 not supported, 1: FMA3 supported
+%macro CompVMathTrigFastAtan2_32f_Macro_X64_AVX 1
 	vzeroupper
 	push rbp
 	mov rbp, rsp
@@ -59,7 +61,7 @@ sym(CompVMathTrigFastAtan2_32f_Asm_X64_AVX)
 	%define vecAtan2_plus180	ymm4
 	%define vecAtan2_plus360	ymm5
 	%define vecAtan2_eps		ymm6
-	%define vecAtan2_p1			ymm7
+	%define vecAtan2_p7			ymm7
 	%define vecC				ymm8
 	%define vecC2				ymm9
 	%define vecAx				ymm10
@@ -83,7 +85,7 @@ sym(CompVMathTrigFastAtan2_32f_Asm_X64_AVX)
 	vmovaps vecAtan2_plus180, [sym(k180_32f)]
 	vmovaps vecAtan2_plus360, [sym(k360_32f)]
 	vmovaps vecAtan2_eps, [sym(kAtan2Eps_32f)]
-	vmovaps vecAtan2_p1, [sym(kAtan2P1_32f)]
+	vmovaps vecAtan2_p7, [sym(kAtan2P7_32f)]
 
 	mov y, arg(0)
 	mov x, arg(1)
@@ -125,13 +127,21 @@ sym(CompVMathTrigFastAtan2_32f_Asm_X64_AVX)
 			vmulps vecC2, vecC, vecC
 
 			;; a = (((atan2_p7*c2 + atan2_p5)*c2 + atan2_p3)*c2 + atan2_p1)*c ;;
-			vmulps vec0, vecC2, [sym(kAtan2P7_32f)]
-			vaddps vec0, vec0, [sym(kAtan2P5_32f)]
-			vmulps vec0, vec0, vecC2
-			vaddps vec0, vec0, [sym(kAtan2P3_32f)]
-			vmulps vec0, vec0, vecC2
-			vaddps vec0, vec0, vecAtan2_p1
-			vmulps vec0, vec0, vecC
+			%if %1
+				vmovaps vec0, vecAtan2_p7
+				vfmadd213ps vec0, vecC2, [sym(kAtan2P5_32f)]
+				vfmadd213ps vec0, vecC2, [sym(kAtan2P3_32f)]
+				vfmadd213ps vec0, vecC2, [sym(kAtan2P1_32f)]
+				vmulps vec0, vec0, vecC
+			%else
+				vmulps vec0, vecC2, vecAtan2_p7
+				vaddps vec0, vec0, [sym(kAtan2P5_32f)]
+				vmulps vec0, vec0, vecC2
+				vaddps vec0, vec0, [sym(kAtan2P3_32f)]
+				vmulps vec0, vec0, vecC2
+				vaddps vec0, vec0, [sym(kAtan2P1_32f)]
+				vmulps vec0, vec0, vecC
+			%endif
 
 			;; if (!(ax >= ay)) a = 90 - a ;;
 			vsubps vec2, vecAtan2_plus90, vec0
@@ -186,7 +196,7 @@ sym(CompVMathTrigFastAtan2_32f_Asm_X64_AVX)
 	%undef vecAtan2_plus180	
 	%undef vecAtan2_plus360	
 	%undef vecAtan2_eps		
-	%undef vecAtan2_p1			
+	%undef vecAtan2_p7			
 	%undef vecC				
 	%undef vecC2				
 	%undef vecAx				
@@ -203,6 +213,15 @@ sym(CompVMathTrigFastAtan2_32f_Asm_X64_AVX)
 	pop rbp
 	vzeroupper
 	ret
+%endmacro
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(CompVMathTrigFastAtan2_32f_Asm_X64_AVX)
+	CompVMathTrigFastAtan2_32f_Macro_X64_AVX 0
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(CompVMathTrigFastAtan2_32f_Asm_X64_FMA3_AVX)
+	CompVMathTrigFastAtan2_32f_Macro_X64_AVX 1
 
 
 %endif ; COMPV_YASM_ABI_IS_64BIT

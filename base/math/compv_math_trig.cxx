@@ -22,6 +22,7 @@ COMPV_NAMESPACE_BEGIN()
 #if COMPV_ASM && COMPV_ARCH_X64
 COMPV_EXTERNC void CompVMathTrigFastAtan2_32f_Asm_X64_SSE2(COMPV_ALIGNED(SSE) const compv_float32_t* y, COMPV_ALIGNED(SSE) const compv_float32_t* x, COMPV_ALIGNED(SSE) compv_float32_t* r, const compv_float32_t* scale1, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
 COMPV_EXTERNC void CompVMathTrigFastAtan2_32f_Asm_X64_AVX(COMPV_ALIGNED(AVX) const compv_float32_t* y, COMPV_ALIGNED(AVX) const compv_float32_t* x, COMPV_ALIGNED(AVX) compv_float32_t* r, const compv_float32_t* scale1, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride);
+COMPV_EXTERNC void CompVMathTrigFastAtan2_32f_Asm_X64_FMA3_AVX(COMPV_ALIGNED(AVX) const compv_float32_t* y, COMPV_ALIGNED(AVX) const compv_float32_t* x, COMPV_ALIGNED(AVX) compv_float32_t* r, const compv_float32_t* scale1, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride);
 #endif /* COMPV_ASM && COMPV_ARCH_X64 */
 
 static void CompVMathTrigFastAtan2_32f_C(const compv_float32_t* y, const compv_float32_t* x, compv_float32_t* r, const compv_float32_t* scale1, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
@@ -232,6 +233,9 @@ COMPV_ERROR_CODE CompVMathTrig::fastAtan2(const CompVMatPtr& y, const CompVMatPt
 		if (width >= 8 && CompVCpu::isEnabled(compv::kCpuFlagAVX) && x->isAlignedAVX() && y->isAlignedAVX() && r_->isAlignedAVX()) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathTrigFastAtan2_32f = CompVMathTrigFastAtan2_32f_Intrin_AVX);
 			COMPV_EXEC_IFDEF_ASM_X64(CompVMathTrigFastAtan2_32f = CompVMathTrigFastAtan2_32f_Asm_X64_AVX);
+			if (CompVCpu::isEnabled(compv::kCpuFlagFMA3)) {
+				COMPV_EXEC_IFDEF_ASM_X64(CompVMathTrigFastAtan2_32f = CompVMathTrigFastAtan2_32f_Asm_X64_FMA3_AVX);
+			}
 		}
 #elif COMPV_ARCH_ARM
 #endif
