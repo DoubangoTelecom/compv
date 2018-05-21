@@ -9,6 +9,7 @@
 
 #include "compv/core/compv_core_config.h"
 #include "compv/core/compv_core_common.h"
+#include "compv/core/features/hog/compv_core_feature_hog_common_norm.h"
 #include "compv/base/compv_memz.h"
 #include "compv/base/compv_allocators.h"
 #include "compv/base/compv_features.h"
@@ -21,6 +22,8 @@ COMPV_NAMESPACE_BEGIN()
 
 typedef compv_float32_t compv_hog_floattype_t;
 typedef std::vector<compv_hog_floattype_t> compv_hog_vector_t;
+
+COMPV_OBJECT_DECLARE_PTRS(HogStd)
 
 class CompVHogStd : public CompVHOG
 {
@@ -58,10 +61,6 @@ private:
 		const compv_hog_floattype_t* mapHistPtr, compv_hog_floattype_t* outputPtr,
 		const size_t& numCellsPerBlockY, const size_t& numBinsPerBlockX, const size_t& mapHistStride
 	);
-	static COMPV_ERROR_CODE normL1(compv_hog_floattype_t* inOutPtr, const size_t& count);
-	static COMPV_ERROR_CODE normL1Sqrt(compv_hog_floattype_t* inOutPtr, const size_t& count);
-	static COMPV_ERROR_CODE normL2(compv_hog_floattype_t* inOutPtr, const size_t& count);
-	static COMPV_ERROR_CODE normL2Hys(compv_hog_floattype_t* inOutPtr, const size_t& count);
 
 private:
 	CompVSizeSz m_szBlockSize;
@@ -71,6 +70,16 @@ private:
 	int m_nBlockNorm;
 	bool m_bGradientSigned;
 	int m_nInterp;
+	struct {
+		void(*L1)(compv_hog_floattype_t* inOutPtr, const compv_hog_floattype_t* eps1, const compv_uscalar_t count) = CompVHogCommonNormL1_32f_C;
+		void(*L1_9)(compv_hog_floattype_t* inOutPtr, const compv_hog_floattype_t* eps1, const compv_uscalar_t count) = CompVHogCommonNormL1_32f_C;
+		void(*L1Sqrt)(compv_hog_floattype_t* inOutPtr, const compv_hog_floattype_t* eps1, const compv_uscalar_t count) = CompVHogCommonNormL1Sqrt_32f_C;
+		void(*L1Sqrt_9)(compv_hog_floattype_t* inOutPtr, const compv_hog_floattype_t* eps1, const compv_uscalar_t count) = CompVHogCommonNormL1Sqrt_32f_C;
+		void(*L2)(compv_hog_floattype_t* inOutPtr, const compv_hog_floattype_t* eps1, const compv_uscalar_t count) = CompVHogCommonNormL2_32f_C;
+		void(*L2_9)(compv_hog_floattype_t* inOutPtr, const compv_hog_floattype_t* eps1, const compv_uscalar_t count) = CompVHogCommonNormL2_32f_C;
+		void(*L2Hys)(compv_hog_floattype_t* inOutPtr, const compv_hog_floattype_t* eps1, const compv_uscalar_t count) = CompVHogCommonNormL2Hys_32f_C;
+		void(*L2Hys_9)(compv_hog_floattype_t* inOutPtr, const compv_hog_floattype_t* eps1, const compv_uscalar_t count) = CompVHogCommonNormL2Hys_32f_C;
+	} fptrs_norm;
 };
 
 COMPV_NAMESPACE_END()

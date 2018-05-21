@@ -9,10 +9,14 @@
 #include "compv/base/math/compv_math_utils.h"
 #include "compv/base/parallel/compv_parallel.h"
 
+#include "compv/core/features/hog/intrin/x86/compv_core_feature_hog_common_norm_intrin_sse2.h"
+
 #define COMPV_THIS_CLASSNAME	"CompVHogStd"
 
 #define COMPV_HOG_BUILD_CELL_HIST_SAMPLES_PER_THREAD			(4 * 4) // unit=cells
 #define COMPV_HOG_BUILD_BLOCK_DESC_SAMPLES_PER_THREAD			(1 * 1) // unit=cells
+
+#define COMPV_HOG_FAST_BLOCK_9									1
 
 // Documentation (HOG Standard):
 //	- https://en.wikipedia.org/wiki/Histogram_of_oriented_gradients
@@ -238,12 +242,14 @@ COMPV_ERROR_CODE CompVHogStd::process(const CompVMatPtr& input, CompVMatPtrPtr o
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_hog_floattype_t>(&output_, 1, nOutSize));
 
 	// Set norm function
-	COMPV_ERROR_CODE(*normFunc)(compv_hog_floattype_t* inOutPtr, const size_t& count) = nullptr;
+	void(*fptr_norm)(compv_hog_floattype_t* inOutPtr, const compv_hog_floattype_t* eps1, const compv_uscalar_t count) = nullptr;
+	const compv_hog_floattype_t eps = (m_nBlockNorm == COMPV_HOG_BLOCK_NORM_L2 || m_nBlockNorm == COMPV_HOG_BLOCK_NORM_L2HYS)
+		? COMPV_HOG_EPSILON2 : COMPV_HOG_EPSILON;
 	switch (m_nBlockNorm) {
-	case COMPV_HOG_BLOCK_NORM_L1: normFunc = CompVHogStd::normL1; break;
-	case COMPV_HOG_BLOCK_NORM_L1SQRT: normFunc = CompVHogStd::normL1Sqrt; break;
-	case COMPV_HOG_BLOCK_NORM_L2: normFunc = CompVHogStd::normL2; break;
-	case COMPV_HOG_BLOCK_NORM_L2HYS: normFunc = CompVHogStd::normL2Hys; break;
+	case COMPV_HOG_BLOCK_NORM_L1: fptr_norm = (nBlockBinsCount == 9) ? fptrs_norm.L1_9 : fptrs_norm.L1; break;
+	case COMPV_HOG_BLOCK_NORM_L1SQRT: fptr_norm = (nBlockBinsCount == 9) ? fptrs_norm.L1Sqrt_9 : fptrs_norm.L1Sqrt; break;
+	case COMPV_HOG_BLOCK_NORM_L2: fptr_norm = (nBlockBinsCount == 9) ? fptrs_norm.L2_9 : fptrs_norm.L2; break;
+	case COMPV_HOG_BLOCK_NORM_L2HYS: fptr_norm = (nBlockBinsCount == 9) ? fptrs_norm.L2Hys_9 : fptrs_norm.L2Hys; break;
 	case COMPV_HOG_BLOCK_NORM_NONE: break;
 	default: COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED, "Supported norm functions: none,L1"); break;
 	}
@@ -264,8 +270,8 @@ COMPV_ERROR_CODE CompVHogStd::process(const CompVMatPtr& input, CompVMatPtrPtr o
 					numCellsPerBlockY, numBinsPerBlockX, nMapHistStride
 				));
 				// Normalize the output vector
-				if (normFunc) {
-					COMPV_CHECK_CODE_RETURN(normFunc(outputPtr, nBlockBinsCount));
+				if (fptr_norm) {
+					fptr_norm(outputPtr, &eps, nBlockBinsCount);
 				}
 				outputPtr += nBlockBinsCount;
 			}
@@ -410,71 +416,6 @@ COMPV_ERROR_CODE CompVHogStd::buildOutputForSingleBlock(
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVHogStd::normL1(compv_hog_floattype_t* inOutPtr, const size_t& count)
-{
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
-
-	// Compute den = sum(vector) + eps
-	compv_hog_floattype_t den = 0; // vector contains small values -> no need to use double for accumulation
-	for (size_t i = 0; i < count; ++i) {
-		den += inOutPtr[i]; // no need for abs because hist are always >= 0
-	}
-	den = 1 / (den + COMPV_HOG_EPSILON);
-	// Compute norm = v * (1 / den)
-	for (size_t i = 0; i < count; ++i) {
-		inOutPtr[i] *= den;
-	}
-	return COMPV_ERROR_CODE_S_OK;
-}
-
-COMPV_ERROR_CODE CompVHogStd::normL1Sqrt(compv_hog_floattype_t* inOutPtr, const size_t& count)
-{
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
-
-	// Compute den = sum(vector) + eps
-	compv_hog_floattype_t den = 0; // vector contains small values -> no need to use double for accumulation
-	for (size_t i = 0; i < count; ++i) {
-		den += inOutPtr[i]; // no need for abs because hist are always >= 0
-	}
-	den = 1 / (den + COMPV_HOG_EPSILON);
-	// Compute norm = sqrt(v * (1 / den))
-	for (size_t i = 0; i < count; ++i) {
-		inOutPtr[i] = std::sqrt(inOutPtr[i] * den);
-	}
-	return COMPV_ERROR_CODE_S_OK;
-}
-
-COMPV_ERROR_CODE CompVHogStd::normL2(compv_hog_floattype_t* inOutPtr, const size_t& count)
-{
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
-
-	// Compute den = L2(vector)^2 + eps^2
-	compv_hog_floattype_t den = 0; // vector contains small values -> no need to use double for accumulation
-	for (size_t i = 0; i < count; ++i) {
-		den += inOutPtr[i] * inOutPtr[i];
-	}
-	den = 1 / std::sqrt(den + COMPV_HOG_EPSILON2);
-	// Compute norm = v * (1 / den)
-	for (size_t i = 0; i < count; ++i) {
-		inOutPtr[i] *= den;
-	}
-	return COMPV_ERROR_CODE_S_OK;
-}
-
-COMPV_ERROR_CODE CompVHogStd::normL2Hys(compv_hog_floattype_t* inOutPtr, const size_t& count)
-{
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
-
-	COMPV_CHECK_CODE_RETURN(CompVHogStd::normL2(inOutPtr, count));
-	for (size_t i = 0; i < count; ++i) {
-		if (inOutPtr[i] > 0.2f) {
-			inOutPtr[i] = 0.2f;
-		}
-	}
-	COMPV_CHECK_CODE_RETURN(CompVHogStd::normL2(inOutPtr, count));
-	return COMPV_ERROR_CODE_S_OK;
-}
-
 COMPV_ERROR_CODE CompVHogStd::newObj(
 	CompVHOGPtrPtr hog,
 	const CompVSizeSz& blockSize COMPV_DEFAULT(CompVSizeSz(16, 16)),
@@ -487,8 +428,49 @@ COMPV_ERROR_CODE CompVHogStd::newObj(
 {
 	COMPV_CHECK_EXP_RETURN(!hog, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_CHECK_CODE_RETURN(CompVHOG::checkParams(blockSize, blockStride, cellSize, nbins, blockNorm, gradientSigned));
-	CompVHOGPtr hog_ = new CompVHogStd(blockSize, blockStride, cellSize, nbins, blockNorm, gradientSigned, interp);
+	CompVHogStdPtr hog_ = new CompVHogStd(blockSize, blockStride, cellSize, nbins, blockNorm, gradientSigned, interp);
 	COMPV_CHECK_EXP_RETURN(!hog_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+
+#if COMPV_ARCH_X86
+	if (CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
+		/* == L1 == */
+		COMPV_EXEC_IFDEF_INTRIN_X86(hog_->fptrs_norm.L1 = CompVHogCommonNormL1_32f_Intrin_SSE2);
+#		if COMPV_HOG_FAST_BLOCK_9
+		COMPV_EXEC_IFDEF_INTRIN_X86(hog_->fptrs_norm.L1_9 = CompVHogCommonNormL1_9_32f_Intrin_SSE2);
+		//COMPV_EXEC_IFDEF_ASM_X64(hog_->fptrs_norm.L1_9 = );
+#		else
+		COMPV_EXEC_IFDEF_INTRIN_X86(hog_->fptrs_norm.L1_9 = CompVHogCommonNormL1_32f_Intrin_SSE2);
+#		endif		
+
+		/* == L1Sqrt == */
+		COMPV_EXEC_IFDEF_INTRIN_X86(hog_->fptrs_norm.L1Sqrt = CompVHogCommonNormL1Sqrt_32f_Intrin_SSE2);
+#		if COMPV_HOG_FAST_BLOCK_9
+		COMPV_EXEC_IFDEF_INTRIN_X86(hog_->fptrs_norm.L1Sqrt_9 = CompVHogCommonNormL1Sqrt_9_32f_Intrin_SSE2);
+		//COMPV_EXEC_IFDEF_ASM_X64(hog_->fptrs_norm.L1Sqrt_9 = );
+#		else
+		COMPV_EXEC_IFDEF_INTRIN_X86(hog_->fptrs_norm.L1Sqrt_9 = CompVHogCommonNormL1Sqrt_32f_Intrin_SSE2);
+#		endif
+
+		/* == L2 == */
+		COMPV_EXEC_IFDEF_INTRIN_X86(hog_->fptrs_norm.L2 = CompVHogCommonNormL2_32f_Intrin_SSE2);
+#		if COMPV_HOG_FAST_BLOCK_9
+		COMPV_EXEC_IFDEF_INTRIN_X86(hog_->fptrs_norm.L2_9 = CompVHogCommonNormL2_9_32f_Intrin_SSE2);
+		//COMPV_EXEC_IFDEF_ASM_X64(hog_->fptrs_norm.L2_9 = );
+#		else
+		COMPV_EXEC_IFDEF_INTRIN_X86(hog_->fptrs_norm.L2_9 = CompVHogCommonNormL2_32f_Intrin_SSE2);
+#		endif
+
+		/* == L2Hys == */
+		COMPV_EXEC_IFDEF_INTRIN_X86(hog_->fptrs_norm.L2Hys = CompVHogCommonNormL2Hys_32f_Intrin_SSE2);
+#		if COMPV_HOG_FAST_BLOCK_9
+		COMPV_EXEC_IFDEF_INTRIN_X86(hog_->fptrs_norm.L2Hys_9 = CompVHogCommonNormL2Hys_9_32f_Intrin_SSE2);
+		//COMPV_EXEC_IFDEF_ASM_X64(hog_->fptrs_norm.L2Hys_9 = );
+#		else
+		COMPV_EXEC_IFDEF_INTRIN_X86(hog_->fptrs_norm.L2Hys_9 = CompVHogCommonNormL2Hys_32f_Intrin_SSE2);
+#		endif
+	}
+#elif COMPV_ARCH_ARM
+#endif
 
 	*hog = *hog_;
 	return COMPV_ERROR_CODE_S_OK;

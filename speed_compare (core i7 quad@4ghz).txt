@@ -162,7 +162,7 @@ Please note that comparison against [1] is useless as they don't extract the poi
 is the bottleneck.
 
 === HOG (input=equirectangular_1282x720.jpg, winSize=inputSize, blockSize=(8,8), blockStride=(4,4), cellSize=(8,8), nBins=9, norm=L2Hyst, gammaCorrection=false, nlevels=64) (1282, 720) (#1k times) ===
-CompV: 7391.ms(full optiz)
+CompV: 7154.ms(full optiz)
 OpenCV: 29356.ms(full optiz)
 Remarque: We're x% (almost #y times) faster.
 OpenCV uses SSE2 and pre-computed indices for the indexes. To be fair we have created the HOG descriptor outside of the loop to make sure OpenCV will reuse the computed indices.

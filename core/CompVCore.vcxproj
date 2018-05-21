@@ -254,6 +254,12 @@
     <ClCompile Include="features\fast\intrin\x86\compv_core_feature_fast_dete_intrin_sse2.cxx" />
     <ClCompile Include="features\hog\compv_core_feature_hog_std.cxx" />
     <ClCompile Include="features\hog\compv_core_feature_hog_t.cxx" />
+    <ClCompile Include="features\hog\intrin\x86\compv_core_feature_hog_common_norm_intrin_sse2.cxx">
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+    </ClCompile>
     <ClCompile Include="features\hough\compv_core_feature_houghkht.cxx" />
     <ClCompile Include="features\hough\compv_core_feature_houghsht.cxx" />
     <ClCompile Include="features\hough\intrin\arm\compv_core_feature_houghkht_intrin_neon.cxx" />
@@ -323,8 +329,10 @@
     <ClInclude Include="include\compv\core\features\fast\compv_core_feature_fast_dete.h" />
     <ClInclude Include="include\compv\core\features\fast\intrin\x86\compv_core_feature_fast_dete_intrin_avx2.h" />
     <ClInclude Include="include\compv\core\features\fast\intrin\x86\compv_core_feature_fast_dete_intrin_sse2.h" />
+    <ClInclude Include="include\compv\core\features\hog\compv_core_feature_hog_common_norm.h" />
     <ClInclude Include="include\compv\core\features\hog\compv_core_feature_hog_std.h" />
     <ClInclude Include="include\compv\core\features\hog\compv_core_feature_hog_t.h" />
+    <ClInclude Include="include\compv\core\features\hog\intrin\x86\compv_core_feature_hog_common_norm_intrin_sse2.h" />
     <ClInclude Include="include\compv\core\features\hough\compv_core_feature_houghkht.h" />
     <ClInclude Include="include\compv\core\features\hough\compv_core_feature_houghsht.h" />
     <ClInclude Include="include\compv\core\features\hough\intrin\arm\compv_core_feature_houghsht_intrin_neon.h" />
@@ -433,6 +441,13 @@
     </YASM>
   </ItemGroup>
   <ItemGroup>
+    <YASM Include="features\hog\asm\x86\compv_core_feature_hog_common_norm_x64_sse.s">
+      <FileType>Document</FileType>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)../base/asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)../base/asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)../base/asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)../base/asm/x86;%(IncludePaths)</IncludePaths>
+    </YASM>
     <YASM Include="features\hough\asm\x86\compv_core_feature_houghkht_x64_avx.s">
       <FileType>Document</FileType>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)../base/asm/x86;%(IncludePaths)</IncludePaths>

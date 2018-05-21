@@ -189,6 +189,33 @@
     <Filter Include="Source Files\features\hog">
       <UniqueIdentifier>{f1fc489e-ec16-44f7-bfbf-28fbd19bde3f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\features\hog\intrin">
+      <UniqueIdentifier>{09368e95-53e5-4a93-9cfe-c86559288eb4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\features\hog\intrin\x86">
+      <UniqueIdentifier>{f05bc403-7126-445b-b975-e0fa0af9f8d5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\features\hog\intrin\arm">
+      <UniqueIdentifier>{db56f2ac-753e-4031-8fa4-ba534c22b980}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\features\hog\intrin">
+      <UniqueIdentifier>{14a27926-6efd-468f-b48b-c0e9b311629f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\features\hog\intrin\x86">
+      <UniqueIdentifier>{6e9d331f-e610-4094-aada-aafa935d7576}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\features\hog\intrin\arm">
+      <UniqueIdentifier>{3a0aa278-2192-438a-a540-846c48f0218a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\features\hog\asm">
+      <UniqueIdentifier>{4245cf43-3166-484a-bc12-ec02b9167904}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\features\hog\asm\x86">
+      <UniqueIdentifier>{15aa6955-249e-4d28-a6a4-dc2e0e2144e7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\features\hog\asm\arm">
+      <UniqueIdentifier>{e01420a6-0407-4600-9ce9-06b142e654e6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_core.cxx">
@@ -328,6 +355,9 @@
     </ClCompile>
     <ClCompile Include="features\hog\compv_core_feature_hog_t.cxx">
       <Filter>Source Files\features\hog</Filter>
+    </ClCompile>
+    <ClCompile Include="features\hog\intrin\x86\compv_core_feature_hog_common_norm_intrin_sse2.cxx">
+      <Filter>Source Files\features\hog\intrin\x86</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -469,6 +499,12 @@
     <ClInclude Include="include\compv\core\features\hog\compv_core_feature_hog_t.h">
       <Filter>Header Files\features\hog</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\core\features\hog\compv_core_feature_hog_common_norm.h">
+      <Filter>Header Files\features\hog</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\core\features\hog\intrin\x86\compv_core_feature_hog_common_norm_intrin_sse2.h">
+      <Filter>Header Files\features\hog\intrin\x86</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <YASM Include="features\fast\asm\x86\compv_core_feature_fast_dete_x64_sse.s">
@@ -544,6 +580,9 @@
     </None>
     <None Include="features\fast\asm\arm\compv_core_feature_fast_dete_macros_neon.S">
       <Filter>Source Files\features\fast\asm\arm</Filter>
+    </None>
+    <None Include="features\hog\asm\x86\compv_core_feature_hog_common_norm_x64_sse.s">
+      <Filter>Source Files\features\hog\asm\x86</Filter>
     </None>
   </ItemGroup>
 </Project>
