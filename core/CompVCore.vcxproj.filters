@@ -570,6 +570,9 @@
     <YASM Include="ccl\asm\x86\compv_core_ccl_lsl_x64_avx.s">
       <Filter>Source Files\ccl\asm\x86</Filter>
     </YASM>
+    <YASM Include="features\hog\asm\x86\compv_core_feature_hog_common_norm_x64_sse.s">
+      <Filter>Source Files\features\hog\asm\x86</Filter>
+    </YASM>
   </ItemGroup>
   <ItemGroup>
     <None Include="features\fast\asm\arm\compv_core_feature_fast_dete_arm32_neon.S">
@@ -580,9 +583,6 @@
     </None>
     <None Include="features\fast\asm\arm\compv_core_feature_fast_dete_macros_neon.S">
       <Filter>Source Files\features\fast\asm\arm</Filter>
-    </None>
-    <None Include="features\hog\asm\x86\compv_core_feature_hog_common_norm_x64_sse.s">
-      <Filter>Source Files\features\hog\asm\x86</Filter>
     </None>
   </ItemGroup>
 </Project>

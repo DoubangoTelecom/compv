@@ -26,6 +26,13 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+#if COMPV_ASM && COMPV_ARCH_X64
+COMPV_EXTERNC void CompVHogCommonNormL1_9_32f_Asm_X64_SSE2(compv_float32_t* inOutPtr, const compv_float32_t* eps1, const compv_uscalar_t count);
+COMPV_EXTERNC void CompVHogCommonNormL1Sqrt_9_32f_Asm_X64_SSE2(compv_float32_t* inOutPtr, const compv_float32_t* eps1, const compv_uscalar_t count);
+COMPV_EXTERNC void CompVHogCommonNormL2_9_32f_Asm_X64_SSE2(compv_float32_t* inOutPtr, const compv_float32_t* eps_square1, const compv_uscalar_t count);
+COMPV_EXTERNC void CompVHogCommonNormL2Hys_9_32f_Asm_X64_SSE2(compv_float32_t* inOutPtr, const compv_float32_t* eps_square1, const compv_uscalar_t count);
+#endif /* COMPV_ASM && COMPV_ARCH_X64 */
+
 static const compv_hog_floattype_t COMPV_HOG_EPSILON = compv_hog_floattype_t(1e-6);
 static const compv_hog_floattype_t COMPV_HOG_EPSILON2 = COMPV_HOG_EPSILON * COMPV_HOG_EPSILON;
 
@@ -437,7 +444,7 @@ COMPV_ERROR_CODE CompVHogStd::newObj(
 		COMPV_EXEC_IFDEF_INTRIN_X86(hog_->fptrs_norm.L1 = CompVHogCommonNormL1_32f_Intrin_SSE2);
 #		if COMPV_HOG_FAST_BLOCK_9
 		COMPV_EXEC_IFDEF_INTRIN_X86(hog_->fptrs_norm.L1_9 = CompVHogCommonNormL1_9_32f_Intrin_SSE2);
-		//COMPV_EXEC_IFDEF_ASM_X64(hog_->fptrs_norm.L1_9 = );
+		COMPV_EXEC_IFDEF_ASM_X64(hog_->fptrs_norm.L1_9 = CompVHogCommonNormL1_9_32f_Asm_X64_SSE2);
 #		else
 		COMPV_EXEC_IFDEF_INTRIN_X86(hog_->fptrs_norm.L1_9 = CompVHogCommonNormL1_32f_Intrin_SSE2);
 #		endif		
@@ -446,7 +453,7 @@ COMPV_ERROR_CODE CompVHogStd::newObj(
 		COMPV_EXEC_IFDEF_INTRIN_X86(hog_->fptrs_norm.L1Sqrt = CompVHogCommonNormL1Sqrt_32f_Intrin_SSE2);
 #		if COMPV_HOG_FAST_BLOCK_9
 		COMPV_EXEC_IFDEF_INTRIN_X86(hog_->fptrs_norm.L1Sqrt_9 = CompVHogCommonNormL1Sqrt_9_32f_Intrin_SSE2);
-		//COMPV_EXEC_IFDEF_ASM_X64(hog_->fptrs_norm.L1Sqrt_9 = );
+		COMPV_EXEC_IFDEF_ASM_X64(hog_->fptrs_norm.L1Sqrt_9 = CompVHogCommonNormL1Sqrt_9_32f_Asm_X64_SSE2);
 #		else
 		COMPV_EXEC_IFDEF_INTRIN_X86(hog_->fptrs_norm.L1Sqrt_9 = CompVHogCommonNormL1Sqrt_32f_Intrin_SSE2);
 #		endif
@@ -455,7 +462,7 @@ COMPV_ERROR_CODE CompVHogStd::newObj(
 		COMPV_EXEC_IFDEF_INTRIN_X86(hog_->fptrs_norm.L2 = CompVHogCommonNormL2_32f_Intrin_SSE2);
 #		if COMPV_HOG_FAST_BLOCK_9
 		COMPV_EXEC_IFDEF_INTRIN_X86(hog_->fptrs_norm.L2_9 = CompVHogCommonNormL2_9_32f_Intrin_SSE2);
-		//COMPV_EXEC_IFDEF_ASM_X64(hog_->fptrs_norm.L2_9 = );
+		COMPV_EXEC_IFDEF_ASM_X64(hog_->fptrs_norm.L2_9 = CompVHogCommonNormL2_9_32f_Asm_X64_SSE2);
 #		else
 		COMPV_EXEC_IFDEF_INTRIN_X86(hog_->fptrs_norm.L2_9 = CompVHogCommonNormL2_32f_Intrin_SSE2);
 #		endif
@@ -464,7 +471,7 @@ COMPV_ERROR_CODE CompVHogStd::newObj(
 		COMPV_EXEC_IFDEF_INTRIN_X86(hog_->fptrs_norm.L2Hys = CompVHogCommonNormL2Hys_32f_Intrin_SSE2);
 #		if COMPV_HOG_FAST_BLOCK_9
 		COMPV_EXEC_IFDEF_INTRIN_X86(hog_->fptrs_norm.L2Hys_9 = CompVHogCommonNormL2Hys_9_32f_Intrin_SSE2);
-		//COMPV_EXEC_IFDEF_ASM_X64(hog_->fptrs_norm.L2Hys_9 = );
+		COMPV_EXEC_IFDEF_ASM_X64(hog_->fptrs_norm.L2Hys_9 = CompVHogCommonNormL2Hys_9_32f_Asm_X64_SSE2);
 #		else
 		COMPV_EXEC_IFDEF_INTRIN_X86(hog_->fptrs_norm.L2Hys_9 = CompVHogCommonNormL2Hys_32f_Intrin_SSE2);
 #		endif

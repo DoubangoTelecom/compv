@@ -39,7 +39,7 @@ void CompVHogCommonNormL1_32f_Intrin_SSE2(compv_float32_t* inOutPtr, const compv
 		vec0 = _mm_add_ss(vec0, _mm_load_ss(&inOutPtr[i]));
 	}
 	
-	vec0 = _mm_add_ss(vec0, _mm_set1_ps(*eps1));
+	vec0 = _mm_add_ss(vec0, _mm_load_ss(eps1));
 #if 0 // TODO(dmi): use RCP instead of 1/den
 	vec0 = _mm_rcp_ss(vec0);
 #else
@@ -64,13 +64,13 @@ void CompVHogCommonNormL1_32f_Intrin_SSE2(compv_float32_t* inOutPtr, const compv
 void CompVHogCommonNormL1_9_32f_Intrin_SSE2(compv_float32_t* inOutPtr, const compv_float32_t* eps1, const compv_uscalar_t count)
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No ASM code");
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM code faster");
 	__m128 vec0 = _mm_add_ps(_mm_loadu_ps(&inOutPtr[0]), _mm_loadu_ps(&inOutPtr[4]));
 	vec0 = _mm_add_ps(vec0, _mm_shuffle_ps(vec0, vec0, 0x0E));
 	vec0 = _mm_add_ps(vec0, _mm_shuffle_ps(vec0, vec0, 0x01));
 	vec0 = _mm_add_ss(vec0, _mm_load_ss(&inOutPtr[8]));
 
-	vec0 = _mm_add_ss(vec0, _mm_set1_ps(*eps1));
+	vec0 = _mm_add_ss(vec0, _mm_load_ss(eps1));
 #if 0 // TODO(dmi): use RCP instead of 1/den
 	vec0 = _mm_rcp_ss(vec0);
 #else
@@ -107,7 +107,7 @@ void CompVHogCommonNormL1Sqrt_32f_Intrin_SSE2(compv_float32_t* inOutPtr, const c
 void CompVHogCommonNormL1Sqrt_9_32f_Intrin_SSE2(compv_float32_t* inOutPtr, const compv_float32_t* eps1, const compv_uscalar_t count)
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No ASM code");
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM code faster");
 	CompVHogCommonNormL1_9_32f_Intrin_SSE2(inOutPtr, eps1, count);
 	_mm_storeu_ps(&inOutPtr[0], _mm_sqrt_ps(_mm_loadu_ps(&inOutPtr[0])));
 	_mm_storeu_ps(&inOutPtr[4], _mm_sqrt_ps(_mm_loadu_ps(&inOutPtr[4])));
@@ -143,7 +143,7 @@ void CompVHogCommonNormL2_32f_Intrin_SSE2(compv_float32_t* inOutPtr, const compv
 		vec0 = _mm_add_ss(vec0, _mm_mul_ss(vec2, vec2));
 	}
 
-	vec0 = _mm_add_ss(vec0, _mm_set1_ps(*eps_square1));
+	vec0 = _mm_add_ss(vec0, _mm_load_ss(eps_square1));
 #if 0 // TODO(dmi): use RSQRT instead of SQRT followed by DIV
 	vec0 = _mm_rsqrt_ss(vec0);
 #else
@@ -168,7 +168,7 @@ void CompVHogCommonNormL2_32f_Intrin_SSE2(compv_float32_t* inOutPtr, const compv
 void CompVHogCommonNormL2_9_32f_Intrin_SSE2(compv_float32_t* inOutPtr, const compv_float32_t* eps_square1, const compv_uscalar_t count)
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No ASM code");
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM code faster");
 	__m128 vec0 = _mm_loadu_ps(&inOutPtr[0]);
 	__m128 vec1 = _mm_loadu_ps(&inOutPtr[4]);
 	vec0 = _mm_mul_ps(vec0, vec0);
@@ -179,7 +179,7 @@ void CompVHogCommonNormL2_9_32f_Intrin_SSE2(compv_float32_t* inOutPtr, const com
 	const __m128 vec2 = _mm_load_ss(&inOutPtr[8]);
 	vec0 = _mm_add_ss(vec0, _mm_mul_ss(vec2, vec2));
 
-	vec0 = _mm_add_ss(vec0, _mm_set1_ps(*eps_square1));
+	vec0 = _mm_add_ss(vec0, _mm_load_ss(eps_square1));
 #if 0 // TODO(dmi): use RSQRT instead of SQRT followed by DIV
 	vec0 = _mm_rsqrt_ss(vec0);
 #else
@@ -219,7 +219,7 @@ void CompVHogCommonNormL2Hys_32f_Intrin_SSE2(compv_float32_t* inOutPtr, const co
 void CompVHogCommonNormL2Hys_9_32f_Intrin_SSE2(compv_float32_t* inOutPtr, const compv_float32_t* eps_square1, const compv_uscalar_t count)
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No ASM code");
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM code faster");
 	static const __m128 vecMax = _mm_set1_ps(0.2f);
 	CompVHogCommonNormL2_9_32f_Intrin_SSE2(inOutPtr, eps_square1, count);	
 	_mm_storeu_ps(&inOutPtr[0], _mm_min_ps(_mm_loadu_ps(&inOutPtr[0]), vecMax));

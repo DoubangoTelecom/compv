@@ -190,14 +190,14 @@ sym(CompVMathTrigFastAtan2_32f_Asm_X64_SSE2)
 	%undef stride			
 	%undef i
 
-	%undef vecAtan2_zero		
-	%undef vecAtan2_sign		
-	%undef vecAtan2_scale		
-	%undef vecAtan2_plus90		
-	%undef vecAtan2_plus180	
-	%undef vecAtan2_plus360	
-	%undef vecAtan2_eps		
-	%undef vecAtan2_p1			
+	%undef vecAtan2_zero
+	%undef vecAtan2_sign
+	%undef vecAtan2_scale
+	%undef vecAtan2_plus90
+	%undef vecAtan2_plus180
+	%undef vecAtan2_plus360
+	%undef vecAtan2_eps
+	%undef vecAtan2_p1
 	%undef vecC				
 	%undef vecC2				
 	%undef vecAx				
