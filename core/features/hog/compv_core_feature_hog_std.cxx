@@ -135,6 +135,9 @@ COMPV_ERROR_CODE CompVHogStd::process(const CompVMatPtr& input, CompVMatPtrPtr o
 	//		make sure not to compute the histogram map (requires magnitude and direction) several times when the windows are overlapping.
 	const CompVSizeSz szWinSize = CompVSizeSz(input->cols(), input->rows());
 	COMPV_CHECK_EXP_RETURN(szWinSize.width < m_szBlockSize.width || szWinSize.height < m_szBlockSize.height, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "winSize < blockSize");
+	if (!input->isMemoryOwed()) { // Probably called bound() to extract a window for slidding
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("For slidding window you should change this function to compute magnitude and direction one time");
+	}
 
 	// Compute bin width associated values
 	const int nBinWidth = static_cast<int>((m_bGradientSigned ? 360 : 180) / m_nbins);
