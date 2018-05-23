@@ -14,6 +14,8 @@ COMPV_YASM_DEFAULT_REL
 
 global sym(CompVMathTrigFastAtan2_32f_Asm_X64_AVX)
 global sym(CompVMathTrigFastAtan2_32f_Asm_X64_FMA3_AVX)
+global sym(CompVMathTrigHypotNaive_32f_Asm_X64_AVX)
+global sym(CompVMathTrigHypotNaive_32f_Asm_X64_FMA3_AVX)
 
 section .data
 	extern sym(kAtan2Eps_32f)
@@ -216,12 +218,154 @@ section .text
 %endmacro
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-sym(CompVMathTrigFastAtan2_32f_Asm_X64_AVX)
+sym(CompVMathTrigFastAtan2_32f_Asm_X64_AVX):
 	CompVMathTrigFastAtan2_32f_Macro_X64_AVX 0
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-sym(CompVMathTrigFastAtan2_32f_Asm_X64_FMA3_AVX)
+sym(CompVMathTrigFastAtan2_32f_Asm_X64_FMA3_AVX):
 	CompVMathTrigFastAtan2_32f_Macro_X64_AVX 1
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> COMPV_ALIGNED(AVX) const compv_float32_t* x
+; arg(1) -> COMPV_ALIGNED(AVX) const compv_float32_t* y
+; arg(2) -> COMPV_ALIGNED(AVX) compv_float32_t* r
+; arg(3) -> compv_uscalar_t width
+; arg(4) -> compv_uscalar_t height
+; arg(5) -> COMPV_ALIGNED(AVX) compv_uscalar_t stride
+; %1 -> 0: no FMA3, 1: FMA3
+%macro CompVMathTrigHypotNaive_32f_Macro_X64_AVX 1
+	vzeroupper
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 6
+	COMPV_YASM_SAVE_YMM 7
+	push r12
+	;; end prolog ;;
+
+	%define x				rax
+	%define y				rcx
+	%define r				rdx
+	%define width			r8
+	%define height			r9
+	%define stride			r10
+	%define i				r11
+	%define width32			r12
+
+	mov x, arg(0)
+	mov y, arg(1)
+	mov r, arg(2)
+	mov width, arg(3)
+	mov height, arg(4)
+	mov stride, arg(5)
+	mov width32, width
+
+	and width32, -32
+
+	; Convert stride from float-unit to byte-unit
+	lea stride, [stride * COMPV_YASM_FLOAT32_SZ_BYTES]
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	; for (compv_uscalar_t j = 0; j < height; ++j)
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	.LoopHeight:
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; for (i = 0; i < width32; i += 32)
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		xor i, i
+		test width32, width32
+		jz .EndOf_LoopWidth32
+		.LoopWidth32:
+			vmovaps ymm0, [x + (i + 0)*COMPV_YASM_FLOAT32_SZ_BYTES]
+			vmovaps ymm1, [x + (i + 8)*COMPV_YASM_FLOAT32_SZ_BYTES]
+			vmulps ymm0, ymm0
+			vmulps ymm1, ymm1
+			vmovaps ymm2, [x + (i + 16)*COMPV_YASM_FLOAT32_SZ_BYTES]
+			vmovaps ymm3, [x + (i + 24)*COMPV_YASM_FLOAT32_SZ_BYTES]
+			vmulps ymm2, ymm2
+			vmulps ymm3, ymm3
+			vmovaps ymm4, [y + (i + 0)*COMPV_YASM_FLOAT32_SZ_BYTES]
+			vmovaps ymm5, [y + (i + 8)*COMPV_YASM_FLOAT32_SZ_BYTES]
+			vmovaps ymm6, [y + (i + 16)*COMPV_YASM_FLOAT32_SZ_BYTES]
+			vmovaps ymm7, [y + (i + 24)*COMPV_YASM_FLOAT32_SZ_BYTES]
+			%if %1
+				vfmadd231ps ymm0, ymm4, ymm4
+				vfmadd231ps ymm1, ymm5, ymm5
+				vfmadd231ps ymm2, ymm6, ymm6
+				vfmadd231ps ymm3, ymm7, ymm7
+			%else
+				vmulps ymm4, ymm4
+				vmulps ymm5, ymm5
+				vmulps ymm6, ymm6
+				vmulps ymm7, ymm7
+				vaddps ymm0, ymm4
+				vaddps ymm1, ymm5
+				vaddps ymm2, ymm6
+				vaddps ymm3, ymm7
+			%endif
+			vsqrtps ymm0, ymm0
+			vsqrtps ymm1, ymm1
+			vsqrtps ymm2, ymm2
+			vsqrtps ymm3, ymm3
+			vmovaps [r + (i + 0)*COMPV_YASM_FLOAT32_SZ_BYTES], ymm0
+			vmovaps [r + (i + 8)*COMPV_YASM_FLOAT32_SZ_BYTES], ymm1
+			vmovaps [r + (i + 16)*COMPV_YASM_FLOAT32_SZ_BYTES], ymm2
+			vmovaps [r + (i + 24)*COMPV_YASM_FLOAT32_SZ_BYTES], ymm3
+			add i, 32
+			cmp i, width32
+			jl .LoopWidth32
+		.EndOf_LoopWidth32:
+
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; for (; i < width; i += 8)
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		cmp i, width
+		jge .EndOf_LoopWidth
+		.LoopWidth:
+			vmovaps ymm0, [x + (i + 0)*COMPV_YASM_FLOAT32_SZ_BYTES]
+			vmovaps ymm4, [y + (i + 0)*COMPV_YASM_FLOAT32_SZ_BYTES]
+			vmulps ymm0, ymm0
+			vmulps ymm4, ymm4
+			vaddps ymm0, ymm4
+			vsqrtps ymm0, ymm0
+			vmovaps [r + (i + 0)*COMPV_YASM_FLOAT32_SZ_BYTES], ymm0
+			add i, 8
+			cmp i, width
+			jl .LoopWidth
+		.EndOf_LoopWidth:
+
+		dec height
+		lea x, [x + stride]
+		lea y, [y + stride]
+		lea r, [r + stride]
+		jnz .LoopHeight
+	.EndOf_LoopHeight:
+
+	%undef x				
+	%undef y			
+	%undef r				
+	%undef width			
+	%undef height			
+	%undef stride			
+	%undef i
+	%undef width32
+
+	;; begin epilog ;;
+	pop r12
+	COMPV_YASM_RESTORE_YMM
+	COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	vzeroupper
+	ret
+%endmacro
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(CompVMathTrigHypotNaive_32f_Asm_X64_AVX):
+	CompVMathTrigHypotNaive_32f_Macro_X64_AVX 0
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(CompVMathTrigHypotNaive_32f_Asm_X64_FMA3_AVX):
+	CompVMathTrigHypotNaive_32f_Macro_X64_AVX 1
 
 %endif ; COMPV_YASM_ABI_IS_64BIT

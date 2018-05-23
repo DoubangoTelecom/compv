@@ -14,8 +14,6 @@
 #define COMPV_GRADIENT_FAST_GRADX_8U32F_SAMPLES_PER_THREAD		(64 * 64)
 #define COMPV_GRADIENT_FAST_GRADY_8U16S_SAMPLES_PER_THREAD		(64 * 64)
 #define COMPV_GRADIENT_FAST_GRADY_8U32F_SAMPLES_PER_THREAD		(64 * 64)
-#define COMPV_GRADIENT_FAST_MAG_32F_SAMPLES_PER_THREAD			(32 * 32)
-#define COMPV_GRADIENT_FAST_MAG_64F_SAMPLES_PER_THREAD			(16 * 16)
 
 //
 // Gradient computation using [-1, 0, 1] kernel without convolution (no mul, add/sub only)
@@ -28,9 +26,6 @@ static void CompVGradientFastGradX_8u32f_C(const uint8_t* input, compv_float32_t
 
 static void CompVGradientFastGradY_8u16s_C(const uint8_t* input, int16_t* dy, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
 static void CompVGradientFastGradY_8u32f_C(const uint8_t* input, compv_float32_t* dy, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
-
-static void CompVGradientFastMagnitude_32f_C(const compv_float32_t* gx, const compv_float32_t* gy, compv_float32_t* mag, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
-static void CompVGradientFastMagnitude_64f_C(const compv_float64_t* gx, const compv_float64_t* gy, compv_float64_t* mag, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
 
 COMPV_ERROR_CODE CompVGradientFast::gradX_8u16s(const CompVMatPtr& input, CompVMatPtrPtr outputX)
 {
@@ -188,36 +183,7 @@ COMPV_ERROR_CODE CompVGradientFast::magnitude(const CompVMatPtr& input, CompVMat
 
 COMPV_ERROR_CODE CompVGradientFast::magnitude(const CompVMatPtr& gradX, const CompVMatPtr& gradY, CompVMatPtrPtr mag)
 {
-	COMPV_CHECK_EXP_RETURN(!gradX || !gradY || !mag || gradX->cols() != gradY->cols() || gradX->rows() != gradY->rows() || gradX->stride() != gradY->stride() ||
-		gradX->subType() != COMPV_SUBTYPE_RAW_FLOAT32 || gradY->subType() != COMPV_SUBTYPE_RAW_FLOAT32
-		, 
-		COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-
-	const size_t width = gradX->cols();
-	const size_t height = gradX->rows();
-	const size_t stride = gradX->stride();	
-	CompVMatPtr mag_ = (*mag == gradX || *mag == gradY) ? nullptr : *mag;
-	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float32_t>(&mag_, height, width, stride));
-
-	void(*CompVGradientFastMagnitude_32f)(const compv_float32_t* gx, const compv_float32_t* gy, compv_float32_t* mag, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
-		= CompVGradientFastMagnitude_32f_C;
-#if COMPV_ARCH_X86
-#elif COMPV_ARCH_ARM
-#endif
-
-	auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
-		CompVGradientFastMagnitude_32f(gradX->ptr<const compv_float32_t>(ystart), gradY->ptr<compv_float32_t>(ystart), mag_->ptr<compv_float32_t>(ystart),
-			static_cast<compv_uscalar_t>(width), static_cast<compv_uscalar_t>(yend - ystart), static_cast<compv_uscalar_t>(stride));
-		return COMPV_ERROR_CODE_S_OK;
-	};
-	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
-		funcPtr,
-		width,
-		height,
-		COMPV_GRADIENT_FAST_MAG_32F_SAMPLES_PER_THREAD
-	));
-
-	*mag = mag_;
+	COMPV_CHECK_CODE_RETURN(CompVMathTrig::hypot_naive(gradX, gradY, mag)); // No overflow/underflow -> use naive implementatio (more info: https://improbable.io/games/blog/thanos-prometheus-at-scale)
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -281,26 +247,6 @@ static void CompVGradientFastGradY_8u32f_C(const uint8_t* input, compv_float32_t
 	CompVGradientFastGradY_8u_C<compv_float32_t>(input, dy, width, height, stride);
 }
 
-template<typename FloatType>
-static void CompVGradientFastMagnitude_X_C(const FloatType* gx, const FloatType* gy, FloatType* mag, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
-{
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
-	for (compv_uscalar_t j = 0; j < height; ++j) {
-		for (compv_uscalar_t i = 0; i < width; ++i) {
-			mag[i] = std::sqrt((gx[i] * gx[i]) + (gy[i] * gy[i]));
-		}
-		gx += stride;
-		gy += stride;
-		mag += stride;
-	}
-}
-static void CompVGradientFastMagnitude_32f_C(const compv_float32_t* gx, const compv_float32_t* gy, compv_float32_t* mag, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride) {
-	CompVGradientFastMagnitude_X_C<compv_float32_t>(gx, gy, mag, width, height, stride);
-}
-COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-function")
-static void CompVGradientFastMagnitude_64f_C(const compv_float64_t* gx, const compv_float64_t* gy, compv_float64_t* mag, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride) {
-	CompVGradientFastMagnitude_X_C<compv_float64_t>(gx, gy, mag, width, height, stride);
-}
 COMPV_GCC_DISABLE_WARNINGS_END()
 
 COMPV_NAMESPACE_END()

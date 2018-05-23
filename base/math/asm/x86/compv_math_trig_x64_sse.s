@@ -13,6 +13,7 @@
 COMPV_YASM_DEFAULT_REL
 
 global sym(CompVMathTrigFastAtan2_32f_Asm_X64_SSE2)
+global sym(CompVMathTrigHypotNaive_32f_Asm_X64_SSE2)
 
 section .data
 	extern sym(kAtan2Eps_32f)
@@ -208,6 +209,129 @@ sym(CompVMathTrigFastAtan2_32f_Asm_X64_SSE2)
 	%undef vec2				
 
 	;; begin epilog ;;
+	COMPV_YASM_RESTORE_XMM
+	COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> COMPV_ALIGNED(SSE) const compv_float32_t* x
+; arg(1) -> COMPV_ALIGNED(SSE) const compv_float32_t* y
+; arg(2) -> COMPV_ALIGNED(SSE) compv_float32_t* r
+; arg(3) -> compv_uscalar_t width
+; arg(4) -> compv_uscalar_t height
+; arg(5) -> COMPV_ALIGNED(SSE) compv_uscalar_t stride
+sym(CompVMathTrigHypotNaive_32f_Asm_X64_SSE2)
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 6
+	COMPV_YASM_SAVE_XMM 7
+	push r12
+	;; end prolog ;;
+
+	%define x				rax
+	%define y				rcx
+	%define r				rdx
+	%define width			r8
+	%define height			r9
+	%define stride			r10
+	%define i				r11
+	%define width16			r12
+
+	mov x, arg(0)
+	mov y, arg(1)
+	mov r, arg(2)
+	mov width, arg(3)
+	mov height, arg(4)
+	mov stride, arg(5)
+	mov width16, width
+
+	and width16, -16
+
+	; Convert stride from float-unit to byte-unit
+	lea stride, [stride * COMPV_YASM_FLOAT32_SZ_BYTES]
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	; for (compv_uscalar_t j = 0; j < height; ++j)
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	.LoopHeight:
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; for (i = 0; i < width16; i += 16)
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		xor i, i
+		test width16, width16
+		jz .EndOf_LoopWidth16
+		.LoopWidth16:
+			movaps xmm0, [x + (i + 0)*COMPV_YASM_FLOAT32_SZ_BYTES]
+			movaps xmm1, [x + (i + 4)*COMPV_YASM_FLOAT32_SZ_BYTES]
+			mulps xmm0, xmm0
+			mulps xmm1, xmm1
+			movaps xmm2, [x + (i + 8)*COMPV_YASM_FLOAT32_SZ_BYTES]
+			movaps xmm3, [x + (i + 12)*COMPV_YASM_FLOAT32_SZ_BYTES]
+			mulps xmm2, xmm2
+			mulps xmm3, xmm3
+			movaps xmm4, [y + (i + 0)*COMPV_YASM_FLOAT32_SZ_BYTES]
+			movaps xmm5, [y + (i + 4)*COMPV_YASM_FLOAT32_SZ_BYTES]
+			mulps xmm4, xmm4
+			mulps xmm5, xmm5
+			movaps xmm6, [y + (i + 8)*COMPV_YASM_FLOAT32_SZ_BYTES]
+			movaps xmm7, [y + (i + 12)*COMPV_YASM_FLOAT32_SZ_BYTES]
+			mulps xmm6, xmm6
+			mulps xmm7, xmm7
+			addps xmm0, xmm4
+			addps xmm1, xmm5
+			addps xmm2, xmm6
+			addps xmm3, xmm7
+			sqrtps xmm0, xmm0
+			sqrtps xmm1, xmm1
+			sqrtps xmm2, xmm2
+			sqrtps xmm3, xmm3
+			movaps [r + (i + 0)*COMPV_YASM_FLOAT32_SZ_BYTES], xmm0
+			movaps [r + (i + 4)*COMPV_YASM_FLOAT32_SZ_BYTES], xmm1
+			movaps [r + (i + 8)*COMPV_YASM_FLOAT32_SZ_BYTES], xmm2
+			movaps [r + (i + 12)*COMPV_YASM_FLOAT32_SZ_BYTES], xmm3
+			add i, 16
+			cmp i, width16
+			jl .LoopWidth16
+		.EndOf_LoopWidth16:
+
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; for (; i < width; i += 4)
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		cmp i, width
+		jge .EndOf_LoopWidth
+		.LoopWidth:
+			movaps xmm0, [x + (i + 0)*COMPV_YASM_FLOAT32_SZ_BYTES]
+			movaps xmm4, [y + (i + 0)*COMPV_YASM_FLOAT32_SZ_BYTES]
+			mulps xmm0, xmm0
+			mulps xmm4, xmm4
+			addps xmm0, xmm4
+			sqrtps xmm0, xmm0
+			movaps [r + (i + 0)*COMPV_YASM_FLOAT32_SZ_BYTES], xmm0
+			add i, 4
+			cmp i, width
+			jl .LoopWidth
+		.EndOf_LoopWidth:
+
+		dec height
+		lea x, [x + stride]
+		lea y, [y + stride]
+		lea r, [r + stride]
+		jnz .LoopHeight
+	.EndOf_LoopHeight:
+
+	%undef x				
+	%undef y			
+	%undef r				
+	%undef width			
+	%undef height			
+	%undef stride			
+	%undef i
+	%undef width16	
+
+	;; begin epilog ;;
+	pop r12
 	COMPV_YASM_RESTORE_XMM
 	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp

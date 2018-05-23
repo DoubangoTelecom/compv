@@ -77,6 +77,40 @@ void CompVMathTrigFastAtan2_32f_Intrin_SSE2(COMPV_ALIGNED(SSE) const compv_float
 	}
 }
 
+void CompVMathTrigHypotNaive_32f_Intrin_SSE2(COMPV_ALIGNED(SSE) const compv_float32_t* x, COMPV_ALIGNED(SSE) const compv_float32_t* y, COMPV_ALIGNED(SSE) compv_float32_t* r, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride)
+{
+	COMPV_DEBUG_INFO_CHECK_SSE2();
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM AVX-FMA3 version is faster");
+	const compv_uscalar_t width16 = width & -16;
+	compv_uscalar_t i;
+	__m128 vec0, vec1, vec2, vec3, vec4, vec5, vec6, vec7;
+
+	for (compv_uscalar_t j = 0; j < height; ++j) {
+		for (i = 0; i < width16; i += 16) {
+			vec0 = _mm_load_ps(&x[i]);
+			vec1 = _mm_load_ps(&x[i + 4]);
+			vec2 = _mm_load_ps(&x[i + 8]);
+			vec3 = _mm_load_ps(&x[i + 12]);
+			vec4 = _mm_load_ps(&y[i]);
+			vec5 = _mm_load_ps(&y[i + 4]);
+			vec6 = _mm_load_ps(&y[i + 8]);
+			vec7 = _mm_load_ps(&y[i + 12]);
+			_mm_store_ps(&r[i], _mm_sqrt_ps(_mm_add_ps(_mm_mul_ps(vec0, vec0), _mm_mul_ps(vec4, vec4)))); // TODO(dmi): Add support for FMA3 (see ASM code)
+			_mm_store_ps(&r[i + 4], _mm_sqrt_ps(_mm_add_ps(_mm_mul_ps(vec1, vec1), _mm_mul_ps(vec5, vec5)))); // TODO(dmi): Add support for FMA3 (see ASM code)
+			_mm_store_ps(&r[i + 8], _mm_sqrt_ps(_mm_add_ps(_mm_mul_ps(vec2, vec2), _mm_mul_ps(vec6, vec6)))); // TODO(dmi): Add support for FMA3 (see ASM code)
+			_mm_store_ps(&r[i + 12], _mm_sqrt_ps(_mm_add_ps(_mm_mul_ps(vec3, vec3), _mm_mul_ps(vec7, vec7)))); // TODO(dmi): Add support for FMA3 (see ASM code)
+		}
+		for (; i < width; i += 4) {
+			vec0 = _mm_load_ps(&x[i]);
+			vec4 = _mm_load_ps(&y[i]);
+			_mm_store_ps(&r[i], _mm_sqrt_ps(_mm_add_ps(_mm_mul_ps(vec0, vec0), _mm_mul_ps(vec4, vec4)))); // TODO(dmi): Add support for FMA3 (see ASM code)
+		}
+		y += stride;
+		x += stride;
+		r += stride;
+	}
+}
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */

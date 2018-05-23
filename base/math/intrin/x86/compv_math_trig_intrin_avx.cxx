@@ -82,6 +82,45 @@ void CompVMathTrigFastAtan2_32f_Intrin_AVX(COMPV_ALIGNED(AVX) const compv_float3
 	_mm256_zeroupper();
 }
 
+#if defined(__INTEL_COMPILER)
+#	pragma intel optimization_parameter target_arch=avx
+#endif
+void CompVMathTrigHypotNaive_32f_Intrin_AVX(COMPV_ALIGNED(AVX) const compv_float32_t* x, COMPV_ALIGNED(AVX) const compv_float32_t* y, COMPV_ALIGNED(AVX) compv_float32_t* r, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride)
+{
+	COMPV_DEBUG_INFO_CHECK_AVX();
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM AVX-FMA3 version is faster");
+	_mm256_zeroupper();
+	const compv_uscalar_t width32 = width & -32;
+	compv_uscalar_t i;
+	__m256 vec0, vec1, vec2, vec3, vec4, vec5, vec6, vec7;
+
+	for (compv_uscalar_t j = 0; j < height; ++j) {
+		for (i = 0; i < width32; i += 32) {
+			vec0 = _mm256_load_ps(&x[i]);
+			vec1 = _mm256_load_ps(&x[i + 8]);
+			vec2 = _mm256_load_ps(&x[i + 16]);
+			vec3 = _mm256_load_ps(&x[i + 24]);
+			vec4 = _mm256_load_ps(&y[i]);
+			vec5 = _mm256_load_ps(&y[i + 8]);
+			vec6 = _mm256_load_ps(&y[i + 16]);
+			vec7 = _mm256_load_ps(&y[i + 24]);
+			_mm256_store_ps(&r[i], _mm256_sqrt_ps(_mm256_add_ps(_mm256_mul_ps(vec0, vec0), _mm256_mul_ps(vec4, vec4)))); // TODO(dmi): Add support for FMA3 (see ASM code)
+			_mm256_store_ps(&r[i + 8], _mm256_sqrt_ps(_mm256_add_ps(_mm256_mul_ps(vec1, vec1), _mm256_mul_ps(vec5, vec5)))); // TODO(dmi): Add support for FMA3 (see ASM code)
+			_mm256_store_ps(&r[i + 16], _mm256_sqrt_ps(_mm256_add_ps(_mm256_mul_ps(vec2, vec2), _mm256_mul_ps(vec6, vec6)))); // TODO(dmi): Add support for FMA3 (see ASM code)
+			_mm256_store_ps(&r[i + 24], _mm256_sqrt_ps(_mm256_add_ps(_mm256_mul_ps(vec3, vec3), _mm256_mul_ps(vec7, vec7)))); // TODO(dmi): Add support for FMA3 (see ASM code)
+		}
+		for (; i < width; i += 8) {
+			vec0 = _mm256_load_ps(&x[i]);
+			vec4 = _mm256_load_ps(&y[i]);
+			_mm256_store_ps(&r[i], _mm256_sqrt_ps(_mm256_add_ps(_mm256_mul_ps(vec0, vec0), _mm256_mul_ps(vec4, vec4)))); // TODO(dmi): Add support for FMA3 (see ASM code)
+		}
+		y += stride;
+		x += stride;
+		r += stride;
+	}
+	_mm256_zeroupper();
+}
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */

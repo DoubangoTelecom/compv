@@ -19,6 +19,7 @@
 COMPV_NAMESPACE_BEGIN()
 
 void CompVMathTrigFastAtan2_32f_Intrin_SSE2(COMPV_ALIGNED(SSE) const compv_float32_t* y, COMPV_ALIGNED(SSE) const compv_float32_t* x, COMPV_ALIGNED(SSE) compv_float32_t* r, const compv_float32_t* scale1, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
+void CompVMathTrigHypotNaive_32f_Intrin_SSE2(COMPV_ALIGNED(SSE) const compv_float32_t* x, COMPV_ALIGNED(SSE) const compv_float32_t* y, COMPV_ALIGNED(SSE) compv_float32_t* r, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
 
 COMPV_NAMESPACE_END()
 

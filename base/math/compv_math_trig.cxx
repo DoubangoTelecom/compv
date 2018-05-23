@@ -16,6 +16,8 @@
 
 #define COMPV_MATH_TRIG_FASTATAN2_32F_SAMPLES_PER_THREAD			(16 * 16)
 #define COMPV_MATH_TRIG_FASTATAN2_64F_SAMPLES_PER_THREAD			(8 * 8)
+#define COMPV_MATH_TRIG_HYPOT_32F_SAMPLES_PER_THREAD			(32 * 32)
+#define COMPV_MATH_TRIG_HYPOT_64F_SAMPLES_PER_THREAD			(16 * 16)
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -23,10 +25,18 @@ COMPV_NAMESPACE_BEGIN()
 COMPV_EXTERNC void CompVMathTrigFastAtan2_32f_Asm_X64_SSE2(COMPV_ALIGNED(SSE) const compv_float32_t* y, COMPV_ALIGNED(SSE) const compv_float32_t* x, COMPV_ALIGNED(SSE) compv_float32_t* r, const compv_float32_t* scale1, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
 COMPV_EXTERNC void CompVMathTrigFastAtan2_32f_Asm_X64_AVX(COMPV_ALIGNED(AVX) const compv_float32_t* y, COMPV_ALIGNED(AVX) const compv_float32_t* x, COMPV_ALIGNED(AVX) compv_float32_t* r, const compv_float32_t* scale1, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride);
 COMPV_EXTERNC void CompVMathTrigFastAtan2_32f_Asm_X64_FMA3_AVX(COMPV_ALIGNED(AVX) const compv_float32_t* y, COMPV_ALIGNED(AVX) const compv_float32_t* x, COMPV_ALIGNED(AVX) compv_float32_t* r, const compv_float32_t* scale1, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride);
+COMPV_EXTERNC void CompVMathTrigHypotNaive_32f_Asm_X64_SSE2(COMPV_ALIGNED(SSE) const compv_float32_t* x, COMPV_ALIGNED(SSE) const compv_float32_t* y, COMPV_ALIGNED(SSE) compv_float32_t* r, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
+COMPV_EXTERNC void CompVMathTrigHypotNaive_32f_Asm_X64_AVX(COMPV_ALIGNED(AVX) const compv_float32_t* x, COMPV_ALIGNED(AVX) const compv_float32_t* y, COMPV_ALIGNED(AVX) compv_float32_t* r, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride);
+COMPV_EXTERNC void CompVMathTrigHypotNaive_32f_Asm_X64_FMA3_AVX(COMPV_ALIGNED(AVX) const compv_float32_t* x, COMPV_ALIGNED(AVX) const compv_float32_t* y, COMPV_ALIGNED(AVX) compv_float32_t* r, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride);
 #endif /* COMPV_ASM && COMPV_ARCH_X64 */
 
 static void CompVMathTrigFastAtan2_32f_C(const compv_float32_t* y, const compv_float32_t* x, compv_float32_t* r, const compv_float32_t* scale1, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
 static void CompVMathTrigFastAtan2_64f_C(const compv_float64_t* y, const compv_float64_t* x, compv_float64_t* r, const compv_float64_t* scale1, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
+static void CompVMathTrigHypot_32f_C(const compv_float32_t* x, const compv_float32_t* y, compv_float32_t* r, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
+static void CompVMathTrigHypot_64f_C(const compv_float64_t* x, const compv_float64_t* y, compv_float64_t* r, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
+static void CompVMathTrigHypotNaive_32f_C(const compv_float32_t* x, const compv_float32_t* y, compv_float32_t* r, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
+static void CompVMathTrigHypotNaive_64f_C(const compv_float64_t* x, const compv_float64_t* y, compv_float64_t* r, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
+
 
 //
 //	CompVMathTrigGeneric
@@ -226,11 +236,11 @@ COMPV_ERROR_CODE CompVMathTrig::fastAtan2(const CompVMatPtr& y, const CompVMatPt
 		void(*CompVMathTrigFastAtan2_32f)(const compv_float32_t* y, const compv_float32_t* x, compv_float32_t* r, const compv_float32_t* scale1, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
 			= CompVMathTrigFastAtan2_32f_C;
 #if COMPV_ARCH_X86
-		if (width >= 4 && CompVCpu::isEnabled(compv::kCpuFlagSSE2) && x->isAlignedSSE() && y->isAlignedSSE() && r_->isAlignedSSE()) {
+		if (CompVCpu::isEnabled(compv::kCpuFlagSSE2) && x->isAlignedSSE() && y->isAlignedSSE() && r_->isAlignedSSE()) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathTrigFastAtan2_32f = CompVMathTrigFastAtan2_32f_Intrin_SSE2);
 			COMPV_EXEC_IFDEF_ASM_X64(CompVMathTrigFastAtan2_32f = CompVMathTrigFastAtan2_32f_Asm_X64_SSE2);
 		}
-		if (width >= 8 && CompVCpu::isEnabled(compv::kCpuFlagAVX) && x->isAlignedAVX() && y->isAlignedAVX() && r_->isAlignedAVX()) {
+		if (CompVCpu::isEnabled(compv::kCpuFlagAVX) && x->isAlignedAVX() && y->isAlignedAVX() && r_->isAlignedAVX()) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathTrigFastAtan2_32f = CompVMathTrigFastAtan2_32f_Intrin_AVX);
 			COMPV_EXEC_IFDEF_ASM_X64(CompVMathTrigFastAtan2_32f = CompVMathTrigFastAtan2_32f_Asm_X64_AVX);
 			if (CompVCpu::isEnabled(compv::kCpuFlagFMA3)) {
@@ -241,6 +251,123 @@ COMPV_ERROR_CODE CompVMathTrig::fastAtan2(const CompVMatPtr& y, const CompVMatPt
 #endif
 		COMPV_CHECK_CODE_RETURN((CompVMathTrigFastAtan2_X<compv_float32_t>(y->ptr<const compv_float32_t>(), x->ptr<const compv_float32_t>(), r_->ptr<compv_float32_t>(), static_cast<compv_float32_t>(angleInDeg ? 1.0 : M_PI / 180.0),
 			width, height, stride, CompVMathTrigFastAtan2_32f)));
+	}
+
+	*r = r_;
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+template<typename FloatType>
+static COMPV_ERROR_CODE CompVMathTrigHypot_X(const FloatType* x, const FloatType* y, FloatType* r,
+	const size_t width, const size_t height, const size_t stride,
+	void(*fptr)(const FloatType* x, const FloatType* y, FloatType* r, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride))
+{
+	auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
+		const size_t offset = (ystart * stride);
+		fptr(&x[offset], &y[offset], &r[offset],
+			static_cast<compv_uscalar_t>(width), static_cast<compv_uscalar_t>(yend - ystart), static_cast<compv_uscalar_t>(stride));
+		return COMPV_ERROR_CODE_S_OK;
+	};
+	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+		funcPtr,
+		width,
+		height,
+		std::is_same<FloatType, compv_float64_t>::value ? COMPV_MATH_TRIG_HYPOT_64F_SAMPLES_PER_THREAD : COMPV_MATH_TRIG_HYPOT_32F_SAMPLES_PER_THREAD
+	));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// https://en.wikipedia.org/wiki/Hypot
+// Use hypot_naive which is optimised if you're sure there is no overflow/underflow risk
+COMPV_ERROR_CODE CompVMathTrig::hypot(const CompVMatPtr& x, const CompVMatPtr& y, CompVMatPtrPtr r)
+{
+	COMPV_CHECK_EXP_RETURN(!y || !x || !r || y->cols() != x->cols() || y->rows() != x->rows() || y->stride() != x->stride() || y->subType() != x->subType() ||
+		(y->subType() != COMPV_SUBTYPE_RAW_FLOAT32 && y->subType() != COMPV_SUBTYPE_RAW_FLOAT64)
+		,
+		COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	const size_t width = y->cols();
+	const size_t height = y->rows();
+	const size_t stride = y->stride();
+	const COMPV_SUBTYPE subType = y->subType();
+	CompVMatPtr r_ = (*r == y || *r == x) ? nullptr : *r;
+	if (subType == COMPV_SUBTYPE_RAW_FLOAT64) {
+		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float64_t>(&r_, height, width, stride));
+		void(*CompVMathTrigHypot_64f)(const compv_float64_t* x, const compv_float64_t* y, compv_float64_t* r, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
+			= CompVMathTrigHypot_64f_C;
+#if COMPV_ARCH_X86
+#elif COMPV_ARCH_ARM
+#endif
+		COMPV_CHECK_CODE_RETURN((CompVMathTrigHypot_X<compv_float64_t>(x->ptr<const compv_float64_t>(), y->ptr<const compv_float64_t>(), r_->ptr<compv_float64_t>(),
+			width, height, stride, CompVMathTrigHypot_64f)));
+	}
+	else {
+		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float32_t>(&r_, height, width, stride));
+		void(*CompVMathTrigHypot_32f)(const compv_float32_t* x, const compv_float32_t* y, compv_float32_t* r, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
+			= CompVMathTrigHypot_32f_C;
+#if COMPV_ARCH_X86 && 0
+		if (width >= 4 && CompVCpu::isEnabled(compv::kCpuFlagSSE2) && x->isAlignedSSE() && y->isAlignedSSE() && r_->isAlignedSSE()) {
+			COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathTrigHypot_32f = CompVMathTrigHypot_32f_Intrin_SSE2);
+			COMPV_EXEC_IFDEF_ASM_X64(CompVMathTrigHypot_32f = CompVMathTrigHypot_32f_Asm_X64_SSE2);
+		}
+		if (width >= 8 && CompVCpu::isEnabled(compv::kCpuFlagAVX) && x->isAlignedAVX() && y->isAlignedAVX() && r_->isAlignedAVX()) {
+			COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathTrigHypot_32f = CompVMathTrigHypot_32f_Intrin_AVX);
+			COMPV_EXEC_IFDEF_ASM_X64(CompVMathTrigHypot_32f = CompVMathTrigHypot_32f_Asm_X64_AVX);
+			if (CompVCpu::isEnabled(compv::kCpuFlagFMA3)) {
+				COMPV_EXEC_IFDEF_ASM_X64(CompVMathTrigHypot_32f = CompVMathTrigHypot_32f_Asm_X64_FMA3_AVX);
+			}
+		}
+#elif COMPV_ARCH_ARM
+#endif
+		COMPV_CHECK_CODE_RETURN((CompVMathTrigHypot_X<compv_float32_t>(x->ptr<const compv_float32_t>(), y->ptr<const compv_float32_t>(), r_->ptr<compv_float32_t>(),
+			width, height, stride, CompVMathTrigHypot_32f)));
+	}
+
+	*r = r_;
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// https://en.wikipedia.org/wiki/Hypot
+COMPV_ERROR_CODE CompVMathTrig::hypot_naive(const CompVMatPtr& x, const CompVMatPtr& y, CompVMatPtrPtr r)
+{
+	COMPV_CHECK_EXP_RETURN(!y || !x || !r || y->cols() != x->cols() || y->rows() != x->rows() || y->stride() != x->stride() || y->subType() != x->subType() ||
+		(y->subType() != COMPV_SUBTYPE_RAW_FLOAT32 && y->subType() != COMPV_SUBTYPE_RAW_FLOAT64)
+		,
+		COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	const size_t width = y->cols();
+	const size_t height = y->rows();
+	const size_t stride = y->stride();
+	const COMPV_SUBTYPE subType = y->subType();
+	CompVMatPtr r_ = (*r == y || *r == x) ? nullptr : *r;
+	if (subType == COMPV_SUBTYPE_RAW_FLOAT64) {
+		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float64_t>(&r_, height, width, stride));
+		void(*CompVMathTrigHypotNaive_64f)(const compv_float64_t* x, const compv_float64_t* y, compv_float64_t* r, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
+			= CompVMathTrigHypotNaive_64f_C;
+#if COMPV_ARCH_X86
+#elif COMPV_ARCH_ARM
+#endif
+		COMPV_CHECK_CODE_RETURN((CompVMathTrigHypot_X<compv_float64_t>(x->ptr<const compv_float64_t>(), y->ptr<const compv_float64_t>(), r_->ptr<compv_float64_t>(),
+			width, height, stride, CompVMathTrigHypotNaive_64f)));
+	}
+	else {
+		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float32_t>(&r_, height, width, stride));
+		void(*CompVMathTrigHypotNaive_32f)(const compv_float32_t* x, const compv_float32_t* y, compv_float32_t* r, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
+			= CompVMathTrigHypotNaive_32f_C;
+#if COMPV_ARCH_X86
+		if (CompVCpu::isEnabled(compv::kCpuFlagSSE2) && x->isAlignedSSE() && y->isAlignedSSE() && r_->isAlignedSSE()) {
+			COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathTrigHypotNaive_32f = CompVMathTrigHypotNaive_32f_Intrin_SSE2);
+			COMPV_EXEC_IFDEF_ASM_X64(CompVMathTrigHypotNaive_32f = CompVMathTrigHypotNaive_32f_Asm_X64_SSE2);
+		}
+		if (CompVCpu::isEnabled(compv::kCpuFlagAVX) && x->isAlignedAVX() && y->isAlignedAVX() && r_->isAlignedAVX()) {
+			COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathTrigHypotNaive_32f = CompVMathTrigHypotNaive_32f_Intrin_AVX);
+			COMPV_EXEC_IFDEF_ASM_X64(CompVMathTrigHypotNaive_32f = CompVMathTrigHypotNaive_32f_Asm_X64_AVX);
+			if (CompVCpu::isEnabled(compv::kCpuFlagFMA3)) {
+				COMPV_EXEC_IFDEF_ASM_X64(CompVMathTrigHypotNaive_32f = CompVMathTrigHypotNaive_32f_Asm_X64_FMA3_AVX);
+			}
+		}
+#elif COMPV_ARCH_ARM
+#endif
+		COMPV_CHECK_CODE_RETURN((CompVMathTrigHypot_X<compv_float32_t>(x->ptr<const compv_float32_t>(), y->ptr<const compv_float32_t>(), r_->ptr<compv_float32_t>(),
+			width, height, stride, CompVMathTrigHypotNaive_32f)));
 	}
 
 	*r = r_;
@@ -290,6 +417,68 @@ static void CompVMathTrigFastAtan2_32f_C(const compv_float32_t* y, const compv_f
 }
 static void CompVMathTrigFastAtan2_64f_C(const compv_float64_t* y, const compv_float64_t* x, compv_float64_t* r, const compv_float64_t* scale1, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride) {
 	CompVMathTrigFastAtan2_X_C<compv_float64_t>(y, x, r, scale1, width, height, stride);
+}
+
+
+template<typename FloatType>
+static void CompVMathTrigHypot_X_C(const FloatType* x, const FloatType* y, FloatType* r, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
+	for (compv_uscalar_t j = 0; j < height; ++j) {
+		for (compv_uscalar_t i = 0; i < width; ++i) {
+			// https://en.wikipedia.org/wiki/Hypot
+			FloatType a = COMPV_MATH_ABS(x[i]);
+			const FloatType b = COMPV_MATH_ABS(y[i]);
+#if 0
+			if (b > a) {
+				// swap(a, b)
+				t = a;
+				a = b;
+				b = t;
+			}
+#else // Branchless (SIMD-friendly)
+			FloatType t = COMPV_MATH_MIN(a, b);
+			a = COMPV_MATH_MAX(a, b);
+#endif
+			if (!a) {
+				r[i] = t;
+			}
+			else {
+				t = t / a;
+				r[i] = a * COMPV_MATH_SQRT(1 + t*t);
+			}
+		}
+		y += stride;
+		x += stride;
+		r += stride;
+	}
+}
+static void CompVMathTrigHypot_32f_C(const compv_float32_t* x, const compv_float32_t* y, compv_float32_t* r, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride) {
+	CompVMathTrigHypot_X_C<compv_float32_t>(x, y, r, width, height, stride);
+}
+static void CompVMathTrigHypot_64f_C(const compv_float64_t* x, const compv_float64_t* y, compv_float64_t* r, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride) {
+	CompVMathTrigHypot_X_C<compv_float64_t>(x, y, r, width, height, stride);
+}
+
+template<typename FloatType>
+static void CompVMathTrigHypotNaive_X_C(const FloatType* x, const FloatType* y, FloatType* r, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
+	for (compv_uscalar_t j = 0; j < height; ++j) {
+		for (compv_uscalar_t i = 0; i < width; ++i) {
+			// https://en.wikipedia.org/wiki/Hypot
+			r[i] = std::sqrt(x[i]* x[i] + y[i]* y[i]);
+		}
+		y += stride;
+		x += stride;
+		r += stride;
+	}
+}
+static void CompVMathTrigHypotNaive_32f_C(const compv_float32_t* x, const compv_float32_t* y, compv_float32_t* r, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride) {
+	CompVMathTrigHypotNaive_X_C<compv_float32_t>(x, y, r, width, height, stride);
+}
+static void CompVMathTrigHypotNaive_64f_C(const compv_float64_t* x, const compv_float64_t* y, compv_float64_t* r, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride) {
+	CompVMathTrigHypotNaive_X_C<compv_float64_t>(x, y, r, width, height, stride);
 }
 
 COMPV_NAMESPACE_END()

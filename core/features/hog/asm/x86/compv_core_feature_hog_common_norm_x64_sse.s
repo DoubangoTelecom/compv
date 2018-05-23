@@ -85,11 +85,11 @@ section .text
 %endmacro
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-sym(CompVHogCommonNormL1_9_32f_Asm_X64_SSE2)
+sym(CompVHogCommonNormL1_9_32f_Asm_X64_SSE2):
 	CompVHogCommonNormL1_9_32f_Macro_X64_SSE2 0
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-sym(CompVHogCommonNormL1Sqrt_9_32f_Asm_X64_SSE2)
+sym(CompVHogCommonNormL1Sqrt_9_32f_Asm_X64_SSE2):
 	CompVHogCommonNormL1_9_32f_Macro_X64_SSE2 1
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -126,7 +126,7 @@ sym(CompVHogCommonNormL1Sqrt_9_32f_Asm_X64_SSE2)
 ; arg(0) -> compv_float32_t* inOutPtr
 ; arg(1) -> const compv_float32_t* eps_square1
 ; arg(2) -> const compv_uscalar_t count
-sym(CompVHogCommonNormL2_9_32f_Asm_X64_SSE2)
+sym(CompVHogCommonNormL2_9_32f_Asm_X64_SSE2):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 3
@@ -163,7 +163,7 @@ sym(CompVHogCommonNormL2_9_32f_Asm_X64_SSE2)
 ; arg(0) -> compv_float32_t* inOutPtr
 ; arg(1) -> const compv_float32_t* eps_square1
 ; arg(2) -> const compv_uscalar_t count
-sym(CompVHogCommonNormL2Hys_9_32f_Asm_X64_SSE2)
+sym(CompVHogCommonNormL2Hys_9_32f_Asm_X64_SSE2):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 3

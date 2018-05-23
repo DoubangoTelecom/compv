@@ -19,6 +19,7 @@
 COMPV_NAMESPACE_BEGIN()
 
 void CompVMathTrigFastAtan2_32f_Intrin_AVX(COMPV_ALIGNED(AVX) const compv_float32_t* y, COMPV_ALIGNED(AVX) const compv_float32_t* x, COMPV_ALIGNED(AVX) compv_float32_t* r, const compv_float32_t* scale1, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride);
+void CompVMathTrigHypotNaive_32f_Intrin_AVX(COMPV_ALIGNED(AVX) const compv_float32_t* x, COMPV_ALIGNED(AVX) const compv_float32_t* y, COMPV_ALIGNED(AVX) compv_float32_t* r, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride);
 
 COMPV_NAMESPACE_END()
 
