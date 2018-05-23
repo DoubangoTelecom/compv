@@ -349,7 +349,7 @@ COMPV_ERROR_CODE CompVHogStd::buildMapHistForSingleCell(compv_hog_floattype_t* m
 				COMPV_ASSERT(binIdx >= 0 && binIdx <= binIdxMax);
 #				endif
 				const compv_hog_floattype_t diff = ((theta - (binIdx * binWidth)) * scaleBinWidth) - 0.5f;
-#				if 0
+#				if 0 // This code is branchless and could be used for SIMD accel
 				COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Next (see #else) code faster");
 				const compv_hog_floattype_t avv = std::abs(magPtr[i] * diff);
 				const int binIdxNext = binIdx + ((diff >= 0) ? 1 : -1);

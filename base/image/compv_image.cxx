@@ -19,6 +19,7 @@
 #include "compv/base/compv_base.h"
 #include "compv/base/compv_mem.h"
 #include "compv/base/compv_fileutils.h"
+#include "compv/base/compv_gradient_fast.h"
 #include "compv/base/android/compv_android_fileutils.h"
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -395,6 +396,28 @@ COMPV_ERROR_CODE CompVImage::convertGrayscaleFast(CompVMatPtr& imageInOut)
 COMPV_ERROR_CODE CompVImage::histogramBuild(const CompVMatPtr& input, CompVMatPtrPtr histogram)
 {
 	COMPV_CHECK_CODE_RETURN(CompVMathHistogram::build(input, histogram));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVImage::gradientX(const CompVMatPtr& input, CompVMatPtrPtr outputX, bool outputFloat COMPV_DEFAULT(false))
+{
+	if (outputFloat) {
+		COMPV_CHECK_CODE_RETURN(CompVGradientFast::gradX<compv_float32_t>(input, outputX));
+	}
+	else {
+		COMPV_CHECK_CODE_RETURN(CompVGradientFast::gradX<int16_t>(input, outputX));
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVImage::gradientY(const CompVMatPtr& input, CompVMatPtrPtr outputY, bool outputFloat COMPV_DEFAULT(false))
+{
+	if (outputFloat) {
+		COMPV_CHECK_CODE_RETURN(CompVGradientFast::gradY<compv_float32_t>(input, outputY));
+	}
+	else {
+		COMPV_CHECK_CODE_RETURN(CompVGradientFast::gradY<int16_t>(input, outputY));
+	}
 	return COMPV_ERROR_CODE_S_OK;
 }
 

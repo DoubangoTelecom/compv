@@ -10,6 +10,8 @@
 #include "compv/base/parallel/compv_parallel.h"
 #include "compv/base/math/compv_math_trig.h"
 
+#include "compv/base/intrin/x86/compv_gradient_fast_intrin_sse2.h"
+
 #define COMPV_GRADIENT_FAST_GRADX_8U16S_SAMPLES_PER_THREAD		(64 * 64)
 #define COMPV_GRADIENT_FAST_GRADX_8U32F_SAMPLES_PER_THREAD		(64 * 64)
 #define COMPV_GRADIENT_FAST_GRADY_8U16S_SAMPLES_PER_THREAD		(64 * 64)
@@ -20,6 +22,12 @@
 //
 
 COMPV_NAMESPACE_BEGIN()
+#if COMPV_ASM && COMPV_ARCH_X64
+COMPV_EXTERNC void CompVGradientFastGradX_8u32f_Asm_X64_SSE2(COMPV_ALIGNED(SSE) const uint8_t* input, COMPV_ALIGNED(SSE) compv_float32_t* dx, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
+COMPV_EXTERNC void CompVGradientFastGradX_8u16s_Asm_X64_SSE2(COMPV_ALIGNED(SSE) const uint8_t* input, COMPV_ALIGNED(SSE) int16_t* dx, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
+COMPV_EXTERNC void CompVGradientFastGradY_8u32f_Asm_X64_SSE2(COMPV_ALIGNED(SSE) const uint8_t* input, COMPV_ALIGNED(SSE) compv_float32_t* dx, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
+COMPV_EXTERNC void CompVGradientFastGradY_8u16s_Asm_X64_SSE2(COMPV_ALIGNED(SSE) const uint8_t* input, COMPV_ALIGNED(SSE) int16_t* dx, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
+#endif /* COMPV_ASM && COMPV_ARCH_X64 */
 
 static void CompVGradientFastGradX_8u16s_C(const uint8_t* input, int16_t* dx, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
 static void CompVGradientFastGradX_8u32f_C(const uint8_t* input, compv_float32_t* dx, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
@@ -40,12 +48,28 @@ COMPV_ERROR_CODE CompVGradientFast::gradX_8u16s(const CompVMatPtr& input, CompVM
 	void(*CompVGradientFastGradX_8u16s)(const uint8_t* input, int16_t* dx, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
 		= CompVGradientFastGradX_8u16s_C;
 #if COMPV_ARCH_X86
+	if (CompVCpu::isEnabled(compv::kCpuFlagSSE2) && input->isAlignedSSE() && outputX_->isAlignedSSE()) {
+		COMPV_EXEC_IFDEF_INTRIN_X86(CompVGradientFastGradX_8u16s = CompVGradientFastGradX_8u16s_Intrin_SSE2);
+		COMPV_EXEC_IFDEF_ASM_X64(CompVGradientFastGradX_8u16s = CompVGradientFastGradX_8u16s_Asm_X64_SSE2);
+	}
 #elif COMPV_ARCH_ARM
 #endif
 
 	auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
-		CompVGradientFastGradX_8u16s(input->ptr<const uint8_t>(ystart), outputX_->ptr<int16_t>(ystart),
-			static_cast<compv_uscalar_t>(width), static_cast<compv_uscalar_t>(yend - ystart), static_cast<compv_uscalar_t>(stride));
+		int16_t* outPtr = outputX_->ptr<int16_t>(ystart);
+		const size_t h = static_cast<compv_uscalar_t>(yend - ystart);
+		const size_t widthMinus1 = width - 1;
+		CompVGradientFastGradX_8u16s(input->ptr<const uint8_t>(ystart), outPtr,
+			static_cast<compv_uscalar_t>(widthMinus1), static_cast<compv_uscalar_t>(h), static_cast<compv_uscalar_t>(stride));
+		// Set lef/right borders to zero
+		// SIMD code will write on the borders and this is why we reset them AFTER the op
+		{
+			const size_t maxh = h * stride;
+			for (compv_uscalar_t j = 0; j < maxh; j += stride) {
+				outPtr[j] = 0;
+				outPtr[j + widthMinus1] = 0;
+			}
+		}
 		return COMPV_ERROR_CODE_S_OK;
 	};
 	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
@@ -72,12 +96,28 @@ COMPV_ERROR_CODE CompVGradientFast::gradX_8u32f(const CompVMatPtr& input, CompVM
 	void(*CompVGradientFastGradX_8u32f)(const uint8_t* input, compv_float32_t* dx, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
 		= CompVGradientFastGradX_8u32f_C;
 #if COMPV_ARCH_X86
+	if (CompVCpu::isEnabled(compv::kCpuFlagSSE2) && input->isAlignedSSE() && outputX_->isAlignedSSE()) {
+		COMPV_EXEC_IFDEF_INTRIN_X86(CompVGradientFastGradX_8u32f = CompVGradientFastGradX_8u32f_Intrin_SSE2);
+		COMPV_EXEC_IFDEF_ASM_X64(CompVGradientFastGradX_8u32f = CompVGradientFastGradX_8u32f_Asm_X64_SSE2);
+	}
 #elif COMPV_ARCH_ARM
 #endif
 
 	auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
-		CompVGradientFastGradX_8u32f(input->ptr<const uint8_t>(ystart), outputX_->ptr<compv_float32_t>(ystart),
-			static_cast<compv_uscalar_t>(width), static_cast<compv_uscalar_t>(yend - ystart), static_cast<compv_uscalar_t>(stride));
+		compv_float32_t* outPtr = outputX_->ptr<compv_float32_t>(ystart);
+		const size_t h = static_cast<compv_uscalar_t>(yend - ystart);
+		const size_t widthMinus1 = width - 1;
+		CompVGradientFastGradX_8u32f(input->ptr<const uint8_t>(ystart), outPtr,
+			static_cast<compv_uscalar_t>(widthMinus1), static_cast<compv_uscalar_t>(h), static_cast<compv_uscalar_t>(stride));
+		// Set lef/right borders to zero
+		// SIMD code will write on the borders and this is why we reset them AFTER the op
+		{
+			const size_t maxh = h * stride;
+			for (compv_uscalar_t j = 0; j < maxh; j += stride) {
+				outPtr[j] = 0;
+				outPtr[j + widthMinus1] = 0;
+			}
+		}
 		return COMPV_ERROR_CODE_S_OK;
 	};
 	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
@@ -104,6 +144,10 @@ COMPV_ERROR_CODE CompVGradientFast::gradY_8u16s(const CompVMatPtr& input, CompVM
 	void(*CompVGradientFastGradY_8u16s)(const uint8_t* input, int16_t* dy, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
 		= CompVGradientFastGradY_8u16s_C;
 #if COMPV_ARCH_X86
+	if (CompVCpu::isEnabled(compv::kCpuFlagSSE2) && input->isAlignedSSE() && outputY_->isAlignedSSE()) {
+		COMPV_EXEC_IFDEF_INTRIN_X86(CompVGradientFastGradY_8u16s = CompVGradientFastGradY_8u16s_Intrin_SSE2);
+		COMPV_EXEC_IFDEF_ASM_X64(CompVGradientFastGradY_8u16s = CompVGradientFastGradY_8u16s_Asm_X64_SSE2);
+	}
 #elif COMPV_ARCH_ARM
 #endif
 
@@ -144,6 +188,10 @@ COMPV_ERROR_CODE CompVGradientFast::gradY_8u32f(const CompVMatPtr& input, CompVM
 	void(*CompVGradientFastGradY_8u32f)(const uint8_t* input, compv_float32_t* dy, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
 		= CompVGradientFastGradY_8u32f_C;
 #if COMPV_ARCH_X86
+	if (CompVCpu::isEnabled(compv::kCpuFlagSSE2) && input->isAlignedSSE() && outputY_->isAlignedSSE()) {
+		COMPV_EXEC_IFDEF_INTRIN_X86(CompVGradientFastGradY_8u32f = CompVGradientFastGradY_8u32f_Intrin_SSE2);
+		COMPV_EXEC_IFDEF_ASM_X64(CompVGradientFastGradY_8u32f = CompVGradientFastGradY_8u32f_Asm_X64_SSE2);
+	}
 #elif COMPV_ARCH_ARM
 #endif
 
@@ -206,11 +254,8 @@ template<typename OutType>
 static void CompVGradientFastGradX_8u_C(const uint8_t* input, OutType* dx, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
-	const compv_uscalar_t widthMinus1 = width - 1;
 	for (compv_uscalar_t j = 0; j < height; ++j) {
-		dx[0] = 0;
-		dx[widthMinus1] = 0;
-		for (compv_uscalar_t i = 1; i < widthMinus1; ++i) {
+		for (compv_uscalar_t i = 0; i < width; ++i) {
 			dx[i] = static_cast<OutType>(input[i + 1] - input[i - 1]);
 		}
 		input += stride;

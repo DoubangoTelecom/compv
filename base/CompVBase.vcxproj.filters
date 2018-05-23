@@ -729,6 +729,9 @@
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_trig_intrin_avx.h">
       <Filter>include\math\intrin\x86</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\intrin\x86\compv_gradient_fast_intrin_sse2.h">
+      <Filter>include\intrin\x86</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx">
@@ -1202,6 +1205,9 @@
     <ClCompile Include="math\intrin\x86\compv_math_trig_intrin_avx.cxx">
       <Filter>source\math\intrin\x86</Filter>
     </ClCompile>
+    <ClCompile Include="intrin\x86\compv_gradient_fast_intrin_sse2.cxx">
+      <Filter>source\intrin\x86</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <YASM Include="asm\x86\compv_bits_macros_x86.s">
@@ -1386,6 +1392,12 @@
     </YASM>
     <YASM Include="math\asm\x86\compv_math_trig_x64_avx.s">
       <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="asm\x86\compv_gradient_fast_x64_sse.s">
+      <Filter>source\asm\x86</Filter>
+    </YASM>
+    <YASM Include="asm\x86\compv_gradient_fast_x64_avx.s">
+      <Filter>source\asm\x86</Filter>
     </YASM>
   </ItemGroup>
   <ItemGroup>

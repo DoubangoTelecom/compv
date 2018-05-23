@@ -104,6 +104,7 @@
     <ClInclude Include="include\compv\base\intrin\arm\compv_mem_intrin_neon.h" />
     <ClInclude Include="include\compv\base\intrin\arm\compv_patch_intrin_neon.h" />
     <ClInclude Include="include\compv\base\intrin\x86\compv_bits_intrin_sse2.h" />
+    <ClInclude Include="include\compv\base\intrin\x86\compv_gradient_fast_intrin_sse2.h" />
     <ClInclude Include="include\compv\base\intrin\x86\compv_intrin_avx.h" />
     <ClInclude Include="include\compv\base\intrin\x86\compv_intrin_sse.h" />
     <ClInclude Include="include\compv\base\intrin\x86\compv_mem_intrin_avx.h" />
@@ -352,6 +353,12 @@
     <ClCompile Include="intrin\arm\compv_mem_intrin_neon.cxx" />
     <ClCompile Include="intrin\arm\compv_patch_intrin_neon.cxx" />
     <ClCompile Include="intrin\x86\compv_bits_intrin_sse2.cxx">
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+    </ClCompile>
+    <ClCompile Include="intrin\x86\compv_gradient_fast_intrin_sse2.cxx">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
@@ -790,6 +797,12 @@
       <FileType>Document</FileType>
     </YASM>
     <YASM Include="asm\x86\compv_bits_x64_sse.s">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="asm\x86\compv_gradient_fast_x64_avx.s">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="asm\x86\compv_gradient_fast_x64_sse.s">
       <FileType>Document</FileType>
     </YASM>
     <None Include="asm\x86\compv_vldx_vstx_macros_x86.s" />

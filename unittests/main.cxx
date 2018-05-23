@@ -7,6 +7,7 @@ using namespace compv;
 #define UNITTEST_SPLIT							0
 #define UNITTEST_SCALE							0
 #define UNITTEST_PYRAMID						0
+#define UNITTEST_GRADIENT						1
 #define UNITTEST_SOBEL							0
 #define UNITTEST_CANNY							0
 #define UNITTEST_THRESHOLD_ADAPT				0
@@ -16,7 +17,7 @@ using namespace compv;
 #define UNITTEST_CCL_BINAR						0
 #define UNITTEST_CCL_MSER						0
 #define UNITTEST_CCL_BITS						0
-#define UNITTEST_HOG_S							1
+#define UNITTEST_HOG_S							0
 
 #define UNITTEST_FEATURE_FAST					0
 #define UNITTEST_CHROMA_CONV					0
@@ -113,6 +114,11 @@ compv_main()
 #if UNITTEST_PYRAMID || !defined(COMPV_TEST_LOCAL)
 								extern COMPV_ERROR_CODE unittest_pyramid();
 								COMPV_CHECK_CODE_BAIL(err = unittest_pyramid(), "Image pyramid unittest failed");
+#endif
+								
+#if UNITTEST_GRADIENT || !defined(COMPV_TEST_LOCAL)
+								extern COMPV_ERROR_CODE unittest_gradient();
+								COMPV_CHECK_CODE_BAIL(err = unittest_gradient(), "Gradient unittest failed");
 #endif
 #if UNITTEST_SOBEL || !defined(COMPV_TEST_LOCAL)
 								extern COMPV_ERROR_CODE unittest_sobel();

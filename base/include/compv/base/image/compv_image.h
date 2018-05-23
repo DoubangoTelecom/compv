@@ -31,6 +31,9 @@ public:
 	static COMPV_ERROR_CODE convertGrayscale(const CompVMatPtr& imageIn, CompVMatPtrPtr imageGray);
 	static COMPV_ERROR_CODE convertGrayscaleFast(CompVMatPtr& imageInOut);
 
+	static COMPV_ERROR_CODE gradientX(const CompVMatPtr& input, CompVMatPtrPtr outputX, bool outputFloat = false);
+	static COMPV_ERROR_CODE gradientY(const CompVMatPtr& input, CompVMatPtrPtr outputY, bool outputFloat = false);
+
 	static COMPV_ERROR_CODE histogramBuild(const CompVMatPtr& input, CompVMatPtrPtr ptr32shistogram);
 	static COMPV_ERROR_CODE histogramBuildProjectionY(const CompVMatPtr& dataIn, CompVMatPtrPtr ptr32sProjection);
 	static COMPV_ERROR_CODE histogramBuildProjectionX(const CompVMatPtr& dataIn, CompVMatPtrPtr ptr32sProjection);
