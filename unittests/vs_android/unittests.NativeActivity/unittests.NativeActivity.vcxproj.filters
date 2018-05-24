@@ -33,5 +33,6 @@
     <ClCompile Include="..\..\bits.cxx" />
     <ClCompile Include="..\..\hog_s.cxx" />
     <ClCompile Include="..\..\hog_t.cxx" />
+    <ClCompile Include="..\..\gradient.cxx" />
   </ItemGroup>
 </Project>

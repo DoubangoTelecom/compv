@@ -292,6 +292,4 @@ static void CompVGradientFastGradY_8u32f_C(const uint8_t* input, compv_float32_t
 	CompVGradientFastGradY_8u_C<compv_float32_t>(input, dy, width, height, stride);
 }
 
-COMPV_GCC_DISABLE_WARNINGS_END()
-
 COMPV_NAMESPACE_END()

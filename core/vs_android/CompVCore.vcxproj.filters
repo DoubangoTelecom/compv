@@ -190,6 +190,24 @@
     <Filter Include="source\features\hog">
       <UniqueIdentifier>{c384ef19-829a-4780-9af6-eb85e50e01ae}</UniqueIdentifier>
     </Filter>
+    <Filter Include="source\features\hog\intrin">
+      <UniqueIdentifier>{1f00a2de-1b6d-4dec-89cc-9c0c756d069a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\features\hog\intrin\x86">
+      <UniqueIdentifier>{a50e25e5-3a9e-4630-8967-d56b33fe0c8f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\features\hog\intrin\arm">
+      <UniqueIdentifier>{efb1b82c-ae9b-4bff-a5ef-e90e7dc75d5c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\features\hog\intrin">
+      <UniqueIdentifier>{8e9c830e-5d85-4413-b054-5b0412e2106d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\features\hog\intrin\x86">
+      <UniqueIdentifier>{1e329286-3888-46aa-99c2-2e75d54dbca2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\features\hog\intrin\arm">
+      <UniqueIdentifier>{245ac1b3-0899-4cfb-86ea-4e52cddd538c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\compv\core\compv_core.h">
@@ -330,6 +348,18 @@
     <ClInclude Include="..\include\compv\core\features\hog\compv_core_feature_hog_t.h">
       <Filter>include\features\hog</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\compv\core\features\hog\intrin\x86\compv_core_feature_hog_common_norm_intrin_sse2.h">
+      <Filter>include\features\hog\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\core\features\hog\intrin\x86\compv_core_feature_hog_std_intrin_avx2.h">
+      <Filter>include\features\hog\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\core\features\hog\intrin\x86\compv_core_feature_hog_std_intrin_sse2.h">
+      <Filter>include\features\hog\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\core\features\hog\compv_core_feature_hog_common_norm.h">
+      <Filter>include\features\hog</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_core.cxx">
@@ -463,6 +493,15 @@
     </ClCompile>
     <ClCompile Include="..\features\hog\compv_core_feature_hog_t.cxx">
       <Filter>source\features\hog</Filter>
+    </ClCompile>
+    <ClCompile Include="..\features\hog\intrin\x86\compv_core_feature_hog_common_norm_intrin_sse2.cxx">
+      <Filter>source\features\hog\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\features\hog\intrin\x86\compv_core_feature_hog_std_intrin_avx2.cxx">
+      <Filter>source\features\hog\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\features\hog\intrin\x86\compv_core_feature_hog_std_intrin_sse2.cxx">
+      <Filter>source\features\hog\intrin\x86</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

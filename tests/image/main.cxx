@@ -12,14 +12,14 @@ using namespace compv;
 #define TEST_PATCH_MOMENTS			0
 #define TEST_CCL_BINAR				0
 #define TEST_CCL_MSER				0
-#define TEST_GRADIENT				0
+#define TEST_GRADIENT				1
 #define TEST_SOBEL					0
 #define TEST_CANNY					0
 #define TEST_ADAPT_THRESH			0
 #define TEST_OTSU_THRESH			0
 #define TEST_HOUGHSHT				0
 #define TEST_HOUGHKHT				0
-#define TEST_HOGSTD					1
+#define TEST_HOGSTD					0
 #define TEST_BRUTEFORCE				0
 #define TEST_SPLIT3					0
 #define TEST_BITS					0
