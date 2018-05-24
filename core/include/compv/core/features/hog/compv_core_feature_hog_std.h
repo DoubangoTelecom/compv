@@ -22,6 +22,18 @@ COMPV_NAMESPACE_BEGIN()
 
 typedef compv_float32_t compv_hog_floattype_t;
 typedef std::vector<compv_hog_floattype_t> compv_hog_vector_t;
+typedef void(*CompVHogStdBuildMapHistForSingleCell_32f32s)(
+	const compv_float32_t* magPtr,
+	const compv_float32_t* dirPtr,
+	compv_float32_t* mapHistPtr,
+	const compv_float32_t* thetaMax1,
+	const compv_float32_t* scaleBinWidth1,
+	const int32_t* binWidth1,
+	const int32_t* binIdxMax1,
+	const compv_uscalar_t cellWidth,
+	const compv_uscalar_t cellHeight,
+	const compv_uscalar_t magStride,
+	const compv_uscalar_t dirStride);
 
 COMPV_OBJECT_DECLARE_PTRS(HogStd)
 
@@ -53,10 +65,7 @@ public:
 		const int interp = COMPV_HOG_INTERPOLATION_BILINEAR);
 
 private:
-	static COMPV_ERROR_CODE buildMapHistForSingleCell(compv_hog_floattype_t* mapHistPtr, const compv_hog_floattype_t* magPtr, const compv_hog_floattype_t* dirPtr,
-		const size_t& cellWidth, const size_t& cellHeight, const size_t& magStride, const size_t& dirStride,
-		const compv_hog_floattype_t& thetaMax, const compv_hog_floattype_t& binWidth, const compv_hog_floattype_t& scaleBinWidth, const size_t& binCount, const int& interp
-	);
+	COMPV_ERROR_CODE updateFptrBinning(const int& nInterp, const CompVSizeSz& szCellSize);
 	static COMPV_ERROR_CODE buildOutputForSingleBlock(
 		const compv_hog_floattype_t* mapHistPtr, compv_hog_floattype_t* outputPtr,
 		const size_t& numCellsPerBlockY, const size_t& numBinsPerBlockX, const size_t& mapHistStride
@@ -70,6 +79,7 @@ private:
 	int m_nBlockNorm;
 	bool m_bGradientSigned;
 	int m_nInterp;
+	CompVHogStdBuildMapHistForSingleCell_32f32s m_fptrBinning;
 	struct {
 		void(*L1)(compv_hog_floattype_t* inOutPtr, const compv_hog_floattype_t* eps1, const compv_uscalar_t count) = CompVHogCommonNormL1_32f_C;
 		void(*L1_9)(compv_hog_floattype_t* inOutPtr, const compv_hog_floattype_t* eps1, const compv_uscalar_t count) = CompVHogCommonNormL1_32f_C;

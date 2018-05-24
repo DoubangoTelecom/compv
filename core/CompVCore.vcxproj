@@ -260,6 +260,18 @@
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
+    <ClCompile Include="features\hog\intrin\x86\compv_core_feature_hog_std_intrin_avx2.cxx">
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+    </ClCompile>
+    <ClCompile Include="features\hog\intrin\x86\compv_core_feature_hog_std_intrin_sse2.cxx">
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+    </ClCompile>
     <ClCompile Include="features\hough\compv_core_feature_houghkht.cxx" />
     <ClCompile Include="features\hough\compv_core_feature_houghsht.cxx" />
     <ClCompile Include="features\hough\intrin\arm\compv_core_feature_houghkht_intrin_neon.cxx" />
@@ -333,6 +345,8 @@
     <ClInclude Include="include\compv\core\features\hog\compv_core_feature_hog_std.h" />
     <ClInclude Include="include\compv\core\features\hog\compv_core_feature_hog_t.h" />
     <ClInclude Include="include\compv\core\features\hog\intrin\x86\compv_core_feature_hog_common_norm_intrin_sse2.h" />
+    <ClInclude Include="include\compv\core\features\hog\intrin\x86\compv_core_feature_hog_std_intrin_avx2.h" />
+    <ClInclude Include="include\compv\core\features\hog\intrin\x86\compv_core_feature_hog_std_intrin_sse2.h" />
     <ClInclude Include="include\compv\core\features\hough\compv_core_feature_houghkht.h" />
     <ClInclude Include="include\compv\core\features\hough\compv_core_feature_houghsht.h" />
     <ClInclude Include="include\compv\core\features\hough\intrin\arm\compv_core_feature_houghsht_intrin_neon.h" />

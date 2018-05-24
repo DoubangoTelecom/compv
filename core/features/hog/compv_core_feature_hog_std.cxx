@@ -10,6 +10,8 @@
 #include "compv/base/parallel/compv_parallel.h"
 
 #include "compv/core/features/hog/intrin/x86/compv_core_feature_hog_common_norm_intrin_sse2.h"
+#include "compv/core/features/hog/intrin/x86/compv_core_feature_hog_std_intrin_sse2.h"
+#include "compv/core/features/hog/intrin/x86/compv_core_feature_hog_std_intrin_avx2.h"
 
 #define COMPV_THIS_CLASSNAME	"CompVHogStd"
 
@@ -33,6 +35,32 @@ COMPV_EXTERNC void CompVHogCommonNormL2_9_32f_Asm_X64_SSE2(compv_float32_t* inOu
 COMPV_EXTERNC void CompVHogCommonNormL2Hys_9_32f_Asm_X64_SSE2(compv_float32_t* inOutPtr, const compv_float32_t* eps_square1, const compv_uscalar_t count);
 #endif /* COMPV_ASM && COMPV_ARCH_X64 */
 
+static void CompVHogStdBuildMapHistForSingleCellBilinear_32f32s_C(
+	const compv_float32_t* magPtr,
+	const compv_float32_t* dirPtr,
+	compv_float32_t* mapHistPtr,
+	const compv_float32_t* thetaMax1,
+	const compv_float32_t* scaleBinWidth1,
+	const int32_t* binWidth1,
+	const int32_t* binIdxMax1,
+	const compv_uscalar_t cellWidth,
+	const compv_uscalar_t cellHeight,
+	const compv_uscalar_t magStride,
+	const compv_uscalar_t dirStride);
+
+static void CompVHogStdBuildMapHistForSingleCellNearest_32f32s_C(
+	const compv_float32_t* magPtr,
+	const compv_float32_t* dirPtr,
+	compv_float32_t* mapHistPtr,
+	const compv_float32_t* thetaMax1,
+	const compv_float32_t* scaleBinWidth1,
+	const int32_t* binWidth1,
+	const int32_t* binIdxMax1,
+	const compv_uscalar_t cellWidth,
+	const compv_uscalar_t cellHeight,
+	const compv_uscalar_t magStride,
+	const compv_uscalar_t dirStride);
+
 static const compv_hog_floattype_t COMPV_HOG_EPSILON = compv_hog_floattype_t(1e-6);
 static const compv_hog_floattype_t COMPV_HOG_EPSILON2 = COMPV_HOG_EPSILON * COMPV_HOG_EPSILON;
 
@@ -51,6 +79,7 @@ CompVHogStd::CompVHogStd(const CompVSizeSz& blockSize,
 	, m_nBlockNorm(blockNorm)
 	, m_bGradientSigned(gradientSigned)
 	, m_nInterp(interp)
+	, m_fptrBinning(nullptr)
 {
 
 }
@@ -100,6 +129,7 @@ COMPV_ERROR_CODE CompVHogStd::set(int id, const void* valuePtr, size_t valueSize
 			COMPV_ERROR_CODE_E_INVALID_PARAMETER,
 			"interp must be equal to COMPV_HOG_INTERPOLATION_xxxx"
 		);
+		COMPV_CHECK_CODE_RETURN(updateFptrBinning(interp, m_szCellSize));
 		m_nInterp = interp;
 		return COMPV_ERROR_CODE_S_OK;
 	}
@@ -140,9 +170,10 @@ COMPV_ERROR_CODE CompVHogStd::process(const CompVMatPtr& input, CompVMatPtrPtr o
 	}
 
 	// Compute bin width associated values
-	const int nBinWidth = static_cast<int>((m_bGradientSigned ? 360 : 180) / m_nbins);
+	const int32_t nBinWidth = static_cast<int32_t>((m_bGradientSigned ? 360 : 180) / m_nbins);
 	const compv_hog_floattype_t fBinWidth = static_cast<compv_hog_floattype_t>(nBinWidth);
 	const compv_hog_floattype_t fBinWidthScale = 1 / fBinWidth;
+	const int32_t nBinIdxMax = static_cast<int32_t>(m_nbins - 1);
 
 	const compv_hog_floattype_t thetaMax = static_cast<compv_hog_floattype_t>(m_bGradientSigned ? 360 : 180);
 
@@ -189,11 +220,25 @@ COMPV_ERROR_CODE CompVHogStd::process(const CompVMatPtr& input, CompVMatPtrPtr o
 		size_t x;
 		for (size_t j = cellYstart; j < cellYend - yGuard; ++j) {
 			for (i = 0, x = 0; i < numCellsX - xGuard; ++i, x += xOffset) {
-				COMPV_CHECK_CODE_RETURN(
-					CompVHogStd::buildMapHistForSingleCell(&mapHistPtr[i * m_nbins], &magPtr[x], &dirPtr[x],
-						m_szCellSize.width, m_szCellSize.height, nMagnitudeStride, nDirectionStride,
-						thetaMax, fBinWidth, fBinWidthScale, m_nbins, m_nInterp
-				));
+				compv_hog_floattype_t* mapHistPtr_ = &mapHistPtr[i * m_nbins];
+				// Reset histogram for the current cell
+				for (size_t k = 0; k < m_nbins; ++k) {
+					mapHistPtr_[k] = 0;
+				}
+				// Process
+				m_fptrBinning(
+					&magPtr[x],
+					&dirPtr[x],
+					mapHistPtr_,
+					&thetaMax,
+					&fBinWidthScale,
+					&nBinWidth,
+					&nBinIdxMax,
+					static_cast<const compv_uscalar_t>(m_szCellSize.width),
+					static_cast<const compv_uscalar_t>(m_szCellSize.height),
+					static_cast<const compv_uscalar_t>(nMagnitudeStride),
+					static_cast<const compv_uscalar_t>(nDirectionStride)
+				);
 			}
 			mapHistPtr += nMapHistStride;
 			magPtr += nMagnitudeOffset;
@@ -307,88 +352,20 @@ COMPV_ERROR_CODE CompVHogStd::process(const CompVMatPtr& input, CompVMatPtrPtr o
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-// Compute Orientation binning: 
-//	- https://en.wikipedia.org/wiki/Histogram_of_oriented_gradients#Orientation_binning
-//	- https://www2.cs.duke.edu/courses/fall15/compsci527/notes/hog.pdf, Cell Orientation Histograms
-COMPV_ERROR_CODE CompVHogStd::buildMapHistForSingleCell(compv_hog_floattype_t* mapHistPtr, const compv_hog_floattype_t* magPtr, const compv_hog_floattype_t* dirPtr,
-	const size_t& cellWidth, const size_t& cellHeight, const size_t& magStride, const size_t& dirStride,
-	const compv_hog_floattype_t& thetaMax, const compv_hog_floattype_t& binWidth, const compv_hog_floattype_t& scaleBinWidth, const size_t& binCount, const int& interp
-)
+COMPV_ERROR_CODE CompVHogStd::updateFptrBinning(const int& nInterp, const CompVSizeSz& szCellSize)
 {
-	// Private function, do not check input params
-
-	// Reset histogram for the current cell
-	for (size_t i = 0; i < binCount; ++i) {
-		mapHistPtr[i] = 0;
+	CompVHogStdBuildMapHistForSingleCell_32f32s binningFuncPtr =
+		(m_nInterp == COMPV_HOG_INTERPOLATION_NEAREST) ? CompVHogStdBuildMapHistForSingleCellNearest_32f32s_C : CompVHogStdBuildMapHistForSingleCellBilinear_32f32s_C;
+#if COMPV_ARCH_X86
+	if (CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(szCellSize.width * sizeof(compv_float32_t))) {
+		COMPV_EXEC_IFDEF_INTRIN_X86(binningFuncPtr = CompVHogStdBuildMapHistForSingleCellBilinear_32f32s_Intrin_SSE2);
 	}
-
-	if (interp == COMPV_HOG_INTERPOLATION_BILINEAR) {
-#		if ((defined(_DEBUG) && _DEBUG != 0) || (defined(DEBUG) && DEBUG != 0)) || 1
-		const int binIdxMax = static_cast<int>(binCount - 1);
-#		endif
-		for (size_t j = 0; j < cellHeight; ++j) {
-			for (size_t i = 0; i < cellWidth; ++i) {
-				const compv_hog_floattype_t theta = (dirPtr[i] > thetaMax) ? (dirPtr[i] - thetaMax) : dirPtr[i];
-#				if ((defined(_DEBUG) && _DEBUG != 0) || (defined(DEBUG) && DEBUG != 0))
-				COMPV_ASSERT(theta >= 0 && theta <= thetaMax);
-#				endif
-				// Bilinear interpolation: https://www2.cs.duke.edu/courses/fall15/compsci527/notes/hog.pdf, Cell Orientation Histograms
-				// Also see: https://www.learnopencv.com/histogram-of-oriented-gradients/, Step 3 : Calculate Histogram of Gradients in 8×8 cells
-				// Signed grad with 9 bins (width = 40) :  
-				//	- legs:	[20, 60, 100, 140, 180, 220, 260, 300, 340]
-				//	- leg 20:  [0   -  40] , note: 0 is same as 360 (wraps around)
-				//	- leg 60:  [40  -  80]
-				//	- leg 100: [80  - 120]
-				//	- leg 140: [120 - 160]
-				//	- leg 180: [160 - 200]
-				//	- leg 220: [200 - 240]
-				//	- leg 260: [240 - 280]
-				//	- leg 300: [280 - 320]
-				//	- leg 340: [320 - 360] , note: 360 is the same as 0 (wraps around)
-				//	with 20 degrees on the right and left of each leg				
-				const int binIdx = static_cast<int>((theta * scaleBinWidth) - 0.5f);
-#				if ((defined(_DEBUG) && _DEBUG != 0) || (defined(DEBUG) && DEBUG != 0))
-				// binIdx = COMPV_MATH_CLIP3(0, binIdxMax, binIdx);
-				COMPV_ASSERT(binIdx >= 0 && binIdx <= binIdxMax);
-#				endif
-				const compv_hog_floattype_t diff = ((theta - (binIdx * binWidth)) * scaleBinWidth) - 0.5f;
-#				if 0 // This code is branchless and could be used for SIMD accel
-				COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Next (see #else) code faster");
-				const compv_hog_floattype_t avv = std::abs(magPtr[i] * diff);
-				const int binIdxNext = binIdx + ((diff >= 0) ? 1 : -1);
-				mapHistPtr[binIdxNext < 0 ? binIdxMax : (binIdxNext > binIdxMax ? 0 : binIdxNext)] += avv;
-				mapHistPtr[binIdx] += (magPtr[i] - avv);
-#				else
-				const compv_hog_floattype_t vv = magPtr[i] * diff;
-				if (diff >= 0) {
-					mapHistPtr[binIdx == binIdxMax ? 0 : (binIdx + 1)] += vv;
-					mapHistPtr[binIdx] += (magPtr[i] - vv);
-				}
-				else {
-					mapHistPtr[binIdx ? (binIdx - 1) : binIdxMax] -= vv;
-					mapHistPtr[binIdx] += (magPtr[i] + vv);
-				}
-#				endif
-			}
-			magPtr += magStride;
-			dirPtr += dirStride;
-		}
-	}
-	else if (interp == COMPV_HOG_INTERPOLATION_NEAREST) {
-		for (size_t j = 0; j < cellHeight; ++j) {
-			for (size_t i = 0; i < cellWidth; ++i) {
-				const compv_hog_floattype_t theta = (dirPtr[i] > thetaMax) ? (dirPtr[i] - thetaMax) : dirPtr[i];
-				const int binIdx = static_cast<int>(theta * scaleBinWidth);
-				mapHistPtr[binIdx] += magPtr[i];
-			}
-			magPtr += magStride;
-			dirPtr += dirStride;
-		}
-	}
-	else {
-		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED, "Invalid interpolation type");
-	}
-
+	if (CompVCpu::isEnabled(kCpuFlagAVX2) && COMPV_IS_ALIGNED_AVX(szCellSize.width * sizeof(compv_float32_t))) {
+		COMPV_EXEC_IFDEF_INTRIN_X86(binningFuncPtr = CompVHogStdBuildMapHistForSingleCellBilinear_32f32s_Intrin_AVX2);
+}
+#elif COMPV_ARCH_ARM
+#endif
+	m_fptrBinning = binningFuncPtr;
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -441,6 +418,9 @@ COMPV_ERROR_CODE CompVHogStd::newObj(
 	CompVHogStdPtr hog_ = new CompVHogStd(blockSize, blockStride, cellSize, nbins, blockNorm, gradientSigned, interp);
 	COMPV_CHECK_EXP_RETURN(!hog_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 
+	// Update binning function pointer
+	COMPV_CHECK_CODE_RETURN(hog_->updateFptrBinning(interp, cellSize));
+
 #if COMPV_ARCH_X86
 	if (CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
 		/* == L1 == */
@@ -484,6 +464,104 @@ COMPV_ERROR_CODE CompVHogStd::newObj(
 
 	*hog = *hog_;
 	return COMPV_ERROR_CODE_S_OK;
+}
+
+static void CompVHogStdBuildMapHistForSingleCellBilinear_32f32s_C(
+	const compv_float32_t* magPtr,
+	const compv_float32_t* dirPtr,
+	compv_float32_t* mapHistPtr,
+	const compv_float32_t* thetaMax1,
+	const compv_float32_t* scaleBinWidth1,
+	const int32_t* binWidth1,
+	const int32_t* binIdxMax1,
+	const compv_uscalar_t cellWidth,
+	const compv_uscalar_t cellHeight,
+	const compv_uscalar_t magStride,
+	const compv_uscalar_t dirStride
+)
+{
+	// "cellWidth" and "cellHeight" are expected to be small values (<=16) which means no GPU implementation is needed
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
+	const compv_float32_t& thetaMax = *thetaMax1;
+	const compv_float32_t& scaleBinWidth = *scaleBinWidth1;
+	const int32_t& binWidth = *binWidth1;
+	const int32_t& binIdxMax = *binIdxMax1;
+	for (compv_uscalar_t j = 0; j < cellHeight; ++j) {
+		for (compv_uscalar_t i = 0; i < cellWidth; ++i) {
+			const compv_float32_t theta = (dirPtr[i] > thetaMax) ? (dirPtr[i] - thetaMax) : dirPtr[i];
+#			if ((defined(_DEBUG) && _DEBUG != 0) || (defined(DEBUG) && DEBUG != 0))
+			COMPV_ASSERT(theta >= 0 && theta <= thetaMax);
+#			endif
+			// Bilinear interpolation: https://www2.cs.duke.edu/courses/fall15/compsci527/notes/hog.pdf, Cell Orientation Histograms
+			// Also see: https://www.learnopencv.com/histogram-of-oriented-gradients/, Step 3 : Calculate Histogram of Gradients in 8×8 cells
+			// Signed grad with 9 bins (width = 40) :  
+			//	- legs:	[20, 60, 100, 140, 180, 220, 260, 300, 340]
+			//	- leg 20:  [0   -  40] , note: 0 is same as 360 (wraps around)
+			//	- leg 60:  [40  -  80]
+			//	- leg 100: [80  - 120]
+			//	- leg 140: [120 - 160]
+			//	- leg 180: [160 - 200]
+			//	- leg 220: [200 - 240]
+			//	- leg 260: [240 - 280]
+			//	- leg 300: [280 - 320]
+			//	- leg 340: [320 - 360] , note: 360 is the same as 0 (wraps around)
+			//	with 20 degrees on the right and left of each leg				
+			const int32_t binIdx = static_cast<int32_t>((theta * scaleBinWidth) - 0.5f);
+#			if ((defined(_DEBUG) && _DEBUG != 0) || (defined(DEBUG) && DEBUG != 0))
+			// binIdx = COMPV_MATH_CLIP3(0, binIdxMax, binIdx);
+			COMPV_ASSERT(binIdx >= 0 && binIdx <= binIdxMax);
+#			endif
+			const compv_float32_t diff = ((theta - (binIdx * binWidth)) * scaleBinWidth) - 0.5f;
+#			if 0 // This code is branchless and could be used for SIMD accel
+			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Next (see #else) code faster");
+			const compv_float32_t avv = std::abs(magPtr[i] * diff);
+			const int32_t binIdxNext = binIdx + ((diff >= 0) ? 1 : -1);
+			mapHistPtr[binIdxNext < 0 ? binIdxMax : (binIdxNext > binIdxMax ? 0 : binIdxNext)] += avv;
+			mapHistPtr[binIdx] += (magPtr[i] - avv);
+#			else
+			const compv_float32_t vv = magPtr[i] * diff;
+			if (diff >= 0) {
+				mapHistPtr[binIdx == binIdxMax ? 0 : (binIdx + 1)] += vv;
+				mapHistPtr[binIdx] += (magPtr[i] - vv);
+			}
+			else {
+				mapHistPtr[binIdx ? (binIdx - 1) : binIdxMax] -= vv;
+				mapHistPtr[binIdx] += (magPtr[i] + vv);
+			}
+#			endif
+		}
+		magPtr += magStride;
+		dirPtr += dirStride;
+	}
+}
+
+static void CompVHogStdBuildMapHistForSingleCellNearest_32f32s_C(
+	const compv_float32_t* magPtr,
+	const compv_float32_t* dirPtr,
+	compv_float32_t* mapHistPtr,
+	const compv_float32_t* thetaMax1,
+	const compv_float32_t* scaleBinWidth1,
+	const int32_t* binWidth1,
+	const int32_t* binIdxMax1,
+	const compv_uscalar_t cellWidth,
+	const compv_uscalar_t cellHeight,
+	const compv_uscalar_t magStride,
+	const compv_uscalar_t dirStride
+)
+{
+	// "cellWidth" and "cellHeight" are expected to be small values (<=16) which means no GPU implementation is needed
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
+	const compv_float32_t& thetaMax = *thetaMax1;
+	const compv_float32_t& scaleBinWidth = *scaleBinWidth1;
+	for (compv_uscalar_t j = 0; j < cellHeight; ++j) {
+		for (compv_uscalar_t i = 0; i < cellWidth; ++i) {
+			const compv_float32_t theta = (dirPtr[i] > thetaMax) ? (dirPtr[i] - thetaMax) : dirPtr[i];
+			const int32_t binIdx = static_cast<int32_t>(theta * scaleBinWidth);
+			mapHistPtr[binIdx] += magPtr[i];
+		}
+		magPtr += magStride;
+		dirPtr += dirStride;
+	}
 }
 
 COMPV_NAMESPACE_END()

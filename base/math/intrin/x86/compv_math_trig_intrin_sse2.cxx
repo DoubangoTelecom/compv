@@ -27,7 +27,7 @@ void CompVMathTrigFastAtan2_32f_Intrin_SSE2(COMPV_ALIGNED(SSE) const compv_float
 	static const __m128 vecAtan2_plus90 = _mm_load_ps(k90_32f);
 	static const __m128 vecAtan2_plus180 = _mm_load_ps(k180_32f);
 	static const __m128 vecAtan2_plus360 = _mm_load_ps(k360_32f);
-	static const __m128 vecAtan2_sign = _mm_castsi128_ps(_mm_set1_epi32(0x7fffffff)); // used to compute fabs, not needed for ARM NEON
+	static const __m128 vecAtan2_sign = _mm_castsi128_ps(_mm_set1_epi32(0x7fffffff)); // used to compute _mm_abs_ps, not needed for ARM NEON
 	const __m128 vecAtan2_scale = _mm_set1_ps(*scale1);
 	for (compv_uscalar_t j = 0; j < height; ++j) {
 		for (compv_uscalar_t i = 0; i < width; i += 4) {
