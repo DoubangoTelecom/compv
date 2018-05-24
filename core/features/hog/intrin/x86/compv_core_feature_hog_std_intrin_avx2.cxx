@@ -44,8 +44,8 @@ void CompVHogStdBuildMapHistForSingleCellBilinear_32f32s_Intrin_AVX2(
 	const __m256i vecOne_minus = _mm256_set1_epi32(-1);
 	const __m256i vecBinIdxMax = _mm256_set1_epi32(*binIdxMax1);
 	const __m256 vecBinWidth = _mm256_cvtepi32_ps(_mm256_set1_epi32(*binWidth1));
-	COMPV_ALIGN_SSE() int32_t indices[16];
-	COMPV_ALIGN_SSE() compv_float32_t values[16];
+	COMPV_ALIGN_AVX() int32_t indices[16];
+	COMPV_ALIGN_AVX() compv_float32_t values[16];
 	for (compv_uscalar_t j = 0; j < cellHeight; ++j) {
 		for (compv_uscalar_t i = 0; i < cellWidth; i += 8) {
 			__m256 vecTheta = _mm256_load_ps(&dirPtr[i]);
@@ -64,14 +64,13 @@ void CompVHogStdBuildMapHistForSingleCellBilinear_32f32s_Intrin_AVX2(
 				_mm256_and_si256(vecMaski0, vecBinIdxMax),
 				_mm256_andnot_si256(vecMaski0, _mm256_andnot_si256(vecMaski1, vecBinIdxNext))
 			);
-			vecMagPtr = _mm256_sub_ps(vecMagPtr, vecAVV);
 			// TODO(dmi): AVX2 -> use gather[binIdxNext] and gather[binIdx]:
 			//		mapHistPtr[vecBinIdxNext.m256i_i32[k]] += vecAVV.m256_f32[k];
 			//		mapHistPtr[vecBinIdx.m256i_i32[k]] += vecMagPtr.m256_f32[k];
 			_mm256_store_si256(reinterpret_cast<__m256i*>(&indices[0]), vecBinIdxNext);
 			_mm256_store_si256(reinterpret_cast<__m256i*>(&indices[8]), vecBinIdx);
 			_mm256_store_ps(&values[0], vecAVV);
-			_mm256_store_ps(&values[8], vecMagPtr);
+			_mm256_store_ps(&values[8], _mm256_sub_ps(vecMagPtr, vecAVV));
 			// Addition order is important if we want to have the same MD5 as serial code
 			mapHistPtr[indices[0]] += values[0];
 			mapHistPtr[indices[8]] += values[8];

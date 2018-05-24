@@ -362,7 +362,7 @@ COMPV_ERROR_CODE CompVHogStd::updateFptrBinning(const int& nInterp, const CompVS
 	}
 	if (CompVCpu::isEnabled(kCpuFlagAVX2) && COMPV_IS_ALIGNED_AVX(szCellSize.width * sizeof(compv_float32_t))) {
 		COMPV_EXEC_IFDEF_INTRIN_X86(binningFuncPtr = CompVHogStdBuildMapHistForSingleCellBilinear_32f32s_Intrin_AVX2);
-}
+	}
 #elif COMPV_ARCH_ARM
 #endif
 	m_fptrBinning = binningFuncPtr;
