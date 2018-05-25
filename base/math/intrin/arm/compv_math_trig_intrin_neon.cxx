@@ -8,6 +8,7 @@
 
 #if COMPV_ARCH_ARM && COMPV_INTRINSIC
 #include "compv/base/compv_simd_globals.h"
+#include "compv/base/intrin/arm/compv_intrin_neon.h"
 #include "compv/base/math/compv_math.h"
 #include "compv/base/compv_mem.h"
 #include "compv/base/compv_debug.h"
@@ -18,6 +19,9 @@ void CompVMathTrigFastAtan2_32f_Intrin_NEON(COMPV_ALIGNED(NEON) const compv_floa
 {
     COMPV_DEBUG_INFO_CHECK_NEON();
     COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM FMA version is faster");
+#if COMPV_ARCH_ARM32
+    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("vdivq_f32 not optimized");
+#endif
     static const float32x4_t vecAtan2_eps = vld1q_f32(kAtan2Eps_32f);
     static const float32x4_t vecAtan2_p1 = vld1q_f32(kAtan2P1_32f);
     static const float32x4_t vecAtan2_p3 = vld1q_f32(kAtan2P3_32f);
@@ -80,6 +84,9 @@ void CompVMathTrigHypotNaive_32f_Intrin_NEON(COMPV_ALIGNED(NEON) const compv_flo
 {
     COMPV_DEBUG_INFO_CHECK_NEON();
     COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM FMA version is faster");
+#if COMPV_ARCH_ARM32
+    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("vsqrtq_f32 not optimized");
+#endif
     const compv_uscalar_t width16 = width & -16;
     compv_uscalar_t i;
     float32x4_t vec0, vec1, vec2, vec3, vec4, vec5, vec6, vec7;
@@ -102,7 +109,7 @@ void CompVMathTrigHypotNaive_32f_Intrin_NEON(COMPV_ALIGNED(NEON) const compv_flo
         for (; i < width; i += 4) {
             vec0 = vld1q_f32(&x[i]);
             vec4 = vld1q_f32(&y[i]);
-            vst1q_f32(&r[i], vsqrtq_f32(vaddq_f32(vmulq_f32(vec0, vec0), vmulq_f32(vec4, vec4)))); // TODO(dmi): Add support for FMA3 (see ASM code)
+            vst1q_f32(&r[i], vsqrtq_f32(vmlaq_f32(vmulq_f32(vec0, vec0), vec4, vec4))); // TODO(dmi): Add support for FMA3 (see ASM code)
         }
         y += stride;
         x += stride;

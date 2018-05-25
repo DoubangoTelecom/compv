@@ -72,6 +72,20 @@ COMPV_NAMESPACE_BEGIN()
 #   define COMPV_ARM_N_FMA(a, b, c) vfma_f32(a, b, (float32x2_t) {c, c})
 #endif
 
+// TODO(dmi): Not optimized
+// Theses next implementations for DIV and SQRT are very slow and don't use approximation (e.g. vrsqrteq_f32). The reason is
+// that we need the exact values in order to pass the MD5 checks.
+#if COMPV_ARCH_ARM32
+#	define vsqrtq_f32(vec)({ \
+    float32x4_t __ret = {std::sqrt(vgetq_lane_f32(vec, 0)), std::sqrt(vgetq_lane_f32(vec, 1)), std::sqrt(vgetq_lane_f32(vec, 2)), std::sqrt(vgetq_lane_f32(vec, 3))}; \
+    __ret; \
+    })
+#	define vdivq_f32(vec0, vec1)({ \
+    float32x4_t __ret = {(vgetq_lane_f32(vec0, 0) / vgetq_lane_f32(vec1, 0)), (vgetq_lane_f32(vec0, 1) / vgetq_lane_f32(vec1, 1)), (vgetq_lane_f32(vec0, 2) / vgetq_lane_f32(vec1, 2)), (vgetq_lane_f32(vec0, 3) / vgetq_lane_f32(vec1, 3))}; \
+    __ret; \
+    })
+#endif
+
 // static_cast<inttype>((f) >= 0.0 ? ((f) + 0.5) : ((f) - 0.5))
 // const float32x4_t vecHalf = vdupq_n_f32(0.5f) or (float32x4_t)vdupq_n_s32(0x3f000000)
 #if COMPV_ARCH_ARM64

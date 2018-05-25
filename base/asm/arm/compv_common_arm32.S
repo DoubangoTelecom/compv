@@ -19,6 +19,7 @@
 bp .req r12
 
 #########################################################################
+# http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dht0002a/ch01s03s02.html
 # .dn to define neon registers aliases not supported by llvm.
 q0x .req d0
 q0y .req d1

@@ -31,6 +31,10 @@ COMPV_EXTERNC void CompVMathTrigHypotNaive_32f_Asm_X64_AVX(COMPV_ALIGNED(AVX) co
 COMPV_EXTERNC void CompVMathTrigHypotNaive_32f_Asm_X64_FMA3_AVX(COMPV_ALIGNED(AVX) const compv_float32_t* x, COMPV_ALIGNED(AVX) const compv_float32_t* y, COMPV_ALIGNED(AVX) compv_float32_t* r, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride);
 #endif /* COMPV_ASM && COMPV_ARCH_X64 */
 
+#if COMPV_ASM && COMPV_ARCH_ARM32
+COMPV_EXTERNC void CompVMathTrigHypotNaive_32f_Asm_NEON32(COMPV_ALIGNED(NEON) const compv_float32_t* x, COMPV_ALIGNED(NEON) const compv_float32_t* y, COMPV_ALIGNED(NEON) compv_float32_t* r, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
+#endif /* COMPV_ASM && COMPV_ARCH_ARM32 */
+
 static void CompVMathTrigFastAtan2_32f_C(const compv_float32_t* y, const compv_float32_t* x, compv_float32_t* r, const compv_float32_t* scale1, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
 static void CompVMathTrigFastAtan2_64f_C(const compv_float64_t* y, const compv_float64_t* x, compv_float64_t* r, const compv_float64_t* scale1, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
 static void CompVMathTrigHypot_32f_C(const compv_float32_t* x, const compv_float32_t* y, compv_float32_t* r, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
@@ -371,6 +375,7 @@ COMPV_ERROR_CODE CompVMathTrig::hypot_naive(const CompVMatPtr& x, const CompVMat
 #elif COMPV_ARCH_ARM
         if (CompVCpu::isEnabled(compv::kCpuFlagARM_NEON) && x->isAlignedNEON() && y->isAlignedNEON() && r_->isAlignedNEON()) {
             COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMathTrigHypotNaive_32f = CompVMathTrigHypotNaive_32f_Intrin_NEON);
+            COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathTrigHypotNaive_32f = CompVMathTrigHypotNaive_32f_Asm_NEON32);
         }
 #endif
 		COMPV_CHECK_CODE_RETURN((CompVMathTrigHypot_X<compv_float32_t>(x->ptr<const compv_float32_t>(), y->ptr<const compv_float32_t>(), r_->ptr<compv_float32_t>(),
