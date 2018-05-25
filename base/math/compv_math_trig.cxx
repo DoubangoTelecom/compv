@@ -11,6 +11,7 @@
 
 #include "compv/base/math/intrin/x86/compv_math_trig_intrin_sse2.h"
 #include "compv/base/math/intrin/x86/compv_math_trig_intrin_avx.h"
+#include "compv/base/math/intrin/arm/compv_math_trig_intrin_neon.h"
 
 #define COMPV_THIS_CLASSNAME	"CompVMathStats"
 
@@ -248,6 +249,9 @@ COMPV_ERROR_CODE CompVMathTrig::fastAtan2(const CompVMatPtr& y, const CompVMatPt
 			}
 		}
 #elif COMPV_ARCH_ARM
+        if (CompVCpu::isEnabled(compv::kCpuFlagARM_NEON) && x->isAlignedNEON() && y->isAlignedNEON() && r_->isAlignedNEON()) {
+            COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMathTrigFastAtan2_32f = CompVMathTrigFastAtan2_32f_Intrin_NEON);
+        }
 #endif
 		COMPV_CHECK_CODE_RETURN((CompVMathTrigFastAtan2_X<compv_float32_t>(y->ptr<const compv_float32_t>(), x->ptr<const compv_float32_t>(), r_->ptr<compv_float32_t>(), static_cast<compv_float32_t>(angleInDeg ? 1.0 : M_PI / 180.0),
 			width, height, stride, CompVMathTrigFastAtan2_32f)));
@@ -365,6 +369,9 @@ COMPV_ERROR_CODE CompVMathTrig::hypot_naive(const CompVMatPtr& x, const CompVMat
 			}
 		}
 #elif COMPV_ARCH_ARM
+        if (CompVCpu::isEnabled(compv::kCpuFlagARM_NEON) && x->isAlignedNEON() && y->isAlignedNEON() && r_->isAlignedNEON()) {
+            COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMathTrigHypotNaive_32f = CompVMathTrigHypotNaive_32f_Intrin_NEON);
+        }
 #endif
 		COMPV_CHECK_CODE_RETURN((CompVMathTrigHypot_X<compv_float32_t>(x->ptr<const compv_float32_t>(), y->ptr<const compv_float32_t>(), r_->ptr<compv_float32_t>(),
 			width, height, stride, CompVMathTrigHypotNaive_32f)));

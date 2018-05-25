@@ -16,7 +16,7 @@
 
 #define LOOP_COUNT				1
 #define FILE_NAME				FILE_NAME_EQUIRECTANGULAR
-#define NORM					COMPV_HOG_BLOCK_NORM_L2HYS
+#define NORM					COMPV_HOG_BLOCK_NORM_NONE
 
 static const struct compv_unittest_hogstd {
 	const char* filename;
