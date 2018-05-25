@@ -11,6 +11,7 @@
 #include "compv/base/math/compv_math_trig.h"
 
 #include "compv/base/intrin/x86/compv_gradient_fast_intrin_sse2.h"
+#include "compv/base/intrin/arm/compv_gradient_fast_intrin_neon.h"
 
 #define COMPV_GRADIENT_FAST_GRADX_8U16S_SAMPLES_PER_THREAD		(64 * 64)
 #define COMPV_GRADIENT_FAST_GRADX_8U32F_SAMPLES_PER_THREAD		(64 * 64)
@@ -53,6 +54,9 @@ COMPV_ERROR_CODE CompVGradientFast::gradX_8u16s(const CompVMatPtr& input, CompVM
 		COMPV_EXEC_IFDEF_ASM_X64(CompVGradientFastGradX_8u16s = CompVGradientFastGradX_8u16s_Asm_X64_SSE2);
 	}
 #elif COMPV_ARCH_ARM
+	if (CompVCpu::isEnabled(compv::kCpuFlagARM_NEON) && input->isAlignedNEON() && outputX_->isAlignedNEON()) {
+		COMPV_EXEC_IFDEF_INTRIN_ARM(CompVGradientFastGradX_8u16s = CompVGradientFastGradX_8u16s_Intrin_NEON);
+	}
 #endif
 
 	auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {

@@ -115,10 +115,12 @@
     <ClInclude Include="..\include\compv\base\image\intrin\x86\compv_image_threshold_intrin_sse2.h" />
     <ClInclude Include="..\include\compv\base\image\intrin\x86\compv_image_threshold_intrin_sse41.h" />
     <ClInclude Include="..\include\compv\base\intrin\arm\compv_bits_intrin_neon.h" />
+    <ClInclude Include="..\include\compv\base\intrin\arm\compv_gradient_fast_intrin_neon.h" />
     <ClInclude Include="..\include\compv\base\intrin\arm\compv_intrin_neon.h" />
     <ClInclude Include="..\include\compv\base\intrin\arm\compv_mem_intrin_neon.h" />
     <ClInclude Include="..\include\compv\base\intrin\arm\compv_patch_intrin_neon.h" />
     <ClInclude Include="..\include\compv\base\intrin\x86\compv_bits_intrin_sse2.h" />
+    <ClInclude Include="..\include\compv\base\intrin\x86\compv_gradient_fast_intrin_sse2.h" />
     <ClInclude Include="..\include\compv\base\intrin\x86\compv_intrin_avx.h" />
     <ClInclude Include="..\include\compv\base\intrin\x86\compv_intrin_sse.h" />
     <ClInclude Include="..\include\compv\base\intrin\x86\compv_mem_intrin_avx.h" />
@@ -326,9 +328,11 @@
     <ClCompile Include="..\image\intrin\x86\compv_image_threshold_intrin_sse2.cxx" />
     <ClCompile Include="..\image\intrin\x86\compv_image_threshold_intrin_sse41.cxx" />
     <ClCompile Include="..\intrin\arm\compv_bits_intrin_neon.cxx" />
+    <ClCompile Include="..\intrin\arm\compv_gradient_fast_intrin_neon.cxx" />
     <ClCompile Include="..\intrin\arm\compv_mem_intrin_neon.cxx" />
     <ClCompile Include="..\intrin\arm\compv_patch_intrin_neon.cxx" />
     <ClCompile Include="..\intrin\x86\compv_bits_intrin_sse2.cxx" />
+    <ClCompile Include="..\intrin\x86\compv_gradient_fast_intrin_sse2.cxx" />
     <ClCompile Include="..\intrin\x86\compv_mem_intrin_avx.cxx" />
     <ClCompile Include="..\intrin\x86\compv_mem_intrin_sse2.cxx" />
     <ClCompile Include="..\intrin\x86\compv_mem_intrin_ssse3.cxx" />
