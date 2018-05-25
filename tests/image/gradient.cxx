@@ -16,8 +16,8 @@
 
 #define LOOP_COUNT				1
 #define FILE_NAME				FILE_NAME_EQUIRECTANGULAR
-#define FLTP					false // Floating point?
-#define XDIR					true // XDIR(true) or YDIR(false)
+#define FLTP					true // Floating point?
+#define XDIR					false // XDIR(true) or YDIR(false)
 
 static const struct compv_unittest_gradient {
 	const char* filename;

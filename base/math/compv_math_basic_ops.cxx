@@ -111,10 +111,10 @@ public:
 	 \
 	switch (a->subType()) { \
 	case COMPV_SUBTYPE_RAW_UINT8: \
-		COMPV_CHECK_CODE_RETURN((CompVMathBasicOpsGeneric::processABR<uint8_t, CompVMathBasicUnsignedOp##op##<uint8_t> >(a, b, r))); \
+		COMPV_CHECK_CODE_RETURN((CompVMathBasicOpsGeneric::processABR<uint8_t, CompVMathBasicUnsignedOp##op<uint8_t> >(a, b, r))); \
 		break; \
 	case COMPV_SUBTYPE_RAW_UINT16: \
-		COMPV_CHECK_CODE_RETURN((CompVMathBasicOpsGeneric::processABR<uint16_t, CompVMathBasicUnsignedOp##op##<uint16_t> >(a, b, r))); \
+		COMPV_CHECK_CODE_RETURN((CompVMathBasicOpsGeneric::processABR<uint16_t, CompVMathBasicUnsignedOp##op<uint16_t> >(a, b, r))); \
 		break; \
 	default: \
 		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED); \

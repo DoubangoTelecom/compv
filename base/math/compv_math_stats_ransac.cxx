@@ -6,9 +6,8 @@
 */
 #include "compv/base/math/compv_math_stats_ransac.h"
 #include "compv/base/math/compv_math_utils.h"
-#include "compv/base/parallel/compv_parallel.h"
-
 #include <random>
+#include "compv/base/parallel/compv_parallel.h" // TODO(dmi): Very strange, when targeting iOS and including this header before <random> cause build errors
 
 #define COMPV_THIS_CLASSNAME	"CompVMathStatsRansac"
 

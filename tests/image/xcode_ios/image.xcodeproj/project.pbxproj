@@ -9,6 +9,9 @@
 /* Begin PBXBuildFile section */
 		152BA37B1F05711F0024C7A9 /* houghkht.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 152BA3791F05711F0024C7A9 /* houghkht.cxx */; };
 		152BA37C1F05711F0024C7A9 /* houghsht.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 152BA37A1F05711F0024C7A9 /* houghsht.cxx */; };
+		155C322520B7B313000AFF7B /* bits.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 155C322220B7B313000AFF7B /* bits.cxx */; };
+		155C322620B7B313000AFF7B /* gradient.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 155C322320B7B313000AFF7B /* gradient.cxx */; };
+		155C322720B7B313000AFF7B /* hog_std.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 155C322420B7B313000AFF7B /* hog_std.cxx */; };
 		156E41B51E7118F900DF9950 /* sobel.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 156E41B41E7118F900DF9950 /* sobel.cxx */; };
 		157840911E36CC2E00955396 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 157840901E36CC2E00955396 /* main.m */; };
 		157840941E36CC2E00955396 /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 157840931E36CC2E00955396 /* AppDelegate.mm */; };
@@ -114,6 +117,9 @@
 /* Begin PBXFileReference section */
 		152BA3791F05711F0024C7A9 /* houghkht.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = houghkht.cxx; path = ../../houghkht.cxx; sourceTree = "<group>"; };
 		152BA37A1F05711F0024C7A9 /* houghsht.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = houghsht.cxx; path = ../../houghsht.cxx; sourceTree = "<group>"; };
+		155C322220B7B313000AFF7B /* bits.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = bits.cxx; path = ../../bits.cxx; sourceTree = "<group>"; };
+		155C322320B7B313000AFF7B /* gradient.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = gradient.cxx; path = ../../gradient.cxx; sourceTree = "<group>"; };
+		155C322420B7B313000AFF7B /* hog_std.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = hog_std.cxx; path = ../../hog_std.cxx; sourceTree = "<group>"; };
 		156E41B41E7118F900DF9950 /* sobel.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sobel.cxx; path = ../../sobel.cxx; sourceTree = "<group>"; };
 		1578408C1E36CC2E00955396 /* image.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = image.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		157840901E36CC2E00955396 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
@@ -276,6 +282,9 @@
 		157840D01E36CCDE00955396 /* source */ = {
 			isa = PBXGroup;
 			children = (
+				155C322220B7B313000AFF7B /* bits.cxx */,
+				155C322320B7B313000AFF7B /* gradient.cxx */,
+				155C322420B7B313000AFF7B /* hog_std.cxx */,
 				159D71EB2015A63A005AE171 /* ccl_binar.cxx */,
 				159D71EC2015A63A005AE171 /* ccl_mser.cxx */,
 				159A9C8F1FE9C2D30080DB32 /* split.cxx */,
@@ -458,9 +467,11 @@
 				157F72C41E5811E8000DE45F /* tests_common.cxx in Sources */,
 				152BA37B1F05711F0024C7A9 /* houghkht.cxx in Sources */,
 				157F72791E580751000DE45F /* pyramid.cxx in Sources */,
+				155C322720B7B313000AFF7B /* hog_std.cxx in Sources */,
 				157840C61E36CCD800955396 /* feature_fast.cxx in Sources */,
 				159A9C921FE9C2D30080DB32 /* split.cxx in Sources */,
 				157840941E36CC2E00955396 /* AppDelegate.mm in Sources */,
+				155C322520B7B313000AFF7B /* bits.cxx in Sources */,
 				157840911E36CC2E00955396 /* main.m in Sources */,
 				159A9C931FE9C2D30080DB32 /* threshold.cxx in Sources */,
 				159E15721E5DA5DF00D8CE75 /* feature_orb.cxx in Sources */,
@@ -468,6 +479,7 @@
 				15AE9FFB1E644FC40030D908 /* patch.cxx in Sources */,
 				156E41B51E7118F900DF9950 /* sobel.cxx in Sources */,
 				157840C31E36CCD800955396 /* chroma_conv.cxx in Sources */,
+				155C322620B7B313000AFF7B /* gradient.cxx in Sources */,
 				159D71ED2015A63A005AE171 /* ccl_binar.cxx in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -105,6 +105,9 @@ COMPV_ERROR_CODE CompVGradientFast::gradX_8u32f(const CompVMatPtr& input, CompVM
 		COMPV_EXEC_IFDEF_ASM_X64(CompVGradientFastGradX_8u32f = CompVGradientFastGradX_8u32f_Asm_X64_SSE2);
 	}
 #elif COMPV_ARCH_ARM
+    if (CompVCpu::isEnabled(compv::kCpuFlagARM_NEON) && input->isAlignedNEON() && outputX_->isAlignedNEON()) {
+        COMPV_EXEC_IFDEF_INTRIN_ARM(CompVGradientFastGradX_8u32f = CompVGradientFastGradX_8u32f_Intrin_NEON);
+    }
 #endif
 
 	auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
@@ -153,6 +156,9 @@ COMPV_ERROR_CODE CompVGradientFast::gradY_8u16s(const CompVMatPtr& input, CompVM
 		COMPV_EXEC_IFDEF_ASM_X64(CompVGradientFastGradY_8u16s = CompVGradientFastGradY_8u16s_Asm_X64_SSE2);
 	}
 #elif COMPV_ARCH_ARM
+    if (CompVCpu::isEnabled(compv::kCpuFlagARM_NEON) && input->isAlignedNEON() && outputY_->isAlignedNEON()) {
+        COMPV_EXEC_IFDEF_INTRIN_ARM(CompVGradientFastGradY_8u16s = CompVGradientFastGradY_8u16s_Intrin_NEON);
+    }
 #endif
 
 	auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
@@ -197,6 +203,9 @@ COMPV_ERROR_CODE CompVGradientFast::gradY_8u32f(const CompVMatPtr& input, CompVM
 		COMPV_EXEC_IFDEF_ASM_X64(CompVGradientFastGradY_8u32f = CompVGradientFastGradY_8u32f_Asm_X64_SSE2);
 	}
 #elif COMPV_ARCH_ARM
+    if (CompVCpu::isEnabled(compv::kCpuFlagARM_NEON) && input->isAlignedNEON() && outputY_->isAlignedNEON()) {
+        COMPV_EXEC_IFDEF_INTRIN_ARM(CompVGradientFastGradY_8u32f = CompVGradientFastGradY_8u32f_Intrin_NEON);
+    }
 #endif
 
 	auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
