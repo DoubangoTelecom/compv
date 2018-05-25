@@ -27,7 +27,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathTrigHypotNaive_32f_Asm_NEON32
 	COMPV_GAS_SAVE_NEON_REGS
 
 	@@ Load arguments @@
-	ldm_args r0-r4
+	ldm_args r0-r5
 	x .req r0
 	y .req r1
 	out .req r2
@@ -38,11 +38,18 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathTrigHypotNaive_32f_Asm_NEON32
     width16 .req r6
     i .req r7
 
+    pld [x, #(CACHE_LINE_SIZE*0)]
+	pld [x, #(CACHE_LINE_SIZE*1)]
+	pld [x, #(CACHE_LINE_SIZE*2)]
+    pld [y, #(CACHE_LINE_SIZE*0)]
+	pld [y, #(CACHE_LINE_SIZE*1)]
+	pld [y, #(CACHE_LINE_SIZE*2)]
+
     and width16, width, #-16
 
     @ Transform stride to padding then from samples to bytes @
-	add r11, width, #15
-	and r11, r11, #-16
+	add r11, width, #3
+	and r11, r11, #-4
 	sub stride, stride, r11
     lsl stride, stride, #(COMPV_GAS_FLOAT32_SHIFT_BYTES)
 
@@ -61,6 +68,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathTrigHypotNaive_32f_Asm_NEON32
             vld1.u8 { q2, q3 }, [x]!
             vld1.u8 { q4, q5 }, [y]!
             vld1.u8 { q6, q7 }, [y]!
+            pld [x, #(CACHE_LINE_SIZE*3)]
+            pld [y, #(CACHE_LINE_SIZE*3)]
             vmul.f32 q0, q0, q0
             vmul.f32 q1, q1, q1
             vmul.f32 q2, q2, q2
@@ -70,55 +79,24 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathTrigHypotNaive_32f_Asm_NEON32
             vmla.f32 q2, q6, q6
             vmla.f32 q3, q7, q7
             @ TODO(dmi): 'vsqrt.f32' not vectorized and not using approx implementaion (to make sure MD5 match) -> !! PERF ISSUE!!
-            vmov.f32 r8, q0x[0]
-            vmov.f32 r9, q0x[1]
-            vmov.f32 r10, q0y[0]
-            vmov.f32 r11, q0y[1]
+            vsqrt.f32 s0, s0
+            vsqrt.f32 s1, s1
+            vsqrt.f32 s2, s2
+            vsqrt.f32 s3, s3
+            vsqrt.f32 s4, s4
+            vsqrt.f32 s5, s5
+            vsqrt.f32 s6, s6
+            vsqrt.f32 s7, s7
             vsqrt.f32 s8, s8
             vsqrt.f32 s9, s9
             vsqrt.f32 s10, s10
             vsqrt.f32 s11, s11
-            str r8, [out, #(0*COMPV_GAS_FLOAT32_SZ_BYTES)]
-            vmov.f32 r8, q1x[0]
-            str r9, [out, #(1*COMPV_GAS_FLOAT32_SZ_BYTES)]
-            vmov.f32 r9, q1x[1]
-            vsqrt.f32 s8, s8
-            vsqrt.f32 s9, s9
-            str r10, [out, #(2*COMPV_GAS_FLOAT32_SZ_BYTES)]
-            vmov.f32 r10, q1y[0]
-            str r11, [out, #(3*COMPV_GAS_FLOAT32_SZ_BYTES)]
-            vmov.f32 r11, q1y[1]            
-            vsqrt.f32 s10, s10
-            vsqrt.f32 s11, s11
-            str r8, [out, #(4*COMPV_GAS_FLOAT32_SZ_BYTES)]
-            str r9, [out, #(5*COMPV_GAS_FLOAT32_SZ_BYTES)]
-            str r10, [out, #(6*COMPV_GAS_FLOAT32_SZ_BYTES)]
-            str r11, [out, #(7*COMPV_GAS_FLOAT32_SZ_BYTES)]
-            vmov.f32 r8, q2x[0]
-            vmov.f32 r9, q2x[1]
-            vmov.f32 r10, q2y[0]
-            vmov.f32 r11, q2y[1]
-            vsqrt.f32 s8, s8
-            vsqrt.f32 s9, s9
-            vsqrt.f32 s10, s10
-            vsqrt.f32 s11, s11
-            str r8, [out, #(8*COMPV_GAS_FLOAT32_SZ_BYTES)]
-            vmov.f32 r8, q3x[0]
-            str r9, [out, #(9*COMPV_GAS_FLOAT32_SZ_BYTES)]
-            vmov.f32 r9, q3x[1]
-            vsqrt.f32 s8, s8
-            vsqrt.f32 s9, s9
-            str r10, [out, #(10*COMPV_GAS_FLOAT32_SZ_BYTES)]
-            vmov.f32 r10, q3y[0]
-            str r11, [out, #(11*COMPV_GAS_FLOAT32_SZ_BYTES)]
-            vmov.f32 r11, q3y[1]            
-            vsqrt.f32 s10, s10
-            vsqrt.f32 s11, s11
-            str r8, [out, #(12*COMPV_GAS_FLOAT32_SZ_BYTES)]
-            str r9, [out, #(13*COMPV_GAS_FLOAT32_SZ_BYTES)]
-            str r10, [out, #(14*COMPV_GAS_FLOAT32_SZ_BYTES)]
-            str r11, [out, #(15*COMPV_GAS_FLOAT32_SZ_BYTES)]
-            add out, out, #(16*COMPV_GAS_FLOAT32_SZ_BYTES)
+            vsqrt.f32 s12, s12
+            vsqrt.f32 s13, s13
+            vsqrt.f32 s14, s14
+            vsqrt.f32 s15, s15
+            vst1.f32 {q0, q1}, [out :128]!
+            vst1.f32 {q2, q3}, [out :128]!
             add i, i, #16
             cmp i, width16
             blt LoopWidth16_CompVMathTrigHypotNaive_32f_Asm_NEON32
@@ -133,19 +111,11 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathTrigHypotNaive_32f_Asm_NEON32
             vmul.f32 q0, q0, q0
             vmla.f32 q0, q4, q4
             @ TODO(dmi): 'vsqrt.f32' not vectorized and not using approx implementaion (to make sure MD5 match) -> !! PERF ISSUE!!
-            vmov.f32 r8, q0x[0]
-            vmov.f32 r9, q0x[1]
-            vmov.f32 r10, q0y[0]
-            vmov.f32 r11, q0y[1]
-            vsqrt.f32 s8, s8
-            vsqrt.f32 s9, s9
-            vsqrt.f32 s10, s10
-            vsqrt.f32 s11, s11
-            str r8, [out, #(0*COMPV_GAS_FLOAT32_SZ_BYTES)]
-            str r9, [out, #(1*COMPV_GAS_FLOAT32_SZ_BYTES)]
-            str r10, [out, #(2*COMPV_GAS_FLOAT32_SZ_BYTES)]
-            str r11, [out, #(3*COMPV_GAS_FLOAT32_SZ_BYTES)]
-            add out, out, #(4*COMPV_GAS_FLOAT32_SZ_BYTES)
+            vsqrt.f32 s0, s0
+            vsqrt.f32 s1, s1
+            vsqrt.f32 s2, s2
+            vsqrt.f32 s3, s3
+            vst1.f32 {q0}, [out :128]!
             add i, i, #4
             cmp i, width
             blt LoopWidth4_CompVMathTrigHypotNaive_32f_Asm_NEON32
