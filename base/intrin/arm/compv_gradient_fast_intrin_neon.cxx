@@ -11,6 +11,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+// TODO(dmi): On iPhone5 ARM32, 1282x720, 1 thread -> Intrin: 895ms, ASM: 632ms
 void CompVGradientFastGradX_8u16s_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* input, COMPV_ALIGNED(NEON) int16_t* dx, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM code faster");
@@ -29,6 +30,7 @@ void CompVGradientFastGradX_8u16s_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t*
 	}
 }
 
+// TODO(dmi): On iPhone5 ARM32, 1282x720, 1 thread -> Intrin: 1718ms, ASM: 1063ms
 void CompVGradientFastGradX_8u32f_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* input, COMPV_ALIGNED(NEON) compv_float32_t* dx, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
 {
     COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM code faster");
@@ -49,14 +51,15 @@ void CompVGradientFastGradX_8u32f_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t*
     }
 }
 
+// TODO(dmi): On iPhone5 ARM32, 1282x720, 1 thread -> Intrin: 1306ms, ASM: 638ms
 void CompVGradientFastGradY_8u16s_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* input, COMPV_ALIGNED(NEON) int16_t* dy, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM code faster");
 	COMPV_DEBUG_INFO_CHECK_NEON();
-    const uint8_t* inputPlus1 = input + stride;
     const uint8_t* inputMinus1 = input - stride;
+    const uint8_t* inputPlus1 = input + stride;
     for (compv_uscalar_t j = 0; j < height; ++j) {
-        for (compv_uscalar_t i = 0; i < width; ++i) {
+        for (compv_uscalar_t i = 0; i < width; i+= 16) {
             const uint8x16_t vec0 = vld1q_u8(&inputMinus1[i]); // aligned load
             const uint8x16_t vec1 = vld1q_u8(&inputPlus1[i]); // aligned load
             const int16x8_t vec2 = vsubl_u8(vget_low_u8(vec1), vget_low_u8(vec0));
@@ -70,14 +73,15 @@ void CompVGradientFastGradY_8u16s_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t*
     }
 }
 
+// TODO(dmi): On iPhone5 ARM32, 1282x720, 1 thread -> Intrin: 1806ms, ASM: 1028ms
 void CompVGradientFastGradY_8u32f_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* input, COMPV_ALIGNED(NEON) compv_float32_t* dy, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
 {
     COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM code faster");
     COMPV_DEBUG_INFO_CHECK_NEON();
-    const uint8_t* inputPlus1 = input + stride;
     const uint8_t* inputMinus1 = input - stride;
+    const uint8_t* inputPlus1 = input + stride;
     for (compv_uscalar_t j = 0; j < height; ++j) {
-        for (compv_uscalar_t i = 0; i < width; ++i) {
+        for (compv_uscalar_t i = 0; i < width; i+= 16) {
             const uint8x16_t vec0 = vld1q_u8(&inputMinus1[i]); // aligned load
             const uint8x16_t vec1 = vld1q_u8(&inputPlus1[i]); // aligned load
             const int16x8_t vec2 = vsubl_u8(vget_low_u8(vec1), vget_low_u8(vec0));
