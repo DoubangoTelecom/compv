@@ -31,6 +31,7 @@ void CompVMathTrigFastAtan2_32f_Intrin_NEON(COMPV_ALIGNED(NEON) const compv_floa
     static const float32x4_t vecAtan2_plus90 = vld1q_f32(k90_32f);
     static const float32x4_t vecAtan2_plus180 = vld1q_f32(k180_32f);
     static const float32x4_t vecAtan2_plus360 = vld1q_f32(k360_32f);
+    
     const float32x4_t vecAtan2_scale = vdupq_n_f32(*scale1);
     for (compv_uscalar_t j = 0; j < height; ++j) {
         for (compv_uscalar_t i = 0; i < width; i += 4) {

@@ -74,12 +74,7 @@ COMPV_ERROR_CODE hogstd()
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "HogStd Elapsed time = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "MD5:%s", compv_tests_md5(features).c_str());
-#if COMPV_ARCH_ARM
-    COMPV_DEBUG_INFO_CODE_FOR_TESTING("FMA disaled for now");
-    COMPV_CHECK_EXP_RETURN(compv_tests_md5(features).compare(test->md5) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "S-HOG failed");
-#else
 	COMPV_CHECK_EXP_RETURN(compv_tests_md5(features).compare(compv_tests_is_fma_enabled() ? test->md5_fma : test->md5) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "S-HOG failed");
-#endif
 
 	return COMPV_ERROR_CODE_S_OK;
 }

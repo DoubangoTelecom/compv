@@ -32,7 +32,7 @@ k360_32f: .single 360.0, 360.0, 360.0, 360.0
 @ arg(4) -> compv_uscalar_t width
 @ arg(5) -> compv_uscalar_t height
 @ arg(6) -> COMPV_ALIGNED(SSE) compv_uscalar_t stride
-COMPV_GAS_FUNCTION_DECLARE CompVMathTrigFastAtan2_32f_Asm_NEON32
+.macro CompVMathTrigFastAtan2_32f_Macro_NEON32 fusedMultiplyAdd
     COMPV_GAS_FUNCTION_PROLOG
 	COMPV_GAS_SHADOW_ARGS_TO_STACK 7
 	COMPV_GAS_SAVE_NEON_REGS
@@ -78,7 +78,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathTrigFastAtan2_32f_Asm_NEON32
     ldr r8, =kAtan2P1_32f
     ldr r9, =kAtan2P3_32f
     ldr r10, =kAtan2P5_32f
-    ldr r11, =kAtan2P7_32f    
+    ldr r11, =kAtan2P7_32f
     vld1.f32 { vecAtan2_eps }, [r7]
     vld1.f32 { vecAtan2_p1 }, [r8]
     vld1.f32 { vecAtan2_p3 }, [r9]
@@ -102,12 +102,12 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathTrigFastAtan2_32f_Asm_NEON32
     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     @ for (compv_uscalar_t j = 0; j < height; ++j)
     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    LoopHeight_CompVMathTrigFastAtan2_32f_Asm_NEON32:
+    LoopHeight_CompVMathTrigFastAtan2_32f_Macro_NEON32\@:
         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         @ for (compv_uscalar_t i = 0; i < width; i += 4)
         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         mov i, #0
-        LoopWidth_CompVMathTrigFastAtan2_32f_Asm_NEON32:
+        LoopWidth_CompVMathTrigFastAtan2_32f_Macro_NEON32\@:
             vld1.u8 { vecAx }, [x :128] @ ARM64: increment now and remove later load
             vld1.u8 { vecAy }, [y :128] @ ARM64: increment now and remove later load
             pld [x, #(CACHE_LINE_SIZE*3)]
@@ -143,9 +143,15 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathTrigFastAtan2_32f_Asm_NEON32
             vmul.f32 vec2, vec1, vec1
 
             @ a = (((atan2_p7*c2 + atan2_p5)*c2 + atan2_p3)*c2 + atan2_p1)*c
-            vmla.f32 vecAx, vecAtan2_p7, vec2
-            vmla.f32 vecAy, vecAx, vec2
-            vmla.f32 vec0, vecAy, vec2
+            .if \fusedMultiplyAdd
+                vfma.f32 vecAx, vecAtan2_p7, vec2
+                vfma.f32 vecAy, vecAx, vec2
+                vfma.f32 vec0, vecAy, vec2
+            .else
+                vmla.f32 vecAx, vecAtan2_p7, vec2
+                vmla.f32 vecAy, vecAx, vec2
+                vmla.f32 vec0, vecAy, vec2
+            .endif
             vmul.f32 vec0, vec0, vec1
 
             @ if (!(ax >= ay)) a = 90 - a
@@ -178,15 +184,15 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathTrigFastAtan2_32f_Asm_NEON32
 
             add i, i, #4
             cmp i, width
-            blt LoopWidth_CompVMathTrigFastAtan2_32f_Asm_NEON32
-        EndOf_LoopWidth_CompVMathTrigFastAtan2_32f_Asm_NEON32:
+            blt LoopWidth_CompVMathTrigFastAtan2_32f_Macro_NEON32\@
+        EndOf_LoopWidth_CompVMathTrigFastAtan2_32f_Macro_NEON32\@:
 
         subs height, height, #1
         add y, y, stride
         add x, x, stride
         add out, out, stride
-        bne LoopHeight_CompVMathTrigFastAtan2_32f_Asm_NEON32
-    EndOf_LoopHeight_CompVMathTrigFastAtan2_32f_Asm_NEON32:
+        bne LoopHeight_CompVMathTrigFastAtan2_32f_Macro_NEON32\@
+    EndOf_LoopHeight_CompVMathTrigFastAtan2_32f_Macro_NEON32\@:
 
     .unreq y
     .unreq x
@@ -219,6 +225,15 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathTrigFastAtan2_32f_Asm_NEON32
 	COMPV_GAS_UNSHADOW_ARGS 7
 	COMPV_GAS_FUNCTION_EPILOG
 	COMPV_GAS_FUNCTION_RETURN
+.endm
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+COMPV_GAS_FUNCTION_DECLARE CompVMathTrigFastAtan2_32f_Asm_NEON32
+    CompVMathTrigFastAtan2_32f_Macro_NEON32 0
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+COMPV_GAS_FUNCTION_DECLARE CompVMathTrigFastAtan2_32f_Asm_FMA_NEON32
+    CompVMathTrigFastAtan2_32f_Macro_NEON32 1
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @ arg(0) -> COMPV_ALIGNED(NEON) const compv_float32_t* x
