@@ -71,6 +71,8 @@
     vecAtan2_p5 .req v14
     vecAtan2_eps .req v15
     vec3 .req v16
+    vecAx0 .req v17
+    vecAy0 .req v18
 
     prfm pldl1keep, [x, #(CACHE_LINE_SIZE*0)]
 	prfm pldl1keep, [x, #(CACHE_LINE_SIZE*1)]
@@ -126,14 +128,14 @@
         #####################################################
         mov i, #0
         LoopWidth_CompVMathTrigFastAtan2_32f_Macro_NEON64\@:
-            ld1 { vecAx.4s }, [x] // ARM64: increment now and remove later load
-            ld1 { vecAy.4s }, [y] // ARM64: increment now and remove later load
+            ld1 { vecAx0.4s }, [x], #(COMPV_GAS_V_SZ_BYTES)
+            ld1 { vecAy0.4s }, [y], #(COMPV_GAS_V_SZ_BYTES)
             prfm pldl1keep, [x, #(CACHE_LINE_SIZE*3)]
             prfm pldl1keep, [y, #(CACHE_LINE_SIZE*3)]
 
             // ax = std::abs(x[i]), ay = std::abs(y[i]);
-            fabs vecAx.4s, vecAx.4s
-            fabs vecAy.4s, vecAy.4s
+            fabs vecAx.4s, vecAx0.4s
+            fabs vecAy.4s, vecAy0.4s
 
             // if (ax >= ay) vec1 = ay, vec2 = ax;
             // else vec1 = ax, vec2 = ay;
@@ -179,19 +181,15 @@
             bic vec1.16b, vec1.16b, vecMask.16b
             orr vec0.16b, vec0.16b, vec1.16b
 
-            // TODO(dmi): not needed for ARM64 -> save values
-            ld1 { vecAx.4s }, [x], #(COMPV_GAS_V_SZ_BYTES)
-            ld1 { vecAy.4s }, [y], #(COMPV_GAS_V_SZ_BYTES)
-
             // if (x[i] < 0) a = 180.f - a
-            fcmlt vecMask.4s, vecAx.4s, vecAtan2_zero.4s
+            fcmlt vecMask.4s, vecAx0.4s, vecAtan2_zero.4s
             fsub vec1.4s, vecAtan2_plus180.4s, vec0.4s
             bic vec0.16b, vec0.16b, vecMask.16b
             and vec1.16b, vec1.16b, vecMask.16b
             orr vec0.16b, vec0.16b, vec1.16b
 
             // if (y[i] < 0) a = 360.f - a
-            fcmlt vecMask.4s, vecAy.4s, vecAtan2_zero.4s
+            fcmlt vecMask.4s, vecAy0.4s, vecAtan2_zero.4s
             fsub vec1.4s, vecAtan2_plus360.4s, vec0.4s
             bic vec0.16b, vec0.16b, vecMask.16b
             and vec1.16b, vec1.16b, vecMask.16b
@@ -240,6 +238,8 @@
     .unreq vecAtan2_p5
     .unreq vecAtan2_eps
     .unreq vec3
+    .unreq vecAx0
+    .unreq vecAy0
 
     COMPV_GAS_RESTORE_NEON_REGS
 	COMPV_GAS_FUNCTION_EPILOG
