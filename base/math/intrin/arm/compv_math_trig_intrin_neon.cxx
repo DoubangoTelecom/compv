@@ -34,9 +34,11 @@ void CompVMathTrigFastAtan2_32f_Intrin_NEON(COMPV_ALIGNED(NEON) const compv_floa
     const float32x4_t vecAtan2_scale = vdupq_n_f32(*scale1);
     for (compv_uscalar_t j = 0; j < height; ++j) {
         for (compv_uscalar_t i = 0; i < width; i += 4) {
+            const float32x4_t vecAx0 = vld1q_f32(&x[i]);
+            const float32x4_t vecAy0 = vld1q_f32(&y[i]);
             // ax = std::abs(x[i]), ay = std::abs(y[i]);
-            float32x4_t vecAx = vabsq_f32(vld1q_f32(&x[i]));
-            float32x4_t vecAy = vabsq_f32(vld1q_f32(&y[i]));
+            float32x4_t vecAx = vabsq_f32(vecAx0);
+            float32x4_t vecAy = vabsq_f32(vecAy0);
             
             // if (ax >= ay) vec1 = ay, vec2 = ax;
             // else vec1 = ax, vec2 = ay;
@@ -62,12 +64,12 @@ void CompVMathTrigFastAtan2_32f_Intrin_NEON(COMPV_ALIGNED(NEON) const compv_floa
             vec0 = vorrq_s32(vandq_s32(vec0, vecMask), vec1);
             
             // if (x[i] < 0) a = 180.f - a
-            vecMask = vcltq_f32(vld1q_f32(&x[i]), vecAtan2_zero);
+            vecMask = vcltq_f32(vecAx0, vecAtan2_zero);
             vec1 = vandq_s32(vecMask, vsubq_f32(vecAtan2_plus180, vec0));
             vec0 = vorrq_s32(vbicq_s32(vec0, vecMask), vec1);
             
-            // if (y[i + k] < 0) a = 360.f - a
-            vecMask = vcltq_f32(vld1q_f32(&y[i]), vecAtan2_zero);
+            // if (y[i] < 0) a = 360.f - a
+            vecMask = vcltq_f32(vecAy0, vecAtan2_zero);
             vec1 = vandq_s32(vecMask, vsubq_f32(vecAtan2_plus360, vec0));
             vec0 = vorrq_s32(vbicq_s32(vec0, vecMask), vec1);
             

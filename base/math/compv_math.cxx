@@ -21,6 +21,8 @@ COMPV_BASE_API const float kMathTrigC1 = 0.99940307f;
 COMPV_BASE_API const float kMathTrigC2 = -0.49558072f;
 COMPV_BASE_API const float kMathTrigC3 = 0.03679168f;
 
+// IMPORTANT: ARM32 and ARM64 asm code have theses numbers embedded which means "NEVER CHANGE THEM". Or if you really think it's a good idea to change them then, also
+// change them in "compv_math_trig_arm32_neon.S" and "compv_math_trig_arm64_neon.S"
 COMPV_BASE_API const double kMathTrigAtan2Eps = 2.2204460492503131e-016;
 COMPV_BASE_API const float kMathTrigAtan2P1 = 57.2836266f;
 COMPV_BASE_API const float kMathTrigAtan2P3 = -18.6674461f;

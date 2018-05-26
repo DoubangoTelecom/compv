@@ -32,6 +32,7 @@ COMPV_EXTERNC void CompVMathTrigHypotNaive_32f_Asm_X64_FMA3_AVX(COMPV_ALIGNED(AV
 #endif /* COMPV_ASM && COMPV_ARCH_X64 */
 
 #if COMPV_ASM && COMPV_ARCH_ARM32
+COMPV_EXTERNC void CompVMathTrigFastAtan2_32f_Asm_NEON32(COMPV_ALIGNED(NEON) const compv_float32_t* y, COMPV_ALIGNED(NEON) const compv_float32_t* x, COMPV_ALIGNED(NEON) compv_float32_t* r, const compv_float32_t* scale1, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
 COMPV_EXTERNC void CompVMathTrigHypotNaive_32f_Asm_NEON32(COMPV_ALIGNED(NEON) const compv_float32_t* x, COMPV_ALIGNED(NEON) const compv_float32_t* y, COMPV_ALIGNED(NEON) compv_float32_t* r, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
 COMPV_EXTERNC void CompVMathTrigHypotNaive_32f_Asm_FMA_NEON32(COMPV_ALIGNED(NEON) const compv_float32_t* x, COMPV_ALIGNED(NEON) const compv_float32_t* y, COMPV_ALIGNED(NEON) compv_float32_t* r, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
 #endif /* COMPV_ASM && COMPV_ARCH_ARM32 */
@@ -261,6 +262,7 @@ COMPV_ERROR_CODE CompVMathTrig::fastAtan2(const CompVMatPtr& y, const CompVMatPt
 #elif COMPV_ARCH_ARM
         if (CompVCpu::isEnabled(compv::kCpuFlagARM_NEON) && x->isAlignedNEON() && y->isAlignedNEON() && r_->isAlignedNEON()) {
             COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMathTrigFastAtan2_32f = CompVMathTrigFastAtan2_32f_Intrin_NEON);
+            COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathTrigFastAtan2_32f = CompVMathTrigFastAtan2_32f_Asm_NEON32);
         }
 #endif
 		COMPV_CHECK_CODE_RETURN((CompVMathTrigFastAtan2_X<compv_float32_t>(y->ptr<const compv_float32_t>(), x->ptr<const compv_float32_t>(), r_->ptr<compv_float32_t>(), static_cast<compv_float32_t>(angleInDeg ? 1.0 : M_PI / 180.0),

@@ -63,7 +63,7 @@ void CompVMathTrigFastAtan2_32f_Intrin_SSE2(COMPV_ALIGNED(SSE) const compv_float
 			vec1 = _mm_and_ps(vecMask, _mm_sub_ps(vecAtan2_plus180, vec0));
 			vec0 = _mm_or_ps(_mm_andnot_ps(vecMask, vec0), vec1);
 
-			// if (y[i + k] < 0) a = 360.f - a
+			// if (y[i] < 0) a = 360.f - a
 			vecMask = _mm_cmplt_ps(_mm_load_ps(&y[i]), vecAtan2_zero);
 			vec1 = _mm_and_ps(vecMask, _mm_sub_ps(vecAtan2_plus360, vec0));
 			vec0 = _mm_or_ps(_mm_andnot_ps(vecMask, vec0), vec1);
