@@ -121,7 +121,7 @@
 		155C329820B7D852000AFF7B /* compv_math_trig_intrin_avx.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 155C329120B7D852000AFF7B /* compv_math_trig_intrin_avx.cxx */; };
 		155C329920B7D852000AFF7B /* compv_math_trig_intrin_sse2.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 155C329220B7D852000AFF7B /* compv_math_trig_intrin_sse2.cxx */; };
 		155C329C20B7D8D4000AFF7B /* compv_math_trig_intrin_neon.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 155C329B20B7D8D4000AFF7B /* compv_math_trig_intrin_neon.cxx */; };
-		155C329F20B7E3D1000AFF7B /* compv_math_trig_arm32_neon.S in Sources */ = {isa = PBXBuildFile; fileRef = 155C329D20B7E3D1000AFF7B /* compv_math_trig_arm32_neon.S */; };
+		155C329F20B7E3D1000AFF7B /* compv_math_trig_arm32_neon.S in Sources */ = {isa = PBXBuildFile; fileRef = 155C329D20B7E3D1000AFF7B /* compv_math_trig_arm32_neon.S */; settings = {COMPILER_FLAGS = "-mfpu=neon-vfpv4"; }; };
 		155C32A020B7E3D1000AFF7B /* compv_math_trig_arm64_neon.S in Sources */ = {isa = PBXBuildFile; fileRef = 155C329E20B7E3D1000AFF7B /* compv_math_trig_arm64_neon.S */; };
 		15621B751E6B8E6B00DCBBCC /* compv_math_stats_intrin_neon64.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 15621B731E6B8E6B00DCBBCC /* compv_math_stats_intrin_neon64.cxx */; };
 		15621B761E6B8E6B00DCBBCC /* compv_math_transform_intrin_neon64.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 15621B741E6B8E6B00DCBBCC /* compv_math_transform_intrin_neon64.cxx */; };

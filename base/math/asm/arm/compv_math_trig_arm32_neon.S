@@ -21,8 +21,8 @@
 @ arg(3) -> compv_uscalar_t width
 @ arg(4) -> compv_uscalar_t height
 @ arg(5) -> COMPV_ALIGNED(NEON) compv_uscalar_t stride
-COMPV_GAS_FUNCTION_DECLARE CompVMathTrigHypotNaive_32f_Asm_NEON32
-	COMPV_GAS_FUNCTION_PROLOG
+.macro CompVMathTrigHypotNaive_32f_Macro_NEON32 fusedMultiplyAdd
+    COMPV_GAS_FUNCTION_PROLOG
 	COMPV_GAS_SHADOW_ARGS_TO_STACK 6
 	COMPV_GAS_SAVE_NEON_REGS
 
@@ -56,14 +56,14 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathTrigHypotNaive_32f_Asm_NEON32
     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     @ for (compv_uscalar_t j = 0; j < height; ++j)
     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    LoopHeight_CompVMathTrigHypotNaive_32f_Asm_NEON32:
+    LoopHeight_CompVMathTrigHypotNaive_32f_Macro_NEON32\@:
         mov i, #0 
         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         @ for (i = 0; i < width16; i += 16)
         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         tst width16, width16
-        beq EndOf_LoopWidth16_CompVMathTrigHypotNaive_32f_Asm_NEON32
-        LoopWidth16_CompVMathTrigHypotNaive_32f_Asm_NEON32:
+        beq EndOf_LoopWidth16_CompVMathTrigHypotNaive_32f_Macro_NEON32\@
+        LoopWidth16_CompVMathTrigHypotNaive_32f_Macro_NEON32\@:
             vld1.u8 { q0, q1 }, [x]!
             vld1.u8 { q2, q3 }, [x]!
             vld1.u8 { q4, q5 }, [y]!
@@ -74,10 +74,17 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathTrigHypotNaive_32f_Asm_NEON32
             vmul.f32 q1, q1, q1
             vmul.f32 q2, q2, q2
             vmul.f32 q3, q3, q3
-            vmla.f32 q0, q4, q4
-            vmla.f32 q1, q5, q5
-            vmla.f32 q2, q6, q6
-            vmla.f32 q3, q7, q7
+            .if \fusedMultiplyAdd
+                vfma.f32 q0, q4, q4
+                vfma.f32 q1, q5, q5
+                vfma.f32 q2, q6, q6
+                vfma.f32 q3, q7, q7
+            .else
+                vmla.f32 q0, q4, q4
+                vmla.f32 q1, q5, q5
+                vmla.f32 q2, q6, q6
+                vmla.f32 q3, q7, q7
+            .endif
             @ TODO(dmi): 'vsqrt.f32' not vectorized and not using approx implementaion (to make sure MD5 match) -> !! PERF ISSUE!!
             vsqrt.f32 s0, s0
             vsqrt.f32 s1, s1
@@ -99,13 +106,13 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathTrigHypotNaive_32f_Asm_NEON32
             vst1.f32 {q2, q3}, [out :128]!
             add i, i, #16
             cmp i, width16
-            blt LoopWidth16_CompVMathTrigHypotNaive_32f_Asm_NEON32
-        EndOf_LoopWidth16_CompVMathTrigHypotNaive_32f_Asm_NEON32:
+            blt LoopWidth16_CompVMathTrigHypotNaive_32f_Macro_NEON32\@
+        EndOf_LoopWidth16_CompVMathTrigHypotNaive_32f_Macro_NEON32\@:
 
         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         @ for (; i < width; i += 4)
         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-        LoopWidth4_CompVMathTrigHypotNaive_32f_Asm_NEON32:
+        LoopWidth4_CompVMathTrigHypotNaive_32f_Macro_NEON32\@:
             vld1.u8 { q0 }, [x]!
             vld1.u8 { q4 }, [y]!
             vmul.f32 q0, q0, q0
@@ -118,15 +125,15 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathTrigHypotNaive_32f_Asm_NEON32
             vst1.f32 {q0}, [out :128]!
             add i, i, #4
             cmp i, width
-            blt LoopWidth4_CompVMathTrigHypotNaive_32f_Asm_NEON32
-        EndOf_LoopWidth4_CompVMathTrigHypotNaive_32f_Asm_NEON32:
+            blt LoopWidth4_CompVMathTrigHypotNaive_32f_Macro_NEON32\@
+        EndOf_LoopWidth4_CompVMathTrigHypotNaive_32f_Macro_NEON32\@:
 
         subs height, height, #1
         add y, y, stride
         add x, x, stride
         add out, out, stride
-        bne LoopHeight_CompVMathTrigHypotNaive_32f_Asm_NEON32
-    EndOf_LoopHeight_CompVMathTrigHypotNaive_32f_Asm_NEON32:
+        bne LoopHeight_CompVMathTrigHypotNaive_32f_Macro_NEON32\@
+    EndOf_LoopHeight_CompVMathTrigHypotNaive_32f_Macro_NEON32\@:
 
 
     .unreq x
@@ -143,5 +150,14 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathTrigHypotNaive_32f_Asm_NEON32
 	COMPV_GAS_UNSHADOW_ARGS 6
 	COMPV_GAS_FUNCTION_EPILOG
 	COMPV_GAS_FUNCTION_RETURN
+.endm
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+COMPV_GAS_FUNCTION_DECLARE CompVMathTrigHypotNaive_32f_Asm_NEON32
+	CompVMathTrigHypotNaive_32f_Macro_NEON32 0
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+COMPV_GAS_FUNCTION_DECLARE CompVMathTrigHypotNaive_32f_Asm_FMA_NEON32
+	CompVMathTrigHypotNaive_32f_Macro_NEON32 1
 
 #endif /* defined(__arm__) && !defined(__aarch64__) */

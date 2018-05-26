@@ -21,8 +21,8 @@
 # arg(3) -> compv_uscalar_t width
 # arg(4) -> compv_uscalar_t height
 # arg(5) -> COMPV_ALIGNED(NEON) compv_uscalar_t stride
-COMPV_GAS_FUNCTION_DECLARE CompVMathTrigHypotNaive_32f_Asm_NEON64
-	COMPV_GAS_FUNCTION_PROLOG
+.macro CompVMathTrigHypotNaive_32f_Macro_NEON64 fusedMultiplyAdd
+    COMPV_GAS_FUNCTION_PROLOG
 	COMPV_GAS_SAVE_NEON_REGS
 
 	## Set arguments ##
@@ -54,14 +54,14 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathTrigHypotNaive_32f_Asm_NEON64
     ####################################################
     # for (compv_uscalar_t j = 0; j < height; ++j)
     ####################################################
-    LoopHeight_CompVMathTrigHypotNaive_32f_Asm_NEON64:
+    LoopHeight_CompVMathTrigHypotNaive_32f_Macro_NEON64\@:
         mov i, #0 
         ####################################################
         # for (i = 0; i < width16; i += 16)
         ####################################################
         tst width16, width16
-        beq EndOf_LoopWidth16_CompVMathTrigHypotNaive_32f_Asm_NEON64
-        LoopWidth16_CompVMathTrigHypotNaive_32f_Asm_NEON64:
+        beq EndOf_LoopWidth16_CompVMathTrigHypotNaive_32f_Macro_NEON64\@
+        LoopWidth16_CompVMathTrigHypotNaive_32f_Macro_NEON64\@:
             ldp q0, q1, [x], #(2*COMPV_GAS_Q_SZ_BYTES)
             ldp q2, q3, [x], #(2*COMPV_GAS_Q_SZ_BYTES)
             ldp q4, q5, [y], #(2*COMPV_GAS_Q_SZ_BYTES)
@@ -72,10 +72,21 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathTrigHypotNaive_32f_Asm_NEON64
             fmul v1.4s, v1.4s, v1.4s
             fmul v2.4s, v2.4s, v2.4s
             fmul v3.4s, v3.4s, v3.4s
-            fmla v0.4s, v4.4s, v4.4s
-            fmla v1.4s, v5.4s, v5.4s
-            fmla v2.4s, v6.4s, v6.4s
-            fmla v3.4s, v7.4s, v7.4s
+            .if \fusedMultiplyAdd
+                fmla v0.4s, v4.4s, v4.4s
+                fmla v1.4s, v5.4s, v5.4s
+                fmla v2.4s, v6.4s, v6.4s
+                fmla v3.4s, v7.4s, v7.4s
+            .else
+                fmul v4.4s, v4.4s, v4.4s
+                fmul v5.4s, v5.4s, v5.4s
+                fmul v6.4s, v6.4s, v6.4s
+                fmul v7.4s, v7.4s, v7.4s
+                fadd v0.4s, v0.4s, v4.4s
+                fadd v1.4s, v1.4s, v5.4s
+                fadd v2.4s, v2.4s, v6.4s
+                fadd v3.4s, v3.4s, v7.4s
+            .endif
             fsqrt v0.4s, v0.4s
             fsqrt v1.4s, v1.4s
             fsqrt v2.4s, v2.4s
@@ -84,13 +95,13 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathTrigHypotNaive_32f_Asm_NEON64
             stp q2, q3, [out], #(2*COMPV_GAS_Q_SZ_BYTES)
             add i, i, #16
             cmp i, width16
-            blt LoopWidth16_CompVMathTrigHypotNaive_32f_Asm_NEON64
-        EndOf_LoopWidth16_CompVMathTrigHypotNaive_32f_Asm_NEON64:
+            blt LoopWidth16_CompVMathTrigHypotNaive_32f_Macro_NEON64\@
+        EndOf_LoopWidth16_CompVMathTrigHypotNaive_32f_Macro_NEON64\@:
 
         ####################################################
         # for (; i < width; i += 4)
         ####################################################
-        LoopWidth4_CompVMathTrigHypotNaive_32f_Asm_NEON64:
+        LoopWidth4_CompVMathTrigHypotNaive_32f_Macro_NEON64\@:
             ldr q0, [x], #(1*COMPV_GAS_Q_SZ_BYTES)
             ldr q5, [y], #(1*COMPV_GAS_Q_SZ_BYTES)
             fmul v0.4s, v0.4s, v0.4s
@@ -99,15 +110,15 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathTrigHypotNaive_32f_Asm_NEON64
             str q0, [out], #(1*COMPV_GAS_Q_SZ_BYTES)
             add i, i, #4
             cmp i, width
-            blt LoopWidth4_CompVMathTrigHypotNaive_32f_Asm_NEON64
-        EndOf_LoopWidth4_CompVMathTrigHypotNaive_32f_Asm_NEON64:
+            blt LoopWidth4_CompVMathTrigHypotNaive_32f_Macro_NEON64\@
+        EndOf_LoopWidth4_CompVMathTrigHypotNaive_32f_Macro_NEON64\@:
 
         subs height, height, #1
         add y, y, stride
         add x, x, stride
         add out, out, stride
-        bne LoopHeight_CompVMathTrigHypotNaive_32f_Asm_NEON64
-    EndOf_LoopHeight_CompVMathTrigHypotNaive_32f_Asm_NEON64:
+        bne LoopHeight_CompVMathTrigHypotNaive_32f_Macro_NEON64\@
+    EndOf_LoopHeight_CompVMathTrigHypotNaive_32f_Macro_NEON64\@:
 
 
     .unreq x
@@ -123,5 +134,14 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathTrigHypotNaive_32f_Asm_NEON64
 	COMPV_GAS_RESTORE_NEON_REGS
 	COMPV_GAS_FUNCTION_EPILOG
 	COMPV_GAS_FUNCTION_RETURN
+.endm
+
+#########################################################################
+COMPV_GAS_FUNCTION_DECLARE CompVMathTrigHypotNaive_32f_Asm_NEON64
+	CompVMathTrigHypotNaive_32f_Macro_NEON64 0
+
+#########################################################################
+COMPV_GAS_FUNCTION_DECLARE CompVMathTrigHypotNaive_32f_Asm_FMA_NEON64
+	CompVMathTrigHypotNaive_32f_Macro_NEON64 1
 
 #endif /* defined(__aarch64__) */
