@@ -12,6 +12,7 @@
 #include "compv/core/features/hog/intrin/x86/compv_core_feature_hog_common_norm_intrin_sse2.h"
 #include "compv/core/features/hog/intrin/x86/compv_core_feature_hog_std_intrin_sse2.h"
 #include "compv/core/features/hog/intrin/x86/compv_core_feature_hog_std_intrin_avx2.h"
+#include "compv/core/features/hog/intrin/arm/compv_core_feature_hog_std_intrin_neon.h"
 
 #define COMPV_THIS_CLASSNAME	"CompVHogStd"
 
@@ -364,6 +365,9 @@ COMPV_ERROR_CODE CompVHogStd::updateFptrBinning(const int& nInterp, const CompVS
 		COMPV_EXEC_IFDEF_INTRIN_X86(binningFuncPtr = CompVHogStdBuildMapHistForSingleCellBilinear_32f32s_Intrin_AVX2);
 	}
 #elif COMPV_ARCH_ARM
+    if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(szCellSize.width * sizeof(compv_float32_t))) {
+        COMPV_EXEC_IFDEF_INTRIN_ARM(binningFuncPtr = CompVHogStdBuildMapHistForSingleCellBilinear_32f32s_Intrin_NEON);
+    }
 #endif
 	m_fptrBinning = binningFuncPtr;
 	return COMPV_ERROR_CODE_S_OK;

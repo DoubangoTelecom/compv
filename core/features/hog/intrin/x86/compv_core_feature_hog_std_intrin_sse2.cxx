@@ -29,7 +29,7 @@ void CompVHogStdBuildMapHistForSingleCellBilinear_32f32s_Intrin_SSE2(
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
 #if 0 // TODO(dmi): Add ASM code
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No ASM code (ASM code should use )");
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No ASM code");
 #endif
 	const __m128 vecMask_sign = _mm_castsi128_ps(_mm_set1_epi32(0x7fffffff)); // used to compute _mm_abs_ps, not needed for ARM NEON
 	const __m128 vecthetaMax = _mm_set1_ps(*thetaMax1);

@@ -32,7 +32,7 @@ void CompVHogStdBuildMapHistForSingleCellBilinear_32f32s_Intrin_AVX2(
 {
 	COMPV_DEBUG_INFO_CHECK_AVX2();
 #if 0 // TODO(dmi): Add ASM code
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No ASM code (ASM code should use )");
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No ASM code");
 #endif
 	_mm256_zeroupper();
 	const __m256 vecMask_sign = _mm256_castsi256_ps(_mm256_set1_epi32(0x7fffffff)); // used to compute _mm256_abs_ps, not needed for ARM NEON
