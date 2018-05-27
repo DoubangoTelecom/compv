@@ -12,6 +12,7 @@
 #include "compv/core/features/hog/intrin/x86/compv_core_feature_hog_common_norm_intrin_sse2.h"
 #include "compv/core/features/hog/intrin/x86/compv_core_feature_hog_std_intrin_sse2.h"
 #include "compv/core/features/hog/intrin/x86/compv_core_feature_hog_std_intrin_avx2.h"
+#include "compv/core/features/hog/intrin/arm/compv_core_feature_hog_common_norm_intrin_neon.h"
 #include "compv/core/features/hog/intrin/arm/compv_core_feature_hog_std_intrin_neon.h"
 
 #define COMPV_THIS_CLASSNAME	"CompVHogStd"
@@ -464,10 +465,51 @@ COMPV_ERROR_CODE CompVHogStd::newObj(
 #		endif
 	}
 #elif COMPV_ARCH_ARM
+    if (CompVCpu::isEnabled(compv::kCpuFlagARM_NEON)) {
+        /* == L1 == */
+        COMPV_EXEC_IFDEF_INTRIN_ARM(hog_->fptrs_norm.L1 = CompVHogCommonNormL1_32f_Intrin_NEON);
+#		if COMPV_HOG_FAST_BLOCK_9
+        COMPV_EXEC_IFDEF_INTRIN_ARM(hog_->fptrs_norm.L1_9 = CompVHogCommonNormL1_9_32f_Intrin_NEON);
+        //--COMPV_EXEC_IFDEF_ASM_ARM32(hog_->fptrs_norm.L1_9 = CompVHogCommonNormL1_9_32f_Asm_NEON32);
+        //--COMPV_EXEC_IFDEF_ASM_ARM64(hog_->fptrs_norm.L1_9 = CompVHogCommonNormL1_9_32f_Asm_NEON64);
+#		else
+        COMPV_EXEC_IFDEF_INTRIN_ARM(hog_->fptrs_norm.L1_9 = CompVHogCommonNormL1_32f_Intrin_NEON);
+#		endif
+        
+        /* == L1Sqrt == */
+        COMPV_EXEC_IFDEF_INTRIN_ARM(hog_->fptrs_norm.L1Sqrt = CompVHogCommonNormL1Sqrt_32f_Intrin_NEON);
+#		if COMPV_HOG_FAST_BLOCK_9
+        COMPV_EXEC_IFDEF_INTRIN_ARM(hog_->fptrs_norm.L1Sqrt_9 = CompVHogCommonNormL1Sqrt_9_32f_Intrin_NEON);
+        //--COMPV_EXEC_IFDEF_ASM_ARM32(hog_->fptrs_norm.L1Sqrt_9 = CompVHogCommonNormL1Sqrt_9_32f_Asm_NEON32);
+        //--COMPV_EXEC_IFDEF_ASM_ARM64(hog_->fptrs_norm.L1Sqrt_9 = CompVHogCommonNormL1Sqrt_9_32f_Asm_NEON64);
+#		else
+        COMPV_EXEC_IFDEF_INTRIN_ARM(hog_->fptrs_norm.L1Sqrt_9 = CompVHogCommonNormL1Sqrt_32f_Intrin_NEON);
+#		endif
+        
+        /* == L2 == */
+        COMPV_EXEC_IFDEF_INTRIN_ARM(hog_->fptrs_norm.L2 = CompVHogCommonNormL2_32f_Intrin_NEON);
+#		if COMPV_HOG_FAST_BLOCK_9
+        COMPV_EXEC_IFDEF_INTRIN_ARM(hog_->fptrs_norm.L2_9 = CompVHogCommonNormL2_9_32f_Intrin_NEON);
+        //--COMPV_EXEC_IFDEF_ASM_ARM32(hog_->fptrs_norm.L2_9 = CompVHogCommonNormL2_9_32f_Asm_NEON32);
+        //--COMPV_EXEC_IFDEF_ASM_ARM64(hog_->fptrs_norm.L2_9 = CompVHogCommonNormL2_9_32f_Asm_NEON64);
+#		else
+        COMPV_EXEC_IFDEF_INTRIN_ARM(hog_->fptrs_norm.L2_9 = CompVHogCommonNormL2_32f_Intrin_NEON);
+#		endif
+        
+        /* == L2Hys == */
+        COMPV_EXEC_IFDEF_INTRIN_ARM(hog_->fptrs_norm.L2Hys = CompVHogCommonNormL2Hys_32f_Intrin_NEON);
+#		if COMPV_HOG_FAST_BLOCK_9
+        COMPV_EXEC_IFDEF_INTRIN_ARM(hog_->fptrs_norm.L2Hys_9 = CompVHogCommonNormL2Hys_9_32f_Intrin_NEON);
+        //--COMPV_EXEC_IFDEF_ASM_ARM32(hog_->fptrs_norm.L2Hys_9 = CompVHogCommonNormL2Hys_9_32f_Asm_NEON32);
+        //--COMPV_EXEC_IFDEF_ASM_ARM64(hog_->fptrs_norm.L2Hys_9 = CompVHogCommonNormL2Hys_9_32f_Asm_NEON64);
+#		else
+        COMPV_EXEC_IFDEF_INTRIN_ARM(hog_->fptrs_norm.L2Hys_9 = CompVHogCommonNormL2Hys_32f_Intrin_NEON);
+#		endif
+    }
 #endif
-
-	*hog = *hog_;
-	return COMPV_ERROR_CODE_S_OK;
+    
+    *hog = *hog_;
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 static void CompVHogStdBuildMapHistForSingleCellBilinear_32f32s_C(

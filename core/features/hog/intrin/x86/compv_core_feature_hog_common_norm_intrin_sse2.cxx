@@ -17,6 +17,9 @@ void CompVHogCommonNormL1_32f_Intrin_SSE2(compv_float32_t* inOutPtr, const compv
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No ASM code");
+    if (count == 9) {
+        COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("There is a faster version");
+    }
 	const compv_uscalar_t count8 = count & -8; // count equal #9 is very common -> use count8 instead of count16
 	const compv_uscalar_t count4 = count & -4;
 	compv_uscalar_t i;
@@ -88,6 +91,9 @@ void CompVHogCommonNormL1Sqrt_32f_Intrin_SSE2(compv_float32_t* inOutPtr, const c
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No ASM code");
+    if (count == 9) {
+        COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("There is a faster version");
+    }
 	CompVHogCommonNormL1_32f_Intrin_SSE2(inOutPtr, eps1, count);
 	const compv_uscalar_t count8 = count & -8; // count equal #9 is very common -> use count8 instead of count16
 	const compv_uscalar_t count4 = count & -4;
@@ -118,6 +124,9 @@ void CompVHogCommonNormL2_32f_Intrin_SSE2(compv_float32_t* inOutPtr, const compv
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No ASM code");
+    if (count == 9) {
+        COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("There is a faster version");
+    }
 	const compv_uscalar_t count8 = count & -8; // count equal #9 is very common -> use count8 instead of count16
 	const compv_uscalar_t count4 = count & -4;
 	compv_uscalar_t i;
@@ -198,6 +207,9 @@ void CompVHogCommonNormL2Hys_32f_Intrin_SSE2(compv_float32_t* inOutPtr, const co
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No ASM code");
+    if (count == 9) {
+        COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("There is a faster version");
+    }
 	static const __m128 vecMax = _mm_set1_ps(0.2f);
 	CompVHogCommonNormL2_32f_Intrin_SSE2(inOutPtr, eps_square1, count);
 	const compv_uscalar_t count8 = count & -8; // count equal #9 is very common -> use count8 instead of count16
