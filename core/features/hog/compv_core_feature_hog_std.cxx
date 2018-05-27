@@ -44,6 +44,13 @@ COMPV_EXTERNC void CompVHogCommonNormL2_9_32f_Asm_NEON32(compv_float32_t* inOutP
 COMPV_EXTERNC void CompVHogCommonNormL2Hys_9_32f_Asm_NEON32(compv_float32_t* inOutPtr, const compv_float32_t* eps_square1, const compv_uscalar_t count);
 #endif /* COMPV_ASM && COMPV_ARCH_ARM32 */
 
+#if COMPV_ASM && COMPV_ARCH_ARM64
+COMPV_EXTERNC void CompVHogCommonNormL1_9_32f_Asm_NEON64(compv_float32_t* inOutPtr, const compv_float32_t* eps1, const compv_uscalar_t count);
+COMPV_EXTERNC void CompVHogCommonNormL1Sqrt_9_32f_Asm_NEON64(compv_float32_t* inOutPtr, const compv_float32_t* eps1, const compv_uscalar_t count);
+COMPV_EXTERNC void CompVHogCommonNormL2_9_32f_Asm_NEON64(compv_float32_t* inOutPtr, const compv_float32_t* eps_square1, const compv_uscalar_t count);
+COMPV_EXTERNC void CompVHogCommonNormL2Hys_9_32f_Asm_NEON64(compv_float32_t* inOutPtr, const compv_float32_t* eps_square1, const compv_uscalar_t count);
+#endif /* COMPV_ASM && COMPV_ARCH_ARM64 */
+
 static void CompVHogStdBuildMapHistForSingleCellBilinear_32f32s_C(
 	const compv_float32_t* magPtr,
 	const compv_float32_t* dirPtr,
@@ -478,7 +485,7 @@ COMPV_ERROR_CODE CompVHogStd::newObj(
 #		if COMPV_HOG_FAST_BLOCK_9
         COMPV_EXEC_IFDEF_INTRIN_ARM(hog_->fptrs_norm.L1_9 = CompVHogCommonNormL1_9_32f_Intrin_NEON);
         COMPV_EXEC_IFDEF_ASM_ARM32(hog_->fptrs_norm.L1_9 = CompVHogCommonNormL1_9_32f_Asm_NEON32);
-        //--COMPV_EXEC_IFDEF_ASM_ARM64(hog_->fptrs_norm.L1_9 = CompVHogCommonNormL1_9_32f_Asm_NEON64);
+        COMPV_EXEC_IFDEF_ASM_ARM64(hog_->fptrs_norm.L1_9 = CompVHogCommonNormL1_9_32f_Asm_NEON64);
 #		else
         COMPV_EXEC_IFDEF_INTRIN_ARM(hog_->fptrs_norm.L1_9 = CompVHogCommonNormL1_32f_Intrin_NEON);
 #		endif
@@ -488,7 +495,7 @@ COMPV_ERROR_CODE CompVHogStd::newObj(
 #		if COMPV_HOG_FAST_BLOCK_9
         COMPV_EXEC_IFDEF_INTRIN_ARM(hog_->fptrs_norm.L1Sqrt_9 = CompVHogCommonNormL1Sqrt_9_32f_Intrin_NEON);
         COMPV_EXEC_IFDEF_ASM_ARM32(hog_->fptrs_norm.L1Sqrt_9 = CompVHogCommonNormL1Sqrt_9_32f_Asm_NEON32);
-        //--COMPV_EXEC_IFDEF_ASM_ARM64(hog_->fptrs_norm.L1Sqrt_9 = CompVHogCommonNormL1Sqrt_9_32f_Asm_NEON64);
+        COMPV_EXEC_IFDEF_ASM_ARM64(hog_->fptrs_norm.L1Sqrt_9 = CompVHogCommonNormL1Sqrt_9_32f_Asm_NEON64);
 #		else
         COMPV_EXEC_IFDEF_INTRIN_ARM(hog_->fptrs_norm.L1Sqrt_9 = CompVHogCommonNormL1Sqrt_32f_Intrin_NEON);
 #		endif

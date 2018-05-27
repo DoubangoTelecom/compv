@@ -24,6 +24,90 @@ kZeroDotTwo_32f: .single 0.2
 .text
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@ arg(0) -> compv_float32_t* inOutPtr
+@ arg(1) -> const compv_float32_t* eps1
+@ arg(2) -> const compv_uscalar_t count
+.macro CompVHogCommonNormL1_9_32f_Macro_NEON32 norm
+    COMPV_GAS_FUNCTION_PROLOG
+	COMPV_GAS_SAVE_NEON_REGS
+
+	@@ Set arguments @@
+	inOutPtr .req r0
+	eps1 .req r1
+
+    idx4 .req r2
+    idx8 .req r3
+
+    vec0 .req q0 @ Must not change
+    vec0x .req q0x
+    vec0y .req q0y
+    veca .req q1 @ Must not change
+    vecb .req q2 @ Must not change
+
+    ldr r11, =kOne_32f
+    add idx4, inOutPtr, #(4 * COMPV_GAS_FLOAT32_SZ_BYTES)
+    add idx8, inOutPtr, #(8 * COMPV_GAS_FLOAT32_SZ_BYTES)
+    vld1.f32 {d11[0]}, [r11] @ s22 = vecOne
+    vld1.f32 {d11[1]}, [eps1] @ s23 = vecEps
+    vld1.f32 {veca}, [inOutPtr]
+    vld1.f32 {vecb}, [idx4] @ ARM64: idx not needed, ldr accepts pre-index
+    vld1.f32 {d12[0]}, [idx8] @ s24 = vvb - ARM64: idx not needed, ldr accepts pre-index
+    
+    vadd.f32 vec0, veca, vecb
+    vadd.f32 vec0x, vec0x, vec0y
+    vpadd.f32 vec0x, vec0x, vec0x
+    vadd.f32 s0, s0, s24
+    vadd.f32 s0, s0, s23
+    vdiv.f32 s0, s22, s0
+    vdup.f32 vec0, vec0x[0]
+    
+    vmul.f32 veca, veca, vec0
+    vmul.f32 vecb, vecb, vec0
+    vmul.f32 s24, s24, s0
+
+    .if \norm == normL1Sqrt
+        @ TODO(dmi): 'vsqrt.f32' not vectorized and not using approx implementaion (to make sure MD5 match) -> !! PERF ISSUE!!
+        vsqrt.f32 s4, s4
+        vsqrt.f32 s5, s5
+        vsqrt.f32 s6, s6
+        vsqrt.f32 s7, s7
+        vsqrt.f32 s8, s8
+        vsqrt.f32 s9, s9
+        vsqrt.f32 s10, s10
+        vsqrt.f32 s11, s11
+        vsqrt.f32 s24, s24
+    .endif
+
+    vst1.f32 {veca}, [inOutPtr]
+    vst1.f32 {vecb}, [idx4]
+    vst1.f32 {d12[0]}, [idx8]
+
+    .unreq inOutPtr
+    .unreq eps1
+
+    .unreq idx4
+    .unreq idx8
+
+    .unreq vec0
+    .unreq vec0x
+    .unreq vec0y
+    .unreq veca
+    .unreq vecb
+
+	COMPV_GAS_RESTORE_NEON_REGS
+	COMPV_GAS_FUNCTION_EPILOG
+	COMPV_GAS_FUNCTION_RETURN
+.endm
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+COMPV_GAS_FUNCTION_DECLARE CompVHogCommonNormL1_9_32f_Asm_NEON32
+    CompVHogCommonNormL1_9_32f_Macro_NEON32 normL1
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+COMPV_GAS_FUNCTION_DECLARE CompVHogCommonNormL1Sqrt_9_32f_Asm_NEON32
+    CompVHogCommonNormL1_9_32f_Macro_NEON32 normL1Sqrt
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 .macro CompVHogCommonNormL2_9_32f_Macro_Round_NEON32
     vmul.f32 vec0, veca, veca
     vmul.f32 vec1, vecb, vecb
@@ -115,89 +199,5 @@ COMPV_GAS_FUNCTION_DECLARE CompVHogCommonNormL2_9_32f_Asm_NEON32
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 COMPV_GAS_FUNCTION_DECLARE CompVHogCommonNormL2Hys_9_32f_Asm_NEON32
     CompVHogCommonNormL2_9_32f_Macro_NEON32 normL2Hys
-
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-@ arg(0) -> compv_float32_t* inOutPtr
-@ arg(1) -> const compv_float32_t* eps1
-@ arg(2) -> const compv_uscalar_t count
-.macro CompVHogCommonNormL1_9_32f_Macro_NEON32 norm
-    COMPV_GAS_FUNCTION_PROLOG
-	COMPV_GAS_SAVE_NEON_REGS
-
-	@@ Set arguments @@
-	inOutPtr .req r0
-	eps1 .req r1
-
-    idx4 .req r2
-    idx8 .req r3
-
-    vec0 .req q0 @ Must not change
-    vec0x .req q0x
-    vec0y .req q0y
-    veca .req q1 @ Must not change
-    vecb .req q2 @ Must not change
-
-    ldr r11, =kOne_32f
-    add idx4, inOutPtr, #(4 * COMPV_GAS_FLOAT32_SZ_BYTES)
-    add idx8, inOutPtr, #(8 * COMPV_GAS_FLOAT32_SZ_BYTES)
-    vld1.f32 {d11[0]}, [r11] @ s22 = vecOne
-    vld1.f32 {d11[1]}, [eps1] @ s23 = vecEps
-    vld1.f32 {veca}, [inOutPtr]
-    vld1.f32 {vecb}, [idx4] @ ARM64: idx not needed, ldr accepts pre-index
-    vld1.f32 {d12[0]}, [idx8] @ s24 = vvb - ARM64: idx not needed, ldr accepts pre-index
-    
-    vadd.f32 vec0, veca, vecb
-    vadd.f32 vec0x, vec0x, vec0y
-    vpadd.f32 vec0x, vec0x, vec0x
-    vadd.f32 s0, s0, s24
-    vadd.f32 s0, s0, s23
-    vdiv.f32 s0, s22, s0
-    vdup.f32 vec0, vec0x[0]
-    
-    vmul.f32 veca, veca, vec0
-    vmul.f32 vecb, vecb, vec0
-    vmul.f32 s24, s24, s0
-
-    .if \norm == normL1Sqrt
-        @ TODO(dmi): 'vsqrt.f32' not vectorized and not using approx implementaion (to make sure MD5 match) -> !! PERF ISSUE!!
-        vsqrt.f32 s4, s4
-        vsqrt.f32 s5, s5
-        vsqrt.f32 s6, s6
-        vsqrt.f32 s7, s7
-        vsqrt.f32 s8, s8
-        vsqrt.f32 s9, s9
-        vsqrt.f32 s10, s10
-        vsqrt.f32 s11, s11
-        vsqrt.f32 s24, s24
-    .endif
-
-    vst1.f32 {veca}, [inOutPtr]
-    vst1.f32 {vecb}, [idx4]
-    vst1.f32 {d12[0]}, [idx8]
-
-    .unreq inOutPtr
-    .unreq eps1
-
-    .unreq idx4
-    .unreq idx8
-
-    .unreq vec0
-    .unreq vec0x
-    .unreq vec0y
-    .unreq veca
-    .unreq vecb
-
-	COMPV_GAS_RESTORE_NEON_REGS
-	COMPV_GAS_FUNCTION_EPILOG
-	COMPV_GAS_FUNCTION_RETURN
-.endm
-
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-COMPV_GAS_FUNCTION_DECLARE CompVHogCommonNormL1_9_32f_Asm_NEON32
-    CompVHogCommonNormL1_9_32f_Macro_NEON32 normL1
-
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-COMPV_GAS_FUNCTION_DECLARE CompVHogCommonNormL1Sqrt_9_32f_Asm_NEON32
-    CompVHogCommonNormL1_9_32f_Macro_NEON32 normL1Sqrt
 
 #endif /* defined(__arm__) && !defined(__aarch64__) */
