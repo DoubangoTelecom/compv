@@ -47,8 +47,7 @@
     add inOutPtr8, inOutPtr, #(8 * COMPV_GAS_FLOAT32_SZ_BYTES)
     mov v5.s[0], r11w // s5 = vecOne
     ld1 {v6.s}[0], [eps1] // s6 = vecEps
-    ldr q1, [inOutPtr] // q1 = veca
-    ldr q2, [inOutPtr, #(4 * COMPV_GAS_FLOAT32_SZ_BYTES)] // q2 = vecb
+    ldp q1, q2, [inOutPtr] // q1 = veca, q2 = vecb
     ld1 {v7.s}[0], [inOutPtr8] // s7 = vvb
     
     fadd vec0.4s, veca.4s, vecb.4s
@@ -59,7 +58,6 @@
     fadd s0, s0, s6
     fdiv s0, s5, s0
     dup vec0.4s, vec0.s[0]
-    
     fmul veca.4s, veca.4s, vec0.4s
     fmul vecb.4s, vecb.4s, vec0.4s
     fmul s7, s7, s0
@@ -70,8 +68,7 @@
         fsqrt s7, s7
     .endif
 
-    str q1, [inOutPtr]
-    str q2, [inOutPtr, #(4 * COMPV_GAS_FLOAT32_SZ_BYTES)]
+    stp q1, q2, [inOutPtr]
     st1 {v7.s}[0], [inOutPtr8]
 
     .unreq inOutPtr
@@ -147,8 +144,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVHogCommonNormL1Sqrt_9_32f_Asm_NEON64
         dup v8.4s, r12w // s8 = vecMax
     .endif
     ld1 {v6.s}[0], [eps1] // s6 = vecEps
-    ldr q1, [inOutPtr] // q1 = veca
-    ldr q2, [inOutPtr, #(4 * COMPV_GAS_FLOAT32_SZ_BYTES)] // q2 = vecb
+    ldp q1, q2, [inOutPtr] // q1 = veca, q2 = vecb
     ld1 {v7.s}[0], [inOutPtr8] // s7 = vvb
 
     CompVHogCommonNormL2_9_32f_Macro_Round_NEON64
@@ -159,8 +155,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVHogCommonNormL1Sqrt_9_32f_Asm_NEON64
         CompVHogCommonNormL2_9_32f_Macro_Round_NEON64
     .endif
 
-    str q1, [inOutPtr]
-    str q2, [inOutPtr, #(4 * COMPV_GAS_FLOAT32_SZ_BYTES)]
+    stp q1, q2, [inOutPtr]
     st1 {v7.s}[0], [inOutPtr8]
 
     .unreq inOutPtr
