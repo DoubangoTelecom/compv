@@ -11,6 +11,8 @@
 #include "compv/base/compv_simd_globals.h"
 #include "compv/base/compv_debug.h"
 
+#define USE_EXT 0
+
 COMPV_NAMESPACE_BEGIN()
 
 void CompVHogStdBuildMapHistForSingleCellBilinear_32f32s_Intrin_NEON(
@@ -39,8 +41,10 @@ void CompVHogStdBuildMapHistForSingleCellBilinear_32f32s_Intrin_NEON(
 	const int32x4_t vecOne_minus = vdupq_n_s32(-1);
 	const int32x4_t vecBinIdxMax = vdupq_n_s32(*binIdxMax1);
 	const float32x4_t vecBinWidth = vdupq_n_f32(static_cast<compv_float32_t>(*binWidth1));
+#if !USE_EXT
 	COMPV_ALIGN_NEON() int32_t indices[8];
 	COMPV_ALIGN_NEON() compv_float32_t values[8];
+#endif
 	for (compv_uscalar_t j = 0; j < cellHeight; ++j) {
 		for (compv_uscalar_t i = 0; i < cellWidth; i += 4) {
 			float32x4_t vecTheta = vld1q_f32(&dirPtr[i]);
@@ -60,6 +64,7 @@ void CompVHogStdBuildMapHistForSingleCellBilinear_32f32s_Intrin_NEON(
 				vbicq_s32(vbicq_s32(vecBinIdxNext, vecMaski1), vecMaski0)
 			);
 			vecMagPtr = vsubq_f32(vecMagPtr, vecAVV);
+#if !USE_EXT
 			vst1q_s32(&indices[0], vecBinIdxNext);
 			vst1q_s32(&indices[4], vecBinIdx);
 			vst1q_f32(&values[0], vecAVV);
@@ -73,6 +78,16 @@ void CompVHogStdBuildMapHistForSingleCellBilinear_32f32s_Intrin_NEON(
 			mapHistPtr[indices[6]] += values[6];
 			mapHistPtr[indices[3]] += values[3];
 			mapHistPtr[indices[7]] += values[7];
+#else
+            mapHistPtr[vgetq_lane_s32(vecBinIdxNext, 0)] += vgetq_lane_f32(vecAVV, 0);
+            mapHistPtr[vgetq_lane_s32(vecBinIdx, 0)] += vgetq_lane_f32(vecMagPtr, 0);
+            mapHistPtr[vgetq_lane_s32(vecBinIdxNext, 1)] += vgetq_lane_f32(vecAVV, 1);
+            mapHistPtr[vgetq_lane_s32(vecBinIdx, 1)] += vgetq_lane_f32(vecMagPtr, 1);
+            mapHistPtr[vgetq_lane_s32(vecBinIdxNext, 2)] += vgetq_lane_f32(vecAVV, 2);
+            mapHistPtr[vgetq_lane_s32(vecBinIdx, 2)] += vgetq_lane_f32(vecMagPtr, 2);
+            mapHistPtr[vgetq_lane_s32(vecBinIdxNext, 3)] += vgetq_lane_f32(vecAVV, 3);
+            mapHistPtr[vgetq_lane_s32(vecBinIdx, 3)] += vgetq_lane_f32(vecMagPtr, 3);
+#endif
 		}
 		magPtr += magStride;
 		dirPtr += dirStride;
