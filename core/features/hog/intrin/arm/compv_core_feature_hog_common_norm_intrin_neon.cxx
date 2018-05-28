@@ -224,7 +224,7 @@ void CompVHogCommonNormL2Hys_32f_Intrin_NEON(compv_float32_t* inOutPtr, const co
 	for (; i < count4; i += 4) {
 		vst1q_f32(&inOutPtr[i], vminq_f32(vld1q_f32(&inOutPtr[i]), vecMax));
 	}
-	for (i; i < count; ++i) {
+	for (; i < count; ++i) {
         inOutPtr[i] = std::min(inOutPtr[i], 0.2f);
 	}
 	CompVHogCommonNormL2_32f_Intrin_NEON(inOutPtr, eps_square1, count);

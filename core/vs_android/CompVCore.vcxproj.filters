@@ -208,6 +208,12 @@
     <Filter Include="include\features\hog\intrin\arm">
       <UniqueIdentifier>{245ac1b3-0899-4cfb-86ea-4e52cddd538c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="source\features\hog\asm">
+      <UniqueIdentifier>{7e761806-2217-4060-91c8-c0a7cd0bdf88}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\features\hog\asm\arm">
+      <UniqueIdentifier>{f85544a5-0d63-404f-936e-401f5f7d0eec}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\compv\core\compv_core.h">
@@ -360,6 +366,12 @@
     <ClInclude Include="..\include\compv\core\features\hog\compv_core_feature_hog_common_norm.h">
       <Filter>include\features\hog</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\compv\core\features\hog\intrin\arm\compv_core_feature_hog_common_norm_intrin_neon.h">
+      <Filter>include\features\hog\intrin\arm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\core\features\hog\intrin\arm\compv_core_feature_hog_std_intrin_neon.h">
+      <Filter>include\features\hog\intrin\arm</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_core.cxx">
@@ -503,6 +515,12 @@
     <ClCompile Include="..\features\hog\intrin\x86\compv_core_feature_hog_std_intrin_sse2.cxx">
       <Filter>source\features\hog\intrin\x86</Filter>
     </ClCompile>
+    <ClCompile Include="..\features\hog\intrin\arm\compv_core_feature_hog_common_norm_intrin_neon.cxx">
+      <Filter>source\features\hog\intrin\arm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\features\hog\intrin\arm\compv_core_feature_hog_std_intrin_neon.cxx">
+      <Filter>source\features\hog\intrin\arm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\features\fast\asm\x86\compv_core_feature_fast_dete_macros_x86_avx.s">
@@ -584,6 +602,12 @@
     </GAS>
     <GAS Include="..\ccl\asm\arm\compv_core_ccl_lsl_arm64_neon.S">
       <Filter>source\ccl\asm\arm</Filter>
+    </GAS>
+    <GAS Include="..\features\hog\asm\arm\compv_core_feature_hog_common_norm_arm32_neon.S">
+      <Filter>source\features\hog\asm\arm</Filter>
+    </GAS>
+    <GAS Include="..\features\hog\asm\arm\compv_core_feature_hog_common_norm_arm64_neon.S">
+      <Filter>source\features\hog\asm\arm</Filter>
     </GAS>
   </ItemGroup>
 </Project>

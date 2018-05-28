@@ -741,6 +741,9 @@
     <ClInclude Include="..\include\compv\base\intrin\arm\compv_gradient_fast_intrin_neon.h">
       <Filter>include\intrin\arm</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_trig_intrin_neon.h">
+      <Filter>include\math\intrin\arm</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_base.cxx">
@@ -1214,6 +1217,9 @@
     <ClCompile Include="..\intrin\arm\compv_gradient_fast_intrin_neon.cxx">
       <Filter>source\intrin\arm</Filter>
     </ClCompile>
+    <ClCompile Include="..\math\intrin\arm\compv_math_trig_intrin_neon.cxx">
+      <Filter>source\math\intrin\arm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\asm\x86\compv_bits_macros_x86.s">
@@ -1409,6 +1415,18 @@
     </GAS>
     <GAS Include="..\asm\arm\compv_bits_arm64_neon.S">
       <Filter>source\asm\arm</Filter>
+    </GAS>
+    <GAS Include="..\asm\arm\compv_gradient_fast_arm32_neon.S">
+      <Filter>source\asm\arm</Filter>
+    </GAS>
+    <GAS Include="..\asm\arm\compv_gradient_fast_arm64_neon.S">
+      <Filter>source\asm\arm</Filter>
+    </GAS>
+    <GAS Include="..\math\asm\arm\compv_math_trig_arm32_neon.S">
+      <Filter>source\math\asm\arm</Filter>
+    </GAS>
+    <GAS Include="..\math\asm\arm\compv_math_trig_arm64_neon.S">
+      <Filter>source\math\asm\arm</Filter>
     </GAS>
   </ItemGroup>
 </Project>

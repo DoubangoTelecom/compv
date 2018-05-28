@@ -63,16 +63,15 @@
     vecAtan2_scale .req v6
     vecAtan2_plus360 .req v7
     vecAtan2_plus180 .req v8
-    vecAtan2_zero .req v9
-    vecAtan2_plus90 .req v10
-    vecAtan2_p1 .req v11
-    vecAtan2_p3 .req v12
-    vecAtan2_p7 .req v13
-    vecAtan2_p5 .req v14
-    vecAtan2_eps .req v15
-    vec3 .req v16
-    vecAx0 .req v17
-    vecAy0 .req v18
+    vecAtan2_plus90 .req v9
+    vecAtan2_p1 .req v10
+    vecAtan2_p3 .req v11
+    vecAtan2_p7 .req v12
+    vecAtan2_p5 .req v13
+    vecAtan2_eps .req v14
+    vec3 .req v15
+    vecAx0 .req v16
+    vecAy0 .req v17
 
     prfm pldl1keep, [x, #(CACHE_LINE_SIZE*0)]
 	prfm pldl1keep, [x, #(CACHE_LINE_SIZE*1)]
@@ -101,7 +100,6 @@
     dup vecAtan2_p3.4s, r9w
     dup vecAtan2_p5.4s, r10w
     dup vecAtan2_p7.4s, r11w
-    eor vecAtan2_zero.16b, vecAtan2_zero.16b, vecAtan2_zero.16b
     movz r7w, #k90_32f_0
     movz r8w, #k180_32f_0
     movz r9w, #k360_32f_0
@@ -154,9 +152,9 @@
             // vec2 = vecC2
             fdiv vec1.4s, vec1.4s, vec2.4s
             .if \fusedMultiplyAdd
-                mov vecAx.4s, vecAtan2_p5.4s
-                mov vecAy.4s, vecAtan2_p3.4s
-                mov vec0.4s, vecAtan2_p1.4s
+                mov vecAx.16b, vecAtan2_p5.16b
+                mov vecAy.16b, vecAtan2_p3.16b
+                mov vec0.16b, vecAtan2_p1.16b
             .endif
             fmul vec2.4s, vec1.4s, vec1.4s
 
@@ -182,14 +180,14 @@
             orr vec0.16b, vec0.16b, vec1.16b
 
             // if (x[i] < 0) a = 180.f - a
-            fcmlt vecMask.4s, vecAx0.4s, vecAtan2_zero.4s
+            fcmlt vecMask.4s, vecAx0.4s, #0.0
             fsub vec1.4s, vecAtan2_plus180.4s, vec0.4s
             bic vec0.16b, vec0.16b, vecMask.16b
             and vec1.16b, vec1.16b, vecMask.16b
             orr vec0.16b, vec0.16b, vec1.16b
 
             // if (y[i] < 0) a = 360.f - a
-            fcmlt vecMask.4s, vecAy0.4s, vecAtan2_zero.4s
+            fcmlt vecMask.4s, vecAy0.4s, #0.0
             fsub vec1.4s, vecAtan2_plus360.4s, vec0.4s
             bic vec0.16b, vec0.16b, vecMask.16b
             and vec1.16b, vec1.16b, vecMask.16b
@@ -230,7 +228,6 @@
     .unreq vecAtan2_scale
     .unreq vecAtan2_plus360
     .unreq vecAtan2_plus180
-    .unreq vecAtan2_zero
     .unreq vecAtan2_plus90
     .unreq vecAtan2_p1
     .unreq vecAtan2_p3

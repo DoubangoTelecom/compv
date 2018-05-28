@@ -68,10 +68,13 @@ void CompVHogCommonNormL1_9_32f_Intrin_SSE2(compv_float32_t* inOutPtr, const com
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM code faster");
-	__m128 vec0 = _mm_add_ps(_mm_loadu_ps(&inOutPtr[0]), _mm_loadu_ps(&inOutPtr[4]));
+	const __m128 veca = _mm_loadu_ps(&inOutPtr[0]);
+	const __m128 vecb = _mm_loadu_ps(&inOutPtr[4]);
+	const __m128 vecc = _mm_load_ss(&inOutPtr[8]);
+	__m128 vec0 = _mm_add_ps(veca, vecb);
 	vec0 = _mm_add_ps(vec0, _mm_shuffle_ps(vec0, vec0, 0x0E));
 	vec0 = _mm_add_ps(vec0, _mm_shuffle_ps(vec0, vec0, 0x01));
-	vec0 = _mm_add_ss(vec0, _mm_load_ss(&inOutPtr[8]));
+	vec0 = _mm_add_ss(vec0, vecc);
 
 	vec0 = _mm_add_ss(vec0, _mm_load_ss(eps1));
 #if 0 // TODO(dmi): use RCP instead of 1/den
@@ -82,9 +85,9 @@ void CompVHogCommonNormL1_9_32f_Intrin_SSE2(compv_float32_t* inOutPtr, const com
 #endif
 	vec0 = _mm_shuffle_ps(vec0, vec0, 0x00);
 	
-	_mm_storeu_ps(&inOutPtr[0], _mm_mul_ps(vec0, _mm_loadu_ps(&inOutPtr[0])));
-	_mm_storeu_ps(&inOutPtr[4], _mm_mul_ps(vec0, _mm_loadu_ps(&inOutPtr[4])));
-	_mm_store_ss(&inOutPtr[8], _mm_mul_ss(vec0, _mm_load_ss(&inOutPtr[8])));
+	_mm_storeu_ps(&inOutPtr[0], _mm_mul_ps(vec0, veca));
+	_mm_storeu_ps(&inOutPtr[4], _mm_mul_ps(vec0, vecb));
+	_mm_store_ss(&inOutPtr[8], _mm_mul_ss(vec0, vecc));
 }
 
 void CompVHogCommonNormL1Sqrt_32f_Intrin_SSE2(compv_float32_t* inOutPtr, const compv_float32_t* eps1, const compv_uscalar_t count)
@@ -178,15 +181,15 @@ void CompVHogCommonNormL2_9_32f_Intrin_SSE2(compv_float32_t* inOutPtr, const com
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM code faster");
-	__m128 vec0 = _mm_loadu_ps(&inOutPtr[0]);
-	__m128 vec1 = _mm_loadu_ps(&inOutPtr[4]);
-	vec0 = _mm_mul_ps(vec0, vec0);
-	vec1 = _mm_mul_ps(vec1, vec1);
+	const __m128 veca = _mm_loadu_ps(&inOutPtr[0]);
+	const __m128 vecb = _mm_loadu_ps(&inOutPtr[4]);
+	const __m128 vecc = _mm_load_ss(&inOutPtr[8]);
+	__m128 vec0 = _mm_mul_ps(veca, veca);
+	__m128 vec1 = _mm_mul_ps(vecb, vecb);
 	vec0 = _mm_add_ps(vec0, vec1);
 	vec0 = _mm_add_ps(vec0, _mm_shuffle_ps(vec0, vec0, 0x0E));
 	vec0 = _mm_add_ps(vec0, _mm_shuffle_ps(vec0, vec0, 0x01));
-	const __m128 vec2 = _mm_load_ss(&inOutPtr[8]);
-	vec0 = _mm_add_ss(vec0, _mm_mul_ss(vec2, vec2));
+	vec0 = _mm_add_ss(vec0, _mm_mul_ss(vecc, vecc));
 
 	vec0 = _mm_add_ss(vec0, _mm_load_ss(eps_square1));
 #if 0 // TODO(dmi): use RSQRT instead of SQRT followed by DIV
@@ -198,9 +201,9 @@ void CompVHogCommonNormL2_9_32f_Intrin_SSE2(compv_float32_t* inOutPtr, const com
 #endif
 	vec0 = _mm_shuffle_ps(vec0, vec0, 0x00);
 
-	_mm_storeu_ps(&inOutPtr[0], _mm_mul_ps(vec0, _mm_loadu_ps(&inOutPtr[0])));
-	_mm_storeu_ps(&inOutPtr[4], _mm_mul_ps(vec0, _mm_loadu_ps(&inOutPtr[4])));
-	_mm_store_ss(&inOutPtr[8], _mm_mul_ss(vec0, _mm_load_ss(&inOutPtr[8])));
+	_mm_storeu_ps(&inOutPtr[0], _mm_mul_ps(vec0, veca));
+	_mm_storeu_ps(&inOutPtr[4], _mm_mul_ps(vec0, vecb));
+	_mm_store_ss(&inOutPtr[8], _mm_mul_ss(vec0, vecc));
 }
 
 void CompVHogCommonNormL2Hys_32f_Intrin_SSE2(compv_float32_t* inOutPtr, const compv_float32_t* eps_square1, const compv_uscalar_t count)

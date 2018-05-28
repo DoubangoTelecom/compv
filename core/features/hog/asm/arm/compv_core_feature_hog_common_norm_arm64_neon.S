@@ -76,8 +76,6 @@
     .unreq inOutPtr8
 
     .unreq vec0
-    .unreq vec0x
-    .unreq vec0y
     .unreq veca
     .unreq vecb
 
@@ -163,8 +161,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVHogCommonNormL1Sqrt_9_32f_Asm_NEON64
     .unreq inOutPtr8
 
     .unreq vec0
-    .unreq vec0x
-    .unreq vec0y
     .unreq veca
     .unreq vecb
     .unreq vec1

@@ -48,6 +48,7 @@ k360_32f: .single 360.0, 360.0, 360.0, 360.0
     stride .req r6
 
     i .req r7
+	r_vecAtan2_p1 .req r8
 
     vec1 .req q0 @ MUST not change (used by vdiv.f32)
     vec2 .req q1 @ MUST not change (used by vdiv.f32)
@@ -58,13 +59,13 @@ k360_32f: .single 360.0, 360.0, 360.0, 360.0
     vecAtan2_scale .req q6
     vecAtan2_plus360 .req q7
     vecAtan2_plus180 .req q8
-    vecAtan2_zero .req q9
-    vecAtan2_plus90 .req q10
-    vecAtan2_p1 .req q11
-    vecAtan2_p3 .req q12
-    vecAtan2_p7 .req q13
-    vecAtan2_p5 .req q14
-    vecAtan2_eps .req q15
+    vecAtan2_plus90 .req q9
+    vecAtan2_p3 .req q10
+    vecAtan2_p7 .req q11
+    vecAtan2_p5 .req q12
+    vecAtan2_eps .req q13
+	vecAx0 .req q14
+	vecAy0 .req q15
 
     pld [x, #(CACHE_LINE_SIZE*0)]
 	pld [x, #(CACHE_LINE_SIZE*1)]
@@ -75,22 +76,19 @@ k360_32f: .single 360.0, 360.0, 360.0, 360.0
 
     ldr scale1, [scale1]
     ldr r7, =kAtan2Eps_32f
-    ldr r8, =kAtan2P1_32f
+    ldr r8, =k90_32f
     ldr r9, =kAtan2P3_32f
     ldr r10, =kAtan2P5_32f
     ldr r11, =kAtan2P7_32f
     vld1.f32 { vecAtan2_eps }, [r7]
-    vld1.f32 { vecAtan2_p1 }, [r8]
+    vld1.f32 { vecAtan2_plus90 }, [r8]
     vld1.f32 { vecAtan2_p3 }, [r9]
     vld1.f32 { vecAtan2_p5 }, [r10]
     vld1.f32 { vecAtan2_p7 }, [r11]
-    veor.f32 vecAtan2_zero, vecAtan2_zero, vecAtan2_zero
-    ldr r7, =k90_32f
-    ldr r8, =k180_32f
-    ldr r9, =k360_32f
-    vld1.f32 { vecAtan2_plus90 }, [r7]
-    vld1.f32 { vecAtan2_plus180 }, [r8]
-    vld1.f32 { vecAtan2_plus360 }, [r9]
+    ldr r7, =k180_32f
+    ldr r8, =k360_32f
+    vld1.f32 { vecAtan2_plus180 }, [r7]
+    vld1.f32 { vecAtan2_plus360 }, [r8]
     vdup.f32 vecAtan2_scale, scale1    
 
     @ Transform stride to padding then from samples to bytes @
@@ -98,6 +96,8 @@ k360_32f: .single 360.0, 360.0, 360.0, 360.0
 	and r11, r11, #-4
 	sub stride, stride, r11
     lsl stride, stride, #(COMPV_GAS_FLOAT32_SHIFT_BYTES)
+
+	ldr r_vecAtan2_p1, =kAtan2P1_32f
 
     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     @ for (compv_uscalar_t j = 0; j < height; ++j)
@@ -108,14 +108,14 @@ k360_32f: .single 360.0, 360.0, 360.0, 360.0
         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         mov i, #0
         LoopWidth_CompVMathTrigFastAtan2_32f_Macro_NEON32\@:
-            vld1.u8 { vecAx }, [x :128] @ ARM64: increment now and remove later load
-            vld1.u8 { vecAy }, [y :128] @ ARM64: increment now and remove later load
+            vld1.u8 { vecAx0 }, [x :128]!
+            vld1.u8 { vecAy0 }, [y :128]!
             pld [x, #(CACHE_LINE_SIZE*3)]
             pld [y, #(CACHE_LINE_SIZE*3)]
 
             @ ax = std::abs(x[i]), ay = std::abs(y[i]);
-            vabs.f32 vecAx, vecAx
-            vabs.f32 vecAy, vecAy
+            vabs.f32 vecAx, vecAx0
+            vabs.f32 vecAy, vecAy0
 
             @ if (ax >= ay) vec1 = ay, vec2 = ax;
             @ else vec1 = ax, vec2 = ay;
@@ -139,7 +139,7 @@ k360_32f: .single 360.0, 360.0, 360.0, 360.0
             vdiv.f32 s3, s3, s7
             vmov.f32 vecAx, vecAtan2_p5
             vmov.f32 vecAy, vecAtan2_p3
-            vmov.f32 vec0, vecAtan2_p1
+			vld1.f32 { vec0 }, [r_vecAtan2_p1]
             vmul.f32 vec2, vec1, vec1
 
             @ a = (((atan2_p7*c2 + atan2_p5)*c2 + atan2_p3)*c2 + atan2_p1)*c
@@ -160,19 +160,15 @@ k360_32f: .single 360.0, 360.0, 360.0, 360.0
             vbic.s32 vec1, vec1, vecMask
             vorr.s32 vec0, vec0, vec1
 
-            @ TODO(dmi): not needed for ARM64 -> save values
-            vld1.u8 { vecAx }, [x :128]!
-            vld1.u8 { vecAy }, [y :128]!
-
             @ if (x[i] < 0) a = 180.f - a
-            vclt.f32 vecMask, vecAx, vecAtan2_zero
+            vclt.f32 vecMask, vecAx0, #0
             vsub.f32 vec1, vecAtan2_plus180, vec0
             vbic.s32 vec0, vec0, vecMask
             vand.s32 vec1, vec1, vecMask
             vorr.s32 vec0, vec0, vec1
 
             @ if (y[i] < 0) a = 360.f - a
-            vclt.f32 vecMask, vecAy, vecAtan2_zero
+            vclt.f32 vecMask, vecAy0, #0
             vsub.f32 vec1, vecAtan2_plus360, vec0
             vbic.s32 vec0, vec0, vecMask
             vand.s32 vec1, vec1, vecMask
@@ -203,6 +199,7 @@ k360_32f: .single 360.0, 360.0, 360.0, 360.0
     .unreq stride
 
     .unreq i
+	.unreq r_vecAtan2_p1
 
     .unreq vec1
     .unreq vec2
@@ -213,13 +210,13 @@ k360_32f: .single 360.0, 360.0, 360.0, 360.0
     .unreq vecAtan2_scale
     .unreq vecAtan2_plus360
     .unreq vecAtan2_plus180
-    .unreq vecAtan2_zero
     .unreq vecAtan2_plus90
-    .unreq vecAtan2_p1
     .unreq vecAtan2_p3
     .unreq vecAtan2_p7
     .unreq vecAtan2_p5
     .unreq vecAtan2_eps
+	.unreq vecAx0
+	.unreq vecAy0
 
     COMPV_GAS_RESTORE_NEON_REGS
 	COMPV_GAS_UNSHADOW_ARGS 7
