@@ -10,6 +10,7 @@
 #include "compv/base/math/compv_math_cast.h"
 #include "compv/base/math/compv_math_stats.h"
 #include "compv/base/compv_cpu.h"
+#include "compv/base/compv_fileutils.h"
 #include "compv/base/jsoncpp-1.8.4/json.h"
 
 /*
@@ -127,16 +128,77 @@ COMPV_ERROR_CODE CompVMathPCA::compute(const CompVMatPtr& observations, const in
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVMathPCA::read(const char* filePath, CompVMathPCAPtrPtr pca)
+COMPV_ERROR_CODE CompVMathPCA::read(CompVMathPCAPtrPtr pca, const char* filePath)
 {
+	COMPV_CHECK_EXP_RETURN(!pca || !filePath, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVMathPCA::write(const char* filePath, const CompVMathPCAPtr& pca)
+COMPV_ERROR_CODE CompVMathPCA::write(const char* filePath) const
 {
-	COMPV_CHECK_EXP_RETURN(!pca || !pca->isReady(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
+	COMPV_CHECK_EXP_RETURN(!filePath, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(!isReady(), COMPV_ERROR_CODE_E_INVALID_STATE, "Not ready. You should call compute first");
+
+	/* vectors */
+	Json::Value vectors;
+	Json::Value vectors_size = Json::Value(Json::arrayValue);
+	Json::Value vectors_data = Json::Value(Json::arrayValue);
+	const size_t vectors_rows = m_ptr32fEigenVectors->rows();
+	const size_t vectors_cols = m_ptr32fEigenVectors->cols();
+	const size_t vectors_stride = m_ptr32fEigenVectors->stride();
+	vectors_size[0] = vectors_rows, vectors_size[1] = vectors_cols;
+	const compv_float32_t* vectorsPtr = m_ptr32fEigenVectors->ptr<const compv_float32_t>();
+	for (size_t j = 0; j < vectors_rows; ++j) {
+		for (size_t i = 0; i < vectors_cols; ++i) {
+			vectors_data.append(vectorsPtr[i]);
+		}
+		vectorsPtr += vectors_stride;
+	}
+	vectors["type"] = "32f";
+	vectors["size"] = vectors_size;
+	vectors["data"] = vectors_data;
+
+	/* values */
+	Json::Value values;
+	Json::Value values_size = Json::Value(Json::arrayValue);
+	Json::Value values_data = Json::Value(Json::arrayValue);
+	const size_t values_cols = m_ptr32fEigenVectors->cols();
+	values_size[0] = 1, values_size[1] = values_cols;
+	const compv_float32_t* valuesPtr = m_ptr32fEigenValues->ptr<const compv_float32_t>();
+	for (size_t i = 0; i < values_cols; ++i) {
+		values_data.append(valuesPtr[i]);
+	}
+	values["type"] = "32f";
+	values["size"] = values_size;
+	values["data"] = values_data;
+
+	/* mean */
+	Json::Value mean;
+	Json::Value mean_size = Json::Value(Json::arrayValue);
+	Json::Value mean_data = Json::Value(Json::arrayValue);
+	const size_t mean_cols = m_ptr32fEigenVectors->cols();
+	mean_size[0] = 1, mean_size[1] = mean_cols;
+	const compv_float32_t* meanPtr = m_ptr32fMean->ptr<const compv_float32_t>();
+	for (size_t i = 0; i < mean_cols; ++i) {
+		mean_data.append(meanPtr[i]);
+	}
+	mean["type"] = "32f";
+	mean["size"] = mean_size;
+	mean["data"] = mean_data;
+
+	/* root */
+	Json::Value root;
+	root["vectors"] = vectors;
+	root["values"] = values;
+	root["mean"] = mean;
+
+	/* write */
+	Json::FastWriter writer;
+	const std::string root_string = writer.write(root);
+	COMPV_CHECK_EXP_RETURN(root_string.empty(), COMPV_ERROR_CODE_E_JSON_CPP, "Writting json object failed");
+	COMPV_CHECK_CODE_RETURN(CompVFileUtils::write(filePath, root_string.c_str(), root_string.size()));
+
 	return COMPV_ERROR_CODE_S_OK;
 }
 

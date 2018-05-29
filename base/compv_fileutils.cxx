@@ -272,7 +272,7 @@ FILE* CompVFileUtils::open(const char* fname, const char* mode)
         COMPV_DEBUG_ERROR_EX(kModuleNameFileUtils, "Invalid parameter (%s, %s)", fname, mode);
         return nullptr;
     }
-	if (!CompVFileUtils::exists(fname)) {
+	if (!std::string(mode).compare("w+") && !CompVFileUtils::exists(fname)) {
 		COMPV_DEBUG_ERROR_EX(kModuleNameFileUtils, "File doesn't exist (%s)", fname);
 		return nullptr;
 	}

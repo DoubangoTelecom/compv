@@ -23,10 +23,23 @@ public:
 	virtual ~CompVMathPCA();
 	COMPV_OBJECT_GET_ID(CompVMathPCA);
 
-	COMPV_ERROR_CODE compute(const CompVMatPtr& observations, const int maxDimensions, const bool rowBased);
+	COMPV_INLINE const CompVMatPtr& mean() const {
+		return m_ptr32fMean;
+	}
+	COMPV_INLINE const CompVMatPtr& vectors() const {
+		return m_ptr32fEigenVectors;
+	}
+	COMPV_INLINE const CompVMatPtr& values() const {
+		return m_ptr32fEigenValues;
+	}
+	COMPV_INLINE const int& dimension() const {
+		return m_nMaxDimensions;
+	}
 
-	static COMPV_ERROR_CODE read(const char* filePath, CompVMathPCAPtrPtr pca);
-	static COMPV_ERROR_CODE write(const char* filePath, const CompVMathPCAPtr& pca);
+	COMPV_ERROR_CODE compute(const CompVMatPtr& observations, const int maxDimensions, const bool rowBased);
+	COMPV_ERROR_CODE write(const char* filePath) const;
+
+	static COMPV_ERROR_CODE read(CompVMathPCAPtrPtr pca, const char* filePath);
 	static COMPV_ERROR_CODE newObj(CompVMathPCAPtrPtr pca);
 
 private:
