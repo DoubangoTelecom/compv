@@ -254,6 +254,8 @@
     <ClCompile Include="features\fast\intrin\x86\compv_core_feature_fast_dete_intrin_sse2.cxx" />
     <ClCompile Include="features\hog\compv_core_feature_hog_std.cxx" />
     <ClCompile Include="features\hog\compv_core_feature_hog_t.cxx" />
+    <ClCompile Include="features\hog\intrin\arm\compv_core_feature_hog_common_norm_intrin_neon.cxx" />
+    <ClCompile Include="features\hog\intrin\arm\compv_core_feature_hog_std_intrin_neon.cxx" />
     <ClCompile Include="features\hog\intrin\x86\compv_core_feature_hog_common_norm_intrin_sse2.cxx">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
@@ -344,6 +346,8 @@
     <ClInclude Include="include\compv\core\features\hog\compv_core_feature_hog_common_norm.h" />
     <ClInclude Include="include\compv\core\features\hog\compv_core_feature_hog_std.h" />
     <ClInclude Include="include\compv\core\features\hog\compv_core_feature_hog_t.h" />
+    <ClInclude Include="include\compv\core\features\hog\intrin\arm\compv_core_feature_hog_common_norm_intrin_neon.h" />
+    <ClInclude Include="include\compv\core\features\hog\intrin\arm\compv_core_feature_hog_std_intrin_neon.h" />
     <ClInclude Include="include\compv\core\features\hog\intrin\x86\compv_core_feature_hog_common_norm_intrin_sse2.h" />
     <ClInclude Include="include\compv\core\features\hog\intrin\x86\compv_core_feature_hog_std_intrin_avx2.h" />
     <ClInclude Include="include\compv\core\features\hog\intrin\x86\compv_core_feature_hog_std_intrin_sse2.h" />

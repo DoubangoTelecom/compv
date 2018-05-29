@@ -33,7 +33,65 @@ typedef void(*CompVHogStdBuildMapHistForSingleCell_32f32s)(
 	const compv_uscalar_t cellWidth,
 	const compv_uscalar_t cellHeight,
 	const compv_uscalar_t magStride,
-	const compv_uscalar_t dirStride);
+	const compv_uscalar_t dirStride,
+	const void* bilinearFastLUT COMPV_DEFAULT(nullptr));
+
+struct CompVHogStdBilinearLUTIdx {
+	compv_float32_t diff;
+	int32_t binIdx;
+	int32_t binIdxNext;
+};
+
+struct CompVHogStdBilinearLUTData {
+public:
+	COMPV_INLINE const CompVHogStdBilinearLUTIdx* lut()const {
+		return m_ptrLUT ? m_ptrLUT->ptr<const CompVHogStdBilinearLUTIdx>() : nullptr;
+	}
+	COMPV_ERROR_CODE update(const size_t& nbins, const int& interp, const bool& gradientSigned)
+	{
+		if (interp != COMPV_HOG_INTERPOLATION_BILINEAR_LUT) {
+			m_nbins = 0;
+			m_ptrLUT = nullptr;
+			return COMPV_ERROR_CODE_S_OK;
+		}
+		if (m_bGradientSigned == gradientSigned && m_nbins == nbins && m_ptrLUT) {
+			return COMPV_ERROR_CODE_S_OK;
+		}
+		const compv_hog_floattype_t thetaMax = gradientSigned ? 360.f : 180.f;
+		const int32_t binWidth = static_cast<int32_t>(thetaMax / nbins);
+		const compv_hog_floattype_t scaleBinWidth = 1.f / static_cast<compv_hog_floattype_t>(binWidth);
+		const int32_t binIdxMax = static_cast<int32_t>(nbins - 1);
+		
+		const size_t lut_count = static_cast<size_t>((thetaMax + 1) * 10); // Resolution = 0.1 degree (*10), (+1) because we start at Zero
+		CompVMatPtr lut;
+		COMPV_CHECK_CODE_RETURN((CompVMat::newObjAligned<CompVHogStdBilinearLUTIdx, COMPV_MAT_TYPE_STRUCT>(&lut, 1, lut_count)));
+		CompVHogStdBilinearLUTIdx* lut_ptr = lut->ptr<CompVHogStdBilinearLUTIdx>();
+		for (compv_hog_floattype_t theta = 0.f; theta <= thetaMax + 1; theta += 0.1f, ++lut_ptr) {
+			const int32_t binIdx = static_cast<int32_t>((theta * scaleBinWidth) - 0.5f);
+			const compv_float32_t diff = ((theta - (binIdx * binWidth)) * scaleBinWidth) - 0.5f;
+			const int32_t binIdxNext = binIdx + ((diff >= 0) ? 1 : -1);
+			
+			lut_ptr->binIdx = binIdx;
+			lut_ptr->binIdxNext = binIdxNext < 0 ? binIdxMax : (binIdxNext > binIdxMax ? 0 : binIdxNext);
+			lut_ptr->diff = diff;
+#			if ((defined(_DEBUG) && _DEBUG != 0) || (defined(DEBUG) && DEBUG != 0))
+			COMPV_ASSERT(lut_ptr->binIdx >= 0 && lut_ptr->binIdx <= binIdxMax);
+			COMPV_ASSERT(lut_ptr->binIdxNext >= 0 && lut_ptr->binIdxNext <= binIdxMax);
+#			endif
+		}
+		COMPV_ASSERT(lut_ptr == lut->ptr<CompVHogStdBilinearLUTIdx>() + lut_count);
+
+		m_bGradientSigned = gradientSigned;
+		m_nbins = nbins;
+		m_ptrLUT = lut;
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
+private:
+	bool m_bGradientSigned = false;
+	size_t m_nbins = 0;
+	CompVMatPtr m_ptrLUT = nullptr;
+};
 
 COMPV_OBJECT_DECLARE_PTRS(HogStd)
 
@@ -66,6 +124,7 @@ public:
 
 private:
 	COMPV_ERROR_CODE updateFptrBinning(const int& nInterp, const CompVSizeSz& szCellSize);
+	COMPV_ERROR_CODE updateBilinearFastData(const size_t& nbins, const int& interp, const bool& gradientSigned);
 	static COMPV_ERROR_CODE buildOutputForSingleBlock(
 		const compv_hog_floattype_t* mapHistPtr, compv_hog_floattype_t* outputPtr,
 		const size_t& numCellsPerBlockY, const size_t& numBinsPerBlockX, const size_t& mapHistStride
@@ -90,6 +149,7 @@ private:
 		void(*L2Hys)(compv_hog_floattype_t* inOutPtr, const compv_hog_floattype_t* eps1, const compv_uscalar_t count) = CompVHogCommonNormL2Hys_32f_C;
 		void(*L2Hys_9)(compv_hog_floattype_t* inOutPtr, const compv_hog_floattype_t* eps1, const compv_uscalar_t count) = CompVHogCommonNormL2Hys_32f_C;
 	} fptrs_norm;
+	CompVHogStdBilinearLUTData m_BilinearLUT;
 };
 
 COMPV_NAMESPACE_END()

@@ -365,6 +365,12 @@
     <ClCompile Include="features\hog\intrin\x86\compv_core_feature_hog_std_intrin_avx2.cxx">
       <Filter>Source Files\features\hog\intrin\x86</Filter>
     </ClCompile>
+    <ClCompile Include="features\hog\intrin\arm\compv_core_feature_hog_common_norm_intrin_neon.cxx">
+      <Filter>Source Files\features\hog\intrin\arm</Filter>
+    </ClCompile>
+    <ClCompile Include="features\hog\intrin\arm\compv_core_feature_hog_std_intrin_neon.cxx">
+      <Filter>Source Files\features\hog\intrin\arm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\core\compv_core.h">
@@ -516,6 +522,12 @@
     </ClInclude>
     <ClInclude Include="include\compv\core\features\hog\intrin\x86\compv_core_feature_hog_std_intrin_avx2.h">
       <Filter>Header Files\features\hog\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\core\features\hog\intrin\arm\compv_core_feature_hog_common_norm_intrin_neon.h">
+      <Filter>Header Files\features\hog\intrin\arm</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\core\features\hog\intrin\arm\compv_core_feature_hog_std_intrin_neon.h">
+      <Filter>Header Files\features\hog\intrin\arm</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

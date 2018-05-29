@@ -29,7 +29,8 @@ void CompVHogStdBuildMapHistForSingleCellBilinear_32f32s_Intrin_SSE2(
 	COMPV_ALIGNED(SSE) const compv_uscalar_t cellWidth,
 	const compv_uscalar_t cellHeight,
 	COMPV_ALIGNED(SSE) const compv_uscalar_t magStride,
-	COMPV_ALIGNED(SSE) const compv_uscalar_t dirStride
+	COMPV_ALIGNED(SSE) const compv_uscalar_t dirStride,
+	const void* bilinearFastLUT COMPV_DEFAULT(nullptr)
 );
 
 COMPV_NAMESPACE_END()

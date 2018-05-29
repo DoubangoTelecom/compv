@@ -27,11 +27,12 @@ void CompVHogStdBuildMapHistForSingleCellBilinear_32f32s_Intrin_AVX2(
 	COMPV_ALIGNED(AVX) const compv_uscalar_t cellWidth,
 	const compv_uscalar_t cellHeight,
 	COMPV_ALIGNED(AVX) const compv_uscalar_t magStride,
-	COMPV_ALIGNED(AVX) const compv_uscalar_t dirStride
+	COMPV_ALIGNED(AVX) const compv_uscalar_t dirStride,
+	const void* bilinearFastLUT COMPV_DEFAULT(nullptr)
 )
 {
 	COMPV_DEBUG_INFO_CHECK_AVX2();
-#if 0 // TODO(dmi): Add ASM code
+#if 0 // TODO(dmi): not urgent
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No ASM code");
 #endif
 	_mm256_zeroupper();

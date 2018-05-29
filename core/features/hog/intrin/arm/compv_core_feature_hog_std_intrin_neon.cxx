@@ -26,11 +26,12 @@ void CompVHogStdBuildMapHistForSingleCellBilinear_32f32s_Intrin_NEON(
 	COMPV_ALIGNED(NEON) const compv_uscalar_t cellWidth, // should be small (<= 16)
 	const compv_uscalar_t cellHeight,
 	COMPV_ALIGNED(NEON) const compv_uscalar_t magStride,
-	COMPV_ALIGNED(NEON) const compv_uscalar_t dirStride
+	COMPV_ALIGNED(NEON) const compv_uscalar_t dirStride,
+	const void* bilinearFastLUT COMPV_DEFAULT(nullptr)
 )
 {
 	COMPV_DEBUG_INFO_CHECK_NEON();
-#if 0 // TODO(dmi): Add ASM code
+#if 0 // TODO(dmi): not urgent
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No ASM code");
 #endif
 	const float32x4_t vecthetaMax = vdupq_n_f32(*thetaMax1);

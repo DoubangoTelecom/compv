@@ -62,7 +62,22 @@ static void CompVHogStdBuildMapHistForSingleCellBilinear_32f32s_C(
 	const compv_uscalar_t cellWidth,
 	const compv_uscalar_t cellHeight,
 	const compv_uscalar_t magStride,
-	const compv_uscalar_t dirStride);
+	const compv_uscalar_t dirStride,
+	const void* bilinearFastLUT COMPV_DEFAULT(nullptr));
+
+static void CompVHogStdBuildMapHistForSingleCellBilinearLUT_32f32s_C(
+	const compv_float32_t* magPtr,
+	const compv_float32_t* dirPtr,
+	compv_float32_t* mapHistPtr,
+	const compv_float32_t* thetaMax1,
+	const compv_float32_t* scaleBinWidth1,
+	const int32_t* binWidth1,
+	const int32_t* binIdxMax1,
+	const compv_uscalar_t cellWidth,
+	const compv_uscalar_t cellHeight,
+	const compv_uscalar_t magStride,
+	const compv_uscalar_t dirStride,
+	const void* bilinearFastLUT COMPV_DEFAULT(nullptr));
 
 static void CompVHogStdBuildMapHistForSingleCellNearest_32f32s_C(
 	const compv_float32_t* magPtr,
@@ -75,7 +90,8 @@ static void CompVHogStdBuildMapHistForSingleCellNearest_32f32s_C(
 	const compv_uscalar_t cellWidth,
 	const compv_uscalar_t cellHeight,
 	const compv_uscalar_t magStride,
-	const compv_uscalar_t dirStride);
+	const compv_uscalar_t dirStride,
+	const void* bilinearFastLUT COMPV_DEFAULT(nullptr));
 
 static const compv_hog_floattype_t COMPV_HOG_EPSILON = compv_hog_floattype_t(1e-6);
 static const compv_hog_floattype_t COMPV_HOG_EPSILON2 = COMPV_HOG_EPSILON * COMPV_HOG_EPSILON;
@@ -111,7 +127,9 @@ COMPV_ERROR_CODE CompVHogStd::set(int id, const void* valuePtr, size_t valueSize
 	switch (id) {
 	case COMPV_HOG_SET_BOOL_GRADIENT_SIGNED: {
 		COMPV_CHECK_EXP_RETURN(valueSize != sizeof(bool), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-		m_bGradientSigned = *reinterpret_cast<const bool*>(valuePtr);
+		const bool gradientSigned = *reinterpret_cast<const bool*>(valuePtr);
+		COMPV_CHECK_CODE_RETURN(updateBilinearFastData(m_nbins, m_nInterp, gradientSigned));
+		m_bGradientSigned = gradientSigned;
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	case COMPV_HOG_SET_INT_BLOCK_NORM: {
@@ -133,6 +151,7 @@ COMPV_ERROR_CODE CompVHogStd::set(int id, const void* valuePtr, size_t valueSize
 		COMPV_CHECK_EXP_RETURN(valueSize != sizeof(int), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 		const int nbins = *reinterpret_cast<const int*>(valuePtr);
 		COMPV_CHECK_EXP_RETURN(nbins <= 1 || nbins > 360, COMPV_ERROR_CODE_E_OUT_OF_BOUND, "NBINS must be within [2-360]");
+		COMPV_CHECK_CODE_RETURN(updateBilinearFastData(nbins, m_nInterp, m_bGradientSigned));
 		m_nbins = nbins;
 		return COMPV_ERROR_CODE_S_OK;
 	}
@@ -141,11 +160,13 @@ COMPV_ERROR_CODE CompVHogStd::set(int id, const void* valuePtr, size_t valueSize
 		const int interp = *reinterpret_cast<const int*>(valuePtr);
 		COMPV_CHECK_EXP_RETURN(
 			interp != COMPV_HOG_INTERPOLATION_NEAREST &&
-			interp != COMPV_HOG_INTERPOLATION_BILINEAR,
+			interp != COMPV_HOG_INTERPOLATION_BILINEAR &&
+			interp != COMPV_HOG_INTERPOLATION_BILINEAR_LUT,
 			COMPV_ERROR_CODE_E_INVALID_PARAMETER,
 			"interp must be equal to COMPV_HOG_INTERPOLATION_xxxx"
 		);
 		COMPV_CHECK_CODE_RETURN(updateFptrBinning(interp, m_szCellSize));
+		COMPV_CHECK_CODE_RETURN(updateBilinearFastData(m_nbins, interp, m_bGradientSigned));
 		m_nInterp = interp;
 		return COMPV_ERROR_CODE_S_OK;
 	}
@@ -220,6 +241,7 @@ COMPV_ERROR_CODE CompVHogStd::process(const CompVMatPtr& input, CompVMatPtrPtr o
 	const size_t nMapHeight = numCellsY;
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_hog_floattype_t>(&mapHist, nMapHeight, nMapWidth)); // numCellsY * numBinsX
 	const size_t nMapHistStride = mapHist->stride();
+	const void* bilinearFastLUT = reinterpret_cast<const void*>(m_BilinearLUT.lut());
 	// Multithreading - Process
 	auto funcPtrOrientationBinning = [&](const size_t cellYstart, const size_t cellYend) -> COMPV_ERROR_CODE {
 		const size_t yOffset = static_cast<size_t>(m_szCellSize.height * szStrideInCellsCount.height);
@@ -253,7 +275,8 @@ COMPV_ERROR_CODE CompVHogStd::process(const CompVMatPtr& input, CompVMatPtrPtr o
 					static_cast<const compv_uscalar_t>(m_szCellSize.width),
 					static_cast<const compv_uscalar_t>(m_szCellSize.height),
 					static_cast<const compv_uscalar_t>(nMagnitudeStride),
-					static_cast<const compv_uscalar_t>(nDirectionStride)
+					static_cast<const compv_uscalar_t>(nDirectionStride),
+					bilinearFastLUT
 				);
 			}
 			mapHistPtr += nMapHistStride;
@@ -371,20 +394,30 @@ COMPV_ERROR_CODE CompVHogStd::process(const CompVMatPtr& input, CompVMatPtrPtr o
 COMPV_ERROR_CODE CompVHogStd::updateFptrBinning(const int& nInterp, const CompVSizeSz& szCellSize)
 {
 	CompVHogStdBuildMapHistForSingleCell_32f32s binningFuncPtr =
-		(m_nInterp == COMPV_HOG_INTERPOLATION_NEAREST) ? CompVHogStdBuildMapHistForSingleCellNearest_32f32s_C : CompVHogStdBuildMapHistForSingleCellBilinear_32f32s_C;
-#if COMPV_ARCH_X86
-	if (CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(szCellSize.width * sizeof(compv_float32_t))) {
-		COMPV_EXEC_IFDEF_INTRIN_X86(binningFuncPtr = CompVHogStdBuildMapHistForSingleCellBilinear_32f32s_Intrin_SSE2);
+		(nInterp == COMPV_HOG_INTERPOLATION_NEAREST)
+		? CompVHogStdBuildMapHistForSingleCellNearest_32f32s_C 
+		: (nInterp == COMPV_HOG_INTERPOLATION_BILINEAR) ? CompVHogStdBuildMapHistForSingleCellBilinear_32f32s_C : CompVHogStdBuildMapHistForSingleCellBilinearLUT_32f32s_C;
+	if (nInterp == COMPV_HOG_INTERPOLATION_BILINEAR) {
+#		if COMPV_ARCH_X86
+		if (CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(szCellSize.width * sizeof(compv_float32_t))) {
+			COMPV_EXEC_IFDEF_INTRIN_X86(binningFuncPtr = CompVHogStdBuildMapHistForSingleCellBilinear_32f32s_Intrin_SSE2);
+		}
+		if (CompVCpu::isEnabled(kCpuFlagAVX2) && COMPV_IS_ALIGNED_AVX(szCellSize.width * sizeof(compv_float32_t))) {
+			COMPV_EXEC_IFDEF_INTRIN_X86(binningFuncPtr = CompVHogStdBuildMapHistForSingleCellBilinear_32f32s_Intrin_AVX2);
+		}
+#		elif COMPV_ARCH_ARM
+		if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(szCellSize.width * sizeof(compv_float32_t))) {
+			COMPV_EXEC_IFDEF_INTRIN_ARM(binningFuncPtr = CompVHogStdBuildMapHistForSingleCellBilinear_32f32s_Intrin_NEON);
+		}
+#		endif
 	}
-	if (CompVCpu::isEnabled(kCpuFlagAVX2) && COMPV_IS_ALIGNED_AVX(szCellSize.width * sizeof(compv_float32_t))) {
-		COMPV_EXEC_IFDEF_INTRIN_X86(binningFuncPtr = CompVHogStdBuildMapHistForSingleCellBilinear_32f32s_Intrin_AVX2);
-	}
-#elif COMPV_ARCH_ARM
-    if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(szCellSize.width * sizeof(compv_float32_t))) {
-        COMPV_EXEC_IFDEF_INTRIN_ARM(binningFuncPtr = CompVHogStdBuildMapHistForSingleCellBilinear_32f32s_Intrin_NEON);
-    }
-#endif
 	m_fptrBinning = binningFuncPtr;
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVHogStd::updateBilinearFastData(const size_t& nbins, const int& interp, const bool& gradientSigned)
+{
+	COMPV_CHECK_CODE_RETURN(m_BilinearLUT.update(nbins, interp, gradientSigned));
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -439,6 +472,7 @@ COMPV_ERROR_CODE CompVHogStd::newObj(
 
 	// Update binning function pointer
 	COMPV_CHECK_CODE_RETURN(hog_->updateFptrBinning(interp, cellSize));
+	COMPV_CHECK_CODE_RETURN(hog_->updateBilinearFastData(nbins, interp, gradientSigned));
 
 #if COMPV_ARCH_X86
 	if (CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
@@ -537,7 +571,8 @@ static void CompVHogStdBuildMapHistForSingleCellBilinear_32f32s_C(
 	const compv_uscalar_t cellWidth,
 	const compv_uscalar_t cellHeight,
 	const compv_uscalar_t magStride,
-	const compv_uscalar_t dirStride
+	const compv_uscalar_t dirStride,
+	const void* bilinearFastLUT COMPV_DEFAULT(nullptr)
 )
 {
 	// "cellWidth" and "cellHeight" are expected to be small values (<=16) which means no GPU implementation is needed
@@ -595,6 +630,87 @@ static void CompVHogStdBuildMapHistForSingleCellBilinear_32f32s_C(
 	}
 }
 
+static void CompVHogStdBuildMapHistForSingleCellBilinearLUT_32f32s_C(
+	const compv_float32_t* magPtr,
+	const compv_float32_t* dirPtr,
+	compv_float32_t* mapHistPtr,
+	const compv_float32_t* thetaMax1,
+	const compv_float32_t* scaleBinWidth1,
+	const int32_t* binWidth1,
+	const int32_t* binIdxMax1,
+	const compv_uscalar_t cellWidth,
+	const compv_uscalar_t cellHeight,
+	const compv_uscalar_t magStride,
+	const compv_uscalar_t dirStride,
+	const void* bilinearFastLUT COMPV_DEFAULT(nullptr)
+)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Not faster than BilinearFull when SIMD is enabled");
+	// "cellWidth" and "cellHeight" are expected to be small values (<=16) which means no GPU implementation is needed
+	const CompVHogStdBilinearLUTIdx* bilinearFastLUT_ = reinterpret_cast<const CompVHogStdBilinearLUTIdx*>(bilinearFastLUT);
+	const compv_float32_t& thetaMax = *thetaMax1;
+	const size_t cellWidth4 = cellWidth & -4;
+	for (compv_uscalar_t j = 0; j < cellHeight; ++j) {
+		/*for (compv_uscalar_t i = 0; i < cellWidth; ++i) {
+			const compv_float32_t theta = (dirPtr[i] > thetaMax) ? (dirPtr[i] - thetaMax) : dirPtr[i];
+#			if ((defined(_DEBUG) && _DEBUG != 0) || (defined(DEBUG) && DEBUG != 0))
+			COMPV_ASSERT(theta >= 0 && theta <= thetaMax);
+#			endif
+			const int32_t thetaIdx = COMPV_MATH_ROUNDFU_2_NEAREST_INT((theta * 10), int32_t); // e.g. if theta = 359.96 then, thetaIdx = int(359.96 * 10) = 360
+			const CompVHogStdBilinearLUTIdx& lut = bilinearFastLUT_[thetaIdx];
+			const compv_float32_t avv = std::abs(magPtr[i] * lut.diff);
+			mapHistPtr[lut.binIdxNext] += avv;
+			mapHistPtr[lut.binIdx] += (magPtr[i] - avv);
+		}*/
+		compv_uscalar_t i;
+		for (i = 0; i < cellWidth4; i += 4) {
+			const compv_float32_t theta_0 = (dirPtr[i] > thetaMax) ? (dirPtr[i] - thetaMax) : dirPtr[i];
+			const compv_float32_t theta_1 = (dirPtr[i + 1] > thetaMax) ? (dirPtr[i + 1] - thetaMax) : dirPtr[i + 1];
+			const compv_float32_t theta_2 = (dirPtr[i + 2] > thetaMax) ? (dirPtr[i + 2] - thetaMax) : dirPtr[i + 2];
+			const compv_float32_t theta_3 = (dirPtr[i + 3] > thetaMax) ? (dirPtr[i + 3] - thetaMax) : dirPtr[i + 3];
+#			if ((defined(_DEBUG) && _DEBUG != 0) || (defined(DEBUG) && DEBUG != 0))
+			COMPV_ASSERT(theta_0 >= 0 && theta_0 <= thetaMax);
+			COMPV_ASSERT(theta_1 >= 0 && theta_1 <= thetaMax);
+			COMPV_ASSERT(theta_2 >= 0 && theta_2 <= thetaMax);
+			COMPV_ASSERT(theta_3 >= 0 && theta_3 <= thetaMax);
+#			endif
+			const int32_t thetaIdx_0 = COMPV_MATH_ROUNDFU_2_NEAREST_INT((theta_0 * 10), int32_t); // e.g. if theta = 359.96 then, thetaIdx = int(359.96 * 10) = 360
+			const int32_t thetaIdx_1 = COMPV_MATH_ROUNDFU_2_NEAREST_INT((theta_1 * 10), int32_t); // e.g. if theta = 359.96 then, thetaIdx = int(359.96 * 10) = 360
+			const int32_t thetaIdx_2 = COMPV_MATH_ROUNDFU_2_NEAREST_INT((theta_2 * 10), int32_t); // e.g. if theta = 359.96 then, thetaIdx = int(359.96 * 10) = 360
+			const int32_t thetaIdx_3 = COMPV_MATH_ROUNDFU_2_NEAREST_INT((theta_3 * 10), int32_t); // e.g. if theta = 359.96 then, thetaIdx = int(359.96 * 10) = 360
+			const CompVHogStdBilinearLUTIdx& lut_0 = bilinearFastLUT_[thetaIdx_0];
+			const CompVHogStdBilinearLUTIdx& lut_1 = bilinearFastLUT_[thetaIdx_1];
+			const CompVHogStdBilinearLUTIdx& lut_2 = bilinearFastLUT_[thetaIdx_2];
+			const CompVHogStdBilinearLUTIdx& lut_3 = bilinearFastLUT_[thetaIdx_3];
+			const compv_float32_t avv_0 = std::abs(magPtr[i] * lut_0.diff);
+			const compv_float32_t avv_1 = std::abs(magPtr[i + 1] * lut_1.diff);
+			const compv_float32_t avv_2 = std::abs(magPtr[i + 2] * lut_2.diff);
+			const compv_float32_t avv_3 = std::abs(magPtr[i + 3] * lut_3.diff);
+			mapHistPtr[lut_0.binIdxNext] += avv_0;
+			mapHistPtr[lut_0.binIdx] += (magPtr[i] - avv_0);
+			mapHistPtr[lut_1.binIdxNext] += avv_1;
+			mapHistPtr[lut_1.binIdx] += (magPtr[i + 1] - avv_1);
+			mapHistPtr[lut_2.binIdxNext] += avv_2;
+			mapHistPtr[lut_2.binIdx] += (magPtr[i + 2] - avv_2);
+			mapHistPtr[lut_3.binIdxNext] += avv_3;
+			mapHistPtr[lut_3.binIdx] += (magPtr[i + 3] - avv_3);
+		}
+		for (; i < cellWidth; i += 1) {
+			const compv_float32_t theta_0 = (dirPtr[i] > thetaMax) ? (dirPtr[i] - thetaMax) : dirPtr[i];
+#			if ((defined(_DEBUG) && _DEBUG != 0) || (defined(DEBUG) && DEBUG != 0))
+			COMPV_ASSERT(theta_0 >= 0 && theta_0 <= thetaMax);
+#			endif
+			const int32_t thetaIdx_0 = COMPV_MATH_ROUNDFU_2_NEAREST_INT((theta_0 * 10), int32_t); // e.g. if theta = 359.96 then, thetaIdx = int(359.96 * 10) = 360
+			const CompVHogStdBilinearLUTIdx& lut_0 = bilinearFastLUT_[thetaIdx_0];
+			const compv_float32_t avv_0 = std::abs(magPtr[i] * lut_0.diff);
+			mapHistPtr[lut_0.binIdxNext] += avv_0;
+			mapHistPtr[lut_0.binIdx] += (magPtr[i] - avv_0);
+		}
+		magPtr += magStride;
+		dirPtr += dirStride;
+	}
+}
+
 static void CompVHogStdBuildMapHistForSingleCellNearest_32f32s_C(
 	const compv_float32_t* magPtr,
 	const compv_float32_t* dirPtr,
@@ -606,7 +722,8 @@ static void CompVHogStdBuildMapHistForSingleCellNearest_32f32s_C(
 	const compv_uscalar_t cellWidth,
 	const compv_uscalar_t cellHeight,
 	const compv_uscalar_t magStride,
-	const compv_uscalar_t dirStride
+	const compv_uscalar_t dirStride,
+	const void* bilinearFastLUT COMPV_DEFAULT(nullptr)
 )
 {
 	// "cellWidth" and "cellHeight" are expected to be small values (<=16) which means no GPU implementation is needed
