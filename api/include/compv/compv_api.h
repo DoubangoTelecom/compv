@@ -48,6 +48,7 @@
 #include <compv/base/math/compv_math_matrix.h>
 #include <compv/base/math/compv_math_moments.h>
 #include <compv/base/math/compv_math_morph.h>
+#include <compv/base/math/compv_math_pca.h>
 #include <compv/base/math/compv_math_transform.h>
 #include <compv/base/math/compv_math_trig.h>
 #include <compv/base/math/compv_math_stats.h>

@@ -72,5 +72,8 @@
     <ClCompile Include="ml_svm.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="pca.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

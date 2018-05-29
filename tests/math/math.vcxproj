@@ -171,6 +171,7 @@
     <ClCompile Include="matrix_ops.cxx" />
     <ClCompile Include="ml_svm.cxx" />
     <ClCompile Include="morph.cxx" />
+    <ClCompile Include="pca.cxx" />
     <ClCompile Include="stats_mse.cxx" />
     <ClCompile Include="stats_normalize.cxx" />
     <ClCompile Include="stats_ransac.cxx" />

@@ -59,7 +59,7 @@ struct CompVMachineLearningSVMParams {
 	int probability_estimates = 0; // whether to train a SVC or SVR model for probability estimates, 0 or 1 (default 0)
 };
 
-struct CompVMachineLearningSVMCrossValidation{
+struct CompVMachineLearningSVMCrossValidation {
 	int kfold = COMPV_LIBSVM_KFOLDS_DEFAULT; // use "(k-1)/k" for training and "1/k" for testing. For k=5(default), use "4/5" for training and "1/5" for testing
 	int log2c[3] = { -5,  15,  2 }; // C: begin, end, step. See "https://www.csie.ntu.edu.tw/~cjlin/papers/guide/guide.pdf" section 3.2 for range values.
 	int log2g[3] = { 4, -15, -2 }; // Gamma: begin, end, step. See "https://www.csie.ntu.edu.tw/~cjlin/papers/guide/guide.pdf" section 3.2 for range values.

@@ -78,7 +78,7 @@ COMPV_ERROR_CODE CompVMathEigen<T>::findSymm(const CompVMatPtr &S, CompVMatPtrPt
 
 	COMPV_DEBUG_INFO_CODE_TODO("jacobiAngles contains few lines, embedd the code instead of calling a function");
 
-	COMPV_DEBUG_INFO_CODE_TODO("Try to eliminate extract2Cols/insert2Cols which were made to make mulAG thread-safe and SIMD-friendly. Took too much time");
+	COMPV_DEBUG_INFO_CODE_TODO("Try to eliminate extract2Cols/insert2Cols which were made to make mulAG thread-safe and SIMD-friendly. Take too much time");
 
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<T>(&GD_2rows, 2, D_->rows()));
 	do {
