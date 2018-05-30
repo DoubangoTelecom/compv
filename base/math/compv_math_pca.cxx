@@ -105,6 +105,7 @@ COMPV_ERROR_CODE CompVMathPCA::compute(const CompVMatPtr& observations, const in
 		static_cast<compv_float32_t>(eigenVectors->cols()),
 		static_cast<compv_float32_t>(maxDimensions - 1)
 	};
+
 	CompVMatPtr eigenVectorsBind;
 	COMPV_CHECK_CODE_RETURN(eigenVectors->bind(&eigenVectorsBind, roi));
 	COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static<compv_float64_t, compv_float32_t>(eigenVectorsBind, &ptr32fEigenVectors)));
