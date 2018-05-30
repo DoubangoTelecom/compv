@@ -23,11 +23,14 @@ COMPV_ERROR_CODE pca()
 	const uint64_t timeStart = CompVTime::nowMillis();
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
 		COMPV_CHECK_CODE_RETURN(pca->compute(observations, PCA_DIM, OBSERVATION_ROW_BASED));
-		COMPV_CHECK_CODE_RETURN(pca->write(FILE_OUT_PATH));
 	}
 	const uint64_t timeEnd = CompVTime::nowMillis();
 	
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "Elapsed time(PCA) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
+
+	COMPV_CHECK_CODE_RETURN(pca->write(FILE_OUT_PATH));
+	COMPV_CHECK_CODE_RETURN(CompVMathPCA::read(&pca, FILE_OUT_PATH));
+	COMPV_CHECK_CODE_RETURN(pca->project(observations, &observations));
 
 	return COMPV_ERROR_CODE_S_OK;
 }

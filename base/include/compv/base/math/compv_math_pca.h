@@ -38,6 +38,7 @@ public:
 
 	COMPV_ERROR_CODE compute(const CompVMatPtr& observations, const int maxDimensions, const bool rowBased);
 	COMPV_ERROR_CODE write(const char* filePath) const;
+	COMPV_ERROR_CODE project(const CompVMatPtr& observations, CompVMatPtrPtr vectors) const;
 
 	static COMPV_ERROR_CODE read(CompVMathPCAPtrPtr pca, const char* filePath);
 	static COMPV_ERROR_CODE newObj(CompVMathPCAPtrPtr pca);

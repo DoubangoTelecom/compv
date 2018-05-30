@@ -42,6 +42,7 @@
     <ClInclude Include="include\compv\base\compv_fileutils.h" />
     <ClInclude Include="include\compv\base\compv_gradient_fast.h" />
     <ClInclude Include="include\compv\base\compv_jni.h" />
+    <ClInclude Include="include\compv\base\compv_json.h" />
     <ClInclude Include="include\compv\base\compv_kernel.h" />
     <ClInclude Include="include\compv\base\compv_lock.h" />
     <ClInclude Include="include\compv\base\compv_mat.h" />
@@ -230,6 +231,7 @@
     <ClCompile Include="compv_fileutils.cxx" />
     <ClCompile Include="compv_gradient_fast.cxx" />
     <ClCompile Include="compv_jni.cxx" />
+    <ClCompile Include="compv_json.cxx" />
     <ClCompile Include="compv_kernel.cxx" />
     <ClCompile Include="compv_lock.cxx" />
     <ClCompile Include="compv_mat.cxx" />

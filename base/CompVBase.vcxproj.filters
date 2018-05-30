@@ -735,6 +735,9 @@
     <ClInclude Include="include\compv\base\math\compv_math_pca.h">
       <Filter>include\math</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\compv_json.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx">
@@ -1213,6 +1216,9 @@
     </ClCompile>
     <ClCompile Include="math\compv_math_pca.cxx">
       <Filter>source\math</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_json.cxx">
+      <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
