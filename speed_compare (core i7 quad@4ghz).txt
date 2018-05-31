@@ -166,3 +166,4 @@ CompV: 5198.ms(full optiz)
 OpenCV: 29356.ms(full optiz)
 Remarque: We're 564% (almost #6 times) faster.
 OpenCV uses SSE2 and pre-computed indices for the indexes. To be fair we have created the HOG descriptor outside of the loop to make sure OpenCV will reuse the computed indices.
+We tested the HOG descriptor with many products and machine learning algorithms (SVM, Gradient Boosting...) and we always get better result with our implementation (versus OpenCV).
