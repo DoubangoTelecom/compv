@@ -613,6 +613,7 @@ class CompVMatrixGeneric
 		const T* a0_ = A->ptr<const T>();
 		size_t rows_ = A->rows();
 		signed cols_ = static_cast<signed>(A->cols());
+		signed cols4_ = cols_ & -4;
 		T *r0_ = (*R)->ptr<T>();
 		size_t rstrideInElts_, row_;
 		size_t astrideInElts_;
@@ -625,7 +626,7 @@ class CompVMatrixGeneric
 		size_t rstrideInEltsTimes4_ = rstrideInElts_ << 2;
 		for (row_ = 0; row_ < rows_; ++row_) {
 			r_ = r0_;
-			for (col_ = 0; col_ < cols_ - 3; col_ += 4, r_ += rstrideInEltsTimes4_) {
+			for (col_ = 0; col_ < cols4_; col_ += 4, r_ += rstrideInEltsTimes4_) {
 				r_[0] = a0_[col_];
 				r_[rstrideInElts_] = a0_[col_ + 1];
 				r_[rstrideInEltsTimes2_] = a0_[col_ + 2];
