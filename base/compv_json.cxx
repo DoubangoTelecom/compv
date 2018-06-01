@@ -115,16 +115,6 @@ static COMPV_ERROR_CODE writeMat(Json::Value& root, const CompVMatPtr& mat)
 }
 
 template<typename T>
-class CompVMathBasicUnsignedOpAdds {
-public:
-	COMPV_ALWAYS_INLINE T operator()(const T& a, const T& b) const {
-		static const T maxx = std::numeric_limits<T>::max();
-		const T r = (a + b);
-		return (r < a) ? maxx : r;
-	}
-};
-
-template<typename T>
 class JSONMatVal {
 public:
 	virtual T operator()(const Json::Value& vv) const = 0;
