@@ -88,9 +88,7 @@ public:
 	}
 
 	COMPV_ERROR_CODE predict(const CompVMatPtr& vector, int& label, double* distance = nullptr);
-	COMPV_ERROR_CODE addVector(const int label, const CompVMatPtr& vector);
-	COMPV_ERROR_CODE train(const std::vector<int>& trainLabels, const CompVMatPtrVector& trainVectors, const CompVMachineLearningSVMCrossValidation* crossValidation = nullptr);
-	COMPV_ERROR_CODE train(const CompVMachineLearningSVMCrossValidation* crossValidation = nullptr);
+	COMPV_ERROR_CODE train(const CompVMatPtr& trainLabels, const CompVMatPtr& trainVectors, const CompVMachineLearningSVMCrossValidation* crossValidation = nullptr);
 	COMPV_ERROR_CODE save(const char* filePath, const bool releaseVectors_ = true);
 
 	static COMPV_ERROR_CODE load(const char* filePath, CompVMachineLearningSVMPtrPtr mlSVM);
@@ -99,7 +97,7 @@ public:
 private:
 	static COMPV_ERROR_CODE trainEx(const struct svm_problem* problem, struct svm_parameter* params, const CompVMachineLearningSVMCrossValidation* crossValidation, struct svm_model** model);
 	static COMPV_ERROR_CODE crossValidation(const struct svm_problem* problem, const struct svm_parameter* params, const int _kfolds, double& accuracy);
-	static COMPV_ERROR_CODE rawToNode(const CompVMatPtr& rawVector, CompVMatPtrPtr nodeVector);
+	static COMPV_ERROR_CODE rawToNode(const double* rawVector, const size_t count, CompVMatPtrPtr nodeVector);
 
 private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
@@ -107,8 +105,6 @@ private:
 	struct svm_model* m_ptrLibsvmModel;
 	bool m_bPredictProbEnabled;
 	size_t m_nVectorSize;
-	CompVMatPtrVector m_vecTrainVectors;
-	std::vector<int> m_vecTrainLabels;
 	CompVMatPtrVector m_vecNodeVectors;
 	COMPV_VS_DISABLE_WARNINGS_END()
 };

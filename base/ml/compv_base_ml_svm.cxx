@@ -70,8 +70,11 @@ COMPV_ERROR_CODE CompVMachineLearningSVM::predict(const CompVMatPtr& vector, int
 	}
 
 	// Create a node containing the vector data
-	CompVMatPtr nodeVector;
-	COMPV_CHECK_CODE_RETURN(CompVMachineLearningSVM::rawToNode(vector, &nodeVector));
+	CompVMatPtr nodeVector, vector64f = vector;
+	if (vector->subType() != COMPV_SUBTYPE_RAW_FLOAT64) {
+		COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static<compv_float32_t, compv_float64_t>(vector, &vector64f)));
+	}
+	COMPV_CHECK_CODE_RETURN(CompVMachineLearningSVM::rawToNode(vector64f->ptr<const double>(), vector64f->cols(), &nodeVector));
 	if (distance) {
 #if 1
 		label = static_cast<int>(svm_predict_distance(m_ptrLibsvmModel, nodeVector->ptr<const svm_node>(), distance));
@@ -97,45 +100,34 @@ COMPV_ERROR_CODE CompVMachineLearningSVM::predict(const CompVMatPtr& vector, int
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVMachineLearningSVM::addVector(const int label, const CompVMatPtr& vector)
+// trainLabels : (1 x n) - each col represent a label (must be 32s)
+// trainVectors: (n x m) - each row reprsent a vector (must be 32f or 64f)
+COMPV_ERROR_CODE CompVMachineLearningSVM::train(const CompVMatPtr& trainLabels, const CompVMatPtr& trainVectors, const CompVMachineLearningSVMCrossValidation* crossValidation COMPV_DEFAULT(nullptr))
 {
-	COMPV_CHECK_EXP_RETURN(!vector || vector->rows() != 1 ||
-		(vector->subType() != COMPV_SUBTYPE_RAW_FLOAT64 && vector->subType() != COMPV_SUBTYPE_RAW_FLOAT32),
-		COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_AUTOLOCK_THIS(CompVMachineLearningSVM);
-	const size_t vecSize = m_vecTrainVectors.empty() ? vector->cols() : m_vecTrainVectors.back()->cols();
-	// Make sure the vector size is correct
-	if (vector->cols() != vecSize) {
-		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Invalid vector size: %zu # %zu", vector->cols(), vecSize);
-		return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
-	}
-	CompVMatPtr vector_;
-	if (vector->subType() == COMPV_SUBTYPE_RAW_FLOAT64) {
-		COMPV_CHECK_CODE_RETURN(vector->clone(&vector_));
-	}
-	else {
-		COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static<float, double>(vector, &vector_)));
-	}
-	m_vecTrainVectors.push_back(vector_);
-	m_vecTrainLabels.push_back(label);
-
-	m_nVectorSize = vecSize;
-	return COMPV_ERROR_CODE_S_OK;
-}
-
-COMPV_ERROR_CODE CompVMachineLearningSVM::train(const std::vector<int>& trainLabels, const CompVMatPtrVector& trainVectors, const CompVMachineLearningSVMCrossValidation* crossValidation COMPV_DEFAULT(nullptr))
-{
-	COMPV_CHECK_EXP_RETURN(trainLabels.empty() || trainLabels.size() != trainVectors.size(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(!trainLabels || !trainVectors || trainLabels->rows() != 1 && trainLabels->cols() != trainVectors->rows(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(trainLabels->subType() != COMPV_SUBTYPE_RAW_INT32, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "trainLabels must be 32s");
+	COMPV_CHECK_EXP_RETURN(trainVectors->subType() != COMPV_SUBTYPE_RAW_FLOAT32 && trainVectors->subType() != COMPV_SUBTYPE_RAW_FLOAT64, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "trainVectors must be 32f or 64f");
 	COMPV_CHECK_EXP_RETURN(crossValidation && !crossValidation->isValid(), COMPV_ERROR_CODE_E_INVALID_PARAMETER, "crossValidation params are incorrect");
 	COMPV_AUTOLOCK_THIS(CompVMachineLearningSVM);
+
+	// Convert "trainVectors" to double
+	CompVMatPtr vectors;
+	if (trainVectors->subType() != COMPV_SUBTYPE_RAW_FLOAT64) {
+		COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static<compv_float32_t, compv_float64_t>(trainVectors, &vectors)));
+	}
+	else {
+		vectors = trainVectors;
+	}
+	const size_t vectorLength = vectors->cols();
+	const int32_t* trainLabelsPtr = trainLabels->ptr<int32_t>();
 
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	svm_problem problem = { 0 };
 	const char* error_msg = nullptr;
 	std::function<COMPV_ERROR_CODE(const size_t ystart, const size_t yend)> funcPtr;
-	m_vecNodeVectors.resize(trainVectors.size(), nullptr); // member variable because model use it as reference pointer
+	m_vecNodeVectors.resize(vectors->rows(), nullptr); // member variable because model use it as reference pointer
 
-	problem.l = static_cast<int>(trainVectors.size());
+	problem.l = static_cast<int>(vectors->rows());
 	problem.y = reinterpret_cast<double*>(CompVMem::malloc(problem.l * sizeof(double)));
 	COMPV_CHECK_EXP_BAIL(!problem.y, err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 	problem.x = reinterpret_cast<svm_node**>(CompVMem::malloc(problem.l * sizeof(svm_node*)));
@@ -143,9 +135,9 @@ COMPV_ERROR_CODE CompVMachineLearningSVM::train(const std::vector<int>& trainLab
 	// Set Problem's values
 	funcPtr = [&](const size_t start, const size_t end) -> COMPV_ERROR_CODE {
 		for (size_t l = start; l < end; l++) {
-			COMPV_CHECK_CODE_RETURN(CompVMachineLearningSVM::rawToNode(trainVectors[l], &m_vecNodeVectors[l]));
+			COMPV_CHECK_CODE_RETURN(CompVMachineLearningSVM::rawToNode(vectors->ptr<const double>(l), vectorLength, &m_vecNodeVectors[l]));
 			problem.x[l] = m_vecNodeVectors[l]->ptr<svm_node>();
-			problem.y[l] = trainLabels[l];
+			problem.y[l] = trainLabelsPtr[l];
 		}
 		return COMPV_ERROR_CODE_S_OK;
 	};
@@ -175,14 +167,6 @@ bail:
 	return err;
 }
 
-COMPV_ERROR_CODE CompVMachineLearningSVM::train(const CompVMachineLearningSVMCrossValidation* crossValidation COMPV_DEFAULT(nullptr))
-{
-	COMPV_AUTOLOCK_THIS(CompVMachineLearningSVM);
-	// Train using local labels and vectors
-	COMPV_CHECK_EXP_RETURN(crossValidation && !crossValidation->isValid(), COMPV_ERROR_CODE_E_INVALID_PARAMETER, "crossValidation params are incorrect");
-	return COMPV_ERROR_CODE_S_OK;
-}
-
 COMPV_ERROR_CODE CompVMachineLearningSVM::save(const char* filePath, const bool releaseVectors_ COMPV_DEFAULT(true))
 {
 	COMPV_AUTOLOCK_THIS(CompVMachineLearningSVM);
@@ -190,11 +174,7 @@ COMPV_ERROR_CODE CompVMachineLearningSVM::save(const char* filePath, const bool 
 	COMPV_CHECK_EXP_RETURN(svm_save_model(filePath, m_ptrLibsvmModel) != 0, COMPV_ERROR_CODE_E_LIBSVM, "svm_save_model failed");
 	// Margaret Thatcher: "I want my memory back"
 	if (releaseVectors_) {
-		m_vecTrainVectors.clear();
-		m_vecTrainLabels.clear();
 		m_vecNodeVectors.clear();
-		m_vecTrainVectors.shrink_to_fit();
-		m_vecTrainLabels.shrink_to_fit();
 		m_vecNodeVectors.shrink_to_fit();
 	}
 	return COMPV_ERROR_CODE_S_OK;
@@ -318,27 +298,18 @@ COMPV_ERROR_CODE CompVMachineLearningSVM::crossValidation(const struct svm_probl
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVMachineLearningSVM::rawToNode(const CompVMatPtr& rawVector, CompVMatPtrPtr nodeVector)
+COMPV_ERROR_CODE CompVMachineLearningSVM::rawToNode(const double* rawVector, const size_t count, CompVMatPtrPtr nodeVector)
 {
 	// Private function, do not check parameters
-
-	CompVMatPtr rawVector64f = rawVector;
-	if (rawVector->subType() != COMPV_SUBTYPE_RAW_FLOAT64) {
-		COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static<compv_float32_t, compv_float64_t>(rawVector, &rawVector64f)));
-	}
-	const int count = static_cast<int>(rawVector64f->cols());
-	CompVMatPtr nodeVector_ = (*nodeVector == rawVector && rawVector64f == rawVector) ? nullptr : *nodeVector;
-	COMPV_CHECK_CODE_RETURN((CompVMat::newObjStrideless<svm_node, COMPV_MAT_TYPE_STRUCT>(&nodeVector_, 1, count + 1)));
-	svm_node* xnodePtr = nodeVector_->ptr<svm_node>();
-	const double* rawVector64fPtr = rawVector64f->ptr<const double>();
+	COMPV_CHECK_CODE_RETURN((CompVMat::newObjStrideless<svm_node, COMPV_MAT_TYPE_STRUCT>(nodeVector, 1, count + 1)));
+	svm_node* xnodePtr = (*nodeVector)->ptr<svm_node>();
 
 	for (int i = 0; i < count; ++i) {
 		xnodePtr[i].index = (i + 1); // index must start at #1 and finish at #-1
-		xnodePtr[i].value = rawVector64fPtr[i];
+		xnodePtr[i].value = rawVector[i];
 	}
 	xnodePtr[count].index = -1; // term indication
-
-	*nodeVector = nodeVector_;
+	
 	return COMPV_ERROR_CODE_S_OK;
 }
 

@@ -31,6 +31,9 @@ static COMPV_ERROR_CODE CompVMathPCAMean(const CompVMatPtr& input, CompVMatPtrPt
 template<typename T>
 static COMPV_ERROR_CODE CompVMathPCASubstractMean(const CompVMatPtr& input, CompVMatPtrPtr output, const CompVMatPtr& mean);
 
+template<typename T>
+static COMPV_ERROR_CODE CompVMathPCACovariance(const CompVMatPtr& input, const CompVMatPtr& mean, CompVMatPtrPtr covar);
+
 CompVMathPCA::CompVMathPCA()
 	: m_nMaxDimensions(0)
 {
@@ -47,6 +50,7 @@ CompVMathPCA:: ~CompVMathPCA()
 COMPV_ERROR_CODE CompVMathPCA::compute(const CompVMatPtr& observations, const int maxDimensions, const bool rowBased)
 {
 	COMPV_CHECK_EXP_RETURN(!observations, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(observations->subType() != COMPV_SUBTYPE_RAW_FLOAT32 && observations->subType() != COMPV_SUBTYPE_RAW_FLOAT64, COMPV_ERROR_CODE_E_INVALID_SUBTYPE);
 
 	// Transform input (cols = observations and rows = dimensions)
 	CompVMatPtr input;
@@ -58,69 +62,74 @@ COMPV_ERROR_CODE CompVMathPCA::compute(const CompVMatPtr& observations, const in
 		COMPV_CHECK_CODE_RETURN(observations->clone(&input));
 	}
 
-	const COMPV_SUBTYPE inputSubType = input->subType();
-
-	// Check input
+	// Check input (must have at least #2 rows/observations)
 	COMPV_CHECK_EXP_RETURN(input->rows() <= 1 || input->rows() <= maxDimensions, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_CHECK_EXP_RETURN(inputSubType != COMPV_SUBTYPE_RAW_FLOAT32 && inputSubType != COMPV_SUBTYPE_RAW_FLOAT32, COMPV_ERROR_CODE_E_INVALID_SUBTYPE);
 
-	// Compute mean and substract
-	CompVMatPtr mean;
-	if (inputSubType == COMPV_SUBTYPE_RAW_FLOAT32) {
+	// Compute mean and covar
+	CompVMatPtr mean, covar;
+	if (input->subType() == COMPV_SUBTYPE_RAW_FLOAT32) {
 		COMPV_CHECK_CODE_RETURN((CompVMathPCAMean<compv_float32_t>(input, &mean)));
-		COMPV_CHECK_CODE_RETURN((CompVMathPCASubstractMean<compv_float32_t>(input, &input, mean)));
+		COMPV_CHECK_CODE_RETURN(CompVMathPCACovariance<compv_float32_t>(input, mean, &covar));
 	}
 	else {
 		COMPV_CHECK_CODE_RETURN((CompVMathPCAMean<compv_float64_t>(input, &mean)));
-		COMPV_CHECK_CODE_RETURN((CompVMathPCASubstractMean<compv_float64_t>(input, &input, mean)));
+		COMPV_CHECK_CODE_RETURN(CompVMathPCACovariance<compv_float64_t>(input, mean, &covar));
 	}
 
-	// Compute covariance matrix
-	CompVMatPtr covar;
-	COMPV_CHECK_CODE_RETURN(CompVMatrix::mulABt(input, input, &covar));
-	input = nullptr; // Margaret Thatcher: "I want my memory back"
-
 	// Transform covariance matrix from any type to double to improve acurracy when computing the eigen values/vectors
-	if (inputSubType != COMPV_SUBTYPE_RAW_FLOAT64) {
+	if (covar->subType() != COMPV_SUBTYPE_RAW_FLOAT64) {
 		COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static<compv_float32_t, compv_float64_t>(covar, &covar)));
 	}
 
 	// Compute Eigen values and Eigen vectors
 	static const bool kSortEigenValuesVectors = true;
-	static const bool kRowVectors = false; // EigenVectors (output for 'CompVMatrix::eigenS') as rows?
+	static const bool kRowVectors = true; // EigenVectors (output for 'CompVMatrix::eigenS') as rows?
 	static const bool kForceZerosInD = true;
 	CompVMatPtr eigenValues, eigenVectors;
 	COMPV_CHECK_CODE_RETURN(CompVMatrix::eigenS(covar, &eigenValues, &eigenVectors, kSortEigenValuesVectors, kRowVectors, kForceZerosInD));
 
+	// Norm eigen vectors
+#if 0 // MUST NOT
 	COMPV_DEBUG_INFO_CODE_TODO("normalize the vectors??");
 	COMPV_CHECK_CODE_RETURN(CompVMathStats::normMinmax(eigenVectors, &eigenVectors));
+#endif
 
 	// Create final eigen values/vectors
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD code could be found"); // eigenValues and eigenVectors vectors should be very small square matrix (dim x dim)
-	CompVMatPtr ptr32fEigenVectors, ptr32fEigenValues;
-	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float32_t>(&ptr32fEigenValues, 1, maxDimensions));
-	const CompVRectFloat32 roi = {
+	CompVMatPtr ptr32fEigenVectors, ptr32fEigenValues, ptr32fMean;
+	const CompVRectFloat32 roiVectors = {
 		0.f,
 		0.f,
 		static_cast<compv_float32_t>(eigenVectors->cols()),
 		static_cast<compv_float32_t>(maxDimensions - 1)
 	};
-
 	CompVMatPtr eigenVectorsBind;
-	COMPV_CHECK_CODE_RETURN(eigenVectors->bind(&eigenVectorsBind, roi));
-	COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static<compv_float64_t, compv_float32_t>(eigenVectorsBind, &ptr32fEigenVectors)));
+	COMPV_CHECK_CODE_RETURN(eigenVectors->bind(&eigenVectorsBind, roiVectors));
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float32_t>(&ptr32fEigenValues, 1, maxDimensions));
 	compv_float32_t* ptr32fEigenValuesPtr = ptr32fEigenValues->ptr<compv_float32_t>();
-	for (size_t i = 0; i < static_cast<size_t>(maxDimensions); ++i) {
-		ptr32fEigenValuesPtr[i] = static_cast<compv_float32_t>(*eigenValues->ptr<const compv_float64_t>(i, i));
-	}
 
-	// Create final mean
-	CompVMatPtr ptr32fMean;
-	if (mean->subType() == COMPV_SUBTYPE_RAW_FLOAT32) {
-		ptr32fMean = mean;
+	if (eigenVectors->subType() == COMPV_SUBTYPE_RAW_FLOAT64) {
+		// Vectors
+		COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static<compv_float64_t, compv_float32_t>(eigenVectorsBind, &ptr32fEigenVectors)));
+		// Values
+		for (size_t i = 0; i < static_cast<size_t>(maxDimensions); ++i) {
+			ptr32fEigenValuesPtr[i] = static_cast<compv_float32_t>(*eigenValues->ptr<const compv_float64_t>(i, i));
+		}
 	}
 	else {
+		// MUST clone because 'eigenVectorsBind' lifetime is tied to 'eigenVectors' which is a local variable
+		COMPV_CHECK_CODE_RETURN(CompVMat::newObj(&ptr32fEigenVectors, eigenVectorsBind));
+		COMPV_CHECK_CODE_RETURN(CompVMem::copy(ptr32fEigenVectors->ptr<void>(), eigenVectorsBind->ptr<const void>(), ptr32fEigenVectors->dataSizeInBytes()));
+		for (size_t i = 0; i < static_cast<size_t>(maxDimensions); ++i) {
+			ptr32fEigenValuesPtr[i] = *eigenValues->ptr<const compv_float32_t>(i, i);
+		}
+	}
+
+	// Mean
+	if (mean->subType() == COMPV_SUBTYPE_RAW_FLOAT64) {
 		COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static<compv_float64_t, compv_float32_t>(mean, &ptr32fMean)));
+	}
+	else {
+		ptr32fMean = mean;
 	}
 
 	// Set values
@@ -264,6 +273,7 @@ static COMPV_ERROR_CODE CompVMathPCASubstractMean(const CompVMatPtr& input, Comp
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation could be found");
 	COMPV_ASSERT(input->subType() == mean->subType() && input->isRawTypeMatch<T>());
+	COMPV_ASSERT(mean->cols() == input->cols());
 	const size_t cols = input->cols();
 	const size_t rows = input->rows();
 	const size_t stride = input->stride();
@@ -277,15 +287,67 @@ static COMPV_ERROR_CODE CompVMathPCASubstractMean(const CompVMatPtr& input, Comp
 	T* outputPtr = output_->ptr<T>();
 
 	for (size_t j = 0; j < rows; ++j) {
-		const T& mean_ = meanPtr[j];
 		for (size_t i = 0; i < cols; ++i) {
-			outputPtr[i] = (inputPtr[i] - mean_);
+			outputPtr[i] = (inputPtr[i] - meanPtr[i]); // Column-major, different than the SubMean compute in CompVMathPCACovariance
 		}
 		inputPtr += stride;
 		outputPtr += stride;
 	}
 
 	*output = output_;
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// https://www.itl.nist.gov/div898/handbook/pmc/section5/pmc541.htm
+template<typename T>
+static COMPV_ERROR_CODE CompVMathPCACovariance(const CompVMatPtr& input, const CompVMatPtr& mean, CompVMatPtrPtr covar)
+{
+	// For now this function is called on training phase only
+	// -> do not waste your time writing SIMD/GPGPU code
+
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation could be found");
+	COMPV_ASSERT(input->subType() == mean->subType() && input->isRawTypeMatch<T>());
+	COMPV_ASSERT(input->rows() == mean->cols() && mean->rows() == 1);
+	const size_t cols = input->cols();
+	const size_t rows = input->rows();
+	const size_t stride = input->stride();
+	CompVMatPtr inputSubMean;
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<T>(&inputSubMean, rows, cols, stride));
+	
+	// Substract mean
+	// Row-major, different than the SubMean compute in CompVMathPCASubstractMean
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found - SubstractMean");
+	const T* meanPtr = mean->ptr<const T>();
+	const T* inputPtr = input->ptr<const T>();
+	T* inputSubMeanPtr = inputSubMean->ptr<T>();
+	for (size_t j = 0; j < rows; ++j) {
+		const T mean_ = meanPtr[j];
+		for (size_t i = 0; i < cols; ++i) {
+			inputSubMeanPtr[i] = (inputPtr[i] - mean_);
+		}
+		inputPtr += stride;
+		inputSubMeanPtr += stride;
+	}
+
+	// Covar = M * Mt
+	COMPV_CHECK_CODE_RETURN(CompVMatrix::mulABt(inputSubMean, inputSubMean, covar));
+
+	// Scale
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found - Scale");
+	if (cols > 1) {
+		const T scale = 1 / static_cast<T>(cols - 1);
+		const size_t cols = (*covar)->cols();
+		const size_t rows = (*covar)->rows();
+		const size_t stride = (*covar)->stride();
+		T* covarPtr = (*covar)->ptr<T>();
+		for (size_t j = 0; j < rows; ++j) {
+			for (size_t i = 0; i < cols; ++i) {
+				covarPtr[i] *= scale;
+			}
+			covarPtr += stride;
+		}
+	}
+	
 	return COMPV_ERROR_CODE_S_OK;
 }
 
