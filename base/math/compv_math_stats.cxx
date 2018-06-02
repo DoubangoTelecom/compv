@@ -336,11 +336,7 @@ class CompVMathStatsGeneric {
 			COMPV_CHECK_EXP_RETURN(!ptrIn->isRawTypeMatch<T>(), COMPV_ERROR_CODE_E_INVALID_SUBTYPE);
 
 			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
-
-			CompVMatPtr ptrOut_ = *ptrOut;
-			if (ptrOut_ != ptrIn) { // This function allows ptrIn to be equal to ptrOut
-				COMPV_CHECK_CODE_RETURN(CompVMat::newObj(&ptrOut_, ptrIn));
-			}
+			
 			const size_t width = ptrIn->cols();
 			const size_t height = ptrIn->rows();
 			const size_t stride = ptrIn->stride();
@@ -359,6 +355,8 @@ class CompVMathStatsGeneric {
 				inPtr += stride;
 			}
 
+			CompVMatPtr ptrOut_ = *ptrOut;
+
 			const T diff = (maxx - minn);
 			const T scale = (std::abs(diff) < std::numeric_limits<T>::epsilon())
 				? 0
@@ -367,7 +365,14 @@ class CompVMathStatsGeneric {
 			if (!scale) {
 				COMPV_CHECK_CODE_RETURN(ptrOut_->zero_all());
 			}
+			else if (scale == 1) {
+				COMPV_CHECK_CODE_RETURN(ptrIn->clone(&ptrOut_));
+			}
 			else {
+				if (ptrOut_ != ptrIn) { // This function allows ptrIn to be equal to ptrOut
+					COMPV_CHECK_CODE_RETURN(CompVMat::newObj(&ptrOut_, ptrIn));
+				}
+
 				inPtr = ptrIn->ptr<T>();
 				T* outPtr = ptrOut_->ptr<T>();
 				for (size_t j = 0; j < height; ++j) {
