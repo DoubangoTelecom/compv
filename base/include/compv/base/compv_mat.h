@@ -205,7 +205,7 @@ public:
 
 	COMPV_ERROR_CODE clone(CompVMatPtrPtr clone) const {
 		COMPV_CHECK_EXP_RETURN(!clone, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-		CompVMatPtr clone_ = *clone;
+		CompVMatPtr clone_ = (*clone && **clone == this) ? nullptr : *clone;
 		const CompVMatPtr& model = const_cast<CompVMat*>(this);
 		COMPV_CHECK_CODE_RETURN(CompVMat::newObj(&clone_, model));
 		COMPV_CHECK_EXP_RETURN(this->dataSizeInBytes() != clone_->dataSizeInBytes(), COMPV_ERROR_CODE_E_INVALID_CALL);
