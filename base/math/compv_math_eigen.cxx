@@ -7,12 +7,15 @@
 #include "compv/base/math/compv_math_eigen.h"
 #include "compv/base/math/compv_math_matrix.h"
 #include "compv/base/math/compv_math_utils.h"
+#include "compv/base/parallel/compv_parallel.h"
+#include "compv/base/compv_allocators.h"
 
 #define COMPV_THIS_CLASSNAME	"CompVMathEigen"
 
 #if !defined(COMPV_MATH_EIGEN_MAX_ROUNDS)
 #	define COMPV_MATH_EIGEN_MAX_ROUNDS 30 // should be 30
 #endif
+#define COMPV_MATH_EIGEN_OFFDIAG_MAX_SAMPLES_PER_THREAD		(50 * 50)
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -21,22 +24,24 @@ COMPV_NAMESPACE_BEGIN()
 // Q: an (n x n) matrix containing the eigenvectors (columns unless transposed)
 // rowVectors: true -> eigenvectors are rows, otherwise it's columns. True is faster.
 // sort: Whether to sort the eigenvalues and eigenvectors (from higher to lower)
+// Algorithm: https://en.wikipedia.org/wiki/Jacobi_eigenvalue_algorithm
 template <class T>
 COMPV_ERROR_CODE CompVMathEigen<T>::findSymm(const CompVMatPtr &S, CompVMatPtrPtr D, CompVMatPtrPtr Q, bool sort COMPV_DEFAULT(true), bool rowVectors COMPV_DEFAULT(false), bool forceZerosInD COMPV_DEFAULT(true))
 {
-	COMPV_CHECK_EXP_RETURN(!S || !D || !Q || !S->rows() || S->rows() != S->cols(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
+	COMPV_CHECK_EXP_RETURN(!S || !S->isRawTypeMatch<T>() || !D || !Q || !S->rows() || S->rows() != S->cols(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
 	COMPV_DEBUG_INFO_CODE_TODO("Remove T and create CompVMathEigenGeneric like what is done with CompVMathMatrix (type of S discovered at runtime)");
 
+	const size_t dim = S->cols();
+
 #if defined(_DEBUG) || defined(DEBUG)
 	// For homography and Fundamental matrices S is 9x9 matrix
-	if (S->rows() > 9 || S->cols() > 9) {
+	if (dim > 9) {
 		// TODO(dmi): For multithreading, change 'maxAbsOffDiag_symm' to add max rows and use it as guard
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation");
 	}
 	// Eigen values and vectors can be easily computed for 3x3 without using jacobi
-	if (S->cols() == 3 && S->rows() == 3) {
+	if (dim == 3) {
 		// https://github.com/DoubangoTelecom/compv/issues/85
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Eigen values/vectors: No fast implementation for 3x3 matrix");
 	}
@@ -46,7 +51,6 @@ COMPV_ERROR_CODE CompVMathEigen<T>::findSymm(const CompVMatPtr &S, CompVMatPtrPt
 	T gcos_, gsin_;
 	const T epsilon_ = CompVMathEigen<T>::epsilon();
 	size_t ops = 0, maxops = S->rows() * S->cols() * COMPV_MATH_EIGEN_MAX_ROUNDS;
-	T maxOffDiag;
 	CompVMatPtr Qt;
 	CompVMatPtr GD_2rows;
 	CompVMatPtr D_ = *D;
@@ -62,12 +66,56 @@ COMPV_ERROR_CODE CompVMathEigen<T>::findSymm(const CompVMatPtr &S, CompVMatPtrPt
 	}
 	// D = S
 	COMPV_CHECK_CODE_RETURN(CompVMatrix::copy(&D_, S));
+	
+	// Compute all max off-diagonal values
+	
+	struct CompVMaxAbsOffDiagValue {
+		size_t index;
+		T maxx;
+		static COMPV_ERROR_CODE highest(const std::vector<CompVMaxAbsOffDiagValue, CompVAllocatorNoDefaultConstruct<CompVMaxAbsOffDiagValue> >& vec, size_t *row, T* max) {
+			const size_t count = vec.size();
+			T maxx = vec[1].maxx;
+			*row = 1;
+			for (size_t i = 2; i < count; ++i) { // #0 part of the diagonal, #1 used to init values
+				if (vec[i].maxx > maxx) {
+					*row = i;
+					maxx = vec[i].maxx;
+				}
+			}
+			*max = maxx;
+			return COMPV_ERROR_CODE_S_OK;
+		}
+	};
+	std::vector<CompVMaxAbsOffDiagValue, CompVAllocatorNoDefaultConstruct<CompVMaxAbsOffDiagValue> > maxAbsOffDiagValues(dim);
+	CompVMaxAbsOffDiagValue& maxAbsOffDiagValueHighest = maxAbsOffDiagValues[0]; // Zero unused -> hack to store highest value
+	auto funcPtrOffDiagMax = [&](const size_t row_start, const size_t row_end) -> COMPV_ERROR_CODE {
+		const size_t row_start_ = COMPV_MATH_MAX(row_start, 1); // #0 part of the diagonal
+		const T* rowPtr = D_->ptr<const T>(row_start_);
+		const size_t stride = D_->stride();
+		for (size_t row = row_start_; row < row_end; ++row) {
+			CompVMaxAbsOffDiagValue& maxAbsOffDiagValue = maxAbsOffDiagValues[row];
+			COMPV_CHECK_CODE_RETURN(CompVMathEigen<T>::maxAbsOffDiagSymm(rowPtr, row, &maxAbsOffDiagValue.index, &maxAbsOffDiagValue.maxx));
+			rowPtr += stride;
+		}
+		return COMPV_ERROR_CODE_S_OK;
+	};
+	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+		funcPtrOffDiagMax,
+		dim,
+		dim,
+		COMPV_MATH_EIGEN_OFFDIAG_MAX_SAMPLES_PER_THREAD
+	));
+
+	// Fill index zero with the highest max val
+	COMPV_CHECK_CODE_RETURN(CompVMaxAbsOffDiagValue::highest(maxAbsOffDiagValues, &maxAbsOffDiagValueHighest.index, &maxAbsOffDiagValueHighest.maxx));
+
 	// Check is S is already diagonal or not
-	COMPV_CHECK_CODE_RETURN(CompVMatrix::maxAbsOffDiag_symm<T>(S, &row, &col, &maxOffDiag));
-	if (maxOffDiag < epsilon_) { // S already diagonal -> D = S, Q = I
+	if (maxAbsOffDiagValueHighest.maxx < epsilon_) { // S already diagonal -> D = S, Q = I
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Symmetric matrix already diagonal -> do nothing");
 		goto done;
 	}
+	row = maxAbsOffDiagValueHighest.index;
+	col = maxAbsOffDiagValues[maxAbsOffDiagValueHighest.index].index;
 
 	// If matrix A is symmetric then, mulAG(c, s) = mulGA(c, -s), 'mulGA' is thread-safe which is not the case for 'mulAG'
 
@@ -76,23 +124,83 @@ COMPV_ERROR_CODE CompVMathEigen<T>::findSymm(const CompVMatPtr &S, CompVMatPtrPt
 
 	// Instead of returning Q = QG, return Qt, Qt = GtQt
 
-	COMPV_DEBUG_INFO_CODE_TODO("jacobiAngles contains few lines, embedd the code instead of calling a function");
-
 	COMPV_DEBUG_INFO_CODE_TODO("Try to eliminate extract2Cols/insert2Cols which were made to make mulAG thread-safe and SIMD-friendly. Take too much time");
 
-	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<T>(&GD_2rows, 2, D_->rows()));
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<T>(&GD_2rows, 2, dim));
+	T* GD_2rowsPtr0 = GD_2rows->ptr<T>(0);
+	T* GD_2rowsPtr1 = GD_2rows->ptr<T>(1);
+	size_t rowOld = 0, colOld = 0;
 	do {
 		CompVMathEigen<T>::jacobiAngles(D_, row, col, &gcos_, &gsin_); // Thread-safe
-		// Qt = G*Qt
+		/* Qt = G*Qt */
 		COMPV_CHECK_CODE_RETURN(CompVMatrix::mulGA<T>(Qt, row, col, gcos_, -gsin_)); // Thread-safe
-		// GtDt
-		CompVMathEigen<T>::extract2Cols(D_, row, col, GD_2rows); // GD_2rows = Dt
+		/* Extract #2 cols */
+		if (rowOld != row) {
+			CompVMathEigen<T>::extract1Col(D_, row, GD_2rows, 0);
+		}
+		else {
+			GD_2rowsPtr0[rowOld] = *D_->ptr<const T>(rowOld, rowOld);
+			GD_2rowsPtr0[colOld] = *D_->ptr<const T>(colOld, rowOld);
+		}
+		if (colOld != col) {
+			CompVMathEigen<T>::extract1Col(D_, col, GD_2rows, 1);
+		}
+		else {
+			GD_2rowsPtr1[colOld] = *D_->ptr<const T>(colOld, colOld);
+			GD_2rowsPtr1[rowOld] = *D_->ptr<const T>(rowOld, colOld);
+		}
+
+		/* GtDt */
 		COMPV_CHECK_CODE_RETURN(CompVMatrix::mulGA<T>(GD_2rows, 0, 1, gcos_, -gsin_)); // Thread-safe
-		// Gt(GtDt)t
+		/* Insert #2 cols */
 		CompVMathEigen<T>::insert2Cols(GD_2rows, D_, row, col); // GD_2rows = (GtDt)t
-		COMPV_CHECK_CODE_RETURN(CompVMatrix::mulGA<T>(D_, row, col, gcos_, -gsin_)); // Thread-safe
+		/* Make sure the inserted cols doesn't change the max map */
+		for (size_t i = row + 1; i < dim; ++i) {
+			CompVMaxAbsOffDiagValue& vv = maxAbsOffDiagValues[i];
+			const T maxx_ = std::abs(GD_2rowsPtr0[i]);
+			if (maxx_ > vv.maxx) {
+				vv.index = row;
+				vv.maxx = maxx_;
+			}
+		}
+		for (size_t i = col + 1; i < dim; ++i) {
+			CompVMaxAbsOffDiagValue& vv = maxAbsOffDiagValues[i];
+			const T maxx_ = std::abs(GD_2rowsPtr1[i]);
+			if (maxx_ > vv.maxx) {
+				vv.index = col;
+				vv.maxx = maxx_;
+			}
+		}
+		/* Gt(GtDt)t */
+		COMPV_CHECK_CODE_RETURN(CompVMatrix::mulGA<T>(D_, row, col, gcos_, -gsin_)); // Thread-safe (only rows at 'row' and 'col' are modified)
+		/* Check ops count */
+		if (++ops >= maxops) {
+			break;
+		}
+		/* Compute max-abs-off-diagonal */
+		if (row) {
+			CompVMaxAbsOffDiagValue& vv = maxAbsOffDiagValues[row];
+			COMPV_CHECK_CODE_RETURN(CompVMathEigen<T>::maxAbsOffDiagSymm(D_->ptr<const T>(row), row, &vv.index, &vv.maxx));
+			if (vv.maxx > maxAbsOffDiagValueHighest.maxx) {
+				maxAbsOffDiagValueHighest.maxx = vv.maxx;
+				maxAbsOffDiagValueHighest.index = row;
+			}
+		}
+		if (col) {
+			CompVMaxAbsOffDiagValue& vv = maxAbsOffDiagValues[col];
+			COMPV_CHECK_CODE_RETURN(CompVMathEigen<T>::maxAbsOffDiagSymm(D_->ptr<const T>(col), col, &vv.index, &vv.maxx));
+			if (vv.maxx > maxAbsOffDiagValueHighest.maxx) {
+				maxAbsOffDiagValueHighest.maxx = vv.maxx;
+				maxAbsOffDiagValueHighest.index = col;
+			}
+		}
+		COMPV_CHECK_CODE_RETURN(CompVMaxAbsOffDiagValue::highest(maxAbsOffDiagValues, &maxAbsOffDiagValueHighest.index, &maxAbsOffDiagValueHighest.maxx));
+		rowOld = row;
+		colOld = col;
+		row = maxAbsOffDiagValueHighest.index;
+		col = maxAbsOffDiagValues[maxAbsOffDiagValueHighest.index].index;
 	} 
-	while (++ops < maxops &&  COMPV_ERROR_CODE_IS_OK(err_ = CompVMatrix::maxAbsOffDiag_symm<T>(D_, &row, &col, &maxOffDiag)) && maxOffDiag > epsilon_);
+	while (maxAbsOffDiagValueHighest.maxx > epsilon_);
 
 	// Sort Qt (eigenvectors are rows)
 	if (sort) {
@@ -167,7 +275,7 @@ done:
 
 	*D = D_;
 
-	return err_;
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 template <class T>
@@ -240,6 +348,23 @@ template <class T>
 bool CompVMathEigen<T>::isCloseToZero(T a)
 {
 	return (static_cast<T>(COMPV_MATH_ABS(a)) <= CompVMathEigen<T>::epsilon());
+}
+
+template <class T>
+COMPV_ERROR_CODE CompVMathEigen<T>::maxAbsOffDiagSymm(const T* rowPtr, const size_t row, size_t *col, T* max)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
+	COMPV_CHECK_EXP_RETURN(!row, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "row must be > 0"); // row zero cannot contain off-diagonal index
+	T vv, maxx = rowPtr[0];
+	*col = 0;
+	for (size_t i = 1; i < row; ++i) { // i stops at j because the matrix is symmetric and break just before reaching the diagonal
+		if ((vv = std::abs(rowPtr[i])) > maxx) {
+			maxx = vv;
+			*col = i;
+		}
+	}
+	*max = maxx;
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 // Compute cos('c') and sin ('s')
@@ -327,11 +452,11 @@ void CompVMathEigen<T>::extract2Cols(const CompVMatPtr &A, size_t a_col0, size_t
 		r1[2] = a1[astrideInElts << 1];
 		break;
 	default:
-		size_t row_, aidx_, rowminus3 = rows_ - 3;
+		size_t row_, aidx_, rows4_ = rows_ & -4;
 		size_t astrideInEltsTimes2 = astrideInElts << 1;
 		size_t astrideInEltsTimes3 = astrideInEltsTimes2 + astrideInElts;
 		size_t astrideInEltsTimes4 = astrideInEltsTimes3 + astrideInElts;
-		for (row_ = 0, aidx_ = 0; row_ < rowminus3; row_ += 4, aidx_ += astrideInEltsTimes4) {
+		for (row_ = 0, aidx_ = 0; row_ < rows4_; row_ += 4, aidx_ += astrideInEltsTimes4) {
 			r0[row_] = a0[aidx_];
 			r0[row_ + 1] = a0[aidx_ + astrideInElts];
 			r0[row_ + 2] = a0[aidx_ + astrideInEltsTimes2];
@@ -344,6 +469,47 @@ void CompVMathEigen<T>::extract2Cols(const CompVMatPtr &A, size_t a_col0, size_t
 		for (; row_ < rows_; ++row_, aidx_ += astrideInElts) {
 			r0[row_] = a0[aidx_];
 			r1[row_] = a1[aidx_];
+		}
+		break;
+	}
+}
+
+// Extract 1 col from A and insert as rows to R
+template <class T>
+void CompVMathEigen<T>::extract1Col(const CompVMatPtr &A, size_t a_col0, CompVMatPtr &R, size_t r_row)
+{
+	// Private function -> do not check input parameters
+	T* r0 = R->ptr<T>(r_row);
+	const T* a0 = A->ptr<const T>(0, a_col0);
+	size_t astrideInElts;
+	COMPV_CHECK_CODE_ASSERT(A->strideInElts(astrideInElts));
+	const size_t rows_ = A->rows();
+	switch (rows_) {
+	case 1:
+		r0[0] = a0[0];
+		break;
+	case 2:
+		r0[0] = a0[0];
+		r0[1] = a0[astrideInElts];
+		break;
+	case 3:
+		r0[0] = a0[0];
+		r0[1] = a0[astrideInElts];
+		r0[2] = a0[astrideInElts << 1];
+		break;
+	default:
+		size_t row_, aidx_, rows4_ = rows_ & -4;
+		size_t astrideInEltsTimes2 = astrideInElts << 1;
+		size_t astrideInEltsTimes3 = astrideInEltsTimes2 + astrideInElts;
+		size_t astrideInEltsTimes4 = astrideInEltsTimes3 + astrideInElts;
+		for (row_ = 0, aidx_ = 0; row_ < rows4_; row_ += 4, aidx_ += astrideInEltsTimes4) {
+			r0[row_] = a0[aidx_];
+			r0[row_ + 1] = a0[aidx_ + astrideInElts];
+			r0[row_ + 2] = a0[aidx_ + astrideInEltsTimes2];
+			r0[row_ + 3] = a0[aidx_ + astrideInEltsTimes3];
+		}
+		for (; row_ < rows_; ++row_, aidx_ += astrideInElts) {
+			r0[row_] = a0[aidx_];
 		}
 		break;
 	}
@@ -380,11 +546,11 @@ void CompVMathEigen<T>::insert2Cols(const CompVMatPtr &A, CompVMatPtr &R, size_t
 		r1[rstrideInElts << 1] = a1[2];
 		break;
 	default:
-		size_t row_, ridx_, rowminus3 = rows_ - 3;
+		size_t row_, ridx_, rows4_ = rows_ & -4;
 		size_t rstrideInEltsTimes2 = rstrideInElts << 1;
 		size_t rstrideInEltsTimes3 = rstrideInEltsTimes2 + rstrideInElts;
 		size_t rstrideInEltsTimes4 = rstrideInEltsTimes3 + rstrideInElts;
-		for (row_ = 0, ridx_ = 0; row_ < rowminus3; row_ += 4, ridx_ += rstrideInEltsTimes4) {
+		for (row_ = 0, ridx_ = 0; row_ < rows4_; row_ += 4, ridx_ += rstrideInEltsTimes4) {
 			r0[ridx_] = a0[row_];
 			r0[ridx_ + rstrideInElts] = a0[row_ + 1];
 			r0[ridx_ + rstrideInEltsTimes2] = a0[row_ + 2];

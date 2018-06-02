@@ -345,10 +345,12 @@ class CompVMatrixGeneric
 
 	static COMPV_ERROR_CODE maxAbsOffDiag_symm(const CompVMatPtr &S, size_t *row, size_t *col, T* max)
 	{
+		COMPV_CHECK_EXP_RETURN(S->cols() != S->rows(), COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Symmetric matrix must be square");
 		// Input parameters checked in the calling function
 		// S = 9x9 for homography and fundamental matrix
 		if (S->rows() * S->cols() > 81) { // 9x9 (low diag. only) is too small for SIMD or GPU acceleration
 			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found.");
+			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation could be found.");
 		}
 
 		const size_t rowEnd = S->rows();

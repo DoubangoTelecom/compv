@@ -26,10 +26,10 @@ public:
 	COMPV_INLINE const CompVMatPtr& mean() const {
 		return m_ptr32fMean;
 	}
-	COMPV_INLINE const CompVMatPtr& vectors() const {
+	COMPV_INLINE const CompVMatPtr& eingenVectors() const {
 		return m_ptr32fEigenVectors;
 	}
-	COMPV_INLINE const CompVMatPtr& values() const {
+	COMPV_INLINE const CompVMatPtr& eingenValues() const {
 		return m_ptr32fEigenValues;
 	}
 	COMPV_INLINE const int& dimension() const {

@@ -23,9 +23,11 @@ public:
 	static bool isCloseToZero(T a);
 
 private:
+	static COMPV_ERROR_CODE maxAbsOffDiagSymm(const T* rowPtr, const size_t row, size_t *col, T* max);
 	static void jacobiAngles(const CompVMatPtr &S, size_t ith, size_t jth, T *c, T *s);
 	static void jacobiAngles_Left(const CompVMatPtr &S, size_t ith, size_t jth, T *c, T *s);
 	static void extract2Cols(const CompVMatPtr &A, size_t a_col0, size_t a_col1, CompVMatPtr &R);
+	static void extract1Col(const CompVMatPtr &A, size_t a_col0, CompVMatPtr &R, size_t r_row);
 	static void insert2Cols(const CompVMatPtr &A, CompVMatPtr &R, size_t r_col0, size_t r_col1);
 };
 
