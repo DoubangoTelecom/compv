@@ -16,9 +16,9 @@ COMPV_NAMESPACE_BEGIN()
 class COMPV_BASE_API CompVMatrix
 {
 public:
-	static COMPV_ERROR_CODE mulAB(const CompVMatPtr &A, const CompVMatPtr &B, CompVMatPtrPtr R);
-	static COMPV_ERROR_CODE mulABt(const CompVMatPtr &A, const CompVMatPtr &B, CompVMatPtrPtr R);
-	static COMPV_ERROR_CODE mulAtA(const CompVMatPtr &A, CompVMatPtrPtr R);
+	static COMPV_ERROR_CODE COMPV_DEPRECATED(mulAB)(const CompVMatPtr &A, const CompVMatPtr &B, CompVMatPtrPtr R);
+	static COMPV_ERROR_CODE COMPV_DEPRECATED(mulABt)(const CompVMatPtr &A, const CompVMatPtr &B, CompVMatPtrPtr R);
+	static COMPV_ERROR_CODE COMPV_DEPRECATED(mulAtA)(const CompVMatPtr &A, CompVMatPtrPtr R);
 	template<typename FloatType>
 	static COMPV_ERROR_CODE mulAG(CompVMatPtr &A, size_t ith, size_t jth, FloatType c, FloatType s);
 	template<typename FloatType>

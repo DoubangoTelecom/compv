@@ -11,7 +11,6 @@
 #include "compv/base/compv_buffer.h"
 #include "compv/base/compv_mem.h"
 #include "compv/base/image/compv_image_utils.h"
-#include "compv/base/math/compv_math.h"
 
 COMPV_NAMESPACE_BEGIN()
 COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Warray-bounds")
@@ -287,16 +286,16 @@ public:
 	// returned object doesn't have ownership on the internal memory and depends on its creator
 	COMPV_ERROR_CODE bind(CompVMatPtrPtr mat, const CompVRectFloat32& roi) const {
 		COMPV_CHECK_EXP_RETURN(!mat || roi.left < 0.f || roi.right < 0.f || roi.top < 0.f || roi.bottom < 0.f, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-		const size_t colStart = COMPV_MATH_ROUNDFU_2_NEAREST_INT(roi.left, size_t);
+		const size_t colStart = static_cast<size_t>(roi.left + 0.5);
 		COMPV_CHECK_EXP_RETURN(colStart > m_nCols, COMPV_ERROR_CODE_E_OUT_OF_BOUND);
-		size_t colEnd = COMPV_MATH_ROUNDFU_2_NEAREST_INT(roi.right, size_t);
+		size_t colEnd = static_cast<size_t>(roi.right + 0.5);
 		colEnd = std::min(colEnd, (m_nCols - 1)); // roi is up right which means 'roi.right' have to be included
 		COMPV_CHECK_EXP_RETURN(colStart > colEnd, COMPV_ERROR_CODE_E_OUT_OF_BOUND); // when equal means size = 1
 		const size_t colCount = (colEnd - colStart) + 1; // +1 because it's from 'colStart' up to 'colEnd'
 
-		const size_t rowStart = COMPV_MATH_ROUNDFU_2_NEAREST_INT(roi.top, size_t);
+		const size_t rowStart = static_cast<size_t>(roi.top + 0.5);
 		COMPV_CHECK_EXP_RETURN(rowStart > m_nRows, COMPV_ERROR_CODE_E_OUT_OF_BOUND);
-		size_t rowEnd = COMPV_MATH_ROUNDFU_2_NEAREST_INT(roi.bottom, size_t);
+		size_t rowEnd = static_cast<size_t>(roi.bottom + 0.5);
 		rowEnd = std::min(rowEnd, (m_nRows - 1)); // roi is up bottom which means 'roi.bottom' have to be included
 		COMPV_CHECK_EXP_RETURN(rowStart > rowEnd, COMPV_ERROR_CODE_E_OUT_OF_BOUND); // when equal means size = 1
 		const size_t rowCount = (rowEnd - rowStart) + 1; // +1 because it's from 'rowStart' up to 'rowEnd'

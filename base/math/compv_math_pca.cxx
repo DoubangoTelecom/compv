@@ -9,6 +9,7 @@
 #include "compv/base/math/compv_math_eigen.h"
 #include "compv/base/math/compv_math_cast.h"
 #include "compv/base/math/compv_math_stats.h"
+#include "compv/base/math/compv_math.h"
 #include "compv/base/compv_json.h"
 #include "compv/base/compv_cpu.h"
 #include "compv/base/compv_fileutils.h"
@@ -27,9 +28,6 @@ COMPV_NAMESPACE_BEGIN()
 
 template<typename T>
 static COMPV_ERROR_CODE CompVMathPCAMean(const CompVMatPtr& input, CompVMatPtrPtr mean);
-
-template<typename T>
-static COMPV_ERROR_CODE CompVMathPCASubstractMean(const CompVMatPtr& input, CompVMatPtrPtr output, const CompVMatPtr& mean);
 
 template<typename T>
 static COMPV_ERROR_CODE CompVMathPCACovariance(const CompVMatPtr& input, const CompVMatPtr& mean, CompVMatPtrPtr covar);
@@ -90,7 +88,7 @@ COMPV_ERROR_CODE CompVMathPCA::compute(const CompVMatPtr& observations, const in
 
 	// Norm eigen vectors
 #if 0 // MUST NOT
-	COMPV_DEBUG_INFO_CODE_TODO("normalize the vectors??");
+	COMPV_ASSERT(false);
 	COMPV_CHECK_CODE_RETURN(CompVMathStats::normMinmax(eigenVectors, &eigenVectors));
 #endif
 
@@ -205,13 +203,7 @@ COMPV_ERROR_CODE CompVMathPCA::project(const CompVMatPtr& observations, CompVMat
 	// Substract mean (kind of normaliz -zero-mean centered-)
 	CompVMatPtr input;
 	if (m_ptr32fMean) {
-		COMPV_ASSERT(observations->cols() == m_ptr32fMean->cols());
-		if (subtype == COMPV_SUBTYPE_RAW_FLOAT32) {
-			COMPV_CHECK_CODE_RETURN((CompVMathPCASubstractMean<compv_float32_t>(observations, &input, m_ptr32fMean)));
-		}
-		else {
-			COMPV_CHECK_CODE_RETURN((CompVMathPCASubstractMean<compv_float64_t>(observations, &input, m_ptr32fMean)));
-		}
+		COMPV_CHECK_CODE_RETURN(CompVMath::sub(observations, m_ptr32fMean, &input));
 	}
 	else {
 		input = observations;
@@ -264,37 +256,6 @@ static COMPV_ERROR_CODE CompVMathPCAMean(const CompVMatPtr& input, CompVMatPtrPt
 	}
 
 	*mean = mean_;
-	return COMPV_ERROR_CODE_S_OK;
-}
-
-template<typename T>
-static COMPV_ERROR_CODE CompVMathPCASubstractMean(const CompVMatPtr& input, CompVMatPtrPtr output, const CompVMatPtr& mean)
-{
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation could be found");
-	COMPV_ASSERT(input->subType() == mean->subType() && input->isRawTypeMatch<T>());
-	COMPV_ASSERT(mean->cols() == input->cols());
-	const size_t cols = input->cols();
-	const size_t rows = input->rows();
-	const size_t stride = input->stride();
-	CompVMatPtr output_ = *output;
-	if (output_ != input) { // This function allows having input equal to output
-		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<T>(&output_, rows, cols, stride));
-	}
-
-	const T* meanPtr = mean->ptr<const T>();
-	const T* inputPtr = input->ptr<const T>();
-	T* outputPtr = output_->ptr<T>();
-
-	for (size_t j = 0; j < rows; ++j) {
-		for (size_t i = 0; i < cols; ++i) {
-			outputPtr[i] = (inputPtr[i] - meanPtr[i]); // Column-major, different than the SubMean compute in CompVMathPCACovariance
-		}
-		inputPtr += stride;
-		outputPtr += stride;
-	}
-
-	*output = output_;
 	return COMPV_ERROR_CODE_S_OK;
 }
 

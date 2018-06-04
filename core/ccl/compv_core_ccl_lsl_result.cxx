@@ -6,6 +6,7 @@
 */
 #include "compv/core/ccl/compv_core_ccl_lsl_result.h"
 #include "compv/base/parallel/compv_parallel.h"
+#include "compv/base/math/compv_math.h"
 #include "compv/base/compv_debug.h"
 
 #include <atomic>

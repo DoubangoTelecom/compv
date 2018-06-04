@@ -8,6 +8,8 @@
 #define _COMPV_BASE_MATH_H_
 
 #include "compv/base/compv_config.h"
+#include "compv/base/compv_common.h"
+#include "compv/base/compv_mat.h"
 
 #include <cmath>
 
@@ -82,6 +84,15 @@ extern COMPV_BASE_API const float kMathTrigAtan2P1;
 extern COMPV_BASE_API const float kMathTrigAtan2P3;
 extern COMPV_BASE_API const float kMathTrigAtan2P5;
 extern COMPV_BASE_API const float kMathTrigAtan2P7;
+
+class COMPV_BASE_API CompVMath
+{
+public:
+	static COMPV_ERROR_CODE sub(const CompVMatPtr& A, const CompVMatPtr& B, CompVMatPtrPtr R);
+	static COMPV_ERROR_CODE mulAB(const CompVMatPtr &A, const CompVMatPtr &B, CompVMatPtrPtr R);
+	static COMPV_ERROR_CODE mulABt(const CompVMatPtr &A, const CompVMatPtr &B, CompVMatPtrPtr R);
+	static COMPV_ERROR_CODE mulAtA(const CompVMatPtr &A, CompVMatPtrPtr R);
+};
 
 COMPV_NAMESPACE_END()
 

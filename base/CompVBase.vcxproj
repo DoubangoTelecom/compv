@@ -40,6 +40,7 @@
     <ClInclude Include="include\compv\base\compv_errno.h" />
     <ClInclude Include="include\compv\base\compv_features.h" />
     <ClInclude Include="include\compv\base\compv_fileutils.h" />
+    <ClInclude Include="include\compv\base\compv_generic_invoke.h" />
     <ClInclude Include="include\compv\base\compv_gradient_fast.h" />
     <ClInclude Include="include\compv\base\compv_jni.h" />
     <ClInclude Include="include\compv\base\compv_json.h" />
@@ -127,6 +128,8 @@
     <ClInclude Include="include\compv\base\math\compv_math_matrix.h" />
     <ClInclude Include="include\compv\base\math\compv_math_moments.h" />
     <ClInclude Include="include\compv\base\math\compv_math_morph.h" />
+    <ClInclude Include="include\compv\base\math\compv_math_op_mul.h" />
+    <ClInclude Include="include\compv\base\math\compv_math_op_sub.h" />
     <ClInclude Include="include\compv\base\math\compv_math_pca.h" />
     <ClInclude Include="include\compv\base\math\compv_math_stats.h" />
     <ClInclude Include="include\compv\base\math\compv_math_stats_fit.h" />
@@ -149,6 +152,8 @@
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_matrix_intrin_sse41.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_morph_intrin_avx2.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_morph_intrin_sse2.h" />
+    <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_op_mul_intrin_sse2.h" />
+    <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_op_sub_intrin_sse2.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_stats_intrin_avx.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_stats_intrin_sse2.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_transform_intrin_avx.h" />
@@ -400,6 +405,8 @@
     <ClCompile Include="math\compv_math_matrix.cxx" />
     <ClCompile Include="math\compv_math_moments.cxx" />
     <ClCompile Include="math\compv_math_morph.cxx" />
+    <ClCompile Include="math\compv_math_op_mul.cxx" />
+    <ClCompile Include="math\compv_math_op_sub.cxx" />
     <ClCompile Include="math\compv_math_pca.cxx" />
     <ClCompile Include="math\compv_math_stats.cxx" />
     <ClCompile Include="math\compv_math_stats_fit.cxx" />
@@ -470,6 +477,18 @@
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <ClCompile Include="math\intrin\x86\compv_math_morph_intrin_sse2.cxx">
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+    </ClCompile>
+    <ClCompile Include="math\intrin\x86\compv_math_op_mul_intrin_sse2.cxx">
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+    </ClCompile>
+    <ClCompile Include="math\intrin\x86\compv_math_op_sub_intrin_sse2.cxx">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>

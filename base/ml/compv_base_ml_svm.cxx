@@ -6,6 +6,7 @@
 */
 #include "compv/base/ml/compv_base_ml_svm.h"
 #include "compv/base/math/compv_math_cast.h"
+#include "compv/base/math/compv_math.h"
 #include "compv/base/parallel/compv_parallel.h"
 #include "compv/base/compv_fileutils.h"
 

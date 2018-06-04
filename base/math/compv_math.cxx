@@ -8,6 +8,8 @@
 Most of trig approx. are implemented using document at "documentation/trig_approximations.pdf"
 */
 #include "compv/base/math/compv_math.h"
+#include "compv/base/math/compv_math_op_sub.h"
+#include "compv/base/math/compv_math_op_mul.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -28,5 +30,29 @@ COMPV_BASE_API const float kMathTrigAtan2P1 = 57.2836266f;
 COMPV_BASE_API const float kMathTrigAtan2P3 = -18.6674461f;
 COMPV_BASE_API const float kMathTrigAtan2P5 = 8.91400051f;
 COMPV_BASE_API const float kMathTrigAtan2P7 = -2.53972459f;
+
+COMPV_ERROR_CODE CompVMath::sub(const CompVMatPtr& A, const CompVMatPtr& B, CompVMatPtrPtr R)
+{
+	COMPV_CHECK_CODE_RETURN(CompVMathOpSub::sub(A, B, R));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVMath::mulAB(const CompVMatPtr &A, const CompVMatPtr &B, CompVMatPtrPtr R)
+{
+	COMPV_CHECK_CODE_RETURN(CompVMathOpMul::mulAB(A, B, R));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVMath::mulABt(const CompVMatPtr &A, const CompVMatPtr &B, CompVMatPtrPtr R)
+{
+	COMPV_CHECK_CODE_RETURN(CompVMathOpMul::mulABt(A, B, R));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVMath::mulAtA(const CompVMatPtr &A, CompVMatPtrPtr R)
+{
+	COMPV_CHECK_CODE_RETURN(CompVMathOpMul::mulAtA(A, R));
+	return COMPV_ERROR_CODE_S_OK;
+}
 
 COMPV_NAMESPACE_END()

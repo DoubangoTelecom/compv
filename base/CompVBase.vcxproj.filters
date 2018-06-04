@@ -738,6 +738,21 @@
     <ClInclude Include="include\compv\base\compv_json.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\math\compv_math_op_mul.h">
+      <Filter>include\math</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\math\compv_math_op_sub.h">
+      <Filter>include\math</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\compv_generic_invoke.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_op_mul_intrin_sse2.h">
+      <Filter>include\math\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_op_sub_intrin_sse2.h">
+      <Filter>include\math\intrin\x86</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx">
@@ -1219,6 +1234,18 @@
     </ClCompile>
     <ClCompile Include="compv_json.cxx">
       <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="math\compv_math_op_mul.cxx">
+      <Filter>source\math</Filter>
+    </ClCompile>
+    <ClCompile Include="math\compv_math_op_sub.cxx">
+      <Filter>source\math</Filter>
+    </ClCompile>
+    <ClCompile Include="math\intrin\x86\compv_math_op_mul_intrin_sse2.cxx">
+      <Filter>source\math\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="math\intrin\x86\compv_math_op_sub_intrin_sse2.cxx">
+      <Filter>source\math\intrin\x86</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

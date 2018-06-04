@@ -22,14 +22,46 @@
 #define FILE_FEATURES_FULL		"pca_features_full.json" // Do not include in unittest (large, too slow)
 
 static COMPV_ERROR_CODE pca_compue();
+static COMPV_ERROR_CODE pca_project();
 
 COMPV_ERROR_CODE pca()
 {
-#if 1
+#if 0
 	COMPV_CHECK_CODE_RETURN(pca_compue());
-#elif 0
+#elif 1
+	COMPV_CHECK_CODE_RETURN(pca_project());
 #endif
 
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+static COMPV_ERROR_CODE pca_project()
+{
+#define PCA_PROJECT_MD5					"c353e4c095fddb2bab8e617c2c12ae1d"
+#define PCA_PROJECT_FMA_MD5				"c353e4c095fddb2bab8e617c2c12ae1d"
+	CompVMathPCAPtr pca;
+	COMPV_CHECK_CODE_RETURN(CompVMathPCA::read(&pca, COMPV_TEST_PATH_TO_FILE(FILE_INIT).c_str()));
+
+	CompVMatPtr features, projected;
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float32_t>(&features, 1, OBSERVATION_DIM));
+	compv_float32_t* featuresPtr = features->ptr<compv_float32_t>();
+	for (int i = 0; i < OBSERVATION_DIM; ++i) {
+		featuresPtr[i] = (((i * 398) + i) * ((i & 1) ? 1 : -1)) * 4.95f;
+	}
+
+	const uint64_t timeStart = CompVTime::nowMillis();
+	for (size_t i = 0; i < LOOP_COUNT; ++i) {
+		COMPV_CHECK_CODE_RETURN(pca->project(features, &projected));
+	}
+	const uint64_t timeEnd = CompVTime::nowMillis();
+	COMPV_DEBUG_INFO_EX(TAG_TEST, "Elapsed time(PCA, project) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
+
+	const std::string md5 = compv_tests_md5(projected);
+	COMPV_DEBUG_INFO_EX(TAG_TEST, "MD5=%s", md5.c_str());
+	COMPV_CHECK_EXP_RETURN(md5.compare(compv_tests_is_fma_enabled() ? PCA_PROJECT_MD5 : PCA_PROJECT_FMA_MD5) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "PCA project mismatch");
+
+#undef PCA_PROJECT_MD5
+#undef PCA_PROJECT_FMA_MD5
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -60,7 +92,6 @@ static COMPV_ERROR_CODE pca_compue()
 		COMPV_CHECK_CODE_RETURN(pca->compute(features, PCA_DIM, OBSERVATION_ROW_BASED));
 	}
 	const uint64_t timeEnd = CompVTime::nowMillis();
-
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "Elapsed time(PCA, compute) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 #if 0
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "Mean=%s", compv_tests_md5(pca->mean()).c_str());
