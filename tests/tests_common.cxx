@@ -149,7 +149,7 @@ bool compv_tests_is_fma_enabled()
 	// On X86 FMA requires AVX2 (only asm)
 	// On ARM FMA requires NEON (only asm) - When intrinsic code is built without "-mfpu=neon-vfpv4" then, the compiler generate very slooow code for vfma function.
 #if COMPV_ARCH_X86
-	return (CompVCpu::isEnabled(kCpuFlagAVX2) && CompVCpu::isEnabled(kCpuFlagFMA3) && CompVCpu::isAsmEnabled());
+	return ((CompVCpu::isEnabled(kCpuFlagAVX2) || CompVCpu::isEnabled(kCpuFlagAVX)) && CompVCpu::isEnabled(kCpuFlagFMA3) && CompVCpu::isAsmEnabled());
 #elif COMPV_ARCH_ARM
 	return (CompVCpu::isEnabled(kCpuFlagARM_NEON) && CompVCpu::isEnabled(kCpuFlagARM_NEON_FMA) && CompVCpu::isAsmEnabled());
 #endif

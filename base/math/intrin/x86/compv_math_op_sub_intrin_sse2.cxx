@@ -35,6 +35,9 @@ void CompVMathOpSubSub_32f32f32f_Intrin_SSE2(
 		for (; i < width; i += 4) {
 			_mm_store_ps(&Rptr[i], _mm_sub_ps(_mm_load_ps(&Aptr[i]), _mm_load_ps(&Bptr[i])));
 		}
+		Aptr += Astride;
+		Bptr += Bstride;
+		Rptr += Rstride;
 	}
 }
 

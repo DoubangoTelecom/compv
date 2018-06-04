@@ -18,6 +18,17 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+void CompVMathOpMulMulABt_32f32f32f_Intrin_SSE2(
+	COMPV_ALIGNED(SSE) const compv_float32_t* Aptr,
+	COMPV_ALIGNED(SSE) const compv_float32_t* Bptr,
+	COMPV_ALIGNED(SSE) compv_float32_t* Rptr,
+	const compv_uscalar_t Bcols,
+	const compv_uscalar_t Arows,
+	const compv_uscalar_t Brows,
+	COMPV_ALIGNED(SSE) const compv_uscalar_t Astride,
+	COMPV_ALIGNED(SSE) const compv_uscalar_t Bstride,
+	COMPV_ALIGNED(SSE) const compv_uscalar_t Rstride
+);
 
 COMPV_NAMESPACE_END()
 

@@ -13,6 +13,7 @@
 #include "compv/base/compv_json.h"
 #include "compv/base/compv_cpu.h"
 #include "compv/base/compv_fileutils.h"
+#include "compv/base/parallel/compv_parallel.h"
 #include "compv/base/jsoncpp-1.8.4/json.h"
 
 /*
@@ -23,6 +24,8 @@
 */
 
 #define COMPV_THIS_CLASSNAME "CompVMathPCA"
+
+#define COMPV_MATH_PCA_SUB_SAMPLES_PER_THREAD (50 * 50)
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -203,7 +206,35 @@ COMPV_ERROR_CODE CompVMathPCA::project(const CompVMatPtr& observations, CompVMat
 	// Substract mean (kind of normaliz -zero-mean centered-)
 	CompVMatPtr input;
 	if (m_ptr32fMean) {
-		COMPV_CHECK_CODE_RETURN(CompVMath::sub(observations, m_ptr32fMean, &input));
+		COMPV_ASSERT(m_ptr32fMean->cols() == observations->cols());
+		const size_t rows = observations->rows();
+		if (rows == 1) {
+			COMPV_CHECK_CODE_RETURN(CompVMath::sub(observations, m_ptr32fMean, &input));
+		}
+		else {
+			COMPV_CHECK_CODE_RETURN(observations->clone(&input));
+			auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
+				for (size_t j = ystart; j < yend; ++j) {
+					// Sub(A, B, R) expect A.rows == B.rows. In our case, Mean.rows == 1 -> bind row by row
+					const CompVRectFloat32 roi = {
+						0.f, // left
+						static_cast<compv_float32_t>(j), // top
+						static_cast<compv_float32_t>(input->cols()), // right
+						static_cast<compv_float32_t>(j) // bottom
+					};
+					CompVMatPtr inputBind;
+					COMPV_CHECK_CODE_RETURN(input->bind(&inputBind, roi));
+					COMPV_CHECK_CODE_RETURN(CompVMath::sub(inputBind, m_ptr32fMean, &inputBind)); // Sub(A, B, R) will NOT override R if [R==A] or [R==B]
+				}
+				return COMPV_ERROR_CODE_S_OK;
+			};
+			COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+				funcPtr,
+				input->cols(),
+				input->rows(),
+				COMPV_MATH_PCA_SUB_SAMPLES_PER_THREAD
+			));
+		}
 	}
 	else {
 		input = observations;
@@ -211,7 +242,7 @@ COMPV_ERROR_CODE CompVMathPCA::project(const CompVMatPtr& observations, CompVMat
 
 	// Project
 	CompVMatPtr vectors_ = (*vectors == input) ? nullptr : *vectors;
-	COMPV_CHECK_CODE_RETURN(CompVMatrix::mulABt(input, m_ptr32fEigenVectors, &vectors_));
+	COMPV_CHECK_CODE_RETURN(CompVMath::mulABt(input, m_ptr32fEigenVectors, &vectors_));
 
 	// Set result and return
 	*vectors = vectors_;

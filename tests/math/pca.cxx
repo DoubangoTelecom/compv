@@ -37,16 +37,18 @@ COMPV_ERROR_CODE pca()
 
 static COMPV_ERROR_CODE pca_project()
 {
-#define PCA_PROJECT_MD5					"c353e4c095fddb2bab8e617c2c12ae1d"
-#define PCA_PROJECT_FMA_MD5				"c353e4c095fddb2bab8e617c2c12ae1d"
+#define PCA_PROJECT_MD5					"98169b12704065d2fe6e123496f677b2"
+#define PCA_PROJECT_FMA_MD5				"8e8b93d2d43dc9161aaeba5a120f6f14"
 	CompVMathPCAPtr pca;
 	COMPV_CHECK_CODE_RETURN(CompVMathPCA::read(&pca, COMPV_TEST_PATH_TO_FILE(FILE_INIT).c_str()));
 
 	CompVMatPtr features, projected;
-	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float32_t>(&features, 1, OBSERVATION_DIM));
-	compv_float32_t* featuresPtr = features->ptr<compv_float32_t>();
-	for (int i = 0; i < OBSERVATION_DIM; ++i) {
-		featuresPtr[i] = (((i * 398) + i) * ((i & 1) ? 1 : -1)) * 4.95f;
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float32_t>(&features, 100, OBSERVATION_DIM));
+	for (int j = 0; j < 100; ++j) {
+		compv_float32_t* featuresPtr = features->ptr<compv_float32_t>(j);
+		for (int i = 0; i < OBSERVATION_DIM; ++i) {
+			featuresPtr[i] = ((((i * 398) + i) * ((i & 1) ? 1 : -1)) * 4.95f) * (j + 0.5f);
+		}
 	}
 
 	const uint64_t timeStart = CompVTime::nowMillis();
@@ -58,7 +60,7 @@ static COMPV_ERROR_CODE pca_project()
 
 	const std::string md5 = compv_tests_md5(projected);
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "MD5=%s", md5.c_str());
-	COMPV_CHECK_EXP_RETURN(md5.compare(compv_tests_is_fma_enabled() ? PCA_PROJECT_MD5 : PCA_PROJECT_FMA_MD5) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "PCA project mismatch");
+	COMPV_CHECK_EXP_RETURN(md5.compare(compv_tests_is_fma_enabled() ? PCA_PROJECT_FMA_MD5 : PCA_PROJECT_MD5) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "PCA project mismatch");
 
 #undef PCA_PROJECT_MD5
 #undef PCA_PROJECT_FMA_MD5

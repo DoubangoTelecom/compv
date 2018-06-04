@@ -15,6 +15,11 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+#if COMPV_ASM && COMPV_ARCH_X64
+COMPV_EXTERNC void CompVMathOpSubSub_32f32f32f_Asm_X64_SSE2(COMPV_ALIGNED(SSE) const compv_float32_t* Aptr, COMPV_ALIGNED(SSE) const compv_float32_t* Bptr, COMPV_ALIGNED(SSE) compv_float32_t* Rptr, const compv_uscalar_t width, const compv_uscalar_t height, COMPV_ALIGNED(SSE) const compv_uscalar_t Astride, COMPV_ALIGNED(SSE) const compv_uscalar_t Bstride, COMPV_ALIGNED(SSE) const compv_uscalar_t Rstride);
+COMPV_EXTERNC void CompVMathOpSubSub_32f32f32f_Asm_X64_AVX(COMPV_ALIGNED(AVX) const compv_float32_t* Aptr, COMPV_ALIGNED(AVX) const compv_float32_t* Bptr, COMPV_ALIGNED(AVX) compv_float32_t* Rptr, const compv_uscalar_t width, const compv_uscalar_t height, COMPV_ALIGNED(AVX) const compv_uscalar_t Astride, COMPV_ALIGNED(AVX) const compv_uscalar_t Bstride, COMPV_ALIGNED(AVX) const compv_uscalar_t Rstride);
+#endif /* COMPV_ASM && COMPV_ARCH_X64 */
+
 template<typename T>
 static void CompVMathOpSubSub(const CompVMatPtr& A, const CompVMatPtr& B, CompVMatPtr& R);
 
@@ -67,9 +72,16 @@ static void CompVMathOpSubSub(const CompVMatPtr& A, const CompVMatPtr& B, CompVM
 	if (std::is_same<T, compv_float32_t>::value) {
 		void(*CompVMathOpSubSub_32f32f32f)(COMPV_ALIGNED(SSE) const compv_float32_t* Aptr, COMPV_ALIGNED(SSE) const compv_float32_t* Bptr, COMPV_ALIGNED(SSE) compv_float32_t* Rptr, const compv_uscalar_t width, const compv_uscalar_t height, COMPV_ALIGNED(SSE) const compv_uscalar_t Astride, COMPV_ALIGNED(SSE) const compv_uscalar_t Bstride, COMPV_ALIGNED(SSE) const compv_uscalar_t Rstride)
 			= nullptr;
+#if COMPV_ARCH_X86
 		if (CompVCpu::isEnabled(kCpuFlagSSE2) && A->isAlignedSSE() && B->isAlignedSSE() && R->isAlignedSSE()) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathOpSubSub_32f32f32f = CompVMathOpSubSub_32f32f32f_Intrin_SSE2);
+			COMPV_EXEC_IFDEF_ASM_X64(CompVMathOpSubSub_32f32f32f = CompVMathOpSubSub_32f32f32f_Asm_X64_SSE2);
 		}
+		if (CompVCpu::isEnabled(kCpuFlagAVX) && A->isAlignedAVX() && B->isAlignedAVX() && R->isAlignedAVX()) {
+			COMPV_EXEC_IFDEF_ASM_X64(CompVMathOpSubSub_32f32f32f = CompVMathOpSubSub_32f32f32f_Asm_X64_AVX);
+		}
+#elif COMPV_ARCH_ARM
+#endif
 		if (CompVMathOpSubSub_32f32f32f) {
 			CompVMathOpSubSub_32f32f32f(reinterpret_cast<const compv_float32_t*>(Aptr), reinterpret_cast<const compv_float32_t*>(Bptr), reinterpret_cast<compv_float32_t*>(Rptr), width, height, Astride, Bstride, Rstride);
 			return;

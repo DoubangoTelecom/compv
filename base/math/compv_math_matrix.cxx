@@ -106,7 +106,7 @@ class CompVMatrixGeneric
 
 	// R must be <> A,B
 	// R = mul(A, B) = mulAB(A, B) = mulABt(A, Bt)
-	static COMPV_ERROR_CODE mulAB(const CompVMatPtr &A, const CompVMatPtr &B, CompVMatPtrPtr R)
+	static COMPV_ERROR_CODE COMPV_DEPRECATED(mulAB)(const CompVMatPtr &A, const CompVMatPtr &B, CompVMatPtrPtr R)
 	{
 		COMPV_CHECK_EXP_RETURN(!A || !B || !R || A->isEmpty() || B->rows() != A->cols() || !B->cols() || *R == A || *R == B, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 		if (A->rows() == 3 && A->cols() == 3 && B->rows() == 3 && B->cols() == 3) {
@@ -126,7 +126,7 @@ class CompVMatrixGeneric
 
 	// R must be <> A,B
 	// R = mul(A, Bt)
-	static COMPV_ERROR_CODE mulABt(const CompVMatPtr &A, const CompVMatPtr &B, CompVMatPtrPtr R)
+	static COMPV_ERROR_CODE COMPV_DEPRECATED(mulABt)(const CompVMatPtr &A, const CompVMatPtr &B, CompVMatPtrPtr R)
 	{
 		COMPV_CHECK_EXP_RETURN(!A || !B || !R || A->subType() != B->subType() || A->isEmpty() || A->cols() != B->cols() || !B->cols() || *R == A || *R == B, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
@@ -214,7 +214,7 @@ class CompVMatrixGeneric
 
 	// R must be <> A
 	// R = mul(At, A)
-	static COMPV_ERROR_CODE mulAtA(const CompVMatPtr &A, CompVMatPtrPtr R)
+	static COMPV_ERROR_CODE COMPV_DEPRECATED(mulAtA)(const CompVMatPtr &A, CompVMatPtrPtr R)
 	{
 		COMPV_CHECK_EXP_RETURN(!A || !R || A->isEmpty() || *R == A, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 		
@@ -848,22 +848,25 @@ class CompVMatrixGeneric
 
 // R must be <> A,B
 // R = mul(A, B) = mulAB(A, B) = mulABt(A, Bt)
-COMPV_ERROR_CODE CompVMatrix::mulAB(const CompVMatPtr &A, const CompVMatPtr &B, CompVMatPtrPtr R)
+COMPV_ERROR_CODE COMPV_DEPRECATED(CompVMatrix::mulAB)(const CompVMatPtr &A, const CompVMatPtr &B, CompVMatPtrPtr R)
 {
+	COMPV_DEBUG_INFO_CODE_TODO("Deprecated: use CompVMath::mulAB");
 	CompVMatrixGenericInvoke(A->subType(), mulAB, A, B, R);
 }
 
 // R must be <> A,B
 // R = mul(A, Bt)
-COMPV_ERROR_CODE CompVMatrix::mulABt(const CompVMatPtr &A, const CompVMatPtr &B, CompVMatPtrPtr R)
+COMPV_ERROR_CODE COMPV_DEPRECATED(CompVMatrix::mulABt)(const CompVMatPtr &A, const CompVMatPtr &B, CompVMatPtrPtr R)
 {
+	COMPV_DEBUG_INFO_CODE_TODO("Deprecated: use CompVMath::mulABt");
 	CompVMatrixGenericInvoke(A->subType(), mulABt, A, B, R);
 }
 
 // R must be <> A
 // R = mul(At, A)
-COMPV_ERROR_CODE CompVMatrix::mulAtA(const CompVMatPtr &A, CompVMatPtrPtr R)
+COMPV_ERROR_CODE COMPV_DEPRECATED(CompVMatrix::mulAtA)(const CompVMatPtr &A, CompVMatPtrPtr R)
 {
+	COMPV_DEBUG_INFO_CODE_TODO("Deprecated: use CompVMath::mulAB");
 	CompVMatrixGenericInvoke(A->subType(), mulAtA, A, R);
 }
 

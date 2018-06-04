@@ -13,11 +13,12 @@ COMPV_NAMESPACE_BEGIN()
 
 // Useful only if bCols >= 8, otherwise use SSE version
 #if defined(__INTEL_COMPILER)
-#	pragma intel optimization_parameter target_arch=avx2
+#	pragma intel optimization_parameter target_arch=avx
 #endif
-void CompVMathMatrixMulABt_64f_Intrin_AVX(const COMPV_ALIGNED(AVX) compv_float64_t* A, compv_uscalar_t aRows, COMPV_ALIGNED(AVX) compv_uscalar_t aStrideInBytes, const COMPV_ALIGNED(AVX) compv_float64_t* B, compv_uscalar_t bRows, compv_uscalar_t bCols, COMPV_ALIGNED(AVX) compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(AVX) compv_float64_t* R, COMPV_ALIGNED(AVX) compv_uscalar_t rStrideInBytes)
+void COMPV_DEPRECATED(CompVMathMatrixMulABt_64f_Intrin_AVX)(const COMPV_ALIGNED(AVX) compv_float64_t* A, compv_uscalar_t aRows, COMPV_ALIGNED(AVX) compv_uscalar_t aStrideInBytes, const COMPV_ALIGNED(AVX) compv_float64_t* B, compv_uscalar_t bRows, compv_uscalar_t bCols, COMPV_ALIGNED(AVX) compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(AVX) compv_float64_t* R, COMPV_ALIGNED(AVX) compv_uscalar_t rStrideInBytes)
 {
 	COMPV_DEBUG_INFO_CHECK_AVX(); // AVX/SSE transition issues
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Not optimized at all and deprecated");
 	_mm256_zeroupper();
 	const compv_float64_t* B0;
 	compv_scalar_t k, bColsSigned = static_cast<compv_scalar_t>(bCols);
@@ -76,6 +77,9 @@ void CompVMathMatrixMulABt_64f_Intrin_AVX(const COMPV_ALIGNED(AVX) compv_float64
 	_mm256_zeroupper();
 }
 
+#if defined(__INTEL_COMPILER)
+#	pragma intel optimization_parameter target_arch=avx
+#endif
 void CompVMathMatrixMulGA_64f_Intrin_AVX(COMPV_ALIGNED(AVX) compv_float64_t* ri, COMPV_ALIGNED(AVX) compv_float64_t* rj, const compv_float64_t* c1, const compv_float64_t* s1, compv_uscalar_t count)
 {
 	COMPV_DEBUG_INFO_CHECK_AVX(); // AVX/SSE transition issues
