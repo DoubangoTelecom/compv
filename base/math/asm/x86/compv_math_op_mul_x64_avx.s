@@ -165,7 +165,7 @@ section .text
 				%endif
 				inc k
 				cmp k, Bcols
-				jl .LoopBcols4
+				jl .LoopBcols1
 			.EndOf_LoopBcols1:
 
 			vmovss [Rptr + j*COMPV_YASM_FLOAT32_SZ_BYTES], xmm0
