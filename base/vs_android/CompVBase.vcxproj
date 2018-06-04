@@ -55,8 +55,10 @@
     <ClInclude Include="..\include\compv\base\compv_errno.h" />
     <ClInclude Include="..\include\compv\base\compv_features.h" />
     <ClInclude Include="..\include\compv\base\compv_fileutils.h" />
+    <ClInclude Include="..\include\compv\base\compv_generic_invoke.h" />
     <ClInclude Include="..\include\compv\base\compv_gradient_fast.h" />
     <ClInclude Include="..\include\compv\base\compv_jni.h" />
+    <ClInclude Include="..\include\compv\base\compv_json.h" />
     <ClInclude Include="..\include\compv\base\compv_kernel.h" />
     <ClInclude Include="..\include\compv\base\compv_lock.h" />
     <ClInclude Include="..\include\compv\base\compv_mat.h" />
@@ -131,6 +133,7 @@
     <ClInclude Include="..\include\compv\base\jsoncpp-1.8.4\json-forwards.h" />
     <ClInclude Include="..\include\compv\base\jsoncpp-1.8.4\json.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math.h" />
+    <ClInclude Include="..\include\compv\base\math\compv_math_basic_ops.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_cast.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_convlt.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_distance.h" />
@@ -141,6 +144,9 @@
     <ClInclude Include="..\include\compv\base\math\compv_math_matrix.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_moments.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_morph.h" />
+    <ClInclude Include="..\include\compv\base\math\compv_math_op_mul.h" />
+    <ClInclude Include="..\include\compv\base\math\compv_math_op_sub.h" />
+    <ClInclude Include="..\include\compv\base\math\compv_math_pca.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_stats.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_stats_fit.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_stats_ransac.h" />
@@ -152,6 +158,8 @@
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_histogram_intrin_neon.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_matrix_intrin_neon64.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_morph_intrin_neon.h" />
+    <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_op_mul_intrin_neon.h" />
+    <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_op_sub_intrin_neon.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_stats_intrin_neon64.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_transform_intrin_neon64.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_trig_intrin_neon.h" />
@@ -168,10 +176,14 @@
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_matrix_intrin_sse41.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_morph_intrin_avx2.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_morph_intrin_sse2.h" />
+    <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_op_mul_intrin_sse2.h" />
+    <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_op_sub_intrin_sse2.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_stats_intrin_avx.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_stats_intrin_sse2.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_transform_intrin_avx.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_transform_intrin_sse2.h" />
+    <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_trig_intrin_avx.h" />
+    <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_trig_intrin_sse2.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_utils_intrin_avx2.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_utils_intrin_sse2.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_utils_intrin_sse41.h" />
@@ -245,6 +257,7 @@
     <ClCompile Include="..\compv_fileutils.cxx" />
     <ClCompile Include="..\compv_gradient_fast.cxx" />
     <ClCompile Include="..\compv_jni.cxx" />
+    <ClCompile Include="..\compv_json.cxx" />
     <ClCompile Include="..\compv_kernel.cxx" />
     <ClCompile Include="..\compv_lock.cxx" />
     <ClCompile Include="..\compv_mat.cxx" />
@@ -341,6 +354,7 @@
     <ClCompile Include="..\intrin\x86\compv_patch_intrin_sse2.cxx" />
     <ClCompile Include="..\jsoncpp-1.8.4\jsoncpp.cxx" />
     <ClCompile Include="..\math\compv_math.cxx" />
+    <ClCompile Include="..\math\compv_math_basic_ops.cxx" />
     <ClCompile Include="..\math\compv_math_cast.cxx" />
     <ClCompile Include="..\math\compv_math_convlt.cxx" />
     <ClCompile Include="..\math\compv_math_distance.cxx" />
@@ -351,6 +365,9 @@
     <ClCompile Include="..\math\compv_math_matrix.cxx" />
     <ClCompile Include="..\math\compv_math_moments.cxx" />
     <ClCompile Include="..\math\compv_math_morph.cxx" />
+    <ClCompile Include="..\math\compv_math_op_mul.cxx" />
+    <ClCompile Include="..\math\compv_math_op_sub.cxx" />
+    <ClCompile Include="..\math\compv_math_pca.cxx" />
     <ClCompile Include="..\math\compv_math_stats.cxx" />
     <ClCompile Include="..\math\compv_math_stats_fit.cxx" />
     <ClCompile Include="..\math\compv_math_stats_ransac.cxx" />
@@ -362,6 +379,8 @@
     <ClCompile Include="..\math\intrin\arm\compv_math_histogram_intrin_neon.cxx" />
     <ClCompile Include="..\math\intrin\arm\compv_math_matrix_intrin_neon64.cxx" />
     <ClCompile Include="..\math\intrin\arm\compv_math_morph_intrin_neon.cxx" />
+    <ClCompile Include="..\math\intrin\arm\compv_math_op_mul_intrin_neon.cxx" />
+    <ClCompile Include="..\math\intrin\arm\compv_math_op_sub_intrin_neon.cxx" />
     <ClCompile Include="..\math\intrin\arm\compv_math_stats_intrin_neon64.cxx" />
     <ClCompile Include="..\math\intrin\arm\compv_math_transform_intrin_neon64.cxx" />
     <ClCompile Include="..\math\intrin\arm\compv_math_trig_intrin_neon.cxx" />
@@ -378,10 +397,14 @@
     <ClCompile Include="..\math\intrin\x86\compv_math_matrix_intrin_sse41.cxx" />
     <ClCompile Include="..\math\intrin\x86\compv_math_morph_intrin_avx2.cxx" />
     <ClCompile Include="..\math\intrin\x86\compv_math_morph_intrin_sse2.cxx" />
+    <ClCompile Include="..\math\intrin\x86\compv_math_op_mul_intrin_sse2.cxx" />
+    <ClCompile Include="..\math\intrin\x86\compv_math_op_sub_intrin_sse2.cxx" />
     <ClCompile Include="..\math\intrin\x86\compv_math_stats_intrin_avx.cxx" />
     <ClCompile Include="..\math\intrin\x86\compv_math_stats_intrin_sse2.cxx" />
     <ClCompile Include="..\math\intrin\x86\compv_math_transform_intrin_avx.cxx" />
     <ClCompile Include="..\math\intrin\x86\compv_math_transform_intrin_sse2.cxx" />
+    <ClCompile Include="..\math\intrin\x86\compv_math_trig_intrin_avx.cxx" />
+    <ClCompile Include="..\math\intrin\x86\compv_math_trig_intrin_sse2.cxx" />
     <ClCompile Include="..\math\intrin\x86\compv_math_utils_intrin_avx2.cxx" />
     <ClCompile Include="..\math\intrin\x86\compv_math_utils_intrin_sse2.cxx" />
     <ClCompile Include="..\math\intrin\x86\compv_math_utils_intrin_sse41.cxx" />

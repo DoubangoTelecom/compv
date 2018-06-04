@@ -63,7 +63,9 @@ COMPV_ERROR_CODE eigenS()
 	
 	// Symmetric(S) = A*A
 	CompVMatPtr S;
+	COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wdeprecated-declarations")
 	COMPV_CHECK_CODE_RETURN(CompVMatrix::mulAtA(A, &S));
+	COMPV_GCC_DISABLE_WARNINGS_END()
 
 	bool symmetric;
 	COMPV_CHECK_CODE_RETURN(CompVMatrix::isSymmetric(S, symmetric));

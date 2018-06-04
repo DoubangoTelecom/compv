@@ -47,12 +47,13 @@ COMPV_ERROR_CODE CompVMathEigen<T>::findSymm(const CompVMatPtr &S, CompVMatPtrPt
 	}
 #endif
 
-	size_t row, col;
+	size_t row, col, rowOld, colOld;
 	T gcos_, gsin_;
 	const T epsilon_ = CompVMathEigen<T>::epsilon();
 	size_t ops = 0, maxops = S->rows() * S->cols() * COMPV_MATH_EIGEN_MAX_ROUNDS;
 	CompVMatPtr Qt;
 	CompVMatPtr GD_2rows;
+	T *GD_2rowsPtr0, *GD_2rowsPtr1;
 	CompVMatPtr D_ = *D;
 	bool transpose = !rowVectors;
 
@@ -127,9 +128,8 @@ COMPV_ERROR_CODE CompVMathEigen<T>::findSymm(const CompVMatPtr &S, CompVMatPtrPt
 	COMPV_DEBUG_INFO_CODE_TODO("Try to eliminate extract2Cols/insert2Cols which were made to make mulAG thread-safe and SIMD-friendly. Take too much time");
 
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<T>(&GD_2rows, 2, dim));
-	T* GD_2rowsPtr0 = GD_2rows->ptr<T>(0);
-	T* GD_2rowsPtr1 = GD_2rows->ptr<T>(1);
-	size_t rowOld = 0, colOld = 0;
+	GD_2rowsPtr0 = GD_2rows->ptr<T>(0), GD_2rowsPtr1 = GD_2rows->ptr<T>(1);
+	rowOld = 0, colOld = 0;
 	do {
 		CompVMathEigen<T>::jacobiAngles(D_, row, col, &gcos_, &gsin_); // Thread-safe
 		/* Qt = G*Qt */

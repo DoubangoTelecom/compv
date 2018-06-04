@@ -744,6 +744,42 @@
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_trig_intrin_neon.h">
       <Filter>include\math\intrin\arm</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\compv\base\math\compv_math_basic_ops.h">
+      <Filter>include\math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\math\compv_math_op_mul.h">
+      <Filter>include\math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\math\compv_math_op_sub.h">
+      <Filter>include\math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\math\compv_math_pca.h">
+      <Filter>include\math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_op_mul_intrin_sse2.h">
+      <Filter>include\math\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_op_sub_intrin_sse2.h">
+      <Filter>include\math\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_trig_intrin_avx.h">
+      <Filter>include\math\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_trig_intrin_sse2.h">
+      <Filter>include\math\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\compv_generic_invoke.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\compv_json.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_op_mul_intrin_neon.h">
+      <Filter>include\math\intrin\arm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_op_sub_intrin_neon.h">
+      <Filter>include\math\intrin\arm</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_base.cxx">
@@ -1218,6 +1254,39 @@
       <Filter>source\intrin\arm</Filter>
     </ClCompile>
     <ClCompile Include="..\math\intrin\arm\compv_math_trig_intrin_neon.cxx">
+      <Filter>source\math\intrin\arm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\compv_math_basic_ops.cxx">
+      <Filter>source\math</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\compv_math_op_mul.cxx">
+      <Filter>source\math</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\compv_math_op_sub.cxx">
+      <Filter>source\math</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\compv_math_pca.cxx">
+      <Filter>source\math</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\intrin\x86\compv_math_op_mul_intrin_sse2.cxx">
+      <Filter>source\math\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\intrin\x86\compv_math_op_sub_intrin_sse2.cxx">
+      <Filter>source\math\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\intrin\x86\compv_math_trig_intrin_avx.cxx">
+      <Filter>source\math\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\intrin\x86\compv_math_trig_intrin_sse2.cxx">
+      <Filter>source\math\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\compv_json.cxx">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\intrin\arm\compv_math_op_mul_intrin_neon.cxx">
+      <Filter>source\math\intrin\arm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\intrin\arm\compv_math_op_sub_intrin_neon.cxx">
       <Filter>source\math\intrin\arm</Filter>
     </ClCompile>
   </ItemGroup>

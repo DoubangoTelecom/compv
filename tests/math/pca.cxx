@@ -35,6 +35,8 @@ COMPV_ERROR_CODE pca()
 	return COMPV_ERROR_CODE_S_OK;
 }
 
+COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-function")
+
 static COMPV_ERROR_CODE pca_project()
 {
 #define PCA_PROJECT_MD5					"98169b12704065d2fe6e123496f677b2"
@@ -70,14 +72,16 @@ static COMPV_ERROR_CODE pca_project()
 static COMPV_ERROR_CODE pca_compue()
 {
 #define PCA_COMPUTE_MEAN_MD5				"1eaf666bfd2097acbd4ca9c552a62fb7"
-#define PCA_COMPUTE_EIGEN_VECTORS_MD5		"4af8ef623793f5480f673c2b0a1df6be"
-#define PCA_COMPUTE_EIGEN_VALUES_MD5		"3344f4803ac45673db434d3151f6bc85"
+#define PCA_COMPUTE_EIGEN_VECTORS_MD5		"4fe317782774d998aec455f6f40c964d"
+#define PCA_COMPUTE_EIGEN_VALUES_MD5		"101301fd1db099310d1f620239d15a48"
 
 #define PCA_COMPUTE_MEAN_FMA_MD5			"1eaf666bfd2097acbd4ca9c552a62fb7"
 #define PCA_COMPUTE_EIGEN_VECTORS_FMA_MD5	"d5b38cb1a046f1403290654c436ea0f9"
 #define PCA_COMPUTE_EIGEN_VALUES_FMA_MD5	"3344f4803ac45673db434d3151f6bc85"
 	CompVBufferPtr content;
+	COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wdeprecated-declarations")
 	Json::Reader reader;
+	COMPV_GCC_DISABLE_WARNINGS_END()
 	Json::Value root;
 	COMPV_CHECK_CODE_RETURN(CompVFileUtils::read(COMPV_TEST_PATH_TO_FILE(FILE_FEATURES_PARTIAL).c_str(), &content));
 	COMPV_CHECK_EXP_RETURN(!reader.parse(reinterpret_cast<const char*>(content->ptr()), reinterpret_cast<const char*>(content->ptr()) + content->size(), root, false)
@@ -95,7 +99,7 @@ static COMPV_ERROR_CODE pca_compue()
 	}
 	const uint64_t timeEnd = CompVTime::nowMillis();
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "Elapsed time(PCA, compute) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
-#if 0
+#if 1
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "Mean=%s", compv_tests_md5(pca->mean()).c_str());
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "Vectors=%s", compv_tests_md5(pca->eingenVectors()).c_str());
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "values=%s", compv_tests_md5(pca->eingenValues()).c_str());
@@ -113,3 +117,5 @@ static COMPV_ERROR_CODE pca_compue()
 #undef PCA_COMPUTE_EIGEN_VALUES_FMA_MD5
 	return COMPV_ERROR_CODE_S_OK;
 }
+
+COMPV_GCC_DISABLE_WARNINGS_END()

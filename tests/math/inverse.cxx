@@ -115,7 +115,9 @@ COMPV_ERROR_CODE inv3x3()
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "Elapsed time(inv3x3 non singular) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 
 	// Compute error
+	COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wdeprecated-declarations")
 	CompVMatrix::mulAB(A, Ai, &I);
+	COMPV_GCC_DISABLE_WARNINGS_END()
 	sum = 0;
 	for (size_t j = 0; j < 3; ++j) {
 		for (size_t i = 0; i < 3; ++i) {

@@ -96,7 +96,9 @@ COMPV_ERROR_CODE matrix_ops_mulAB()
 
 	uint64_t timeStart = CompVTime::nowMillis();
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
+		COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wdeprecated-declarations")
 		COMPV_CHECK_CODE_RETURN(CompVMatrix::mulAB(A, B, &R));
+		COMPV_GCC_DISABLE_WARNINGS_END()
 	}
 	uint64_t timeEnd = CompVTime::nowMillis();
 
@@ -217,8 +219,9 @@ COMPV_ERROR_CODE matrix_ops_isSymetric()
 			aptr[i] = static_cast<TYP>(rand());
 		}
 	}
-
+	COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wdeprecated-declarations")
 	COMPV_CHECK_CODE_RETURN(CompVMatrix::mulAtA(A, &S));
+	COMPV_GCC_DISABLE_WARNINGS_END()
 	bool isSymmetric;
 
 	uint64_t timeStart = CompVTime::nowMillis();

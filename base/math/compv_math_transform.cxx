@@ -42,8 +42,9 @@ public:
 	static COMPV_ERROR_CODE perspective2D(const CompVMatPtr &src, const CompVMatPtr &M, CompVMatPtrPtr dst)
 	{
 		// TODO(dmi): #4 points too common
-
+		COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wdeprecated-declarations")
 		COMPV_CHECK_CODE_RETURN(CompVMatrix::mulAB(M, src, dst));
+		COMPV_GCC_DISABLE_WARNINGS_END()
 		COMPV_CHECK_CODE_RETURN(CompVMathTransformGeneric<T>::homogeneousToCartesian2D(*dst, dst));
 
 		return COMPV_ERROR_CODE_S_OK;

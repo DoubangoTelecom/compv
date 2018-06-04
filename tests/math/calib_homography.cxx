@@ -89,7 +89,9 @@ COMPV_ERROR_CODE homography()
 	COMPV_CHECK_EXP_ASSERT(colinear, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Homography requires no-colinear points");
 
 	// Compute output = H:input
+	COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wdeprecated-declarations")
 	COMPV_CHECK_CODE_RETURN(CompVMatrix::mulAB(h, input, &output)); // output = mul(H, input)
+	COMPV_GCC_DISABLE_WARNINGS_END()
 	// Add error
 	x = output->ptr<TYP>(0);
 	y = output->ptr<TYP>(1);

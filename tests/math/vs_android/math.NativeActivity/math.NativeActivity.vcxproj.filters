@@ -20,6 +20,7 @@
     <ClCompile Include="..\..\calib_undist.cxx" />
     <ClCompile Include="..\..\stats_ransac.cxx" />
     <ClCompile Include="..\..\ml_svm.cxx" />
+    <ClCompile Include="..\..\pca.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\tests_common.h" />

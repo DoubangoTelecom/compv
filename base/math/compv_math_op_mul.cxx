@@ -11,6 +11,7 @@
 
 
 #include "compv/base/math/intrin/x86/compv_math_op_mul_intrin_sse2.h"
+#include "compv/base/math/intrin/arm/compv_math_op_mul_intrin_neon.h"
 
 #define COMPV_MATH_OP_MUL_ABt_SAMPLES_PER_THREAD (50 * 50)
 
@@ -101,6 +102,11 @@ static void CompVMathOpMulMulABt(const CompVMatPtr& A, const CompVMatPtr& B, Com
 			}
 		}
 #elif COMPV_ARCH_ARM
+		if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && A->isAlignedNEON() && B->isAlignedNEON() && R->isAlignedNEON()) {
+			COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMathOpMulMulABt_32f32f32f = CompVMathOpMulMulABt_32f32f32f_Intrin_NEON);
+			//COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathOpMulMulABt_32f32f32f = CompVMathOpMulMulABt_32f32f32f_Asm_NEON32);
+			//COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathOpMulMulABt_32f32f32f = CompVMathOpMulMulABt_32f32f32f_Asm_NEON64);
+		}
 #endif
 		if (CompVMathOpMulMulABt_32f32f32f) {
 			CompVMathOpMulMulABt_32f32f32f(reinterpret_cast<const compv_float32_t*>(Aptr), reinterpret_cast<const compv_float32_t*>(Bptr), reinterpret_cast<compv_float32_t*>(Rptr), Bcols, Arows, Brows, Astride, Bstride, Rstride);

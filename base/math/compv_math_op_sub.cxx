@@ -10,6 +10,7 @@
 #include "compv/base/compv_cpu.h"
 
 #include "compv/base/math/intrin/x86/compv_math_op_sub_intrin_sse2.h"
+#include "compv/base/math/intrin/arm/compv_math_op_sub_intrin_neon.h"
 
 #define COMPV_MATH_OP_SUB_SAMPLES_PER_THREAD (50 * 50)
 
@@ -81,6 +82,11 @@ static void CompVMathOpSubSub(const CompVMatPtr& A, const CompVMatPtr& B, CompVM
 			COMPV_EXEC_IFDEF_ASM_X64(CompVMathOpSubSub_32f32f32f = CompVMathOpSubSub_32f32f32f_Asm_X64_AVX);
 		}
 #elif COMPV_ARCH_ARM
+		if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && A->isAlignedNEON() && B->isAlignedNEON() && R->isAlignedNEON()) {
+			COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMathOpSubSub_32f32f32f = CompVMathOpSubSub_32f32f32f_Intrin_NEON);
+			//COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathOpSubSub_32f32f32f = CompVMathOpSubSub_32f32f32f_Asm_NEON32);
+			//COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathOpSubSub_32f32f32f = CompVMathOpSubSub_32f32f32f_Asm_NEON64);
+		}
 #endif
 		if (CompVMathOpSubSub_32f32f32f) {
 			CompVMathOpSubSub_32f32f32f(reinterpret_cast<const compv_float32_t*>(Aptr), reinterpret_cast<const compv_float32_t*>(Bptr), reinterpret_cast<compv_float32_t*>(Rptr), width, height, Astride, Bstride, Rstride);

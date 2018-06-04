@@ -146,7 +146,9 @@ COMPV_ERROR_CODE CompVMathPCA::read(CompVMathPCAPtrPtr pca, const char* filePath
 {
 	COMPV_CHECK_EXP_RETURN(!pca || !filePath, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	CompVBufferPtr content;
+	COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wdeprecated-declarations")
 	Json::Reader reader;
+	COMPV_GCC_DISABLE_WARNINGS_END()
 	Json::Value root;
 	COMPV_CHECK_CODE_RETURN(CompVFileUtils::read(filePath, &content));	
 	COMPV_CHECK_EXP_RETURN(!reader.parse(reinterpret_cast<const char*>(content->ptr()), reinterpret_cast<const char*>(content->ptr()) + content->size(), root, false)
@@ -181,7 +183,9 @@ COMPV_ERROR_CODE CompVMathPCA::write(const char* filePath) const
 	COMPV_CHECK_CODE_RETURN(CompVJSON::write(&root, "values", m_ptr32fEigenValues));
 	COMPV_CHECK_CODE_RETURN(CompVJSON::write(&root, "mean", m_ptr32fMean));
 	
+	COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wdeprecated-declarations")
 	Json::FastWriter writer;
+	COMPV_GCC_DISABLE_WARNINGS_END()
 	const std::string root_string = writer.write(root);
 	COMPV_CHECK_EXP_RETURN(root_string.empty(), COMPV_ERROR_CODE_E_JSON_CPP, "Writting json object failed");
 	COMPV_CHECK_CODE_RETURN(CompVFileUtils::write(filePath, root_string.c_str(), root_string.size()));
@@ -322,7 +326,7 @@ static COMPV_ERROR_CODE CompVMathPCACovariance(const CompVMatPtr& input, const C
 	}
 
 	// Covar = M * Mt
-	COMPV_CHECK_CODE_RETURN(CompVMatrix::mulABt(inputSubMean, inputSubMean, covar));
+	COMPV_CHECK_CODE_RETURN(CompVMath::mulABt(inputSubMean, inputSubMean, covar));
 
 	// Scale
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found - Scale");

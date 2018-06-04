@@ -7,6 +7,7 @@
 #include "compv/base/math/compv_math_matrix.h"
 #include "compv/base/math/compv_math_eigen.h"
 #include "compv/base/math/compv_math_utils.h"
+#include "compv/base/math/compv_math.h"
 
 #include "compv/base/math/intrin/x86/compv_math_matrix_intrin_sse2.h"
 #include "compv/base/math/intrin/x86/compv_math_matrix_intrin_sse41.h"
@@ -14,6 +15,8 @@
 #include "compv/base/math/intrin/arm/compv_math_matrix_intrin_neon64.h"
 
 #define COMPV_THIS_CLASSNAME	"CompVMatrix"
+
+COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wdeprecated-declarations")
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -1052,3 +1055,5 @@ template<> COMPV_BASE_API COMPV_ERROR_CODE CompVMatrix::buildHomographyEqMatrix(
 }
 
 COMPV_NAMESPACE_END()
+
+COMPV_GCC_DISABLE_WARNINGS_END()

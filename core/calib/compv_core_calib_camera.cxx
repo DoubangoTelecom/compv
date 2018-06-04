@@ -529,7 +529,9 @@ COMPV_ERROR_CODE CompVCalibCamera::calibrate(CompVCalibContex& context)
 	/* Find b by solving Vb = 0: [2] equation (98)*/
 	// Compute S = Vt*V, 6x6 symetric matrix
 	CompVMatPtr S;
+	COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wdeprecated-declarations")
 	COMPV_CHECK_CODE_RETURN(CompVMatrix::mulAtA(V, &S));
+	COMPV_GCC_DISABLE_WARNINGS_END()
 	// Find Eigen values and vectors
 	CompVMatPtr eigenValues, eigneVectors;
 	static const bool sortEigenValuesVectors = true;
@@ -704,7 +706,9 @@ COMPV_ERROR_CODE CompVCalibCamera::calibrate(CompVCalibContex& context)
 		// blame the next code. Just, comment the next lines to avoid overriding R and check
 		// if this solve the issue.
 		COMPV_CHECK_CODE_RETURN(CompVMatrix::svd(R, &U, &D, &V, false));
+		COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wdeprecated-declarations")
 		COMPV_CHECK_CODE_RETURN(CompVMatrix::mulABt(U, V, &R));
+		COMPV_GCC_DISABLE_WARNINGS_END()
 
 		// Packing translation vector t (extrinsic)
 		CompVMatPtr& t = it_planes->t;
@@ -719,12 +723,16 @@ COMPV_ERROR_CODE CompVCalibCamera::calibrate(CompVCalibContex& context)
 	k = (Dt.D)*.Dt.d
 	*/
 	CompVMatPtr DtD, kd;
+	COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wdeprecated-declarations")
 	COMPV_CHECK_CODE_RETURN(CompVMatrix::mulAtA(D, &DtD)); // Dt.D
+	COMPV_GCC_DISABLE_WARNINGS_END()
 	if (compute_tangential_dist) {
 		CompVMatPtr DtDinv, k;
 		COMPV_CHECK_CODE_RETURN(CompVMatrix::pseudoinv(DtD, &DtDinv)); // (Dt.D)*
+		COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wdeprecated-declarations")
 		COMPV_CHECK_CODE_RETURN(CompVMatrix::mulABt(DtDinv, D, &kd)); // (Dt.D)*.Dt
 		COMPV_CHECK_CODE_RETURN(CompVMatrix::mulAB(kd, d, &context.d)); // (Dt.D)*.Dt.d
+		COMPV_GCC_DISABLE_WARNINGS_END()
 	}
 	else {
 		const compv_float64_t aa = *DtD->ptr<const compv_float64_t>(0, 0);
@@ -739,8 +747,10 @@ COMPV_ERROR_CODE CompVCalibCamera::calibrate(CompVCalibContex& context)
 		*DtD->ptr<compv_float64_t>(1, 0) = -(cc * det);
 		*DtD->ptr<compv_float64_t>(1, 1) = (aa * det);
 		// (DtDinv.Dt).d
-		COMPV_CHECK_CODE_RETURN(CompVMatrix::mulABt(DtD, D, &kd));
+		COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wdeprecated-declarations")
+		COMPV_CHECK_CODE_RETURN(CompVMath::mulABt(DtD, D, &kd));
 		COMPV_CHECK_CODE_RETURN(CompVMatrix::mulAB(kd, d, &context.d));
+		COMPV_GCC_DISABLE_WARNINGS_END()
 	}
 
 	/* Compute reproj error */

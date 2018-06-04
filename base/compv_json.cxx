@@ -122,7 +122,7 @@ public:
 #define JSONMatVal_decl(className, typeName, funcName) \
 	class className : public JSONMatVal<typeName> { \
 	public: \
-		virtual typeName operator()(const Json::Value& vv) const override { return static_cast<typeName>(vv.##funcName()); } \
+		virtual typeName operator()(const Json::Value& vv) const override { return static_cast<typeName>(vv.funcName()); } \
 	};
 JSONMatVal_decl(JSONMatValInt8, int8_t, asInt)
 JSONMatVal_decl(JSONMatValUInt8, uint8_t, asUInt)

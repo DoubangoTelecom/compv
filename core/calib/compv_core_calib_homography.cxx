@@ -384,7 +384,9 @@ static COMPV_ERROR_CODE computeH(CompVMatPtrPtr H, const CompVMatPtr &src, const
 	row_ = T1_->ptr<T>(0), row_[0] = srcScale_, row_[1] = 0, row_[2] = -srcTX_ * srcScale_;
 	row_ = T1_->ptr<T>(1), row_[0] = 0, row_[1] = srcScale_, row_[2] = -srcTY_ * srcScale_;
 	row_ = T1_->ptr<T>(2), row_[0] = 0, row_[1] = 0, row_[2] = 1;
+	COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wdeprecated-declarations")
 	COMPV_CHECK_CODE_RETURN(CompVMatrix::mulAB(T1_, src, &srcn_));
+	COMPV_GCC_DISABLE_WARNINGS_END()
 	// Normilize dst_: dstn_ = T.dst_
 	CompVMatPtr T2_;
 	CompVMatPtr dstn_;
@@ -392,7 +394,9 @@ static COMPV_ERROR_CODE computeH(CompVMatPtrPtr H, const CompVMatPtr &src, const
 	row_ = T2_->ptr<T>(0), row_[0] = dstScale_, row_[1] = 0, row_[2] = -dstTX_ * dstScale_;
 	row_ = T2_->ptr<T>(1), row_[0] = 0, row_[1] = dstScale_, row_[2] = -dstTY_ * dstScale_;
 	row_ = T2_->ptr<T>(2), row_[0] = 0, row_[1] = 0, row_[2] = 1;
+	COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wdeprecated-declarations")
 	COMPV_CHECK_CODE_RETURN(CompVMatrix::mulAB(T2_, dst, &dstn_));
+	COMPV_GCC_DISABLE_WARNINGS_END()
 
 	// Build M for homogeneous equation: Mh = 0
 	CompVMatPtr M_;
@@ -400,7 +404,9 @@ static COMPV_ERROR_CODE computeH(CompVMatPtrPtr H, const CompVMatPtr &src, const
 
 	// Build symmetric matrix S = MtM
 	CompVMatPtr S_; // temp symmetric array
+	COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wdeprecated-declarations")
 	COMPV_CHECK_CODE_RETURN(CompVMatrix::mulAtA(M_, &S_));
+	COMPV_GCC_DISABLE_WARNINGS_END()
 
 	// Find eigenvalues and eigenvectors (no sorting and vectors in rows instead of columns)
 	CompVMatPtr D_; // 9x9 diagonal matrix containing the eigenvalues
@@ -457,8 +463,10 @@ static COMPV_ERROR_CODE computeH(CompVMatPtrPtr H, const CompVMatPtr &src, const
 	// ->T2^HnT1A = T2^T2B = B
 	// ->(T2^HnT1)A = B -> H'A = B whith H' = T2^HnT1 our final homography matrix
 	// T2^HnT1 = T2^(T1*Hn*)* = T2^(T3Hn*)* with T3 = T1*
+	COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wdeprecated-declarations")
 	COMPV_CHECK_CODE_RETURN(CompVMatrix::mulABt(T1_, *H, &M_));
 	COMPV_CHECK_CODE_RETURN(CompVMatrix::mulABt(T2_, M_, H));
+	COMPV_GCC_DISABLE_WARNINGS_END()
 
 	if (promoteZeros) {
 		COMPV_PROMOTE_ZEROS(hn0_, 0);
@@ -499,7 +507,9 @@ static COMPV_ERROR_CODE countInliers(CompVTempArraysCountInliers& tempArrays, si
 	bool isSingular = false;
 
 	// Apply H to the source and compute mse: Ha = b, mse(Ha, b)
+	COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wdeprecated-declarations")
 	COMPV_CHECK_CODE_RETURN(CompVMatrix::mulAB(H, src, &tempArrays.b_));
+	COMPV_GCC_DISABLE_WARNINGS_END()
 	COMPV_CHECK_CODE_RETURN(CompVMathStats::mse2D_homogeneous<T>(&tempArrays.mseb_, tempArrays.b_->ptr<T>(0), tempArrays.b_->ptr<T>(1), tempArrays.b_->ptr<T>(2), dst->ptr<T>(0), dst->ptr<T>(1), numPoints_));
 
 	// Apply H* to the destination and compute mse: a = H*b, mse(a, H*b)
@@ -509,7 +519,9 @@ static COMPV_ERROR_CODE countInliers(CompVTempArraysCountInliers& tempArrays, si
 		inliersCount = 0;
 		return COMPV_ERROR_CODE_S_OK;
 	}
+	COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wdeprecated-declarations")
 	COMPV_CHECK_CODE_RETURN(CompVMatrix::mulAB(tempArrays.Hinv_, dst, &tempArrays.a_));
+	COMPV_GCC_DISABLE_WARNINGS_END()
 	COMPV_CHECK_CODE_RETURN(CompVMathStats::mse2D_homogeneous<T>(&tempArrays.msea_, tempArrays.a_->ptr<T>(0), tempArrays.a_->ptr<T>(1), tempArrays.a_->ptr<T>(2), src->ptr<T>(0), src->ptr<T>(1), numPoints_));
 
 	// Sum the MSE values and build the inliers
