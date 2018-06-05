@@ -23,6 +23,10 @@ COMPV_EXTERNC void CompVMathOpMulMulABt_32f32f32f_Asm_X64_AVX(COMPV_ALIGNED(AVX)
 COMPV_EXTERNC void CompVMathOpMulMulABt_32f32f32f_Asm_X64_FMA3_AVX(COMPV_ALIGNED(AVX) const compv_float32_t* Aptr, COMPV_ALIGNED(AVX) const compv_float32_t* Bptr, COMPV_ALIGNED(AVX) compv_float32_t* Rptr, const compv_uscalar_t Bcols, const compv_uscalar_t Arows, const compv_uscalar_t Brows, COMPV_ALIGNED(AVX) const compv_uscalar_t Astride, COMPV_ALIGNED(AVX) const compv_uscalar_t Bstride, COMPV_ALIGNED(AVX) const compv_uscalar_t Rstride);
 #endif /* COMPV_ASM && COMPV_ARCH_X64 */
 
+#if COMPV_ASM && COMPV_ARCH_ARM32
+COMPV_EXTERNC void CompVMathOpMulMulABt_32f32f32f_Asm_NEON32(COMPV_ALIGNED(SSE) const compv_float32_t* Aptr, COMPV_ALIGNED(SSE) const compv_float32_t* Bptr, COMPV_ALIGNED(SSE) compv_float32_t* Rptr, const compv_uscalar_t Bcols, const compv_uscalar_t Arows, const compv_uscalar_t Brows, COMPV_ALIGNED(SSE) const compv_uscalar_t Astride, COMPV_ALIGNED(SSE) const compv_uscalar_t Bstride, COMPV_ALIGNED(SSE) const compv_uscalar_t Rstride);
+#endif /* COMPV_ASM && COMPV_ARCH_ARM32 */
+
 template<typename T>
 static void CompVMathOpMulMulABt(const CompVMatPtr& A, const CompVMatPtr& B, CompVMatPtr& R);
 
@@ -104,7 +108,7 @@ static void CompVMathOpMulMulABt(const CompVMatPtr& A, const CompVMatPtr& B, Com
 #elif COMPV_ARCH_ARM
 		if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && A->isAlignedNEON() && B->isAlignedNEON() && R->isAlignedNEON()) {
 			COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMathOpMulMulABt_32f32f32f = CompVMathOpMulMulABt_32f32f32f_Intrin_NEON);
-			//COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathOpMulMulABt_32f32f32f = CompVMathOpMulMulABt_32f32f32f_Asm_NEON32);
+			COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathOpMulMulABt_32f32f32f = CompVMathOpMulMulABt_32f32f32f_Asm_NEON32);
 			//COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathOpMulMulABt_32f32f32f = CompVMathOpMulMulABt_32f32f32f_Asm_NEON64);
 		}
 #endif

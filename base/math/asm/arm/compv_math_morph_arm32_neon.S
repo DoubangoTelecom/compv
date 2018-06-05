@@ -8,12 +8,6 @@
 #if defined(__arm__) && !defined(__aarch64__)
 .include "compv_common_arm32.S"
 
-#if defined(__APPLE__)
-#   define sym(funcname) _##funcname
-#else
-#   define sym(funcname) funcname
-#endif
-
 .equ CompVMathMorphProcessOpErode, 0
 .equ CompVMathMorphProcessOpDilate, 1
 
