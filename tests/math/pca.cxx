@@ -45,8 +45,8 @@ static COMPV_ERROR_CODE pca_project()
 	COMPV_CHECK_CODE_RETURN(CompVMathPCA::read(&pca, COMPV_TEST_PATH_TO_FILE(FILE_INIT).c_str()));
 
 	CompVMatPtr features, projected;
-	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float32_t>(&features, 100, OBSERVATION_DIM));
-	for (int j = 0; j < 100; ++j) {
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float32_t>(&features, NUM_OBSERVATIONS, OBSERVATION_DIM));
+	for (int j = 0; j < NUM_OBSERVATIONS; ++j) {
 		compv_float32_t* featuresPtr = features->ptr<compv_float32_t>(j);
 		for (int i = 0; i < OBSERVATION_DIM; ++i) {
 			featuresPtr[i] = ((((i * 398) + i) * ((i & 1) ? 1 : -1)) * 4.95f) * (j + 0.5f);

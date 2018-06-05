@@ -24,7 +24,7 @@
 @ arg(6) -> COMPV_ALIGNED(NEON) const compv_uscalar_t Astride
 @ arg(7) -> COMPV_ALIGNED(NEON) const compv_uscalar_t Bstride
 @ arg(8) -> COMPV_ALIGNED(NEON) const compv_uscalar_t Rstride
-COMPV_GAS_FUNCTION_DECLARE CompVMathOpMulMulABt_32f32f32f_Asm_NEON32
+.macro CompVMathOpMulMulABt_32f32f32f_Macro_NEON32 fusedMultiplyAdd
 	COMPV_GAS_FUNCTION_PROLOG
 	COMPV_GAS_SHADOW_ARGS_TO_STACK 9
 	COMPV_GAS_SAVE_NEON_REGS
@@ -64,13 +64,13 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathOpMulMulABt_32f32f32f_Asm_NEON32
 	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	@ for (compv_uscalar_t i = 0; i < Arows; ++i)
 	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-	LoopArows_CompVMathOpMulMulABt_32f32f32f_Asm_NEON32:
+	LoopArows_CompVMathOpMulMulABt_32f32f32f_Asm_NEON32\@:
 		ldr_arg 1, Bptr
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 		@ for (compv_uscalar_t j = 0; j < Brows; ++j)
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-		mov j, #0
-		LoopBrows_CompVMathOpMulMulABt_32f32f32f_Asm_NEON32:
+		mov j, Brows
+		LoopBrows_CompVMathOpMulMulABt_32f32f32f_Asm_NEON32\@:
 			veor.f32 q0, q0, q0
 			veor.f32 q1, q1, q1
 			veor.f32 q2, q2, q2
@@ -80,37 +80,48 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathOpMulMulABt_32f32f32f_Asm_NEON32
 			@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 			mov k, #0
 			ands Bcolsx, Bcols, #-16
-			beq EndOf_LoopBcols16_CompVMathOpMulMulABt_32f32f32f_Asm_NEON32
-			LoopBcols16_CompVMathOpMulMulABt_32f32f32f_Asm_NEON32:
+			beq EndOf_LoopBcols16_CompVMathOpMulMulABt_32f32f32f_Asm_NEON32\@
+			LoopBcols16_CompVMathOpMulMulABt_32f32f32f_Asm_NEON32\@:
 				vld1.f32 { q4, q5 }, [Aptr :128]!
 				vld1.f32 { q6, q7 }, [Aptr :128]!
 				vld1.f32 { q8, q9 }, [Bptr :128]!
 				vld1.f32 { q10, q11 }, [Bptr :128]!
 				pld [Aptr, #(CACHE_LINE_SIZE*4)]
 				pld [Bptr, #(CACHE_LINE_SIZE*4)]
-				vmla.f32 q0, q4, q8
-				vmla.f32 q1, q5, q9
-				vmla.f32 q2, q6, q10
-				vmla.f32 q3, q7, q11
+				.if \fusedMultiplyAdd
+					vfma.f32 q0, q4, q8
+					vfma.f32 q1, q5, q9
+					vfma.f32 q2, q6, q10
+					vfma.f32 q3, q7, q11
+				.else
+					vmla.f32 q0, q4, q8
+					vmla.f32 q1, q5, q9
+					vmla.f32 q2, q6, q10
+					vmla.f32 q3, q7, q11
+				.endif
 				add k, k, #16
 				cmp k, Bcolsx
-				blt LoopBcols16_CompVMathOpMulMulABt_32f32f32f_Asm_NEON32
-			EndOf_LoopBcols16_CompVMathOpMulMulABt_32f32f32f_Asm_NEON32:
+				blt LoopBcols16_CompVMathOpMulMulABt_32f32f32f_Asm_NEON32\@
+			EndOf_LoopBcols16_CompVMathOpMulMulABt_32f32f32f_Asm_NEON32\@:
 
 			@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 			@ for (; k < Bcols4; k += 4)
 			@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 			and Bcolsx, Bcols, #-4
 			cmp k, Bcolsx
-			bge EndOf_LoopBcols4_CompVMathOpMulMulABt_32f32f32f_Asm_NEON32
-			LoopBcols4_CompVMathOpMulMulABt_32f32f32f_Asm_NEON32:
+			bge EndOf_LoopBcols4_CompVMathOpMulMulABt_32f32f32f_Asm_NEON32\@
+			LoopBcols4_CompVMathOpMulMulABt_32f32f32f_Asm_NEON32\@:
 				vld1.f32 { q4 }, [Aptr :128]!
 				vld1.f32 { q8 }, [Bptr :128]!
-				vmla.f32 q0, q4, q8
+				.if \fusedMultiplyAdd
+					vfma.f32 q0, q4, q8
+				.else
+					vmla.f32 q0, q4, q8
+				.endif
 				add k, k, #4
 				cmp k, Bcolsx
-				blt LoopBcols4_CompVMathOpMulMulABt_32f32f32f_Asm_NEON32
-			EndOf_LoopBcols4_CompVMathOpMulMulABt_32f32f32f_Asm_NEON32:
+				blt LoopBcols4_CompVMathOpMulMulABt_32f32f32f_Asm_NEON32\@
+			EndOf_LoopBcols4_CompVMathOpMulMulABt_32f32f32f_Asm_NEON32\@:
 
 			vadd.f32 q0, q0, q1
 			vadd.f32 q2, q2, q3
@@ -122,29 +133,32 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathOpMulMulABt_32f32f32f_Asm_NEON32
 			@ for (; k < Bcols; k += 1)
 			@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 			cmp k, Bcols
-			bge EndOf_LoopBcols1_CompVMathOpMulMulABt_32f32f32f_Asm_NEON32
-			LoopBcols1_CompVMathOpMulMulABt_32f32f32f_Asm_NEON32:
+			bge EndOf_LoopBcols1_CompVMathOpMulMulABt_32f32f32f_Asm_NEON32\@
+			LoopBcols1_CompVMathOpMulMulABt_32f32f32f_Asm_NEON32\@:
 				vld1.f32 { d1[0] }, [Aptr]! @ s2 = Aptr
 				vld1.f32 { d2[0] }, [Bptr]! @ s4 = Bptr
-				vmla.f32 s0, s2, s4 @ s0 += (s2 * s4) 
+				.if \fusedMultiplyAdd
+					vfma.f32 s0, s2, s4 @ s0 += (s2 * s4) 
+				.else
+					vmla.f32 s0, s2, s4 @ s0 += (s2 * s4) 
+				.endif
 				add k, k, #1
 				cmp k, Bcols
-				blt LoopBcols1_CompVMathOpMulMulABt_32f32f32f_Asm_NEON32
-			EndOf_LoopBcols1_CompVMathOpMulMulABt_32f32f32f_Asm_NEON32:
+				blt LoopBcols1_CompVMathOpMulMulABt_32f32f32f_Asm_NEON32\@
+			EndOf_LoopBcols1_CompVMathOpMulMulABt_32f32f32f_Asm_NEON32\@:
 
 			vst1.f32 { d0[0] }, [Rptr]! @ s0 = sum
-			add j, j, #1
+			subs j, j, #1
 			sub Aptr, Aptr, Bcols, LSL #(COMPV_GAS_FLOAT32_SHIFT_BYTES) @ rollback
 			add Bptr, Bptr, Bstride
-			cmp j, Brows
-			blt LoopBrows_CompVMathOpMulMulABt_32f32f32f_Asm_NEON32
-		EndOf_LoopBrows_CompVMathOpMulMulABt_32f32f32f_Asm_NEON32:
+			bne LoopBrows_CompVMathOpMulMulABt_32f32f32f_Asm_NEON32\@
+		EndOf_LoopBrows_CompVMathOpMulMulABt_32f32f32f_Asm_NEON32\@:
 
 		subs Arows, Arows, #1
 		add Aptr, Aptr, Astride
 		add Rptr, Rptr, Rstride
-		bne LoopArows_CompVMathOpMulMulABt_32f32f32f_Asm_NEON32
-	EndOf_LoopArows_CompVMathOpMulMulABt_32f32f32f_Asm_NEON32:
+		bne LoopArows_CompVMathOpMulMulABt_32f32f32f_Asm_NEON32\@
+	EndOf_LoopArows_CompVMathOpMulMulABt_32f32f32f_Asm_NEON32\@:
 
 	.unreq Aptr
 	.unreq Bptr
@@ -164,5 +178,14 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathOpMulMulABt_32f32f32f_Asm_NEON32
 	COMPV_GAS_UNSHADOW_ARGS 9
 	COMPV_GAS_FUNCTION_EPILOG
 	COMPV_GAS_FUNCTION_RETURN
+.endm
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+COMPV_GAS_FUNCTION_DECLARE CompVMathOpMulMulABt_32f32f32f_Asm_NEON32
+	CompVMathOpMulMulABt_32f32f32f_Macro_NEON32 0
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+COMPV_GAS_FUNCTION_DECLARE CompVMathOpMulMulABt_32f32f32f_Asm_FMA_NEON32
+	CompVMathOpMulMulABt_32f32f32f_Macro_NEON32 1
 
 #endif /* defined(__arm__) && !defined(__aarch64__) */

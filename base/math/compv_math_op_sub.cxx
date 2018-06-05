@@ -25,6 +25,10 @@ COMPV_EXTERNC void CompVMathOpSubSub_32f32f32f_Asm_X64_AVX(COMPV_ALIGNED(AVX) co
 COMPV_EXTERNC void CompVMathOpSubSub_32f32f32f_Asm_NEON32(COMPV_ALIGNED(NEON) const compv_float32_t* Aptr, COMPV_ALIGNED(NEON) const compv_float32_t* Bptr, COMPV_ALIGNED(NEON) compv_float32_t* Rptr, const compv_uscalar_t width, const compv_uscalar_t height, COMPV_ALIGNED(NEON) const compv_uscalar_t Astride, COMPV_ALIGNED(SSE) const compv_uscalar_t Bstride, COMPV_ALIGNED(NEON) const compv_uscalar_t Rstride);
 #endif /* COMPV_ASM && COMPV_ARCH_ARM32 */
 
+#if COMPV_ASM && COMPV_ARCH_ARM64
+COMPV_EXTERNC void CompVMathOpSubSub_32f32f32f_Asm_NEON64(COMPV_ALIGNED(NEON) const compv_float32_t* Aptr, COMPV_ALIGNED(NEON) const compv_float32_t* Bptr, COMPV_ALIGNED(NEON) compv_float32_t* Rptr, const compv_uscalar_t width, const compv_uscalar_t height, COMPV_ALIGNED(NEON) const compv_uscalar_t Astride, COMPV_ALIGNED(SSE) const compv_uscalar_t Bstride, COMPV_ALIGNED(NEON) const compv_uscalar_t Rstride);
+#endif /* COMPV_ASM && COMPV_ARCH_ARM64 */
+
 template<typename T>
 static void CompVMathOpSubSub(const CompVMatPtr& A, const CompVMatPtr& B, CompVMatPtr& R);
 
@@ -89,7 +93,7 @@ static void CompVMathOpSubSub(const CompVMatPtr& A, const CompVMatPtr& B, CompVM
 		if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && A->isAlignedNEON() && B->isAlignedNEON() && R->isAlignedNEON()) {
 			COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMathOpSubSub_32f32f32f = CompVMathOpSubSub_32f32f32f_Intrin_NEON);
 			COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathOpSubSub_32f32f32f = CompVMathOpSubSub_32f32f32f_Asm_NEON32);
-			//COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathOpSubSub_32f32f32f = CompVMathOpSubSub_32f32f32f_Asm_NEON64);
+			COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathOpSubSub_32f32f32f = CompVMathOpSubSub_32f32f32f_Asm_NEON64);
 		}
 #endif
 		if (CompVMathOpSubSub_32f32f32f) {
