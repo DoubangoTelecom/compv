@@ -83,13 +83,14 @@ private:
 		const size_t  outputStride = output->stride();
 
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
-		COMPV_DEBUG_INFO_CODE_TODO("Clip x2 and y2: std::min(x2, widithMinus1)");
 
 		auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
 			// Bilinear filtering: https://en.wikipedia.org/wiki/Bilinear_interpolation#Unit_square
 			uint8_t* outputPtr = output->ptr<uint8_t>(ystart);
 			const uint8_t* inputPtr = input->ptr<uint8_t>();
 			const size_t stride = input->stride();
+			const int inWidthMinus1 = static_cast<int>(input->cols() - 1);
+			const int inHeightMinus1 = static_cast<int>(input->rows() - 1);
 			size_t i, j, k;
 			for (j = ystart, k = (ystart * outputWidth); j < yend; ++j) {
 				for (i = 0; i < outputWidth; ++i, ++k) {
@@ -118,10 +119,10 @@ private:
 						);
 #else // Next code is faster (less multiplications)
 						const int x1 = static_cast<int>(x);
-						const int x2 = static_cast<int>(x + 1.f);
+						const int x2 = std::min(static_cast<int>(x + 1.f), inWidthMinus1);
 						const T xfractpart = x - x1;
 						const int y1 = static_cast<int>(y);
-						const int y2 = static_cast<int>(y + 1.f);
+						const int y2 = std::min(static_cast<int>(y + 1.f), inHeightMinus1);
 						const T yfractpart = y - y1;
 						const T xyfractpart = (xfractpart * yfractpart);
 						const uint8_t* inputY1 = &inputPtr[y1 * stride];
