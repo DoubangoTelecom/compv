@@ -51,7 +51,7 @@ COMPV_ERROR_CODE CompVMathOpSub::sub(const CompVMatPtr& A, const CompVMatPtr& B,
 		COMPV_CHECK_CODE_RETURN(A->bind(&Abind, roi));
 		COMPV_CHECK_CODE_RETURN(B->bind(&Bbind, roi));
 		COMPV_CHECK_CODE_RETURN(R_->bind(&Rbind, roi));
-		CompVGenericInvokeStaticVoidRawType(Abind->subType(), CompVMathOpSubSub, Abind, Bbind, Rbind);
+		CompVGenericInvokeVoidRawType(Abind->subType(), CompVMathOpSubSub, Abind, Bbind, Rbind);
 		return COMPV_ERROR_CODE_S_OK;
 	};
 	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(

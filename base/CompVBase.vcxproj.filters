@@ -753,6 +753,9 @@
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_op_sub_intrin_sse2.h">
       <Filter>include\math\intrin\x86</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\image\compv_image_scale_bicubic.h">
+      <Filter>include\image</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx">
@@ -1246,6 +1249,9 @@
     </ClCompile>
     <ClCompile Include="math\intrin\x86\compv_math_op_sub_intrin_sse2.cxx">
       <Filter>source\math\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="image\compv_image_scale_bicubic.cxx">
+      <Filter>source\image</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

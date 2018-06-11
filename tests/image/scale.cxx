@@ -39,24 +39,26 @@ COMPV_UNITTEST_SCALE[] =
 	{ COMPV_INTERPOLATION_TYPE_BILINEAR, 0.83f, FILE_NAME_GRIOTS, 480, 640, 480, "1f67605aae23461222939da568dd7e29" },
 	{ COMPV_INTERPOLATION_TYPE_BILINEAR, 1.2f, FILE_NAME_GRIOTS, 480, 640, 480, "b9461507269a7ddb7ce18bc2f1f836df" },
 	{ COMPV_INTERPOLATION_TYPE_BILINEAR, 3.f, FILE_NAME_GRIOTS, 480, 640, 480, "130ffba1d1bd05bd7a86067db6a5d082" },
+
+	{ COMPV_INTERPOLATION_TYPE_BICUBIC, 0.5f, FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, "d838342cf629f4d9bb7365cef1806336" },
+	{ COMPV_INTERPOLATION_TYPE_BICUBIC, 0.83f, FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, "750503b7dfaa586b19582e5f9f0bcc7b" },
+	{ COMPV_INTERPOLATION_TYPE_BICUBIC, 1.2f, FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, "6878e8e4d76ec4d9b671ddd7237063f2" },
+	{ COMPV_INTERPOLATION_TYPE_BICUBIC, 3.f, FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, "4a0f54be266d38242825adf88fd36f26" },
 };
 static const size_t COMPV_UNITTEST_SCALE_COUNT = sizeof(COMPV_UNITTEST_SCALE) / sizeof(COMPV_UNITTEST_SCALE[0]);
 
 #define LOOP_COUNT		1
-#define SCALE_TYPE		COMPV_INTERPOLATION_TYPE_BILINEAR
+#define SCALE_TYPE		COMPV_INTERPOLATION_TYPE_BICUBIC
 #define FILE_NAME		FILE_NAME_EQUIRECTANGULAR
 #define FACTOR			0.83f
 
 
 COMPV_ERROR_CODE scale()
 {
-	COMPV_ERROR_CODE err;
 	uint64_t timeStart, timeEnd;
 	CompVMatPtr srcImage, dstImage;
 	const compv_unittest_scale* test = NULL;
 	size_t widthOut, heightOut;
-
-	COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_S_OK, "Just to avoid 'bail not referenced warning'");
 
 	// Find test
 	for (size_t i = 0; i < COMPV_UNITTEST_SCALE_COUNT; ++i) {
@@ -73,25 +75,26 @@ COMPV_ERROR_CODE scale()
 	}
 	
 	// Read params
-	COMPV_CHECK_CODE_BAIL(err = CompVImage::read(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &srcImage));
+	COMPV_CHECK_CODE_RETURN(CompVImage::read(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &srcImage));
 	widthOut = static_cast<size_t>(test->width * test->factor);
 	heightOut = static_cast<size_t>(test->height * test->factor);
 
 	// Perform test
 	timeStart = CompVTime::nowMillis();
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
-		COMPV_CHECK_CODE_BAIL(err = CompVImage::scale(srcImage, &dstImage, widthOut, heightOut, test->type));
+		COMPV_CHECK_CODE_RETURN(CompVImage::scale(srcImage, &dstImage, widthOut, heightOut, test->type));
 	}
 	timeEnd = CompVTime::nowMillis();
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "Elapsed time = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 
-#if COMPV_OS_WINDOWS
+	COMPV_DEBUG_INFO_EX(TAG_TEST, "MD5: %s", compv_tests_md5(dstImage).c_str());
+
+#if COMPV_OS_WINDOWS && 1
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Do not write the file to the hd");
-	COMPV_CHECK_CODE_BAIL(err = compv_tests_write_to_file(dstImage, "out.gray"));
+	COMPV_CHECK_CODE_RETURN(compv_tests_write_to_file(dstImage, compv_tests_build_filename(dstImage).c_str()));
 #endif
 
-	COMPV_CHECK_EXP_BAIL(std::string(test->md5).compare(compv_tests_md5(dstImage)) != 0, (err = COMPV_ERROR_CODE_E_UNITTEST_FAILED), "Image scaling MD5 mismatch");
+	COMPV_CHECK_EXP_RETURN(std::string(test->md5).compare(compv_tests_md5(dstImage)) != 0, (COMPV_ERROR_CODE_E_UNITTEST_FAILED), "Image scaling MD5 mismatch");
 
-bail:
-	return err;
+	return COMPV_ERROR_CODE_S_OK;
 }

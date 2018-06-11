@@ -4,7 +4,7 @@ using namespace compv;
 
 #define TAG_TEST_IMAGE "TestImage"
 
-#define TEST_SCALE					0
+#define TEST_SCALE					1
 #define TEST_PYRAMID				0
 #define TEST_CHROMA_CONV			0
 #define TEST_FEATURE_FAST			0
@@ -19,7 +19,7 @@ using namespace compv;
 #define TEST_OTSU_THRESH			0
 #define TEST_HOUGHSHT				0
 #define TEST_HOUGHKHT				0
-#define TEST_HOGSTD					1
+#define TEST_HOGSTD					0
 #define TEST_BRUTEFORCE				0
 #define TEST_SPLIT3					0
 #define TEST_BITS					0

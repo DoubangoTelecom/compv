@@ -19,22 +19,23 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-#if COMPV_ASM
-#	if COMPV_ARCH_X86
-	COMPV_EXTERNC void CompVImageScaleBilinear_Asm_X86_SSE41(const uint8_t* inPtr, compv_uscalar_t inStride, COMPV_ALIGNED(SSE) uint8_t* outPtr, compv_uscalar_t outWidth, compv_uscalar_t outYStart, compv_uscalar_t outYEnd, COMPV_ALIGNED(SSE) compv_uscalar_t outStride, compv_uscalar_t sf_x, compv_uscalar_t sf_y);
-	COMPV_EXTERNC void CompVImageScaleBilinear_Asm_X86_AVX2(const uint8_t* inPtr, compv_uscalar_t inStride, COMPV_ALIGNED(AVX) uint8_t* outPtr, compv_uscalar_t outWidth, compv_uscalar_t outYStart, compv_uscalar_t outYEnd, COMPV_ALIGNED(AVX) compv_uscalar_t outStride, compv_uscalar_t sf_x, compv_uscalar_t sf_y);
-#	endif /* COMPV_ARCH_X86 */
-#	if COMPV_ARCH_X64
-	COMPV_EXTERNC void CompVImageScaleBilinear_Asm_X64_SSE41(const uint8_t* inPtr, compv_uscalar_t inStride, COMPV_ALIGNED(SSE) uint8_t* outPtr, compv_uscalar_t outWidth, compv_uscalar_t outYStart, compv_uscalar_t outYEnd, COMPV_ALIGNED(SSE) compv_uscalar_t outStride, compv_uscalar_t sf_x, compv_uscalar_t sf_y);
-	COMPV_EXTERNC void CompVImageScaleBilinear_Asm_X64_AVX2(const uint8_t* inPtr, compv_uscalar_t inStride, COMPV_ALIGNED(AVX) uint8_t* outPtr, compv_uscalar_t outWidth, compv_uscalar_t outYStart, compv_uscalar_t outYEnd, COMPV_ALIGNED(AVX) compv_uscalar_t outStride, compv_uscalar_t sf_x, compv_uscalar_t sf_y);
-#	endif /* COMPV_ARCH_X64 */
-#	if COMPV_ARCH_ARM32
-	COMPV_EXTERNC void CompVImageScaleBilinear_Asm_NEON32(const uint8_t* inPtr, compv_uscalar_t inStride, COMPV_ALIGNED(NEON) uint8_t* outPtr, compv_uscalar_t outWidth, compv_uscalar_t outYStart, compv_uscalar_t outYEnd, COMPV_ALIGNED(NEON) compv_uscalar_t outStride, compv_uscalar_t sf_x, compv_uscalar_t sf_y);
-#	endif /* COMPV_ARCH_ARM32 */
-#	if COMPV_ARCH_ARM64
-    COMPV_EXTERNC void CompVImageScaleBilinear_Asm_NEON64(const uint8_t* inPtr, compv_uscalar_t inStride, COMPV_ALIGNED(NEON) uint8_t* outPtr, compv_uscalar_t outWidth, compv_uscalar_t outYStart, compv_uscalar_t outYEnd, COMPV_ALIGNED(NEON) compv_uscalar_t outStride, compv_uscalar_t sf_x, compv_uscalar_t sf_y);
-#	endif /* COMPV_ARCH_ARM32 */
-#endif /* COMPV_ASM */
+#if COMPV_ASM && COMPV_ARCH_X86
+COMPV_EXTERNC void CompVImageScaleBilinear_Asm_X86_SSE41(const uint8_t* inPtr, compv_uscalar_t inStride, COMPV_ALIGNED(SSE) uint8_t* outPtr, compv_uscalar_t outWidth, compv_uscalar_t outYStart, compv_uscalar_t outYEnd, COMPV_ALIGNED(SSE) compv_uscalar_t outStride, compv_uscalar_t sf_x, compv_uscalar_t sf_y);
+COMPV_EXTERNC void CompVImageScaleBilinear_Asm_X86_AVX2(const uint8_t* inPtr, compv_uscalar_t inStride, COMPV_ALIGNED(AVX) uint8_t* outPtr, compv_uscalar_t outWidth, compv_uscalar_t outYStart, compv_uscalar_t outYEnd, COMPV_ALIGNED(AVX) compv_uscalar_t outStride, compv_uscalar_t sf_x, compv_uscalar_t sf_y);
+#endif /* COMPV_ASM && COMPV_ARCH_X86 */
+
+#if COMPV_ASM && COMPV_ARCH_X64
+COMPV_EXTERNC void CompVImageScaleBilinear_Asm_X64_SSE41(const uint8_t* inPtr, compv_uscalar_t inStride, COMPV_ALIGNED(SSE) uint8_t* outPtr, compv_uscalar_t outWidth, compv_uscalar_t outYStart, compv_uscalar_t outYEnd, COMPV_ALIGNED(SSE) compv_uscalar_t outStride, compv_uscalar_t sf_x, compv_uscalar_t sf_y);
+COMPV_EXTERNC void CompVImageScaleBilinear_Asm_X64_AVX2(const uint8_t* inPtr, compv_uscalar_t inStride, COMPV_ALIGNED(AVX) uint8_t* outPtr, compv_uscalar_t outWidth, compv_uscalar_t outYStart, compv_uscalar_t outYEnd, COMPV_ALIGNED(AVX) compv_uscalar_t outStride, compv_uscalar_t sf_x, compv_uscalar_t sf_y);
+#endif /* COMPV_ASM && COMPV_ARCH_X64 */
+
+#if COMPV_ASM && COMPV_ARCH_ARM32
+COMPV_EXTERNC void CompVImageScaleBilinear_Asm_NEON32(const uint8_t* inPtr, compv_uscalar_t inStride, COMPV_ALIGNED(NEON) uint8_t* outPtr, compv_uscalar_t outWidth, compv_uscalar_t outYStart, compv_uscalar_t outYEnd, COMPV_ALIGNED(NEON) compv_uscalar_t outStride, compv_uscalar_t sf_x, compv_uscalar_t sf_y);
+#endif /* COMPV_ASM && COMPV_ARCH_ARM32 */
+
+#if COMPV_ASM && COMPV_ARCH_ARM64
+COMPV_EXTERNC void CompVImageScaleBilinear_Asm_NEON64(const uint8_t* inPtr, compv_uscalar_t inStride, COMPV_ALIGNED(NEON) uint8_t* outPtr, compv_uscalar_t outWidth, compv_uscalar_t outYStart, compv_uscalar_t outYEnd, COMPV_ALIGNED(NEON) compv_uscalar_t outStride, compv_uscalar_t sf_x, compv_uscalar_t sf_y);
+#endif /* COMPV_ASM && COMPV_ARCH_ARM64 */
 
 static void scaleBilinear_C(const uint8_t* inPtr, compv_uscalar_t inStride, uint8_t* outPtr, compv_uscalar_t outWidth, compv_uscalar_t outYStart, compv_uscalar_t outYEnd, compv_uscalar_t outStride, compv_uscalar_t sf_x, compv_uscalar_t sf_y)
 {

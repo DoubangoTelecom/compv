@@ -17,6 +17,9 @@ class COMPV_BASE_API CompVMathMoments
 {
 public:
 	static COMPV_ERROR_CODE rawFirstOrder(const CompVMatPtr& ptrIn, double(&moments)[3], bool binar = false);
+	static COMPV_ERROR_CODE rawSecondOrder(const CompVMatPtr& ptrIn, double(&moments)[6], bool binar = false);
+	static COMPV_ERROR_CODE skewness(const CompVMatPtr& ptrIn, double& skew, bool binar = false);
+	static COMPV_ERROR_CODE orientation(const CompVMatPtr& ptrIn, double& theta, bool binar = false);
 };
 
 COMPV_NAMESPACE_END()

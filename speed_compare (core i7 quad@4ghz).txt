@@ -73,6 +73,14 @@ OpenCV: 4148.ms(full optiz)
 Remarque: We're 281% (almost #3 times) faster. 
 OpenCV uses SSE2 and multithreading and we're faster even with plain c++ (without sse or avx).
 
+=== Image scaling (Bicubic) from (1282, 720) to (1064, 597), (#10k times) ===
+CompV: 
+OpenCV: 6671.ms(full optiz)
+Remarque: 
+Our Bicubic implementation uses more computations (more multiplications) than what OpenCV is doing. 
+We have better result compared to OpenCV. OpenCV's Bicubic implementation produces images with very poor quality on small sizes.
+OpenCV uses SSE2 and multithreading.
+
 === Gaussian Blur (kernel size = 7, Sigma = 2.0) (1282, 720) (#10k times) ===
 CompV(float): 2419.ms(mt,avx2,fma3), 2822.ms(mt,avx2), 5476.ms(mt,sse2), 7874.ms(st,avx2,fma3), 9980.ms(st,avx2), 17527.ms (st,sse2), 23004.ms(mt,c++), 79309.ms(st,c++)
 CompV(Fixed): 1367.ms(mt,avx2), 2815.ms(mt,sse2), 4736.ms(st,avx2), 8824.ms(st,sse2), 19741.ms(mt,c++), 70983.ms(st,c++)

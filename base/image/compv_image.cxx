@@ -11,11 +11,15 @@
 #include "compv/base/image/compv_image_conv_to_rgbx.h"
 #include "compv/base/image/compv_image_conv_hsv.h"
 #include "compv/base/image/compv_image_scale_bilinear.h"
+#include "compv/base/image/compv_image_scale_bicubic.h"
 #include "compv/base/image/compv_image_threshold.h"
 #include "compv/base/image/compv_image_remap.h"
 #include "compv/base/parallel/compv_parallel.h"
 #include "compv/base/math/compv_math_utils.h"
 #include "compv/base/math/compv_math_histogram.h"
+#include "compv/base/math/compv_math_cast.h"
+#include "compv/base/math/compv_math_transform.h"
+#include "compv/base/math/compv_math_matrix.h"
 #include "compv/base/compv_base.h"
 #include "compv/base/compv_mem.h"
 #include "compv/base/compv_fileutils.h"
@@ -567,6 +571,9 @@ COMPV_ERROR_CODE CompVImage::scale(const CompVMatPtr& imageIn, CompVMatPtrPtr im
 	}
 
 	switch (scaleType) {
+	case COMPV_INTERPOLATION_TYPE_BICUBIC:
+		COMPV_CHECK_CODE_RETURN(CompVImageScaleBicubic::process(imageIn, imageOut_));
+		break;
 	case COMPV_INTERPOLATION_TYPE_BILINEAR:
 		COMPV_CHECK_CODE_RETURN(CompVImageScaleBilinear::process(imageIn, imageOut_));
 		break;
@@ -578,5 +585,87 @@ COMPV_ERROR_CODE CompVImage::scale(const CompVMatPtr& imageIn, CompVMatPtrPtr im
 	*imageOut = imageOut_;
 	return COMPV_ERROR_CODE_S_OK;
 }
+
+// dst(x,y) = src*inverse(M)
+// M = (2x3) matrix
+COMPV_ERROR_CODE CompVImage::warp(const CompVMatPtr& imageIn, CompVMatPtrPtr imageOut, const CompVMatPtr& M, const CompVSizeSz& outSize, COMPV_INTERPOLATION_TYPE interpType COMPV_DEFAULT(COMPV_INTERPOLATION_TYPE_BILINEAR))
+{
+	COMPV_CHECK_EXP_RETURN(!imageIn || !imageOut || !M || !outSize.height || !outSize.width, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(M->rows() != 2 || M->cols() != 3 || (M->subType() != COMPV_SUBTYPE_RAW_FLOAT32 && M->subType() != COMPV_SUBTYPE_RAW_FLOAT64), COMPV_ERROR_CODE_E_INVALID_PARAMETER, "M must be (2x3) float or double matrix");
+	// No need to check other parameters -> up2 CompVImage::warpInverse
+
+	// Convert to 64f and compute inverse
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Maybe use 32f instead of 64f");
+	CompVMatPtr M64f;
+	if (M->subType() != COMPV_SUBTYPE_RAW_FLOAT64) {
+		COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static<compv_float32_t, compv_float64_t>(M, &M64f)));
+	}
+	else {
+		COMPV_CHECK_CODE_RETURN(M->clone(&M64f));
+	}
+
+	// inverse(M)
+	compv_float64_t* M0ptr = M64f->ptr<compv_float64_t>(0);
+	compv_float64_t* M1ptr = M64f->ptr<compv_float64_t>(1);
+	compv_float64_t D = M0ptr[0] * M1ptr[1] - M0ptr[1] * M1ptr[0];
+	D = D != 0 ? 1. / D : 0;
+	const compv_float64_t A11 = M1ptr[1] * D, A22 = M0ptr[0] * D;
+	M0ptr[0] = A11; M0ptr[1] *= -D;
+	M1ptr[0] *= -D; M1ptr[1] = A22;
+	const compv_float64_t b1 = -M0ptr[0] * M0ptr[2] - M0ptr[1] * M1ptr[2];
+	const compv_float64_t b2 = -M1ptr[0] * M0ptr[2] - M1ptr[1] * M1ptr[2];
+	M0ptr[2] = b1; M1ptr[2] = b2;
+
+	// Perform action
+	COMPV_CHECK_CODE_RETURN(CompVImage::warpInverse(imageIn, imageOut, M64f, outSize, interpType));
+
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// dst(x,y) = src*M
+// M = (2x3) matrix
+COMPV_ERROR_CODE CompVImage::warpInverse(const CompVMatPtr& imageIn, CompVMatPtrPtr imageOut, const CompVMatPtr& M, const CompVSizeSz& outSize, COMPV_INTERPOLATION_TYPE interpType COMPV_DEFAULT(COMPV_INTERPOLATION_TYPE_BILINEAR))
+{
+	COMPV_CHECK_EXP_RETURN(!imageIn || !imageOut || !M || !outSize.height || !outSize.width, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(M->rows() != 2 || M->cols() != 3 || (M->subType() != COMPV_SUBTYPE_RAW_FLOAT32 && M->subType() != COMPV_SUBTYPE_RAW_FLOAT64), COMPV_ERROR_CODE_E_INVALID_PARAMETER, "M must be (2x3) float or double matrix");
+
+	// Convert to 64f and compute inverse
+	CompVMatPtr M64f;
+	if (M->subType() != COMPV_SUBTYPE_RAW_FLOAT64) {
+		COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static<compv_float32_t, compv_float64_t>(M, &M64f)));
+	}
+	else {
+		M64f = M;
+	}
+
+	// Set map
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation could be found");
+	const int width = static_cast<int>(outSize.width);
+	const int height = static_cast<int>(outSize.height);
+	const int count = (width * height);
+	CompVMatPtr map;
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float64_t>(&map, 3, count));
+	COMPV_CHECK_CODE_RETURN(map->one_row<compv_float64_t>(2)); // Homogeneous (z = 1)
+	compv_float64_t* mapX = map->ptr<compv_float64_t>(0);
+	compv_float64_t* mapY = map->ptr<compv_float64_t>(1);
+	for (int y = 0, index = 0; y < height; ++y) {
+		for (int x = 0; x < width; ++x, ++index) {
+			mapX[index] = x;
+			mapY[index] = y;
+		}
+	}
+
+	// Compute map(x,y) = src*M
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Compute map transposed so that we can call CompVMath::mulABt");
+	CompVMatPtr mapR;
+	COMPV_CHECK_CODE_RETURN(CompVMatrix::mulAB(M64f, map, &mapR));
+
+	// remap
+	const CompVRectFloat32 inputROI = { 0.f, 0.f, static_cast<compv_float32_t>(imageIn->cols() - 1), static_cast<compv_float32_t>(imageIn->rows() - 1) };
+	COMPV_CHECK_CODE_RETURN(CompVImageRemap::process(imageIn, imageOut, mapR, interpType, &inputROI, &outSize));
+
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 
 COMPV_NAMESPACE_END()

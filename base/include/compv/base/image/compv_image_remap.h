@@ -17,7 +17,7 @@ COMPV_NAMESPACE_BEGIN()
 class COMPV_BASE_API CompVImageRemap
 {
 public:
-	static COMPV_ERROR_CODE process(const CompVMatPtr& input, CompVMatPtrPtr output, const CompVMatPtr& map, COMPV_INTERPOLATION_TYPE interType = COMPV_INTERPOLATION_TYPE_BILINEAR, const CompVRectFloat32* inputROI = nullptr);
+	static COMPV_ERROR_CODE process(const CompVMatPtr& input, CompVMatPtrPtr output, const CompVMatPtr& map, COMPV_INTERPOLATION_TYPE interType = COMPV_INTERPOLATION_TYPE_BILINEAR, const CompVRectFloat32* inputROI = nullptr, const CompVSizeSz* outSize = nullptr);
 	
 private:
 };

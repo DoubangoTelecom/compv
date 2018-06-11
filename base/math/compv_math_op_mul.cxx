@@ -46,7 +46,7 @@ COMPV_ERROR_CODE CompVMathOpMul::mulABt(const CompVMatPtr &A, const CompVMatPtr 
 {
 	COMPV_CHECK_EXP_RETURN(!A || !B || !R || A->subType() != B->subType() || A->cols() != B->cols(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	CompVMatPtr R_ = (*R == A || *R == B) ? nullptr : *R;
-	CompVGenericInvokeStaticVoidRawType(A->subType(), CompVMat::newObjAligned, &R_, A->rows(), B->rows());
+	CompVGenericInvokeVoidRawType(A->subType(), CompVMat::newObjAligned, &R_, A->rows(), B->rows());
 	auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
 		const CompVRectFloat32 Aroi = {
 			0.f, // left
@@ -63,7 +63,7 @@ COMPV_ERROR_CODE CompVMathOpMul::mulABt(const CompVMatPtr &A, const CompVMatPtr 
 		CompVMatPtr Abind, Rbind;
 		COMPV_CHECK_CODE_RETURN(A->bind(&Abind, Aroi));
 		COMPV_CHECK_CODE_RETURN(R_->bind(&Rbind, Rroi));
-		CompVGenericInvokeStaticVoidRawType(Abind->subType(), CompVMathOpMulMulABt, Abind, B, Rbind);
+		CompVGenericInvokeVoidRawType(Abind->subType(), CompVMathOpMulMulABt, Abind, B, Rbind);
 		return COMPV_ERROR_CODE_S_OK;
 	};
 	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(

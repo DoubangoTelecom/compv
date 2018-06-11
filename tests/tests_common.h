@@ -19,6 +19,8 @@ const std::string compv_tests_path_from_file(const char* filename, const char* o
 
 COMPV_ERROR_CODE compv_tests_write_to_file(const CompVMatPtr& mat, const char* filename);
 
+const std::string compv_tests_build_filename(const CompVMatPtr& mat);
+
 const std::string compv_tests_md5(const CompVMatPtr& mat);
 
 COMPV_ERROR_CODE compv_tests_draw_bbox(CompVMatPtr mat, const CompVConnectedComponentBoundingBox& bb, const uint8_t color);

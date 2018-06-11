@@ -5,7 +5,7 @@ using namespace compv;
 #define TAG_UNITTESTS "UnitTests"
 
 #define UNITTEST_SPLIT							0
-#define UNITTEST_SCALE							0
+#define UNITTEST_SCALE							1
 #define UNITTEST_PYRAMID						0
 #define UNITTEST_GRADIENT						0
 #define UNITTEST_SOBEL							0
@@ -17,7 +17,7 @@ using namespace compv;
 #define UNITTEST_CCL_BINAR						0
 #define UNITTEST_CCL_MSER						0
 #define UNITTEST_CCL_BITS						0
-#define UNITTEST_HOG_S							1
+#define UNITTEST_HOG_S							0
 
 #define UNITTEST_FEATURE_FAST					0
 #define UNITTEST_CHROMA_CONV					0
