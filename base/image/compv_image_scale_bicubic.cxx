@@ -9,6 +9,9 @@
 #include "compv/base/parallel/compv_parallel.h"
 #include "compv/base/math/compv_math_utils.h"
 
+#include "compv/base/image/intrin/x86/compv_image_scale_bicubic_intrin_sse41.h"
+
+
 // Some documentation:
 //	- https://en.wikipedia.org/wiki/Bicubic_interpolation
 //	- https://blog.demofox.org/2015/08/15/resizing-images-with-bicubic-interpolation/
@@ -20,14 +23,16 @@
 COMPV_NAMESPACE_BEGIN()
 
 // Hermite
-static float __hermite(const float A, const float B, const float C, const float D, const float t, const float t2, float t3)
+static compv_float32_t __hermite_32f(const compv_float32_t A, const compv_float32_t B, const compv_float32_t C, const compv_float32_t D, const compv_float32_t t, const compv_float32_t t2, compv_float32_t t3)
 {
-	const float a = (A*(-0.5f)) + (B*(1.5f))	+ (C*(-1.5f))	+ (D*(0.5f));
-	const float b = A			+ (B*(-2.5f))	+ (C*(2.0f))	+ (D*(-0.5f));
-	const float c = (A*(-0.5f))					+ (C * 0.5f);
-	const float d =				B;
-
-	return a*t3 + b*t2 + c*t + d;
+	const compv_float32_t a = (A*(-0.5f)) + (B*(1.5f))	+ (C*(-1.5f))	+ (D*(0.5f));
+	const compv_float32_t b = A			+ (B*(-2.5f))	+ (C*(2.0f))	+ (D*(-0.5f));
+	const compv_float32_t c = (A*(-0.5f))				+ (C * 0.5f);
+	const compv_float32_t d =				B;
+	// simulate vpadd_f32 (to have same MD5)
+	const compv_float32_t s0 = (a*t3) + (c*t);
+	const compv_float32_t s1 = (b*t2) + (d);
+	return s0 + s1;
 }
 
 static void CompVImageScaleBicubicHermite_8u32f_C(
@@ -64,16 +69,16 @@ static void CompVImageScaleBicubicHermite_8u32f_C(
 
 	const compv_float32_t& xfract = *xfract1;
 	const compv_float32_t& yfract = *yfract1;
-	const float xfract2 = (xfract * xfract);
-	const float xfract3 = (xfract2 * xfract);
-	const float yfract2 = (yfract * yfract);
-	const float yfract3 = (yfract2 * yfract);
+	const compv_float32_t xfract2 = (xfract * xfract);
+	const compv_float32_t xfract3 = (xfract2 * xfract);
+	const compv_float32_t yfract2 = (yfract * yfract);
+	const compv_float32_t yfract3 = (yfract2 * yfract);
 	
-	const float c0 = __hermite(p0[x0], p0[x1], p0[x2], p0[x3], xfract, xfract2, xfract3); // TODO(dmi): AVX - use gather
-	const float c1 = __hermite(p1[x0], p1[x1], p1[x2], p1[x3], xfract, xfract2, xfract3);
-	const float c2 = __hermite(p2[x0], p2[x1], p2[x2], p2[x3], xfract, xfract2, xfract3);
-	const float c3 = __hermite(p3[x0], p3[x1], p3[x2], p3[x3], xfract, xfract2, xfract3);
-	const float value = __hermite(c0, c1, c2, c3, yfract, yfract2, yfract3);
+	const compv_float32_t c0 = __hermite_32f(p0[x0], p0[x1], p0[x2], p0[x3], xfract, xfract2, xfract3); // TODO(dmi): AVX - use gather
+	const compv_float32_t c1 = __hermite_32f(p1[x0], p1[x1], p1[x2], p1[x3], xfract, xfract2, xfract3);
+	const compv_float32_t c2 = __hermite_32f(p2[x0], p2[x1], p2[x2], p2[x3], xfract, xfract2, xfract3);
+	const compv_float32_t c3 = __hermite_32f(p3[x0], p3[x1], p3[x2], p3[x3], xfract, xfract2, xfract3);
+	const compv_float32_t value = __hermite_32f(c0, c1, c2, c3, yfract, yfract2, yfract3);
 
 	*outPtr = static_cast<uint8_t>(COMPV_MATH_CLIP3(0, 255.f, value)); // SIMD(dmi): saturation (no need to clip)
 }
@@ -94,6 +99,11 @@ COMPV_ERROR_CODE CompVImageScaleBicubicProcessor::init()
 {
 	bicubic_8u32f = CompVImageScaleBicubicHermite_8u32f_C;
 #if COMPV_ARCH_X86
+	if (CompVCpu::isEnabled(kCpuFlagSSE41)) {
+		COMPV_EXEC_IFDEF_INTRIN_X86(bicubic_8u32f = CompVImageScaleBicubicHermite_8u32f_Intrin_SSE41);
+		//COMPV_EXEC_IFDEF_ASM_X64(bicubic_8u32f = CompVImageScaleBicubicHermite_8u32f_Asm_X64_SSE41);
+	}
+
 #elif COMPV_ARCH_ARM
 #endif
 	return COMPV_ERROR_CODE_S_OK;

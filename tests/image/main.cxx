@@ -5,6 +5,7 @@ using namespace compv;
 #define TAG_TEST_IMAGE "TestImage"
 
 #define TEST_SCALE					1
+#define TEST_ROTATE					0
 #define TEST_PYRAMID				0
 #define TEST_CHROMA_CONV			0
 #define TEST_FEATURE_FAST			0
@@ -34,6 +35,10 @@ compv_main()
 #if TEST_SCALE
 		extern COMPV_ERROR_CODE scale();
 		COMPV_CHECK_CODE_BAIL(err = scale(), TAG_TEST_IMAGE "Image scaling test failed");
+#endif
+#if TEST_ROTATE
+		extern COMPV_ERROR_CODE rotate();
+		COMPV_CHECK_CODE_BAIL(err = rotate(), TAG_TEST_IMAGE "Image rotate test failed");
 #endif
 #if TEST_PYRAMID
 		extern COMPV_ERROR_CODE pyramid();

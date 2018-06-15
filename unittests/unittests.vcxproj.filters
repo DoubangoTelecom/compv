@@ -114,5 +114,8 @@
     <ClCompile Include="gradient.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="rotate.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -6,6 +6,7 @@ using namespace compv;
 
 #define UNITTEST_SPLIT							0
 #define UNITTEST_SCALE							1
+#define UNITTEST_ROTATE							1
 #define UNITTEST_PYRAMID						0
 #define UNITTEST_GRADIENT						0
 #define UNITTEST_SOBEL							0
@@ -110,6 +111,10 @@ compv_main()
 #if UNITTEST_SCALE || !defined(COMPV_TEST_LOCAL)
 								extern COMPV_ERROR_CODE unittest_scale();
 								COMPV_CHECK_CODE_BAIL(err = unittest_scale(), "Image scale unittest failed");
+#endif
+#if UNITTEST_ROTATE || !defined(COMPV_TEST_LOCAL)
+								extern COMPV_ERROR_CODE unittest_rotate();
+								COMPV_CHECK_CODE_BAIL(err = unittest_rotate(), "Image rotate unittest failed");
 #endif
 #if UNITTEST_PYRAMID || !defined(COMPV_TEST_LOCAL)
 								extern COMPV_ERROR_CODE unittest_pyramid();

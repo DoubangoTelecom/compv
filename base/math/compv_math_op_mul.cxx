@@ -46,7 +46,7 @@ COMPV_ERROR_CODE CompVMathOpMul::mulABt(const CompVMatPtr &A, const CompVMatPtr 
 {
 	COMPV_CHECK_EXP_RETURN(!A || !B || !R || A->subType() != B->subType() || A->cols() != B->cols(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	CompVMatPtr R_ = (*R == A || *R == B) ? nullptr : *R;
-	CompVGenericInvokeVoidRawType(A->subType(), CompVMat::newObjAligned, &R_, A->rows(), B->rows());
+	CompVGenericInvokeCodeRawType(A->subType(), CompVMat::newObjAligned, &R_, A->rows(), B->rows());
 	auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
 		const CompVRectFloat32 Aroi = {
 			0.f, // left
