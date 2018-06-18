@@ -5,9 +5,10 @@
 * WebSite: http://compv.org
 */
 #include "compv/base/image/compv_image_scale_bicubic.h"
-#include "compv/base/compv_cpu.h"
 #include "compv/base/parallel/compv_parallel.h"
 #include "compv/base/math/compv_math_utils.h"
+#include "compv/base/math/compv_math_cast.h"
+#include "compv/base/compv_cpu.h"
 
 #include "compv/base/image/intrin/x86/compv_image_scale_bicubic_intrin_sse41.h"
 
@@ -35,9 +36,9 @@ static compv_float32_t __hermite_32f(const compv_float32_t A, const compv_float3
 	return s0 + s1;
 }
 
-static void CompVImageScaleBicubicHermite_8u32f_C(
-	uint8_t* outPtr,
-	const uint8_t* inPtr, 
+static void CompVImageScaleBicubicHermite_32f32s_C(
+	compv_float32_t* outPtr,
+	const compv_float32_t* inPtr,
 	const int32_t* xint1, 
 	const compv_float32_t* xfract1,
 	const int32_t* yint1, 
@@ -62,10 +63,10 @@ static void CompVImageScaleBicubicHermite_8u32f_C(
 	y2 = COMPV_MATH_CLIP3(0, inHeightMinus1, y2);
 	y3 = COMPV_MATH_CLIP3(0, inHeightMinus1, y3);
 
-	const uint8_t* p0 = &inPtr[y0 * inStride];
-	const uint8_t* p1 = &inPtr[y1 * inStride];
-	const uint8_t* p2 = &inPtr[y2 * inStride];
-	const uint8_t* p3 = &inPtr[y3 * inStride];
+	const compv_float32_t* p0 = &inPtr[y0 * inStride];
+	const compv_float32_t* p1 = &inPtr[y1 * inStride];
+	const compv_float32_t* p2 = &inPtr[y2 * inStride];
+	const compv_float32_t* p3 = &inPtr[y3 * inStride];
 
 	const compv_float32_t& xfract = *xfract1;
 	const compv_float32_t& yfract = *yfract1;
@@ -78,9 +79,9 @@ static void CompVImageScaleBicubicHermite_8u32f_C(
 	const compv_float32_t c1 = __hermite_32f(p1[x0], p1[x1], p1[x2], p1[x3], xfract, xfract2, xfract3);
 	const compv_float32_t c2 = __hermite_32f(p2[x0], p2[x1], p2[x2], p2[x3], xfract, xfract2, xfract3);
 	const compv_float32_t c3 = __hermite_32f(p3[x0], p3[x1], p3[x2], p3[x3], xfract, xfract2, xfract3);
-	const compv_float32_t value = __hermite_32f(c0, c1, c2, c3, yfract, yfract2, yfract3);
+	*outPtr = __hermite_32f(c0, c1, c2, c3, yfract, yfract2, yfract3);
 
-	*outPtr = static_cast<uint8_t>(COMPV_MATH_CLIP3(0, 255.f, value)); // SIMD(dmi): saturation (no need to clip)
+	//*outPtr = static_cast<uint8_t>(COMPV_MATH_CLIP3(0, 255.f, value)); // SIMD(dmi): saturation (no need to clip)
 }
 
 static void CompVImageScaleBicubicIndices_32s32f_C(int32_t* intergral, compv_float32_t* fraction, const compv_float32_t* sv1, const compv_uscalar_t outSize)
@@ -97,10 +98,10 @@ static void CompVImageScaleBicubicIndices_32s32f_C(int32_t* intergral, compv_flo
 
 COMPV_ERROR_CODE CompVImageScaleBicubicProcessor::init()
 {
-	bicubic_8u32f = CompVImageScaleBicubicHermite_8u32f_C;
+	bicubic_32f32s = CompVImageScaleBicubicHermite_32f32s_C;
 #if COMPV_ARCH_X86
 	if (CompVCpu::isEnabled(kCpuFlagSSE41)) {
-		COMPV_EXEC_IFDEF_INTRIN_X86(bicubic_8u32f = CompVImageScaleBicubicHermite_8u32f_Intrin_SSE41);
+		COMPV_EXEC_IFDEF_INTRIN_X86(bicubic_32f32s = CompVImageScaleBicubicHermite_32f32s_Intrin_SSE41);
 		//COMPV_EXEC_IFDEF_ASM_X64(bicubic_8u32f = CompVImageScaleBicubicHermite_8u32f_Asm_X64_SSE41);
 	}
 
@@ -129,7 +130,6 @@ COMPV_ERROR_CODE CompVImageScaleBicubic::process(const CompVMatPtr& imageIn, Com
 	const compv_uscalar_t inStride = imageIn->stride();
 	const compv_uscalar_t inHeight = static_cast<compv_uscalar_t>(imageIn->rows());
 	const compv_uscalar_t inWidth = static_cast<compv_uscalar_t>(imageIn->cols());
-	const uint8_t* inPtr = imageIn->ptr<const uint8_t>();
 
 	// Compute "yintMat", "yfractMat", "xintMat" and "xfractMat"
 	CompVMatPtr yintMat, yfractMat, xintMat, xfractMat;
@@ -148,6 +148,13 @@ COMPV_ERROR_CODE CompVImageScaleBicubic::process(const CompVMatPtr& imageIn, Com
 	const compv_float32_t xSV = static_cast<compv_float32_t>(inWidth) / static_cast<compv_float32_t>(outWidth - 1);
 	CompVImageScaleBicubicIndices_32s32f(yintMat->ptr<int32_t>(), yfractMat->ptr<compv_float32_t>(), &ySV, outHeight);
 	CompVImageScaleBicubicIndices_32s32f(xintMat->ptr<int32_t>(), xfractMat->ptr<compv_float32_t>(), &xSV, outWidth);
+
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Convert from 8u to 32f not MT");
+	CompVMatPtr imageIn32f;
+	COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static<uint8_t, compv_float32_t>(imageIn, &imageIn32f)));
+	const compv_float32_t* inPtr = imageIn32f->ptr<const compv_float32_t>();
+
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD for COMPV_MATH_ROUNDFU_2_NEAREST_INT at the end");
 	
 	auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
 		const int32_t yendInt32 = static_cast<int32_t>(yend);
@@ -156,10 +163,11 @@ COMPV_ERROR_CODE CompVImageScaleBicubic::process(const CompVMatPtr& imageIn, Com
 		const compv_float32_t* yfractPtr = yfractMat->ptr<const compv_float32_t>();
 		const int32_t* xintPtr = xintMat->ptr<const int32_t>();
 		const compv_float32_t* xfractPtr = xfractMat->ptr<const compv_float32_t>();
+		compv_float32_t out;
 		for (int32_t y = static_cast<int32_t>(ystart); y < yendInt32; ++y) {
 			for (int x = 0; x < outWidth; ++x) {
-				processor.bicubic_8u32f(
-					&outPtr[x],
+				processor.bicubic_32f32s(
+					&out,
 					inPtr,
 					&xintPtr[x], 
 					&xfractPtr[x], 
@@ -169,6 +177,7 @@ COMPV_ERROR_CODE CompVImageScaleBicubic::process(const CompVMatPtr& imageIn, Com
 					inHeight,
 					inStride
 				);
+				outPtr[x] = COMPV_MATH_ROUNDFU_2_NEAREST_INT(COMPV_MATH_CLIP3(0, 255.f, out), uint8_t);
 			}
 			outPtr += outStride;
 		}

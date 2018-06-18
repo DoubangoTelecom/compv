@@ -47,9 +47,9 @@ static compv_float32_t __hermite_32f(const compv_float32_t A, const compv_float3
 #endif
 }
 
-void CompVImageScaleBicubicHermite_8u32f_Intrin_SSE41(
-	uint8_t* outPtr,
-	const uint8_t* inPtr,
+void CompVImageScaleBicubicHermite_32f32s_Intrin_SSE41(
+	compv_float32_t* outPtr,
+	const compv_float32_t* inPtr,
 	const int32_t* xint1,
 	const compv_float32_t* xfract1,
 	const int32_t* yint1,
@@ -100,9 +100,9 @@ void CompVImageScaleBicubicHermite_8u32f_Intrin_SSE41(
 	const compv_float32_t c1 = __hermite_32f(inPtr[vecIdx0_mem[4]], inPtr[vecIdx0_mem[5]], inPtr[vecIdx0_mem[6]], inPtr[vecIdx0_mem[7]], xfract, xfract2, xfract3);
 	const compv_float32_t c2 = __hermite_32f(inPtr[vecIdx0_mem[8]], inPtr[vecIdx0_mem[9]], inPtr[vecIdx0_mem[10]], inPtr[vecIdx0_mem[11]], xfract, xfract2, xfract3);
 	const compv_float32_t c3 = __hermite_32f(inPtr[vecIdx0_mem[12]], inPtr[vecIdx0_mem[13]], inPtr[vecIdx0_mem[14]], inPtr[vecIdx0_mem[15]], xfract, xfract2, xfract3);
-	const compv_float32_t value = __hermite_32f(c0, c1, c2, c3, yfract, yfract2, yfract3);
+	*outPtr =  __hermite_32f(c0, c1, c2, c3, yfract, yfract2, yfract3);
 
-	*outPtr = static_cast<uint8_t>(COMPV_MATH_CLIP3(0, 255.f, value)); // SIMD(dmi): saturation (no need to clip)
+	//*outPtr = static_cast<uint8_t>(COMPV_MATH_CLIP3(0, 255.f, value)); // SIMD(dmi): saturation (no need to clip)
 }
 
 COMPV_NAMESPACE_END()

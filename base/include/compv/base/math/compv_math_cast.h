@@ -19,7 +19,7 @@ public:
 	template<typename srcType, typename dstType>
 	static COMPV_ERROR_CODE process_static(const CompVMatPtr& src, CompVMatPtrPtr dst)
 	{
-		COMPV_CHECK_EXP_RETURN(!src || !src->isRawTypeMatch<srcType>() || !dst, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		COMPV_CHECK_EXP_RETURN(!src || src->elmtInBytes() != sizeof(srcType) || !dst, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 		if (std::is_same<srcType, dstType>::value) {
 			COMPV_DEBUG_INFO_EX("CompVMathCast", "This is just a useless call. Are you drunk?")
 			COMPV_CHECK_CODE_RETURN(src->clone(dst));

@@ -17,9 +17,9 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-void CompVImageScaleBicubicHermite_8u32f_Intrin_SSE41(
-	uint8_t* outPtr,
-	const uint8_t* inPtr,
+void CompVImageScaleBicubicHermite_32f32s_Intrin_SSE41(
+	compv_float32_t* outPtr,
+	const compv_float32_t* inPtr,
 	const int32_t* xint1,
 	const compv_float32_t* xfract1,
 	const int32_t* yint1,

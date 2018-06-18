@@ -18,9 +18,9 @@ COMPV_NAMESPACE_BEGIN()
 
 struct CompVImageScaleBicubicProcessor {
 public:
-	void (*bicubic_8u32f)(
-		uint8_t* outPtr,
-		const uint8_t* inPtr,
+	void (*bicubic_32f32s)(
+		compv_float32_t* outPtr,
+		const compv_float32_t* inPtr,
 		const int32_t* xint1,
 		const compv_float32_t* xfract1,
 		const int32_t* yint1,

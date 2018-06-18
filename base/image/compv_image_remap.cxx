@@ -8,6 +8,7 @@
 #include "compv/base/image/compv_image.h"
 #include "compv/base/image/compv_image_scale_bicubic.h"
 #include "compv/base/math/compv_math.h"
+#include "compv/base/math/compv_math_cast.h"
 #include "compv/base/parallel/compv_parallel.h"
 #include "compv/base/compv_base.h"
 #include "compv/base/compv_generic_invoke.h"
@@ -169,17 +170,24 @@ private:
 		const compv_uscalar_t inStride = static_cast<compv_uscalar_t>(input->stride());
 		const compv_uscalar_t inWidth = static_cast<compv_uscalar_t>(input->cols());
 		const compv_uscalar_t inHeight = static_cast<compv_uscalar_t>(input->rows());
-		const uint8_t* inputPtr = input->ptr<uint8_t>();
 
 		CompVImageScaleBicubicProcessor processor;
 		COMPV_CHECK_CODE_RETURN(processor.init());
 
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
 
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Convert from 8u to 32f not MT");
+		CompVMatPtr input32f;
+		COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static<uint8_t, compv_float32_t>(input, &input32f)));
+		const compv_float32_t* inputPtr = input32f->ptr<const compv_float32_t>();
+
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD for COMPV_MATH_ROUNDFU_2_NEAREST_INT at the end");
+
 		auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
 			// Bilinear filtering: https://en.wikipedia.org/wiki/Bilinear_interpolation#Unit_square
 			uint8_t* outputPtr = output->ptr<uint8_t>(ystart);
 			size_t i, j, k;
+			compv_float32_t out;
 			for (j = ystart, k = (ystart * outputWidth); j < yend; ++j) {
 				for (i = 0; i < outputWidth; ++i, ++k) {
 					const T& x = mapXPtr[k];
@@ -194,8 +202,8 @@ private:
 						const int32_t xint = static_cast<int32_t>(x);
 						const compv_float32_t xfract = static_cast<compv_float32_t>(x - std::floor(x));
 
-						processor.bicubic_8u32f(
-							&outputPtr[i],
+						processor.bicubic_32f32s(
+							&out,
 							inputPtr, 
 							&xint, 
 							&xfract, 
@@ -205,6 +213,7 @@ private:
 							inHeight,
 							inStride
 						);
+						outputPtr[i] = COMPV_MATH_ROUNDFU_2_NEAREST_INT(COMPV_MATH_CLIP3(0, 255.f, out), uint8_t);
 					}
 				}
 				outputPtr += outputStride;
