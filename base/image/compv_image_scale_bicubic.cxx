@@ -26,9 +26,9 @@ COMPV_NAMESPACE_BEGIN()
 // Hermite
 static compv_float32_t __hermite_32f(const compv_float32_t A, const compv_float32_t B, const compv_float32_t C, const compv_float32_t D, const compv_float32_t t, const compv_float32_t t2, compv_float32_t t3)
 {
-	const compv_float32_t a = (A*(-0.5f))	+ (B*(1.5f))	+ (C*(-1.5f))	+ (D*(0.5f));
+	const compv_float32_t a = /*(A*(-0.5f))	+ (B*(1.5f))	+ (C*(-1.5f))	+ (D*(0.5f))*/ ((D - A) * 0.5f) + ((B - C) * 1.5f);
 	const compv_float32_t b = A				+ (B*(-2.5f))	+ (C*(2.0f))	+ (D*(-0.5f));
-	const compv_float32_t c = (A*(-0.5f))					+ (C * 0.5f);
+	const compv_float32_t c = /*(A*(-0.5f))					+ (C * 0.5f)*/ ((C - A) * 0.5f);
 	const compv_float32_t d =				B;
 	// simulate vpadd_f32 (to have same MD5)
 	const compv_float32_t s0 = (a*t3) + (c*t);

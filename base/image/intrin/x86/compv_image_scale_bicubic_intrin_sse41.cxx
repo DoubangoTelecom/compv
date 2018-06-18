@@ -21,7 +21,7 @@ static const __m128 vecCoeff3 = _mm_setr_ps(0.5f, -0.5f, 0.0f, 0.0f);
 
 static compv_float32_t __hermite1_32f_Intrin_SSE2(const __m128 A, const __m128 B, const __m128 C, const __m128 D, const __m128 ttt)
 {
-#if 1
+	// TODO(DMI): Add support for FMA
 	__m128 vec0 = _mm_mul_ps(A, vecCoeff0);
 	__m128 vec1 = _mm_mul_ps(B, vecCoeff1);
 	__m128 vec2 = _mm_mul_ps(C, vecCoeff2);
@@ -36,14 +36,6 @@ static compv_float32_t __hermite1_32f_Intrin_SSE2(const __m128 A, const __m128 B
 	vec0 = _mm_add_ps(vec0, _mm_shuffle_ps(vec0, vec0, 0x01));
 
 	return _mm_cvtss_f32(vec0);
-#else
-	const compv_float32_t a = (A*(-0.5f)) + (B*(1.5f)) + (C*(-1.5f)) + (D*(0.5f)); // -1.50000000, -1.50000000, 0.000000000, 1.00000000
-	const compv_float32_t b = A + (B*(-2.5f)) + (C*(2.0f)) + (D*(-0.5f)); // 2.00000000, 2.00000000, 0.000000000, -1.50000000
-	const compv_float32_t c = (A*(-0.5f)) + (C * 0.5f); // 0.500000000, 0.500000000, 0.000000000, -0.500000000
-	const compv_float32_t d = B; // 24.0000000, 24.0000000, 23.0000000, 21.0000000
-
-	return a*t3 + b*t2 + c*t + d;
-#endif
 }
 
 static __m128 vec05 = _mm_set1_ps(0.5f);
@@ -53,15 +45,16 @@ static __m128 vec25 = _mm_set1_ps(2.5f);
 
 static __m128 __hermite4_32f_Intrin_SSE2(const __m128 A, const __m128 B, const __m128 C, const __m128 D, const __m128 t, const __m128 t2, __m128 t3)
 {
-	__m128 vec0 = _mm_sub_ps(_mm_mul_ps(B, vec15), _mm_mul_ps(A, vec05));
-	vec0 = _mm_sub_ps(vec0, _mm_mul_ps(C, vec15));
-	vec0 = _mm_add_ps(vec0, _mm_mul_ps(D, vec05));
+	// TODO(DMI): Add support for FMA
+
+	__m128 vec0 = _mm_mul_ps(_mm_sub_ps(D, A), vec05);
+	vec0 = _mm_add_ps(vec0, _mm_mul_ps(_mm_sub_ps(B, C), vec15));
 
 	__m128 vec1 = _mm_sub_ps(A, _mm_mul_ps(B, vec25));
 	vec1 = _mm_add_ps(vec1, _mm_mul_ps(C, vec20));
 	vec1 = _mm_sub_ps(vec1, _mm_mul_ps(D, vec05));
 
-	__m128 vec2 = _mm_sub_ps(_mm_mul_ps(C, vec05), _mm_mul_ps(A, vec05));
+	__m128 vec2 = _mm_mul_ps(_mm_sub_ps(C, A), vec05);
 
 	vec0 = _mm_mul_ps(vec0, t3);
 	vec1 = _mm_mul_ps(vec1, t2);
@@ -70,17 +63,6 @@ static __m128 __hermite4_32f_Intrin_SSE2(const __m128 A, const __m128 B, const _
 	vec0 = _mm_add_ps(vec0, vec2);
 	vec1 = _mm_add_ps(vec1, B);
 	return _mm_add_ps(vec0, vec1);
-
-#if 0
-	__m128 vec0 = _mm_mul_ps(A, vecCoeff0);
-	__m128 vec1 = _mm_mul_ps(B, vecCoeff1);
-	__m128 vec2 = _mm_mul_ps(C, vecCoeff2);
-	__m128 vec3 = _mm_mul_ps(D, vecCoeff3);
-	vec0 = _mm_add_ps(vec0, vec1);
-	vec2 = _mm_add_ps(vec2, vec3);
-	vec0 = _mm_add_ps(vec0, vec2);
-	return _mm_mul_ps(vec0, _mm_setr_ps(t3, t2, t, 1.f));
-#endif
 }
 
 void CompVImageScaleBicubicHermite_32f32s_Intrin_SSE41(
@@ -97,6 +79,7 @@ void CompVImageScaleBicubicHermite_32f32s_Intrin_SSE41(
 {
 	COMPV_DEBUG_INFO_CHECK_SSE41();
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("AVX using Gather is faster");
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM code faster");
 
 	static const __m128i vecZero = _mm_setzero_si128();
 	static const __m128i vecOffset = _mm_setr_epi32(-1, 0, 1, 2);
@@ -133,13 +116,6 @@ void CompVImageScaleBicubicHermite_32f32s_Intrin_SSE41(
 	const compv_float32_t yfract2_ = yfract1_ * yfract1_;
 	const __m128 yfract = _mm_setr_ps((yfract2_ * yfract1_), yfract2_, yfract1_, 1.f);
 
-#if 0
-	const compv_float32_t c0 = __hermite1_32f_Intrin_SSE2(inPtr[vecIdx0_mem[0]], inPtr[vecIdx0_mem[1]], inPtr[vecIdx0_mem[2]], inPtr[vecIdx0_mem[3]], xfract, xfract2, xfract3); // TODO(dmi): AVX - use gather
-	const compv_float32_t c1 = __hermite1_32f_Intrin_SSE2(inPtr[vecIdx0_mem[4]], inPtr[vecIdx0_mem[5]], inPtr[vecIdx0_mem[6]], inPtr[vecIdx0_mem[7]], xfract, xfract2, xfract3);
-	const compv_float32_t c2 = __hermite1_32f_Intrin_SSE2(inPtr[vecIdx0_mem[8]], inPtr[vecIdx0_mem[9]], inPtr[vecIdx0_mem[10]], inPtr[vecIdx0_mem[11]], xfract, xfract2, xfract3);
-	const compv_float32_t c3 = __hermite1_32f_Intrin_SSE2(inPtr[vecIdx0_mem[12]], inPtr[vecIdx0_mem[13]], inPtr[vecIdx0_mem[14]], inPtr[vecIdx0_mem[15]], xfract, xfract2, xfract3);
-	*outPtr = __hermite1_32f_Intrin_SSE2(c0, c1, c2, c3, yfract, yfract2, yfract3);
-#else
 	const __m128 cc = __hermite4_32f_Intrin_SSE2(
 		_mm_setr_ps(inPtr[vecIdx0_mem[0]], inPtr[vecIdx0_mem[4]], inPtr[vecIdx0_mem[8]], inPtr[vecIdx0_mem[12]]),
 		_mm_setr_ps(inPtr[vecIdx0_mem[1]], inPtr[vecIdx0_mem[5]], inPtr[vecIdx0_mem[9]], inPtr[vecIdx0_mem[13]]),
@@ -156,7 +132,6 @@ void CompVImageScaleBicubicHermite_32f32s_Intrin_SSE41(
 		_mm_shuffle_ps(cc, cc, 0xFF),
 		yfract
 	);
-#endif
 }
 
 COMPV_NAMESPACE_END()
