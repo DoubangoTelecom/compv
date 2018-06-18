@@ -19,31 +19,67 @@ static const __m128 vecCoeff1 = _mm_setr_ps(1.5f, -2.5f, 0.f, 1.0f);
 static const __m128 vecCoeff2 = _mm_setr_ps(-1.5f, 2.0f, 0.5f, 0.0f);
 static const __m128 vecCoeff3 = _mm_setr_ps(0.5f, -0.5f, 0.0f, 0.0f);
 
-// Hermite
-static compv_float32_t __hermite_32f(const compv_float32_t A, const compv_float32_t B, const compv_float32_t C, const compv_float32_t D, const compv_float32_t t, const compv_float32_t t2, compv_float32_t t3)
+static compv_float32_t __hermite1_32f_Intrin_SSE2(const __m128 A, const __m128 B, const __m128 C, const __m128 D, const __m128 ttt)
 {
-	__m128 vec0 = _mm_mul_ps(_mm_set1_ps(A), vecCoeff0);
-	__m128 vec1 = _mm_mul_ps(_mm_set1_ps(B), vecCoeff1);
-	__m128 vec2 = _mm_mul_ps(_mm_set1_ps(C), vecCoeff2);
-	__m128 vec3 = _mm_mul_ps(_mm_set1_ps(D), vecCoeff3);
+#if 1
+	__m128 vec0 = _mm_mul_ps(A, vecCoeff0);
+	__m128 vec1 = _mm_mul_ps(B, vecCoeff1);
+	__m128 vec2 = _mm_mul_ps(C, vecCoeff2);
+	__m128 vec3 = _mm_mul_ps(D, vecCoeff3);
 	vec0 = _mm_add_ps(vec0, vec1);
 	vec2 = _mm_add_ps(vec2, vec3);
 	vec0 = _mm_add_ps(vec0, vec2);
-	vec0 = _mm_mul_ps(vec0, _mm_setr_ps(t3, t2, t, 1.f));
+	vec0 = _mm_mul_ps(vec0, ttt);
 
 	// ARM: vpadd_f32
 	vec0 = _mm_add_ps(vec0, _mm_shuffle_ps(vec0, vec0, 0x0E));
 	vec0 = _mm_add_ps(vec0, _mm_shuffle_ps(vec0, vec0, 0x01));
 
 	return _mm_cvtss_f32(vec0);
-
-#if 0
-	const compv_float32_t a = (A*(-0.5f)) + (B*(1.5f)) + (C*(-1.5f)) + (D*(0.5f));
-	const compv_float32_t b = A + (B*(-2.5f)) + (C*(2.0f)) + (D*(-0.5f));
-	const compv_float32_t c = (A*(-0.5f)) + (C * 0.5f);
-	const compv_float32_t d = B;
+#else
+	const compv_float32_t a = (A*(-0.5f)) + (B*(1.5f)) + (C*(-1.5f)) + (D*(0.5f)); // -1.50000000, -1.50000000, 0.000000000, 1.00000000
+	const compv_float32_t b = A + (B*(-2.5f)) + (C*(2.0f)) + (D*(-0.5f)); // 2.00000000, 2.00000000, 0.000000000, -1.50000000
+	const compv_float32_t c = (A*(-0.5f)) + (C * 0.5f); // 0.500000000, 0.500000000, 0.000000000, -0.500000000
+	const compv_float32_t d = B; // 24.0000000, 24.0000000, 23.0000000, 21.0000000
 
 	return a*t3 + b*t2 + c*t + d;
+#endif
+}
+
+static __m128 vec05 = _mm_set1_ps(0.5f);
+static __m128 vec15 = _mm_set1_ps(1.5f);
+static __m128 vec20 = _mm_set1_ps(2.0f);
+static __m128 vec25 = _mm_set1_ps(2.5f);
+
+static __m128 __hermite4_32f_Intrin_SSE2(const __m128 A, const __m128 B, const __m128 C, const __m128 D, const __m128 t, const __m128 t2, __m128 t3)
+{
+	__m128 vec0 = _mm_sub_ps(_mm_mul_ps(B, vec15), _mm_mul_ps(A, vec05));
+	vec0 = _mm_sub_ps(vec0, _mm_mul_ps(C, vec15));
+	vec0 = _mm_add_ps(vec0, _mm_mul_ps(D, vec05));
+
+	__m128 vec1 = _mm_sub_ps(A, _mm_mul_ps(B, vec25));
+	vec1 = _mm_add_ps(vec1, _mm_mul_ps(C, vec20));
+	vec1 = _mm_sub_ps(vec1, _mm_mul_ps(D, vec05));
+
+	__m128 vec2 = _mm_sub_ps(_mm_mul_ps(C, vec05), _mm_mul_ps(A, vec05));
+
+	vec0 = _mm_mul_ps(vec0, t3);
+	vec1 = _mm_mul_ps(vec1, t2);
+	vec2 = _mm_mul_ps(vec2, t);
+
+	vec0 = _mm_add_ps(vec0, vec2);
+	vec1 = _mm_add_ps(vec1, B);
+	return _mm_add_ps(vec0, vec1);
+
+#if 0
+	__m128 vec0 = _mm_mul_ps(A, vecCoeff0);
+	__m128 vec1 = _mm_mul_ps(B, vecCoeff1);
+	__m128 vec2 = _mm_mul_ps(C, vecCoeff2);
+	__m128 vec3 = _mm_mul_ps(D, vecCoeff3);
+	vec0 = _mm_add_ps(vec0, vec1);
+	vec2 = _mm_add_ps(vec2, vec3);
+	vec0 = _mm_add_ps(vec0, vec2);
+	return _mm_mul_ps(vec0, _mm_setr_ps(t3, t2, t, 1.f));
 #endif
 }
 
@@ -89,20 +125,38 @@ void CompVImageScaleBicubicHermite_32f32s_Intrin_SSE41(
 	_mm_store_si128(reinterpret_cast<__m128i*>(&vecIdx0_mem[8]), vecIdx2);
 	_mm_store_si128(reinterpret_cast<__m128i*>(&vecIdx0_mem[12]), vecIdx3);
 
-	const compv_float32_t& xfract = *xfract1;
-	const compv_float32_t& yfract = *yfract1;
-	const compv_float32_t xfract2 = (xfract * xfract);
-	const compv_float32_t xfract3 = (xfract2 * xfract);
-	const compv_float32_t yfract2 = (yfract * yfract);
-	const compv_float32_t yfract3 = (yfract2 * yfract);
+	const __m128 xfract = _mm_set1_ps(*xfract1);
+	const __m128 xfract2 = _mm_mul_ps(xfract, xfract);
+	const __m128 xfract3 = _mm_mul_ps(xfract2, xfract);
 
-	const compv_float32_t c0 = __hermite_32f(inPtr[vecIdx0_mem[0]], inPtr[vecIdx0_mem[1]], inPtr[vecIdx0_mem[2]], inPtr[vecIdx0_mem[3]], xfract, xfract2, xfract3); // TODO(dmi): AVX - use gather
-	const compv_float32_t c1 = __hermite_32f(inPtr[vecIdx0_mem[4]], inPtr[vecIdx0_mem[5]], inPtr[vecIdx0_mem[6]], inPtr[vecIdx0_mem[7]], xfract, xfract2, xfract3);
-	const compv_float32_t c2 = __hermite_32f(inPtr[vecIdx0_mem[8]], inPtr[vecIdx0_mem[9]], inPtr[vecIdx0_mem[10]], inPtr[vecIdx0_mem[11]], xfract, xfract2, xfract3);
-	const compv_float32_t c3 = __hermite_32f(inPtr[vecIdx0_mem[12]], inPtr[vecIdx0_mem[13]], inPtr[vecIdx0_mem[14]], inPtr[vecIdx0_mem[15]], xfract, xfract2, xfract3);
-	*outPtr =  __hermite_32f(c0, c1, c2, c3, yfract, yfract2, yfract3);
+	const compv_float32_t& yfract1_ = *yfract1;
+	const compv_float32_t yfract2_ = yfract1_ * yfract1_;
+	const __m128 yfract = _mm_setr_ps((yfract2_ * yfract1_), yfract2_, yfract1_, 1.f);
 
-	//*outPtr = static_cast<uint8_t>(COMPV_MATH_CLIP3(0, 255.f, value)); // SIMD(dmi): saturation (no need to clip)
+#if 0
+	const compv_float32_t c0 = __hermite1_32f_Intrin_SSE2(inPtr[vecIdx0_mem[0]], inPtr[vecIdx0_mem[1]], inPtr[vecIdx0_mem[2]], inPtr[vecIdx0_mem[3]], xfract, xfract2, xfract3); // TODO(dmi): AVX - use gather
+	const compv_float32_t c1 = __hermite1_32f_Intrin_SSE2(inPtr[vecIdx0_mem[4]], inPtr[vecIdx0_mem[5]], inPtr[vecIdx0_mem[6]], inPtr[vecIdx0_mem[7]], xfract, xfract2, xfract3);
+	const compv_float32_t c2 = __hermite1_32f_Intrin_SSE2(inPtr[vecIdx0_mem[8]], inPtr[vecIdx0_mem[9]], inPtr[vecIdx0_mem[10]], inPtr[vecIdx0_mem[11]], xfract, xfract2, xfract3);
+	const compv_float32_t c3 = __hermite1_32f_Intrin_SSE2(inPtr[vecIdx0_mem[12]], inPtr[vecIdx0_mem[13]], inPtr[vecIdx0_mem[14]], inPtr[vecIdx0_mem[15]], xfract, xfract2, xfract3);
+	*outPtr = __hermite1_32f_Intrin_SSE2(c0, c1, c2, c3, yfract, yfract2, yfract3);
+#else
+	const __m128 cc = __hermite4_32f_Intrin_SSE2(
+		_mm_setr_ps(inPtr[vecIdx0_mem[0]], inPtr[vecIdx0_mem[4]], inPtr[vecIdx0_mem[8]], inPtr[vecIdx0_mem[12]]),
+		_mm_setr_ps(inPtr[vecIdx0_mem[1]], inPtr[vecIdx0_mem[5]], inPtr[vecIdx0_mem[9]], inPtr[vecIdx0_mem[13]]),
+		_mm_setr_ps(inPtr[vecIdx0_mem[2]], inPtr[vecIdx0_mem[6]], inPtr[vecIdx0_mem[10]], inPtr[vecIdx0_mem[14]]),
+		_mm_setr_ps(inPtr[vecIdx0_mem[3]], inPtr[vecIdx0_mem[7]], inPtr[vecIdx0_mem[11]], inPtr[vecIdx0_mem[15]]),
+		xfract,
+		xfract2,
+		xfract3
+	);
+	*outPtr = __hermite1_32f_Intrin_SSE2(
+		_mm_shuffle_ps(cc, cc, 0x00),
+		_mm_shuffle_ps(cc, cc, 0x55),
+		_mm_shuffle_ps(cc, cc, 0xAA),
+		_mm_shuffle_ps(cc, cc, 0xFF),
+		yfract
+	);
+#endif
 }
 
 COMPV_NAMESPACE_END()
