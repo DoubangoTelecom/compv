@@ -25,8 +25,8 @@ public:
 		const compv_float32_t* xfract1,
 		const int32_t* yint1,
 		const compv_float32_t* yfract1,
-		const compv_uscalar_t inWidth,
-		const compv_uscalar_t inHeight,
+		const compv_uscalar_t inWidthMinus1,
+		const compv_uscalar_t inHeightMinus1,
 		const compv_uscalar_t inStride
 	) = nullptr;
 	COMPV_ERROR_CODE init();

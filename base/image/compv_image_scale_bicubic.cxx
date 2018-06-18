@@ -11,6 +11,7 @@
 #include "compv/base/compv_cpu.h"
 
 #include "compv/base/image/intrin/x86/compv_image_scale_bicubic_intrin_sse41.h"
+#include "compv/base/image/intrin/x86/compv_image_scale_bicubic_intrin_avx2.h"
 
 
 // Some documentation:
@@ -43,25 +44,25 @@ static void CompVImageScaleBicubicHermite_32f32s_C(
 	const compv_float32_t* xfract1,
 	const int32_t* yint1, 
 	const compv_float32_t* yfract1,
-	const compv_uscalar_t inWidth,
-	const compv_uscalar_t inHeight,
+	const compv_uscalar_t inWidthMinus1,
+	const compv_uscalar_t inHeightMinus1,
 	const compv_uscalar_t inStride
 )
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
 
-	const compv_scalar_t inWidthMinus1 = static_cast<compv_scalar_t>(inWidth - 1);
-	const compv_scalar_t inHeightMinus1 = static_cast<compv_scalar_t>(inHeight - 1);
+	const compv_scalar_t inWidthMinus1_ = static_cast<compv_scalar_t>(inWidthMinus1);
+	const compv_scalar_t inHeightMinus1_ = static_cast<compv_scalar_t>(inHeightMinus1);
 	compv_scalar_t x0 = (*xint1 - 1), x1 = (x0 + 1), x2 = (x0 + 2), x3 = (x0 + 3);
 	compv_scalar_t y0 = (*yint1 - 1), y1 = (y0 + 1), y2 = (y0 + 2), y3 = (y0 + 3);
-	x0 = COMPV_MATH_CLIP3(0, inWidthMinus1, x0); // SIMD: max(0, min(x0, inWidthMinus1))
-	x1 = COMPV_MATH_CLIP3(0, inWidthMinus1, x1);
-	x2 = COMPV_MATH_CLIP3(0, inWidthMinus1, x2);
-	x3 = COMPV_MATH_CLIP3(0, inWidthMinus1, x3);
-	y0 = COMPV_MATH_CLIP3(0, inHeightMinus1, y0);
-	y1 = COMPV_MATH_CLIP3(0, inHeightMinus1, y1);
-	y2 = COMPV_MATH_CLIP3(0, inHeightMinus1, y2);
-	y3 = COMPV_MATH_CLIP3(0, inHeightMinus1, y3);
+	x0 = COMPV_MATH_CLIP3(0, inWidthMinus1_, x0); // SIMD: max(0, min(x0, inWidthMinus1))
+	x1 = COMPV_MATH_CLIP3(0, inWidthMinus1_, x1);
+	x2 = COMPV_MATH_CLIP3(0, inWidthMinus1_, x2);
+	x3 = COMPV_MATH_CLIP3(0, inWidthMinus1_, x3);
+	y0 = COMPV_MATH_CLIP3(0, inHeightMinus1_, y0);
+	y1 = COMPV_MATH_CLIP3(0, inHeightMinus1_, y1);
+	y2 = COMPV_MATH_CLIP3(0, inHeightMinus1_, y2);
+	y3 = COMPV_MATH_CLIP3(0, inHeightMinus1_, y3);
 
 	const compv_float32_t* p0 = &inPtr[y0 * inStride];
 	const compv_float32_t* p1 = &inPtr[y1 * inStride];
@@ -104,6 +105,10 @@ COMPV_ERROR_CODE CompVImageScaleBicubicProcessor::init()
 		COMPV_EXEC_IFDEF_INTRIN_X86(bicubic_32f32s = CompVImageScaleBicubicHermite_32f32s_Intrin_SSE41);
 		//COMPV_EXEC_IFDEF_ASM_X64(bicubic_8u32f = CompVImageScaleBicubicHermite_8u32f_Asm_X64_SSE41);
 	}
+	if (CompVCpu::isEnabled(kCpuFlagAVX2)) {
+		COMPV_EXEC_IFDEF_INTRIN_X86(bicubic_32f32s = CompVImageScaleBicubicHermite_32f32s_Intrin_AVX2);
+		//COMPV_EXEC_IFDEF_ASM_X64(bicubic_8u32f = CompVImageScaleBicubicHermite_8u32f_Asm_X64_AVX2);
+	}
 
 #elif COMPV_ARCH_ARM
 #endif
@@ -130,6 +135,8 @@ COMPV_ERROR_CODE CompVImageScaleBicubic::process(const CompVMatPtr& imageIn, Com
 	const compv_uscalar_t inStride = imageIn->stride();
 	const compv_uscalar_t inHeight = static_cast<compv_uscalar_t>(imageIn->rows());
 	const compv_uscalar_t inWidth = static_cast<compv_uscalar_t>(imageIn->cols());
+	const compv_uscalar_t inWidthMinus1 = inWidth - 1;
+	const compv_uscalar_t inHeightMinus1 = inHeight - 1;
 
 	// Compute "yintMat", "yfractMat", "xintMat" and "xfractMat"
 	CompVMatPtr yintMat, yfractMat, xintMat, xfractMat;
@@ -173,8 +180,8 @@ COMPV_ERROR_CODE CompVImageScaleBicubic::process(const CompVMatPtr& imageIn, Com
 					&xfractPtr[x], 
 					&yintPtr[y], 
 					&yfractPtr[y],
-					inWidth,
-					inHeight,
+					inWidthMinus1,
+					inHeightMinus1,
 					inStride
 				);
 				outPtr[x] = COMPV_MATH_ROUNDFU_2_NEAREST_INT(COMPV_MATH_CLIP3(0, 255.f, out), uint8_t);

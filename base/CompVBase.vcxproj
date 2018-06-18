@@ -96,6 +96,8 @@
     <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_conv_to_rgbx_intrin_avx2.h" />
     <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_conv_to_rgbx_intrin_sse2.h" />
     <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_conv_to_rgbx_intrin_ssse3.h" />
+    <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_scale_bicubic_intrin_avx2.h" />
+    <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_scale_bicubic_intrin_sse2.h" />
     <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_scale_bicubic_intrin_sse41.h" />
     <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_scale_bilinear_intrin_avx2.h" />
     <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_scale_bilinear_intrin_sse41.h" />
@@ -327,6 +329,12 @@
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <ClCompile Include="image\intrin\x86\compv_image_conv_to_rgbx_intrin_ssse3.cxx" />
+    <ClCompile Include="image\intrin\x86\compv_image_scale_bicubic_intrin_avx2.cxx">
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+    </ClCompile>
     <ClCompile Include="image\intrin\x86\compv_image_scale_bicubic_intrin_sse41.cxx">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>

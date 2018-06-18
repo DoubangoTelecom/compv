@@ -4,18 +4,55 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#include "compv/base/image/intrin/x86/compv_image_scale_bicubic_intrin_sse41.h"
+#include "compv/base/image/intrin/x86/compv_image_scale_bicubic_intrin_avx2.h"
 #include "compv/base/image/intrin/x86/compv_image_scale_bicubic_intrin_sse2.h"
 
 #if COMPV_ARCH_X86 && COMPV_INTRINSIC
-#include "compv/base/intrin/x86/compv_intrin_sse.h"
+#include "compv/base/intrin/x86/compv_intrin_avx.h"
 #include "compv/base/compv_simd_globals.h"
 #include "compv/base/compv_debug.h"
 #include "compv/base/math/compv_math.h"
 
 COMPV_NAMESPACE_BEGIN()
 
-void CompVImageScaleBicubicHermite_32f32s_Intrin_SSE41(
+#define HERMITE1_32F_INTRIN_FMA3_AVX2(A, B, C, D, ttt, ret) { \
+	static const __m128 vecCoeff0 = _mm_setr_ps(-0.5f, 1.f, -0.5f, 0.0f); \
+	static const __m128 vecCoeff1 = _mm_setr_ps(1.5f, -2.5f, 0.f, 1.0f); \
+	static const __m128 vecCoeff2 = _mm_setr_ps(-1.5f, 2.0f, 0.5f, 0.0f); \
+	static const __m128 vecCoeff3 = _mm_setr_ps(0.5f, -0.5f, 0.0f, 0.0f); \
+	const __m128 vec1 = _mm_mul_ps(B, vecCoeff1); \
+	const __m128 vec3 = _mm_mul_ps(D, vecCoeff3); \
+	__m128 vec0 = _mm_fmadd_ps(A, vecCoeff0, vec1); \
+	const __m128 vec2 = _mm_fmadd_ps(C, vecCoeff2, vec3); \
+	vec0 = _mm_add_ps(vec0, vec2); \
+	vec0 = _mm_mul_ps(vec0, ttt); \
+	/* ARM: vpadd_f32 */  \
+	vec0 = _mm_add_ps(vec0, _mm_shuffle_ps(vec0, vec0, 0x0E)); \
+	vec0 = _mm_add_ps(vec0, _mm_shuffle_ps(vec0, vec0, 0x01)); \
+	ret = _mm_cvtss_f32(vec0); \
+}
+
+#define HERMITE4_32F_INTRIN_FMA3_AVX2(A, B, C, D, t, t2, t3, ret) { \
+	static __m128 vec05m = _mm_set1_ps(-0.5f); \
+	static __m128 vec15 = _mm_set1_ps(1.5f); \
+	static __m128 vec20 = _mm_set1_ps(2.0f); \
+	static __m128 vec25m = _mm_set1_ps(-2.5f); \
+	ret = _mm_mul_ps(_mm_sub_ps(A, D), vec05m); \
+	ret = _mm_fmadd_ps(_mm_sub_ps(B, C), vec15, ret); \
+	__m128 vec1 = _mm_fmadd_ps(B, vec25m, A); \
+	vec1 = _mm_fmadd_ps(C, vec20, vec1); \
+	vec1 = _mm_fmadd_ps(D, vec05m, vec1); \
+	__m128 vec2 = _mm_mul_ps(_mm_sub_ps(A, C), vec05m); \
+	vec2 = _mm_mul_ps(vec2, t); \
+	ret = _mm_fmadd_ps(ret, t3, vec2); \
+	vec1 = _mm_fmadd_ps(vec1, t2, B); \
+	ret = _mm_add_ps(ret, vec1); \
+}
+
+#if defined(__INTEL_COMPILER)
+#	pragma intel optimization_parameter target_arch=avx2
+#endif
+void CompVImageScaleBicubicHermite_32f32s_Intrin_AVX2(
 	compv_float32_t* outPtr,
 	const compv_float32_t* inPtr,
 	const int32_t* xint1,
@@ -27,9 +64,10 @@ void CompVImageScaleBicubicHermite_32f32s_Intrin_SSE41(
 	const compv_uscalar_t inStride
 )
 {
-	COMPV_DEBUG_INFO_CHECK_SSE41();
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("AVX using Gather is faster");
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM code faster");
+	COMPV_DEBUG_INFO_CHECK_AVX2();
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM code faster (FMA3)");
+
+	_mm256_zeroupper();
 
 	static const __m128i vecZero = _mm_setzero_si128();
 	static const __m128i vecOffset = _mm_setr_epi32(-1, 0, 1, 2);
@@ -51,13 +89,6 @@ void CompVImageScaleBicubicHermite_32f32s_Intrin_SSE41(
 	const __m128i vecIdx2 = _mm_add_epi32(vecY, _mm_shuffle_epi32(vecX, 0xAA));
 	const __m128i vecIdx3 = _mm_add_epi32(vecY, _mm_shuffle_epi32(vecX, 0xFF));
 
-	// TODO(dmi): AVX - use gather
-	COMPV_ALIGN_SSE() int32_t vecIdx0_mem[4 * 4];
-	_mm_store_si128(reinterpret_cast<__m128i*>(&vecIdx0_mem[0]), vecIdx0);
-	_mm_store_si128(reinterpret_cast<__m128i*>(&vecIdx0_mem[4]), vecIdx1);
-	_mm_store_si128(reinterpret_cast<__m128i*>(&vecIdx0_mem[8]), vecIdx2);
-	_mm_store_si128(reinterpret_cast<__m128i*>(&vecIdx0_mem[12]), vecIdx3);
-
 	const __m128 xfract = _mm_set1_ps(*xfract1);
 	const __m128 xfract2 = _mm_mul_ps(xfract, xfract);
 	const __m128 xfract3 = _mm_mul_ps(xfract2, xfract);
@@ -66,10 +97,10 @@ void CompVImageScaleBicubicHermite_32f32s_Intrin_SSE41(
 	const compv_float32_t yfract2_ = yfract1_ * yfract1_;
 	const __m128 yfract = _mm_setr_ps((yfract2_ * yfract1_), yfract2_, yfract1_, 1.f);
 
-	const __m128 AA = _mm_setr_ps(inPtr[vecIdx0_mem[0]], inPtr[vecIdx0_mem[1]], inPtr[vecIdx0_mem[2]], inPtr[vecIdx0_mem[3]]);
-	const __m128 BB = _mm_setr_ps(inPtr[vecIdx0_mem[4]], inPtr[vecIdx0_mem[5]], inPtr[vecIdx0_mem[6]], inPtr[vecIdx0_mem[7]]);
-	const __m128 CC = _mm_setr_ps(inPtr[vecIdx0_mem[8]], inPtr[vecIdx0_mem[9]], inPtr[vecIdx0_mem[10]], inPtr[vecIdx0_mem[11]]);
-	const __m128 DD = _mm_setr_ps(inPtr[vecIdx0_mem[12]], inPtr[vecIdx0_mem[13]], inPtr[vecIdx0_mem[14]], inPtr[vecIdx0_mem[15]]);
+	const __m128 AA = _mm_i32gather_ps(inPtr, vecIdx0, sizeof(compv_float32_t));
+	const __m128 BB = _mm_i32gather_ps(inPtr, vecIdx1, sizeof(compv_float32_t));
+	const __m128 CC = _mm_i32gather_ps(inPtr, vecIdx2, sizeof(compv_float32_t));
+	const __m128 DD = _mm_i32gather_ps(inPtr, vecIdx3, sizeof(compv_float32_t));
 	__m128 EE;
 	HERMITE4_32F_INTRIN_SSE2(
 		AA, BB, CC, DD,
@@ -84,6 +115,8 @@ void CompVImageScaleBicubicHermite_32f32s_Intrin_SSE41(
 		yfract,
 		*outPtr
 	);
+
+	_mm256_zeroupper();
 }
 
 COMPV_NAMESPACE_END()

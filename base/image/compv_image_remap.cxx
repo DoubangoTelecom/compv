@@ -168,8 +168,8 @@ private:
 		const size_t outputHeight = output->rows();
 		const size_t  outputStride = output->stride();
 		const compv_uscalar_t inStride = static_cast<compv_uscalar_t>(input->stride());
-		const compv_uscalar_t inWidth = static_cast<compv_uscalar_t>(input->cols());
-		const compv_uscalar_t inHeight = static_cast<compv_uscalar_t>(input->rows());
+		const compv_uscalar_t inWidthMinus1 = static_cast<compv_uscalar_t>(input->cols() - 1);
+		const compv_uscalar_t inHeightMinus1 = static_cast<compv_uscalar_t>(input->rows() - 1);
 
 		CompVImageScaleBicubicProcessor processor;
 		COMPV_CHECK_CODE_RETURN(processor.init());
@@ -209,8 +209,8 @@ private:
 							&xfract, 
 							&yint, 
 							&yfract,
-							inWidth,
-							inHeight,
+							inWidthMinus1,
+							inHeightMinus1,
 							inStride
 						);
 						outputPtr[i] = COMPV_MATH_ROUNDFU_2_NEAREST_INT(COMPV_MATH_CLIP3(0, 255.f, out), uint8_t);
