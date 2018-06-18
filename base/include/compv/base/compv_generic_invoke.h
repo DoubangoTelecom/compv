@@ -12,7 +12,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-#define CompVGenericCheckVoid(code)
+#define CompVGenericCheckVoid(code)	(code)
 #define CompVGenericCheckCode(code) COMPV_CHECK_CODE_RETURN((code))
 
 #define CompVGenericInvokeRawType(subType, func, check, ...) \
