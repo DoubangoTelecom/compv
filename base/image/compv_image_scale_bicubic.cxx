@@ -89,11 +89,10 @@ static void CompVImageScaleBicubicIndices_32s32f_C(int32_t* intergral, compv_flo
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPGPU implementation could be found");
 	const compv_float32_t& sv = *sv1;
-	compv_float32_t v = -0.5f;
 	for (compv_uscalar_t i = 0; i < outSize; ++i) {
-		intergral[i] = static_cast<int32_t>(v);
-		fraction[i] = static_cast<compv_float32_t>(v - std::floor(v));
-		v += sv;
+		const compv_float32_t fract = static_cast<compv_float32_t>((i + 0.5f) * sv - 0.5f);
+		intergral[i] = static_cast<int32_t>(std::floor(fract));
+		fraction[i] = static_cast<compv_float32_t>(fract - intergral[i]);
 	}
 }
 
@@ -102,11 +101,11 @@ COMPV_ERROR_CODE CompVImageScaleBicubicProcessor::init()
 	bicubic_32f32s = CompVImageScaleBicubicHermite_32f32s_C;
 #if COMPV_ARCH_X86
 	if (CompVCpu::isEnabled(kCpuFlagSSE41)) {
-		COMPV_EXEC_IFDEF_INTRIN_X86(bicubic_32f32s = CompVImageScaleBicubicHermite_32f32s_Intrin_SSE41);
+		//--COMPV_EXEC_IFDEF_INTRIN_X86(bicubic_32f32s = CompVImageScaleBicubicHermite_32f32s_Intrin_SSE41);
 		//COMPV_EXEC_IFDEF_ASM_X64(bicubic_8u32f = CompVImageScaleBicubicHermite_8u32f_Asm_X64_SSE41);
 	}
 	if (CompVCpu::isEnabled(kCpuFlagAVX2)) {
-		COMPV_EXEC_IFDEF_INTRIN_X86(bicubic_32f32s = CompVImageScaleBicubicHermite_32f32s_Intrin_AVX2);
+		//--COMPV_EXEC_IFDEF_INTRIN_X86(bicubic_32f32s = CompVImageScaleBicubicHermite_32f32s_Intrin_AVX2);
 		//COMPV_EXEC_IFDEF_ASM_X64(bicubic_8u32f = CompVImageScaleBicubicHermite_8u32f_Asm_X64_AVX2);
 	}
 

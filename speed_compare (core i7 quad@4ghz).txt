@@ -74,7 +74,7 @@ Remarque: We're 281% (almost #3 times) faster.
 OpenCV uses SSE2 and multithreading and we're faster even with plain c++ (without sse or avx).
 
 === Image scaling (Bicubic) from (1282, 720) to (1064, 597), (#10k times) ===
-CompV: 
+CompV: ---
 OpenCV: 6671.ms(full optiz)
 Remarque: 
 Our Bicubic implementation uses more computations (more multiplications) than what OpenCV is doing. 
@@ -82,7 +82,7 @@ We have better result compared to OpenCV. OpenCV's Bicubic implementation produc
 OpenCV uses SSE2 and multithreading.
 
 === Image rotation (Bicubic) from (1282, 720) (45°), (#10k times) ===
-CompV: 
+CompV: ---
 OpenCV: 74464.ms(full optiz)
 Remarque: 
 
