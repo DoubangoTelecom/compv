@@ -18,7 +18,7 @@ COMPV_NAMESPACE_BEGIN()
 
 struct CompVImageScaleBicubicProcessor {
 public:
-	void (*bicubic_32f32s)(
+	void (*NOT_OPTIMIZ_hermite_32f32s)(
 		compv_float32_t* outPtr,
 		const compv_float32_t* inPtr,
 		const int32_t* xint1,
@@ -28,6 +28,23 @@ public:
 		const compv_uscalar_t inWidthMinus1,
 		const compv_uscalar_t inHeightMinus1,
 		const compv_uscalar_t inStride
+	) = nullptr;
+	void (*postprocessrow_32f32s)(
+		compv_float32_t* outPtr,
+		const compv_float32_t* inPtr,
+		const int32_t* xint4,
+		const compv_float32_t* xfract4,
+		const int32_t* yint4,
+		const compv_float32_t* yfract4,
+		const compv_uscalar_t rowCount
+	) = nullptr;
+	void (*preprocess_32s32f)(
+		int32_t* intergral,
+		compv_float32_t* fraction,
+		const compv_float32_t* sv1,
+		const compv_uscalar_t outSize,
+		const compv_scalar_t intergralMax,
+		const compv_scalar_t intergralStride
 	) = nullptr;
 	COMPV_ERROR_CODE init();
 };

@@ -29,6 +29,16 @@ void CompVImageScaleBicubicHermite_32f32s_Intrin_AVX2(
 	const compv_uscalar_t inStride
 );
 
+void CompVImageScaleBicubicPostProcessRow_32f32s_Intrin_AVX2(
+	compv_float32_t* outPtr,
+	const compv_float32_t* inPtr,
+	COMPV_ALIGNED(SSE) const int32_t* xint4,
+	COMPV_ALIGNED(SSE) const compv_float32_t* xfract4,
+	COMPV_ALIGNED(SSE) const int32_t* yint4,
+	COMPV_ALIGNED(SSE) const compv_float32_t* yfract4,
+	const compv_uscalar_t rowCount
+);
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */

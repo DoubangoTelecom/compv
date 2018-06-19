@@ -29,7 +29,7 @@ COMPV_NAMESPACE_BEGIN()
 	/* ARM: vpadd_f32 */  \
 	vec0 = _mm_add_ps(vec0, _mm_shuffle_ps(vec0, vec0, 0x0E)); \
 	vec0 = _mm_add_ps(vec0, _mm_shuffle_ps(vec0, vec0, 0x01)); \
-	ret = _mm_cvtss_f32(vec0); \
+	_mm_store_ss(&ret, vec0); \
 }
 
 #define HERMITE4_32F_INTRIN_FMA3_AVX2(A, B, C, D, t, t2, t3, ret) { \
@@ -65,7 +65,10 @@ void CompVImageScaleBicubicHermite_32f32s_Intrin_AVX2(
 )
 {
 	COMPV_DEBUG_INFO_CHECK_AVX2();
+#if 0
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM code faster (FMA3)");
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No ASM implementation");
+#endif
 
 	_mm256_zeroupper();
 
@@ -115,6 +118,73 @@ void CompVImageScaleBicubicHermite_32f32s_Intrin_AVX2(
 		yfract,
 		*outPtr
 	);
+
+	_mm256_zeroupper();
+}
+
+#if defined(__INTEL_COMPILER)
+#	pragma intel optimization_parameter target_arch=avx2
+#endif
+void CompVImageScaleBicubicPostProcessRow_32f32s_Intrin_AVX2(
+	compv_float32_t* outPtr,
+	const compv_float32_t* inPtr,
+	COMPV_ALIGNED(SSE) const int32_t* xint4,
+	COMPV_ALIGNED(SSE) const compv_float32_t* xfract4,
+	COMPV_ALIGNED(SSE) const int32_t* yint4,
+	COMPV_ALIGNED(SSE) const compv_float32_t* yfract4,
+	const compv_uscalar_t rowCount
+)
+{
+	COMPV_DEBUG_INFO_CHECK_AVX2();
+#if 0
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No ASM implementation");
+#endif
+
+	_mm256_zeroupper();
+
+	const compv_float32_t* p0 = &inPtr[yint4[0]];
+	const compv_float32_t* p1 = &inPtr[yint4[1]];
+	const compv_float32_t* p2 = &inPtr[yint4[2]];
+	const compv_float32_t* p3 = &inPtr[yint4[3]];
+
+	__m128 AA, BB, CC, DD, EE;
+	const __m128 yfract = _mm_load_ps(yfract4);
+
+	for (compv_uscalar_t i = 0; i < rowCount; ++i, xint4 += 4, xfract4 += 4) {
+		const int32_t& x0 = xint4[0];
+		if ((xint4[3] - x0) == 3) {
+			AA = _mm_loadu_ps(&p0[x0]);
+			BB = _mm_loadu_ps(&p1[x0]);
+			CC = _mm_loadu_ps(&p2[x0]);
+			DD = _mm_loadu_ps(&p3[x0]);
+		}
+		else {
+			const __m128i vecXint4 = _mm_load_si128(reinterpret_cast<const __m128i*>(xint4));
+			AA = _mm_i32gather_ps(p0, vecXint4, sizeof(compv_float32_t));
+			BB = _mm_i32gather_ps(p1, vecXint4, sizeof(compv_float32_t));
+			CC = _mm_i32gather_ps(p2, vecXint4, sizeof(compv_float32_t));
+			DD = _mm_i32gather_ps(p3, vecXint4, sizeof(compv_float32_t));
+		}
+		_MM_TRANSPOSE4_PS(AA, BB, CC, DD);
+
+		const __m128 xfract = _mm_load_ps(xfract4);
+		const __m128 xfract3 = _mm_shuffle_ps(xfract, xfract, 0x00);
+		const __m128 xfract2 = _mm_shuffle_ps(xfract, xfract, 0x55);
+		const __m128 xfract1 = _mm_shuffle_ps(xfract, xfract, 0xAA);
+		HERMITE4_32F_INTRIN_SSE2(
+			AA, BB, CC, DD,
+			xfract1, xfract2, xfract3,
+			EE
+		);
+		HERMITE1_32F_INTRIN_SSE2(
+			_mm_shuffle_ps(EE, EE, 0x00),
+			_mm_shuffle_ps(EE, EE, 0x55),
+			_mm_shuffle_ps(EE, EE, 0xAA),
+			_mm_shuffle_ps(EE, EE, 0xFF),
+			yfract,
+			outPtr[i]
+		);
+	}
 
 	_mm256_zeroupper();
 }

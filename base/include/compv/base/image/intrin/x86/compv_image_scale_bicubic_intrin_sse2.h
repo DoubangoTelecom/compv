@@ -33,7 +33,7 @@ COMPV_NAMESPACE_BEGIN()
 	/* ARM: vpadd_f32 */ \
 	vec0 = _mm_add_ps(vec0, _mm_shuffle_ps(vec0, vec0, 0x0E)); \
 	vec0 = _mm_add_ps(vec0, _mm_shuffle_ps(vec0, vec0, 0x01)); \
-	ret = _mm_cvtss_f32(vec0); \
+	_mm_store_ss(&ret, vec0); \
 }
 
 #define HERMITE4_32F_INTRIN_SSE2(A, B, C, D, t, t2, t3, ret) { \
@@ -54,6 +54,16 @@ COMPV_NAMESPACE_BEGIN()
 	vec1 = _mm_add_ps(vec1, B); \
 	ret = _mm_add_ps(ret, vec1); \
 }
+
+void CompVImageScaleBicubicPostProcessRow_32f32s_Intrin_SSE2(
+	compv_float32_t* outPtr,
+	const compv_float32_t* inPtr,
+	COMPV_ALIGNED(SSE) const int32_t* xint4,
+	COMPV_ALIGNED(SSE) const compv_float32_t* xfract4,
+	COMPV_ALIGNED(SSE) const int32_t* yint4,
+	COMPV_ALIGNED(SSE) const compv_float32_t* yfract4,
+	const compv_uscalar_t rowCount
+);
 
 COMPV_NAMESPACE_END()
 

@@ -1268,6 +1268,9 @@
     <ClCompile Include="image\intrin\x86\compv_image_scale_bicubic_intrin_avx2.cxx">
       <Filter>source\image\intrin\x86</Filter>
     </ClCompile>
+    <ClCompile Include="image\intrin\x86\compv_image_scale_bicubic_intrin_sse2.cxx">
+      <Filter>source\image\intrin\x86</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <YASM Include="asm\x86\compv_bits_macros_x86.s">

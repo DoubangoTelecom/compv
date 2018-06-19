@@ -174,6 +174,11 @@ private:
 		CompVImageScaleBicubicProcessor processor;
 		COMPV_CHECK_CODE_RETURN(processor.init());
 
+		// TODO(dmi): add faster implementation
+		if ((outputHeight * outputWidth) > (32 * 32)) {
+			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("OpenCV implementation [fixed-point] is faster [but less accurate]");
+		}
+
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
 
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Convert from 8u to 32f not MT");
@@ -202,7 +207,8 @@ private:
 						const int32_t xint = static_cast<int32_t>(x);
 						const compv_float32_t xfract = static_cast<compv_float32_t>(x - std::floor(x));
 
-						processor.bicubic_32f32s(
+						// Next function not optiz at all, must not use with large images
+						processor.NOT_OPTIMIZ_hermite_32f32s(
 							&out,
 							inputPtr, 
 							&xint, 
