@@ -222,20 +222,18 @@ COMPV_ERROR_CODE CompVImageScaleBicubic::process(const CompVMatPtr& imageIn, Com
 	COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static<uint8_t, compv_float32_t>(imageIn, &imageIn32f)));
 	const compv_float32_t* inPtr = imageIn32f->ptr<const compv_float32_t>();
 
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD for COMPV_MATH_ROUNDFU_2_NEAREST_INT at the end");
+	CompVMatPtr output32f;
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float32_t>(&output32f, outHeight, outWidth, outStride));
 	
 	auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
-		uint8_t* outPtr = imageOut->ptr<uint8_t>(ystart);
+		compv_float32_t* outPtr = output32f->ptr<compv_float32_t>(ystart);
 		const int32_t* yintPtr = yintMat->ptr<const int32_t>();
 		const compv_float32_t* yfractPtr = yfractMat->ptr<const compv_float32_t>();
 		const int32_t* xintPtr = xintMat->ptr<const int32_t>();
 		const compv_float32_t* xfractPtr = xfractMat->ptr<const compv_float32_t>();
-		CompVMatPtr row;
-		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float32_t>(&row, 1, outWidth));
-		compv_float32_t* rowPtr = row->ptr<compv_float32_t>();
 		for (size_t y = ystart; y < yend; ++y) {
 			processor.postprocessrow_32f32s(
-				rowPtr,
+				outPtr,
 				inPtr,
 				xintPtr,
 				xfractPtr,
@@ -243,10 +241,6 @@ COMPV_ERROR_CODE CompVImageScaleBicubic::process(const CompVMatPtr& imageIn, Com
 				&yfractPtr[y << 2],
 				outWidth
 			);
-			// No SIMD implementation 
-			for (compv_uscalar_t x = 0; x < outWidth; ++x) {
-				outPtr[x] = COMPV_MATH_ROUNDFU_2_NEAREST_INT(COMPV_MATH_CLIP3(0, 255.f, rowPtr[x]), uint8_t);
-			}
 			outPtr += outStride;
 		}
 		return COMPV_ERROR_CODE_S_OK;
@@ -257,6 +251,8 @@ COMPV_ERROR_CODE CompVImageScaleBicubic::process(const CompVMatPtr& imageIn, Com
 		outHeight,
 		COMPV_IMAGE_SCALE_BICUBIC_SAMPLES_PER_THREAD
 	));
+
+	COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static_pixel8(output32f, &imageOut)));
 	
 	return COMPV_ERROR_CODE_S_OK;
 }

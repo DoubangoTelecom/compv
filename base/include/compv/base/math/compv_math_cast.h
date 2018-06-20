@@ -39,6 +39,8 @@ public:
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
+	static COMPV_ERROR_CODE process_static_pixel8(const CompVMatPtr& src, CompVMatPtrPtr dst);
+
 private:
 	template<typename srcType, typename dstType>
 	static COMPV_ERROR_CODE process_static(const srcType* src, dstType* dst, const size_t width, const size_t height, const size_t stride)	{

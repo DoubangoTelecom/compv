@@ -177,22 +177,21 @@ private:
 		// TODO(dmi): add faster implementation
 		if ((outputHeight * outputWidth) > (32 * 32)) {
 			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("OpenCV implementation [fixed-point] is faster [but less accurate]");
+			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
 		}
-
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
 
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Convert from 8u to 32f not MT");
 		CompVMatPtr input32f;
 		COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static<uint8_t, compv_float32_t>(input, &input32f)));
 		const compv_float32_t* inputPtr = input32f->ptr<const compv_float32_t>();
 
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD for COMPV_MATH_ROUNDFU_2_NEAREST_INT at the end");
+		CompVMatPtr output32f;
+		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float32_t>(&output32f, outputHeight, outputWidth, outputStride));
 
 		auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
 			// Bilinear filtering: https://en.wikipedia.org/wiki/Bilinear_interpolation#Unit_square
-			uint8_t* outputPtr = output->ptr<uint8_t>(ystart);
+			compv_float32_t* outputPtr = output32f->ptr<compv_float32_t>(ystart);
 			size_t i, j, k;
-			compv_float32_t out;
 			for (j = ystart, k = (ystart * outputWidth); j < yend; ++j) {
 				for (i = 0; i < outputWidth; ++i, ++k) {
 					const T& x = mapXPtr[k];
@@ -209,17 +208,16 @@ private:
 
 						// Next function not optiz at all, must not use with large images
 						processor.NOT_OPTIMIZ_hermite_32f32s(
-							&out,
+							&outputPtr[i],
 							inputPtr, 
 							&xint, 
-							&xfract, 
+							&xfract,
 							&yint, 
 							&yfract,
 							inWidthMinus1,
 							inHeightMinus1,
 							inStride
 						);
-						outputPtr[i] = COMPV_MATH_ROUNDFU_2_NEAREST_INT(COMPV_MATH_CLIP3(0, 255.f, out), uint8_t);
 					}
 				}
 				outputPtr += outputStride;
@@ -232,6 +230,8 @@ private:
 			outputHeight,
 			COMPV_IMAGE_REMAP_BICUBIC_SAMPLES_PER_THREAD
 		));
+
+		COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static_pixel8(output32f, &output)));
 
 		return COMPV_ERROR_CODE_S_OK;
 	}
