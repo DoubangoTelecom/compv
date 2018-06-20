@@ -29,6 +29,15 @@ void CompVImageScaleBicubicHermite_32f32s_Intrin_SSE41(
 	const compv_uscalar_t inStride
 );
 
+void CompVImageScaleBicubicPreprocess_32s32f_Intrin_SSE41(
+	COMPV_ALIGNED(SSE) int32_t* intergral,
+	COMPV_ALIGNED(SSE) compv_float32_t* fraction,
+	const compv_float32_t* sv1,
+	COMPV_ALIGNED(SSE) const compv_uscalar_t outSize,
+	const compv_scalar_t intergralMax,
+	const compv_scalar_t intergralStride
+);
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */

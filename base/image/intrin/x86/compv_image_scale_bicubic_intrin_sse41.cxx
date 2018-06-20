@@ -88,6 +88,70 @@ void CompVImageScaleBicubicHermite_32f32s_Intrin_SSE41(
 	);
 }
 
+
+void CompVImageScaleBicubicPreprocess_32s32f_Intrin_SSE41(
+	COMPV_ALIGNED(SSE) int32_t* intergral,
+	COMPV_ALIGNED(SSE) compv_float32_t* fraction,
+	const compv_float32_t* sv1,
+	COMPV_ALIGNED(SSE) const compv_uscalar_t outSize,
+	const compv_scalar_t intergralMax,
+	const compv_scalar_t intergralStride
+)
+{
+	COMPV_DEBUG_INFO_CHECK_SSE41();
+
+	// TODO(dmi): No ASM code
+
+	static const __m128i vecIntegralOffset = _mm_setr_epi32(-1, 0, 1, 2);
+	static const __m128i vecZero = _mm_setzero_si128();
+	static const __m128 vecHalf = _mm_set1_ps(0.5f);
+
+	const compv_uscalar_t maxI = outSize << 2;
+	const compv_float32_t& sv = *sv1;
+	const compv_float32_t m = (0.5f * sv);
+	const __m128i vecIntergralMax = _mm_set1_epi32(static_cast<int32_t>(intergralMax));
+	const __m128i vecIntergralStride = _mm_set1_epi32(static_cast<int32_t>(intergralStride));
+	const __m128 vecSV4 = _mm_set1_ps(sv * 4.f);
+	__m128 vecM = _mm_setr_ps(m, m + sv, m + sv*2.f, m + sv*3.f);
+
+	for (compv_uscalar_t i = 0; i < maxI; i += 16) {
+		const __m128 vecFract = _mm_sub_ps(vecM, vecHalf);
+		const __m128 vecIntegralf = _mm_round_ps(vecFract, _MM_FROUND_FLOOR);
+		const __m128i vecIntegrali = _mm_cvttps_epi32(vecIntegralf);
+
+		__m128i vecIntegrali0 = _mm_add_epi32(_mm_shuffle_epi32(vecIntegrali, 0x00), vecIntegralOffset);
+		__m128i vecIntegrali1 = _mm_add_epi32(_mm_shuffle_epi32(vecIntegrali, 0x55), vecIntegralOffset);
+		__m128i vecIntegrali2 = _mm_add_epi32(_mm_shuffle_epi32(vecIntegrali, 0xAA), vecIntegralOffset);
+		__m128i vecIntegrali3 = _mm_add_epi32(_mm_shuffle_epi32(vecIntegrali, 0xFF), vecIntegralOffset);
+		vecIntegrali0 = _mm_max_epi32(vecZero, _mm_min_epi32(vecIntegrali0, vecIntergralMax));
+		vecIntegrali1 = _mm_max_epi32(vecZero, _mm_min_epi32(vecIntegrali1, vecIntergralMax));
+		vecIntegrali2 = _mm_max_epi32(vecZero, _mm_min_epi32(vecIntegrali2, vecIntergralMax));
+		vecIntegrali3 = _mm_max_epi32(vecZero, _mm_min_epi32(vecIntegrali3, vecIntergralMax));
+		vecIntegrali0 = _mm_mullo_epi32(vecIntegrali0, vecIntergralStride);
+		vecIntegrali1 = _mm_mullo_epi32(vecIntegrali1, vecIntergralStride);
+		vecIntegrali2 = _mm_mullo_epi32(vecIntegrali2, vecIntergralStride);
+		vecIntegrali3 = _mm_mullo_epi32(vecIntegrali3, vecIntergralStride);
+
+		__m128 vecFraction = _mm_sub_ps(vecFract, vecIntegralf);
+		__m128 vecFraction2 = _mm_mul_ps(vecFraction, vecFraction);
+		__m128 vecFraction3 = _mm_mul_ps(vecFraction2, vecFraction);
+		__m128 vecOne = _mm_set1_ps(1.f);
+		_MM_TRANSPOSE4_PS(vecFraction3, vecFraction2, vecFraction, vecOne);
+
+		_mm_store_si128(reinterpret_cast<__m128i*>(&intergral[i + 0]), vecIntegrali0);
+		_mm_store_si128(reinterpret_cast<__m128i*>(&intergral[i + 4]), vecIntegrali1);
+		_mm_store_si128(reinterpret_cast<__m128i*>(&intergral[i + 8]), vecIntegrali2);
+		_mm_store_si128(reinterpret_cast<__m128i*>(&intergral[i + 12]), vecIntegrali3);
+
+		_mm_store_ps(&fraction[i + 0], vecFraction3);
+		_mm_store_ps(&fraction[i + 4], vecFraction2);
+		_mm_store_ps(&fraction[i + 8], vecFraction);
+		_mm_store_ps(&fraction[i + 12], vecOne);
+
+		vecM = _mm_add_ps(vecM, vecSV4);
+	}
+}
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */

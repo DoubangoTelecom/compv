@@ -129,29 +129,67 @@ static void CompVImageScaleBicubicPostProcessRow_32f32s_C(
 static void CompVImageScaleBicubicPreprocess_32s32f_C(int32_t* intergral, compv_float32_t* fraction, const compv_float32_t* sv1, const compv_uscalar_t outSize, const compv_scalar_t intergralMax, const compv_scalar_t intergralStride)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPGPU implementation could be found");
-	const compv_float32_t& sv = *sv1;
+
+	static const int32_t vecIntegralOffset[4] = { -1, 0, 1, 2 };
+
 	const int32_t intergralMax_ = static_cast<int32_t>(intergralMax);
 	const int32_t intergralStride_ = static_cast<int32_t>(intergralStride);
-	for (compv_uscalar_t i = 0, j = 0; i < outSize; i += 1, j += 4) {
-		const compv_float32_t fract = static_cast<compv_float32_t>((i + 0.5f) * sv - 0.5f);
-		const int32_t intergral_ = static_cast<int32_t>(std::floor(fract));
-		const compv_float32_t fraction_ = static_cast<compv_float32_t>(fract - intergral_);
-		const compv_float32_t fraction2_ = (fraction_ * fraction_);
-		// TODO(dmi): SIMD: 
-		//	static const __m128i vecOffset = _mm_setr_epi32(-1, 0, 1, 2); // outside the loop
-		//  static const __m128i vecZero = _mm_setzero_si128(); // outside the loop
-		//	const __m128i vecIntergralMax = _mm_set1_epi32(intergralMax); // outside the loop
-		//	__m128i vecIntergral = _mm_add_epi32(_mm_set1_epi32(intergral_), vecOffset);
-		// vecIntergral = _mm_max_epi32(vecZero, _mm_min_epi32(vecIntergral, vecIntergralMax));
-		intergral[j + 0] = std::max(0, std::min(intergral_ - 1, intergralMax_)) * intergralStride_;
-		intergral[j + 1] = std::max(0, std::min(intergral_ - 0, intergralMax_)) * intergralStride_;
-		intergral[j + 2] = std::max(0, std::min(intergral_ + 1, intergralMax_)) * intergralStride_;
-		intergral[j + 3] = std::max(0, std::min(intergral_ + 2, intergralMax_)) * intergralStride_;
+	const compv_uscalar_t maxI = outSize << 2;
+	const compv_float32_t& sv = *sv1;
+	const compv_float32_t m = (0.5f * sv);
+	const compv_float32_t sv4 = (sv * 4.f);
+	compv_float32_t vecM[4] = { m, m + sv, m + sv*2.f, m + sv*3.f };
 
-		fraction[j + 0] = (fraction2_ * fraction_); // x^3
-		fraction[j + 1] = (fraction2_); // x^2
-		fraction[j + 2] = (fraction_); // x^1
-		fraction[j + 3] = (1.f); // x^0
+	for (compv_uscalar_t i = 0; i < maxI; i += 16) {
+		const compv_float32_t vecFract[4] = { vecM[0] - 0.5f, vecM[1] - 0.5f, vecM[2] - 0.5f, vecM[3] - 0.5f};
+		const compv_float32_t vecIntegralf[4] = { std::floor(vecFract[0]), std::floor(vecFract[1]), std::floor(vecFract[2]), std::floor(vecFract[3]) };
+		const int32_t vecIntegrali[4] = { static_cast<int32_t>(vecIntegralf[0]), static_cast<int32_t>(vecIntegralf[1]), static_cast<int32_t>(vecIntegralf[2]),static_cast<int32_t>(vecIntegralf[3]) };
+
+		const int32_t vecIntegrali0[4] = { vecIntegrali[0] + vecIntegralOffset[0], vecIntegrali[0] + vecIntegralOffset[1], vecIntegrali[0] + vecIntegralOffset[2], vecIntegrali[0] + vecIntegralOffset[3] };
+		const int32_t vecIntegrali1[4] = { vecIntegrali[1] + vecIntegralOffset[0], vecIntegrali[1] + vecIntegralOffset[1], vecIntegrali[1] + vecIntegralOffset[2], vecIntegrali[1] + vecIntegralOffset[3] };
+		const int32_t vecIntegrali2[4] = { vecIntegrali[2] + vecIntegralOffset[0], vecIntegrali[2] + vecIntegralOffset[1], vecIntegrali[2] + vecIntegralOffset[2], vecIntegrali[2] + vecIntegralOffset[3] };
+		const int32_t vecIntegrali3[4] = { vecIntegrali[3] + vecIntegralOffset[0], vecIntegrali[3] + vecIntegralOffset[1], vecIntegrali[3] + vecIntegralOffset[2], vecIntegrali[3] + vecIntegralOffset[3] };
+		intergral[i + 0] = std::max(0, std::min(vecIntegrali0[0], intergralMax_)) * intergralStride_;
+		intergral[i + 1] = std::max(0, std::min(vecIntegrali0[1], intergralMax_)) * intergralStride_;
+		intergral[i + 2] = std::max(0, std::min(vecIntegrali0[2], intergralMax_)) * intergralStride_;
+		intergral[i + 3] = std::max(0, std::min(vecIntegrali0[3], intergralMax_)) * intergralStride_;
+		intergral[i + 4] = std::max(0, std::min(vecIntegrali1[0], intergralMax_)) * intergralStride_;
+		intergral[i + 5] = std::max(0, std::min(vecIntegrali1[1], intergralMax_)) * intergralStride_;
+		intergral[i + 6] = std::max(0, std::min(vecIntegrali1[2], intergralMax_)) * intergralStride_;
+		intergral[i + 7] = std::max(0, std::min(vecIntegrali1[3], intergralMax_)) * intergralStride_;
+		intergral[i + 8] = std::max(0, std::min(vecIntegrali2[0], intergralMax_)) * intergralStride_;
+		intergral[i + 9] = std::max(0, std::min(vecIntegrali2[1], intergralMax_)) * intergralStride_;
+		intergral[i + 10] = std::max(0, std::min(vecIntegrali2[2], intergralMax_)) * intergralStride_;
+		intergral[i + 11] = std::max(0, std::min(vecIntegrali2[3], intergralMax_)) * intergralStride_;
+		intergral[i + 12] = std::max(0, std::min(vecIntegrali3[0], intergralMax_)) * intergralStride_;
+		intergral[i + 13] = std::max(0, std::min(vecIntegrali3[1], intergralMax_)) * intergralStride_;
+		intergral[i + 14] = std::max(0, std::min(vecIntegrali3[2], intergralMax_)) * intergralStride_;
+		intergral[i + 15] = std::max(0, std::min(vecIntegrali3[3], intergralMax_)) * intergralStride_;
+
+		const compv_float32_t vecFraction[4] = { vecFract[0] - vecIntegralf[0], vecFract[1] - vecIntegralf[1], vecFract[2] - vecIntegralf[2], vecFract[3] - vecIntegralf[3] };
+		const compv_float32_t vecFraction2[4] = { vecFraction[0] * vecFraction[0], vecFraction[1] * vecFraction[1], vecFraction[2] * vecFraction[2], vecFraction[3] * vecFraction[3] };
+		const compv_float32_t vecFraction3[4] = { vecFraction2[0] * vecFraction[0], vecFraction2[1] * vecFraction[1], vecFraction2[2] * vecFraction[2], vecFraction2[3] * vecFraction[3] };
+		fraction[i + 0] = vecFraction3[0];
+		fraction[i + 1] = vecFraction2[0];
+		fraction[i + 2] = vecFraction[0];
+		fraction[i + 3] = 1.f;
+		fraction[i + 4] = vecFraction3[1];
+		fraction[i + 5] = vecFraction2[1];
+		fraction[i + 6] = vecFraction[1];
+		fraction[i + 7] = 1.f;
+		fraction[i + 8] = vecFraction3[2];
+		fraction[i + 9] = vecFraction2[2];
+		fraction[i + 10] = vecFraction[2];
+		fraction[i + 11] = 1.f;
+		fraction[i + 12] = vecFraction3[3];
+		fraction[i + 13] = vecFraction2[3];
+		fraction[i + 14] = vecFraction[3];
+		fraction[i + 15] = 1.f;
+
+		vecM[0] += sv4;
+		vecM[1] += sv4;
+		vecM[2] += sv4;
+		vecM[3] += sv4;
 	}
 }
 
@@ -165,6 +203,7 @@ COMPV_ERROR_CODE CompVImageScaleBicubicProcessor::init()
 		COMPV_EXEC_IFDEF_INTRIN_X86(postprocessrow_32f32s = CompVImageScaleBicubicPostProcessRow_32f32s_Intrin_SSE2);
 	}
 	if (CompVCpu::isEnabled(kCpuFlagSSE41)) {
+		COMPV_EXEC_IFDEF_INTRIN_X86(preprocess_32s32f = CompVImageScaleBicubicPreprocess_32s32f_Intrin_SSE41);
 		COMPV_EXEC_IFDEF_INTRIN_X86(NOT_OPTIMIZ_hermite_32f32s = CompVImageScaleBicubicHermite_32f32s_Intrin_SSE41);
 	}
 	if (CompVCpu::isEnabled(kCpuFlagAVX2)) {
