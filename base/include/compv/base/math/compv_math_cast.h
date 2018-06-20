@@ -10,11 +10,13 @@
 #include "compv/base/compv_config.h"
 #include "compv/base/compv_common.h"
 #include "compv/base/compv_mat.h"
+#include "compv/base/parallel/compv_parallel.h"
 
 COMPV_NAMESPACE_BEGIN()
 
 class COMPV_BASE_API CompVMathCast
 {
+	static const size_t COMPV_MATH_CAST_PROCESS_STATIC_SAMPLES_PER_THREAD = (50 * 50); // CPU-unfriendly
 public:
 	template<typename srcType, typename dstType>
 	static COMPV_ERROR_CODE process_static(const CompVMatPtr& src, CompVMatPtrPtr dst)
@@ -31,10 +33,18 @@ public:
 		const size_t stride = src->stride();
 		CompVMatPtr dst_ = (*dst == src)? nullptr : *dst; // "src" must not be equal to "dst" because sizeof(srcType) most likely != sizeof(dstType)
 		COMPV_CHECK_CODE_RETURN(CompVMat::newObj<dstType>(&dst_, height, width, src->alignment(), stride));
-		
-		COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static<srcType, dstType>(
-			src->ptr<const srcType>(), dst_->ptr<dstType>(), width, height, stride
-			)));
+		auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
+			COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static<srcType, dstType>(
+				src->ptr<const srcType>(ystart), dst_->ptr<dstType>(ystart), width, (yend - ystart), stride
+				)));
+			return COMPV_ERROR_CODE_S_OK;
+		};
+		COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+			funcPtr,
+			width,
+			height,
+			COMPV_MATH_CAST_PROCESS_STATIC_SAMPLES_PER_THREAD
+		));
 		*dst = *dst_;
 		return COMPV_ERROR_CODE_S_OK;
 	}

@@ -217,7 +217,6 @@ COMPV_ERROR_CODE CompVImageScaleBicubic::process(const CompVMatPtr& imageIn, Com
 	processor.preprocess_32s32f(yintMat->ptr<int32_t>(), yfractMat->ptr<compv_float32_t>(), &ySV, outHeight, inHeightMinus1, inStride);
 	processor.preprocess_32s32f(xintMat->ptr<int32_t>(), xfractMat->ptr<compv_float32_t>(), &xSV, outWidth, inWidthMinus1, 1);
 
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Convert from 8u to 32f not MT");
 	CompVMatPtr imageIn32f;
 	COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static<uint8_t, compv_float32_t>(imageIn, &imageIn32f)));
 	const compv_float32_t* inPtr = imageIn32f->ptr<const compv_float32_t>();

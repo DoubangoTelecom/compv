@@ -180,7 +180,6 @@ private:
 			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
 		}
 
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Convert from 8u to 32f not MT");
 		CompVMatPtr input32f;
 		COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static<uint8_t, compv_float32_t>(input, &input32f)));
 		const compv_float32_t* inputPtr = input32f->ptr<const compv_float32_t>();
