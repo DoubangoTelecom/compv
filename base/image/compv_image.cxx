@@ -601,28 +601,26 @@ static COMPV_ERROR_CODE CompVImageWarpInverse(const CompVMatPtr& imageIn, CompVM
 	const T width = static_cast<T>(outSize.width);
 	const T height = static_cast<T>(outSize.height);
 	const size_t count = static_cast<size_t>(width * height);
-	size_t index;
-	T x, y;
+
+	// Compute map transposed
 	CompVMatPtr map;
-	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<T>(&map, 3, count));
-	COMPV_CHECK_CODE_RETURN(map->one_row<T>(2)); // Homogeneous (z = 1)
-	T* mapX = map->ptr<T>(0);
-	T* mapY = map->ptr<T>(1);
-	for (y = 0, index = 0; y < height; y += 1) {
-		for (x = 0; x < width; x += 1, ++index) {
-			mapX[index] = x;
-			mapY[index] = y;
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<T>(&map, count, 3));
+	T* mapPtr = map->ptr<T>();
+	const size_t mapStride = map->stride();
+	T x, y;
+	for (y = 0; y < height; y += 1) {
+		for (x = 0; x < width; x += 1, mapPtr += mapStride) {
+			mapPtr[0] = x;
+			mapPtr[1] = y;
+			mapPtr[2] = 1;
 		}
 	}
-
 	// Compute map(x,y) = src*M
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Compute map transposed so that we can call CompVMath::mulABt");
-	CompVMatPtr mapR;
-	COMPV_CHECK_CODE_RETURN(CompVMatrix::mulAB(M, map, &mapR));
+	COMPV_CHECK_CODE_RETURN(CompVMath::mulABt(M, map, &map));
 
 	// remap
 	const CompVRectFloat32 inputROI = { 0.f, 0.f, static_cast<compv_float32_t>(imageIn->cols() - 1), static_cast<compv_float32_t>(imageIn->rows() - 1) };
-	COMPV_CHECK_CODE_RETURN(CompVImageRemap::process(imageIn, imageOut, mapR, interpType, &inputROI, &outSize));
+	COMPV_CHECK_CODE_RETURN(CompVImageRemap::process(imageIn, imageOut, map, interpType, &inputROI, &outSize));
 
 	return COMPV_ERROR_CODE_S_OK;
 }
