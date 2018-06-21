@@ -10,9 +10,16 @@
 #include "compv/base/compv_generic_invoke.h"
 #include "compv/base/compv_cpu.h"
 
+#include "compv/base/math/intrin/x86/compv_math_cast_intrin_sse2.h"
+
 #define COMPV_MATH_CAST_STATIC_PIXEL8_SAMPLES_PER_THREAD	(50*50)
 
 COMPV_NAMESPACE_BEGIN()
+
+#if COMPV_ASM && COMPV_ARCH_X64
+COMPV_EXTERNC void CompVMathCastProcess_static_pixel8_32f_Asm_X64_SSE2(COMPV_ALIGNED(SSE) const compv_float32_t* src, COMPV_ALIGNED(SSE) uint8_t* dst, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
+COMPV_EXTERNC void CompVMathCastProcess_static_8u32f_Asm_X64_SSE2(COMPV_ALIGNED(SSE) const uint8_t* src, COMPV_ALIGNED(SSE) compv_float32_t* dst, const compv_uscalar_t width, const compv_uscalar_t height, COMPV_ALIGNED(SSE) const compv_uscalar_t stride);
+#endif /* COMPV_ASM && COMPV_ARCH_X64 */
 
 template <> COMPV_BASE_API
 COMPV_ERROR_CODE CompVMathCast::process_static(const compv_float32_t* src, compv_float64_t* dst, const size_t width, const size_t height, const size_t stride)
@@ -24,21 +31,7 @@ COMPV_ERROR_CODE CompVMathCast::process_static(const compv_float32_t* src, compv
 	};
 
 #if COMPV_ARCH_X86
-	if (width >= 4) {
-		if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
-			//COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathCastProcessStatic_32f64f = CompVMathCastProcessStatic_32f64f_Intrin_SSE2);
-		}
-	}
-	if (CompVCpu::isEnabled(kCpuFlagAVX2) && width >= 8) {
-		//COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathCastProcessStatic_32f64f = CompVMathCastProcessStatic_32f64f_Intrin_AVX2);
-		//COMPV_EXEC_IFDEF_ASM_X64(CompVMathCastProcessStatic_32f64f = CompVMathCastProcessStatic_32f64f_Asm_X64_AVX2);
-	}
 #elif COMPV_ARCH_ARM
-	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && width >= 4) {
-		//COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMathCastProcessStatic_32f64f = CompVMathCastProcessStatic_32f64f_Intrin_NEON);
-		//COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathCastProcessStatic_32f64f = CompVMathCastProcessStatic_32f64f_Asm_NEON32);
-		//COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathCastProcessStatic_32f64f = CompVMathCastProcessStatic_32f64f_Asm_NEON64);
-	}
 #endif
 
 	CompVMathCastProcessStatic_32f64f(src, dst, static_cast<compv_uscalar_t>(width), static_cast<compv_uscalar_t>(height), static_cast<compv_uscalar_t>(stride));
@@ -56,21 +49,7 @@ COMPV_ERROR_CODE CompVMathCast::process_static(const compv_float64_t* src, compv
 	};
 
 #if COMPV_ARCH_X86
-	if (width >= 4) {
-		if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
-			//COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathCastProcessStatic_64f32f = CompVMathCastProcessStatic_64f32f_Intrin_SSE2);
-		}
-	}
-	if (CompVCpu::isEnabled(kCpuFlagAVX2) && width >= 8) {
-		//COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathCastProcessStatic_64f32f = CompVMathCastProcessStatic_64f32f_Intrin_AVX2);
-		//COMPV_EXEC_IFDEF_ASM_X64(CompVMathCastProcessStatic_64f32f = CompVMathCastProcessStatic_64f32f_Asm_X64_AVX2);
-	}
 #elif COMPV_ARCH_ARM
-	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && width >= 4) {
-		//COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMathCastProcessStatic_64f32f = CompVMathCastProcessStatic_64f32f_Intrin_NEON);
-		//COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathCastProcessStatic_64f32f = CompVMathCastProcessStatic_64f32f_Asm_NEON32);
-		//COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathCastProcessStatic_64f32f = CompVMathCastProcessStatic_64f32f_Asm_NEON64);
-	}
 #endif
 
 	CompVMathCastProcessStatic_64f32f(src, dst, static_cast<compv_uscalar_t>(width), static_cast<compv_uscalar_t>(height), static_cast<compv_uscalar_t>(stride));
@@ -88,21 +67,12 @@ COMPV_ERROR_CODE CompVMathCast::process_static(const uint8_t* src, compv_float32
 	};
 
 #if COMPV_ARCH_X86
-	if (width >= 16) {
-		if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
-			//COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathCastProcessStatic_8u32f = CompVMathCastProcessStatic_8u32f_Intrin_SSE2);
-		}
-	}
-	if (CompVCpu::isEnabled(kCpuFlagAVX2) && width >= 32) {
-		//COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathCastProcessStatic_8u32f = CompVMathCastProcessStatic_8u32f_Intrin_AVX2);
-		//COMPV_EXEC_IFDEF_ASM_X64(CompVMathCastProcessStatic_8u32f = CompVMathCastProcessStatic_8u32f_Asm_X64_AVX2);
+	if (CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(src) && COMPV_IS_ALIGNED_SSE(dst) && COMPV_IS_ALIGNED_SSE(stride)) {
+		COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathCastProcessStatic_8u32f = CompVMathCastProcess_static_8u32f_Intrin_SSE2);
+		COMPV_EXEC_IFDEF_ASM_X64(CompVMathCastProcessStatic_8u32f = CompVMathCastProcess_static_8u32f_Asm_X64_SSE2);
 	}
 #elif COMPV_ARCH_ARM
-	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && width >= 16) {
-		//COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMathCastProcessStatic_8u32f = CompVMathCastProcessStatic_8u32f_Intrin_NEON);
-		//COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathCastProcessStatic_8u32f = CompVMathCastProcessStatic_8u32f_Asm_NEON32);
-		//COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathCastProcessStatic_8u32f = CompVMathCastProcessStatic_8u32f_Asm_NEON64);
-	}
+
 #endif
 
 	CompVMathCastProcessStatic_8u32f(src, dst, static_cast<compv_uscalar_t>(width), static_cast<compv_uscalar_t>(height), static_cast<compv_uscalar_t>(stride));
@@ -121,6 +91,25 @@ static void CompVMathCastProcess_static_pixel8(const CompVMatPtr& srcMat, CompVM
 
 	const T* src = srcMat->ptr<const T>();
 	uint8_t* dst = dstMat->ptr<uint8_t>();
+
+	if (std::is_same<T, compv_float32_t>::value) {
+		void (*CompVMathCastProcess_static_pixel8_32f)(const compv_float32_t* src, uint8_t* dst, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
+			= nullptr;
+#if COMPV_ARCH_X86
+		if (CompVCpu::isEnabled(kCpuFlagSSE2) && srcMat->isAlignedSSE() && dstMat->isAlignedSSE()) {
+			COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathCastProcess_static_pixel8_32f = CompVMathCastProcess_static_pixel8_32f_Intrin_SSE2);
+			COMPV_EXEC_IFDEF_ASM_X64(CompVMathCastProcess_static_pixel8_32f = CompVMathCastProcess_static_pixel8_32f_Asm_X64_SSE2);
+		}
+#elif COMPV_ARCH_ARM
+#endif
+		if (CompVMathCastProcess_static_pixel8_32f) {
+			CompVMathCastProcess_static_pixel8_32f(
+				reinterpret_cast<const compv_float32_t*>(src), dst,
+				static_cast<compv_uscalar_t>(width), static_cast<compv_uscalar_t>(height), static_cast<compv_uscalar_t>(stride)
+			);
+			return;
+		}
+	}
 
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
 	for (size_t j = 0; j < height; ++j) {

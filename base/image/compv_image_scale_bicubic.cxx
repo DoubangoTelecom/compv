@@ -210,7 +210,6 @@ COMPV_ERROR_CODE CompVImageScaleBicubicProcessor::init()
 		COMPV_EXEC_IFDEF_INTRIN_X86(postprocessrow_32f32s = CompVImageScaleBicubicPostProcessRow_32f32s_Intrin_AVX2);
 		COMPV_EXEC_IFDEF_INTRIN_X86(NOT_OPTIMIZ_hermite_32f32s = CompVImageScaleBicubicHermite_32f32s_Intrin_AVX2);
 	}
-
 #elif COMPV_ARCH_ARM
 #endif
 	return COMPV_ERROR_CODE_S_OK;

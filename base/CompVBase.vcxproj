@@ -145,6 +145,7 @@
     <ClInclude Include="include\compv\base\math\intrin\arm\compv_math_convlt_intrin_neon.h" />
     <ClInclude Include="include\compv\base\math\intrin\arm\compv_math_distance_intrin_neon.h" />
     <ClInclude Include="include\compv\base\math\intrin\arm\compv_math_matrix_intrin_neon64.h" />
+    <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_cast_intrin_sse2.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_convlt_intrin_avx2.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_convlt_intrin_sse2.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_distance_intrin_avx.h" />
@@ -453,6 +454,12 @@
     <ClCompile Include="math\intrin\arm\compv_math_stats_intrin_neon64.cxx" />
     <ClCompile Include="math\intrin\arm\compv_math_transform_intrin_neon64.cxx" />
     <ClCompile Include="math\intrin\arm\compv_math_utils_intrin_neon.cxx" />
+    <ClCompile Include="math\intrin\x86\compv_math_cast_intrin_sse2.cxx">
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+    </ClCompile>
     <ClCompile Include="math\intrin\x86\compv_math_convlt_intrin_avx2.cxx">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
@@ -700,6 +707,13 @@
     </YASM>
   </ItemGroup>
   <ItemGroup>
+    <YASM Include="math\asm\x86\compv_math_cast_x64_sse.s">
+      <FileType>Document</FileType>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+    </YASM>
     <YASM Include="math\asm\x86\compv_math_op_mul_x64_avx.s">
       <FileType>Document</FileType>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>

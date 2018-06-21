@@ -768,6 +768,9 @@
     <ClInclude Include="include\compv\base\math\compv_math_clip.h">
       <Filter>include\math</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_cast_intrin_sse2.h">
+      <Filter>include\math\intrin\x86</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx">
@@ -1277,6 +1280,9 @@
     <ClCompile Include="math\compv_math_clip.cxx">
       <Filter>source\math</Filter>
     </ClCompile>
+    <ClCompile Include="math\intrin\x86\compv_math_cast_intrin_sse2.cxx">
+      <Filter>source\math\intrin\x86</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <YASM Include="asm\x86\compv_bits_macros_x86.s">
@@ -1478,6 +1484,9 @@
       <Filter>source\math\asm\x86</Filter>
     </YASM>
     <YASM Include="math\asm\x86\compv_math_op_sub_x64_sse.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="math\asm\x86\compv_math_cast_x64_sse.s">
       <Filter>source\math\asm\x86</Filter>
     </YASM>
   </ItemGroup>
