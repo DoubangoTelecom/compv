@@ -70,6 +70,8 @@ void CompVImageScaleBicubicHermite_32f32s_Intrin_AVX2(
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No ASM implementation");
 #endif
 
+	// TODO(dmi): No ASM code
+
 	_mm256_zeroupper();
 
 	static const __m128i vecZero = _mm_setzero_si128();

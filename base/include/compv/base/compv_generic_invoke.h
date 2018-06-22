@@ -12,7 +12,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-#define CompVGenericCheckVoid(code)	(code)
+#define CompVGenericCheckVoid(code)	COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-value") ((code)) COMPV_GCC_DISABLE_WARNINGS_END()
 #define CompVGenericCheckCode(code) COMPV_CHECK_CODE_RETURN((code))
 
 #define CompVGenericInvokeRawType(subType, func, check, ...) \

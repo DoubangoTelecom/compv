@@ -780,6 +780,27 @@
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_op_sub_intrin_neon.h">
       <Filter>include\math\intrin\arm</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\compv\base\image\compv_image_scale_bicubic.h">
+      <Filter>include\image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\image\stb_image.h">
+      <Filter>include\image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\image\stb_image_write.h">
+      <Filter>include\image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\image\intrin\x86\compv_image_scale_bicubic_intrin_avx2.h">
+      <Filter>include\image\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\image\intrin\x86\compv_image_scale_bicubic_intrin_sse2.h">
+      <Filter>include\image\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\image\intrin\x86\compv_image_scale_bicubic_intrin_sse41.h">
+      <Filter>include\image\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\math\compv_math_clip.h">
+      <Filter>include\math</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_base.cxx">
@@ -1288,6 +1309,21 @@
     </ClCompile>
     <ClCompile Include="..\math\intrin\arm\compv_math_op_sub_intrin_neon.cxx">
       <Filter>source\math\intrin\arm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\image\compv_image_scale_bicubic.cxx">
+      <Filter>source\image</Filter>
+    </ClCompile>
+    <ClCompile Include="..\image\intrin\x86\compv_image_scale_bicubic_intrin_avx2.cxx">
+      <Filter>source\image\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\image\intrin\x86\compv_image_scale_bicubic_intrin_sse2.cxx">
+      <Filter>source\image\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\image\intrin\x86\compv_image_scale_bicubic_intrin_sse41.cxx">
+      <Filter>source\image\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\compv_math_clip.cxx">
+      <Filter>source\math</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

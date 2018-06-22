@@ -51,6 +51,7 @@
     <ClCompile Include="..\..\main.cxx" />
     <ClCompile Include="..\..\patch.cxx" />
     <ClCompile Include="..\..\pyramid.cxx" />
+    <ClCompile Include="..\..\rotate.cxx" />
     <ClCompile Include="..\..\scale.cxx" />
     <ClCompile Include="..\..\sobel.cxx" />
     <ClCompile Include="..\..\split.cxx" />

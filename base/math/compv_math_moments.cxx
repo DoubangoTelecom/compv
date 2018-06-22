@@ -6,6 +6,8 @@
 */
 #include "compv/base/math/compv_math_moments.h"
 
+#include <float.h> /* DBL_EPSILON */
+
 #define COMPV_THIS_CLASSNAME	"CompVMathMoments"
 
 COMPV_NAMESPACE_BEGIN()

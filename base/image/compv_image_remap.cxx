@@ -86,6 +86,7 @@ private:
 		const size_t outputHeight = output->rows();
 		const size_t  outputStride = output->stride();
 
+		// xfract and yfract could be computed once
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
 
 		auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
@@ -175,7 +176,12 @@ private:
 		COMPV_CHECK_CODE_RETURN(processor.init());
 
 		// TODO(dmi): add faster implementation
-		if ((outputHeight * outputWidth) > (32 * 32)) {
+		// https://github.com/DoubangoTelecom/compv/issues/167
+		// xfract and yfract could be computed once using Matrix (y=0 then x = 0) then, use postprocess (see scale)
+#if 0
+		if ((outputHeight * outputWidth) > (32 * 32))
+#endif
+		{
 			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("OpenCV implementation [fixed-point] is faster [but less accurate]");
 			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
 		}

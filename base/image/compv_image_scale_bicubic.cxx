@@ -25,10 +25,23 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-#define HERMITE_32F_C(A, B, C, D, t, t2, t3, ret) { \
-	const compv_float32_t a = /*(A*(-0.5f))	+ (B*(1.5f))	+ (C*(-1.5f))	+ (D*(0.5f))*/ ((D - A) * 0.5f) + ((B - C) * 1.5f); \
-	const compv_float32_t b = A				+ (B*(-2.5f))	+ (C*(2.0f))	+ (D*(-0.5f)); \
-	const compv_float32_t c = /*(A*(-0.5f))					+ (C * 0.5f)*/ ((C - A) * 0.5f); \
+// "HERMITE4_32F_C" and "HERMITE1_32F_C" are the same with small rounding diffs. We keep using them to make
+// sure the MD5 result will be the same
+
+#define HERMITE4_32F_C(A, B, C, D, t, t2, t3, ret) { \
+	const compv_float32_t a = ((D - A) * 0.5f)	+ ((B - C) * 1.5f); \
+	const compv_float32_t b = A					+ (B*(-2.5f))		+ (C*(2.0f))	+ (D*(-0.5f)); \
+	const compv_float32_t c = ((C - A) * 0.5f); \
+	const compv_float32_t d =				B; \
+	/* simulate vpadd_f32 (to have same MD5) */ \
+	const compv_float32_t s0 = (a*t3) + (c*t); \
+	const compv_float32_t s1 = (b*t2) + (d); \
+	ret = s0 + s1; \
+}
+#define HERMITE1_32F_C(A, B, C, D, t, t2, t3, ret) { \
+	const compv_float32_t a = ((A*(-0.5f))	+ (B*(1.5f)))	+ ((C*(-1.5f))	+ (D*(0.5f))); \
+	const compv_float32_t b = (A			+ (B*(-2.5f)))	+ ((C*(2.0f))	+ (D*(-0.5f))); \
+	const compv_float32_t c = (A*(-0.5f))					+ (C * 0.5f); \
 	const compv_float32_t d =				B; \
 	/* simulate vpadd_f32 (to have same MD5) */ \
 	const compv_float32_t s0 = (a*t3) + (c*t); \
@@ -76,12 +89,12 @@ static void CompVImageScaleBicubicHermite_32f32s_C(
 	const compv_float32_t yfract3 = (yfract2 * yfract);
 
 	compv_float32_t c0, c1, c2, c3;
-	HERMITE_32F_C(p0[x0], p0[x1], p0[x2], p0[x3], xfract, xfract2, xfract3, c0);
-	HERMITE_32F_C(p1[x0], p1[x1], p1[x2], p1[x3], xfract, xfract2, xfract3, c1);
-	HERMITE_32F_C(p2[x0], p2[x1], p2[x2], p2[x3], xfract, xfract2, xfract3, c2);
-	HERMITE_32F_C(p3[x0], p3[x1], p3[x2], p3[x3], xfract, xfract2, xfract3, c3);
+	HERMITE4_32F_C(p0[x0], p0[x1], p0[x2], p0[x3], xfract, xfract2, xfract3, c0);
+	HERMITE4_32F_C(p1[x0], p1[x1], p1[x2], p1[x3], xfract, xfract2, xfract3, c1);
+	HERMITE4_32F_C(p2[x0], p2[x1], p2[x2], p2[x3], xfract, xfract2, xfract3, c2);
+	HERMITE4_32F_C(p3[x0], p3[x1], p3[x2], p3[x3], xfract, xfract2, xfract3, c3);
 
-	HERMITE_32F_C(c0, c1, c2, c3, yfract, yfract2, yfract3, *outPtr);
+	HERMITE1_32F_C(c0, c1, c2, c3, yfract, yfract2, yfract3, *outPtr);
 }
 
 static void CompVImageScaleBicubicPostProcessRow_32f32s_C(
@@ -117,12 +130,12 @@ static void CompVImageScaleBicubicPostProcessRow_32f32s_C(
 		const compv_float32_t& xfract2 = xfract4[1];
 		const compv_float32_t& xfract1 = xfract4[2];
 
-		HERMITE_32F_C(p0[x0], p0[x1], p0[x2], p0[x3], xfract1, xfract2, xfract3, c0);
-		HERMITE_32F_C(p1[x0], p1[x1], p1[x2], p1[x3], xfract1, xfract2, xfract3, c1);
-		HERMITE_32F_C(p2[x0], p2[x1], p2[x2], p2[x3], xfract1, xfract2, xfract3, c2);
-		HERMITE_32F_C(p3[x0], p3[x1], p3[x2], p3[x3], xfract1, xfract2, xfract3, c3);
+		HERMITE4_32F_C(p0[x0], p0[x1], p0[x2], p0[x3], xfract1, xfract2, xfract3, c0);
+		HERMITE4_32F_C(p1[x0], p1[x1], p1[x2], p1[x3], xfract1, xfract2, xfract3, c1);
+		HERMITE4_32F_C(p2[x0], p2[x1], p2[x2], p2[x3], xfract1, xfract2, xfract3, c2);
+		HERMITE4_32F_C(p3[x0], p3[x1], p3[x2], p3[x3], xfract1, xfract2, xfract3, c3);
 
-		HERMITE_32F_C(c0, c1, c2, c3, yfract1, yfract2, yfract3, outPtr[i]);
+		HERMITE1_32F_C(c0, c1, c2, c3, yfract1, yfract2, yfract3, outPtr[i]);
 	}
 }
 

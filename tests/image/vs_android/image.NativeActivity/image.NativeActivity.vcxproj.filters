@@ -21,6 +21,7 @@
     <ClCompile Include="..\..\bits.cxx" />
     <ClCompile Include="..\..\hog_std.cxx" />
     <ClCompile Include="..\..\gradient.cxx" />
+    <ClCompile Include="..\..\rotate.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\tests_common.h" />
