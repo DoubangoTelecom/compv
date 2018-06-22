@@ -11,6 +11,7 @@
 #include "compv/base/compv_cpu.h"
 
 #include "compv/base/math/intrin/x86/compv_math_cast_intrin_sse2.h"
+#include "compv/base/math/intrin/arm/compv_math_cast_intrin_neon.h"
 
 #define COMPV_MATH_CAST_STATIC_PIXEL8_SAMPLES_PER_THREAD	(50*50)
 
@@ -20,6 +21,16 @@ COMPV_NAMESPACE_BEGIN()
 COMPV_EXTERNC void CompVMathCastProcess_static_pixel8_32f_Asm_X64_SSE2(COMPV_ALIGNED(SSE) const compv_float32_t* src, COMPV_ALIGNED(SSE) uint8_t* dst, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
 COMPV_EXTERNC void CompVMathCastProcess_static_8u32f_Asm_X64_SSE2(COMPV_ALIGNED(SSE) const uint8_t* src, COMPV_ALIGNED(SSE) compv_float32_t* dst, const compv_uscalar_t width, const compv_uscalar_t height, COMPV_ALIGNED(SSE) const compv_uscalar_t stride);
 #endif /* COMPV_ASM && COMPV_ARCH_X64 */
+
+#if COMPV_ASM && COMPV_ARCH_ARM32
+COMPV_EXTERNC void CompVMathCastProcess_static_pixel8_32f_Asm_NEON32(COMPV_ALIGNED(NEON) const compv_float32_t* src, COMPV_ALIGNED(NEON) uint8_t* dst, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
+COMPV_EXTERNC void CompVMathCastProcess_static_8u32f_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* src, COMPV_ALIGNED(NEON) compv_float32_t* dst, const compv_uscalar_t width, const compv_uscalar_t height, COMPV_ALIGNED(NEON) const compv_uscalar_t stride);
+#endif /* COMPV_ASM && COMPV_ARCH_ARM32 */
+
+#if COMPV_ASM && COMPV_ARCH_ARM64
+COMPV_EXTERNC void CompVMathCastProcess_static_pixel8_32f_Asm_NEON64(COMPV_ALIGNED(NEON) const compv_float32_t* src, COMPV_ALIGNED(NEON) uint8_t* dst, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
+COMPV_EXTERNC void CompVMathCastProcess_static_8u32f_Asm_NEON64(COMPV_ALIGNED(NEON) const uint8_t* src, COMPV_ALIGNED(NEON) compv_float32_t* dst, const compv_uscalar_t width, const compv_uscalar_t height, COMPV_ALIGNED(NEON) const compv_uscalar_t stride);
+#endif /* COMPV_ASM && COMPV_ARCH_ARM64 */
 
 template <> COMPV_BASE_API
 COMPV_ERROR_CODE CompVMathCast::process_static(const compv_float32_t* src, compv_float64_t* dst, const size_t width, const size_t height, const size_t stride)
@@ -72,7 +83,11 @@ COMPV_ERROR_CODE CompVMathCast::process_static(const uint8_t* src, compv_float32
 		COMPV_EXEC_IFDEF_ASM_X64(CompVMathCastProcessStatic_8u32f = CompVMathCastProcess_static_8u32f_Asm_X64_SSE2);
 	}
 #elif COMPV_ARCH_ARM
-
+	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(src) && COMPV_IS_ALIGNED_NEON(dst) && COMPV_IS_ALIGNED_NEON(stride)) {
+		COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMathCastProcessStatic_8u32f = CompVMathCastProcess_static_8u32f_Intrin_NEON);
+		COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathCastProcessStatic_8u32f = CompVMathCastProcess_static_8u32f_Asm_NEON32);
+		COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathCastProcessStatic_8u32f = CompVMathCastProcess_static_8u32f_Asm_NEON64);
+	}
 #endif
 
 	CompVMathCastProcessStatic_8u32f(src, dst, static_cast<compv_uscalar_t>(width), static_cast<compv_uscalar_t>(height), static_cast<compv_uscalar_t>(stride));
@@ -101,6 +116,11 @@ static void CompVMathCastProcess_static_pixel8(const CompVMatPtr& srcMat, CompVM
 			COMPV_EXEC_IFDEF_ASM_X64(CompVMathCastProcess_static_pixel8_32f = CompVMathCastProcess_static_pixel8_32f_Asm_X64_SSE2);
 		}
 #elif COMPV_ARCH_ARM
+		if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && srcMat->isAlignedNEON() && dstMat->isAlignedNEON()) {
+			COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMathCastProcess_static_pixel8_32f = CompVMathCastProcess_static_pixel8_32f_Intrin_NEON);
+			COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathCastProcess_static_pixel8_32f = CompVMathCastProcess_static_pixel8_32f_Asm_NEON32);
+			COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathCastProcess_static_pixel8_32f = CompVMathCastProcess_static_pixel8_32f_Asm_NEON64);
+		}
 #endif
 		if (CompVMathCastProcess_static_pixel8_32f) {
 			CompVMathCastProcess_static_pixel8_32f(

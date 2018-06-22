@@ -8,12 +8,6 @@
 #if defined(__aarch64__)
 .include "compv_common_arm64.S" //
 
-#if defined(__APPLE__)
-#   define sym(funcname) _##funcname
-#else
-#   define sym(funcname) funcname
-#endif
-
 .data
 
 .extern
