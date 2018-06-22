@@ -8,9 +8,7 @@
 
 #if COMPV_ARCH_X86 && COMPV_INTRINSIC
 #include "compv/base/intrin/x86/compv_intrin_sse.h"
-#include "compv/base/compv_simd_globals.h"
 #include "compv/base/compv_debug.h"
-#include "compv/base/math/compv_math.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -62,17 +60,6 @@ void CompVImageScaleBicubicPostProcessRow_32f32s_Intrin_SSE2(
 		const __m128 xfract3 = _mm_shuffle_ps(xfract, xfract, 0x00);
 		const __m128 xfract2 = _mm_shuffle_ps(xfract, xfract, 0x55);
 		const __m128 xfract1 = _mm_shuffle_ps(xfract, xfract, 0xAA);
-
-#define HERMITE1_32F_C(A, B, C, D, t, t2, t3, ret) { \
-	const compv_float32_t a = (A*(-0.5f))	+ (B*(1.5f))	+ (C*(-1.5f))	+ (D*(0.5f)); \
-	const compv_float32_t b = A				+ (B*(-2.5f))	+ (C*(2.0f))	+ (D*(-0.5f)); \
-	const compv_float32_t c = (A*(-0.5f))					+ (C * 0.5f); \
-	const compv_float32_t d =				B; \
-	/* simulate vpadd_f32 (to have same MD5) */ \
-	const compv_float32_t s0 = (a*t3) + (c*t); \
-	const compv_float32_t s1 = (b*t2) + (d); \
-	ret = s0 + s1; \
-}
 
 		HERMITE4_32F_INTRIN_SSE2(
 			AA, BB, CC, DD,

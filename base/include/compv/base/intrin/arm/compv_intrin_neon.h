@@ -109,6 +109,46 @@ COMPV_NAMESPACE_BEGIN()
 // Reciprocal, less accurate than 'COMPV_ARM_NEON_RECIPROCAL_NEWTON_RAPHSON'
 #define COMPV_ARM_NEON_RECIPROCAL(vec)	vrecpeq_f32(vec) /* AArch64 -> frecpe */
 
+
+// TODO(dmi): ASM is faster
+// vtrn.32  q0, q1
+// vtrn.32  q2, q3
+// vswp     d1, d4
+// vswp     d3, d6
+#if COMPV_ARCH_ARM64
+#	define COMPV_ARM_NEON_TRANSPOSE4x4_32(v0, v1, v2, v3) { \
+		const float32x4_t aa = vtrn1q_f32(v0, v1); \
+		const float32x4_t bb = vtrn2q_f32(v0, v1); \
+		const float32x4_t cc = vtrn1q_f32(v2, v3); \
+		const float32x4_t dd = vtrn2q_f32(v2, v3); \
+		v0 = vcombine_f32(vget_low_f32(aa), vget_low_f32(cc)); \
+		v1 = vcombine_f32(vget_low_f32(bb), vget_low_f32(dd)); \
+		v2 = vcombine_f32(vget_high_f32(aa), vget_high_f32(cc)); \
+		v3 = vcombine_f32(vget_high_f32(bb), vget_high_f32(dd)); \
+	}
+#else
+#	define COMPV_ARM_NEON_TRANSPOSE4x4_32(v0, v1, v2, v3) { \
+		const float32x4x2_t xx = vtrnq_f32(v0, v1); \
+		const float32x4x2_t yy = vtrnq_f32(v2, v3); \
+		v0 = vcombine_f32(vget_low_f32(xx.val[0]), vget_low_f32(yy.val[0])); \
+		v1 = vcombine_f32(vget_low_f32(xx.val[1]), vget_low_f32(yy.val[1])); \
+		v2 = vcombine_f32(vget_high_f32(xx.val[0]), vget_high_f32(yy.val[0])); \
+		v3 = vcombine_f32(vget_high_f32(xx.val[1]), vget_high_f32(yy.val[1])); \
+	}
+#endif
+
+#if COMPV_ARCH_ARM64
+#	define COMPV_ARM_NEON_FLOOR_F32(v) vrndmq_f32((v))
+#else
+#	define COMPV_ARM_NEON_FLOOR_F32(v) ({ \
+		static const uint32x4_t cc = (uint32x4_t)vdupq_n_f32(1); \
+		const float32x4_t aa = vcvtq_f32_s32(vcvtq_s32_f32(v)); \
+		const uint32x4_t bb = vcgtq_f32(aa, v); \
+		float32x4_t __ret = vsubq_f32(aa, (float32x4_t)vandq_u32(bb, cc)); \
+		__ret; \
+	})
+#endif
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_ARM && COMPV_INTRINSIC */

@@ -9,9 +9,7 @@
 
 #if COMPV_ARCH_X86 && COMPV_INTRINSIC
 #include "compv/base/intrin/x86/compv_intrin_avx.h"
-#include "compv/base/compv_simd_globals.h"
 #include "compv/base/compv_debug.h"
-#include "compv/base/math/compv_math.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -33,10 +31,10 @@ COMPV_NAMESPACE_BEGIN()
 }
 
 #define HERMITE4_32F_INTRIN_FMA3_AVX2(A, B, C, D, t, t2, t3, ret) { \
-	static __m128 vec05m = _mm_set1_ps(-0.5f); \
-	static __m128 vec15 = _mm_set1_ps(1.5f); \
-	static __m128 vec20 = _mm_set1_ps(2.0f); \
-	static __m128 vec25m = _mm_set1_ps(-2.5f); \
+	static const __m128 vec05m = _mm_set1_ps(-0.5f); \
+	static const __m128 vec15 = _mm_set1_ps(1.5f); \
+	static const __m128 vec20 = _mm_set1_ps(2.0f); \
+	static const __m128 vec25m = _mm_set1_ps(-2.5f); \
 	ret = _mm_mul_ps(_mm_sub_ps(A, D), vec05m); \
 	ret = _mm_fmadd_ps(_mm_sub_ps(B, C), vec15, ret); \
 	__m128 vec1 = _mm_fmadd_ps(B, vec25m, A); \
