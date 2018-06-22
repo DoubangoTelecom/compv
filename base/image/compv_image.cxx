@@ -597,7 +597,6 @@ static COMPV_ERROR_CODE CompVImageWarpInverse(const CompVMatPtr& imageIn, CompVM
 	COMPV_CHECK_EXP_RETURN(!M->isRawTypeMatch<T>() || (M->subType() != COMPV_SUBTYPE_RAW_FLOAT32 && M->subType() != COMPV_SUBTYPE_RAW_FLOAT64), COMPV_ERROR_CODE_E_INVALID_SUBTYPE);
 
 	// Set map
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation could be found");
 	const T width = static_cast<T>(outSize.width);
 	const T height = static_cast<T>(outSize.height);
 	const size_t count = static_cast<size_t>(width * height);

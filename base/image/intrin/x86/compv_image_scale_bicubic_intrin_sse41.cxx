@@ -30,6 +30,7 @@ void CompVImageScaleBicubicHermite_32f32s_Intrin_SSE41(
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("AVX using Gather is faster");
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No ASM implementation");
 #endif
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("For ultimate projects, do not use this function -> re-design remap()");
 
 	static const __m128i vecZero = _mm_setzero_si128();
 	static const __m128i vecOffset = _mm_setr_epi32(-1, 0, 1, 2);

@@ -161,7 +161,6 @@ void CompVImageScaleBicubicPostProcessRow_32f32s_Intrin_NEON(
 			xfract1, xfract2, xfract3,
 			EE
 		);
-		
 		HERMITE1_32F_INTRIN_NEON(
 			vdupq_lane_f32(vget_low_f32(EE), 0),
 			vdupq_lane_f32(vget_low_f32(EE), 1),
@@ -171,6 +170,73 @@ void CompVImageScaleBicubicPostProcessRow_32f32s_Intrin_NEON(
 			outPtr[i]
 		);
 	}
+}
+
+void CompVImageScaleBicubicHermite_32f32s_Intrin_NEON(
+	compv_float32_t* outPtr,
+	const compv_float32_t* inPtr,
+	const int32_t* xint1,
+	const compv_float32_t* xfract1,
+	const int32_t* yint1,
+	const compv_float32_t* yfract1,
+	const compv_uscalar_t inWidthMinus1,
+	const compv_uscalar_t inHeightMinus1,
+	const compv_uscalar_t inStride
+)
+{
+	COMPV_DEBUG_INFO_CHECK_NEON();
+#if 0
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No ASM implementation");
+#endif
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("For ultimate projects, do not use this function -> re-design remap()");
+
+	static const int32x4_t vecZero = vdupq_n_s32(0);
+	static const int32x4_t vecOffset = (int32x4_t) { -1, 0, 1, 2 };
+
+	// Add offsets (-1, 0, 1, 2)
+	int32x4_t vecX = vaddq_s32(vdupq_n_s32(*xint1), vecOffset);
+	int32x4_t vecY = vaddq_s32(vdupq_n_s32(*yint1), vecOffset);
+
+	// a = COMPV_MATH_CLIP3(0, size-1, a)
+	vecX = vmaxq_s32(vecZero, vminq_s32(vecX, vdupq_n_s32(static_cast<int32_t>(inWidthMinus1))));
+	vecY = vmaxq_s32(vecZero, vminq_s32(vecY, vdupq_n_s32(static_cast<int32_t>(inHeightMinus1))));
+
+	// Y = Y * stride
+	vecY = vmulq_s32(vecY, vdupq_n_s32(static_cast<int32_t>(inStride)));
+
+	// Index[i] = Y[i] + X
+	const int32x4_t vecIdx0 = vaddq_s32(vecY, vdupq_lane_s32(vget_low_s32(vecX), 0));
+	const int32x4_t vecIdx1 = vaddq_s32(vecY, vdupq_lane_s32(vget_low_s32(vecX), 1));
+	const int32x4_t vecIdx2 = vaddq_s32(vecY, vdupq_lane_s32(vget_high_s32(vecX), 0));
+	const int32x4_t vecIdx3 = vaddq_s32(vecY, vdupq_lane_s32(vget_high_s32(vecX), 1));
+
+	const float32x4_t xfract = vdupq_n_f32(*xfract1);
+	const float32x4_t xfract2 = vmulq_f32(xfract, xfract);
+	const float32x4_t xfract3 = vmulq_f32(xfract2, xfract);
+
+	const compv_float32_t& yfract1_ = *yfract1;
+	const compv_float32_t yfract2_ = yfract1_ * yfract1_;
+	const float32x4_t yfract = (float32x4_t) { (yfract2_ * yfract1_), yfract2_, yfract1_, 1.f };
+
+	// TODO(dmi): use SVE extension (gather) -> https://community.arm.com/processors/b/blog/posts/technology-update-the-scalable-vector-extension-sve-for-the-armv8-a-architecture
+	const float32x4_t AA = (float32x4_t) { inPtr[vgetq_lane_s32(vecIdx0, 0)], inPtr[vgetq_lane_s32(vecIdx0, 1)], inPtr[vgetq_lane_s32(vecIdx0, 2)], inPtr[vgetq_lane_s32(vecIdx0, 3)] };
+	const float32x4_t BB = (float32x4_t) { inPtr[vgetq_lane_s32(vecIdx1, 0)], inPtr[vgetq_lane_s32(vecIdx1, 1)], inPtr[vgetq_lane_s32(vecIdx1, 2)], inPtr[vgetq_lane_s32(vecIdx1, 3)] };
+	const float32x4_t CC = (float32x4_t) { inPtr[vgetq_lane_s32(vecIdx2, 0)], inPtr[vgetq_lane_s32(vecIdx2, 1)], inPtr[vgetq_lane_s32(vecIdx2, 2)], inPtr[vgetq_lane_s32(vecIdx2, 3)] };
+	const float32x4_t DD = (float32x4_t) { inPtr[vgetq_lane_s32(vecIdx3, 0)], inPtr[vgetq_lane_s32(vecIdx3, 1)], inPtr[vgetq_lane_s32(vecIdx3, 2)], inPtr[vgetq_lane_s32(vecIdx3, 3)] };
+	float32x4_t EE;
+	HERMITE4_32F_INTRIN_NEON(
+		AA, BB, CC, DD,
+		xfract, xfract2, xfract3,
+		EE
+	);
+	HERMITE1_32F_INTRIN_NEON(
+		vdupq_lane_f32(vget_low_f32(EE), 0),
+		vdupq_lane_f32(vget_low_f32(EE), 1),
+		vdupq_lane_f32(vget_high_f32(EE), 0),
+		vdupq_lane_f32(vget_high_f32(EE), 1),
+		yfract,
+		*outPtr
+	);
 }
 
 COMPV_NAMESPACE_END()

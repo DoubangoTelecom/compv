@@ -36,6 +36,18 @@ void CompVImageScaleBicubicPostProcessRow_32f32s_Intrin_NEON(
 	const compv_uscalar_t rowCount
 );
 
+void CompVImageScaleBicubicHermite_32f32s_Intrin_NEON(
+	compv_float32_t* outPtr,
+	const compv_float32_t* inPtr,
+	const int32_t* xint1,
+	const compv_float32_t* xfract1,
+	const int32_t* yint1,
+	const compv_float32_t* yfract1,
+	const compv_uscalar_t inWidthMinus1,
+	const compv_uscalar_t inHeightMinus1,
+	const compv_uscalar_t inStride
+);
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_ARM && COMPV_INTRINSIC */

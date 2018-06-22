@@ -229,6 +229,7 @@ COMPV_ERROR_CODE CompVImageScaleBicubicProcessor::init()
 	if (CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
 		COMPV_EXEC_IFDEF_INTRIN_ARM(preprocess_32s32f = CompVImageScaleBicubicPreprocess_32s32f_Intrin_NEON);
 		COMPV_EXEC_IFDEF_INTRIN_ARM(postprocessrow_32f32s = CompVImageScaleBicubicPostProcessRow_32f32s_Intrin_NEON);
+		COMPV_EXEC_IFDEF_INTRIN_ARM(NOT_OPTIMIZ_hermite_32f32s = CompVImageScaleBicubicHermite_32f32s_Intrin_NEON);
 	}
 #endif
 	return COMPV_ERROR_CODE_S_OK;
