@@ -163,6 +163,12 @@
     <Filter Include="source\ml\libsvm-322">
       <UniqueIdentifier>{22abc91c-5578-4526-bef8-f4308b0d2378}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\pugixml-120">
+      <UniqueIdentifier>{4d3d50aa-d09d-4bc7-9195-688203c1d39f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\pugixml-120">
+      <UniqueIdentifier>{ded6b17b-dbbc-4f13-9853-277765338230}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\base\compv_base.h">
@@ -771,6 +777,12 @@
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_cast_intrin_sse2.h">
       <Filter>include\math\intrin\x86</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\pugixml-120\pugiconfig.h">
+      <Filter>include\pugixml-120</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\pugixml-120\pugixml.h">
+      <Filter>include\pugixml-120</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx">
@@ -1282,6 +1294,9 @@
     </ClCompile>
     <ClCompile Include="math\intrin\x86\compv_math_cast_intrin_sse2.cxx">
       <Filter>source\math\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="pugixml-120\xml.cxx">
+      <Filter>source\pugixml-120</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
