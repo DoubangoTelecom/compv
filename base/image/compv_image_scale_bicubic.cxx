@@ -8,6 +8,7 @@
 #include "compv/base/parallel/compv_parallel.h"
 #include "compv/base/math/compv_math_utils.h"
 #include "compv/base/math/compv_math_cast.h"
+#include "compv/base/math/compv_math_clip.h"
 #include "compv/base/compv_cpu.h"
 
 #include "compv/base/image/intrin/x86/compv_image_scale_bicubic_intrin_sse2.h"
@@ -235,15 +236,19 @@ COMPV_ERROR_CODE CompVImageScaleBicubicProcessor::init()
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVImageScaleBicubic::process(const CompVMatPtr& imageIn, CompVMatPtr& imageOut)
+COMPV_ERROR_CODE CompVImageScaleBicubic::process(const CompVMatPtr& imageIn, CompVMatPtr& imageOut, const COMPV_INTERPOLATION_TYPE bicubicType COMPV_DEFAULT(COMPV_INTERPOLATION_TYPE_BICUBIC))
 {
 	// Internal function, no need to check for input parameters
 	// For now only grascale images are fully tested
 	COMPV_CHECK_EXP_RETURN(
-		imageIn->elmtInBytes() != sizeof(uint8_t) || imageIn->planeCount() != 1,
+		(imageIn->elmtInBytes() != sizeof(uint8_t) && !imageIn->isRawTypeMatch<compv_float32_t>()) || imageIn->planeCount() != 1,
 		COMPV_ERROR_CODE_E_NOT_IMPLEMENTED,
-		"Only 8up1 subtypes are supported using bilinear scaling"
+		"Only 8up1 and 32fp1 subtypes are supported using bilinear scaling"
 	);
+	COMPV_CHECK_EXP_RETURN(
+		bicubicType != COMPV_INTERPOLATION_TYPE_BICUBIC && bicubicType != COMPV_INTERPOLATION_TYPE_BICUBIC_FLOAT32,
+		COMPV_ERROR_CODE_E_NOT_IMPLEMENTED,
+		"Invalid bicubic type");
 
 	CompVImageScaleBicubicProcessor processor;
 	COMPV_CHECK_CODE_RETURN(processor.init());
@@ -276,11 +281,21 @@ COMPV_ERROR_CODE CompVImageScaleBicubic::process(const CompVMatPtr& imageIn, Com
 	processor.preprocess_32s32f(xintMat->ptr<int32_t>(), xfractMat->ptr<compv_float32_t>(), &xSV, outWidth, inWidthMinus1, 1);
 
 	CompVMatPtr imageIn32f;
-	COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static<uint8_t, compv_float32_t>(imageIn, &imageIn32f)));
+	if (imageIn->isRawTypeMatch<compv_float32_t>()) {
+		imageIn32f = imageIn;
+	}
+	else {
+		COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static<uint8_t, compv_float32_t>(imageIn, &imageIn32f)));
+	}
 	const compv_float32_t* inPtr = imageIn32f->ptr<const compv_float32_t>();
 
 	CompVMatPtr output32f;
-	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float32_t>(&output32f, outHeight, outWidth, outStride));
+	if (imageOut->isRawTypeMatch<compv_float32_t>()) {
+		output32f = imageOut;
+	}
+	else {
+		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float32_t>(&output32f, outHeight, outWidth, outStride));
+	}
 	
 	auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
 		compv_float32_t* outPtr = output32f->ptr<compv_float32_t>(ystart);
@@ -309,7 +324,12 @@ COMPV_ERROR_CODE CompVImageScaleBicubic::process(const CompVMatPtr& imageIn, Com
 		COMPV_IMAGE_SCALE_BICUBIC_SAMPLES_PER_THREAD
 	));
 
-	COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static_pixel8(output32f, &imageOut)));
+	if (bicubicType == COMPV_INTERPOLATION_TYPE_BICUBIC) { // typeof(output) == typeof(intput) == uint8_t
+		COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static_pixel8(output32f, &imageOut)));
+	}
+	else { // bicubicType == COMPV_INTERPOLATION_TYPE_BICUBIC_FLOAT32
+		COMPV_CHECK_CODE_RETURN(CompVMathClip::clip3(output32f, 0.0, 255.0, &imageOut));
+	}
 	
 	return COMPV_ERROR_CODE_S_OK;
 }

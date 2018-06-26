@@ -5,6 +5,7 @@
 * WebSite: http://compv.org
 */
 #include "compv/base/math/compv_math_moments.h"
+#include "compv/base/compv_generic_invoke.h"
 
 #include <float.h> /* DBL_EPSILON */
 
@@ -14,11 +15,10 @@ COMPV_NAMESPACE_BEGIN()
 
 // Up to the caller function to initialize values to zero
 template<typename T>
-static void CompVMathMomentsRawFirstOrder(const T* data, const size_t width, const size_t height, const size_t stride, double* m00, double* m01, double* m10)
+static void CompVMathMomentsRawFirstOrder(const T* data, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride, double* m00, double* m01, double* m10)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("SUM per row and using int32 then add to double");
-
 	double& m00_ = *m00;
 	double& m01_ = *m01;
 	double& m10_ = *m10;
@@ -27,7 +27,7 @@ static void CompVMathMomentsRawFirstOrder(const T* data, const size_t width, con
 	for (int32_t j = 0; j < height_; j++) {
 		for (int32_t i = 0; i < width_; i++) {
 			if (data[i]) {
-				const double pixel = data[i];
+				const double pixel = static_cast<double>(data[i]);
 				m00_ += pixel;
 				m01_ += (j * pixel);
 				m10_ += (i * pixel);
@@ -39,11 +39,10 @@ static void CompVMathMomentsRawFirstOrder(const T* data, const size_t width, con
 
 // Up to the caller function to initialize values to zero
 template<typename T>
-static void CompVMathMomentsRawSecondOrder(const T* data, const size_t width, const size_t height, const size_t stride, double* m00, double* m01, double* m10, double* m11, double* m02, double* m20)
+static void CompVMathMomentsRawSecondOrder(const T* data, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride, double* m00, double* m01, double* m10, double* m11, double* m02, double* m20)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("SUM per row and using int32 then add to double");
-
 	double& m00_ = *m00;
 	double& m01_ = *m01;
 	double& m10_ = *m10;
@@ -55,7 +54,7 @@ static void CompVMathMomentsRawSecondOrder(const T* data, const size_t width, co
 	for (int32_t j = 0; j < height_; j++) {
 		for (int32_t i = 0; i < width_; i++) {
 			if (data[i]) {
-				const double pixel = data[i];
+				const double pixel = static_cast<double>(data[i]);
 				const double k = (j * pixel);
 				const double p = (i * pixel);
 				m00_ += pixel;
@@ -70,17 +69,17 @@ static void CompVMathMomentsRawSecondOrder(const T* data, const size_t width, co
 	}
 }
 
-COMPV_ERROR_CODE CompVMathMoments::rawFirstOrder(const CompVMatPtr& ptrIn, double(&moments)[3], bool binar COMPV_DEFAULT(false))
+template <typename T>
+static COMPV_ERROR_CODE CompVMathMomentsRawFirstOrderGeneric(const CompVMatPtr& ptrIn, double(&moments)[3], bool binar)
 {
-	COMPV_CHECK_EXP_RETURN(!ptrIn || ptrIn->elmtInBytes() != sizeof(uint8_t), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-
+	COMPV_CHECK_EXP_RETURN(!ptrIn || ptrIn->elmtInBytes() != sizeof(T), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation could be found");
 	moments[0] = 0.0; // M00(area)
 	moments[1] = 0.0; // M01(y)
 	moments[2] = 0.0; // M10(x)
 	for (int plane = 0; plane < ptrIn->planeCount(); ++plane) {
 		CompVMathMomentsRawFirstOrder(
-			ptrIn->ptr<const uint8_t>(0, 0, plane),
+			ptrIn->ptr<const T>(0, 0, plane),
 			ptrIn->cols(plane), ptrIn->rows(plane), ptrIn->stride(plane),
 			&moments[0], &moments[1], &moments[2]
 		);
@@ -88,10 +87,17 @@ COMPV_ERROR_CODE CompVMathMoments::rawFirstOrder(const CompVMatPtr& ptrIn, doubl
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVMathMoments::rawSecondOrder(const CompVMatPtr& ptrIn, double(&moments)[6], bool binar COMPV_DEFAULT(false))
+COMPV_ERROR_CODE CompVMathMoments::rawFirstOrder(const CompVMatPtr& ptrIn, double(&moments)[3], bool binar COMPV_DEFAULT(false))
 {
-	COMPV_CHECK_EXP_RETURN(!ptrIn || ptrIn->elmtInBytes() != sizeof(uint8_t), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(!ptrIn, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	CompVGenericInvokeCodeRawType(ptrIn->subType(), CompVMathMomentsRawFirstOrderGeneric, ptrIn, moments, binar);
+	return COMPV_ERROR_CODE_S_OK;
+}
 
+template<typename T>
+static COMPV_ERROR_CODE CompVMathMomentsRawSecondOrderGeneric(const CompVMatPtr& ptrIn, double(&moments)[6], bool binar)
+{
+	COMPV_CHECK_EXP_RETURN(!ptrIn || ptrIn->elmtInBytes() != sizeof(T), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation could be found");
 	moments[0] = 0.0; // M00(area)
 	moments[1] = 0.0; // M01(y)
@@ -101,7 +107,7 @@ COMPV_ERROR_CODE CompVMathMoments::rawSecondOrder(const CompVMatPtr& ptrIn, doub
 	moments[5] = 0.0; // M20(x*x)
 	for (int plane = 0; plane < ptrIn->planeCount(); ++plane) {
 		CompVMathMomentsRawSecondOrder(
-			ptrIn->ptr<const uint8_t>(0, 0, plane),
+			ptrIn->ptr<const T>(0, 0, plane),
 			ptrIn->cols(plane), ptrIn->rows(plane), ptrIn->stride(plane),
 			&moments[0], &moments[1], &moments[2], &moments[3], &moments[4], &moments[5]
 		);
@@ -109,13 +115,21 @@ COMPV_ERROR_CODE CompVMathMoments::rawSecondOrder(const CompVMatPtr& ptrIn, doub
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVMathMoments::skewness(const CompVMatPtr& ptrIn, double& skew, bool binar COMPV_DEFAULT(false))
+COMPV_ERROR_CODE CompVMathMoments::rawSecondOrder(const CompVMatPtr& ptrIn, double(&moments)[6], bool binar COMPV_DEFAULT(false))
 {
-	COMPV_CHECK_EXP_RETURN(!ptrIn || ptrIn->elmtInBytes() != sizeof(uint8_t), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(!ptrIn, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	CompVGenericInvokeCodeRawType(ptrIn->subType(), CompVMathMomentsRawSecondOrderGeneric, ptrIn, moments, binar);
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+template<typename T>
+static COMPV_ERROR_CODE CompVMathMomentsSkewnessGeneric(const CompVMatPtr& ptrIn, double& skew, bool binar)
+{
+	COMPV_CHECK_EXP_RETURN(!ptrIn || ptrIn->elmtInBytes() != sizeof(T), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	double m00 = 0, m01 = 0, m10 = 0, m11 = 0, m02 = 0, m20 = 0;
 	for (int plane = 0; plane < ptrIn->planeCount(); ++plane) {
 		CompVMathMomentsRawSecondOrder(
-			ptrIn->ptr<const uint8_t>(0, 0, plane),
+			ptrIn->ptr<const T>(0, 0, plane),
 			ptrIn->cols(plane), ptrIn->rows(plane), ptrIn->stride(plane),
 			&m00, &m01, &m10, &m11, &m02, &m20
 		);
@@ -136,13 +150,21 @@ COMPV_ERROR_CODE CompVMathMoments::skewness(const CompVMatPtr& ptrIn, double& sk
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVMathMoments::orientation(const CompVMatPtr& ptrIn, double& theta, bool binar COMPV_DEFAULT(false))
+COMPV_ERROR_CODE CompVMathMoments::skewness(const CompVMatPtr& ptrIn, double& skew, bool binar COMPV_DEFAULT(false))
 {
-	COMPV_CHECK_EXP_RETURN(!ptrIn || ptrIn->elmtInBytes() != sizeof(uint8_t), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(!ptrIn, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	CompVGenericInvokeCodeRawType(ptrIn->subType(), CompVMathMomentsSkewnessGeneric, ptrIn, skew, binar);
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+template<typename T>
+static COMPV_ERROR_CODE CompVMathMomentsOrientationGeneric(const CompVMatPtr& ptrIn, double& theta, bool binar)
+{
+	COMPV_CHECK_EXP_RETURN(!ptrIn || ptrIn->elmtInBytes() != sizeof(T), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	double m00 = 0, m01 = 0, m10 = 0, m11 = 0, m02 = 0, m20 = 0;
 	for (int plane = 0; plane < ptrIn->planeCount(); ++plane) {
 		CompVMathMomentsRawSecondOrder(
-			ptrIn->ptr<const uint8_t>(0, 0, plane),
+			ptrIn->ptr<const T>(0, 0, plane),
 			ptrIn->cols(plane), ptrIn->rows(plane), ptrIn->stride(plane),
 			&m00, &m01, &m10, &m11, &m02, &m20
 		);
@@ -162,6 +184,13 @@ COMPV_ERROR_CODE CompVMathMoments::orientation(const CompVMatPtr& ptrIn, double&
 	else {
 		theta = 0.0;
 	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVMathMoments::orientation(const CompVMatPtr& ptrIn, double& theta, bool binar COMPV_DEFAULT(false))
+{
+	COMPV_CHECK_EXP_RETURN(!ptrIn, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	CompVGenericInvokeCodeRawType(ptrIn->subType(), CompVMathMomentsOrientationGeneric, ptrIn, theta, binar);
 	return COMPV_ERROR_CODE_S_OK;
 }
 

@@ -551,29 +551,33 @@ COMPV_ERROR_CODE CompVImage::scale(const CompVMatPtr& imageIn, CompVMatPtrPtr im
 		// No scaling and output is equal to input
 		return COMPV_ERROR_CODE_S_OK;
 	}
-
-	CompVMatPtr imageOut_ = (imageIn == *imageOut) ? nullptr : *imageOut; // When (imageIn == imageOut) we have to save imageIn
-	size_t strideOut = widthOut;
-	const COMPV_SUBTYPE subType = ((imageIn->planeCount() == 1 && imageIn->subType() == COMPV_SUBTYPE_RAW_UINT8) ? COMPV_SUBTYPE_PIXELS_Y : imageIn->subType());
-	COMPV_CHECK_CODE_RETURN(CompVImageUtils::bestStride(strideOut, &strideOut));
-	COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&imageOut_, subType, widthOut, heightOut, strideOut));
-
 	if (bScaleFactor1 & !CompVBase::isTestingMode()) { // In testing mode we may want to encode the same image several times to check CPU, Memory, Latency...
 		if (bSelfTransfer) {
 			// *outImage = This is enought
 			return COMPV_ERROR_CODE_S_OK;
 		}
-		COMPV_CHECK_CODE_RETURN(CompVImageUtils::copy(
-			subType, imageIn->ptr(), imageIn->cols(), imageIn->rows(), imageIn->stride(),
-			imageOut_->ptr<void>(), imageOut_->cols(), imageOut_->rows(), imageOut_->stride()
-		));
-		*imageOut = imageOut_;
+		if (scaleType == COMPV_INTERPOLATION_TYPE_BICUBIC_FLOAT32) {
+			COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static<uint8_t, compv_float32_t>(imageIn, imageOut)));
+		}
+		else {
+			COMPV_CHECK_CODE_RETURN(imageIn->clone(imageOut));
+		}
 		return COMPV_ERROR_CODE_S_OK;
+	}
+
+	CompVMatPtr imageOut_ = (imageIn == *imageOut) ? nullptr : *imageOut; // When (imageIn == imageOut) we have to save imageIn
+	const COMPV_SUBTYPE subType = ((imageIn->planeCount() == 1 && imageIn->subType() == COMPV_SUBTYPE_RAW_UINT8) ? COMPV_SUBTYPE_PIXELS_Y : imageIn->subType());
+	if (scaleType == COMPV_INTERPOLATION_TYPE_BICUBIC_FLOAT32) {
+		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float32_t>(&imageOut_, heightOut, widthOut));
+	}
+	else {
+		COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&imageOut_, subType, widthOut, heightOut));
 	}
 
 	switch (scaleType) {
 	case COMPV_INTERPOLATION_TYPE_BICUBIC:
-		COMPV_CHECK_CODE_RETURN(CompVImageScaleBicubic::process(imageIn, imageOut_));
+	case COMPV_INTERPOLATION_TYPE_BICUBIC_FLOAT32:
+		COMPV_CHECK_CODE_RETURN(CompVImageScaleBicubic::process(imageIn, imageOut_, scaleType));
 		break;
 	case COMPV_INTERPOLATION_TYPE_BILINEAR:
 		COMPV_CHECK_CODE_RETURN(CompVImageScaleBilinear::process(imageIn, imageOut_));

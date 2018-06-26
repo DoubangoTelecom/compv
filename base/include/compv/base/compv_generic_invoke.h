@@ -18,7 +18,7 @@ COMPV_NAMESPACE_BEGIN()
 #define CompVGenericInvokeRawType(subType, func, check, ...) \
 	switch (subType) { \
 		case COMPV_SUBTYPE_RAW_INT8: CompVGenericCheck##check(func<int8_t>(__VA_ARGS__)); break; \
-		case COMPV_SUBTYPE_RAW_UINT8: CompVGenericCheck##check(func<uint8_t>(__VA_ARGS__)); break; \
+		case COMPV_SUBTYPE_RAW_UINT8: case COMPV_SUBTYPE_PIXELS_Y: CompVGenericCheck##check(func<uint8_t>(__VA_ARGS__)); break; \
 		case COMPV_SUBTYPE_RAW_INT16: CompVGenericCheck##check(func<int16_t>(__VA_ARGS__)); break; \
 		case COMPV_SUBTYPE_RAW_UINT16: CompVGenericCheck##check(func<uint16_t>(__VA_ARGS__)); break; \
 		case COMPV_SUBTYPE_RAW_INT32: CompVGenericCheck##check(func<int32_t>(__VA_ARGS__)); break; \

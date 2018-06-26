@@ -9,6 +9,7 @@
 #include "compv/base/image/compv_image_scale_bicubic.h"
 #include "compv/base/math/compv_math.h"
 #include "compv/base/math/compv_math_cast.h"
+#include "compv/base/math/compv_math_clip.h"
 #include "compv/base/parallel/compv_parallel.h"
 #include "compv/base/compv_base.h"
 #include "compv/base/compv_generic_invoke.h"
@@ -155,7 +156,7 @@ private:
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
-	static COMPV_ERROR_CODE process_bicubic(const CompVMatPtr& input, CompVMatPtr& output, const CompVMatPtr& map, const CompVRectFloat32 inputROI)
+	static COMPV_ERROR_CODE process_bicubic(const CompVMatPtr& input, CompVMatPtr& output, const CompVMatPtr& map, const CompVRectFloat32 inputROI, const COMPV_INTERPOLATION_TYPE bicubicType)
 	{
 		// Private function, no need to check input parameters. Up to the caller.
 
@@ -187,11 +188,21 @@ private:
 		}
 
 		CompVMatPtr input32f;
-		COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static<uint8_t, compv_float32_t>(input, &input32f)));
+		if (input->isRawTypeMatch<compv_float32_t>()) {
+			input32f = input;
+		}
+		else {
+			COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static<uint8_t, compv_float32_t>(input, &input32f)));
+		}
 		const compv_float32_t* inputPtr = input32f->ptr<const compv_float32_t>();
 
 		CompVMatPtr output32f;
-		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float32_t>(&output32f, outputHeight, outputWidth, outputStride));
+		if (output->isRawTypeMatch<compv_float32_t>()) {
+			output32f = output;
+		}
+		else {
+			COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float32_t>(&output32f, outputHeight, outputWidth, outputStride));
+		}
 
 		auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
 			// Bilinear filtering: https://en.wikipedia.org/wiki/Bilinear_interpolation#Unit_square
@@ -236,7 +247,12 @@ private:
 			COMPV_IMAGE_REMAP_BICUBIC_SAMPLES_PER_THREAD
 		));
 
-		COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static_pixel8(output32f, &output)));
+		if (bicubicType == COMPV_INTERPOLATION_TYPE_BICUBIC) {
+			COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static_pixel8(output32f, &output)));
+		}
+		else { // it's "COMPV_INTERPOLATION_TYPE_BICUBIC_FLOAT32"
+			COMPV_CHECK_CODE_RETURN(CompVMathClip::clip3(output32f, 0.0, 255.0, &output));
+		}
 
 		return COMPV_ERROR_CODE_S_OK;
 	}
@@ -245,7 +261,7 @@ public:
 	static COMPV_ERROR_CODE process(const CompVMatPtr& input, CompVMatPtrPtr output, const CompVMatPtr& map, COMPV_INTERPOLATION_TYPE interType COMPV_DEFAULT(COMPV_INTERPOLATION_TYPE_BILINEAR), const CompVRectFloat32* inputROI COMPV_DEFAULT(nullptr), const CompVSizeSz* outSize COMPV_DEFAULT(nullptr))
 	{
 		// For now only grayscale images are supported
-		COMPV_CHECK_EXP_RETURN(!input || !output || !map || input->isEmpty() || input->elmtInBytes() != sizeof(uint8_t) || input->planeCount() != 1 || (outSize && (!outSize->height || !outSize->width)), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		COMPV_CHECK_EXP_RETURN(!input || !output || !map || input->isEmpty() || input->planeCount() != 1 || (outSize && (!outSize->height || !outSize->width)), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
 		CompVMatPtr output_ = (*output == input) ? nullptr : *output;
 
@@ -281,18 +297,26 @@ public:
 		COMPV_CHECK_EXP_RETURN(map->rows() < 2 || map->cols() != outputElmtCount, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Invalid map size");
 
 		// Create output
-		const COMPV_SUBTYPE subType = ((input->planeCount() == 1 && input->subType() == COMPV_SUBTYPE_RAW_UINT8) ? COMPV_SUBTYPE_PIXELS_Y : input->subType());
-		COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&output_, subType, outputSize_.width, outputSize_.height, (input->stride() >= outputSize_.width) ? input->stride() : 0));
+		if (interType == COMPV_INTERPOLATION_TYPE_BICUBIC_FLOAT32) {
+			COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float32_t>(&output_, outputSize_.height, outputSize_.width, (input->stride() >= outputSize_.width) ? input->stride() : 0));
+		}
+		else {
+			const COMPV_SUBTYPE subType = ((input->planeCount() == 1 && input->subType() == COMPV_SUBTYPE_RAW_UINT8) ? COMPV_SUBTYPE_PIXELS_Y : input->subType());
+			COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&output_, subType, outputSize_.width, outputSize_.height, (input->stride() >= outputSize_.width) ? input->stride() : 0));
+		}
 
 		// Perform interpolation
 		switch (interType) {
 		case COMPV_INTERPOLATION_TYPE_BICUBIC:
-			COMPV_CHECK_CODE_RETURN(CompVImageRemapGeneric::process_bicubic(input, output_, map, inputROI_));
+		case COMPV_INTERPOLATION_TYPE_BICUBIC_FLOAT32:
+			COMPV_CHECK_CODE_RETURN(CompVImageRemapGeneric::process_bicubic(input, output_, map, inputROI_, interType));
 			break;
 		case COMPV_INTERPOLATION_TYPE_BILINEAR:
+			COMPV_CHECK_EXP_RETURN(input->elmtInBytes() != sizeof(uint8_t), COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Requires 8u as input");
 			COMPV_CHECK_CODE_RETURN(CompVImageRemapGeneric::process_bilinear(input, output_, map, inputROI_));
 			break;
 		case COMPV_INTERPOLATION_TYPE_NEAREST:
+			COMPV_CHECK_EXP_RETURN(input->elmtInBytes() != sizeof(uint8_t), COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Requires 8u as input");
 			COMPV_CHECK_CODE_RETURN(CompVImageRemapGeneric::process_nearest(input, output_, map, inputROI_));
 			break;
 		default:

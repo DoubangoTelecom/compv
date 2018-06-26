@@ -20,28 +20,38 @@ class COMPV_BASE_API CompVGradientFast
 {
 public:
 	template <typename OutType> static COMPV_ERROR_CODE gradX(const CompVMatPtr& input, CompVMatPtrPtr outputX) {
-		COMPV_CHECK_EXP_RETURN(!input || input->planeCount() != 1 || input->elmtInBytes() != sizeof(uint8_t) || !outputX, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-		if (std::is_same<OutType, compv_float32_t>::value) {
-			COMPV_CHECK_CODE_RETURN(gradX_8u32f(input, outputX));
+		COMPV_CHECK_EXP_RETURN(!input || input->planeCount() != 1 || !outputX || (input->elmtInBytes() != sizeof(uint8_t) && !input->isRawTypeMatch<compv_float32_t>()), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		if (input->isRawTypeMatch<compv_float32_t>()) {
+			COMPV_CHECK_CODE_RETURN(gradX_32f32f(input, outputX));
 		}
-		else {
-			COMPV_CHECK_CODE_RETURN(gradX_8u16s(input, outputX));
-			if (!std::is_same<OutType, int16_t>::value) {
-				COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static<int16_t, OutType>(*outputX, outputX)));
+		else if (input->elmtInBytes() != sizeof(uint8_t)) {
+			if (std::is_same<OutType, compv_float32_t>::value) {
+				COMPV_CHECK_CODE_RETURN(gradX_8u32f(input, outputX));
+			}
+			else {
+				COMPV_CHECK_CODE_RETURN(gradX_8u16s(input, outputX));
+				if (!std::is_same<OutType, int16_t>::value) {
+					COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static<int16_t, OutType>(*outputX, outputX)));
+				}
 			}
 		}
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
 	template <typename OutType> static COMPV_ERROR_CODE gradY(const CompVMatPtr& input, CompVMatPtrPtr outputY) {
-		COMPV_CHECK_EXP_RETURN(!input || input->planeCount() != 1 || input->elmtInBytes() != sizeof(uint8_t) || !outputY, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-		if (std::is_same<OutType, compv_float32_t>::value) {
-			COMPV_CHECK_CODE_RETURN(gradY_8u32f(input, outputY));
+		COMPV_CHECK_EXP_RETURN(!input || input->planeCount() != 1 || !outputY || (input->elmtInBytes() != sizeof(uint8_t) && !input->isRawTypeMatch<compv_float32_t>()), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		if (input->isRawTypeMatch<compv_float32_t>()) {
+			COMPV_CHECK_CODE_RETURN(gradY_32f32f(input, outputY));
 		}
-		else {
-			COMPV_CHECK_CODE_RETURN(gradY_8u16s(input, outputY));
-			if (!std::is_same<OutType, int16_t>::value) {
-				COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static<int16_t, OutType>(*outputY, outputY)));
+		else if (input->elmtInBytes() != sizeof(uint8_t)) {
+			if (std::is_same<OutType, compv_float32_t>::value) {
+				COMPV_CHECK_CODE_RETURN(gradY_8u32f(input, outputY));
+			}
+			else {
+				COMPV_CHECK_CODE_RETURN(gradY_8u16s(input, outputY));
+				if (!std::is_same<OutType, int16_t>::value) {
+					COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static<int16_t, OutType>(*outputY, outputY)));
+				}
 			}
 		}
 		return COMPV_ERROR_CODE_S_OK;
@@ -55,8 +65,10 @@ public:
 private:
 	static COMPV_ERROR_CODE gradX_8u16s(const CompVMatPtr& input, CompVMatPtrPtr outputX);
 	static COMPV_ERROR_CODE gradX_8u32f(const CompVMatPtr& input, CompVMatPtrPtr outputX);
+	static COMPV_ERROR_CODE gradX_32f32f(const CompVMatPtr& input, CompVMatPtrPtr outputX);
 	static COMPV_ERROR_CODE gradY_8u16s(const CompVMatPtr& input, CompVMatPtrPtr outputY);
 	static COMPV_ERROR_CODE gradY_8u32f(const CompVMatPtr& input, CompVMatPtrPtr outputY);
+	static COMPV_ERROR_CODE gradY_32f32f(const CompVMatPtr& input, CompVMatPtrPtr outputY);
 };
 
 COMPV_NAMESPACE_END()

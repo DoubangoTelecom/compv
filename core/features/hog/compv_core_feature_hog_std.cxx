@@ -192,10 +192,11 @@ COMPV_ERROR_CODE CompVHogStd::get(int id, const void** valuePtrPtr, size_t value
 
 // IMPORTANT: this function *must be* thread-safe (do not modify members) as the HOG descriptor
 // instance will be shared (see ultimateText and ultimateADAS projects)
+// input could be of any type (raw float, pixels....)
 COMPV_ERROR_CODE CompVHogStd::process(const CompVMatPtr& input, CompVMatPtrPtr output) /*Overrides(CompVHOG)*/
 {
 	COMPV_CHECK_EXP_RETURN(!input || !output, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_CHECK_EXP_RETURN(input->elmtInBytes() != sizeof(uint8_t) || input->planeCount() != 1, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "input must be 8U_1D (e.g. grayscale image)");
+	COMPV_CHECK_EXP_RETURN(input->planeCount() != 1, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "input must be 1D (e.g. grayscale image) - could be raw float or pixels");
 
 	// TODO(dmi): for now we only support winSize = full image. In ultimateADAS and ultimateText the input already contains the full image to identify (thanks to connected components)
 	// To add support for slidding window just split the code: "pre-process" to compute mapHist and "post-process" to compute the features.
