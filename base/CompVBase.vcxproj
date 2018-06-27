@@ -900,9 +900,6 @@
     <YASM Include="asm\x86\compv_bits_x64_sse.s">
       <FileType>Document</FileType>
     </YASM>
-    <YASM Include="asm\x86\compv_gradient_fast_x64_avx.s">
-      <FileType>Document</FileType>
-    </YASM>
     <YASM Include="asm\x86\compv_gradient_fast_x64_sse.s">
       <FileType>Document</FileType>
     </YASM>

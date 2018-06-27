@@ -24,7 +24,7 @@ public:
 		if (input->isRawTypeMatch<compv_float32_t>()) {
 			COMPV_CHECK_CODE_RETURN(gradX_32f32f(input, outputX));
 		}
-		else if (input->elmtInBytes() != sizeof(uint8_t)) {
+		else if (input->elmtInBytes() == sizeof(uint8_t)) {
 			if (std::is_same<OutType, compv_float32_t>::value) {
 				COMPV_CHECK_CODE_RETURN(gradX_8u32f(input, outputX));
 			}
@@ -43,7 +43,7 @@ public:
 		if (input->isRawTypeMatch<compv_float32_t>()) {
 			COMPV_CHECK_CODE_RETURN(gradY_32f32f(input, outputY));
 		}
-		else if (input->elmtInBytes() != sizeof(uint8_t)) {
+		else if (input->elmtInBytes() == sizeof(uint8_t)) {
 			if (std::is_same<OutType, compv_float32_t>::value) {
 				COMPV_CHECK_CODE_RETURN(gradY_8u32f(input, outputY));
 			}

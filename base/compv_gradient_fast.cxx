@@ -176,7 +176,7 @@ COMPV_ERROR_CODE CompVGradientFast::gradX_32f32f(const CompVMatPtr& input, CompV
 		= CompVGradientFastGradX_32f32f_C;
 #if COMPV_ARCH_X86
 	if (CompVCpu::isEnabled(compv::kCpuFlagSSE2) && input->isAlignedSSE() && outputX_->isAlignedSSE()) {
-		//COMPV_EXEC_IFDEF_INTRIN_X86(CompVGradientFastGradX_32f32f = CompVGradientFastGradX_32f32f_Intrin_SSE2);
+		COMPV_EXEC_IFDEF_INTRIN_X86(CompVGradientFastGradX_32f32f = CompVGradientFastGradX_32f32f_Intrin_SSE2);
 		//COMPV_EXEC_IFDEF_ASM_X64(CompVGradientFastGradX_32f32f = CompVGradientFastGradX_32f32f_Asm_X64_SSE2);
 	}
 #elif COMPV_ARCH_ARM
@@ -327,7 +327,7 @@ COMPV_ERROR_CODE CompVGradientFast::gradY_32f32f(const CompVMatPtr& input, CompV
 		= CompVGradientFastGradY_32f32f_C;
 #if COMPV_ARCH_X86
 	if (CompVCpu::isEnabled(compv::kCpuFlagSSE2) && input->isAlignedSSE() && outputY_->isAlignedSSE()) {
-		//COMPV_EXEC_IFDEF_INTRIN_X86(CompVGradientFastGradY_32f32f = CompVGradientFastGradY_32f32f_Intrin_SSE2);
+		COMPV_EXEC_IFDEF_INTRIN_X86(CompVGradientFastGradY_32f32f = CompVGradientFastGradY_32f32f_Intrin_SSE2);
 		//COMPV_EXEC_IFDEF_ASM_X64(CompVGradientFastGradY_32f32f = CompVGradientFastGradY_32f32f_Asm_X64_SSE2);
 	}
 #elif COMPV_ARCH_ARM

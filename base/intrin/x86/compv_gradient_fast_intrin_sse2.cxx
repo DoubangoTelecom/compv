@@ -62,6 +62,27 @@ void CompVGradientFastGradX_8u32f_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* 
 	}
 }
 
+void CompVGradientFastGradX_32f32f_Intrin_SSE2(COMPV_ALIGNED(SSE) const compv_float32_t* input, COMPV_ALIGNED(SSE) compv_float32_t* dx, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride)
+{
+	COMPV_DEBUG_INFO_CODE_TODO("No ASM code");
+	COMPV_DEBUG_INFO_CHECK_SSE2();
+	const compv_uscalar_t width16 = width & -16;
+	compv_uscalar_t i;
+	for (compv_uscalar_t j = 0; j < height; ++j) {
+		for (i = 0; i < width16; i += 16) {
+			_mm_store_ps(&dx[i], _mm_sub_ps(_mm_loadu_ps(&input[i + 1]), _mm_loadu_ps(&input[i - 1])));
+			_mm_store_ps(&dx[i + 4], _mm_sub_ps(_mm_loadu_ps(&input[i + 5]), _mm_loadu_ps(&input[i + 3])));
+			_mm_store_ps(&dx[i + 8], _mm_sub_ps(_mm_loadu_ps(&input[i + 9]), _mm_loadu_ps(&input[i + 7])));
+			_mm_store_ps(&dx[i + 12], _mm_sub_ps(_mm_loadu_ps(&input[i + 13]), _mm_loadu_ps(&input[i + 11])));
+		}
+		for (; i < width; i += 4) {
+			_mm_store_ps(&dx[i], _mm_sub_ps(_mm_loadu_ps(&input[i + 1]), _mm_loadu_ps(&input[i - 1])));
+		}
+		input += stride;
+		dx += stride;
+	}
+}
+
 void CompVGradientFastGradY_8u16s_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* input, COMPV_ALIGNED(SSE) int16_t* dy, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride)
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
@@ -101,6 +122,30 @@ void CompVGradientFastGradY_8u32f_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* 
 			_mm_store_ps(&dy[i + 4], _mm_cvtepi32_ps(vec0));
 			_mm_store_ps(&dy[i + 8], _mm_cvtepi32_ps(vec3));
 			_mm_store_ps(&dy[i + 12], _mm_cvtepi32_ps(vec1));
+		}
+		inputMinus1 += stride;
+		inputPlus1 += stride;
+		dy += stride;
+	}
+}
+
+void CompVGradientFastGradY_32f32f_Intrin_SSE2(COMPV_ALIGNED(SSE) const compv_float32_t* input, COMPV_ALIGNED(SSE) compv_float32_t* dy, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride)
+{
+	COMPV_DEBUG_INFO_CODE_TODO("No ASM code");
+	COMPV_DEBUG_INFO_CHECK_SSE2();
+	const compv_float32_t* inputMinus1 = input - stride;
+	const compv_float32_t* inputPlus1 = input + stride;
+	const compv_uscalar_t width16 = width & -16;
+	compv_uscalar_t i;
+	for (compv_uscalar_t j = 0; j < height; ++j) {
+		for (i = 0; i < width16; i += 16) {
+			_mm_store_ps(&dy[i], _mm_sub_ps(_mm_load_ps(&inputPlus1[i]), _mm_load_ps(&inputMinus1[i])));
+			_mm_store_ps(&dy[i + 4], _mm_sub_ps(_mm_load_ps(&inputPlus1[i + 4]), _mm_load_ps(&inputMinus1[i + 4])));
+			_mm_store_ps(&dy[i + 8], _mm_sub_ps(_mm_load_ps(&inputPlus1[i + 8]), _mm_load_ps(&inputMinus1[i + 8])));
+			_mm_store_ps(&dy[i + 12], _mm_sub_ps(_mm_load_ps(&inputPlus1[i + 12]), _mm_load_ps(&inputMinus1[i + 12])));
+		}
+		for (; i < width; i += 4) {
+			_mm_store_ps(&dy[i], _mm_sub_ps(_mm_load_ps(&inputPlus1[i]), _mm_load_ps(&inputMinus1[i])));
 		}
 		inputMinus1 += stride;
 		inputPlus1 += stride;

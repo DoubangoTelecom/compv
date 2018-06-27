@@ -1486,9 +1486,6 @@
     <YASM Include="asm\x86\compv_gradient_fast_x64_sse.s">
       <Filter>source\asm\x86</Filter>
     </YASM>
-    <YASM Include="asm\x86\compv_gradient_fast_x64_avx.s">
-      <Filter>source\asm\x86</Filter>
-    </YASM>
     <YASM Include="math\asm\x86\compv_math_op_mul_x64_avx.s">
       <Filter>source\math\asm\x86</Filter>
     </YASM>

@@ -4,7 +4,7 @@ using namespace compv;
 
 #define TAG_TEST_IMAGE "TestImage"
 
-#define TEST_SCALE					1
+#define TEST_SCALE					0
 #define TEST_ROTATE					0
 #define TEST_PYRAMID				0
 #define TEST_CHROMA_CONV			0
@@ -13,7 +13,7 @@ using namespace compv;
 #define TEST_PATCH_MOMENTS			0
 #define TEST_CCL_BINAR				0
 #define TEST_CCL_MSER				0
-#define TEST_GRADIENT				0
+#define TEST_GRADIENT				1
 #define TEST_SOBEL					0
 #define TEST_CANNY					0
 #define TEST_ADAPT_THRESH			0

@@ -16,7 +16,8 @@
 
 #define LOOP_COUNT				1
 #define FILE_NAME				FILE_NAME_EQUIRECTANGULAR
-#define FLTP					true // Floating point?
+#define IN_FLTP					true // testing gradXY_32f32f
+#define OUT_FLTP				true // Floating point?
 #define XDIR					true // XDIR(true) or YDIR(false)
 
 static const struct compv_unittest_gradient {
@@ -24,7 +25,7 @@ static const struct compv_unittest_gradient {
 	size_t width;
 	size_t height;
 	size_t stride;
-	bool fltp;
+	bool out_fltp;
 	bool xdir;
 	const char* md5;
 }
@@ -44,7 +45,7 @@ COMPV_ERROR_CODE gradient()
 
 	// Find test
 	for (size_t i = 0; i < COMPV_UNITTEST_GRADIENT_COUNT; ++i) {
-		if (COMPV_UNITTEST_GRADIENT[i].xdir == XDIR && COMPV_UNITTEST_GRADIENT[i].fltp == FLTP && std::string(COMPV_UNITTEST_GRADIENT[i].filename).compare(FILE_NAME) == 0) {
+		if (COMPV_UNITTEST_GRADIENT[i].xdir == XDIR && COMPV_UNITTEST_GRADIENT[i].out_fltp == OUT_FLTP && std::string(COMPV_UNITTEST_GRADIENT[i].filename).compare(FILE_NAME) == 0) {
 			test = &COMPV_UNITTEST_GRADIENT[i];
 			break;
 		}
@@ -58,9 +59,13 @@ COMPV_ERROR_CODE gradient()
 	
 	COMPV_CHECK_CODE_RETURN(CompVImage::read(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &image));
 
+	if (OUT_FLTP && IN_FLTP) { // Testing gradXY_32f32f
+		COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static<uint8_t, compv_float32_t>(image, &image)));
+	}
+
 	const uint64_t timeStart = CompVTime::nowMillis();
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
-		COMPV_CHECK_CODE_RETURN(fncptr(image, &grad, test->fltp));
+		COMPV_CHECK_CODE_RETURN(fncptr(image, &grad, test->out_fltp));
 	}
 	const uint64_t timeEnd = CompVTime::nowMillis();
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "Gradient Elapsed time = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));

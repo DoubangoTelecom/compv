@@ -5,10 +5,10 @@ using namespace compv;
 #define TAG_UNITTESTS "UnitTests"
 
 #define UNITTEST_SPLIT							0
-#define UNITTEST_SCALE							1
-#define UNITTEST_ROTATE							1
+#define UNITTEST_SCALE							0
+#define UNITTEST_ROTATE							0
 #define UNITTEST_PYRAMID						0
-#define UNITTEST_GRADIENT						0
+#define UNITTEST_GRADIENT						1
 #define UNITTEST_SOBEL							0
 #define UNITTEST_CANNY							0
 #define UNITTEST_THRESHOLD_ADAPT				0

@@ -21,19 +21,27 @@ section .data
 
 section .text
 
+%define ARG_OUT			1
+%define ARG_OUT_INT16	0
+%define ARG_OUT_FLOAT32	1
+
+%define ARG_DIR			2
+%define ARG_DIR_X		0
+%define ARG_DIR_Y		1
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; arg(0) -> COMPV_ALIGNED(SSE) const uint8_t* input
 ; arg(1) -> COMPV_ALIGNED(SSE) compv_float32_t* grad
 ; arg(2) -> compv_uscalar_t width
 ; arg(3) -> compv_uscalar_t height
 ; arg(4) -> COMPV_ALIGNED(SSE) compv_uscalar_t stride
-; %1 -> 0: int16, 1: float32
-; %2 -> 0: X-dir, 1: y-dir
+; %1 -> ARG_OUT
+; %2 -> ARG_DIR
 %macro CompVGradientFastGrad_8uXX_Macro_X64_SSE2 2
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 5
-	%if %2
+	%if %2 == ARG_DIR_Y
 		push r12
 	%endif
 	; end prolog
@@ -45,7 +53,7 @@ section .text
 	%define stride		r9
 	%define i			r10
 	%define stridef		r11	
-	%if %2
+	%if %2 == ARG_DIR_Y
 		%define input2	r12
 	%endif
 
@@ -56,13 +64,13 @@ section .text
 	mov stride, arg(4)
 	mov i, arg(5)
 
-	%if %1
+	%if %1 == ARG_OUT_FLOAT32
 		lea stridef, [stride * COMPV_YASM_FLOAT32_SZ_BYTES]
 	%else
 		lea stridef, [stride * COMPV_YASM_INT16_SZ_BYTES]
 	%endif
 
-	%if %2
+	%if %2 == ARG_DIR_Y
 		mov input2, input
 		sub input, stride
 		add input2, stride
@@ -79,7 +87,7 @@ section .text
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		xor i, i
 		.LoopWidth:
-			%if %2
+			%if %2 == ARG_DIR_Y
 				movdqu xmm2, [input + i*COMPV_YASM_UINT8_SZ_BYTES]
 				movdqu xmm0, [input2 + i*COMPV_YASM_UINT8_SZ_BYTES]
 			%else
@@ -94,7 +102,7 @@ section .text
 			punpckhbw xmm1, xmm4
 			psubw xmm0, xmm2
 			psubw xmm1, xmm3
-			%if %1
+			%if %1 == ARG_OUT_FLOAT32
 				movdqa xmm2, xmm0
 				movdqa xmm3, xmm1
 				punpcklwd xmm0, xmm0
@@ -124,7 +132,7 @@ section .text
 
 		dec height
 		lea input, [input + stride]
-		%if %2
+		%if %2 == ARG_DIR_Y
 			lea input2, [input2 + stride]
 		%endif
 		lea grad, [grad + stridef]
@@ -138,12 +146,12 @@ section .text
 	%undef stride	
 	%undef i
 	%undef stridef
-	%if %2
+	%if %2 == ARG_DIR_Y
 		%undef input2
 	%endif
 
 	; begin epilog
-	%if %2
+	%if %2 == ARG_DIR_Y
 		pop r12
 	%endif
 	COMPV_YASM_UNSHADOW_ARGS
@@ -154,18 +162,18 @@ section .text
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 sym(CompVGradientFastGradX_8u16s_Asm_X64_SSE2):
-	CompVGradientFastGrad_8uXX_Macro_X64_SSE2 0, 0
+	CompVGradientFastGrad_8uXX_Macro_X64_SSE2 ARG_OUT_INT16, ARG_DIR_X
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 sym(CompVGradientFastGradX_8u32f_Asm_X64_SSE2):
-	CompVGradientFastGrad_8uXX_Macro_X64_SSE2 1, 0
+	CompVGradientFastGrad_8uXX_Macro_X64_SSE2 ARG_OUT_FLOAT32, ARG_DIR_X
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 sym(CompVGradientFastGradY_8u16s_Asm_X64_SSE2):
-	CompVGradientFastGrad_8uXX_Macro_X64_SSE2 0, 1
+	CompVGradientFastGrad_8uXX_Macro_X64_SSE2 ARG_OUT_INT16, ARG_DIR_Y
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 sym(CompVGradientFastGradY_8u32f_Asm_X64_SSE2):
-	CompVGradientFastGrad_8uXX_Macro_X64_SSE2 1, 1
+	CompVGradientFastGrad_8uXX_Macro_X64_SSE2 ARG_OUT_FLOAT32, ARG_DIR_Y
 
 %endif ; COMPV_YASM_ABI_IS_64BIT
