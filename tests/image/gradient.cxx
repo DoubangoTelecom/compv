@@ -18,7 +18,7 @@
 #define FILE_NAME				FILE_NAME_EQUIRECTANGULAR
 #define IN_FLTP					true // testing gradXY_32f32f
 #define OUT_FLTP				true // Floating point?
-#define XDIR					true // XDIR(true) or YDIR(false)
+#define XDIR					false // XDIR(true) or YDIR(false)
 
 static const struct compv_unittest_gradient {
 	const char* filename;

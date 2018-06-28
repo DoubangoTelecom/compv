@@ -27,6 +27,7 @@ const COMPV_ERROR_CODE compv_tests_init()
 	CompVParallel::setIntelTbbEnabled(COMPV_enableIntelTbb); // before initializing
 
 	COMPV_CHECK_CODE_ASSERT(err = CompVInit(COMPV_numThreads));
+	COMPV_CHECK_CODE_ASSERT(err = CompVParallel::multiThreadingSetMaxThreads(COMPV_numThreads)); // "CompVInit" is nop if already initialized -> using "multiThreadingSetMaxThreads" to change number of threads
 	COMPV_CHECK_CODE_ASSERT(err = CompVBase::setTestingModeEnabled(COMPV_enableTestingMode));
 	COMPV_CHECK_CODE_ASSERT(err = CompVCpu::setMathFixedPointEnabled(COMPV_enableMathFixedPoint));
 	COMPV_CHECK_CODE_ASSERT(err = CompVCpu::setAsmEnabled(COMPV_enableAsm));

@@ -19,8 +19,10 @@ COMPV_NAMESPACE_BEGIN()
 
 void CompVGradientFastGradX_8u16s_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* input, COMPV_ALIGNED(NEON) int16_t* dx, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
 void CompVGradientFastGradX_8u32f_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* input, COMPV_ALIGNED(NEON) compv_float32_t* dx, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
+void CompVGradientFastGradX_32f32f_Intrin_NEON(COMPV_ALIGNED(NEON) const compv_float32_t* input, COMPV_ALIGNED(NEON) compv_float32_t* dx, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
 void CompVGradientFastGradY_8u16s_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* input, COMPV_ALIGNED(NEON) int16_t* dy, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
 void CompVGradientFastGradY_8u32f_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* input, COMPV_ALIGNED(NEON) compv_float32_t* dy, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
+void CompVGradientFastGradY_32f32f_Intrin_NEON(COMPV_ALIGNED(NEON) const compv_float32_t* input, COMPV_ALIGNED(NEON) compv_float32_t* dy, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
 
 COMPV_NAMESPACE_END()
 

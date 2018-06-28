@@ -83,7 +83,7 @@ COMPV_ERROR_CODE CompVParallel::multiThreadingEnable(CompVThreadDispatcherPtr di
 
 COMPV_ERROR_CODE CompVParallel::multiThreadingDisable()
 {
-    s_ThreadDisp = NULL;
+    s_ThreadDisp = nullptr;
     return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -93,6 +93,14 @@ COMPV_ERROR_CODE CompVParallel::multiThreadingSetMaxThreads(int32_t maxThreads C
 		COMPV_CHECK_CODE_RETURN(multiThreadingDisable());
 		return COMPV_ERROR_CODE_S_OK;
 	}
+	if (s_ThreadDisp) {
+		const int32_t maxThreadsPatched = maxThreads <= 0 ? static_cast<int32_t>(CompVCpu::coresCount()) : maxThreads;
+		if (maxThreads < 0 && s_ThreadDisp->threadsCount() == maxThreadsPatched) {
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Already using the requested number of threads (%d -> %d)", maxThreads, maxThreadsPatched);
+			return COMPV_ERROR_CODE_S_OK;
+		}
+	}
+
     CompVThreadDispatcherPtr newThreadDisp;
     COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::newObj(&newThreadDisp, maxThreads), "Failed to create thread dispatcher");
     s_ThreadDisp = newThreadDisp;// TODO(dmi): function not optimal, we destroy all threads and create new ones
