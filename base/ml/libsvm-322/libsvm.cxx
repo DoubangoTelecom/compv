@@ -15,6 +15,7 @@
 #include "compv/base/parallel/compv_parallel.h"
 #define COMPV_THIS_CLASSNAME "LIBSVM"
 int libsvm_version = LIBSVM_VERSION;
+static svm_model libsvm_static_model; // Forcing ctor() to be called (e.g. will initialize CompVMat members)
 typedef float Qfloat;
 typedef signed char schar;
 #ifndef min
@@ -844,8 +845,8 @@ int Solver::select_working_set(int &out_i, int &out_j)
 		}
 
 	int i = Gmax_idx;
-	const Qfloat *Q_i = NULL;
-	if (i != -1) // NULL Q_i not accessed: Gmax=-INF if i=-1
+	const Qfloat *Q_i = nullptr;
+	if (i != -1) // nullptr Q_i not accessed: Gmax=-INF if i=-1
 		Q_i = Q->get_Q(i, active_size);
 
 	for (int j = 0; j < active_size; j++)
@@ -1093,9 +1094,9 @@ int Solver_NU::select_working_set(int &out_i, int &out_j)
 
 	int ip = Gmaxp_idx;
 	int in = Gmaxn_idx;
-	const Qfloat *Q_ip = NULL;
-	const Qfloat *Q_in = NULL;
-	if (ip != -1) // NULL Q_ip not accessed: Gmaxp=-INF if ip=-1
+	const Qfloat *Q_ip = nullptr;
+	const Qfloat *Q_in = nullptr;
+	if (ip != -1) // nullptr Q_ip not accessed: Gmaxp=-INF if ip=-1
 		Q_ip = Q->get_Q(ip, active_size);
 	if (in != -1)
 		Q_in = Q->get_Q(in, active_size);
@@ -2118,6 +2119,7 @@ static void svm_group_classes(const svm_problem *prob, int *nr_class_ret, int **
 svm_model *svm_train(const svm_problem *prob, const svm_parameter *param)
 {
 	svm_model *model = Malloc(svm_model, 1);
+	CompVMem::copy(model, &libsvm_static_model, sizeof(libsvm_static_model));
 	model->param = *param;
 	model->free_sv = 0;	// XXX
 
@@ -2127,9 +2129,9 @@ svm_model *svm_train(const svm_problem *prob, const svm_parameter *param)
 	{
 		// regression or one-class-svm
 		model->nr_class = 2;
-		model->label = NULL;
-		model->nSV = NULL;
-		model->probA = NULL; model->probB = NULL;
+		model->label = nullptr;
+		model->nSV = nullptr;
+		model->probA = nullptr; model->probB = nullptr;
 		model->sv_coef = Malloc(double *, 1);
 
 		if (param->probability &&
@@ -2169,9 +2171,9 @@ svm_model *svm_train(const svm_problem *prob, const svm_parameter *param)
 		// classification
 		int l = prob->l;
 		int nr_class;
-		int *label = NULL;
-		int *start = NULL;
-		int *count = NULL;
+		int *label = nullptr;
+		int *start = nullptr;
+		int *count = nullptr;
 		int *perm = Malloc(int, l);
 
 		// group training data of the same class
@@ -2210,7 +2212,7 @@ svm_model *svm_train(const svm_problem *prob, const svm_parameter *param)
 			nonzero[i] = false;
 		decision_function *f = Malloc(decision_function, nr_class*(nr_class - 1) / 2);
 
-		double *probA = NULL, *probB = NULL;
+		double *probA = nullptr, *probB = nullptr;
 		if (param->probability)
 		{
 			probA = Malloc(double, nr_class*(nr_class - 1) / 2);
@@ -2278,8 +2280,8 @@ svm_model *svm_train(const svm_problem *prob, const svm_parameter *param)
 		}
 		else
 		{
-			model->probA = NULL;
-			model->probB = NULL;
+			model->probA = nullptr;
+			model->probB = nullptr;
 		}
 
 		int total_sv = 0;
@@ -2382,9 +2384,9 @@ void svm_cross_validation(const svm_problem *prob, const svm_parameter *param, i
 	if ((param->svm_type == C_SVC ||
 		param->svm_type == NU_SVC) && nr_fold < l)
 	{
-		int *start = NULL;
-		int *label = NULL;
-		int *count = NULL;
+		int *start = nullptr;
+		int *label = nullptr;
+		int *count = nullptr;
 		svm_group_classes(prob, &nr_class, &label, &start, &count, perm);
 
 		// random shuffle and then data grouped by fold using the array perm
@@ -2501,14 +2503,14 @@ int svm_get_nr_class(const svm_model *model)
 
 void svm_get_labels(const svm_model *model, int* label)
 {
-	if (model->label != NULL)
+	if (model->label != nullptr)
 		for (int i = 0; i < model->nr_class; i++)
 			label[i] = model->label[i];
 }
 
 void svm_get_sv_indices(const svm_model *model, int* indices)
 {
-	if (model->sv_indices != NULL)
+	if (model->sv_indices != nullptr)
 		for (int i = 0; i < model->l; i++)
 			indices[i] = model->sv_indices[i];
 }
@@ -2521,7 +2523,7 @@ int svm_get_nr_sv(const svm_model *model)
 double svm_get_svr_probability(const svm_model *model)
 {
 	if ((model->param.svm_type == EPSILON_SVR || model->param.svm_type == NU_SVR) &&
-		model->probA != NULL)
+		model->probA != nullptr)
 		return model->probA[0];
 	else
 	{
@@ -2704,7 +2706,7 @@ double svm_predict_probability(
 	const svm_model *model, const svm_node_base *x, double *prob_estimates)
 {
 	if ((model->param.svm_type == C_SVC || model->param.svm_type == NU_SVC) &&
-		model->probA != NULL && model->probB != NULL)
+		model->probA != nullptr && model->probB != nullptr)
 	{
 		int i;
 		int nr_class = model->nr_class;
@@ -2754,20 +2756,20 @@ double svm_predict_probability(
 
 static const char *svm_type_table[] =
 {
-	"c_svc","nu_svc","one_class","epsilon_svr","nu_svr",NULL
+	"c_svc","nu_svc","one_class","epsilon_svr","nu_svr",nullptr
 };
 
 static const char *kernel_type_table[] =
 {
-	"linear","polynomial","rbf","sigmoid","precomputed",NULL
+	"linear","polynomial","rbf","sigmoid","precomputed",nullptr
 };
 
 int svm_save_model(const char *model_file_name, const svm_model *model)
 {
 	FILE *fp = COMPV_NAMESPACE::CompVFileUtils::open(model_file_name, "w");
-	if (fp == NULL) return -1;
+	if (fp == nullptr) return -1;
 
-	char *old_locale = setlocale(LC_ALL, NULL);
+	char *old_locale = setlocale(LC_ALL, nullptr);
 	if (old_locale) {
 		old_locale = strdup(old_locale);
 	}
@@ -2859,22 +2861,22 @@ int svm_save_model(const char *model_file_name, const svm_model *model)
 	else return 0;
 }
 
-static char *line = NULL;
+static char *line = nullptr;
 static int max_line_len;
 
 static char* readline(FILE *input)
 {
 	int len;
 
-	if (fgets(line, max_line_len, input) == NULL)
-		return NULL;
+	if (fgets(line, max_line_len, input) == nullptr)
+		return nullptr;
 
-	while (strrchr(line, '\n') == NULL)
+	while (strrchr(line, '\n') == nullptr)
 	{
 		max_line_len *= 2;
 		line = (char *)Realloc(line, max_line_len);
 		len = (int)strlen(line);
-		if (fgets(line + len, max_line_len - len, input) == NULL)
+		if (fgets(line + len, max_line_len - len, input) == nullptr)
 			break;
 	}
 	return line;
@@ -2891,10 +2893,10 @@ static char* readline(FILE *input)
 bool read_model_header(FILE *fp, svm_model* model)
 {
 	svm_parameter& param = model->param;
-	// parameters for training only won't be assigned, but arrays are assigned as NULL for safety
+	// parameters for training only won't be assigned, but arrays are assigned as nullptr for safety
 	param.nr_weight = 0;
-	param.weight_label = NULL;
-	param.weight = NULL;
+	param.weight_label = nullptr;
+	param.weight = nullptr;
 
 	char cmd[81];
 	while (1)
@@ -2913,7 +2915,7 @@ bool read_model_header(FILE *fp, svm_model* model)
 					break;
 				}
 			}
-			if (svm_type_table[i] == NULL)
+			if (svm_type_table[i] == nullptr)
 			{
 				COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASSNAME, "unknown svm type.");
 				return false;
@@ -2931,7 +2933,7 @@ bool read_model_header(FILE *fp, svm_model* model)
 					break;
 				}
 			}
-			if (kernel_type_table[i] == NULL)
+			if (kernel_type_table[i] == nullptr)
 			{
 				COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASSNAME, "unknown kernel function.");
 				return false;
@@ -3005,9 +3007,9 @@ bool read_model_header(FILE *fp, svm_model* model)
 svm_model *svm_load_model(const char *model_file_name)
 {
 	FILE *fp = COMPV_NAMESPACE::CompVFileUtils::open(model_file_name, "rb");
-	if (fp == NULL) return NULL;
+	if (fp == nullptr) return nullptr;
 
-	char *old_locale = setlocale(LC_ALL, NULL);
+	char *old_locale = setlocale(LC_ALL, nullptr);
 	if (old_locale) {
 		old_locale = strdup(old_locale);
 	}
@@ -3016,12 +3018,7 @@ svm_model *svm_load_model(const char *model_file_name)
 	// read parameters
 
 	svm_model *model = Malloc(svm_model, 1);
-	model->rho = nullptr;
-	model->probA = nullptr;
-	model->probB = nullptr;
-	model->sv_indices = nullptr;
-	model->label = nullptr;
-	model->nSV = nullptr;
+	CompVMem::copy(model, &libsvm_static_model, sizeof(libsvm_static_model));
 
 	// read header
 	if (!read_model_header(fp, model))
@@ -3033,7 +3030,7 @@ svm_model *svm_load_model(const char *model_file_name)
 		Free(model->label);
 		Free(model->nSV);
 		Free(model);
-		return NULL;
+		return nullptr;
 	}
 
 	// read sv_coef and SV
@@ -3045,13 +3042,13 @@ svm_model *svm_load_model(const char *model_file_name)
 	line = Malloc(char, max_line_len);
 	char *p, *endptr, *idx, *val;
 
-	while (readline(fp) != NULL)
+	while (readline(fp) != nullptr)
 	{
 		p = strtok(line, ":");
 		while (1)
 		{
-			p = strtok(NULL, ":");
-			if (p == NULL)
+			p = strtok(nullptr, ":");
+			if (p == nullptr)
 				break;
 			++elements;
 		}
@@ -3080,16 +3077,16 @@ svm_model *svm_load_model(const char *model_file_name)
 		model->sv_coef[0][i] = strtod(p, &endptr);
 		for (int k = 1; k < m; k++)
 		{
-			p = strtok(NULL, " \t");
+			p = strtok(nullptr, " \t");
 			model->sv_coef[k][i] = strtod(p, &endptr);
 		}
 
 		while (1)
 		{
-			idx = strtok(NULL, ":");
-			val = strtok(NULL, " \t");
+			idx = strtok(nullptr, ":");
+			val = strtok(nullptr, " \t");
 
-			if (val == NULL)
+			if (val == nullptr)
 				break;
 			x_space[j].index = (int)strtol(idx, &endptr, 10);
 			x_space[j].value = strtod(val, &endptr);
@@ -3104,7 +3101,7 @@ svm_model *svm_load_model(const char *model_file_name)
 	::free(old_locale); // Allocated using "strdup" which means must use standard "free"
 
 	if (ferror(fp) != 0 || (COMPV_NAMESPACE::CompVFileUtils::close(&fp) != COMPV_NAMESPACE::COMPV_ERROR_CODE_S_OK))
-		return NULL;
+		return nullptr;
 
 	model->free_sv = 1;	// XXX
 	return model;
@@ -3265,15 +3262,15 @@ const char *svm_check_parameter(const svm_problem *prob, const svm_parameter *pa
 		Free(count);
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 int svm_check_probability_model(const svm_model *model)
 {
 	return ((model->param.svm_type == C_SVC || model->param.svm_type == NU_SVC) &&
-		model->probA != NULL && model->probB != NULL) ||
+		model->probA != nullptr && model->probB != nullptr) ||
 		((model->param.svm_type == EPSILON_SVR || model->param.svm_type == NU_SVR) &&
-			model->probA != NULL);
+			model->probA != nullptr);
 }
 
 int svm_check_SIMDFriendly_model(const struct svm_model *model)
