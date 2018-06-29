@@ -12,6 +12,7 @@
 #include <limits.h>
 #include <locale.h>
 #include "compv/base/ml/libsvm-322/libsvm.h"
+#include "compv/base/parallel/compv_parallel.h"
 #define COMPV_THIS_CLASSNAME "LIBSVM"
 int libsvm_version = LIBSVM_VERSION;
 typedef float Qfloat;
@@ -192,8 +193,9 @@ public:
 	Kernel(int l, svm_node * const * x, const svm_parameter& param);
 	virtual ~Kernel();
 
-	static double k_function(const svm_node *x, const svm_node *y,
-		const svm_parameter& param);
+	static double k_function(const svm_node *x, const svm_node *y, const svm_parameter& param);
+	static void k_function(const CompVMatPtr& x, const CompVMatPtr& yy, const size_t count, const svm_parameter& param, CompVMatPtr& kvalues);
+
 	virtual Qfloat *get_Q(int column, int len) const = 0;
 	virtual double *get_QD() const = 0;
 	virtual void swap_index(int i, int j) const	// no so const...
@@ -304,6 +306,7 @@ double Kernel::dot(const svm_node *px, const svm_node *py)
 double Kernel::k_function(const svm_node *x, const svm_node *y,
 	const svm_parameter& param)
 {
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
 	switch (param.kernel_type)
 	{
 	case LINEAR:
@@ -313,42 +316,37 @@ double Kernel::k_function(const svm_node *x, const svm_node *y,
 	case RBF:
 	{
 		double sum = 0;
-		while (x->index != -1 && y->index != -1)
-		{
-			if (x->index == y->index)
-			{
+		while (x->index != -1 && y->index != -1) {
+			if (x->index == y->index) {
 				double d = x->value - y->value;
 				sum += d*d;
 				++x;
 				++y;
 			}
-			else
-			{
-				if (x->index > y->index)
-				{
+			else {
+				COMPV_ASSERT(false);
+				if (x->index > y->index) {
 					sum += y->value * y->value;
 					++y;
 				}
-				else
-				{
+				else {
 					sum += x->value * x->value;
 					++x;
 				}
 			}
 		}
 
-		while (x->index != -1)
-		{
+		while (x->index != -1) {
+			COMPV_ASSERT(false);
 			sum += x->value * x->value;
 			++x;
 		}
 
-		while (y->index != -1)
-		{
+		while (y->index != -1) {
+			COMPV_ASSERT(false);
 			sum += y->value * y->value;
 			++y;
 		}
-
 		return exp(-param.gamma*sum);
 	}
 	case SIGMOID:
@@ -358,6 +356,46 @@ double Kernel::k_function(const svm_node *x, const svm_node *y,
 	default:
 		return 0;  // Unreachable 
 	}
+}
+
+void Kernel::k_function(const CompVMatPtr& x, const CompVMatPtr& yy, const size_t count, const svm_parameter& param, CompVMatPtr& kvalues)
+{
+	COMPV_ASSERT(param.kernel_type == RBF); // For now RBF implementation only (see above)
+	COMPV_ASSERT(kvalues && kvalues->cols() == count && yy->rows() >= count && yy->cols() == x->cols());
+
+	std::vector<double> sums(count, 0.0);
+
+	const size_t xsize = x->cols();
+	const double* xPtr = x->data<const double>(); // always SIMD-aligned and strided
+	double* kvaluesPtr = kvalues->data<double>(); // always SIMD-aligned and strided
+	const double& gamma_minus = -param.gamma;
+	const size_t ystride = yy->stride();
+	// MT model: https://www.csie.ntu.edu.tw/~cjlin/libsvm/faq.html#f432
+	auto funcPtr = [&](const size_t start, const size_t end) -> COMPV_ERROR_CODE {
+		const double* yPtr = yy->ptr<const double>(start); // always SIMD-aligned and strided
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found - RBF_Round1");
+		for (size_t j = start; j < end; ++j) {
+			double& sum = sums[j];
+			for (size_t i = 0; i < xsize; ++i) {
+				const double d = xPtr[i] - yPtr[i];
+				sum += d*d;
+			}
+			kvaluesPtr[j] = gamma_minus*sum; // not aligned-copy (decause of j-indexing)
+			yPtr += ystride;
+		}
+
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found - Exponential");
+		for (size_t j = start; j < end; ++j) {
+			kvaluesPtr[j] = std::exp(kvaluesPtr[j]); // not aligned-copy (decause of j-indexing)
+		}
+		return COMPV_ERROR_CODE_S_OK;
+	};
+	COMPV_CHECK_CODE_ASSERT(CompVThreadDispatcher::dispatchDividingAcrossY(
+		funcPtr,
+		1,
+		count,
+		1
+	));
 }
 
 // An SMO algorithm in Fan et al., JMLR 6(2005), p. 1889--1918
@@ -1947,9 +1985,9 @@ static void svm_binary_svc_probability(
 			subparam.weight[0] = Cp;
 			subparam.weight[1] = Cn;
 			struct svm_model *submodel = svm_train(&subprob, &subparam);
-			for (j = begin; j < end; j++)
-			{
-				svm_predict_values(submodel, prob->x[perm[j]], &(dec_values[perm[j]]));
+			for (j = begin; j < end; j++) {
+				const svm_node_base node(NODE_TYPE_INDEXED, prob->x[perm[j]]);
+				svm_predict_values(submodel, &node, &(dec_values[perm[j]]));
 				// ensure +1 -1 order; reason not using CV subroutine
 				dec_values[perm[j]] *= submodel->label[0];
 			}
@@ -2115,14 +2153,14 @@ svm_model *svm_train(const svm_problem *prob, const svm_parameter *param)
 		model->sv_coef[0] = Malloc(double, nSV);
 		model->sv_indices = Malloc(int, nSV);
 		int j = 0;
-		for (i = 0; i < prob->l; i++)
-			if (fabs(f.alpha[i]) > 0)
-			{
+		for (i = 0; i < prob->l; i++) {
+			if (fabs(f.alpha[i]) > 0) {
 				model->SV[j] = prob->x[i];
 				model->sv_coef[0][j] = f.alpha[i];
 				model->sv_indices[j] = i + 1;
 				++j;
 			}
+		}
 
 		Free(f.alpha);
 	}
@@ -2431,13 +2469,17 @@ void svm_cross_validation(const svm_problem *prob, const svm_parameter *param, i
 			(param->svm_type == C_SVC || param->svm_type == NU_SVC))
 		{
 			double *prob_estimates = Malloc(double, svm_get_nr_class(submodel));
-			for (j = begin; j < end; j++)
-				target[perm[j]] = svm_predict_probability(submodel, prob->x[perm[j]], prob_estimates);
+			for (j = begin; j < end; j++) {
+				const svm_node_base node(NODE_TYPE_INDEXED, prob->x[perm[j]]);
+				target[perm[j]] = svm_predict_probability(submodel, &node, prob_estimates);
+			}
 			Free(prob_estimates);
 		}
 		else
-			for (j = begin; j < end; j++)
-				target[perm[j]] = svm_predict(submodel, prob->x[perm[j]]);
+			for (j = begin; j < end; j++) {
+				const svm_node_base node(NODE_TYPE_INDEXED, prob->x[perm[j]]);
+				target[perm[j]] = svm_predict(submodel, &node);
+			}
 		svm_free_and_destroy_model(&submodel);
 		Free(subprob.x);
 		Free(subprob.y);
@@ -2488,7 +2530,7 @@ double svm_get_svr_probability(const svm_model *model)
 	}
 }
 
-double svm_predict_values(const svm_model *model, const svm_node *x, double* dec_values)
+double svm_predict_values(const svm_model *model, const svm_node_base *xx, double* dec_values)
 {
 	int i;
 	if (model->param.svm_type == ONE_CLASS ||
@@ -2498,8 +2540,21 @@ double svm_predict_values(const svm_model *model, const svm_node *x, double* dec
 		double *sv_coef = model->sv_coef[0];
 		double sum = 0;
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation could be found for 'Kernel::k_function' -> https://www.csie.ntu.edu.tw/~cjlin/libsvm/faq.html#f432");
-		for (i = 0; i < model->l; i++) {
-			sum += sv_coef[i] * Kernel::k_function(x, model->SV[i], model->param);
+		if (xx->type == NODE_TYPE_INDEXED) {
+			const svm_node* x = reinterpret_cast<const svm_node*>(xx->node);
+			for (i = 0; i < model->l; i++) {
+				sum += sv_coef[i] * Kernel::k_function(x, model->SV[i], model->param);
+			}
+		}
+		else {
+			CompVMatPtr kvalueMat;
+			COMPV_CHECK_CODE_ASSERT(CompVMat::newObjAligned<double>(&kvalueMat, 1, model->l));
+			Kernel::k_function(*reinterpret_cast<const CompVMatPtr*>(xx->node), model->SVMat, static_cast<size_t>(model->l), model->param, kvalueMat);
+			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation for DOT");
+			const double* kvalueMatPtr = kvalueMat->data<const double>();
+			for (i = 0; i < model->l; i++) {
+				sum += sv_coef[i] * kvalueMatPtr[i];
+			}
 		}
 		sum -= model->rho[0];
 		*dec_values = sum;
@@ -2516,39 +2571,48 @@ double svm_predict_values(const svm_model *model, const svm_node *x, double* dec
 		int nr_class = model->nr_class;
 		int l = model->l;
 
-		double *kvalue = Malloc(double, l);
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation could be found for 'Kernel::k_function' -> https://www.csie.ntu.edu.tw/~cjlin/libsvm/faq.html#f432");
-		for (i = 0; i < l; i++) {
-			kvalue[i] = Kernel::k_function(x, model->SV[i], model->param);
+		CompVMatPtr kvalueMat;
+		COMPV_CHECK_CODE_ASSERT(CompVMat::newObjAligned<double>(&kvalueMat, 1, l));
+		double* kvaluePtr = kvalueMat->data<double>();
+		if (xx->type == NODE_TYPE_INDEXED) {
+			const svm_node* x = reinterpret_cast<const svm_node*>(xx->node);
+			for (i = 0; i < l; i++) {
+				kvaluePtr[i] = Kernel::k_function(x, model->SV[i], model->param);
+			}
+		}
+		else {
+			Kernel::k_function(*reinterpret_cast<const CompVMatPtr*>(xx->node), model->SVMat, static_cast<size_t>(model->l), model->param, kvalueMat);
 		}
 
 		int *start = Malloc(int, nr_class);
 		start[0] = 0;
-		for (i = 1; i < nr_class; i++)
+		for (i = 1; i < nr_class; i++) {
 			start[i] = start[i - 1] + model->nSV[i - 1];
+		}
 
-		int *vote = Malloc(int, nr_class);
-		for (i = 0; i < nr_class; i++)
-			vote[i] = 0;
-
+		int *vote = reinterpret_cast<int*>(Calloc(nr_class, sizeof(int)));
 		int p = 0;
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation for DOT(coef1, kvaluePtrSI) and DOT(coef2, kvaluePtrSJ)");
 		for (i = 0; i < nr_class; i++) {
 			for (int j = i + 1; j < nr_class; j++) {
 				double sum = 0;
-				int si = start[i];
-				int sj = start[j];
-				int ci = model->nSV[i];
-				int cj = model->nSV[j];
+				const int& si = start[i];
+				const int& sj = start[j];
+				const int& ci = model->nSV[i];
+				const int& cj = model->nSV[j];
+				const double* kvaluePtrSI = &kvaluePtr[si];
+				const double* kvaluePtrSJ = &kvaluePtr[sj];
+				const double *coef1 = model->sv_coef[j - 1] + si;
+				const double *coef2 = model->sv_coef[i] + sj;
+				// TODO(dmi): Add SIMD for next DOT
+				for (int k = 0; k < ci; k++) {
+					sum += coef1[k] * kvaluePtrSI[k];
+				}
+				// TODO(dmi): Add SIMD for next DOT
+				for (int k = 0; k < cj; k++) {
+					sum += coef2[k] * kvaluePtrSJ[k];
+				}
 
-				int k;
-				double *coef1 = model->sv_coef[j - 1];
-				double *coef2 = model->sv_coef[i];
-				for (k = 0; k < ci; k++) {
-					sum += coef1[si + k] * kvalue[si + k];
-				}
-				for (k = 0; k < cj; k++) {
-					sum += coef2[sj + k] * kvalue[sj + k];
-				}
 				sum -= model->rho[p];
 				dec_values[p] = sum;
 
@@ -2569,14 +2633,13 @@ double svm_predict_values(const svm_model *model, const svm_node *x, double* dec
 			}
 		}
 
-		Free(kvalue);
 		Free(start);
 		Free(vote);
 		return model->label[vote_max_idx];
 	}
 }
 
-double svm_predict(const svm_model *model, const svm_node *x)
+double svm_predict(const svm_model *model, const svm_node_base *x)
 {
 	int nr_class = model->nr_class;
 	double *dec_values;
@@ -2591,7 +2654,7 @@ double svm_predict(const svm_model *model, const svm_node *x)
 	return pred_result;
 }
 
-double svm_predict_distance(const svm_model *model, const svm_node *x, double *distance)
+double svm_predict_distance(const svm_model *model, const svm_node_base *x, double *distance)
 {
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Not fully tested yet");
 	if ((model->param.svm_type == C_SVC || model->param.svm_type == NU_SVC) && model->probA && model->probB) {
@@ -2638,7 +2701,7 @@ double svm_predict_distance(const svm_model *model, const svm_node *x, double *d
 }
 
 double svm_predict_probability(
-	const svm_model *model, const svm_node *x, double *prob_estimates)
+	const svm_model *model, const svm_node_base *x, double *prob_estimates)
 {
 	if ((model->param.svm_type == C_SVC || model->param.svm_type == NU_SVC) &&
 		model->probA != NULL && model->probB != NULL)
@@ -2953,12 +3016,12 @@ svm_model *svm_load_model(const char *model_file_name)
 	// read parameters
 
 	svm_model *model = Malloc(svm_model, 1);
-	model->rho = NULL;
-	model->probA = NULL;
-	model->probB = NULL;
-	model->sv_indices = NULL;
-	model->label = NULL;
-	model->nSV = NULL;
+	model->rho = nullptr;
+	model->probA = nullptr;
+	model->probB = nullptr;
+	model->sv_indices = nullptr;
+	model->label = nullptr;
+	model->nSV = nullptr;
 
 	// read header
 	if (!read_model_header(fp, model))
@@ -3004,7 +3067,7 @@ svm_model *svm_load_model(const char *model_file_name)
 	for (i = 0; i < m; i++)
 		model->sv_coef[i] = Malloc(double, l);
 	model->SV = Malloc(svm_node*, l);
-	svm_node *x_space = NULL;
+	svm_node *x_space = nullptr;
 	if (l > 0) x_space = Malloc(svm_node, elements);
 
 	int j = 0;
@@ -3049,7 +3112,7 @@ svm_model *svm_load_model(const char *model_file_name)
 
 void svm_free_model_content(svm_model* model_ptr)
 {
-	if (model_ptr->free_sv && model_ptr->l > 0 && model_ptr->SV != NULL) {
+	if (model_ptr->free_sv && model_ptr->l > 0 && model_ptr->SV) {
 		void* mem = reinterpret_cast<void *>(model_ptr->SV[0]);
 		Free(mem);
 	}
@@ -3211,5 +3274,48 @@ int svm_check_probability_model(const svm_model *model)
 		model->probA != NULL && model->probB != NULL) ||
 		((model->param.svm_type == EPSILON_SVR || model->param.svm_type == NU_SVR) &&
 			model->probA != NULL);
+}
+
+int svm_check_SIMDFriendly_model(const struct svm_model *model)
+{
+	return (model->SVMat != nullptr) ? 1 : 0;
+}
+
+// Not optiz: This function must be called at load phase only
+COMPV_ERROR_CODE svm_makeSVs_SIMD_frienly(struct svm_model *model, const size_t expectedSVsize)
+{
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "This function must be called at trainning phase only");
+	COMPV_CHECK_EXP_RETURN(!model || !model->l || !model->SV || !*model->SV, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+	const size_t count = static_cast<size_t>(model->l);
+	CompVMatPtr& SVMat = model->SVMat;
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<double>(&SVMat, count, expectedSVsize));
+	const size_t stride = SVMat->stride();
+	
+	auto funcPtr = [&](const size_t start, const size_t end) -> COMPV_ERROR_CODE {
+		double* SVMatPtr = SVMat->ptr<double>(start);
+		for (size_t i = start; i < end; ++i) {
+			const struct svm_node *sv = model->SV[i];
+			COMPV_ASSERT(sv[expectedSVsize].index == -1);
+			for (size_t j = 0; j < expectedSVsize; ++j) {
+				SVMatPtr[j] = sv[j].value;
+			}
+			SVMatPtr += stride;
+		}
+		return COMPV_ERROR_CODE_S_OK;
+	};
+	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+		funcPtr,
+		1,
+		count,
+		1
+	));
+
+	// Free SV
+	void* mem = reinterpret_cast<void *>(model->SV[0]);
+	Free(mem);
+	Free(model->SV);
+
+	return COMPV_ERROR_CODE_S_OK;
 }
 

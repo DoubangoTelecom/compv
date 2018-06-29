@@ -97,7 +97,8 @@ public:
 private:
 	static COMPV_ERROR_CODE trainEx(const struct svm_problem* problem, struct svm_parameter* params, const CompVMachineLearningSVMCrossValidation* crossValidation, struct svm_model** model);
 	static COMPV_ERROR_CODE crossValidation(const struct svm_problem* problem, const struct svm_parameter* params, const int _kfolds, double& accuracy);
-	static COMPV_ERROR_CODE rawToNode(const double* rawVector, const size_t count, CompVMatPtrPtr nodeVector);
+	static COMPV_ERROR_CODE rawToNode(const bool SIMDFriendly, const CompVMatPtr& rawVector, CompVMatPtrPtr node);
+	static COMPV_ERROR_CODE rawToNodeIndexed(const double* rawVector, const size_t count, CompVMatPtrPtr node);
 
 private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)

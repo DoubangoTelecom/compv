@@ -4,6 +4,8 @@
 #define LIBSVM_VERSION 322
 
 #include "compv/base/compv_config.h"
+#include "compv/base/compv_mat.h"
+#include "compv/base/compv_common.h"
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
@@ -14,6 +16,16 @@ extern "C" {
 #endif
 
 extern int libsvm_version;
+using namespace COMPV_NAMESPACE;
+
+enum { NODE_TYPE_INDEXED, NODE_TYPE_MAT };
+
+struct svm_node_base
+{
+	int type; // NODE_TYPE_INDEXED or NODE_TYPE_MAT
+	const void* node;
+	svm_node_base(int type_, const void* node_) : type (type_), node(node_) { }
+};
 
 struct svm_node
 {
@@ -61,6 +73,7 @@ struct svm_model
 	int nr_class;		/* number of classes, = 2 in regression/one class svm */
 	int l;			/* total #SV */
 	struct svm_node **SV;		/* SVs (SV[l]) */
+	CompVMatPtr SVMat; /* Same as SV but aligned to make it SIMD friendly */
 	double **sv_coef;	/* coefficients for SVs in decision functions (sv_coef[k-1][l]) */
 	double *rho;		/* constants in decision functions (rho[k*(k-1)/2]) */
 	double *probA;		/* pariwise probability information */
@@ -90,10 +103,10 @@ void svm_get_sv_indices(const struct svm_model *model, int *sv_indices);
 int svm_get_nr_sv(const struct svm_model *model);
 double svm_get_svr_probability(const struct svm_model *model);
 
-double svm_predict_values(const struct svm_model *model, const struct svm_node *x, double* dec_values);
-double svm_predict(const struct svm_model *model, const struct svm_node *x);
-double svm_predict_distance(const struct svm_model *model, const struct svm_node *x, double *confidence);
-double svm_predict_probability(const struct svm_model *model, const struct svm_node *x, double* prob_estimates);
+double svm_predict_values(const struct svm_model *model, const struct svm_node_base *x, double* dec_values);
+double svm_predict(const struct svm_model *model, const struct svm_node_base *x);
+double svm_predict_distance(const struct svm_model *model, const struct svm_node_base *x, double *confidence);
+double svm_predict_probability(const struct svm_model *model, const struct svm_node_base *x, double* prob_estimates);
 
 void svm_free_model_content(struct svm_model *model_ptr);
 void svm_free_and_destroy_model(struct svm_model **model_ptr_ptr);
@@ -101,8 +114,11 @@ void svm_destroy_param(struct svm_parameter *param);
 
 const char *svm_check_parameter(const struct svm_problem *prob, const struct svm_parameter *param);
 int svm_check_probability_model(const struct svm_model *model);
+int svm_check_SIMDFriendly_model(const struct svm_model *model);
 
 void svm_set_print_string_function(void (*print_func)(const char *));
+
+COMPV_ERROR_CODE svm_makeSVs_SIMD_frienly(struct svm_model *model, const size_t expectedSVsize);
 
 #ifdef __cplusplus
 }

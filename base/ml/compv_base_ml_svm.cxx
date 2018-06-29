@@ -75,16 +75,21 @@ COMPV_ERROR_CODE CompVMachineLearningSVM::predict(const CompVMatPtr& vector, int
 	if (vector->subType() != COMPV_SUBTYPE_RAW_FLOAT64) {
 		COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static<compv_float32_t, compv_float64_t>(vector, &vector64f)));
 	}
-	COMPV_CHECK_CODE_RETURN(CompVMachineLearningSVM::rawToNode(vector64f->ptr<const double>(), vector64f->cols(), &nodeVector));
+	const bool SIMDFriendly = !!svm_check_SIMDFriendly_model(m_ptrLibsvmModel);
+	COMPV_CHECK_CODE_RETURN(CompVMachineLearningSVM::rawToNode(SIMDFriendly, vector64f, &nodeVector));
+	const svm_node_base node(
+		SIMDFriendly ? NODE_TYPE_MAT : NODE_TYPE_INDEXED,
+		SIMDFriendly ? reinterpret_cast<const void*>(&nodeVector) : nodeVector->ptr<const void>()
+	);
 	if (distance) {
 #if 1
-		label = static_cast<int>(svm_predict_distance(m_ptrLibsvmModel, nodeVector->ptr<const svm_node>(), distance));
+		label = static_cast<int>(svm_predict_distance(m_ptrLibsvmModel, &node, distance));
 #else
 		COMPV_DEBUG_INFO_CODE_FOR_TESTING("Computing probabilities instead of distances");
 		const int nr_class = m_ptrLibsvmModel->nr_class;
 		double *prob_estimates = reinterpret_cast<double*>(CompVMem::malloc(sizeof(double) * nr_class));
 		COMPV_CHECK_EXP_RETURN(!prob_estimates, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-		label = static_cast<int>(svm_predict_probability(m_ptrLibsvmModel, nodeVector->ptr<const svm_node>(), prob_estimates));
+		label = static_cast<int>(svm_predict_probability(m_ptrLibsvmModel, &node, prob_estimates));
 		for (int i = 0; i < nr_class; i++) {
 			if (m_ptrLibsvmModel->label[i] == label) {
 				*distance = 1.0 - prob_estimates[i];
@@ -95,7 +100,7 @@ COMPV_ERROR_CODE CompVMachineLearningSVM::predict(const CompVMatPtr& vector, int
 #endif
 	}
 	else {
-		label = static_cast<int>(svm_predict(m_ptrLibsvmModel, nodeVector->ptr<const svm_node>()));
+		label = static_cast<int>(svm_predict(m_ptrLibsvmModel, &node));
 	}
 
 	return COMPV_ERROR_CODE_S_OK;
@@ -136,7 +141,7 @@ COMPV_ERROR_CODE CompVMachineLearningSVM::train(const CompVMatPtr& trainLabels, 
 	// Set Problem's values
 	funcPtr = [&](const size_t start, const size_t end) -> COMPV_ERROR_CODE {
 		for (size_t l = start; l < end; l++) {
-			COMPV_CHECK_CODE_RETURN(CompVMachineLearningSVM::rawToNode(vectors->ptr<const double>(l), vectorLength, &m_vecNodeVectors[l]));
+			COMPV_CHECK_CODE_RETURN(CompVMachineLearningSVM::rawToNodeIndexed(vectors->ptr<const double>(l), vectorLength, &m_vecNodeVectors[l]));
 			problem.x[l] = m_vecNodeVectors[l]->ptr<svm_node>();
 			problem.y[l] = trainLabelsPtr[l];
 		}
@@ -299,18 +304,31 @@ COMPV_ERROR_CODE CompVMachineLearningSVM::crossValidation(const struct svm_probl
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVMachineLearningSVM::rawToNode(const double* rawVector, const size_t count, CompVMatPtrPtr nodeVector)
+COMPV_ERROR_CODE CompVMachineLearningSVM::rawToNode(const bool SIMDFriendly, const CompVMatPtr& rawVector, CompVMatPtrPtr node)
 {
 	// Private function, do not check parameters
-	COMPV_CHECK_CODE_RETURN((CompVMat::newObjStrideless<svm_node, COMPV_MAT_TYPE_STRUCT>(nodeVector, 1, count + 1)));
-	svm_node* xnodePtr = (*nodeVector)->ptr<svm_node>();
+#if ((defined(_DEBUG) && _DEBUG != 0) || (defined(DEBUG) && DEBUG != 0))
+	COMPV_ASSERT(rawVector->isRawTypeMatch<double>());
+#endif
+	if (SIMDFriendly) {
+		*node = rawVector;
+	}
+	else {
+		COMPV_CHECK_CODE_RETURN(CompVMachineLearningSVM::rawToNodeIndexed(rawVector->ptr<const double>(), rawVector->cols(), node));
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
 
+COMPV_ERROR_CODE CompVMachineLearningSVM::rawToNodeIndexed(const double* rawVector, const size_t count, CompVMatPtrPtr node)
+{
+	// Private function, do not check parameters
+	COMPV_CHECK_CODE_RETURN((CompVMat::newObjStrideless<svm_node, COMPV_MAT_TYPE_STRUCT>(node, 1, count + 1)));
+	svm_node* xnodePtr = (*node)->ptr<svm_node>();
 	for (int i = 0; i < count; ++i) {
 		xnodePtr[i].index = (i + 1); // index must start at #1 and finish at #-1
 		xnodePtr[i].value = rawVector[i];
 	}
 	xnodePtr[count].index = -1; // term indication
-	
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -345,7 +363,11 @@ COMPV_ERROR_CODE CompVMachineLearningSVM::load(const char* filePath, CompVMachin
 		size_t& m_nVectorSize = mlSVM_->m_nVectorSize;
 		const svm_node *SV0 = model->SV[0];
 		while (SV0++->index != -1) ++m_nVectorSize;
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "SVs size = %zu", m_nVectorSize);
 	}
+
+	// Build SIMD-friendly support vectors
+	COMPV_CHECK_CODE_BAIL(err = svm_makeSVs_SIMD_frienly(model, mlSVM_->m_nVectorSize));
 
 	// Final, set
 	*mlSVM = mlSVM_;
