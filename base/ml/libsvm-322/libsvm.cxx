@@ -3112,9 +3112,9 @@ svm_model *svm_load_model(const char *model_file_name)
 
 void svm_free_model_content(svm_model* model_ptr)
 {
-	if (model_ptr->free_sv && model_ptr->l > 0 && model_ptr->SV) {
-		void* mem = reinterpret_cast<void *>(model_ptr->SV[0]);
-		Free(mem);
+	if (model_ptr->free_sv) {
+		model_ptr->SVMat = nullptr;
+		Free(model_ptr->SV[0]);
 	}
 	if (model_ptr->sv_coef)
 	{
