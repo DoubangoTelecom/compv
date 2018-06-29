@@ -126,6 +126,7 @@
     <ClInclude Include="include\compv\base\math\compv_math_clip.h" />
     <ClInclude Include="include\compv\base\math\compv_math_convlt.h" />
     <ClInclude Include="include\compv\base\math\compv_math_distance.h" />
+    <ClInclude Include="include\compv\base\math\compv_math_dot.h" />
     <ClInclude Include="include\compv\base\math\compv_math_eigen.h" />
     <ClInclude Include="include\compv\base\math\compv_math_gauss.h" />
     <ClInclude Include="include\compv\base\math\compv_math_histogram.h" />
@@ -434,6 +435,7 @@
     <ClCompile Include="math\compv_math_clip.cxx" />
     <ClCompile Include="math\compv_math_convlt.cxx" />
     <ClCompile Include="math\compv_math_distance.cxx" />
+    <ClCompile Include="math\compv_math_dot.cxx" />
     <ClCompile Include="math\compv_math_eigen.cxx" />
     <ClCompile Include="math\compv_math_gauss.cxx" />
     <ClCompile Include="math\compv_math_histogram.cxx" />

@@ -92,6 +92,7 @@ public:
 	COMPV_ERROR_CODE save(const char* filePath, const bool releaseVectors_ = true);
 
 	static COMPV_ERROR_CODE load(const char* filePath, CompVMachineLearningSVMPtrPtr mlSVM);
+	static COMPV_ERROR_CODE rbf(const CompVMatPtr& x, const CompVMatPtr& yy, const size_t count, const double& gamma, CompVMatPtr& kvalues, const struct svm_model *model = nullptr);
 	static COMPV_ERROR_CODE newObj(CompVMachineLearningSVMPtrPtr mlSVM, const CompVMachineLearningSVMParams& params);
 
 private:

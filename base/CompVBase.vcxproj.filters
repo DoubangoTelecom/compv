@@ -783,6 +783,9 @@
     <ClInclude Include="include\compv\base\pugixml-120\pugixml.h">
       <Filter>include\pugixml-120</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\math\compv_math_dot.h">
+      <Filter>include\math</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx">
@@ -1297,6 +1300,9 @@
     </ClCompile>
     <ClCompile Include="pugixml-120\xml.cxx">
       <Filter>source\pugixml-120</Filter>
+    </ClCompile>
+    <ClCompile Include="math\compv_math_dot.cxx">
+      <Filter>source\math</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

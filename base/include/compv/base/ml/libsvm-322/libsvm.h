@@ -1,3 +1,4 @@
+// Code source based on libsvm 322 but modified to add support for multi-threading and SIMD (SSE, AVX and NEON)
 #ifndef _LIBSVM_H
 #define _LIBSVM_H
 
@@ -25,6 +26,16 @@ struct svm_node_base
 	int type; // NODE_TYPE_INDEXED or NODE_TYPE_MAT
 	const void* node;
 	svm_node_base(int type_, const void* node_) : type (type_), node(node_) { }
+};
+
+struct svm_simd_func_ptrs
+{
+	void(*dotSub_64f64f)(const compv_float64_t* ptrA, const compv_float64_t* ptrB, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t strideA, const compv_uscalar_t strideB, compv_float64_t* ret)
+		= nullptr;
+	void(*dot_64f64f)(const compv_float64_t* ptrA, const compv_float64_t* ptrB, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t strideA, const compv_uscalar_t strideB, compv_float64_t* ret)
+		= nullptr;
+	svm_simd_func_ptrs();
+	void init();
 };
 
 struct svm_node
@@ -88,6 +99,10 @@ struct svm_model
 	/* XXX */
 	int free_sv;		/* 1 if svm_model is created by svm_load_model*/
 				/* 0 if svm_model is created by svm_train */
+
+	struct svm_simd_func_ptrs simd_func_ptrs; //SIMD-function pointers
+
+	svm_model();
 };
 
 struct svm_model *svm_train(const struct svm_problem *prob, const struct svm_parameter *param);
@@ -119,6 +134,7 @@ int svm_check_SIMDFriendly_model(const struct svm_model *model);
 void svm_set_print_string_function(void (*print_func)(const char *));
 
 COMPV_ERROR_CODE svm_makeSVs_SIMD_frienly(struct svm_model *model, const size_t expectedSVsize);
+COMPV_ERROR_CODE svm_k_function_rbf(const CompVMatPtr& x, const CompVMatPtr& yy, const size_t count, const double& gamma, CompVMatPtr& kvalues, const struct svm_simd_func_ptrs *simd_func_ptrs);
 
 #ifdef __cplusplus
 }

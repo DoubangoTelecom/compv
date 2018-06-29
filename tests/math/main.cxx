@@ -27,7 +27,8 @@
 #define TEST_CONVLT							0
 #define TEST_MORPH							0
 #define TEST_ML_SVM_PREDICT					0
-#define TEST_PCA							1
+#define TEST_ML_SVM_RBF						1
+#define TEST_PCA							0
 
 
 /* Entry point function */
@@ -141,6 +142,10 @@ compv_main()
 #if TEST_ML_SVM_PREDICT
 		extern COMPV_ERROR_CODE ml_svm_predict();
 		COMPV_CHECK_CODE_BAIL(err = ml_svm_predict(), TAG_TEST "Math ML SVM predict test failed");
+#endif
+#if TEST_ML_SVM_RBF
+		extern COMPV_ERROR_CODE ml_svm_rbf();
+		COMPV_CHECK_CODE_BAIL(err = ml_svm_rbf(), TAG_TEST "Math ML SVM rbf test failed");
 #endif
 
 #if TEST_PCA

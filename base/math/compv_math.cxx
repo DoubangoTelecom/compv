@@ -11,6 +11,7 @@ Most of trig approx. are implemented using document at "documentation/trig_appro
 #include "compv/base/math/compv_math_op_sub.h"
 #include "compv/base/math/compv_math_op_mul.h"
 #include "compv/base/math/compv_math_clip.h"
+#include "compv/base/math/compv_math_dot.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -65,6 +66,18 @@ COMPV_ERROR_CODE CompVMath::clip3(const CompVMatPtr& in, const double minn, cons
 COMPV_ERROR_CODE CompVMath::clip2(const CompVMatPtr& in, const double maxx, CompVMatPtrPtr out)
 {
 	COMPV_CHECK_CODE_RETURN(CompVMathClip::clip2(in, maxx, out));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVMath::dot(const CompVMatPtr &A, const CompVMatPtr &B, double* ret)
+{
+	COMPV_CHECK_CODE_RETURN(CompVMathDot::dot(A, B, ret));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVMath::dotSub(const CompVMatPtr &A, const CompVMatPtr &B, double* ret)
+{
+	COMPV_CHECK_CODE_RETURN(CompVMathDot::dotSub(A, B, ret));
 	return COMPV_ERROR_CODE_S_OK;
 }
 

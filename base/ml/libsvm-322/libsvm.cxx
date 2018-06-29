@@ -1,3 +1,4 @@
+// Code source based on libsvm 322 but modified to add support for multi-threading and SIMD (SSE, AVX and NEON)
 #include "compv/base/compv_config.h"
 #include "compv/base/compv_debug.h"
 #include "compv/base/compv_mem.h"
@@ -13,6 +14,7 @@
 #include <locale.h>
 #include "compv/base/ml/libsvm-322/libsvm.h"
 #include "compv/base/parallel/compv_parallel.h"
+#include "compv/base/math/compv_math_dot.h"
 #define COMPV_THIS_CLASSNAME "LIBSVM"
 int libsvm_version = LIBSVM_VERSION;
 static svm_model libsvm_static_model; // Forcing ctor() to be called (e.g. will initialize CompVMat members)
@@ -195,7 +197,7 @@ public:
 	virtual ~Kernel();
 
 	static double k_function(const svm_node *x, const svm_node *y, const svm_parameter& param);
-	static void k_function(const CompVMatPtr& x, const CompVMatPtr& yy, const size_t count, const svm_parameter& param, CompVMatPtr& kvalues);
+	static void k_function(const CompVMatPtr& x, const CompVMatPtr& yy, const size_t count, const svm_parameter& param, CompVMatPtr& kvalues, const struct svm_simd_func_ptrs *simd_func_ptrs);
 
 	virtual Qfloat *get_Q(int column, int len) const = 0;
 	virtual double *get_QD() const = 0;
@@ -359,44 +361,10 @@ double Kernel::k_function(const svm_node *x, const svm_node *y,
 	}
 }
 
-void Kernel::k_function(const CompVMatPtr& x, const CompVMatPtr& yy, const size_t count, const svm_parameter& param, CompVMatPtr& kvalues)
+void Kernel::k_function(const CompVMatPtr& x, const CompVMatPtr& yy, const size_t count, const svm_parameter& param, CompVMatPtr& kvalues, const struct svm_simd_func_ptrs *simd_func_ptrs)
 {
 	COMPV_ASSERT(param.kernel_type == RBF); // For now RBF implementation only (see above)
-	COMPV_ASSERT(kvalues && kvalues->cols() == count && yy->rows() >= count && yy->cols() == x->cols());
-
-	std::vector<double> sums(count, 0.0);
-
-	const size_t xsize = x->cols();
-	const double* xPtr = x->data<const double>(); // always SIMD-aligned and strided
-	double* kvaluesPtr = kvalues->data<double>(); // always SIMD-aligned and strided
-	const double& gamma_minus = -param.gamma;
-	const size_t ystride = yy->stride();
-	// MT model: https://www.csie.ntu.edu.tw/~cjlin/libsvm/faq.html#f432
-	auto funcPtr = [&](const size_t start, const size_t end) -> COMPV_ERROR_CODE {
-		const double* yPtr = yy->ptr<const double>(start); // always SIMD-aligned and strided
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found - RBF_Round1");
-		for (size_t j = start; j < end; ++j) {
-			double& sum = sums[j];
-			for (size_t i = 0; i < xsize; ++i) {
-				const double d = xPtr[i] - yPtr[i];
-				sum += d*d;
-			}
-			kvaluesPtr[j] = gamma_minus*sum; // not aligned-copy (decause of j-indexing)
-			yPtr += ystride;
-		}
-
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found - Exponential");
-		for (size_t j = start; j < end; ++j) {
-			kvaluesPtr[j] = std::exp(kvaluesPtr[j]); // not aligned-copy (decause of j-indexing)
-		}
-		return COMPV_ERROR_CODE_S_OK;
-	};
-	COMPV_CHECK_CODE_ASSERT(CompVThreadDispatcher::dispatchDividingAcrossY(
-		funcPtr,
-		1,
-		count,
-		1
-	));
+	COMPV_CHECK_CODE_ASSERT(svm_k_function_rbf(x, yy, count, param.gamma, kvalues, simd_func_ptrs));
 }
 
 // An SMO algorithm in Fan et al., JMLR 6(2005), p. 1889--1918
@@ -2535,6 +2503,7 @@ double svm_get_svr_probability(const svm_model *model)
 double svm_predict_values(const svm_model *model, const svm_node_base *xx, double* dec_values)
 {
 	int i;
+	const svm_simd_func_ptrs& simd_func_ptrs = model->simd_func_ptrs;
 	if (model->param.svm_type == ONE_CLASS ||
 		model->param.svm_type == EPSILON_SVR ||
 		model->param.svm_type == NU_SVR)
@@ -2551,7 +2520,7 @@ double svm_predict_values(const svm_model *model, const svm_node_base *xx, doubl
 		else {
 			CompVMatPtr kvalueMat;
 			COMPV_CHECK_CODE_ASSERT(CompVMat::newObjAligned<double>(&kvalueMat, 1, model->l));
-			Kernel::k_function(*reinterpret_cast<const CompVMatPtr*>(xx->node), model->SVMat, static_cast<size_t>(model->l), model->param, kvalueMat);
+			Kernel::k_function(*reinterpret_cast<const CompVMatPtr*>(xx->node), model->SVMat, static_cast<size_t>(model->l), model->param, kvalueMat, &model->simd_func_ptrs);
 			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation for DOT");
 			const double* kvalueMatPtr = kvalueMat->data<const double>();
 			for (i = 0; i < model->l; i++) {
@@ -2583,7 +2552,7 @@ double svm_predict_values(const svm_model *model, const svm_node_base *xx, doubl
 			}
 		}
 		else {
-			Kernel::k_function(*reinterpret_cast<const CompVMatPtr*>(xx->node), model->SVMat, static_cast<size_t>(model->l), model->param, kvalueMat);
+			Kernel::k_function(*reinterpret_cast<const CompVMatPtr*>(xx->node), model->SVMat, static_cast<size_t>(model->l), model->param, kvalueMat, &model->simd_func_ptrs);
 		}
 
 		int *start = Malloc(int, nr_class);
@@ -3315,3 +3284,65 @@ COMPV_ERROR_CODE svm_makeSVs_SIMD_frienly(struct svm_model *model, const size_t 
 	return COMPV_ERROR_CODE_S_OK;
 }
 
+COMPV_ERROR_CODE svm_k_function_rbf(const CompVMatPtr& x, const CompVMatPtr& yy, const size_t count, const double& gamma, CompVMatPtr& kvalues, const struct svm_simd_func_ptrs *simd_func_ptrs)
+{
+	COMPV_ASSERT(x && yy && kvalues && kvalues->cols() == count && yy->rows() >= count && yy->cols() == x->cols() && x->rows() == 1 
+		&& kvalues->subType() == COMPV_SUBTYPE_RAW_FLOAT64 && x->subType() == COMPV_SUBTYPE_RAW_FLOAT64 && yy->subType() == COMPV_SUBTYPE_RAW_FLOAT64
+	);
+
+	CompVMatPtr sumMat;
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<double>(&sumMat, 1, count));
+	COMPV_CHECK_CODE_RETURN(sumMat->zero_row(0)); // FIXME(dmi): no longer needed
+	double* sumMatPtr = sumMat->ptr<double>();
+
+	const compv_uscalar_t xsize = static_cast<compv_uscalar_t>(x->cols());
+	const compv_uscalar_t xstride = static_cast<compv_uscalar_t>(x->stride());
+	const double* xPtr = x->data<const double>(); // always SIMD-aligned and strided
+	double* kvaluesPtr = kvalues->data<double>(); // always SIMD-aligned and strided
+	const double& gamma_minus = -gamma;
+	const size_t ystride = yy->stride();
+	// MT model: https://www.csie.ntu.edu.tw/~cjlin/libsvm/faq.html#f432
+	auto funcPtr = [&](const size_t start, const size_t end) -> COMPV_ERROR_CODE {
+		const double* yPtr = yy->ptr<const double>(start); // always SIMD-aligned and strided
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found - RBF_Round1");
+		for (size_t j = start; j < end; ++j) {
+			simd_func_ptrs->dotSub_64f64f(xPtr, yPtr, xsize, 1, xstride, ystride, &sumMatPtr[j]);
+			yPtr += ystride;
+		}
+
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found - Scale");
+		for (size_t j = start; j < end; ++j) {
+			kvaluesPtr[j] = gamma_minus*sumMatPtr[j]; // not aligned-copy (decause of j-indexing)
+		}
+
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found - Exponential");
+		for (size_t j = start; j < end; ++j) {
+			kvaluesPtr[j] = std::exp(kvaluesPtr[j]); // not aligned-copy (decause of j-indexing)
+		}
+		return COMPV_ERROR_CODE_S_OK;
+	};
+	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+		funcPtr,
+		1,
+		count,
+		1
+	));
+
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+svm_model::svm_model()
+{
+
+}
+
+svm_simd_func_ptrs::svm_simd_func_ptrs()
+{
+	init();
+}
+
+void svm_simd_func_ptrs::init()
+{
+	COMPV_CHECK_CODE_ASSERT(CompVMathDot::hookDotSub_64f(&dotSub_64f64f));
+	COMPV_CHECK_CODE_ASSERT(CompVMathDot::hookDot_64f(&dot_64f64f));
+}

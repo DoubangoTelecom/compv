@@ -94,6 +94,8 @@ public:
 	static COMPV_ERROR_CODE mulAtA(const CompVMatPtr &A, CompVMatPtrPtr R);
 	static COMPV_ERROR_CODE clip3(const CompVMatPtr& in, const double minn, const double maxx, CompVMatPtrPtr out);
 	static COMPV_ERROR_CODE clip2(const CompVMatPtr& in, const double maxx, CompVMatPtrPtr out);
+	static COMPV_ERROR_CODE dot(const CompVMatPtr &A, const CompVMatPtr &B, double* ret);
+	static COMPV_ERROR_CODE dotSub(const CompVMatPtr &A, const CompVMatPtr &B, double* ret);
 };
 
 COMPV_NAMESPACE_END()

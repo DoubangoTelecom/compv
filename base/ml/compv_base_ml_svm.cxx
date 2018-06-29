@@ -390,6 +390,17 @@ bail:
 	return err;
 }
 
+COMPV_ERROR_CODE CompVMachineLearningSVM::rbf(const CompVMatPtr& x, const CompVMatPtr& yy, const size_t count, const double& gamma, CompVMatPtr& kvalues, const struct svm_model *model COMPV_DEFAULT(nullptr))
+{
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Public function used for perf testing");
+	svm_simd_func_ptrs simd_func_ptrs;
+	if (model) {
+		simd_func_ptrs = model->simd_func_ptrs;
+	}
+	COMPV_CHECK_CODE_RETURN(svm_k_function_rbf(x, yy, count, gamma, kvalues, &simd_func_ptrs));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 COMPV_ERROR_CODE CompVMachineLearningSVM::newObj(CompVMachineLearningSVMPtrPtr mlSVM, const CompVMachineLearningSVMParams& params)
 {
 	COMPV_CHECK_EXP_RETURN(!mlSVM, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
