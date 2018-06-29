@@ -370,7 +370,12 @@ COMPV_ERROR_CODE CompVMachineLearningSVM::load(const char* filePath, CompVMachin
 
 	// Build SIMD-friendly support vectors
 #if COMPV_MACHINE_LEARNING_SVM_MAKE_SIMD_FRIENDLY
-	COMPV_CHECK_CODE_BAIL(err = svm_makeSVs_SIMD_frienly(model, mlSVM_->m_nVectorSize));
+	if (mlSVM_->m_ptrLibsvmParams->kernel_type == RBF) {
+		COMPV_CHECK_CODE_BAIL(err = svm_makeSVs_SIMD_frienly(model, mlSVM_->m_nVectorSize));
+	}
+	else {
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("SIMD implemented for RBF kernel type only");
+	}
 #else
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("SVM loaded without making the support vectors SIMD-friendly");
 #endif /* COMPV_MACHINE_LEARNING_SVM_MAKE_SIMD_FRIENDLY */

@@ -2119,7 +2119,7 @@ static void svm_group_classes(const svm_problem *prob, int *nr_class_ret, int **
 svm_model *svm_train(const svm_problem *prob, const svm_parameter *param)
 {
 	svm_model *model = Malloc(svm_model, 1);
-	CompVMem::copy(model, &libsvm_static_model, sizeof(libsvm_static_model));
+	CompVMem::copy(model, &libsvm_static_model, sizeof(svm_model));
 	model->param = *param;
 	model->free_sv = 0;	// XXX
 
@@ -3018,7 +3018,7 @@ svm_model *svm_load_model(const char *model_file_name)
 	// read parameters
 
 	svm_model *model = Malloc(svm_model, 1);
-	CompVMem::copy(model, &libsvm_static_model, sizeof(libsvm_static_model));
+	CompVMem::copy(model, &libsvm_static_model, sizeof(svm_model));
 
 	// read header
 	if (!read_model_header(fp, model))
