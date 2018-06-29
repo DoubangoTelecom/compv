@@ -3309,8 +3309,7 @@ COMPV_ERROR_CODE svm_makeSVs_SIMD_frienly(struct svm_model *model, const size_t 
 	));
 
 	// Free SV
-	void* mem = reinterpret_cast<void *>(model->SV[0]);
-	Free(mem);
+	Free(model->SV[0]);
 	Free(model->SV);
 
 	return COMPV_ERROR_CODE_S_OK;
