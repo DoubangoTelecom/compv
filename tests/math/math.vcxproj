@@ -164,6 +164,7 @@
     <ClCompile Include="calib_undist.cxx" />
     <ClCompile Include="convlt.cxx" />
     <ClCompile Include="distance.cxx" />
+    <ClCompile Include="dot.cxx" />
     <ClCompile Include="eigen.cxx" />
     <ClCompile Include="histogram.cxx" />
     <ClCompile Include="inverse.cxx" />

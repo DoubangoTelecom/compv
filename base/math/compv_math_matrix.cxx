@@ -484,12 +484,12 @@ class CompVMatrixGeneric
 		if (std::is_same<T, compv_float64_t>::value) {
 			void(*CompVMathMatrixInvA3x3_64f)(const COMPV_ALIGNED(X) compv_float64_t* A3x3, COMPV_ALIGNED(X) compv_float64_t* R, compv_uscalar_t strideInBytes, compv_float64_t* det1) = NULL;
 #if COMPV_ARCH_X86
-			if (CompVCpu::isEnabled(compv::kCpuFlagSSE2) && A3x3->isAlignedSSE() && (*R)->isAlignedSSE() && A3x3->strideInBytes() == (*R)->strideInBytes()) {
+			if (CompVCpu::isEnabled(kCpuFlagSSE2) && A3x3->isAlignedSSE() && (*R)->isAlignedSSE() && A3x3->strideInBytes() == (*R)->strideInBytes()) {
 				COMPV_EXEC_IFDEF_INTRIN_X86((CompVMathMatrixInvA3x3_64f = CompVMathMatrixInvA3x3_64f_Intrin_SSE2, hasSIMD = true, nameSIMD = "CompVMathMatrixInvA3x3_64f_Intrin_SSE2"));
 				COMPV_EXEC_IFDEF_ASM_X86((CompVMathMatrixInvA3x3_64f = CompVMathMatrixInvA3x3_64f_Asm_X86_SSE2, hasSIMD = true, nameSIMD = "CompVMathMatrixInvA3x3_64f_Asm_X86_SSE2"));
 			}
 #elif COMPV_ARCH_ARM
-			if (CompVCpu::isEnabled(compv::kCpuFlagARM_NEON) && A3x3->isAlignedNEON() && (*R)->isAlignedNEON() && A3x3->strideInBytes() == (*R)->strideInBytes()) {
+			if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && A3x3->isAlignedNEON() && (*R)->isAlignedNEON() && A3x3->strideInBytes() == (*R)->strideInBytes()) {
 				COMPV_EXEC_IFDEF_ASM_ARM32((CompVMathMatrixInvA3x3_64f = CompVMathMatrixInvA3x3_64f_Asm_NEON32, hasSIMD = true, nameSIMD = "CompVMathMatrixInvA3x3_64f_Asm_NEON32"));
 				COMPV_EXEC_IFDEF_INTRIN_ARM64((CompVMathMatrixInvA3x3_64f = CompVMathMatrixInvA3x3_64f_Intrin_NEON64, hasSIMD = true, nameSIMD = "CompVMathMatrixInvA3x3_64f_Intrin_NEON64"));
 				COMPV_EXEC_IFDEF_ASM_ARM64((CompVMathMatrixInvA3x3_64f = CompVMathMatrixInvA3x3_64f_Asm_NEON64, hasSIMD = true, nameSIMD = "CompVMathMatrixInvA3x3_64f_Asm_NEON64"));

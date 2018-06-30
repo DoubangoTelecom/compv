@@ -155,6 +155,8 @@
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_distance_intrin_avx2.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_distance_intrin_sse2.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_distance_intrin_sse42.h" />
+    <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_dot_intrin_avx.h" />
+    <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_dot_intrin_sse2.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_histogram_intrin_sse2.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_matrix_intrin_avx.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_matrix_intrin_sse2.h" />
@@ -499,6 +501,18 @@
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <ClCompile Include="math\intrin\x86\compv_math_distance_intrin_sse42.cxx">
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+    </ClCompile>
+    <ClCompile Include="math\intrin\x86\compv_math_dot_intrin_avx.cxx">
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions</EnableEnhancedInstructionSet>
+    </ClCompile>
+    <ClCompile Include="math\intrin\x86\compv_math_dot_intrin_sse2.cxx">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>

@@ -361,22 +361,22 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms_gather(CompVMatPtr edges, uint16_t tLow
 
 #if COMPV_ARCH_X86
 	if (maxCols >= 8) {
-		if (CompVCpu::isEnabled(compv::kCpuFlagSSSE3)) {
+		if (CompVCpu::isEnabled(kCpuFlagSSSE3)) {
 			COMPV_EXEC_IFDEF_INTRIN_X86((CompVCannyNMSGatherRow_xmpw = CompVCannyNMSGatherRow_8mpw_Intrin_SSSE3, xmpw = 8));
 		}
-		if (CompVCpu::isEnabled(compv::kCpuFlagSSE41)) {
+		if (CompVCpu::isEnabled(kCpuFlagSSE41)) {
 			COMPV_EXEC_IFDEF_ASM_X86((CompVCannyNMSGatherRow_xmpw = CompVCannyNMSGatherRow_8mpw_Asm_X86_SSE41, xmpw = 8));
 			COMPV_EXEC_IFDEF_ASM_X64((CompVCannyNMSGatherRow_xmpw = CompVCannyNMSGatherRow_8mpw_Asm_X64_SSE41, xmpw = 8));
 		}
 	}
-	if (maxCols >= 16 && CompVCpu::isEnabled(compv::kCpuFlagAVX2)) {
+	if (maxCols >= 16 && CompVCpu::isEnabled(kCpuFlagAVX2)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86((CompVCannyNMSGatherRow_xmpw = CompVCannyNMSGatherRow_16mpw_Intrin_AVX2, xmpw = 16));
 		COMPV_EXEC_IFDEF_ASM_X86((CompVCannyNMSGatherRow_xmpw = CompVCannyNMSGatherRow_16mpw_Asm_X86_AVX2, xmpw = 16));
 		COMPV_EXEC_IFDEF_ASM_X64((CompVCannyNMSGatherRow_xmpw = CompVCannyNMSGatherRow_16mpw_Asm_X64_AVX2, xmpw = 16));
 	}
 #elif COMPV_ARCH_ARM
 	if (maxCols >= 8) {
-		if (CompVCpu::isEnabled(compv::kCpuFlagARM_NEON)) {
+		if (CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
 			COMPV_EXEC_IFDEF_INTRIN_ARM((CompVCannyNMSGatherRow_xmpw = CompVCannyNMSGatherRow_8mpw_Intrin_NEON, xmpw = 8));
             COMPV_EXEC_IFDEF_ASM_ARM32((CompVCannyNMSGatherRow_xmpw = CompVCannyNMSGatherRow_8mpw_Asm_NEON32, xmpw = 8));
             COMPV_EXEC_IFDEF_ASM_ARM64((CompVCannyNMSGatherRow_xmpw = CompVCannyNMSGatherRow_8mpw_Asm_NEON64, xmpw = 8));
@@ -425,17 +425,17 @@ void CompVEdgeDeteCanny::nms_apply()
 
 #if COMPV_ARCH_X86
 	const size_t gStrideInBytes = m_nImageStride * sizeof(uint16_t);
-	if (imageWidthMinus1_ >= 8 && CompVCpu::isEnabled(compv::kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(nms_) && COMPV_IS_ALIGNED_SSE(g_) && COMPV_IS_ALIGNED_SSE(m_nImageStride) && COMPV_IS_ALIGNED_SSE(gStrideInBytes)) {
+	if (imageWidthMinus1_ >= 8 && CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(nms_) && COMPV_IS_ALIGNED_SSE(g_) && COMPV_IS_ALIGNED_SSE(m_nImageStride) && COMPV_IS_ALIGNED_SSE(gStrideInBytes)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86(CompVCannyNMSApply = CompVCannyNMSApply_Intrin_SSE2);
 		COMPV_EXEC_IFDEF_ASM_X86(CompVCannyNMSApply = CompVCannyNMSApply_Asm_X86_SSE2);
 	}
-	if (imageWidthMinus1_ >= 16 && CompVCpu::isEnabled(compv::kCpuFlagAVX2) && COMPV_IS_ALIGNED_AVX2(nms_) && COMPV_IS_ALIGNED_AVX2(g_) && COMPV_IS_ALIGNED_AVX2(m_nImageStride) && COMPV_IS_ALIGNED_AVX2(gStrideInBytes)) {
+	if (imageWidthMinus1_ >= 16 && CompVCpu::isEnabled(kCpuFlagAVX2) && COMPV_IS_ALIGNED_AVX2(nms_) && COMPV_IS_ALIGNED_AVX2(g_) && COMPV_IS_ALIGNED_AVX2(m_nImageStride) && COMPV_IS_ALIGNED_AVX2(gStrideInBytes)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86(CompVCannyNMSApply = CompVCannyNMSApply_Intrin_AVX2);
 		COMPV_EXEC_IFDEF_ASM_X86(CompVCannyNMSApply = CompVCannyNMSApply_Asm_X86_AVX2);
 	}
 #elif COMPV_ARCH_ARM
 	const size_t gStrideInBytes = m_nImageStride * sizeof(uint16_t);
-	if (imageWidthMinus1_ >= 8 && CompVCpu::isEnabled(compv::kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(nms_) && COMPV_IS_ALIGNED_NEON(g_) && COMPV_IS_ALIGNED_NEON(m_nImageStride) && COMPV_IS_ALIGNED_NEON(gStrideInBytes)) {
+	if (imageWidthMinus1_ >= 8 && CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(nms_) && COMPV_IS_ALIGNED_NEON(g_) && COMPV_IS_ALIGNED_NEON(m_nImageStride) && COMPV_IS_ALIGNED_NEON(gStrideInBytes)) {
 		COMPV_EXEC_IFDEF_INTRIN_ARM(CompVCannyNMSApply = CompVCannyNMSApply_Intrin_NEON);
         COMPV_EXEC_IFDEF_ASM_ARM32(CompVCannyNMSApply = CompVCannyNMSApply_Asm_NEON32);
         COMPV_EXEC_IFDEF_ASM_ARM64(CompVCannyNMSApply = CompVCannyNMSApply_Asm_NEON64);
@@ -488,7 +488,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::hysteresis(CompVMatPtr edges, uint16_t tLow
 		}
 	}
 #	if 0 // SSE implementation is faster
-	if (imageWidthMinus1 >= 16 && CompVCpu::isEnabled(compv::kCpuFlagAVX2)) {
+	if (imageWidthMinus1 >= 16 && CompVCpu::isEnabled(kCpuFlagAVX2)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86((CompVCannyHysteresis_xmpw = CompVCannyHysteresisRow_16mpw_Intrin_AVX2, mpw = 16));
 	}
 #	endif

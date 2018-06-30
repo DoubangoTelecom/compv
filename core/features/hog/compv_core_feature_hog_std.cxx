@@ -476,7 +476,7 @@ COMPV_ERROR_CODE CompVHogStd::newObj(
 	COMPV_CHECK_CODE_RETURN(hog_->updateBilinearFastData(nbins, interp, gradientSigned));
 
 #if COMPV_ARCH_X86
-	if (CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
+	if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
 		/* == L1 == */
 		COMPV_EXEC_IFDEF_INTRIN_X86(hog_->fptrs_norm.L1 = CompVHogCommonNormL1_32f_Intrin_SSE2);
 #		if COMPV_HOG_FAST_BLOCK_9
@@ -514,7 +514,7 @@ COMPV_ERROR_CODE CompVHogStd::newObj(
 #		endif
 	}
 #elif COMPV_ARCH_ARM
-    if (CompVCpu::isEnabled(compv::kCpuFlagARM_NEON)) {
+    if (CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
         /* == L1 == */
         COMPV_EXEC_IFDEF_INTRIN_ARM(hog_->fptrs_norm.L1 = CompVHogCommonNormL1_32f_Intrin_NEON);
 #		if COMPV_HOG_FAST_BLOCK_9

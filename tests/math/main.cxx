@@ -6,6 +6,7 @@
 #define TEST_MATRIX_OPS_MUL_AB				0
 #define TEST_MATRIX_OPS_MUL_GA				0
 #define TEST_MATRIX_OPS_IS_SYMETRIC			0
+#define TEST_DOT							1
 #define TEST_EIGEN_S						0
 #define TEST_SVD							0
 #define TEST_PSI							0 // Moore–Penrose pseudoinverse
@@ -27,7 +28,7 @@
 #define TEST_CONVLT							0
 #define TEST_MORPH							0
 #define TEST_ML_SVM_PREDICT					0
-#define TEST_ML_SVM_RBF						1
+#define TEST_ML_SVM_RBF						0
 #define TEST_PCA							0
 
 
@@ -53,6 +54,10 @@ compv_main()
 #if TEST_MATRIX_OPS_IS_SYMETRIC
 		extern COMPV_ERROR_CODE matrix_ops_isSymetric();
 		COMPV_CHECK_CODE_BAIL(err = matrix_ops_isSymetric(), TAG_TEST "Math matrix isSymetric test failed");
+#endif
+#if TEST_DOT
+		extern COMPV_ERROR_CODE dot();
+		COMPV_CHECK_CODE_BAIL(err = dot(), TAG_TEST "Math matrix dot test failed");
 #endif
 #if TEST_EIGEN_S
 		extern COMPV_ERROR_CODE eigenS();

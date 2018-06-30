@@ -33,8 +33,8 @@ COMPV_ERROR_CODE ml_svm_rbf()
 {
 	CompVMatPtr yy;
 	COMPV_CHECK_CODE_RETURN(CompVImage::read(COMPV_SUBTYPE_PIXELS_Y, 1282, 720, 1282, COMPV_TEST_PATH_TO_FILE(FILE_NAME_EQUIRECTANGULAR).c_str(), &yy));
-	// I want the width to be odd (e.g. 1281) in order to have orphans
-	COMPV_CHECK_CODE_RETURN(CompVImage::scale(yy, &yy, 1281, 721, COMPV_INTERPOLATION_TYPE_BICUBIC_FLOAT32));
+	// I want the width to be odd (e.g. 1281x721) in order to have orphans
+	COMPV_CHECK_CODE_RETURN(CompVImage::scale(yy, &yy, 1283, 721, COMPV_INTERPOLATION_TYPE_BICUBIC_FLOAT32));
 	COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static<float, double>(yy, &yy)));
 
 	const size_t cols = yy->cols();
@@ -44,7 +44,7 @@ COMPV_ERROR_CODE ml_svm_rbf()
 	double* xPtr = x->ptr<double>();
 	xPtr[0] = 1983.745;
 	for (size_t i = 1; i < cols; ++i) {
-		xPtr[i] = (xPtr[i - 1] * 845.47777) * ((i & 1) ? -1225.5555 : 54445.5555);
+		xPtr[i] = (xPtr[i - 1] * .47777) * ((i & 1) ? -.5555 : .5555);
 	}
 
 	CompVMatPtr kValues;
@@ -52,13 +52,13 @@ COMPV_ERROR_CODE ml_svm_rbf()
 
 	uint64_t timeStart = CompVTime::nowMillis();
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
-		COMPV_CHECK_CODE_RETURN(CompVMachineLearningSVM::rbf(x, yy, yy->rows(), 7.99, kValues));
+		COMPV_CHECK_CODE_RETURN(CompVMachineLearningSVM::rbf(x, yy, yy->rows(), 7.99e-11, kValues));
 	}
 	uint64_t timeEnd = CompVTime::nowMillis();
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "ML SVM RBF Elapsed time = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "MD5=%s", compv_tests_md5(kValues).c_str());
-	COMPV_CHECK_EXP_RETURN(std::string("309ae093e5910661fb9cb8f2db6f608d").compare(compv_tests_md5(kValues)) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "ML SVM RBF MD5 mismatch");
+	COMPV_CHECK_EXP_RETURN(std::string("09c49d13f8eef8a2aa317c4ac007b642").compare(compv_tests_md5(kValues)) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "ML SVM RBF MD5 mismatch");
 
 	return COMPV_ERROR_CODE_S_OK;
 }

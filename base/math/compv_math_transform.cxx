@@ -67,19 +67,19 @@ public:
 		if (std::is_same<T, compv_float64_t>::value) {
 			void(*CompVMathTransformHomogeneousToCartesian2D_64f)(const COMPV_ALIGNED(X) compv_float64_t* srcX, const COMPV_ALIGNED(X) compv_float64_t* srcY, const COMPV_ALIGNED(X) compv_float64_t* srcZ, COMPV_ALIGNED(X) compv_float64_t* dstX, COMPV_ALIGNED(X) compv_float64_t* dstY, compv_uscalar_t numPoints) = NULL;
 #if COMPV_ARCH_X86
-			if (cols > 1 && CompVCpu::isEnabled(compv::kCpuFlagSSE2) && src->isAlignedSSE() && dst_->isAlignedSSE()) {
+			if (cols > 1 && CompVCpu::isEnabled(kCpuFlagSSE2) && src->isAlignedSSE() && dst_->isAlignedSSE()) {
 				COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathTransformHomogeneousToCartesian2D_64f = CompVMathTransformHomogeneousToCartesian2D_64f_Intrin_SSE2);
 				if (cols == 4) {
 					COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathTransformHomogeneousToCartesian2D_64f = CompVMathTransformHomogeneousToCartesian2D_4_64f_Intrin_SSE2);
 					COMPV_EXEC_IFDEF_ASM_X86(CompVMathTransformHomogeneousToCartesian2D_64f = CompVMathTransformHomogeneousToCartesian2D_4_64f_Asm_X86_SSE2);
 				}
 			}
-			if (cols == 4 && CompVCpu::isEnabled(compv::kCpuFlagAVX) && src->isAlignedAVX() && dst_->isAlignedAVX()) {
+			if (cols == 4 && CompVCpu::isEnabled(kCpuFlagAVX) && src->isAlignedAVX() && dst_->isAlignedAVX()) {
 				COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathTransformHomogeneousToCartesian2D_64f = CompVMathTransformHomogeneousToCartesian2D_4_64f_Intrin_AVX);
 				COMPV_EXEC_IFDEF_ASM_X86(CompVMathTransformHomogeneousToCartesian2D_64f = CompVMathTransformHomogeneousToCartesian2D_4_64f_Asm_X86_AVX);
 			}
 #elif COMPV_ARCH_ARM
-			if (cols > 1 && CompVCpu::isEnabled(compv::kCpuFlagARM_NEON) && src->isAlignedNEON() && dst_->isAlignedNEON()) {
+			if (cols > 1 && CompVCpu::isEnabled(kCpuFlagARM_NEON) && src->isAlignedNEON() && dst_->isAlignedNEON()) {
 				COMPV_EXEC_IFDEF_INTRIN_ARM64(CompVMathTransformHomogeneousToCartesian2D_64f = CompVMathTransformHomogeneousToCartesian2D_64f_Intrin_NEON64);
 				if (cols == 4) {
 					COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathTransformHomogeneousToCartesian2D_64f = CompVMathTransformHomogeneousToCartesian2D_4_64f_Asm_NEON32);

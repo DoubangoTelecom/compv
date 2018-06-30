@@ -152,10 +152,10 @@ COMPV_ERROR_CODE homography()
 	// We're using it now for regression test for asm porting
 #if 0
 	const std::string md5 = arrayMD5<TYP>(h);
-	if (CompVCpu::isEnabled(compv::kCpuFlagAVX)) {
+	if (CompVCpu::isEnabled(kCpuFlagAVX)) {
 		COMPV_CHECK_EXP_RETURN(md5 != MD5_EXPECTED_AVX, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
 	}
-	else if (CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
+	else if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
 		COMPV_CHECK_EXP_RETURN(md5 != MD5_EXPECTED_SSE2, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
 	}
 	else {

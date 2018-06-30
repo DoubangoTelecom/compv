@@ -72,7 +72,7 @@ class CompVMathStatsGeneric {
 			if (std::is_same<T, compv_float64_t>::value) {
 				void(*CompVMathStatsNormalize2DHartley_64f)(const COMPV_ALIGNED(V) compv_float64_t* x, const COMPV_ALIGNED(V) compv_float64_t* y, compv_uscalar_t numPoints, compv_float64_t* tx1, compv_float64_t* ty1, compv_float64_t* s1) = NULL;
 #if COMPV_ARCH_X86
-				if (CompVCpu::isEnabled(compv::kCpuFlagSSE2) && numPoints > 1 && COMPV_IS_ALIGNED_SSE(x) && COMPV_IS_ALIGNED_SSE(y)) {
+				if (CompVCpu::isEnabled(kCpuFlagSSE2) && numPoints > 1 && COMPV_IS_ALIGNED_SSE(x) && COMPV_IS_ALIGNED_SSE(y)) {
 					COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathStatsNormalize2DHartley_64f = CompVMathStatsNormalize2DHartley_64f_Intrin_SSE2);
 					COMPV_EXEC_IFDEF_ASM_X86(CompVMathStatsNormalize2DHartley_64f = CompVMathStatsNormalize2DHartley_64f_Asm_X86_SSE2);
 					if (numPoints == 4) { // Homography -> very common
@@ -81,7 +81,7 @@ class CompVMathStatsGeneric {
 					}
 				}
 #	if 0 // TODO(dmi): AVX code not faster than SSE (not a surprise because it's deprecated code not fully optimized)
-				if (CompVCpu::isEnabled(compv::kCpuFlagAVX) && numPoints > 3 && COMPV_IS_ALIGNED_AVX(x) && COMPV_IS_ALIGNED_AVX(y)) {
+				if (CompVCpu::isEnabled(kCpuFlagAVX) && numPoints > 3 && COMPV_IS_ALIGNED_AVX(x) && COMPV_IS_ALIGNED_AVX(y)) {
 					COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // AVX code not faster than SSE
 					COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathStatsNormalize2DHartley_64f = CompVMathStatsNormalize2DHartley_64f_Intrin_AVX);
 					COMPV_EXEC_IFDEF_ASM_X86(CompVMathStatsNormalize2DHartley_64f = CompVMathStatsNormalize2DHartley_64f_Asm_X86_AVX);
@@ -92,7 +92,7 @@ class CompVMathStatsGeneric {
 				}
 #	endif
 #elif COMPV_ARCH_ARM
-				if (CompVCpu::isEnabled(compv::kCpuFlagARM_NEON) && numPoints > 1 && COMPV_IS_ALIGNED_NEON(x) && COMPV_IS_ALIGNED_NEON(y)) {
+				if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && numPoints > 1 && COMPV_IS_ALIGNED_NEON(x) && COMPV_IS_ALIGNED_NEON(y)) {
 					COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathStatsNormalize2DHartley_64f = CompVMathStatsNormalize2DHartley_64f_Asm_NEON32);
 					COMPV_EXEC_IFDEF_INTRIN_ARM64(CompVMathStatsNormalize2DHartley_64f = CompVMathStatsNormalize2DHartley_64f_Intrin_NEON64);
 					COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathStatsNormalize2DHartley_64f = CompVMathStatsNormalize2DHartley_64f_Asm_NEON64);
@@ -159,7 +159,7 @@ class CompVMathStatsGeneric {
 			if (std::is_same<T, compv_float64_t>::value) {
 				void(*CompVMathStatsMSE2DHomogeneous_64f)(const COMPV_ALIGNED(X) compv_float64_t* aX_h, const COMPV_ALIGNED(X) compv_float64_t* aY_h, const COMPV_ALIGNED(X) compv_float64_t* aZ_h, const COMPV_ALIGNED(X) compv_float64_t* bX, const COMPV_ALIGNED(X) compv_float64_t* bY, COMPV_ALIGNED(X) compv_float64_t* mse, compv_uscalar_t numPoints) = NULL;
 #if COMPV_ARCH_X86
-				if (CompVCpu::isEnabled(compv::kCpuFlagSSE2) && numPoints > 1 && COMPV_IS_ALIGNED_SSE(aX_h) && COMPV_IS_ALIGNED_SSE(aY_h) && COMPV_IS_ALIGNED_SSE(aZ_h) && COMPV_IS_ALIGNED_SSE(bX) && COMPV_IS_ALIGNED_SSE(bY) && COMPV_IS_ALIGNED_SSE(msePtr)) {
+				if (CompVCpu::isEnabled(kCpuFlagSSE2) && numPoints > 1 && COMPV_IS_ALIGNED_SSE(aX_h) && COMPV_IS_ALIGNED_SSE(aY_h) && COMPV_IS_ALIGNED_SSE(aZ_h) && COMPV_IS_ALIGNED_SSE(bX) && COMPV_IS_ALIGNED_SSE(bY) && COMPV_IS_ALIGNED_SSE(msePtr)) {
 					COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathStatsMSE2DHomogeneous_64f = CompVMathStatsMSE2DHomogeneous_64f_Intrin_SSE2);
 					COMPV_EXEC_IFDEF_ASM_X86(CompVMathStatsMSE2DHomogeneous_64f = CompVMathStatsMSE2DHomogeneous_64f_Asm_X86_SSE2);
 					COMPV_EXEC_IFDEF_ASM_X64(CompVMathStatsMSE2DHomogeneous_64f = CompVMathStatsMSE2DHomogeneous_64f_Asm_X64_SSE2);
@@ -170,12 +170,12 @@ class CompVMathStatsGeneric {
 				}
 #	if 0
 				COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // AVX code not faster than SSE  (not a surprise because it's deprecated code not fully optimized)
-				if (CompVCpu::isEnabled(compv::kCpuFlagAVX) && numPoints > 1 && COMPV_IS_ALIGNED_AVX(aX_h) && COMPV_IS_ALIGNED_AVX(aY_h) && COMPV_IS_ALIGNED_AVX(aZ_h) && COMPV_IS_ALIGNED_AVX(bX) && COMPV_IS_ALIGNED_AVX(bY) && COMPV_IS_ALIGNED_AVX(msePtr)) {
+				if (CompVCpu::isEnabled(kCpuFlagAVX) && numPoints > 1 && COMPV_IS_ALIGNED_AVX(aX_h) && COMPV_IS_ALIGNED_AVX(aY_h) && COMPV_IS_ALIGNED_AVX(aZ_h) && COMPV_IS_ALIGNED_AVX(bX) && COMPV_IS_ALIGNED_AVX(bY) && COMPV_IS_ALIGNED_AVX(msePtr)) {
 					COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathStatsMSE2DHomogeneous_64f = CompVMathStatsMSE2DHomogeneous_64f_Intrin_AVX);
 				}
 #	endif
 #elif COMPV_ARCH_ARM
-				if (CompVCpu::isEnabled(compv::kCpuFlagARM_NEON) && numPoints > 1 && COMPV_IS_ALIGNED_NEON(aX_h) && COMPV_IS_ALIGNED_NEON(aY_h) && COMPV_IS_ALIGNED_NEON(aZ_h) && COMPV_IS_ALIGNED_NEON(bX) && COMPV_IS_ALIGNED_NEON(bY) && COMPV_IS_ALIGNED_NEON(msePtr)) {
+				if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && numPoints > 1 && COMPV_IS_ALIGNED_NEON(aX_h) && COMPV_IS_ALIGNED_NEON(aY_h) && COMPV_IS_ALIGNED_NEON(aZ_h) && COMPV_IS_ALIGNED_NEON(bX) && COMPV_IS_ALIGNED_NEON(bY) && COMPV_IS_ALIGNED_NEON(msePtr)) {
 					COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathStatsMSE2DHomogeneous_64f = CompVMathStatsMSE2DHomogeneous_64f_Asm_NEON32);
 					COMPV_EXEC_IFDEF_INTRIN_ARM64(CompVMathStatsMSE2DHomogeneous_64f = CompVMathStatsMSE2DHomogeneous_64f_Intrin_NEON64);
 					COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathStatsMSE2DHomogeneous_64f = CompVMathStatsMSE2DHomogeneous_64f_Asm_NEON64);
@@ -244,16 +244,16 @@ class CompVMathStatsGeneric {
 			if (std::is_same<T, compv_float64_t>::value) {
 				void(*CompVMathStatsVariance_64f)(const COMPV_ALIGNED(X) compv_float64_t* data, compv_uscalar_t count, const compv_float64_t* mean1, compv_float64_t* var1) = NULL;
 #if COMPV_ARCH_X86
-				if (CompVCpu::isEnabled(compv::kCpuFlagSSE2) && count > 1 && COMPV_IS_ALIGNED_SSE(data)) {
+				if (CompVCpu::isEnabled(kCpuFlagSSE2) && count > 1 && COMPV_IS_ALIGNED_SSE(data)) {
 					COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathStatsVariance_64f = CompVMathStatsVariance_64f_Intrin_SSE2);
 					COMPV_EXEC_IFDEF_ASM_X86(CompVMathStatsVariance_64f = CompVMathStatsVariance_64f_Asm_X86_SSE2);
 				}
-				if (CompVCpu::isEnabled(compv::kCpuFlagAVX) && count > 3 && COMPV_IS_ALIGNED_AVX(data)) {
+				if (CompVCpu::isEnabled(kCpuFlagAVX) && count > 3 && COMPV_IS_ALIGNED_AVX(data)) {
 					COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathStatsVariance_64f = CompVMathStatsVariance_64f_Intrin_AVX);
 					COMPV_EXEC_IFDEF_ASM_X86(CompVMathStatsVariance_64f = CompVMathStatsVariance_64f_Asm_X86_AVX);
 				}
 #elif COMPV_ARCH_ARM
-				if (CompVCpu::isEnabled(compv::kCpuFlagARM_NEON) && count > 1 && COMPV_IS_ALIGNED_NEON(data)) {
+				if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && count > 1 && COMPV_IS_ALIGNED_NEON(data)) {
 					COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathStatsVariance_64f = CompVMathStatsVariance_64f_Asm_NEON32);
 					COMPV_EXEC_IFDEF_INTRIN_ARM64(CompVMathStatsVariance_64f = CompVMathStatsVariance_64f_Intrin_NEON64);
 					COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathStatsVariance_64f = CompVMathStatsVariance_64f_Asm_NEON64);

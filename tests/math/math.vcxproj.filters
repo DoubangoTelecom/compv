@@ -75,5 +75,8 @@
     <ClCompile Include="pca.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dot.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

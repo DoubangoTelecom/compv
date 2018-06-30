@@ -251,23 +251,23 @@ COMPV_ERROR_CODE CompVMathTrig::fastAtan2(const CompVMatPtr& y, const CompVMatPt
 		void(*CompVMathTrigFastAtan2_32f)(const compv_float32_t* y, const compv_float32_t* x, compv_float32_t* r, const compv_float32_t* scale1, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
 			= CompVMathTrigFastAtan2_32f_C;
 #if COMPV_ARCH_X86
-		if (CompVCpu::isEnabled(compv::kCpuFlagSSE2) && x->isAlignedSSE() && y->isAlignedSSE() && r_->isAlignedSSE()) {
+		if (CompVCpu::isEnabled(kCpuFlagSSE2) && x->isAlignedSSE() && y->isAlignedSSE() && r_->isAlignedSSE()) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathTrigFastAtan2_32f = CompVMathTrigFastAtan2_32f_Intrin_SSE2);
 			COMPV_EXEC_IFDEF_ASM_X64(CompVMathTrigFastAtan2_32f = CompVMathTrigFastAtan2_32f_Asm_X64_SSE2);
 		}
-		if (CompVCpu::isEnabled(compv::kCpuFlagAVX) && x->isAlignedAVX() && y->isAlignedAVX() && r_->isAlignedAVX()) {
+		if (CompVCpu::isEnabled(kCpuFlagAVX) && x->isAlignedAVX() && y->isAlignedAVX() && r_->isAlignedAVX()) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathTrigFastAtan2_32f = CompVMathTrigFastAtan2_32f_Intrin_AVX);
 			COMPV_EXEC_IFDEF_ASM_X64(CompVMathTrigFastAtan2_32f = CompVMathTrigFastAtan2_32f_Asm_X64_AVX);
-			if (CompVCpu::isEnabled(compv::kCpuFlagFMA3)) {
+			if (CompVCpu::isEnabled(kCpuFlagFMA3)) {
 				COMPV_EXEC_IFDEF_ASM_X64(CompVMathTrigFastAtan2_32f = CompVMathTrigFastAtan2_32f_Asm_X64_FMA3_AVX);
 			}
 		}
 #elif COMPV_ARCH_ARM
-        if (CompVCpu::isEnabled(compv::kCpuFlagARM_NEON) && x->isAlignedNEON() && y->isAlignedNEON() && r_->isAlignedNEON()) {
+        if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && x->isAlignedNEON() && y->isAlignedNEON() && r_->isAlignedNEON()) {
             COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMathTrigFastAtan2_32f = CompVMathTrigFastAtan2_32f_Intrin_NEON);
             COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathTrigFastAtan2_32f = CompVMathTrigFastAtan2_32f_Asm_NEON32);
             COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathTrigFastAtan2_32f = CompVMathTrigFastAtan2_32f_Asm_NEON64);
-            if (CompVCpu::isEnabled(compv::kCpuFlagARM_NEON_FMA)) {
+            if (CompVCpu::isEnabled(kCpuFlagARM_NEON_FMA)) {
                 COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathTrigFastAtan2_32f = CompVMathTrigFastAtan2_32f_Asm_FMA_NEON32);
                 COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathTrigFastAtan2_32f = CompVMathTrigFastAtan2_32f_Asm_FMA_NEON64);
             }
@@ -329,14 +329,14 @@ COMPV_ERROR_CODE CompVMathTrig::hypot(const CompVMatPtr& x, const CompVMatPtr& y
 		void(*CompVMathTrigHypot_32f)(const compv_float32_t* x, const compv_float32_t* y, compv_float32_t* r, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
 			= CompVMathTrigHypot_32f_C;
 #if COMPV_ARCH_X86 && 0
-		if (width >= 4 && CompVCpu::isEnabled(compv::kCpuFlagSSE2) && x->isAlignedSSE() && y->isAlignedSSE() && r_->isAlignedSSE()) {
+		if (width >= 4 && CompVCpu::isEnabled(kCpuFlagSSE2) && x->isAlignedSSE() && y->isAlignedSSE() && r_->isAlignedSSE()) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathTrigHypot_32f = CompVMathTrigHypot_32f_Intrin_SSE2);
 			COMPV_EXEC_IFDEF_ASM_X64(CompVMathTrigHypot_32f = CompVMathTrigHypot_32f_Asm_X64_SSE2);
 		}
-		if (width >= 8 && CompVCpu::isEnabled(compv::kCpuFlagAVX) && x->isAlignedAVX() && y->isAlignedAVX() && r_->isAlignedAVX()) {
+		if (width >= 8 && CompVCpu::isEnabled(kCpuFlagAVX) && x->isAlignedAVX() && y->isAlignedAVX() && r_->isAlignedAVX()) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathTrigHypot_32f = CompVMathTrigHypot_32f_Intrin_AVX);
 			COMPV_EXEC_IFDEF_ASM_X64(CompVMathTrigHypot_32f = CompVMathTrigHypot_32f_Asm_X64_AVX);
-			if (CompVCpu::isEnabled(compv::kCpuFlagFMA3)) {
+			if (CompVCpu::isEnabled(kCpuFlagFMA3)) {
 				COMPV_EXEC_IFDEF_ASM_X64(CompVMathTrigHypot_32f = CompVMathTrigHypot_32f_Asm_X64_FMA3_AVX);
 			}
 		}
@@ -377,23 +377,23 @@ COMPV_ERROR_CODE CompVMathTrig::hypot_naive(const CompVMatPtr& x, const CompVMat
 		void(*CompVMathTrigHypotNaive_32f)(const compv_float32_t* x, const compv_float32_t* y, compv_float32_t* r, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
 			= CompVMathTrigHypotNaive_32f_C;
 #if COMPV_ARCH_X86
-		if (CompVCpu::isEnabled(compv::kCpuFlagSSE2) && x->isAlignedSSE() && y->isAlignedSSE() && r_->isAlignedSSE()) {
+		if (CompVCpu::isEnabled(kCpuFlagSSE2) && x->isAlignedSSE() && y->isAlignedSSE() && r_->isAlignedSSE()) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathTrigHypotNaive_32f = CompVMathTrigHypotNaive_32f_Intrin_SSE2);
 			COMPV_EXEC_IFDEF_ASM_X64(CompVMathTrigHypotNaive_32f = CompVMathTrigHypotNaive_32f_Asm_X64_SSE2);
 		}
-		if (CompVCpu::isEnabled(compv::kCpuFlagAVX) && x->isAlignedAVX() && y->isAlignedAVX() && r_->isAlignedAVX()) {
+		if (CompVCpu::isEnabled(kCpuFlagAVX) && x->isAlignedAVX() && y->isAlignedAVX() && r_->isAlignedAVX()) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathTrigHypotNaive_32f = CompVMathTrigHypotNaive_32f_Intrin_AVX);
 			COMPV_EXEC_IFDEF_ASM_X64(CompVMathTrigHypotNaive_32f = CompVMathTrigHypotNaive_32f_Asm_X64_AVX);
-			if (CompVCpu::isEnabled(compv::kCpuFlagFMA3)) {
+			if (CompVCpu::isEnabled(kCpuFlagFMA3)) {
 				COMPV_EXEC_IFDEF_ASM_X64(CompVMathTrigHypotNaive_32f = CompVMathTrigHypotNaive_32f_Asm_X64_FMA3_AVX);
 			}
 		}
 #elif COMPV_ARCH_ARM
-        if (CompVCpu::isEnabled(compv::kCpuFlagARM_NEON) && x->isAlignedNEON() && y->isAlignedNEON() && r_->isAlignedNEON()) {
+        if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && x->isAlignedNEON() && y->isAlignedNEON() && r_->isAlignedNEON()) {
             COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMathTrigHypotNaive_32f = CompVMathTrigHypotNaive_32f_Intrin_NEON);
             COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathTrigHypotNaive_32f = CompVMathTrigHypotNaive_32f_Asm_NEON32);
             COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathTrigHypotNaive_32f = CompVMathTrigHypotNaive_32f_Asm_NEON64);
-            if (CompVCpu::isEnabled(compv::kCpuFlagARM_NEON_FMA)) {
+            if (CompVCpu::isEnabled(kCpuFlagARM_NEON_FMA)) {
                 COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathTrigHypotNaive_32f = CompVMathTrigHypotNaive_32f_Asm_FMA_NEON64);
                 COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathTrigHypotNaive_32f = CompVMathTrigHypotNaive_32f_Asm_FMA_NEON32);
             }

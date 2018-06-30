@@ -175,6 +175,7 @@
     <ClCompile Include="math_calib_homography.cxx" />
     <ClCompile Include="math_convlt.cxx" />
     <ClCompile Include="math_distance.cxx" />
+    <ClCompile Include="math_dot.cxx" />
     <ClCompile Include="math_eigen.cxx" />
     <ClCompile Include="math_histogram.cxx" />
     <ClCompile Include="math_inverse.cxx" />
