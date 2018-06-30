@@ -15,6 +15,8 @@
 #include "compv/base/ml/libsvm-322/libsvm.h"
 #include "compv/base/parallel/compv_parallel.h"
 #include "compv/base/math/compv_math_dot.h"
+#include "compv/base/math/compv_math_scale.h"
+#include "compv/base/math/compv_math_exp.h"
 #define COMPV_THIS_CLASSNAME "LIBSVM"
 int libsvm_version = LIBSVM_VERSION;
 static svm_model libsvm_static_model; // Forcing ctor() to be called (e.g. will initialize CompVMat members)
@@ -2521,11 +2523,7 @@ double svm_predict_values(const svm_model *model, const svm_node_base *xx, doubl
 			CompVMatPtr kvalueMat;
 			COMPV_CHECK_CODE_ASSERT(CompVMat::newObjAligned<double>(&kvalueMat, 1, model->l));
 			Kernel::k_function(*reinterpret_cast<const CompVMatPtr*>(xx->node), model->SVMat, static_cast<size_t>(model->l), model->param, kvalueMat, &model->simd_func_ptrs);
-			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation for DOT");
-			const double* kvalueMatPtr = kvalueMat->data<const double>();
-			for (i = 0; i < model->l; i++) {
-				sum += sv_coef[i] * kvalueMatPtr[i];
-			}
+			simd_func_ptrs.dot_64f64f(sv_coef, kvalueMat->data<const double>(), static_cast<compv_uscalar_t>(model->l), 1, 0, 0, &sum);
 		}
 		sum -= model->rho[0];
 		*dec_values = sum;
@@ -2563,30 +2561,18 @@ double svm_predict_values(const svm_model *model, const svm_node_base *xx, doubl
 
 		int *vote = reinterpret_cast<int*>(Calloc(nr_class, sizeof(int)));
 		int p = 0;
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation for DOT(coef1, kvaluePtrSI) and DOT(coef2, kvaluePtrSJ)");
 		for (i = 0; i < nr_class; i++) {
 			for (int j = i + 1; j < nr_class; j++) {
-				double sum = 0;
+				double sumi, sumj;
 				const int& si = start[i];
 				const int& sj = start[j];
 				const int& ci = model->nSV[i];
 				const int& cj = model->nSV[j];
-				const double* kvaluePtrSI = &kvaluePtr[si];
-				const double* kvaluePtrSJ = &kvaluePtr[sj];
 				const double *coef1 = model->sv_coef[j - 1] + si;
 				const double *coef2 = model->sv_coef[i] + sj;
-				// TODO(dmi): Add SIMD for next DOT
-				for (int k = 0; k < ci; k++) {
-					sum += coef1[k] * kvaluePtrSI[k];
-				}
-				// TODO(dmi): Add SIMD for next DOT
-				for (int k = 0; k < cj; k++) {
-					sum += coef2[k] * kvaluePtrSJ[k];
-				}
-
-				sum -= model->rho[p];
-				dec_values[p] = sum;
-
+				simd_func_ptrs.dot_64f64f(coef1, &kvaluePtr[si], static_cast<compv_uscalar_t>(ci), 1, 0, 0, &sumi);
+				simd_func_ptrs.dot_64f64f(coef2, &kvaluePtr[sj], static_cast<compv_uscalar_t>(cj), 1, 0, 0, &sumj);
+				dec_values[p] = (sumi + sumj) - model->rho[p];
 				if (dec_values[p] > 0) {
 					++vote[i];
 				}
@@ -3296,7 +3282,6 @@ COMPV_ERROR_CODE svm_k_function_rbf(const CompVMatPtr& x, const CompVMatPtr& yy,
 	double* sumMatPtr = sumMat->ptr<double>();
 
 	const compv_uscalar_t xsize = static_cast<compv_uscalar_t>(x->cols());
-	const compv_uscalar_t xstride = static_cast<compv_uscalar_t>(x->stride());
 	const double* xPtr = x->data<const double>(); // always SIMD-aligned and strided
 	double* kvaluesPtr = kvalues->data<double>(); // always SIMD-aligned and strided
 	const double& gamma_minus = -gamma;
@@ -3304,21 +3289,13 @@ COMPV_ERROR_CODE svm_k_function_rbf(const CompVMatPtr& x, const CompVMatPtr& yy,
 	// MT model: https://www.csie.ntu.edu.tw/~cjlin/libsvm/faq.html#f432
 	auto funcPtr = [&](const size_t start, const size_t end) -> COMPV_ERROR_CODE {
 		const double* yPtr = yy->ptr<const double>(start); // always SIMD-aligned and strided
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found - RBF_Round1");
 		for (size_t j = start; j < end; ++j) {
-			simd_func_ptrs->dotSub_64f64f(xPtr, yPtr, xsize, 1, xstride, ystride, &sumMatPtr[j]);
+			simd_func_ptrs->dotSub_64f64f(xPtr, yPtr, xsize, 1, 0, 0, &sumMatPtr[j]);
 			yPtr += ystride;
 		}
+		simd_func_ptrs->scale_64f64f(&sumMatPtr[start], &kvaluesPtr[start], (end - start), 1, 0, &gamma_minus); // not aligned-copy (decause of start-indexing)
+		simd_func_ptrs->exp_64f64f(&kvaluesPtr[start], &kvaluesPtr[start], (end - start), 1, 0); // not aligned-copy (decause of start-indexing)
 
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found - Scale");
-		for (size_t j = start; j < end; ++j) {
-			kvaluesPtr[j] = gamma_minus*sumMatPtr[j]; // not aligned-copy (decause of j-indexing)
-		}
-
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found - Exponential");
-		for (size_t j = start; j < end; ++j) {
-			kvaluesPtr[j] = std::exp(kvaluesPtr[j]); // not aligned-copy (decause of j-indexing)
-		}
 		return COMPV_ERROR_CODE_S_OK;
 	};
 	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
@@ -3345,4 +3322,6 @@ void svm_simd_func_ptrs::init()
 {
 	COMPV_CHECK_CODE_ASSERT(CompVMathDot::hookDotSub_64f(&dotSub_64f64f));
 	COMPV_CHECK_CODE_ASSERT(CompVMathDot::hookDot_64f(&dot_64f64f));
+	COMPV_CHECK_CODE_ASSERT(CompVMathScale::hookScale_64f(&scale_64f64f));
+	COMPV_CHECK_CODE_ASSERT(CompVMathExp::hookExp_64f(&exp_64f64f));
 }

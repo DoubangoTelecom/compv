@@ -13,7 +13,7 @@
 COMPV_NAMESPACE_BEGIN()
 
 template<typename T>
-static void CompVMathDotDot_64f64f_C(const T* ptrA, const T* ptrB, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t strideA, const compv_uscalar_t strideB, T* ret)
+static void CompVMathDotDot_C(const T* ptrA, const T* ptrB, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t strideA, const compv_uscalar_t strideB, T* ret)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation could be found");
 	T sum = 0;
@@ -28,7 +28,7 @@ static void CompVMathDotDot_64f64f_C(const T* ptrA, const T* ptrB, const compv_u
 }
 
 template<typename T>
-static void CompVMathDotDotSub_64f64f_C(const T* ptrA, const T* ptrB, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t strideA, const compv_uscalar_t strideB, T* ret)
+static void CompVMathDotDotSub_C(const T* ptrA, const T* ptrB, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t strideA, const compv_uscalar_t strideB, T* ret)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation could be found");
 	T sum = 0;
@@ -52,10 +52,10 @@ static COMPV_ERROR_CODE CompVMathDotDot(const CompVMatPtr &A, const CompVMatPtr 
 	const size_t strideA = A->stride();
 	const size_t strideB = B->stride();
 	const T* ptrA = A->ptr<const T>();
-	const T* ptrB = B->ptr<T>();
+	const T* ptrB = B->ptr<const T>();
 	T sum;
 
-	CompVMathDotDot_64f64f_C(
+	CompVMathDotDot_C(
 		ptrA, ptrB,
 		cols, rows, strideA, strideB,
 		&sum
@@ -74,10 +74,10 @@ static COMPV_ERROR_CODE CompVMathDotDotSub(const CompVMatPtr &A, const CompVMatP
 	const size_t strideA = A->stride();
 	const size_t strideB = B->stride();
 	const T* ptrA = A->ptr<const T>();
-	const T* ptrB = B->ptr<T>();
+	const T* ptrB = B->ptr<const T>();
 	T sum;
 
-	CompVMathDotDotSub_64f64f_C(
+	CompVMathDotDotSub_C(
 		ptrA, ptrB,
 		cols, rows, strideA, strideB,
 		&sum
@@ -112,7 +112,7 @@ COMPV_ERROR_CODE CompVMathDot::hookDotSub_64f(
 )
 {
 	COMPV_CHECK_EXP_RETURN(!CompVMathDotDotSub_64f64f, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	*CompVMathDotDotSub_64f64f = CompVMathDotDotSub_64f64f_C;
+	*CompVMathDotDotSub_64f64f = CompVMathDotDotSub_C;
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -121,7 +121,7 @@ COMPV_ERROR_CODE CompVMathDot::hookDot_64f(
 )
 {
 	COMPV_CHECK_EXP_RETURN(!CompVMathDotDot_64f64f, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	*CompVMathDotDot_64f64f = CompVMathDotDot_64f64f_C;
+	*CompVMathDotDot_64f64f = CompVMathDotDot_C;
 	return COMPV_ERROR_CODE_S_OK;
 }
 

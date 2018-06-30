@@ -8,10 +8,13 @@
 Most of trig approx. are implemented using document at "documentation/trig_approximations.pdf"
 */
 #include "compv/base/math/compv_math.h"
+#include "compv/base/math/compv_math_trig.h"
 #include "compv/base/math/compv_math_op_sub.h"
 #include "compv/base/math/compv_math_op_mul.h"
 #include "compv/base/math/compv_math_clip.h"
 #include "compv/base/math/compv_math_dot.h"
+#include "compv/base/math/compv_math_scale.h"
+#include "compv/base/math/compv_math_exp.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -32,6 +35,24 @@ COMPV_BASE_API const float kMathTrigAtan2P1 = 57.2836266f;
 COMPV_BASE_API const float kMathTrigAtan2P3 = -18.6674461f;
 COMPV_BASE_API const float kMathTrigAtan2P5 = 8.91400051f;
 COMPV_BASE_API const float kMathTrigAtan2P7 = -2.53972459f;
+
+COMPV_ERROR_CODE CompVMath::fastAtan2(const CompVMatPtr& y, const CompVMatPtr& x, CompVMatPtrPtr r, const bool angleInDeg)
+{
+	COMPV_CHECK_CODE_RETURN(CompVMathTrig::fastAtan2(y, x, r, angleInDeg));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVMath::hypot(const CompVMatPtr& x, const CompVMatPtr& y, CompVMatPtrPtr r)
+{
+	COMPV_CHECK_CODE_RETURN(CompVMathTrig::hypot(x, y, r));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVMath::hypot_naive(const CompVMatPtr& x, const CompVMatPtr& y, CompVMatPtrPtr r)
+{
+	COMPV_CHECK_CODE_RETURN(CompVMathTrig::hypot_naive(x, y, r));
+	return COMPV_ERROR_CODE_S_OK;
+}
 
 COMPV_ERROR_CODE CompVMath::sub(const CompVMatPtr& A, const CompVMatPtr& B, CompVMatPtrPtr R)
 {
@@ -78,6 +99,18 @@ COMPV_ERROR_CODE CompVMath::dot(const CompVMatPtr &A, const CompVMatPtr &B, doub
 COMPV_ERROR_CODE CompVMath::dotSub(const CompVMatPtr &A, const CompVMatPtr &B, double* ret)
 {
 	COMPV_CHECK_CODE_RETURN(CompVMathDot::dotSub(A, B, ret));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVMath::scale(const CompVMatPtr &in, const double& s, CompVMatPtrPtr out)
+{
+	COMPV_CHECK_CODE_RETURN(CompVMathScale::scale(in, s, out));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVMath::exp(const CompVMatPtr &in, CompVMatPtrPtr out)
+{
+	COMPV_CHECK_CODE_RETURN(CompVMathExp::exp(in, out));
 	return COMPV_ERROR_CODE_S_OK;
 }
 

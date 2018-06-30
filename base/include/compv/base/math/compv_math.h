@@ -88,6 +88,9 @@ extern COMPV_BASE_API const float kMathTrigAtan2P7;
 class COMPV_BASE_API CompVMath
 {
 public:
+	static COMPV_ERROR_CODE fastAtan2(const CompVMatPtr& y, const CompVMatPtr& x, CompVMatPtrPtr r, const bool angleInDeg);
+	static COMPV_ERROR_CODE hypot(const CompVMatPtr& x, const CompVMatPtr& y, CompVMatPtrPtr r);
+	static COMPV_ERROR_CODE hypot_naive(const CompVMatPtr& x, const CompVMatPtr& y, CompVMatPtrPtr r);
 	static COMPV_ERROR_CODE sub(const CompVMatPtr& A, const CompVMatPtr& B, CompVMatPtrPtr R);
 	static COMPV_ERROR_CODE mulAB(const CompVMatPtr &A, const CompVMatPtr &B, CompVMatPtrPtr R);
 	static COMPV_ERROR_CODE mulABt(const CompVMatPtr &A, const CompVMatPtr &B, CompVMatPtrPtr R);
@@ -96,6 +99,8 @@ public:
 	static COMPV_ERROR_CODE clip2(const CompVMatPtr& in, const double maxx, CompVMatPtrPtr out);
 	static COMPV_ERROR_CODE dot(const CompVMatPtr &A, const CompVMatPtr &B, double* ret);
 	static COMPV_ERROR_CODE dotSub(const CompVMatPtr &A, const CompVMatPtr &B, double* ret);
+	static COMPV_ERROR_CODE scale(const CompVMatPtr &in, const double& s, CompVMatPtrPtr out);
+	static COMPV_ERROR_CODE exp(const CompVMatPtr &in, CompVMatPtrPtr out);
 };
 
 COMPV_NAMESPACE_END()
