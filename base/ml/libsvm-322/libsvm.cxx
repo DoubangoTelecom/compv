@@ -329,7 +329,6 @@ double Kernel::k_function(const svm_node *x, const svm_node *y,
 				++y;
 			}
 			else {
-				COMPV_ASSERT(false);
 				if (x->index > y->index) {
 					sum += y->value * y->value;
 					++y;
@@ -342,13 +341,11 @@ double Kernel::k_function(const svm_node *x, const svm_node *y,
 		}
 
 		while (x->index != -1) {
-			COMPV_ASSERT(false);
 			sum += x->value * x->value;
 			++x;
 		}
 
 		while (y->index != -1) {
-			COMPV_ASSERT(false);
 			sum += y->value * y->value;
 			++y;
 		}
@@ -3278,7 +3275,6 @@ COMPV_ERROR_CODE svm_k_function_rbf(const CompVMatPtr& x, const CompVMatPtr& yy,
 
 	CompVMatPtr sumMat;
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<double>(&sumMat, 1, count));
-	COMPV_CHECK_CODE_RETURN(sumMat->zero_row(0)); // FIXME(dmi): no longer needed
 	double* sumMatPtr = sumMat->ptr<double>();
 
 	const compv_uscalar_t xsize = static_cast<compv_uscalar_t>(x->cols());
