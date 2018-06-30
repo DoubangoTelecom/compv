@@ -3264,6 +3264,9 @@ COMPV_ERROR_CODE svm_makeSVs_SIMD_frienly(struct svm_model *model, const size_t 
 	Free(model->SV[0]);
 	Free(model->SV);
 
+	// Update SIMD function ptrs using CPU flags
+	model->simd_func_ptrs.init();
+
 	return COMPV_ERROR_CODE_S_OK;
 }
 
