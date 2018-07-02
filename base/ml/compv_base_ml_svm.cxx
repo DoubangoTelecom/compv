@@ -16,8 +16,6 @@
 
 #define COMPV_THIS_CLASSNAME	"CompVMachineLearningSVM"
 
-#define COMPV_MACHINE_LEARNING_SVM_MAKE_SIMD_FRIENDLY		1
-
 COMPV_NAMESPACE_BEGIN()
 
 /* svm_type  */

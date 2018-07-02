@@ -11,6 +11,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+// Must not require memory alignment (random access from SVM)
 void CompVMathDotDot_64f64f_Intrin_SSE2(const compv_float64_t* ptrA, const compv_float64_t* ptrB, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t strideA, const compv_uscalar_t strideB, compv_float64_t* ret)
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
@@ -18,7 +19,8 @@ void CompVMathDotDot_64f64f_Intrin_SSE2(const compv_float64_t* ptrA, const compv
 	COMPV_ASSERT(false);
 }
 
-void CompVMathDotDotSub_64f64f_Intrin_SSE2(COMPV_ALIGNED(SSE) const compv_float64_t* ptrA, COMPV_ALIGNED(SSE) const compv_float64_t* ptrB, const compv_uscalar_t width, const compv_uscalar_t height, COMPV_ALIGNED(SSE) const compv_uscalar_t strideA, COMPV_ALIGNED(SSE) const compv_uscalar_t strideB, compv_float64_t* ret)
+// Must not require memory alignment (random access from SVM)
+void CompVMathDotDotSub_64f64f_Intrin_SSE2(const compv_float64_t* ptrA, const compv_float64_t* ptrB, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t strideA, const compv_uscalar_t strideB, compv_float64_t* ret)
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Use AVX2+FMA3 ASM implementation");

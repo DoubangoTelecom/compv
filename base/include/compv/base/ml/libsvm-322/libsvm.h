@@ -19,6 +19,10 @@ extern "C" {
 extern int libsvm_version;
 using namespace COMPV_NAMESPACE;
 
+#if !defined(COMPV_MACHINE_LEARNING_SVM_MAKE_SIMD_FRIENDLY)
+#	define COMPV_MACHINE_LEARNING_SVM_MAKE_SIMD_FRIENDLY		1
+#endif /* COMPV_MACHINE_LEARNING_SVM_MAKE_SIMD_FRIENDLY */
+
 enum { NODE_TYPE_INDEXED, NODE_TYPE_MAT };
 
 struct svm_node_base
@@ -31,13 +35,14 @@ struct svm_node_base
 struct svm_simd_func_ptrs
 {
 	void(*dotSub_64f64f)(const compv_float64_t* ptrA, const compv_float64_t* ptrB, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t strideA, const compv_uscalar_t strideB, compv_float64_t* ret)
-		= nullptr;
+		= nullptr; // Prediction
 	void(*dot_64f64f)(const compv_float64_t* ptrA, const compv_float64_t* ptrB, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t strideA, const compv_uscalar_t strideB, compv_float64_t* ret)
-		= nullptr;
+		= nullptr; // Prediction + training
 	void(*scale_64f64f)(const compv_float64_t* ptrIn, compv_float64_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride, const compv_float64_t* s1)
-		= nullptr;
+		= nullptr; // Prediction
 	void(*exp_64f64f)(const compv_float64_t* ptrIn, compv_float64_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride)
-		= nullptr;
+		= nullptr; // Prediction + training
+
 	svm_simd_func_ptrs();
 	void init();
 };
@@ -137,7 +142,9 @@ int svm_check_SIMDFriendly_model(const struct svm_model *model);
 
 void svm_set_print_string_function(void (*print_func)(const char *));
 
-COMPV_ERROR_CODE svm_makeSVs_SIMD_frienly(struct svm_model *model, const size_t expectedSVsize);
+size_t svm_count(const struct svm_node *x);
+COMPV_ERROR_CODE svm_copy(const struct svm_node *x, CompVMatPtrPtr xMat, size_t count = 0);
+COMPV_ERROR_CODE svm_makeSVs_SIMD_frienly(struct svm_model *model, const size_t expectedSVsize, const bool freeSV = true);
 COMPV_ERROR_CODE svm_k_function_rbf(const CompVMatPtr& x, const CompVMatPtr& yy, const size_t count, const double& gamma, CompVMatPtr& kvalues, const struct svm_simd_func_ptrs *simd_func_ptrs);
 
 #ifdef __cplusplus

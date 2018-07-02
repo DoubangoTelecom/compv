@@ -212,9 +212,74 @@ protected:
 
 	double (Kernel::*kernel_function)(int i, int j) const;
 
+	const svm_node* get_x(int i) const {
+		return x[i];
+	}
+	const double* get_x_square(int i) const {
+		return &x_square[i];
+	}
+
+	double kernel_rbf0(int i) const {
+		return exp(-gamma*(x_square[i] + x_square[i] - 2 * dot(x[i], x[i])));
+	}
+	double kernel_rbf1(const double& x_squarei, const svm_node* xi, const double& yi, const double* y, int j) const {
+		return exp(-gamma*(x_squarei + x_square[j] - 2 * dot(xi, x[j])));
+	}
+
+	void kernel_rbf0(const size_t count, double* out) const {
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found - For training");
+		CompVMatPtr xMat, dotMat;
+		COMPV_CHECK_CODE_ASSERT(CompVMat::newObjAligned<double>(&dotMat, 1, count));
+		double* dotMatPtr = dotMat->data<double>();
+		const size_t xsize = svm_count(x[0]);
+		// Compute dot(xi, xi)
+		for (size_t i = 0; i < count; ++i) {
+			COMPV_CHECK_CODE_ASSERT(svm_copy(x[i], &xMat, xsize));
+			simd_func_ptrs.dot_64f64f(xMat->data<const double>(), xMat->data<const double>(), xsize, 1, 0, 0, &dotMatPtr[i]);
+		}
+		// Compute temp out
+		for (size_t i = 0; i < count; ++i) {
+			out[i] = (-gamma*(x_square[i] + x_square[i] - 2 * dotMatPtr[i]));
+		}
+		// Compute final out = exp(temp out)
+		simd_func_ptrs.exp_64f64f(out, out, count, 1, 0);
+	}
+
+	void kernel_rbf1(const double& x_squarei, const svm_node* xi, const double& yi, const double* y, const int start, const int end, Qfloat* out) const {
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found - For training");
+		const svm_node** xj = &x[start];
+		const double* x_squarej = &x_square[start];
+		const double* yj = &y[start];
+		Qfloat* outj = &out[start];
+		const size_t count = static_cast<size_t>(end - start);
+		const size_t xsize = svm_count(x[0]);
+		CompVMatPtr xjMat, xiMat, dotMat, outMat;
+		COMPV_CHECK_CODE_ASSERT(svm_copy(xi, &xiMat, xsize));
+		COMPV_CHECK_CODE_ASSERT(CompVMat::newObjAligned<double>(&dotMat, 1, count));
+		COMPV_CHECK_CODE_ASSERT(CompVMat::newObjAligned<double>(&outMat, 1, count));
+		double* dotMatPtr = dotMat->data<double>();
+		double* outMatPtr = outMat->data<double>();
+		// Compute dot(xi, xj[j])
+		for (size_t j = 0; j < count; ++j) {
+			COMPV_CHECK_CODE_ASSERT(svm_copy(xj[j], &xjMat, xsize));
+			simd_func_ptrs.dot_64f64f(xiMat->data<const double>(), xjMat->data<const double>(), xsize, 1, 0, 0, &dotMatPtr[j]);
+		}
+		// Compute temp out
+		for (size_t j = 0; j < count; ++j) {
+			outMatPtr[j] = (-gamma*(x_squarei + x_squarej[j] - 2 * dotMatPtr[j]));
+		}
+		// Compute exp(temp out)
+		simd_func_ptrs.exp_64f64f(outMatPtr, outMatPtr, count, 1, 0);
+		// Compute final out
+		for (size_t j = 0; j < count; ++j) {
+			outj[j] = static_cast<Qfloat>(yi * yj[j] * outMatPtr[j]);
+		}
+	}
+
 private:
 	const svm_node **x;
 	double *x_square;
+	svm_simd_func_ptrs simd_func_ptrs;
 
 	// svm_parameter
 	const int kernel_type;
@@ -270,14 +335,17 @@ Kernel::Kernel(int l, svm_node * const * x_, const svm_parameter& param)
 
 	clone(x, x_, l);
 
-	if (kernel_type == RBF)
-	{
+	if (kernel_type == RBF) {
 		x_square = new double[l];
-		for (int i = 0; i < l; i++)
+		for (int i = 0; i < l; i++) {
 			x_square[i] = dot(x[i], x[i]);
+		}
 	}
-	else
+	else {
 		x_square = 0;
+	}
+
+	simd_func_ptrs.init();
 }
 
 Kernel::~Kernel()
@@ -1260,24 +1328,42 @@ double Solver_NU::calculate_rho()
 class SVC_Q : public Kernel
 {
 public:
-	SVC_Q(const svm_problem& prob, const svm_parameter& param, const schar *y_)
-		:Kernel(prob.l, prob.x, param)
+	SVC_Q(const svm_problem& prob, const svm_parameter& param, const double *y_)
+		: Kernel(prob.l, prob.x, param), isRBF(param.kernel_type == RBF)
 	{
 		clone(y, y_, prob.l);
 		cache = new Cache(prob.l, (long int)(param.cache_size*(1 << 20)));
 		QD = new double[prob.l];
-		for (int i = 0; i < prob.l; i++)
-			QD[i] = (this->*kernel_function)(i, i);
+		if (isRBF) {
+			kernel_rbf0(static_cast<size_t>(prob.l), QD);
+		}
+		else {
+			for (int i = 0; i < prob.l; i++) {
+				QD[i] = (this->*kernel_function)(i, i);
+			}
+		}
 	}
 
 	Qfloat *get_Q(int i, int len) const
 	{
 		Qfloat *data;
 		int start, j;
-		if ((start = cache->get_data(i, &data, len)) < len)
-		{
-			for (j = start; j < len; j++)
-				data[j] = (Qfloat)(y[i] * y[j] * (this->*kernel_function)(i, j));
+		if ((start = cache->get_data(i, &data, len)) < len) {
+			if (isRBF) {
+				const double& yi = y[i];
+				const double& x_squarei = *get_x_square(i);
+				const svm_node* xi = get_x(i);
+				kernel_rbf1(
+					x_squarei, xi, yi,
+					y,
+					start, len,
+					data);
+			}
+			else {
+				for (j = start; j < len; j++) {
+					data[j] = (Qfloat)(y[i] * y[j] * (this->*kernel_function)(i, j));
+				}
+			}
 		}
 		return data;
 	}
@@ -1302,9 +1388,10 @@ public:
 		delete[] QD;
 	}
 private:
-	schar *y;
+	double *y;
 	Cache *cache;
 	double *QD;
+	bool isRBF;
 };
 
 class ONE_CLASS_Q : public Kernel
@@ -1438,32 +1525,37 @@ static void solve_c_svc(
 	int l = prob->l;
 	double *minus_ones = new double[l];
 	schar *y = new schar[l];
+	double *yd = new double[l];
 
 	int i;
 
-	for (i = 0; i < l; i++)
-	{
+	for (i = 0; i < l; i++)	{
 		alpha[i] = 0;
 		minus_ones[i] = -1;
-		if (prob->y[i] > 0) y[i] = +1; else y[i] = -1;
+		y[i] = (prob->y[i] > 0) ? +1 : -1;
+		yd[i] = y[i];
 	}
 
 	Solver s;
-	s.Solve(l, SVC_Q(*prob, *param, y), minus_ones, y,
+	s.Solve(l, SVC_Q(*prob, *param, yd), minus_ones, y,
 		alpha, Cp, Cn, param->eps, si, param->shrinking);
 
 	double sum_alpha = 0;
-	for (i = 0; i < l; i++)
+	for (i = 0; i < l; i++) {
 		sum_alpha += alpha[i];
+	}
 
-	if (Cp == Cn)
+	if (Cp == Cn) {
 		COMPV_DEBUG_VERBOSE_EX(COMPV_THIS_CLASSNAME, "nu = %f", sum_alpha / (Cp*prob->l));
+	}
 
-	for (i = 0; i < l; i++)
-		alpha[i] *= y[i];
+	for (i = 0; i < l; i++) {
+		alpha[i] *= yd[i];
+	}
 
 	delete[] minus_ones;
 	delete[] y;
+	delete[] yd;
 }
 
 static void solve_nu_svc(
@@ -1475,12 +1567,12 @@ static void solve_nu_svc(
 	double nu = param->nu;
 
 	schar *y = new schar[l];
+	double *yd = new double[l];
 
-	for (i = 0; i < l; i++)
-		if (prob->y[i] > 0)
-			y[i] = +1;
-		else
-			y[i] = -1;
+	for (i = 0; i < l; i++) {
+		y[i] = (prob->y[i] > 0) ? +1 : -1;
+		yd[i] = y[i];
+	}
 
 	double sum_pos = nu*l / 2;
 	double sum_neg = nu*l / 2;
@@ -1503,20 +1595,21 @@ static void solve_nu_svc(
 		zeros[i] = 0;
 
 	Solver_NU s;
-	s.Solve(l, SVC_Q(*prob, *param, y), zeros, y,
+	s.Solve(l, SVC_Q(*prob, *param, yd), zeros, y,
 		alpha, 1.0, 1.0, param->eps, si, param->shrinking);
 	double r = si->r;
 
 	COMPV_DEBUG_VERBOSE_EX(COMPV_THIS_CLASSNAME, "C = %f", 1 / r);
 
 	for (i = 0; i < l; i++)
-		alpha[i] *= y[i] / r;
+		alpha[i] *= yd[i] / r;
 
 	si->rho /= r;
 	si->obj /= (r*r);
 	si->upper_bound_p = 1 / r;
 	si->upper_bound_n = 1 / r;
 
+	delete[] yd;
 	delete[] y;
 	delete[] zeros;
 }
@@ -1953,8 +2046,22 @@ static void svm_binary_svc_probability(
 			subparam.weight[0] = Cp;
 			subparam.weight[1] = Cn;
 			struct svm_model *submodel = svm_train(&subprob, &subparam);
+#if COMPV_MACHINE_LEARNING_SVM_MAKE_SIMD_FRIENDLY
+			if (subparam.kernel_type == RBF) {
+				COMPV_CHECK_CODE_ASSERT(svm_makeSVs_SIMD_frienly(submodel, svm_count(prob->x[perm[begin]]), false));
+			}
+#endif /* COMPV_MACHINE_LEARNING_SVM_MAKE_SIMD_FRIENDLY */
+			int SIMDFriendly = svm_check_SIMDFriendly_model(submodel);
+			CompVMatPtr xMat;
+			const size_t xMatCount = SIMDFriendly ? submodel->SVMat->cols() : 0;
 			for (j = begin; j < end; j++) {
-				const svm_node_base node(NODE_TYPE_INDEXED, prob->x[perm[j]]);
+				if (SIMDFriendly) {
+					COMPV_CHECK_CODE_ASSERT(svm_copy(prob->x[perm[j]], &xMat, xMatCount));
+				}
+				const svm_node_base node(
+					SIMDFriendly ? NODE_TYPE_MAT : NODE_TYPE_INDEXED,
+					SIMDFriendly ? reinterpret_cast<const void*>(&xMat) : reinterpret_cast<const void*>(prob->x[perm[j]])
+				);
 				svm_predict_values(submodel, &node, &(dec_values[perm[j]]));
 				// ensure +1 -1 order; reason not using CV subroutine
 				dec_values[perm[j]] *= submodel->label[0];
@@ -2434,21 +2541,42 @@ void svm_cross_validation(const svm_problem *prob, const svm_parameter *param, i
 			++k;
 		}
 		struct svm_model *submodel = svm_train(&subprob, param);
+#if COMPV_MACHINE_LEARNING_SVM_MAKE_SIMD_FRIENDLY
+		if (param->kernel_type == RBF) {
+			COMPV_CHECK_CODE_ASSERT(svm_makeSVs_SIMD_frienly(submodel, svm_count(prob->x[perm[begin]]), false));
+		}
+#endif /* COMPV_MACHINE_LEARNING_SVM_MAKE_SIMD_FRIENDLY */
+		int SIMDFriendly = svm_check_SIMDFriendly_model(submodel);
+		CompVMatPtr xMat;
+		const size_t xMatCount = SIMDFriendly ? submodel->SVMat->cols() : 0;
 		if (param->probability &&
 			(param->svm_type == C_SVC || param->svm_type == NU_SVC))
 		{
 			double *prob_estimates = Malloc(double, svm_get_nr_class(submodel));
 			for (j = begin; j < end; j++) {
-				const svm_node_base node(NODE_TYPE_INDEXED, prob->x[perm[j]]);
+				if (SIMDFriendly) {
+					COMPV_CHECK_CODE_ASSERT(svm_copy(prob->x[perm[j]], &xMat, xMatCount));
+				}
+				const svm_node_base node(
+					SIMDFriendly ? NODE_TYPE_MAT: NODE_TYPE_INDEXED,
+					SIMDFriendly ? reinterpret_cast<const void*>(&xMat) : reinterpret_cast<const void*>(prob->x[perm[j]])
+				);
 				target[perm[j]] = svm_predict_probability(submodel, &node, prob_estimates);
 			}
 			Free(prob_estimates);
 		}
-		else
+		else {
 			for (j = begin; j < end; j++) {
-				const svm_node_base node(NODE_TYPE_INDEXED, prob->x[perm[j]]);
+				if (SIMDFriendly) {
+					COMPV_CHECK_CODE_ASSERT(svm_copy(prob->x[perm[j]], &xMat, xMatCount));
+				}
+				const svm_node_base node(
+					SIMDFriendly ? NODE_TYPE_MAT : NODE_TYPE_INDEXED,
+					SIMDFriendly ? reinterpret_cast<const void*>(&xMat) : reinterpret_cast<const void*>(prob->x[perm[j]])
+				);
 				target[perm[j]] = svm_predict(submodel, &node);
 			}
+		}
 		svm_free_and_destroy_model(&submodel);
 		Free(subprob.x);
 		Free(subprob.y);
@@ -3062,7 +3190,6 @@ svm_model *svm_load_model(const char *model_file_name)
 void svm_free_model_content(svm_model* model_ptr)
 {
 	if (model_ptr->free_sv) {
-		model_ptr->SVMat = nullptr;
 		Free(model_ptr->SV[0]);
 	}
 	if (model_ptr->sv_coef)
@@ -3071,6 +3198,7 @@ void svm_free_model_content(svm_model* model_ptr)
 			Free(model_ptr->sv_coef[i]);
 		}
 	}
+	model_ptr->SVMat = nullptr;
 
 	Free(model_ptr->SV);
 	Free(model_ptr->sv_coef);
@@ -3230,10 +3358,32 @@ int svm_check_SIMDFriendly_model(const struct svm_model *model)
 	return (model->SVMat != nullptr) ? 1 : 0;
 }
 
-// Not optiz: This function must be called at load phase only
-COMPV_ERROR_CODE svm_makeSVs_SIMD_frienly(struct svm_model *model, const size_t expectedSVsize)
+size_t svm_count(const struct svm_node *x)
 {
-	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "This function must be called at trainning phase only");
+	size_t cc = 0;
+	while (x[cc++].index != -1);
+	return (cc - 1);
+}
+
+COMPV_ERROR_CODE svm_copy(const struct svm_node *x, CompVMatPtrPtr xMat, size_t count COMPV_DEFAULT(0))
+{
+	COMPV_CHECK_EXP_RETURN(!x || !xMat, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	if (!count) {
+		count = svm_count(x);
+	}
+	COMPV_CHECK_EXP_RETURN(x[count].index != -1, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<double>(xMat, 1, count));
+	double* xMatPtr = (*xMat)->data<double>();
+	for (size_t i = 0; i < count; ++i) {
+		xMatPtr[i] = x[i].value;
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// Not optiz: This function must be called at load phase only
+COMPV_ERROR_CODE svm_makeSVs_SIMD_frienly(struct svm_model *model, const size_t expectedSVsize, const bool freeSV COMPV_DEFAULT(true))
+{
+	COMPV_DEBUG_VERBOSE_EX(COMPV_THIS_CLASSNAME, "This function must be called at trainning phase only");
 	COMPV_CHECK_EXP_RETURN(!model || !model->l || !model->SV || !*model->SV, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
 	const size_t count = static_cast<size_t>(model->l);
@@ -3261,8 +3411,10 @@ COMPV_ERROR_CODE svm_makeSVs_SIMD_frienly(struct svm_model *model, const size_t 
 	));
 
 	// Free SV
-	Free(model->SV[0]);
-	Free(model->SV);
+	if (freeSV) {
+		Free(model->SV[0]);
+		Free(model->SV);
+	}
 
 	// Update SIMD function ptrs using CPU flags
 	model->simd_func_ptrs.init();

@@ -19,7 +19,7 @@
 COMPV_NAMESPACE_BEGIN()
 
 void CompVMathDotDot_64f64f_Intrin_AVX(const compv_float64_t* ptrA, const compv_float64_t* ptrB, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t strideA, const compv_uscalar_t strideB, compv_float64_t* ret);
-void CompVMathDotDotSub_64f64f_Intrin_AVX(COMPV_ALIGNED(AVX) const compv_float64_t* ptrA, COMPV_ALIGNED(AVX) const compv_float64_t* ptrB, const compv_uscalar_t width, const compv_uscalar_t height, COMPV_ALIGNED(AVX) const compv_uscalar_t strideA, COMPV_ALIGNED(AVX) const compv_uscalar_t strideB, compv_float64_t* ret);
+void CompVMathDotDotSub_64f64f_Intrin_AVX(const compv_float64_t* ptrA, const compv_float64_t* ptrB, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t strideA, const compv_uscalar_t strideB, compv_float64_t* ret);
 
 COMPV_NAMESPACE_END()
 
