@@ -15,7 +15,6 @@ COMPV_NAMESPACE_BEGIN()
 void CompVMathDotDot_64f64f_Intrin_SSE2(const compv_float64_t* ptrA, const compv_float64_t* ptrB, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t strideA, const compv_uscalar_t strideB, compv_float64_t* ret)
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
-	COMPV_DEBUG_INFO_CODE_TODO("Add ASM implementation");
 	
 	const compv_uscalar_t width16 = width & -16;
 	const compv_uscalar_t width2 = width & -2;
@@ -65,7 +64,6 @@ void CompVMathDotDotSub_64f64f_Intrin_SSE2(const compv_float64_t* ptrA, const co
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Use AVX2+FMA3 ASM implementation");
-	COMPV_DEBUG_INFO_CODE_TODO("Add ASM implementation");
 
 	const compv_uscalar_t width16 = width & -16;
 	const compv_uscalar_t width2 = width & -2;

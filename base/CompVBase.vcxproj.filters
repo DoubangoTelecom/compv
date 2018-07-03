@@ -1539,5 +1539,11 @@
     <None Include="asm\x86\compv_vldx_vstx_macros_x86.s">
       <Filter>source\asm\x86</Filter>
     </None>
+    <None Include="math\asm\x86\compv_math_dot_x64_avx.s">
+      <Filter>source\math\asm\x86</Filter>
+    </None>
+    <None Include="math\asm\x86\compv_math_dot_x64_sse.s">
+      <Filter>source\math\asm\x86</Filter>
+    </None>
   </ItemGroup>
 </Project>
