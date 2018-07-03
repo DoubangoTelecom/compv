@@ -27,7 +27,7 @@ static const struct compv_unittest_dot {
 };
 static const size_t COMPV_UNITTEST_DOT_COUNT = sizeof(COMPV_UNITTEST_DOT) / sizeof(COMPV_UNITTEST_DOT[0]);
 
-#define DOT_SUB				true
+#define DOT_SUB				false
 #define DOT_FLOAT64			true
 
 #define LOOP_COUNT			1
@@ -58,6 +58,9 @@ COMPV_ERROR_CODE dot()
 	}
 
 	double sum;
+	const double maxErr = CompVParallel::threadDispatcher() // MT slightly change the sum
+		? 1e-8 
+		: 0;
 	COMPV_ERROR_CODE(*dot_func)(const CompVMatPtr &A, const CompVMatPtr &B, double* ret)
 		= test->dotSub ? CompVMath::dotSub : CompVMath::dot;
 
@@ -69,7 +72,7 @@ COMPV_ERROR_CODE dot()
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "Math Dot Elapsed time = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "sum=%lf", sum);
-	COMPV_CHECK_EXP_RETURN(sum != test->sum, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Dot sum mismatch");
+	COMPV_CHECK_EXP_RETURN(std::abs(sum - test->sum) > maxErr, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Dot sum mismatch");
 
 	return COMPV_ERROR_CODE_S_OK;
 }

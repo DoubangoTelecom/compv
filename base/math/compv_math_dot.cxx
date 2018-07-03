@@ -120,15 +120,43 @@ static COMPV_ERROR_CODE CompVMathDotDot(const CompVMatPtr &A, const CompVMatPtr 
 	const size_t cols = A->cols();
 	const size_t strideA = A->stride();
 	const size_t strideB = B->stride();
-	const T* ptrA = A->ptr<const T>();
-	const T* ptrB = B->ptr<const T>();
 	T sum;
 
-	CompVMathDotDot_C(
-		ptrA, ptrB,
-		cols, rows, strideA, strideB,
-		&sum
-	);
+	const size_t threadsCount = CompVThreadDispatcher::guessNumThreadsDividingAcrossY(1, rows, 1);
+	std::vector<T > mt_sums(threadsCount - 1);
+
+	auto funcPtr = [&](const size_t start, const size_t end, const size_t threadIdx) -> COMPV_ERROR_CODE {
+		COMPV_ASSERT(threadIdx < threadsCount);
+		const T* ptrA = A->ptr<const T>(start);
+		const T* ptrB = B->ptr<const T>(start);
+		T* mt_sum = threadIdx ? &mt_sums[threadIdx - 1] : &sum;
+		if (std::is_same<T, compv_float64_t>::value) {
+			void(*CompVMathDotSub_64f64f)(const compv_float64_t* ptrA, const compv_float64_t* ptrB, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t strideA, const compv_uscalar_t strideB, compv_float64_t* ret)
+				= nullptr;
+			COMPV_CHECK_CODE_RETURN(CompVMathDot::hookDot_64f(&CompVMathDotSub_64f64f));
+			CompVMathDotSub_64f64f(
+				reinterpret_cast<const compv_float64_t*>(ptrA), reinterpret_cast<const compv_float64_t*>(ptrB),
+				cols, (end - start), strideA, strideB,
+				reinterpret_cast<compv_float64_t*>(mt_sum)
+			);
+		}
+		else {
+			CompVMathDotDot_C(
+				ptrA, ptrB,
+				cols, (end - start), strideA, strideB,
+				mt_sum
+			);
+		}
+		return COMPV_ERROR_CODE_S_OK;
+	};
+	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+		funcPtr,
+		rows,
+		threadsCount
+	));
+	for (std::vector<T >::const_iterator it = mt_sums.begin(); it < mt_sums.end(); ++it) {
+		sum += *it;
+	}
 
 	*ret = sum;
 	return COMPV_ERROR_CODE_S_OK;
@@ -137,31 +165,46 @@ static COMPV_ERROR_CODE CompVMathDotDot(const CompVMatPtr &A, const CompVMatPtr 
 template<typename T>
 static COMPV_ERROR_CODE CompVMathDotDotSub(const CompVMatPtr &A, const CompVMatPtr &B, double* ret)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation could be found");
 	const size_t rows = A->rows();
 	const size_t cols = A->cols();
 	const size_t strideA = A->stride();
 	const size_t strideB = B->stride();
-	const T* ptrA = A->ptr<const T>();
-	const T* ptrB = B->ptr<const T>();
 	T sum;
 
-	if (std::is_same<T, compv_float64_t>::value) {
-		void(*CompVMathDotDotSub_64f64f)(const compv_float64_t* ptrA, const compv_float64_t* ptrB, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t strideA, const compv_uscalar_t strideB, compv_float64_t* ret)
-			= nullptr;
-		COMPV_CHECK_CODE_RETURN(CompVMathDot::hookDotSub_64f(&CompVMathDotDotSub_64f64f));
-		CompVMathDotDotSub_64f64f(
-			reinterpret_cast<const compv_float64_t*>(ptrA), reinterpret_cast<const compv_float64_t*>(ptrB),
-			cols, rows, strideA, strideB,
-			reinterpret_cast<compv_float64_t*>(&sum)
-		);
-	}
-	else {
-		CompVMathDotDotSub_C(
-			ptrA, ptrB,
-			cols, rows, strideA, strideB,
-			&sum
-		);
+	const size_t threadsCount = CompVThreadDispatcher::guessNumThreadsDividingAcrossY(1, rows, 1);
+	std::vector<T > mt_sums(threadsCount - 1);
+
+	auto funcPtr = [&](const size_t start, const size_t end, const size_t threadIdx) -> COMPV_ERROR_CODE {
+		COMPV_ASSERT(threadIdx < threadsCount);
+		const T* ptrA = A->ptr<const T>(start);
+		const T* ptrB = B->ptr<const T>(start);
+		T* mt_sum = threadIdx ? &mt_sums[threadIdx - 1] : &sum;
+		if (std::is_same<T, compv_float64_t>::value) {
+			void(*CompVMathDotDotSub_64f64f)(const compv_float64_t* ptrA, const compv_float64_t* ptrB, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t strideA, const compv_uscalar_t strideB, compv_float64_t* ret)
+				= nullptr;
+			COMPV_CHECK_CODE_RETURN(CompVMathDot::hookDotSub_64f(&CompVMathDotDotSub_64f64f));
+			CompVMathDotDotSub_64f64f(
+				reinterpret_cast<const compv_float64_t*>(ptrA), reinterpret_cast<const compv_float64_t*>(ptrB),
+				cols, (end - start), strideA, strideB,
+				reinterpret_cast<compv_float64_t*>(mt_sum)
+			);
+		}
+		else {
+			CompVMathDotDotSub_C(
+				ptrA, ptrB,
+				cols, (end - start), strideA, strideB,
+				mt_sum
+			);
+		}
+		return COMPV_ERROR_CODE_S_OK;
+	};
+	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+		funcPtr,
+		rows,
+		threadsCount
+	));
+	for (std::vector<T >::const_iterator it = mt_sums.begin(); it < mt_sums.end(); ++it) {
+		sum += *it;
 	}
 
 	*ret = sum;
@@ -209,6 +252,12 @@ COMPV_ERROR_CODE CompVMathDot::hookDot_64f(
 {
 	COMPV_CHECK_EXP_RETURN(!CompVMathDotDot_64f64f, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	*CompVMathDotDot_64f64f = CompVMathDotDot_C;
+	if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
+		COMPV_EXEC_IFDEF_INTRIN_X86(*CompVMathDotDot_64f64f = CompVMathDotDot_64f64f_Intrin_SSE2);
+	}
+	if (CompVCpu::isEnabled(kCpuFlagAVX)) {
+		COMPV_EXEC_IFDEF_INTRIN_X86(*CompVMathDotDot_64f64f = CompVMathDotDot_64f64f_Intrin_AVX);
+	}
 	return COMPV_ERROR_CODE_S_OK;
 }
 
