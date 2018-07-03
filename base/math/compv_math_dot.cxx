@@ -17,6 +17,9 @@ COMPV_NAMESPACE_BEGIN()
 #if COMPV_ASM && COMPV_ARCH_X64
 COMPV_EXTERNC void CompVMathDotDotSub_64f64f_Asm_X64_SSE2(const compv_float64_t* ptrA, const compv_float64_t* ptrB, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t strideA, const compv_uscalar_t strideB, compv_float64_t* ret);
 COMPV_EXTERNC void CompVMathDotDot_64f64f_Asm_X64_SSE2(const compv_float64_t* ptrA, const compv_float64_t* ptrB, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t strideA, const compv_uscalar_t strideB, compv_float64_t* ret);
+COMPV_EXTERNC void CompVMathDotDotSub_64f64f_Asm_X64_AVX(const compv_float64_t* ptrA, const compv_float64_t* ptrB, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t strideA, const compv_uscalar_t strideB, compv_float64_t* ret);
+COMPV_EXTERNC void CompVMathDotDot_64f64f_Asm_X64_AVX(const compv_float64_t* ptrA, const compv_float64_t* ptrB, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t strideA, const compv_uscalar_t strideB, compv_float64_t* ret);
+
 #endif /* COMPV_ASM && COMPV_ARCH_X64 */
 
 template<typename T>
@@ -248,6 +251,7 @@ COMPV_ERROR_CODE CompVMathDot::hookDotSub_64f(
 	}
 	if (CompVCpu::isEnabled(kCpuFlagAVX)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86(*CompVMathDotDotSub_64f64f = CompVMathDotDotSub_64f64f_Intrin_AVX);
+		COMPV_EXEC_IFDEF_ASM_X86(*CompVMathDotDotSub_64f64f = CompVMathDotDotSub_64f64f_Asm_X64_AVX);
 	}
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -264,6 +268,7 @@ COMPV_ERROR_CODE CompVMathDot::hookDot_64f(
 	}
 	if (CompVCpu::isEnabled(kCpuFlagAVX)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86(*CompVMathDotDot_64f64f = CompVMathDotDot_64f64f_Intrin_AVX);
+		COMPV_EXEC_IFDEF_ASM_X86(*CompVMathDotDot_64f64f = CompVMathDotDot_64f64f_Asm_X64_AVX);
 	}
 	return COMPV_ERROR_CODE_S_OK;
 }
