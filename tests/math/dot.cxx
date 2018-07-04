@@ -58,8 +58,8 @@ COMPV_ERROR_CODE dot()
 	}
 
 	double sum;
-	const double maxErr = CompVParallel::threadDispatcher() // MT slightly change the sum
-		? 1e-8 
+	const double maxErr = (compv_tests_is_fma_enabled() || CompVThreadDispatcher::guessNumThreadsDividingAcrossY(1, aa->rows(), 1)) // MT and FMA slightly change the sum
+		? (test->float64Typ ? 1.71131e-08 : 1.71131e-01)
 		: 0;
 	COMPV_ERROR_CODE(*dot_func)(const CompVMatPtr &A, const CompVMatPtr &B, double* ret)
 		= test->dotSub ? CompVMath::dotSub : CompVMath::dot;
@@ -71,7 +71,7 @@ COMPV_ERROR_CODE dot()
 	uint64_t timeEnd = CompVTime::nowMillis();
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "Math Dot Elapsed time = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 
-	COMPV_DEBUG_INFO_EX(TAG_TEST, "sum=%lf", sum);
+	COMPV_DEBUG_INFO_EX(TAG_TEST, "sum= %lf vs %lf, err = %lf", sum, test->sum, std::abs(sum - test->sum));
 	COMPV_CHECK_EXP_RETURN(std::abs(sum - test->sum) > maxErr, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Dot sum mismatch");
 
 	return COMPV_ERROR_CODE_S_OK;

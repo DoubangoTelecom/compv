@@ -18,7 +18,7 @@ COMPV_NAMESPACE_BEGIN()
 void CompVMathDotDot_64f64f_Intrin_AVX(const compv_float64_t* ptrA, const compv_float64_t* ptrB, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t strideA, const compv_uscalar_t strideB, compv_float64_t* ret)
 {
 	COMPV_DEBUG_INFO_CHECK_AVX();
-	COMPV_DEBUG_INFO_CODE_TODO("Add FMA implementation");
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Use AVX+FMA3 ASM implementation (faster)");
 	
 	_mm256_zeroupper();
 
@@ -28,7 +28,7 @@ void CompVMathDotDot_64f64f_Intrin_AVX(const compv_float64_t* ptrA, const compv_
 	__m256d vecSum = _mm256_setzero_pd();
 
 	for (compv_uscalar_t j = 0; j < height; ++j) {
-		// TODO(dmi): Add FMA implementation
+		// TODO(dmi): Add FMA implementation for ASM code
 		for (i = 0; i < width16; i += 16) {
 			__m256d vec0 = _mm256_mul_pd(_mm256_loadu_pd(&ptrA[i]), _mm256_loadu_pd(&ptrB[i]));
 			__m256d vec1 = _mm256_mul_pd(_mm256_loadu_pd(&ptrA[i + 4]), _mm256_loadu_pd(&ptrB[i + 4]));
@@ -67,8 +67,7 @@ void CompVMathDotDot_64f64f_Intrin_AVX(const compv_float64_t* ptrA, const compv_
 void CompVMathDotDotSub_64f64f_Intrin_AVX(const compv_float64_t* ptrA, const compv_float64_t* ptrB, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t strideA, const compv_uscalar_t strideB, compv_float64_t* ret)
 {
 	COMPV_DEBUG_INFO_CHECK_AVX();
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Use AVX2+FMA3 ASM implementation (faster)");
-	COMPV_DEBUG_INFO_CODE_TODO("Add FMA implementation");
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Use AVX+FMA3 ASM implementation (faster)");
 
 	_mm256_zeroupper();
 
@@ -83,7 +82,7 @@ void CompVMathDotDotSub_64f64f_Intrin_AVX(const compv_float64_t* ptrA, const com
 			__m256d vec1 = _mm256_sub_pd(_mm256_loadu_pd(&ptrA[i + 4]), _mm256_loadu_pd(&ptrB[i + 4]));
 			__m256d vec2 = _mm256_sub_pd(_mm256_loadu_pd(&ptrA[i + 8]), _mm256_loadu_pd(&ptrB[i + 8]));
 			__m256d vec3 = _mm256_sub_pd(_mm256_loadu_pd(&ptrA[i + 12]), _mm256_loadu_pd(&ptrB[i + 12]));
-			// TODO(dmi): Add FMA implementation
+			// TODO(dmi): Add FMA implementation for ASM code
 			vec0 = _mm256_mul_pd(vec0, vec0);
 			vec1 = _mm256_mul_pd(vec1, vec1);
 			vec2 = _mm256_mul_pd(vec2, vec2);

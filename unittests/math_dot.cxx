@@ -52,10 +52,14 @@ COMPV_ERROR_CODE unittest_math_dot()
 			COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static<float, double>(bb, &bb)));
 		}
 		double sum;
+		const double maxErr = (compv_tests_is_fma_enabled() || CompVThreadDispatcher::guessNumThreadsDividingAcrossY(1, aa->rows(), 1)) // MT and FMA slightly change the sum
+			? (test->float64Typ ? 1.71131e-08 : 1.71131e-01)
+			: 0;
 		COMPV_ERROR_CODE(*dot_func)(const CompVMatPtr &A, const CompVMatPtr &B, double* ret)
 			= test->dotSub ? CompVMath::dotSub : CompVMath::dot;		
 		COMPV_CHECK_CODE_RETURN(dot_func(aa, bb, &sum));
-		COMPV_CHECK_EXP_RETURN(sum != test->sum, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Dot sum mismatch");
+		COMPV_DEBUG_INFO_EX(TAG_TEST, "sum= %lf vs %lf, err = %lf", sum, test->sum, std::abs(sum - test->sum));
+		COMPV_CHECK_EXP_RETURN(std::abs(sum - test->sum) > maxErr, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Dot sum mismatch");
 		COMPV_DEBUG_INFO_EX(TAG_TEST, "** Test OK **");
 	}
 
