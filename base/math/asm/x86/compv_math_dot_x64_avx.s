@@ -110,6 +110,8 @@ section .text
 			jl .LoopWidth16
 		.EndOf_LoopWidth16:
 
+		vmovapd xmm1, xmm4
+
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		; for (; i < width2; i += 2)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -125,7 +127,7 @@ section .text
 			%endif
 			add i, 2
 			cmp i, width2
-			vaddpd xmm4, xmm4, xmm0
+			vaddpd xmm1, xmm1, xmm0
 			jl .LoopWidth2
 		.EndOf_LoopWidth2:
 
@@ -144,9 +146,11 @@ section .text
 			%endif
 			inc i
 			cmp i, width
-			vaddsd xmm4, xmm4, xmm0
+			vaddsd xmm1, xmm1, xmm0
 			jl .LoopWidth1
 		.EndOf_LoopWidth1:
+
+		vinsertf128 ymm4, ymm4, xmm1, 0x0
 		
 		dec height
 		lea ptrA, [ptrA + strideA]
