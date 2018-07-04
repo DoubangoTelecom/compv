@@ -20,7 +20,7 @@ static const struct compv_unittest_dot {
 	const double sum;
 } COMPV_UNITTEST_DOT[] =
 {
-	{ false, false, 416746.65625000000 }, // dot_float32
+	{ false, false, 416746.96347632096 }, // dot_float32
 	{ true, false, 711936.62500000000 }, // dotSub_float32
 	{ false, true, 416746.92382917117 }, // dot_float64
 	{ true, true, 711936.70357957715 }, // dotSub_float64
