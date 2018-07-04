@@ -128,7 +128,7 @@ static COMPV_ERROR_CODE CompVMathDotDot(const CompVMatPtr &A, const CompVMatPtr 
 	const size_t cols = A->cols();
 	const size_t strideA = A->stride();
 	const size_t strideB = B->stride();
-	T sum;
+	T sum = 0;
 
 	const size_t threadsCount = CompVThreadDispatcher::guessNumThreadsDividingAcrossY(1, rows, 1);
 	std::vector<T > mt_sums(threadsCount - 1);
@@ -139,10 +139,10 @@ static COMPV_ERROR_CODE CompVMathDotDot(const CompVMatPtr &A, const CompVMatPtr 
 		const T* ptrB = B->ptr<const T>(start);
 		T* mt_sum = threadIdx ? &mt_sums[threadIdx - 1] : &sum;
 		if (std::is_same<T, compv_float64_t>::value) {
-			void(*CompVMathDotSub_64f64f)(const compv_float64_t* ptrA, const compv_float64_t* ptrB, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t strideA, const compv_uscalar_t strideB, compv_float64_t* ret)
+			void(*CompVMathDot_64f64f)(const compv_float64_t* ptrA, const compv_float64_t* ptrB, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t strideA, const compv_uscalar_t strideB, compv_float64_t* ret)
 				= nullptr;
-			COMPV_CHECK_CODE_RETURN(CompVMathDot::hookDot_64f(&CompVMathDotSub_64f64f));
-			CompVMathDotSub_64f64f(
+			COMPV_CHECK_CODE_RETURN(CompVMathDot::hookDot_64f(&CompVMathDot_64f64f));
+			CompVMathDot_64f64f(
 				reinterpret_cast<const compv_float64_t*>(ptrA), reinterpret_cast<const compv_float64_t*>(ptrB),
 				cols, (end - start), strideA, strideB,
 				reinterpret_cast<compv_float64_t*>(mt_sum)

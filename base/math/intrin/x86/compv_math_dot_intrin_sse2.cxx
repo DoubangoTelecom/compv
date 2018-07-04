@@ -23,7 +23,7 @@ void CompVMathDotDot_64f64f_Intrin_SSE2(const compv_float64_t* ptrA, const compv
 	__m128d vecSum1 = _mm_setzero_pd();
 
 	for (compv_uscalar_t j = 0; j < height; ++j) {
-		for (i = 0; i < width16; i += 16) {
+		for (i = 0; i < width16; i += 16) { // test "width16, width16"
 			// TODO(dmi): Add FMA implementation
 			__m128d vec0 = _mm_mul_pd(_mm_loadu_pd(&ptrA[i]), _mm_loadu_pd(&ptrB[i]));
 			__m128d vec1 = _mm_mul_pd(_mm_loadu_pd(&ptrA[i + 2]), _mm_loadu_pd(&ptrB[i + 2]));
@@ -42,7 +42,7 @@ void CompVMathDotDot_64f64f_Intrin_SSE2(const compv_float64_t* ptrA, const compv
 			vecSum0 = _mm_add_pd(vecSum0, vec0);
 			vecSum1 = _mm_add_pd(vecSum1, vec1);
 		}
-		for (; i < width2; i += 2) {
+		for (; i < width2; i += 2) { // not "test width2, width2" but "cmp i, width2"
 			__m128d vec0 = _mm_mul_pd(_mm_loadu_pd(&ptrA[i]), _mm_loadu_pd(&ptrB[i]));
 			vecSum0 = _mm_add_pd(vecSum0, vec0);
 		}

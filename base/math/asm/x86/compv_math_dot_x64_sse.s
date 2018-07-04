@@ -158,8 +158,8 @@ section .text
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		; for (; i < width2; i += 2)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-		test width2, width2
-		jz .EndOf_LoopWidth2
+		cmp i, width2
+		jge .EndOf_LoopWidth2
 		.LoopWidth2:
 			movupd xmm0, [ptrA + ((i + 0) * COMPV_YASM_FLOAT64_SZ_BYTES)]
 			movupd xmm1, [ptrB + ((i + 0) * COMPV_YASM_FLOAT64_SZ_BYTES)]
