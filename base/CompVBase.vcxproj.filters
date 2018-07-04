@@ -798,6 +798,9 @@
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_dot_intrin_avx.h">
       <Filter>include\math\intrin\x86</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_scale_intrin_sse2.h">
+      <Filter>include\math\intrin\x86</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx">
@@ -1328,6 +1331,9 @@
     <ClCompile Include="math\intrin\x86\compv_math_dot_intrin_avx.cxx">
       <Filter>source\math\intrin\x86</Filter>
     </ClCompile>
+    <ClCompile Include="math\intrin\x86\compv_math_scale_intrin_sse2.cxx">
+      <Filter>source\math\intrin\x86</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <YASM Include="asm\x86\compv_bits_macros_x86.s">
@@ -1535,6 +1541,12 @@
       <Filter>source\math\asm\x86</Filter>
     </YASM>
     <YASM Include="math\asm\x86\compv_math_dot_x64_sse.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="math\asm\x86\compv_math_scale_x64_avx.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="math\asm\x86\compv_math_scale_x64_sse.s">
       <Filter>source\math\asm\x86</Filter>
     </YASM>
   </ItemGroup>
