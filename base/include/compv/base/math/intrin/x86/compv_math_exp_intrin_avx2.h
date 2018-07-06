@@ -18,7 +18,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-void CompVMathExpExp_minpack2_64f64f_Intrin_AVX2(const compv_float64_t* ptrIn, compv_float64_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride, const uint64_t* lut64u, const uint64_t* var64u, const compv_float64_t* var64f);
+void CompVMathExpExp_minpack4_64f64f_Intrin_AVX2(const compv_float64_t* ptrIn, compv_float64_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride, const uint64_t* lut64u, const uint64_t* var64u, const compv_float64_t* var64f);
 
 COMPV_NAMESPACE_END()
 

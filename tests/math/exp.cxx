@@ -32,7 +32,7 @@ static const size_t COMPV_UNITTEST_EXP_COUNT = sizeof(COMPV_UNITTEST_EXP) / size
 #define EXP_FLOAT64			true
 #define FILE_NAME			FILE_NAME_EQUIRECTANGULAR
 
-#define LOOP_COUNT			1
+#define LOOP_COUNT			1000
 
 COMPV_ERROR_CODE expo()
 {

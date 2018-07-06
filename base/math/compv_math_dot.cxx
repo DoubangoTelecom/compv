@@ -21,7 +21,6 @@ COMPV_EXTERNC void CompVMathDotDotSub_64f64f_Asm_X64_AVX(const compv_float64_t* 
 COMPV_EXTERNC void CompVMathDotDot_64f64f_Asm_X64_AVX(const compv_float64_t* ptrA, const compv_float64_t* ptrB, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t strideA, const compv_uscalar_t strideB, compv_float64_t* ret);
 COMPV_EXTERNC void CompVMathDotDotSub_64f64f_Asm_X64_FMA3_AVX(const compv_float64_t* ptrA, const compv_float64_t* ptrB, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t strideA, const compv_uscalar_t strideB, compv_float64_t* ret);
 COMPV_EXTERNC void CompVMathDotDot_64f64f_Asm_X64_FMA3_AVX(const compv_float64_t* ptrA, const compv_float64_t* ptrB, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t strideA, const compv_uscalar_t strideB, compv_float64_t* ret);
-
 #endif /* COMPV_ASM && COMPV_ARCH_X64 */
 
 template<typename T>
