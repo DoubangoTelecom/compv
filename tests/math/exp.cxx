@@ -21,9 +21,10 @@ static const struct compv_unittest_exp {
 	size_t stride;
 	const bool float64Typ;
 	const char* md5;
-} COMPV_UNITTEST_EXP[] =
-{
+} COMPV_UNITTEST_EXP[] = {
+#if 0 // Not implemented yet (std::exp used and produce different result on different CPUs)
 	{ FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, false, "19b57f18429b1075c8ad945b40967d55" }, // exp_32f32f
+#endif
 	{ FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, true, "a19b56020ec76de44fefd60787ee237d" }, // exp_64f64f
 };
 static const size_t COMPV_UNITTEST_EXP_COUNT = sizeof(COMPV_UNITTEST_EXP) / sizeof(COMPV_UNITTEST_EXP[0]);

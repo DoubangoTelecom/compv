@@ -27,7 +27,8 @@ using namespace compv;
 #define UNITTEST_PATCH_MOMENTS					0
 
 #define UNITTEST_MATH_MATRIX_OPS				0
-#define UNITTEST_MATH_DOT						1
+#define UNITTEST_MATH_DOT						0
+#define UNITTEST_MATH_EXP						1
 #define UNITTEST_MATH_EIGEN_S					0
 #define UNITTEST_MATH_SVD						0
 #define UNITTEST_MATH_INVERSE					0 // Moore–Penrose pseudoinverse and Inverse3x3 (remove from the unittest, not stable and already part of homography)
@@ -195,7 +196,11 @@ compv_main()
 #if UNITTEST_MATH_DOT || !defined(COMPV_TEST_LOCAL)
 								extern COMPV_ERROR_CODE unittest_math_dot();
 								COMPV_CHECK_CODE_BAIL(err = unittest_math_dot(), "Math dot unittest failed");
-#endif				
+#endif		
+#if UNITTEST_MATH_EXP || !defined(COMPV_TEST_LOCAL)
+								extern COMPV_ERROR_CODE unittest_math_exp();
+								COMPV_CHECK_CODE_BAIL(err = unittest_math_exp(), "Math exp unittest failed");
+#endif		
 #if UNITTEST_MATH_EIGEN_S || !defined(COMPV_TEST_LOCAL)
 								extern COMPV_ERROR_CODE unittest_math_eigenS();
 								COMPV_CHECK_CODE_BAIL(err = unittest_math_eigenS(), "Math eigenS unittest failed");

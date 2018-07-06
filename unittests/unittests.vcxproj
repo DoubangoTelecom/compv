@@ -177,6 +177,7 @@
     <ClCompile Include="math_distance.cxx" />
     <ClCompile Include="math_dot.cxx" />
     <ClCompile Include="math_eigen.cxx" />
+    <ClCompile Include="math_exp.cxx" />
     <ClCompile Include="math_histogram.cxx" />
     <ClCompile Include="math_inverse.cxx" />
     <ClCompile Include="math_matrix_ops.cxx" />

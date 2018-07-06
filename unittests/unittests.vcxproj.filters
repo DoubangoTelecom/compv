@@ -120,5 +120,8 @@
     <ClCompile Include="math_dot.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="math_exp.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
