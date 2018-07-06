@@ -111,29 +111,27 @@ sym(CompVMathExpExp_minpack4_64f64f_Asm_X64_AVX2):
 		.LoopWidth4:
 			vminpd vecX, vecMax, [ptrIn + (i*COMPV_YASM_FLOAT64_SZ_BYTES)]
 			vmaxpd vecX, vecX, vecMin
-
 			vmulpd vecDI, vecX, vecCA
 			vaddpd vecDI, vecDI, vecB
 			vsubpd vecT, vecDI, vecB
 			vmulpd vecT, vecT, vecCRA
 			vsubpd vecT, vecT, vecX
-
 			vpaddq vecU, vecDI, vecCADJ
 			vpsrlq vecU, vecU, 11
 			vpsllq vecU, vecU, 52
 			vmulpd vecY, vecT, vecT
 			vpand vecDI, vecDI, vecMask
-			vpcmpeqb vecX, vecX, vecX ; vecX now contains condition mask: changed after executing "vpgatherqq"
+			vpcmpeqq vecX, vecX, vecX ; vecX now contains condition mask: changed after executing "vpgatherqq"
 			vpsllq vecDI, vecDI, COMPV_YASM_FLOAT64_SHIFT_BYTES
-			vpgatherqq vecLUT, qword ptr [lut64u+vecDI], vecX
 			vsubpd vecTemp, vecC30, vecT
+			vpgatherqq vecLUT, [lut64u+vecDI], vecX			
 			vmulpd vecY, vecY, vecTemp
 			vpor vecU, vecU, vecLUT
 			vmulpd vecY, vecY, [mem_vecC20]
+			add i, 4
 			vsubpd vecY, vecY, vecT
 			vaddpd vecY, vecY, vecC10
 			vmulpd vecY, vecY, vecU
-			add i, 4
 			cmp i, width
 			vmovupd [ptrOut + ((i - 4)*COMPV_YASM_FLOAT64_SZ_BYTES)], vecY
 			jl .LoopWidth4
