@@ -11,8 +11,11 @@
 #include "compv/base/compv_cpu.h"
 
 #include "compv/base/math/intrin/x86/compv_math_exp_intrin_sse2.h"
+#include "compv/base/math/intrin/x86/compv_math_exp_intrin_avx2.h"
 
 #define COMPV_THIS_CLASSNAME	"CompVMathExp"
+
+// Part of the code is based on https://github.com/herumi/fmath
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -169,6 +172,10 @@ COMPV_ERROR_CODE CompVMathExp::hookExp_64f(
 		COMPV_EXEC_IFDEF_INTRIN_X86((*CompVMathExpExp_64f64f = CompVMathExpExp_minpack2_64f64f_Intrin_SSE2, minpack_ = 2));
 		//COMPV_EXEC_IFDEF_ASM_X64((*CompVMathExpExp_64f64f = CompVMathExpExp_minpack2_64f64f_Asm_X64_SSE2, minpack_ = 2));
 	}
+	if (CompVCpu::isEnabled(kCpuFlagAVX2)) {
+		COMPV_EXEC_IFDEF_INTRIN_X86((*CompVMathExpExp_64f64f = CompVMathExpExp_minpack2_64f64f_Intrin_AVX2, minpack_ = 4));
+		//COMPV_EXEC_IFDEF_ASM_X64((*CompVMathExpExp_64f64f = CompVMathExpExp_minpack2_64f64f_Asm_X64_AVX2, minpack_ = 4));
+}
 #elif COMPV_ARCH_ARM
 #endif
 	if (minpack) {

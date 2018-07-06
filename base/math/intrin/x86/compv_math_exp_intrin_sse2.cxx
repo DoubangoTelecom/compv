@@ -15,6 +15,7 @@ COMPV_NAMESPACE_BEGIN()
 void CompVMathExpExp_minpack2_64f64f_Intrin_SSE2(const compv_float64_t* ptrIn, compv_float64_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride, const uint64_t* lut64u, const uint64_t* var64u, const compv_float64_t* var64f)
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
+	COMPV_DEBUG_INFO_CODE_TODO("Add ASM implemenation");
 
 	const __m128i vecMask = _mm_set1_epi64x(var64u[0]);
 	const __m128i vecCADJ = _mm_set1_epi64x(var64u[1]);
@@ -58,55 +59,12 @@ void CompVMathExpExp_minpack2_64f64f_Intrin_SSE2(const compv_float64_t* ptrIn, c
 
 			vecY = _mm_sub_pd(_mm_mul_pd(vecY, vecC20), vecT); // TODO(dmi): add FMA implementation
 			vecY = _mm_add_pd(vecY, vecC10);
-			_mm_stream_pd(&ptrOut[i], _mm_mul_pd(vecY, _mm_castsi128_pd(vecU)));
+			_mm_storeu_pd(&ptrOut[i], _mm_mul_pd(vecY, _mm_castsi128_pd(vecU)));
 		}
 		ptrIn += stride;
 		ptrOut += stride;
 	}
 
-#if 0
-	const compv_uscalar_t width16 = width & -16;
-	const compv_uscalar_t width2 = width & -2;
-	compv_uscalar_t i;
-	__m128d vecSum0 = _mm_setzero_pd();
-	__m128d vecSum1 = _mm_setzero_pd();
-
-	for (compv_uscalar_t j = 0; j < height; ++j) {
-		for (i = 0; i < width16; i += 16) { // test "width16, width16"
-											// TODO(dmi): Add FMA implementation
-			__m128d vec0 = _mm_mul_pd(_mm_loadu_pd(&ptrA[i]), _mm_loadu_pd(&ptrB[i]));
-			__m128d vec1 = _mm_mul_pd(_mm_loadu_pd(&ptrA[i + 2]), _mm_loadu_pd(&ptrB[i + 2]));
-			__m128d vec2 = _mm_mul_pd(_mm_loadu_pd(&ptrA[i + 4]), _mm_loadu_pd(&ptrB[i + 4]));
-			__m128d vec3 = _mm_mul_pd(_mm_loadu_pd(&ptrA[i + 6]), _mm_loadu_pd(&ptrB[i + 6]));
-			__m128d vec4 = _mm_mul_pd(_mm_loadu_pd(&ptrA[i + 8]), _mm_loadu_pd(&ptrB[i + 8]));
-			__m128d vec5 = _mm_mul_pd(_mm_loadu_pd(&ptrA[i + 10]), _mm_loadu_pd(&ptrB[i + 10]));
-			__m128d vec6 = _mm_mul_pd(_mm_loadu_pd(&ptrA[i + 12]), _mm_loadu_pd(&ptrB[i + 12]));
-			__m128d vec7 = _mm_mul_pd(_mm_loadu_pd(&ptrA[i + 14]), _mm_loadu_pd(&ptrB[i + 14]));
-			vec0 = _mm_add_pd(vec0, vec2);
-			vec4 = _mm_add_pd(vec4, vec6);
-			vec1 = _mm_add_pd(vec1, vec3);
-			vec5 = _mm_add_pd(vec5, vec7);
-			vec0 = _mm_add_pd(vec0, vec4);
-			vec1 = _mm_add_pd(vec1, vec5);
-			vecSum0 = _mm_add_pd(vecSum0, vec0);
-			vecSum1 = _mm_add_pd(vecSum1, vec1);
-		}
-		for (; i < width2; i += 2) { // not "test width2, width2" but "cmp i, width2"
-			__m128d vec0 = _mm_mul_pd(_mm_loadu_pd(&ptrA[i]), _mm_loadu_pd(&ptrB[i]));
-			vecSum0 = _mm_add_pd(vecSum0, vec0);
-		}
-		for (; i < width; i += 1) {
-			__m128d vec0 = _mm_mul_sd(_mm_load_sd(&ptrA[i]), _mm_load_sd(&ptrB[i]));
-			vecSum0 = _mm_add_sd(vecSum0, vec0);
-		}
-		ptrA += strideA;
-		ptrB += strideB;
-	}
-
-	vecSum0 = _mm_add_pd(vecSum0, vecSum1);
-	vecSum0 = _mm_add_sd(vecSum0, _mm_shuffle_pd(vecSum0, vecSum0, 0xff));
-	_mm_store_sd(ret, vecSum0);
-#endif
 }
 
 COMPV_NAMESPACE_END()
