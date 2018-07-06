@@ -93,6 +93,7 @@ COMPV_ERROR_CODE CompVMathScale::hookScale_64f(
 {
 	COMPV_CHECK_EXP_RETURN(!CompVMathScaleScale_64f64f, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	*CompVMathScaleScale_64f64f = CompVMathScaleScale_C;
+#if COMPV_ARCH_X86
 	if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86(*CompVMathScaleScale_64f64f = CompVMathScaleScale_64f64f_Intrin_SSE2);
 		COMPV_EXEC_IFDEF_ASM_X64(*CompVMathScaleScale_64f64f = CompVMathScaleScale_64f64f_Asm_X64_SSE2);
@@ -100,6 +101,8 @@ COMPV_ERROR_CODE CompVMathScale::hookScale_64f(
 	if (CompVCpu::isEnabled(kCpuFlagAVX)) {
 		COMPV_EXEC_IFDEF_ASM_X64(*CompVMathScaleScale_64f64f = CompVMathScaleScale_64f64f_Asm_X64_AVX);
 	}
+#elif COMPV_ARCH_ARM
+#endif
 	return COMPV_ERROR_CODE_S_OK;
 }
 

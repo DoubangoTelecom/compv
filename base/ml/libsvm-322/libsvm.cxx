@@ -242,7 +242,7 @@ protected:
 			out[i] = (-gamma*(x_square[i] + x_square[i] - 2 * dotMatPtr[i]));
 		}
 		// Compute final out = exp(temp out)
-		simd_func_ptrs.exp_64f64f(out, out, count, 1, 0);
+		simd_func_ptrs.expo(out, out, count);
 	}
 
 	void kernel_rbf1(const double& x_squarei, const svm_node* xi, const double& yi, const double* y, const int start, const int end, Qfloat* out) const {
@@ -269,7 +269,7 @@ protected:
 			outMatPtr[j] = (-gamma*(x_squarei + x_squarej[j] - 2 * dotMatPtr[j]));
 		}
 		// Compute exp(temp out)
-		simd_func_ptrs.exp_64f64f(outMatPtr, outMatPtr, count, 1, 0);
+		simd_func_ptrs.expo(outMatPtr, outMatPtr, count);
 		// Compute final out
 		for (size_t j = 0; j < count; ++j) {
 			outj[j] = static_cast<Qfloat>(yi * yj[j] * outMatPtr[j]);
@@ -3445,8 +3445,8 @@ COMPV_ERROR_CODE svm_k_function_rbf(const CompVMatPtr& x, const CompVMatPtr& yy,
 			yPtr += ystride;
 		}
 		simd_func_ptrs->scale_64f64f(&sumMatPtr[start], &kvaluesPtr[start], (end - start), 1, 0, &gamma_minus); // not aligned-copy (decause of start-indexing)
-		simd_func_ptrs->exp_64f64f(&kvaluesPtr[start], &kvaluesPtr[start], (end - start), 1, 0); // not aligned-copy (decause of start-indexing)
-
+		simd_func_ptrs->expo(&kvaluesPtr[start], &kvaluesPtr[start], (end - start)); // not aligned-copy (decause of start-indexing)
+		
 		return COMPV_ERROR_CODE_S_OK;
 	};
 	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
@@ -3474,5 +3474,5 @@ void svm_simd_func_ptrs::init()
 	COMPV_CHECK_CODE_ASSERT(CompVMathDot::hookDotSub_64f(&dotSub_64f64f));
 	COMPV_CHECK_CODE_ASSERT(CompVMathDot::hookDot_64f(&dot_64f64f));
 	COMPV_CHECK_CODE_ASSERT(CompVMathScale::hookScale_64f(&scale_64f64f));
-	COMPV_CHECK_CODE_ASSERT(CompVMathExp::hookExp_64f(&exp_64f64f));
+	COMPV_CHECK_CODE_ASSERT(CompVMathExp::hookExp_64f(&exp_64f64f_minpackx, &exp_64f64f_minpack));
 }

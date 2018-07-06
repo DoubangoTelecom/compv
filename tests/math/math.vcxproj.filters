@@ -78,5 +78,8 @@
     <ClCompile Include="dot.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="exp.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

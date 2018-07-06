@@ -9,6 +9,7 @@
 #include "compv/base/compv_debug.h"
 #include "compv/base/time/compv_time.h"
 #include "compv/base/math/compv_math_utils.h"
+#include "compv/base/math/compv_math_exp.h"
 #include "compv/base/parallel/compv_parallel.h"
 #include "compv/base/image/compv_image_decoder.h"
 #include "compv/base/drawing/compv_window_registry.h"
@@ -266,6 +267,9 @@ COMPV_ERROR_CODE CompVBase::init(int numThreads COMPV_DEFAULT(-1))
     COMPV_CHECK_CODE_BAIL(err_ = CompVMathUtils::init());
     COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Math Fast Trig.: %s", CompVCpu::isMathTrigFastEnabled() ? "true" : "fast");
     COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Math Fixed Point: %s", CompVCpu::isMathFixedPointEnabled() ? "true" : "fast");
+
+	/* Math exp lut tables */
+	COMPV_CHECK_CODE_BAIL(err_ = CompVMathExp::init());
 
     /* Memory alignment */
     COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Default alignment: #%d", COMPV_ALIGNV_SIMD_DEFAULT);

@@ -7,6 +7,7 @@
 #include "compv/base/compv_config.h"
 #include "compv/base/compv_mat.h"
 #include "compv/base/compv_common.h"
+#include "compv/base/math/compv_math_exp.h"
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
@@ -40,11 +41,21 @@ struct svm_simd_func_ptrs
 		= nullptr; // Prediction + training
 	void(*scale_64f64f)(const compv_float64_t* ptrIn, compv_float64_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride, const compv_float64_t* s1)
 		= nullptr; // Prediction
-	void(*exp_64f64f)(const compv_float64_t* ptrIn, compv_float64_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride)
-		= nullptr; // Prediction + training
-
+	
 	svm_simd_func_ptrs();
 	void init();
+
+	void expo(const compv_float64_t* ptrIn, compv_float64_t* ptrOut, const size_t count) const {
+		exp_64f64f_minpackx(ptrIn, ptrOut, count, 1, 0, CompVMathExp::lut64u(), CompVMathExp::vars64u(), CompVMathExp::vars64f());
+		for (size_t i = (count & -exp_64f64f_minpack); i < count; ++i) {
+			ptrOut[i] = std::exp(ptrIn[i]);
+		}
+	}
+
+private:
+	void(*exp_64f64f_minpackx)(const compv_float64_t* ptrIn, compv_float64_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride, const uint64_t* lut64u, const uint64_t* var64u, const compv_float64_t* var64f)
+		= nullptr; // Prediction + training
+	int exp_64f64f_minpack = 1;
 };
 
 struct svm_node

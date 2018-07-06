@@ -130,7 +130,6 @@ static void CompVMathDotDotSub_C(const T* ptrA, const T* ptrB, const compv_uscal
 template<typename T>
 static COMPV_ERROR_CODE CompVMathDotDot(const CompVMatPtr &A, const CompVMatPtr &B, double* ret)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation could be found");
 	const size_t rows = A->rows();
 	const size_t cols = A->cols();
 	const size_t strideA = A->stride();
@@ -252,6 +251,7 @@ COMPV_ERROR_CODE CompVMathDot::hookDotSub_64f(
 {
 	COMPV_CHECK_EXP_RETURN(!CompVMathDotDotSub_64f64f, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	*CompVMathDotDotSub_64f64f = CompVMathDotDotSub_C;
+#if COMPV_ARCH_X86
 	if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86(*CompVMathDotDotSub_64f64f = CompVMathDotDotSub_64f64f_Intrin_SSE2);
 		COMPV_EXEC_IFDEF_ASM_X64(*CompVMathDotDotSub_64f64f = CompVMathDotDotSub_64f64f_Asm_X64_SSE2);
@@ -263,6 +263,8 @@ COMPV_ERROR_CODE CompVMathDot::hookDotSub_64f(
 			COMPV_EXEC_IFDEF_ASM_X64(*CompVMathDotDotSub_64f64f = CompVMathDotDotSub_64f64f_Asm_X64_FMA3_AVX); //!\\ Not faster but more accurate
 		}
 	}
+#elif COMPV_ARCH_ARM
+#endif
 	return COMPV_ERROR_CODE_S_OK;
 }
 

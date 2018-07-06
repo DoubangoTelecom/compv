@@ -12,6 +12,7 @@ COMPV_NAMESPACE_BEGIN()
 template<typename T>
 static COMPV_ERROR_CODE CompVMathClipClip3Generic(const CompVMatPtr& in, const double minn, const double maxx, CompVMatPtrPtr out)
 {
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation could be found");
 	COMPV_CHECK_EXP_RETURN(!in || !in->isRawTypeMatch<T>() || !out || minn > maxx, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
 	const size_t height = in->rows();
