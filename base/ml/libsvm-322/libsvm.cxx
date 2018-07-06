@@ -2751,8 +2751,10 @@ double svm_predict_distance(const svm_model *model, const svm_node_base *x, doub
 			}
 		}
 		COMPV_ASSERT(pred_class < nr_class);
-
-		double prob_sum = 0.0;
+		double* fApB_values = Malloc(double, nr_class - 1);
+		int* fApB_signs = Malloc(int, nr_class - 1);
+		int* dec_signs = Malloc(int, nr_class - 1);
+		
 		int FIXME_COUNT = 0;
 		for (int i = 0, k = 0; i < nr_class; i++) {
 			const bool bi = (i == pred_class);
@@ -2760,20 +2762,34 @@ double svm_predict_distance(const svm_model *model, const svm_node_base *x, doub
 				const bool bj = (j == pred_class);
 				if (bi || bj) {
 					const double fApB = dec_values[k] * model->probA[k] + model->probB[k];
-					const double prob = (fApB >= 0)
-						? std::exp(-fApB) / (1.0 + std::exp(-fApB))
-						: 1.0 / (1.0 + exp(fApB));
-					prob_sum += (dec_values[k] < 0)
-						? prob
-						: (1 - prob);
+					fApB_signs[FIXME_COUNT] = (fApB >= 0);
+					fApB_values[FIXME_COUNT] = fApB_signs[FIXME_COUNT] ? -fApB : fApB;
+					dec_signs[FIXME_COUNT] = (dec_values[k] < 0);
 					++FIXME_COUNT;
 				}
 			}
 		}
+
 		COMPV_ASSERT(FIXME_COUNT == (nr_class - 1));
+
+		model->simd_func_ptrs.expo(fApB_values, fApB_values, static_cast<size_t>(FIXME_COUNT));
+		double prob_sum = 0.0;
+		for (int i = 0; i < FIXME_COUNT; ++i) {
+			const double& exp_fApB = fApB_values[i];
+			const double exp_fApB_scale = 1.0 / (1.0 + exp_fApB);
+			const double prob = fApB_signs[i]
+				? exp_fApB * exp_fApB_scale
+				: exp_fApB_scale;
+			prob_sum += dec_signs[i]
+				? prob
+				: (1 - prob);
+		}
 		
 		*distance =  (prob_sum / double(FIXME_COUNT));
 
+		Free(fApB_signs);
+		Free(dec_signs);
+		Free(fApB_values);
 		Free(dec_values);
 		return pred_label;
 	}
