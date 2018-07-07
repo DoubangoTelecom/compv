@@ -167,6 +167,7 @@
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_cast_intrin_neon.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_convlt_intrin_neon.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_distance_intrin_neon.h" />
+    <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_exp_intrin_neon.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_histogram_intrin_neon.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_matrix_intrin_neon64.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_morph_intrin_neon.h" />
@@ -404,6 +405,7 @@
     <ClCompile Include="..\math\intrin\arm\compv_math_cast_intrin_neon.cxx" />
     <ClCompile Include="..\math\intrin\arm\compv_math_convlt_intrin_neon.cxx" />
     <ClCompile Include="..\math\intrin\arm\compv_math_distance_intrin_neon.cxx" />
+    <ClCompile Include="..\math\intrin\arm\compv_math_exp_intrin_neon.cxx" />
     <ClCompile Include="..\math\intrin\arm\compv_math_histogram_intrin_neon.cxx" />
     <ClCompile Include="..\math\intrin\arm\compv_math_matrix_intrin_neon64.cxx" />
     <ClCompile Include="..\math\intrin\arm\compv_math_morph_intrin_neon.cxx" />

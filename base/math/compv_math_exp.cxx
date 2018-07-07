@@ -12,6 +12,7 @@
 
 #include "compv/base/math/intrin/x86/compv_math_exp_intrin_sse2.h"
 #include "compv/base/math/intrin/x86/compv_math_exp_intrin_avx2.h"
+#include "compv/base/math/intrin/arm/compv_math_exp_intrin_neon.h"
 
 #define COMPV_THIS_CLASSNAME	"CompVMathExp"
 
@@ -184,6 +185,10 @@ COMPV_ERROR_CODE CompVMathExp::hookExp_64f(
 		}
 	}
 #elif COMPV_ARCH_ARM
+	if (CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
+		COMPV_EXEC_IFDEF_INTRIN_ARM64((*CompVMathExpExp_64f64f = CompVMathExpExp_minpack2_64f64f_Intrin_NEON64, minpack_ = 2));
+		//COMPV_EXEC_IFDEF_ASM_ARM32((*CompVMathExpExp_64f64f = CompVMathExpExp_minpack2_64f64f_Asm_NEON32, minpack_ = 1));
+	}
 #endif
 	if (minpack) {
 		*minpack = minpack_;
