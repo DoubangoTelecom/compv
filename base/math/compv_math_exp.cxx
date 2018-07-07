@@ -20,7 +20,8 @@
 COMPV_NAMESPACE_BEGIN()
 
 #if COMPV_ASM && COMPV_ARCH_X64
-COMPV_EXTERNC void CompVMathExpExp_minpack4_64f64f_Asm_X64_AVX2(const compv_float64_t* ptrIn, compv_float64_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride, const uint64_t* lut64u, const uint64_t* var64u, const compv_float64_t* var64f);
+COMPV_EXTERNC void CompVMathExpExp_minpack1_64f64f_Asm_X64_AVX2(const compv_float64_t* ptrIn, compv_float64_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride, const uint64_t* lut64u, const uint64_t* var64u, const compv_float64_t* var64f);
+COMPV_EXTERNC void CompVMathExpExp_minpack1_64f64f_Asm_X64_FMA3_AVX2(const compv_float64_t* ptrIn, compv_float64_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride, const uint64_t* lut64u, const uint64_t* var64u, const compv_float64_t* var64f);
 #endif /* #if COMPV_ASM && COMPV_ARCH_X64 */
 
 bool CompVMathExp::s_bInitialized = false;
@@ -178,7 +179,10 @@ COMPV_ERROR_CODE CompVMathExp::hookExp_64f(
 	}
 	if (CompVCpu::isEnabled(kCpuFlagAVX2)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86((*CompVMathExpExp_64f64f = CompVMathExpExp_minpack4_64f64f_Intrin_AVX2, minpack_ = 4));
-		COMPV_EXEC_IFDEF_ASM_X64((*CompVMathExpExp_64f64f = CompVMathExpExp_minpack4_64f64f_Asm_X64_AVX2, minpack_ = 4));
+		COMPV_EXEC_IFDEF_ASM_X64((*CompVMathExpExp_64f64f = CompVMathExpExp_minpack1_64f64f_Asm_X64_AVX2, minpack_ = 1));
+		if (CompVCpu::isEnabled(kCpuFlagFMA3)) {
+			COMPV_EXEC_IFDEF_ASM_X64((*CompVMathExpExp_64f64f = CompVMathExpExp_minpack1_64f64f_Asm_X64_FMA3_AVX2, minpack_ = 1));
+		}
 	}
 #elif COMPV_ARCH_ARM
 #endif

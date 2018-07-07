@@ -11,6 +11,8 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+//#define __FMA3__
+
 // Must not require memory alignment (random access from SVM)
 #if defined(__INTEL_COMPILER)
 #	pragma intel optimization_parameter target_arch=avx2

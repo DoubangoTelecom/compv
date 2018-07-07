@@ -21,11 +21,12 @@ static const struct compv_unittest_exp {
 	size_t stride;
 	const bool float64Typ;
 	const char* md5;
+	const char* md5_fma;
 } COMPV_UNITTEST_EXP[] = {
 #if 0 // Not implemented yet (std::exp used and produce different result on different CPUs)
-	{ FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, false, "19b57f18429b1075c8ad945b40967d55" }, // exp_32f32f
+	{ FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, false, "19b57f18429b1075c8ad945b40967d55", "19b57f18429b1075c8ad945b40967d55" }, // exp_32f32f - No FMA yet
 #endif
-	{ FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, true, "a19b56020ec76de44fefd60787ee237d" }, // exp_64f64f
+	{ FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, true, "a19b56020ec76de44fefd60787ee237d", "f69e3f6f9203952f1f29ce2b73930f17" }, // exp_64f64f
 };
 static const size_t COMPV_UNITTEST_EXP_COUNT = sizeof(COMPV_UNITTEST_EXP) / sizeof(COMPV_UNITTEST_EXP[0]);
 
@@ -52,7 +53,14 @@ COMPV_ERROR_CODE unittest_math_exp()
 			*inMat->ptr<double>(4, 9) = 709.78271289338397; // ret = inf
 		}		
 		COMPV_CHECK_CODE_RETURN(CompVMath::exp(inMat, &outMat));
-		COMPV_CHECK_EXP_RETURN(std::string(test->md5).compare(compv_tests_md5(outMat)) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Math Exp mismatch");
+		const char* xmd5 = compv_tests_is_fma_enabled()
+#if COMPV_ARCH_X64 // For now no FMA implementation for ARM
+			? test->md5_fma
+#else
+			? test->md5
+#endif
+			: test->md5;
+		COMPV_CHECK_EXP_RETURN(std::string(xmd5).compare(compv_tests_md5(outMat)) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Math Exp mismatch");
 		COMPV_DEBUG_INFO_EX(TAG_TEST, "** Test OK **");
 	}
 
