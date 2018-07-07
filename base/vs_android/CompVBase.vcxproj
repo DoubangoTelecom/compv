@@ -145,7 +145,9 @@
     <ClInclude Include="..\include\compv\base\math\compv_math_clip.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_convlt.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_distance.h" />
+    <ClInclude Include="..\include\compv\base\math\compv_math_dot.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_eigen.h" />
+    <ClInclude Include="..\include\compv\base\math\compv_math_exp.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_gauss.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_histogram.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_lines.h" />
@@ -155,6 +157,7 @@
     <ClInclude Include="..\include\compv\base\math\compv_math_op_mul.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_op_sub.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_pca.h" />
+    <ClInclude Include="..\include\compv\base\math\compv_math_scale.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_stats.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_stats_fit.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_stats_ransac.h" />
@@ -180,6 +183,10 @@
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_distance_intrin_avx2.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_distance_intrin_sse2.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_distance_intrin_sse42.h" />
+    <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_dot_intrin_avx.h" />
+    <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_dot_intrin_sse2.h" />
+    <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_exp_intrin_avx2.h" />
+    <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_exp_intrin_sse2.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_histogram_intrin_sse2.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_matrix_intrin_avx.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_matrix_intrin_sse2.h" />
@@ -188,6 +195,7 @@
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_morph_intrin_sse2.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_op_mul_intrin_sse2.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_op_sub_intrin_sse2.h" />
+    <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_scale_intrin_sse2.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_stats_intrin_avx.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_stats_intrin_sse2.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_transform_intrin_avx.h" />
@@ -374,7 +382,9 @@
     <ClCompile Include="..\math\compv_math_clip.cxx" />
     <ClCompile Include="..\math\compv_math_convlt.cxx" />
     <ClCompile Include="..\math\compv_math_distance.cxx" />
+    <ClCompile Include="..\math\compv_math_dot.cxx" />
     <ClCompile Include="..\math\compv_math_eigen.cxx" />
+    <ClCompile Include="..\math\compv_math_exp.cxx" />
     <ClCompile Include="..\math\compv_math_gauss.cxx" />
     <ClCompile Include="..\math\compv_math_histogram.cxx" />
     <ClCompile Include="..\math\compv_math_lines.cxx" />
@@ -384,6 +394,7 @@
     <ClCompile Include="..\math\compv_math_op_mul.cxx" />
     <ClCompile Include="..\math\compv_math_op_sub.cxx" />
     <ClCompile Include="..\math\compv_math_pca.cxx" />
+    <ClCompile Include="..\math\compv_math_scale.cxx" />
     <ClCompile Include="..\math\compv_math_stats.cxx" />
     <ClCompile Include="..\math\compv_math_stats_fit.cxx" />
     <ClCompile Include="..\math\compv_math_stats_ransac.cxx" />
@@ -409,6 +420,10 @@
     <ClCompile Include="..\math\intrin\x86\compv_math_distance_intrin_avx2.cxx" />
     <ClCompile Include="..\math\intrin\x86\compv_math_distance_intrin_sse2.cxx" />
     <ClCompile Include="..\math\intrin\x86\compv_math_distance_intrin_sse42.cxx" />
+    <ClCompile Include="..\math\intrin\x86\compv_math_dot_intrin_avx.cxx" />
+    <ClCompile Include="..\math\intrin\x86\compv_math_dot_intrin_sse2.cxx" />
+    <ClCompile Include="..\math\intrin\x86\compv_math_exp_intrin_avx2.cxx" />
+    <ClCompile Include="..\math\intrin\x86\compv_math_exp_intrin_sse2.cxx" />
     <ClCompile Include="..\math\intrin\x86\compv_math_histogram_intrin_sse2.cxx" />
     <ClCompile Include="..\math\intrin\x86\compv_math_matrix_intrin_avx.cxx" />
     <ClCompile Include="..\math\intrin\x86\compv_math_matrix_intrin_sse2.cxx" />
@@ -417,6 +432,7 @@
     <ClCompile Include="..\math\intrin\x86\compv_math_morph_intrin_sse2.cxx" />
     <ClCompile Include="..\math\intrin\x86\compv_math_op_mul_intrin_sse2.cxx" />
     <ClCompile Include="..\math\intrin\x86\compv_math_op_sub_intrin_sse2.cxx" />
+    <ClCompile Include="..\math\intrin\x86\compv_math_scale_intrin_sse2.cxx" />
     <ClCompile Include="..\math\intrin\x86\compv_math_stats_intrin_avx.cxx" />
     <ClCompile Include="..\math\intrin\x86\compv_math_stats_intrin_sse2.cxx" />
     <ClCompile Include="..\math\intrin\x86\compv_math_transform_intrin_avx.cxx" />

@@ -42,9 +42,9 @@ public:
 
 private:
 	static bool s_bInitialized;
-	static COMPV_ALIGN_DEFAULT() uint64_t s_arrayVars64u[2];
-	static COMPV_ALIGN_DEFAULT() compv_float64_t s_arrayVars6f4[8];
-	static COMPV_ALIGN_DEFAULT() uint64_t s_arrayLut64u[2048 /* 1UL << sbit[11] */];
+	static COMPV_ALIGN_DEFAULT() const uint64_t s_arrayVars64u[2];
+	static COMPV_ALIGN_DEFAULT() const compv_float64_t s_arrayVars6f4[8];
+	static COMPV_ALIGN_DEFAULT() const uint64_t s_arrayLut64u[2048 /* 1UL << sbit[11] */];
 };
 
 COMPV_NAMESPACE_END()

@@ -58,6 +58,7 @@ COMPV_ERROR_CODE expo()
 		*inMat->ptr<double>(1, 7) *= -1.50;
 		*inMat->ptr<double>(8, 11) = -708.39641853226408; // ret = 0
 		*inMat->ptr<double>(4, 9) = 709.78271289338397; // ret = inf
+		// MD5(inMat) = "c60c1e7f3363c77ec46b16e0b37017b9"
 	}
 
 	uint64_t timeStart = CompVTime::nowMillis();
