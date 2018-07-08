@@ -16,7 +16,7 @@ COMPV_NAMESPACE_BEGIN()
 void CompVMathExpExp_minpack2_64f64f_Intrin_NEON64(const compv_float64_t* ptrIn, compv_float64_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride, const uint64_t* lut64u, const uint64_t* var64u, const compv_float64_t* var64f)
 {
 	COMPV_DEBUG_INFO_CHECK_NEON();
-	COMPV_DEBUG_INFO_CODE_TODO("Add ASM implemenation");
+	COMPV_DEBUG_INFO_CODE_TODO("ASM code faster");
 
 	const uint64x2_t vecMask = vdupq_n_u64(var64u[0]);
 	const uint64x2_t vecCADJ = vdupq_n_u64(var64u[1]);
@@ -36,9 +36,9 @@ void CompVMathExpExp_minpack2_64f64f_Intrin_NEON64(const compv_float64_t* ptrIn,
 		for (compv_uscalar_t i = 0; i < width2; i += 2) {
 			float64x2_t vecX = vminq_f64(vld1q_f64(&ptrIn[i]), vecMax);
 			vecX = vmaxq_f64(vecX, vecMin);
-			float64x2_t vecDI = vmlaq_f64(vecB, vecX, vecCA);
-			const float64x2_t vecT = vmlsq_f64(vecX, vsubq_f64(vecDI, vecB), vecCRA); // VFMA
-			uint64x2_t vecU = vshlq_n_u64(vshrq_n_s64(vaddq_u64(vecDI, vecCADJ), 11), 52);
+			float64x2_t vecDI = vmlaq_f64(vecB, vecX, vecCA); // VFMA [vecB + (vecX * vecCA)]
+			const float64x2_t vecT = vmlsq_f64(vecX, vsubq_f64(vecDI, vecB), vecCRA); // VFMA [vecX - (sub * vecCRA)]
+			uint64x2_t vecU = vshlq_n_u64(vshrq_n_u64(vaddq_u64(vecDI, vecCADJ), 11), 52);
 			float64x2_t vecY = vmulq_f64(vecT, vecT);
 			vecDI = vandq_u64(vecDI, vecMask);
 			vecY = vmulq_f64(vecY,  vaddq_f64(vecC30, vecT));
@@ -51,7 +51,7 @@ void CompVMathExpExp_minpack2_64f64f_Intrin_NEON64(const compv_float64_t* ptrIn,
 			const uint64x2_t vecLUT = vcombine_u64((uint64x1_t)lut64u[i0], (uint64x1_t)lut64u[i1]);
 			vecU = vorrq_u64(vecU, vecLUT);
 
-			vecY = vmlaq_f64(vecT, vecY, vecC20); // VFMA
+			vecY = vmlaq_f64(vecT, vecY, vecC20); // VFMA [vecT + (vecY * vecC20)]
 			vecY = vaddq_f64(vecC10, vecY);
 			vst1q_f64(&ptrOut[i], vmulq_f64(vecY, vecU));
 		}
