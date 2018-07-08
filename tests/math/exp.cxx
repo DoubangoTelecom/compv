@@ -70,7 +70,7 @@ COMPV_ERROR_CODE expo()
 
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "MD5=%s", compv_tests_md5(outMat).c_str());
 	const char* xmd5 = compv_tests_is_fma_enabled()
-#if COMPV_ARCH_X64 // For now no FMA implementation for ARM
+#if COMPV_ARCH_X64 || COMPV_ARCH_ARM32 // For now no FMA implementation for ARM64
 		? test->md5_fma
 #else
 		? test->md5

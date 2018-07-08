@@ -54,7 +54,7 @@ COMPV_ERROR_CODE unittest_math_exp()
 		}		
 		COMPV_CHECK_CODE_RETURN(CompVMath::exp(inMat, &outMat));
 		const char* xmd5 = compv_tests_is_fma_enabled()
-#if COMPV_ARCH_X64 // For now no FMA implementation for ARM
+#if COMPV_ARCH_X64 || COMPV_ARCH_ARM32 // For now no FMA implementation for ARM64
 			? test->md5_fma
 #else
 			? test->md5

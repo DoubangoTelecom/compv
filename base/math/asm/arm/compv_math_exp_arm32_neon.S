@@ -21,7 +21,7 @@
 @ arg(5) -> const uint64_t* lut64u
 @ arg(6) -> const uint64_t* var64u
 @ arg(7) -> const compv_float64_t* var64f
-COMPV_GAS_FUNCTION_DECLARE CompVMathExpExp_minpack1_64f64f_Asm_NEON32
+.macro CompVMathExpExp_minpack1_64f64f_Macro_NEON32 fusedMultiplyAdd
 	COMPV_GAS_FUNCTION_PROLOG
 	COMPV_GAS_SHADOW_ARGS_TO_STACK 8
 	COMPV_GAS_SAVE_NEON_REGS
@@ -81,12 +81,12 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathExpExp_minpack1_64f64f_Asm_NEON32
 	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	@ for (compv_uscalar_t j = 0; j < height; ++j)
 	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-	LoopHeight_CompVMathExpExp_minpack1_64f64f_Asm_NEON32:
+	LoopHeight_CompVMathExpExp_minpack1_64f64f_Asm_NEON32\@:
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 		@ for (compv_uscalar_t i = 0; i < width; i += 1)
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 		mov i, width
-		LoopWidth1_CompVMathExpExp_minpack1_64f64f_Asm_NEON32:
+		LoopWidth1_CompVMathExpExp_minpack1_64f64f_Asm_NEON32\@:
 			vld1.f64 { vecT }, [ptrIn]!
 			pld [ptrIn, #(CACHE_LINE_SIZE*3)]
 			vmov.f64 vecDI, vecB @ Needed only for FMA or ARM32 
@@ -99,10 +99,18 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathExpExp_minpack1_64f64f_Asm_NEON32
 			vmrs APSR_nzcv, fpscr
 			vmovmi.f64 vecT, vecMin
 			
-			vmla.f64 vecDI, vecT, vecCA
+			.if \fusedMultiplyAdd
+				vfma.f64 vecDI, vecT, vecCA
+			.else
+				vmla.f64 vecDI, vecT, vecCA
+			.endif
 			vsub.f64 vec0, vecDI, vecB
 			vadd.u64 vecU, vecDI, vecCADJ
-			vmls.f64 vecT, vec0, vecCRA
+			.if \fusedMultiplyAdd
+				vfms.f64 vecT, vec0, vecCRA
+			.else
+				vmls.f64 vecT, vec0, vecCRA
+			.endif
 			vshr.u64 vecU, vecU, #11
 			vshl.u64 vecU, vecU, #52
 			vmul.f64 vecY, vecT, vecT
@@ -112,20 +120,24 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathExpExp_minpack1_64f64f_Asm_NEON32
 			vmul.f64 vecY, vecY, vec0
 			add rt0, lut64u, rt0, LSL #(COMPV_GAS_UINT64_SHIFT_BYTES)
 			vld1.f64 { vecLUT }, [rt0]
-			vmla.f64 vecT, vecY, vecC20
+			.if \fusedMultiplyAdd
+				vfma.f64 vecT, vecY, vecC20
+			.else
+				vmla.f64 vecT, vecY, vecC20
+			.endif
 			vorr.u64 vecU, vecU, vecLUT
 			vadd.f64 vecY, vecC10, vecT
 			vmul.f64 vecY, vecY, vecU
 			subs i, i, #1
 			vst1.f64 { vecY }, [ptrOut]!
-			bne LoopWidth1_CompVMathExpExp_minpack1_64f64f_Asm_NEON32
-		EndOf_LoopWidth1_CompVMathExpExp_minpack1_64f64f_Asm_NEON32:
+			bne LoopWidth1_CompVMathExpExp_minpack1_64f64f_Asm_NEON32\@
+		EndOf_LoopWidth1_CompVMathExpExp_minpack1_64f64f_Asm_NEON32\@:
 
 		add ptrIn, ptrIn, stride
 		add ptrOut, ptrOut, stride
 		subs height, height, #1
-		bne LoopHeight_CompVMathExpExp_minpack1_64f64f_Asm_NEON32
-	EndOf_LoopHeight_CompVMathExpExp_minpack1_64f64f_Asm_NEON32:
+		bne LoopHeight_CompVMathExpExp_minpack1_64f64f_Asm_NEON32\@
+	EndOf_LoopHeight_CompVMathExpExp_minpack1_64f64f_Asm_NEON32\@:
 
 	.unreq ptrIn
 	.unreq ptrOut
@@ -160,5 +172,14 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathExpExp_minpack1_64f64f_Asm_NEON32
 	COMPV_GAS_UNSHADOW_ARGS 8
 	COMPV_GAS_FUNCTION_EPILOG
 	COMPV_GAS_FUNCTION_RETURN
+.endm
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+COMPV_GAS_FUNCTION_DECLARE CompVMathExpExp_minpack1_64f64f_Asm_NEON32
+	CompVMathExpExp_minpack1_64f64f_Macro_NEON32 0
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+COMPV_GAS_FUNCTION_DECLARE CompVMathExpExp_minpack1_64f64f_Asm_FMA_NEON32
+	CompVMathExpExp_minpack1_64f64f_Macro_NEON32 1
 
 #endif /* defined(__arm__) && !defined(__aarch64__) */

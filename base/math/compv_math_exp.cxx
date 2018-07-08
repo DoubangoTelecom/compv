@@ -27,6 +27,7 @@ COMPV_EXTERNC void CompVMathExpExp_minpack1_64f64f_Asm_X64_FMA3_AVX2(const compv
 
 #if COMPV_ASM && COMPV_ARCH_ARM32
 COMPV_EXTERNC void CompVMathExpExp_minpack1_64f64f_Asm_NEON32(const compv_float64_t* ptrIn, compv_float64_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride, const uint64_t* lut64u, const uint64_t* var64u, const compv_float64_t* var64f);
+COMPV_EXTERNC void CompVMathExpExp_minpack1_64f64f_Asm_FMA_NEON32(const compv_float64_t* ptrIn, compv_float64_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride, const uint64_t* lut64u, const uint64_t* var64u, const compv_float64_t* var64f);
 #endif /* COMPV_ASM && COMPV_ARCH_ARM32 */
 
 bool CompVMathExp::s_bInitialized = false;
@@ -105,7 +106,6 @@ static void CompVMathExpExp_minpack1_64f64f_C(const compv_float64_t* ptrIn, comp
 template<typename T>
 static COMPV_ERROR_CODE CompVMathExpExp(const CompVMatPtr &in, CompVMatPtrPtr out)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation could be found");
 	const size_t rows = in->rows();
 	const size_t cols = in->cols();
 	const size_t stride = in->stride();
@@ -191,6 +191,9 @@ COMPV_ERROR_CODE CompVMathExp::hookExp_64f(
 	if (CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
 		COMPV_EXEC_IFDEF_INTRIN_ARM64((*CompVMathExpExp_64f64f = CompVMathExpExp_minpack2_64f64f_Intrin_NEON64, minpack_ = 2));
 		COMPV_EXEC_IFDEF_ASM_ARM32((*CompVMathExpExp_64f64f = CompVMathExpExp_minpack1_64f64f_Asm_NEON32, minpack_ = 1));
+		if (CompVCpu::isEnabled(kCpuFlagARM_NEON_FMA)) {
+			COMPV_EXEC_IFDEF_ASM_ARM32((*CompVMathExpExp_64f64f = CompVMathExpExp_minpack1_64f64f_Asm_FMA_NEON32, minpack_ = 1));
+		}
 	}
 #endif
 	if (minpack) {

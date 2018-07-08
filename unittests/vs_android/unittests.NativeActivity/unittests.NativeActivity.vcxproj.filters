@@ -7,17 +7,13 @@
     <ClCompile Include="..\..\scale.cxx" />
     <ClCompile Include="..\..\pyramid.cxx" />
     <ClCompile Include="..\..\..\tests\tests_common.cxx" />
-    <ClCompile Include="..\..\math_eigen.cxx" />
-    <ClCompile Include="..\..\math_inverse.cxx" />
     <ClCompile Include="..\..\math_svd.cxx" />
     <ClCompile Include="..\..\math_stats_mse.cxx" />
     <ClCompile Include="..\..\math_stats_normalize.cxx" />
     <ClCompile Include="..\..\math_stats_variance.cxx" />
     <ClCompile Include="..\..\math_transform.cxx" />
-    <ClCompile Include="..\..\math_calib_homography.cxx" />
     <ClCompile Include="..\..\math_distance.cxx" />
     <ClCompile Include="..\..\matches_bruteforce.cxx" />
-    <ClCompile Include="..\..\math_matrix_ops.cxx" />
     <ClCompile Include="..\..\patch.cxx" />
     <ClCompile Include="..\..\sobel.cxx" />
     <ClCompile Include="..\..\canny.cxx" />
@@ -34,5 +30,7 @@
     <ClCompile Include="..\..\hog_s.cxx" />
     <ClCompile Include="..\..\hog_t.cxx" />
     <ClCompile Include="..\..\gradient.cxx" />
+    <ClCompile Include="..\..\math_dot.cxx" />
+    <ClCompile Include="..\..\math_exp.cxx" />
   </ItemGroup>
 </Project>
