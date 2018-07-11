@@ -69,13 +69,7 @@ COMPV_ERROR_CODE expo()
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "Math Dot Elapsed time = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "MD5=%s", compv_tests_md5(outMat).c_str());
-	const char* xmd5 = compv_tests_is_fma_enabled()
-#if COMPV_ARCH_X64 || COMPV_ARCH_ARM32 // For now no FMA implementation for ARM64
-		? test->md5_fma
-#else
-		? test->md5
-#endif
-		: test->md5;
+	const char* xmd5 = compv_tests_is_fma_enabled() ? test->md5_fma : test->md5;
 	COMPV_CHECK_EXP_RETURN(std::string(xmd5).compare(compv_tests_md5(outMat)) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Math Exp mismatch");
 
 	return COMPV_ERROR_CODE_S_OK;

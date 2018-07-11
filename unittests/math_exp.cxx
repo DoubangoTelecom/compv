@@ -53,13 +53,7 @@ COMPV_ERROR_CODE unittest_math_exp()
 			*inMat->ptr<double>(4, 9) = 709.78271289338397; // ret = inf
 		}		
 		COMPV_CHECK_CODE_RETURN(CompVMath::exp(inMat, &outMat));
-		const char* xmd5 = compv_tests_is_fma_enabled()
-#if COMPV_ARCH_X64 || COMPV_ARCH_ARM32 // For now no FMA implementation for ARM64
-			? test->md5_fma
-#else
-			? test->md5
-#endif
-			: test->md5;
+		const char* xmd5 = compv_tests_is_fma_enabled() ? test->md5_fma : test->md5;
 		COMPV_CHECK_EXP_RETURN(std::string(xmd5).compare(compv_tests_md5(outMat)) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Math Exp mismatch");
 		COMPV_DEBUG_INFO_EX(TAG_TEST, "** Test OK **");
 	}
