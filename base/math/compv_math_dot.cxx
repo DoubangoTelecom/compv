@@ -11,6 +11,7 @@
 
 #include "compv/base/math/intrin/x86/compv_math_dot_intrin_sse2.h"
 #include "compv/base/math/intrin/x86/compv_math_dot_intrin_avx.h"
+#include "compv/base/math/intrin/arm/compv_math_dot_intrin_neon.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -23,9 +24,14 @@ COMPV_EXTERNC void CompVMathDotDotSub_64f64f_Asm_X64_FMA3_AVX(const compv_float6
 COMPV_EXTERNC void CompVMathDotDot_64f64f_Asm_X64_FMA3_AVX(const compv_float64_t* ptrA, const compv_float64_t* ptrB, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t strideA, const compv_uscalar_t strideB, compv_float64_t* ret);
 #endif /* COMPV_ASM && COMPV_ARCH_X64 */
 
+#if COMPV_ASM && COMPV_ARCH_ARM64
+COMPV_EXTERNC void CompVMathDotDotSub_64f64f_Asm_NEON64(const compv_float64_t* ptrA, const compv_float64_t* ptrB, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t strideA, const compv_uscalar_t strideB, compv_float64_t* ret);
+#endif /* COMPV_ASM && COMPV_ARCH_ARM64 */
+
 template<typename T>
 static void CompVMathDotDot_C(const T* ptrA, const T* ptrB, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t strideA, const compv_uscalar_t strideB, compv_float64_t* ret)
 {
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPGPU implementation could be found");
 	const compv_uscalar_t width16 = width & -16;
 	const compv_uscalar_t width2 = width & -2;
 	compv_float64_t vecSum[4] = { 0, 0, 0, 0 }; // AVX-like vector
@@ -263,6 +269,11 @@ COMPV_ERROR_CODE CompVMathDot::hookDotSub_64f(
 		}
 	}
 #elif COMPV_ARCH_ARM
+	if (CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
+		COMPV_EXEC_IFDEF_INTRIN_ARM64(*CompVMathDotDotSub_64f64f = CompVMathDotDotSub_64f64f_Intrin_NEON64);
+		//COMPV_EXEC_IFDEF_ASM_ARM32(*CompVMathDotDotSub_64f64f = CompVMathDotDotSub_64f64f_Asm_NEON32);
+		COMPV_EXEC_IFDEF_ASM_ARM64(*CompVMathDotDotSub_64f64f = CompVMathDotDotSub_64f64f_Asm_NEON64);
+	}
 #endif
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -273,6 +284,7 @@ COMPV_ERROR_CODE CompVMathDot::hookDot_64f(
 {
 	COMPV_CHECK_EXP_RETURN(!CompVMathDotDot_64f64f, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	*CompVMathDotDot_64f64f = CompVMathDotDot_C;
+#if COMPV_ARCH_X86
 	if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86(*CompVMathDotDot_64f64f = CompVMathDotDot_64f64f_Intrin_SSE2);
 		COMPV_EXEC_IFDEF_ASM_X64(*CompVMathDotDot_64f64f = CompVMathDotDot_64f64f_Asm_X64_SSE2);
@@ -284,6 +296,14 @@ COMPV_ERROR_CODE CompVMathDot::hookDot_64f(
 			COMPV_EXEC_IFDEF_ASM_X64(*CompVMathDotDot_64f64f = CompVMathDotDot_64f64f_Asm_X64_FMA3_AVX); //!\\ Not faster but more accurate
 		}
 	}
+#elif COMPV_ARCH_ARM
+	if (CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
+		COMPV_EXEC_IFDEF_INTRIN_ARM64(*CompVMathDotDot_64f64f = CompVMathDotDot_64f64f_Intrin_NEON64);
+		//COMPV_EXEC_IFDEF_ASM_ARM32(*CompVMathDotDot_64f64f = CompVMathDotDot_64f64f_Asm_NEON32);
+		//COMPV_EXEC_IFDEF_ASM_ARM64(*CompVMathDotDot_64f64f = CompVMathDotDot_64f64f_Asm_NEON64);
+	}
+#endif
+
 	return COMPV_ERROR_CODE_S_OK;
 }
 

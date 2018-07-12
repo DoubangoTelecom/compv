@@ -837,6 +837,9 @@
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_exp_intrin_neon.h">
       <Filter>include\math\intrin\arm</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_dot_intrin_neon.h">
+      <Filter>include\math\intrin\arm</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_base.cxx">
@@ -1397,6 +1400,9 @@
     <ClCompile Include="..\math\intrin\arm\compv_math_exp_intrin_neon.cxx">
       <Filter>source\math\intrin\arm</Filter>
     </ClCompile>
+    <ClCompile Include="..\math\intrin\arm\compv_math_dot_intrin_neon.cxx">
+      <Filter>source\math\intrin\arm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\asm\x86\compv_bits_macros_x86.s">
@@ -1473,6 +1479,12 @@
     </None>
     <None Include="..\image\asm\x86\compv_image_scale_bilinear_x86_sse.s">
       <Filter>source\image\asm\x86</Filter>
+    </None>
+    <None Include="..\math\asm\arm\compv_math_dot_arm32_neon.S">
+      <Filter>source\math\asm\arm</Filter>
+    </None>
+    <None Include="..\math\asm\arm\compv_math_dot_arm64_neon.S">
+      <Filter>source\math\asm\arm</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

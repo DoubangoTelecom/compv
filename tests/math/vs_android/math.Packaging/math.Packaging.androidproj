@@ -135,6 +135,10 @@
       <Link>assets\diffract_1285x1285_gray.yuv</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="..\..\..\..\..\data\test_images\mandekalou_480x640_gray.yuv">
+      <Link>assets\mandekalou_480x640_gray.yuv</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="res\values\strings.xml" />
     <AntBuildXml Include="build.xml" />
     <AndroidManifest Include="AndroidManifest.xml" />

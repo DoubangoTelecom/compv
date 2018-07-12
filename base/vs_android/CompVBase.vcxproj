@@ -167,6 +167,7 @@
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_cast_intrin_neon.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_convlt_intrin_neon.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_distance_intrin_neon.h" />
+    <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_dot_intrin_neon.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_exp_intrin_neon.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_histogram_intrin_neon.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_matrix_intrin_neon64.h" />
@@ -405,6 +406,7 @@
     <ClCompile Include="..\math\intrin\arm\compv_math_cast_intrin_neon.cxx" />
     <ClCompile Include="..\math\intrin\arm\compv_math_convlt_intrin_neon.cxx" />
     <ClCompile Include="..\math\intrin\arm\compv_math_distance_intrin_neon.cxx" />
+    <ClCompile Include="..\math\intrin\arm\compv_math_dot_intrin_neon.cxx" />
     <ClCompile Include="..\math\intrin\arm\compv_math_exp_intrin_neon.cxx" />
     <ClCompile Include="..\math\intrin\arm\compv_math_histogram_intrin_neon.cxx" />
     <ClCompile Include="..\math\intrin\arm\compv_math_matrix_intrin_neon64.cxx" />
@@ -1157,6 +1159,32 @@
       <ArmNeonFma Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ArmNeonFma>
     </GAS>
     <GAS Include="..\math\asm\arm\compv_math_exp_arm64_neon.S">
+      <FileType>Document</FileType>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x86'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+    </GAS>
+    <GAS Include="..\math\asm\arm\compv_math_dot_arm32_neon.S">
+      <FileType>Document</FileType>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x86'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ArmNeon>
+      <ArmNeonFma Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ArmNeonFma>
+      <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ArmNeon>
+      <ArmNeonFma Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ArmNeonFma>
+    </GAS>
+    <GAS Include="..\math\asm\arm\compv_math_dot_arm64_neon.S">
       <FileType>Document</FileType>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
