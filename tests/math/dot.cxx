@@ -27,10 +27,10 @@ static const struct compv_unittest_dot {
 };
 static const size_t COMPV_UNITTEST_DOT_COUNT = sizeof(COMPV_UNITTEST_DOT) / sizeof(COMPV_UNITTEST_DOT[0]);
 
-#define DOT_SUB				true
+#define DOT_SUB				false
 #define DOT_FLOAT64			true
 
-#define LOOP_COUNT			100
+#define LOOP_COUNT			1
 
 COMPV_ERROR_CODE dot()
 {
