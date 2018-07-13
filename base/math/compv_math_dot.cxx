@@ -24,6 +24,13 @@ COMPV_EXTERNC void CompVMathDotDotSub_64f64f_Asm_X64_FMA3_AVX(const compv_float6
 COMPV_EXTERNC void CompVMathDotDot_64f64f_Asm_X64_FMA3_AVX(const compv_float64_t* ptrA, const compv_float64_t* ptrB, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t strideA, const compv_uscalar_t strideB, compv_float64_t* ret);
 #endif /* COMPV_ASM && COMPV_ARCH_X64 */
 
+#if COMPV_ASM && COMPV_ARCH_ARM32
+COMPV_EXTERNC void CompVMathDotDotSub_64f64f_Asm_NEON32(const compv_float64_t* ptrA, const compv_float64_t* ptrB, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t strideA, const compv_uscalar_t strideB, compv_float64_t* ret);
+COMPV_EXTERNC void CompVMathDotDot_64f64f_Asm_NEON32(const compv_float64_t* ptrA, const compv_float64_t* ptrB, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t strideA, const compv_uscalar_t strideB, compv_float64_t* ret);
+COMPV_EXTERNC void CompVMathDotDotSub_64f64f_Asm_FMA_NEON32(const compv_float64_t* ptrA, const compv_float64_t* ptrB, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t strideA, const compv_uscalar_t strideB, compv_float64_t* ret);
+COMPV_EXTERNC void CompVMathDotDot_64f64f_Asm_FMA_NEON32(const compv_float64_t* ptrA, const compv_float64_t* ptrB, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t strideA, const compv_uscalar_t strideB, compv_float64_t* ret);
+#endif /* COMPV_ASM && COMPV_ARCH_ARM32 */
+
 #if COMPV_ASM && COMPV_ARCH_ARM64
 COMPV_EXTERNC void CompVMathDotDotSub_64f64f_Asm_NEON64(const compv_float64_t* ptrA, const compv_float64_t* ptrB, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t strideA, const compv_uscalar_t strideB, compv_float64_t* ret);
 COMPV_EXTERNC void CompVMathDotDot_64f64f_Asm_NEON64(const compv_float64_t* ptrA, const compv_float64_t* ptrB, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t strideA, const compv_uscalar_t strideB, compv_float64_t* ret);
@@ -274,10 +281,10 @@ COMPV_ERROR_CODE CompVMathDot::hookDotSub_64f(
 #elif COMPV_ARCH_ARM
 	if (CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
 		COMPV_EXEC_IFDEF_INTRIN_ARM64(*CompVMathDotDotSub_64f64f = CompVMathDotDotSub_64f64f_Intrin_NEON64);
-		//COMPV_EXEC_IFDEF_ASM_ARM32(*CompVMathDotDotSub_64f64f = CompVMathDotDotSub_64f64f_Asm_NEON32);
+		COMPV_EXEC_IFDEF_ASM_ARM32(*CompVMathDotDotSub_64f64f = CompVMathDotDotSub_64f64f_Asm_NEON32);
 		COMPV_EXEC_IFDEF_ASM_ARM64(*CompVMathDotDotSub_64f64f = CompVMathDotDotSub_64f64f_Asm_NEON64);
 		if (CompVCpu::isEnabled(kCpuFlagARM_NEON_FMA)) {
-			//COMPV_EXEC_IFDEF_ASM_ARM32(*CompVMathDotDotSub_64f64f = CompVMathDotDotSub_64f64f_Asm_FMA_NEON32);
+			COMPV_EXEC_IFDEF_ASM_ARM32(*CompVMathDotDotSub_64f64f = CompVMathDotDotSub_64f64f_Asm_FMA_NEON32);
 			COMPV_EXEC_IFDEF_ASM_ARM64(*CompVMathDotDotSub_64f64f = CompVMathDotDotSub_64f64f_Asm_FMA_NEON64);
 		}
 	}
@@ -306,10 +313,10 @@ COMPV_ERROR_CODE CompVMathDot::hookDot_64f(
 #elif COMPV_ARCH_ARM
 	if (CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
 		COMPV_EXEC_IFDEF_INTRIN_ARM64(*CompVMathDotDot_64f64f = CompVMathDotDot_64f64f_Intrin_NEON64);
-		//COMPV_EXEC_IFDEF_ASM_ARM32(*CompVMathDotDot_64f64f = CompVMathDotDot_64f64f_Asm_NEON32);
+		COMPV_EXEC_IFDEF_ASM_ARM32(*CompVMathDotDot_64f64f = CompVMathDotDot_64f64f_Asm_NEON32);
 		COMPV_EXEC_IFDEF_ASM_ARM64(*CompVMathDotDot_64f64f = CompVMathDotDot_64f64f_Asm_NEON64);
 		if (CompVCpu::isEnabled(kCpuFlagARM_NEON_FMA)) {
-			//COMPV_EXEC_IFDEF_ASM_ARM32(*CompVMathDotDot_64f64f = CompVMathDotDot_64f64f_Asm_FMA_NEON32);
+			COMPV_EXEC_IFDEF_ASM_ARM32(*CompVMathDotDot_64f64f = CompVMathDotDot_64f64f_Asm_FMA_NEON32);
 			COMPV_EXEC_IFDEF_ASM_ARM64(*CompVMathDotDot_64f64f = CompVMathDotDot_64f64f_Asm_FMA_NEON64);
 		}
 	}

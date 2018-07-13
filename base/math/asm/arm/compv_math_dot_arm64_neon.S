@@ -180,17 +180,17 @@
 					fmul v0.2d, v0.2d, v8.2d
 				.endif
 			.endif
-			subs i, i, #2
 			.if \fusedMultiplyAdd == FMA_NO
 				fadd vecSum0.2d, vecSum0.2d, v0.2d
 			.endif
+			subs i, i, #2
 			bne LoopWidth2_CompVMathDotDotSub_64f64f_Asm_NEON64\@
 		EndOf_LoopWidth2_CompVMathDotDotSub_64f64f_Asm_NEON64\@:
 
 		#############################################
 		# for (; i < width1; i += 1)
 		#############################################
-		subs i, width, width2
+		cmp width, width2
 		beq EndOf_LoopWidth1_CompVMathDotDotSub_64f64f_Asm_NEON64\@
 		LoopWidth1_CompVMathDotDotSub_64f64f_Asm_NEON64\@:
 			ldr vecLowAd, [ptrA], #(1 * COMPV_GAS_FLOAT64_SZ_BYTES)
