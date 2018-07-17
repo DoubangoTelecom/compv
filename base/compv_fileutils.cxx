@@ -112,6 +112,33 @@ std::string CompVFileUtils::getFullPathFromFileName(const char* filename)
 #endif
 }
 
+std::string CompVFileUtils::getFileNameFromFullPath(const char* fullpath)
+{
+	COMPV_ASSERT(fullpath != nullptr);
+	std::string fullpath_(fullpath);
+	std::replace(fullpath_.begin(), fullpath_.end(), '\\', '/');
+	const size_t i = fullpath_.rfind('/', fullpath_.length());
+	if (i != std::string::npos) {
+		return (fullpath_.substr(i + 1, fullpath_.length() - i));
+	}
+	return fullpath_;
+}
+
+std::string CompVFileUtils::patchFullPath(const char* fullpath)
+{
+	COMPV_ASSERT(fullpath != nullptr);
+	
+	if (CompVFileUtils::exists(fullpath)) {
+		return fullpath;
+	}
+
+	std::string fileName_ = CompVFileUtils::getFileNameFromFullPath(fullpath);
+	if (fileName_.empty()) {
+		return fullpath;
+	}
+	return CompVFileUtils::getFullPathFromFileName(fileName_.c_str()); // Get real full path (Android -> assets, iOS -> Bundle)
+}
+
 bool CompVFileUtils::exists(const char* pcPath)
 {
     if (!pcPath) {

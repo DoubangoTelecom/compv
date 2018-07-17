@@ -24,6 +24,8 @@ public:
     virtual ~CompVFileUtils();
     static std::string getCurrentDirectory();
     static std::string getFullPathFromFileName(const char* filename);
+	static std::string getFileNameFromFullPath(const char* fullpath);
+	static std::string patchFullPath(const char* fullpath);
     static bool exists(const char* pcPath);
     static bool empty(const char* pcPath);
     static size_t getSize(const char* pcPath);
