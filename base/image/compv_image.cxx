@@ -234,7 +234,7 @@ COMPV_ERROR_CODE CompVImage::encode(const char* filePath, const CompVMatPtr& ima
 	COMPV_CHECK_EXP_BAIL(write_fn(CompVImage_stbi_write_func, file_,
 		static_cast<int>(image->cols()), static_cast<int>(image->rows()), comp,
 		image->ptr<const void>(),
-		static_cast<int>(image->stride())) != 1,
+		static_cast<int>(image->strideInBytes())) != 1,
 		(err = COMPV_ERROR_CODE_E_STBI), "Failed to write file");
 bail:
 	if (file_) {
