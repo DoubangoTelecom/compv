@@ -365,6 +365,11 @@
 #	define HAVE_CLOCK_GETTIME				1
 #endif
 
+// LightGBM
+#if !defined(USE_SOCKET) && !defined(USE_MPI)
+#	define USE_SOCKET
+#endif
+
 // Semaphore type: CPP11 or CPPstd
 #if !defined(COMPV_PARALLEL_SEMA11)
 #	define COMPV_PARALLEL_SEMA11 0 // use C++11 Semophores ?
