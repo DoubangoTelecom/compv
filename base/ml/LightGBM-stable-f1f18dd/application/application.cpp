@@ -45,6 +45,10 @@ Application::~Application() {
   }
 }
 
+const double* Application::GetTrainingScore(int64_t* out_len) {
+	return boosting_->GetTrainingScore(out_len);
+}
+
 void Application::LoadParameters(int argc, char** argv) {
   std::unordered_map<std::string, std::string> params;
   for (int i = 1; i < argc; ++i) {

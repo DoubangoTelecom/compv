@@ -15,6 +15,7 @@ class Dataset;
 class Boosting;
 class ObjectiveFunction;
 class Metric;
+struct PredictionEarlyStopInstance;
 
 /*!
 * \brief The main entrance of LightGBM. this application has two tasks:
@@ -32,6 +33,8 @@ public:
 
   /*! \brief To call this funciton to run application*/
   inline void Run();
+
+  const double* GetTrainingScore(int64_t* out_len);
 
 private:
   COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)

@@ -57,6 +57,8 @@ struct CompVMachineLearningSVMParams {
 	double eps = 1e-3; // epsilon, set tolerance of termination criterion (default 0.001)
 	double P = 0.1; // set the epsilon in loss function of epsilon-SVR (default 0.1)
 	int probability_estimates = 0; // whether to train a SVC or SVR model for probability estimates, 0 or 1 (default 0)
+	int shrinking = 0; // use the shrinking heuristics (default 0)
+	double cache_size = 100; // cache size in MB (default 100)
 };
 
 struct CompVMachineLearningSVMCrossValidation {

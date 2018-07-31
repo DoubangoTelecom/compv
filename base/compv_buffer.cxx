@@ -35,10 +35,10 @@ COMPV_ERROR_CODE CompVBuffer::copyData(const void* pcPtr, size_t size)
     COMPV_CHECK_EXP_RETURN(!size, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
     if (m_bOweMem) {
-        COMPV_CHECK_EXP_RETURN(!(m_pPtr = CompVMem::realloc(m_pPtr, size + 8)), COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+        COMPV_CHECK_EXP_RETURN(!(m_pPtr = CompVMem::realloc(m_pPtr, size + sizeof(double))), COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
     }
     else {
-		COMPV_CHECK_EXP_RETURN(!(m_pPtr = CompVMem::malloc(size + 8)), COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+		COMPV_CHECK_EXP_RETURN(!(m_pPtr = CompVMem::malloc(size + sizeof(double))), COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
         m_bOweMem = true;
     }
     m_nSize = size;

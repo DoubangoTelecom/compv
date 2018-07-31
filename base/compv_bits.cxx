@@ -7,6 +7,7 @@
 #include "compv/base/compv_bits.h"
 #include "compv/base/compv_cpu.h"
 #include "compv/base/parallel/compv_parallel.h"
+#include "compv/base/compv_generic_invoke.h"
 
 #include "compv/base/intrin/x86/compv_bits_intrin_sse2.h"
 #include "compv/base/intrin/arm/compv_bits_intrin_neon.h"
@@ -160,9 +161,16 @@ COMPV_ERROR_CODE CompVBits::logical_not_and(const CompVMatPtr& A, const CompVMat
 COMPV_ERROR_CODE CompVBits::logical_not(const CompVMatPtr& A, CompVMatPtrPtr R)
 {
 	COMPV_CHECK_EXP_RETURN(!A || !R, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	CompVMatPtr R_ = *R;
+	CompVMatPtr R_ = (!A->isMemoryOwed() && A == *R) ? nullptr : *R;
 	if (!R_ || R_ != A) { // This function allows R to be equal to A
-		COMPV_CHECK_CODE_RETURN(CompVMat::newObj(&R_, A));
+		if (A->isMemoryOwed()) {
+			COMPV_CHECK_CODE_RETURN(CompVMat::newObj(&R_, A));
+		}
+		else { 
+			// Memory not owed means A is a bind which means the "stride" is probably too large compared to "cols" -> do not waste memory
+			// For example, calling binary not from ultimateText T-HOG classifier (text/nontext classification).
+			CompVGenericInvokeCodeRawType(A->subType(), CompVMat::newObjAligned, &R_, A->rows(), A->cols());
+		}
 	}
 
 	void(*CompVBitsLogicalNot_8u)(const uint8_t* Aptr, uint8_t* Rptr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t Astride, compv_uscalar_t Rstride)

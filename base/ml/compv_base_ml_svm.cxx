@@ -418,11 +418,11 @@ COMPV_ERROR_CODE CompVMachineLearningSVM::newObj(CompVMachineLearningSVMPtrPtr m
 	ptrLibsvmParams->gamma = params.gamma;	// 1/num_features
 	ptrLibsvmParams->coef0 = params.coef0;
 	ptrLibsvmParams->nu = params.nu;
-	ptrLibsvmParams->cache_size = 100;
+	ptrLibsvmParams->cache_size = params.cache_size;
 	ptrLibsvmParams->C = params.C;
 	ptrLibsvmParams->eps = params.eps;
 	ptrLibsvmParams->p = params.P;
-	ptrLibsvmParams->shrinking = 1;
+	ptrLibsvmParams->shrinking = params.shrinking;
 	ptrLibsvmParams->probability = params.probability_estimates;
 	ptrLibsvmParams->nr_weight = 0;
 	ptrLibsvmParams->weight_label = nullptr;
