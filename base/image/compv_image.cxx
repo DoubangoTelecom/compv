@@ -243,6 +243,30 @@ bail:
 	return err;
 }
 
+COMPV_ERROR_CODE CompVImage::write(const char* filePath, const CompVMatPtr& image)
+{
+	COMPV_CHECK_EXP_RETURN(!image || image->isEmpty() || !filePath, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	FILE* file = fopen(filePath, "wb+");
+	COMPV_CHECK_EXP_RETURN(!file, COMPV_ERROR_CODE_E_FILE_NOT_FOUND, "Failed to catere file");
+
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Writing %s file... (w=%zu, h=%zu, s=%zu)", filePath, image->cols(), image->rows(), image->stride());
+	const int32_t planes = static_cast<int32_t>(image->planeCount());
+	for (int32_t plane = 0; plane < planes; ++plane) {
+		size_t planeHeight = image->rows(plane);
+		size_t planeWidth = image->rowInBytes(plane);
+		size_t planeStride = image->strideInBytes(plane);
+		const uint8_t* planePtr = image->ptr<const uint8_t>(0, 0, plane);
+		for (size_t i = 0; i < planeHeight; ++i) {
+			COMPV_ASSERT(fwrite(planePtr, 1, planeWidth, file) == planeWidth);
+			planePtr += planeStride;
+		}
+	}
+	
+	fclose(file);
+
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 COMPV_ERROR_CODE CompVImage::wrap(COMPV_SUBTYPE ePixelFormat, const void* dataPtr, const size_t dataWidth, const size_t dataHeight, const size_t dataStride, CompVMatPtrPtr image, const size_t imageStride COMPV_DEFAULT(0))
 {
 	COMPV_CHECK_EXP_RETURN(!dataPtr || !dataWidth || !dataHeight || dataStride < dataWidth || !image, COMPV_ERROR_CODE_E_INVALID_PARAMETER);

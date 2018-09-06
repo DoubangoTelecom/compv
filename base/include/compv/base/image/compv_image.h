@@ -21,6 +21,7 @@ public:
 	static COMPV_ERROR_CODE read(COMPV_SUBTYPE ePixelFormat, size_t width, size_t height, size_t stride, const char* filePath, CompVMatPtrPtr image);
 	static COMPV_ERROR_CODE decode(const char* filePath, CompVMatPtrPtr image);
 	static COMPV_ERROR_CODE encode(const char* filePath, const CompVMatPtr& image);
+	static COMPV_ERROR_CODE write(const char* filePath, const CompVMatPtr& image);
 	static COMPV_ERROR_CODE wrap(COMPV_SUBTYPE ePixelFormat, const void* dataPtr, const size_t dataWidth, const size_t dataHeight, const size_t dataStride, CompVMatPtrPtr image, const size_t imageStride = 0);
 	static COMPV_ERROR_CODE clone(const CompVMatPtr& imageIn, CompVMatPtrPtr imageOut);
 	static COMPV_ERROR_CODE crop(const CompVMatPtr& imageIn, const CompVRectFloat32& roi, CompVMatPtrPtr imageOut);
