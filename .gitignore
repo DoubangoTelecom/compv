@@ -8,7 +8,11 @@
 /x64
 *.idb
 /Debug
+Debug_dynamic
+Debug_static
 Release
+Release_dynamic
+Release_static
 *.orig
 *.tlog
 Debug
@@ -37,3 +41,4 @@ My Amplifier XE Results*
 My Advisor Results*
 /plugin_androidcamera/.idea/libraries
 *.rbg
+

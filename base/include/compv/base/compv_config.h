@@ -10,13 +10,13 @@
 // Platforms info http://sourceforge.net/p/predef/wiki/Home/
 
 // Windows (XP/Vista/7/CE and Windows Mobile) macro definition.
-#if defined(WIN32)|| defined(_WIN32) || defined(_WIN32_WCE) || defined(_WIN16) || defined(_WIN64) || defined(__WIN32__) || defined(__TOS_WIN__) || defined(__WINDOWS__)
+#if defined(WIN32) || defined(_WIN32) || defined(_WIN32_WCE) || defined(_WIN16) || defined(_WIN64) || defined(__WIN32__) || defined(__TOS_WIN__) || defined(__WINDOWS__)
 #	define COMPV_OS_WINDOWS	1
 #	if defined(_WIN32_WCE) || defined(UNDER_CE)
 #		define COMPV_OS_WINDOWS_CE		1
 #		define COMPV_STDCALL			__cdecl
 #	else
-#		define COMPV_STDCALL __stdcall
+#		define COMPV_STDCALL			__stdcall
 #	endif
 #	if defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP || WINAPI_FAMILY == WINAPI_FAMILY_APP)
 #		define COMPV_OS_WINDOWS_RT		1
@@ -237,7 +237,7 @@
 
 
 // Windows's symbols export
-#if COMPV_OS_WINDOWS
+#if COMPV_OS_WINDOWS && !defined(COMPV_BASE_STATIC)
 #	if defined(COMPV_BASE_EXPORTS)
 # 		define COMPV_BASE_API		__declspec(dllexport)
 #	else

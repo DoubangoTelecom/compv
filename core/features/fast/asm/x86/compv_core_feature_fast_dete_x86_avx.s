@@ -17,7 +17,7 @@ global sym(CompVFastNmsGather_Asm_X86_AVX2)
 global sym(CompVFastNmsApply_Asm_X86_AVX2)
 
 section .data
-	extern COMPV_YASM_DLLIMPORT_DECL(k1_8s)
+	k1_8s db 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 
 section .text
 
@@ -78,7 +78,7 @@ section .text
 	vmovdqa vecThreshold, ymm0
 	vmovdqa vecNMinSumMinusOne, ymm1
 	vmovdqa vecNMinusOne, ymm2
-	COMPV_YASM_DLLIMPORT_LOAD vmovdqa, ymm3, k1_8s, rax
+	vmovdqu ymm3, [sym(k1_8s)]
 	vpcmpeqb ymm4, ymm4
 	vpxor ymm5, ymm5
 	vmovdqa vecOne, ymm3

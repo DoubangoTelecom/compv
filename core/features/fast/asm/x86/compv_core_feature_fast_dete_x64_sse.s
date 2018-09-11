@@ -17,7 +17,7 @@ global sym(CompVFast12DataRow_Asm_X64_SSE2)
 global sym(CompVFastNmsGather_Asm_X64_SSE2)
 
 section .data
-	extern COMPV_YASM_DLLIMPORT_DECL(k1_8s)
+	k1_8s db 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 	
 section .text
 
@@ -80,7 +80,7 @@ section .text
 	pshufd vecThreshold, vecThreshold, 0
 	pshufd vecNMinSumMinusOne, vecNMinSumMinusOne, 0
 	pshufd vecNMinusOne, vecNMinusOne, 0
-	COMPV_YASM_DLLIMPORT_LOAD movdqa, vecOne, k1_8s, rax
+	movdqu vecOne, [sym(k1_8s)]
 	pcmpeqb vec0xFF, vec0xFF
 	pxor vecZero, vecZero
 

@@ -10,7 +10,7 @@
 #include "compv/base/compv_config.h"
 
 // Windows's symbols export
-#if COMPV_OS_WINDOWS
+#if COMPV_OS_WINDOWS && !defined(COMPV_CAMERA_STATIC)
 #	if defined(COMPV_CAMERA_EXPORTS)
 # 		define COMPV_CAMERA_API		__declspec(dllexport)
 #	else

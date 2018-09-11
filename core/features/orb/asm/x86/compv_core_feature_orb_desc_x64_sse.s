@@ -14,7 +14,7 @@ COMPV_YASM_DEFAULT_REL
 global sym(CompVOrbBrief256_31_32f_Asm_X64_SSE41)
 
 section .data
-	extern COMPV_YASM_DLLIMPORT_DECL(k128_8u)
+	k128_8u db 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128
 
 section .text
 
@@ -83,7 +83,7 @@ sym(CompVOrbBrief256_31_32f_Asm_X64_SSE41):
 	movaps[vecSinT], xmm1
 
 	; Compute vec128 ;
-	COMPV_YASM_DLLIMPORT_LOAD movdqa, xmm2, k128_8u, rax
+	movdqu xmm2, [sym(k128_8u)]
 	movdqa [vec128], xmm2
 
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
