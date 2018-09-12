@@ -237,7 +237,7 @@
 
 
 // Windows's symbols export
-#if COMPV_OS_WINDOWS && !defined(COMPV_BASE_STATIC)
+#if COMPV_OS_WINDOWS && !defined(COMPV_STATIC)
 #	if defined(COMPV_BASE_EXPORTS)
 # 		define COMPV_BASE_API		__declspec(dllexport)
 #	else

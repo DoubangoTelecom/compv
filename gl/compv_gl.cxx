@@ -63,7 +63,12 @@ COMPV_ERROR_CODE CompVGL::init()
 #	endif /* HAVE_FREETYPE */
 #endif
 
+#if 1 // Just to make sure "bail"
+	COMPV_CHECK_CODE_BAIL(err);
+#endif
+
     CompVGL::s_bInitialized = true;
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "GL module initialized");
 
 bail:
     if (COMPV_ERROR_CODE_IS_NOK(err)) {

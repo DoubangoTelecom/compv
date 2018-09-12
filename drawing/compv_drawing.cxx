@@ -66,11 +66,11 @@ COMPV_ERROR_CODE CompVDrawing::init()
 	GLenum glewErr;
 #endif
 
-    COMPV_DEBUG_INFO("Initializing [drawing] module (v %s)...", COMPV_VERSION_STRING);
+    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Initializing [drawing] module (v %s)...", COMPV_VERSION_STRING);
 
     /* Android */
 #if COMPV_OS_ANDROID
-    COMPV_DEBUG_INFO("[Drawing] module: android API version: %d", __ANDROID_API__);
+    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "[Drawing] module: android API version: %d", __ANDROID_API__);
     COMPV_CHECK_CODE_BAIL(err = CompVWindowFactory::set(&CompVWindowFactoryEGLAndroid));
 #endif
 
@@ -114,12 +114,12 @@ COMPV_ERROR_CODE CompVDrawing::init()
                            SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN
                        );
     if (!s_pSDLMainWindow) {
-        COMPV_DEBUG_ERROR("SDL_CreateWindow(%d, %d, %s) failed: %s", 1, 1, "Main window", SDL_GetError());
+        COMPV_DEBUG_ERROR_EX("SDL", "SDL_CreateWindow(%d, %d, %s) failed: %s", 1, 1, "Main window", SDL_GetError());
         COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_SDL);
     }
     s_pSDLMainContext = SDL_GL_CreateContext(s_pSDLMainWindow);
     if (!s_pSDLMainContext) {
-        COMPV_DEBUG_ERROR("SDL_GL_CreateContext() failed: %s", SDL_GetError());
+        COMPV_DEBUG_ERROR_EX("SDL", "SDL_GL_CreateContext() failed: %s", SDL_GetError());
         COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_SDL);
     }
     COMPV_CHECK_EXP_BAIL(SDL_GL_MakeCurrent(s_pSDLMainWindow, s_pSDLMainContext) != 0, COMPV_ERROR_CODE_E_SDL);
@@ -143,11 +143,15 @@ COMPV_ERROR_CODE CompVDrawing::init()
     //extern COMPV_ERROR_CODE libjpegDecodeInfo(const char* filePath, CompVImageInfo& info);
     COMPV_CHECK_CODE_BAIL(err = CompVImageDecoder::setFuncPtrs(COMPV_IMAGE_FORMAT_JPEG, libjpegDecodeFile, libjpegDecodeInfo));
 #else
-    COMPV_DEBUG_INFO("/!\\ No jpeg decoder found");
+    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "/!\\ No jpeg decoder found");
+#endif
+
+#if 1 // Just to make sure "bail"
+	COMPV_CHECK_CODE_BAIL(err);
 #endif
 
     CompVDrawing::s_bInitialized = true;
-    COMPV_DEBUG_INFO("Drawing module initialized");
+    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Drawing module initialized");
 
 bail:
     if (COMPV_ERROR_CODE_IS_NOK(err)) {
@@ -213,7 +217,7 @@ COMPV_ERROR_CODE CompVDrawing::runLoop(CompVRunLoopOnNewState cbOnNewState COMPV
     //	- On Windows, (A)and(B) must happen on the same thread.It doesn't have to be the main thread. (C) can happen on any thread.
     //	- On Linux, you can have(A), (B)and(C) on any thread.
     //	- On Mac OS X, (A)and(B) must happen on the same thread, that must also be the main thread(thread 0).Again, (C)can happen on any thread.
-    COMPV_DEBUG_INFO("Running event loop on thread with id = %ld", (long)eventLoopThreadId);
+    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Running event loop on thread with id = %ld", (long)eventLoopThreadId);
 
 #if COMPV_OS_ANDROID
 	if (CompVDrawing::s_cbRunLoopOnNewState) {
@@ -230,6 +234,10 @@ COMPV_ERROR_CODE CompVDrawing::runLoop(CompVRunLoopOnNewState cbOnNewState COMPV
 	COMPV_DEBUG_FATAL_EX(COMPV_THIS_CLASSNAME, "No windowing system implementation found. Die!");
 #endif
 
+#if 1 // Just to make sure "bail"
+	COMPV_CHECK_CODE_BAIL(err);
+#endif
+
 bail:
     CompVDrawing::s_bLoopRunning = false;
 	COMPV_CHECK_CODE_NOP(CompVDrawing::signalState(COMPV_RUNLOOP_STATE_LOOP_STOPPED)); // will increment the semaphore
@@ -240,7 +248,7 @@ bail:
 		COMPV_CHECK_CODE_NOP(CompVDrawing::s_WorkerThread->join(), "Failed to join the worker thread");
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Worker thread joined");
 	}
-    CompVDrawing::s_WorkerThread = NULL;
+    CompVDrawing::s_WorkerThread = nullptr;
     return err;
 }
 
