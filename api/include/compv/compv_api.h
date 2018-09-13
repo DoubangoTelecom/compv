@@ -31,6 +31,7 @@
 #include <compv/base/compv_obj.h>
 #include <compv/base/compv_patch.h>
 #include <compv/base/compv_points_transform.h>
+#include <compv/base/compv_xml.h>
 
 #include <compv/base/android/compv_android_native_activity.h>
 

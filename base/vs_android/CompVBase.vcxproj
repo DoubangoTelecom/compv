@@ -231,6 +231,8 @@
     <ClInclude Include="..\include\compv\base\parallel\compv_threaddisp10.h" />
     <ClInclude Include="..\include\compv\base\parallel\compv_threaddisp11.h" />
     <ClInclude Include="..\include\compv\base\parallel\compv_threaddisptbb.h" />
+    <ClInclude Include="..\include\compv\base\pugixml-1.9\pugiconfig.h" />
+    <ClInclude Include="..\include\compv\base\pugixml-1.9\pugixml.h" />
     <ClInclude Include="..\include\compv\base\tbbmalloc\aligned_space.h" />
     <ClInclude Include="..\include\compv\base\tbbmalloc\atomic.h" />
     <ClInclude Include="..\include\compv\base\tbbmalloc\cache_aligned_allocator.h" />
@@ -466,6 +468,7 @@
     <ClCompile Include="..\parallel\compv_threaddisp10.cxx" />
     <ClCompile Include="..\parallel\compv_threaddisp11.cxx" />
     <ClCompile Include="..\parallel\compv_threaddisptbb.cxx" />
+    <ClCompile Include="..\pugixml-1.9\pugixml.cxx" />
     <ClCompile Include="..\tbbmalloc\backend.cpp" />
     <ClCompile Include="..\tbbmalloc\backref.cpp" />
     <ClCompile Include="..\tbbmalloc\frontend.cpp" />

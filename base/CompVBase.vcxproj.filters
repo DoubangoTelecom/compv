@@ -163,12 +163,6 @@
     <Filter Include="source\ml\libsvm-322">
       <UniqueIdentifier>{22abc91c-5578-4526-bef8-f4308b0d2378}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\pugixml-120">
-      <UniqueIdentifier>{4d3d50aa-d09d-4bc7-9195-688203c1d39f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="source\pugixml-120">
-      <UniqueIdentifier>{ded6b17b-dbbc-4f13-9853-277765338230}</UniqueIdentifier>
-    </Filter>
     <Filter Include="include\ml\LightGBM-stable-f1f18dd">
       <UniqueIdentifier>{a7d08f87-e84a-4872-82a6-609f6a88142a}</UniqueIdentifier>
     </Filter>
@@ -198,6 +192,12 @@
     </Filter>
     <Filter Include="source\ml\LightGBM-stable-f1f18dd\treelearner">
       <UniqueIdentifier>{67f72031-cbb3-491e-87eb-864c0cc348fe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\pugixml-1.9">
+      <UniqueIdentifier>{4d3d50aa-d09d-4bc7-9195-688203c1d39f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\pugixml-1.9">
+      <UniqueIdentifier>{ded6b17b-dbbc-4f13-9853-277765338230}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -807,12 +807,6 @@
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_cast_intrin_sse2.h">
       <Filter>include\math\intrin\x86</Filter>
     </ClInclude>
-    <ClInclude Include="include\compv\base\pugixml-120\pugiconfig.h">
-      <Filter>include\pugixml-120</Filter>
-    </ClInclude>
-    <ClInclude Include="include\compv\base\pugixml-120\pugixml.h">
-      <Filter>include\pugixml-120</Filter>
-    </ClInclude>
     <ClInclude Include="include\compv\base\math\compv_math_dot.h">
       <Filter>include\math</Filter>
     </ClInclude>
@@ -1007,6 +1001,15 @@
     </ClInclude>
     <ClInclude Include="ml\LightGBM-stable-f1f18dd\objective\xentropy_objective.hpp">
       <Filter>source\ml\LightGBM-stable-f1f18dd\objective</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\pugixml-1.9\pugiconfig.h">
+      <Filter>include\pugixml-1.9</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\pugixml-1.9\pugixml.h">
+      <Filter>include\pugixml-1.9</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\compv_xml.h">
+      <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1520,9 +1523,6 @@
     <ClCompile Include="math\intrin\x86\compv_math_cast_intrin_sse2.cxx">
       <Filter>source\math\intrin\x86</Filter>
     </ClCompile>
-    <ClCompile Include="pugixml-120\xml.cxx">
-      <Filter>source\pugixml-120</Filter>
-    </ClCompile>
     <ClCompile Include="math\compv_math_dot.cxx">
       <Filter>source\math</Filter>
     </ClCompile>
@@ -1630,6 +1630,12 @@
     </ClCompile>
     <ClCompile Include="ml\LightGBM-stable-f1f18dd\lightgbm_R.cpp">
       <Filter>source\ml\LightGBM-stable-f1f18dd</Filter>
+    </ClCompile>
+    <ClCompile Include="pugixml-1.9\pugixml.cxx">
+      <Filter>source\pugixml-1.9</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_xml.cxx">
+      <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

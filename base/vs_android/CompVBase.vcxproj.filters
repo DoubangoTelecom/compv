@@ -172,6 +172,12 @@
     <Filter Include="source\ml\libsvm-322">
       <UniqueIdentifier>{43e98092-3916-44fa-a3a0-d3ceb791a92f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\pugixml-1.9">
+      <UniqueIdentifier>{9ce324e3-31a5-4e5a-8a25-97a15d8f0ee8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\pugixml-1.9">
+      <UniqueIdentifier>{bd9540e1-0c16-4802-bccd-6ce395a9d014}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\compv\base\compv_base.h">
@@ -840,6 +846,12 @@
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_dot_intrin_neon.h">
       <Filter>include\math\intrin\arm</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\compv\base\pugixml-1.9\pugiconfig.h">
+      <Filter>include\pugixml-1.9</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\pugixml-1.9\pugixml.h">
+      <Filter>include\pugixml-1.9</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_base.cxx">
@@ -1402,6 +1414,9 @@
     </ClCompile>
     <ClCompile Include="..\math\intrin\arm\compv_math_dot_intrin_neon.cxx">
       <Filter>source\math\intrin\arm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\pugixml-1.9\pugixml.cxx">
+      <Filter>source\pugixml-1.9</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

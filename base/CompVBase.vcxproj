@@ -89,6 +89,7 @@
     <ClInclude Include="include\compv\base\compv_points_transform.h" />
     <ClInclude Include="include\compv\base\compv_sharedlib.h" />
     <ClInclude Include="include\compv\base\compv_simd_globals.h" />
+    <ClInclude Include="include\compv\base\compv_xml.h" />
     <ClInclude Include="include\compv\base\drawing\compv_canvas.h" />
     <ClInclude Include="include\compv\base\drawing\compv_mvp.h" />
     <ClInclude Include="include\compv\base\drawing\compv_renderer.h" />
@@ -259,8 +260,8 @@
     <ClInclude Include="include\compv\base\parallel\compv_threaddisp10.h" />
     <ClInclude Include="include\compv\base\parallel\compv_threaddisp11.h" />
     <ClInclude Include="include\compv\base\parallel\compv_threaddisptbb.h" />
-    <ClInclude Include="include\compv\base\pugixml-120\pugiconfig.h" />
-    <ClInclude Include="include\compv\base\pugixml-120\pugixml.h" />
+    <ClInclude Include="include\compv\base\pugixml-1.9\pugiconfig.h" />
+    <ClInclude Include="include\compv\base\pugixml-1.9\pugixml.h" />
     <ClInclude Include="include\compv\base\tbbmalloc\aligned_space.h" />
     <ClInclude Include="include\compv\base\tbbmalloc\atomic.h" />
     <ClInclude Include="include\compv\base\tbbmalloc\cache_aligned_allocator.h" />
@@ -354,6 +355,7 @@
     <ClCompile Include="compv_points_transform.cxx" />
     <ClCompile Include="compv_sharedlib.cxx" />
     <ClCompile Include="compv_simd_globals.cxx" />
+    <ClCompile Include="compv_xml.cxx" />
     <ClCompile Include="drawing\compv_canvas.cxx" />
     <ClCompile Include="drawing\compv_mvp.cxx" />
     <ClCompile Include="drawing\compv_renderer.cxx" />
@@ -1137,7 +1139,7 @@
     <ClCompile Include="parallel\compv_threaddisp10.cxx" />
     <ClCompile Include="parallel\compv_threaddisp11.cxx" />
     <ClCompile Include="parallel\compv_threaddisptbb.cxx" />
-    <ClCompile Include="pugixml-120\xml.cxx" />
+    <ClCompile Include="pugixml-1.9\pugixml.cxx" />
     <ClCompile Include="tbbmalloc\backend.cpp" />
     <ClCompile Include="tbbmalloc\backref.cpp" />
     <ClCompile Include="tbbmalloc\frontend.cpp" />
