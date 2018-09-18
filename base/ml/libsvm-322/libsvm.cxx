@@ -226,6 +226,16 @@ public:
 		}
 #endif
 	}
+
+	static void svm_kernel_rbf1_out_Step1_C(const double& gamma, const double& x_squarei, const double* xSquarejPtr, const double* dotMatPtr, double* outPtr, const size_t count)
+	{
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found - For training");
+		const double gamma_minus = -gamma;
+		for (size_t j = 0; j < count; ++j) {
+			outPtr[j] = gamma_minus * (x_squarei + xSquarejPtr[j] - 2 * dotMatPtr[j]);
+		}
+	}
+
 protected:
 
 	double (Kernel::*kernel_function)(int i, int j) const;
@@ -268,39 +278,48 @@ protected:
 			1,
 			count,
 			1
-		));	
+		));
 	}
 
 	void kernel_rbf1(const double& x_squarei, const svm_node* xi, const double& yi, const double* y, const int start, const int end, Qfloat* out) const {
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found - For training");
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation could be found - for training");
 		const svm_node** xj = &x[start];
 		const double* x_squarej = &x_square[start];
 		const double* yj = &y[start];
 		Qfloat* outj = &out[start];
 		const size_t count = static_cast<size_t>(end - start);
 		const size_t xsize = svm_count(x[0]);
-		CompVMatPtr xjMat, xiMat, dotMat, outMat;
+		CompVMatPtr xiMat, dotMat, outMat;
 		COMPV_CHECK_CODE_ASSERT(svm_copy(xi, &xiMat, xsize));
 		COMPV_CHECK_CODE_ASSERT(CompVMat::newObjAligned<double>(&dotMat, 1, count));
 		COMPV_CHECK_CODE_ASSERT(CompVMat::newObjAligned<double>(&outMat, 1, count));
 		double* dotMatPtr = dotMat->data<double>();
 		double* outMatPtr = outMat->data<double>();
-		// Compute dot(xi, xj[j])
-		for (size_t j = 0; j < count; ++j) {
-			COMPV_CHECK_CODE_ASSERT(svm_copy(xj[j], &xjMat, xsize));
-			simd_func_ptrs.dot_64f64f(xiMat->data<const double>(), xjMat->data<const double>(), xsize, 1, 0, 0, &dotMatPtr[j]);
-		}
-		// Compute temp out
-		for (size_t j = 0; j < count; ++j) {
-			outMatPtr[j] = (-gamma*(x_squarei + x_squarej[j] - 2 * dotMatPtr[j]));
-		}
-		// Compute exp(temp out)
-		simd_func_ptrs.expo(outMatPtr, outMatPtr, count);
-		// Compute final out
-		for (size_t j = 0; j < count; ++j) {
-			outj[j] = static_cast<Qfloat>(yi * yj[j] * outMatPtr[j]);
-		}
+
+		auto funcPtr = [&](const size_t start, const size_t end) -> COMPV_ERROR_CODE {
+			const size_t mt_count = (end - start);
+			CompVMatPtr xjMat;
+			// Compute dot(xi, xj[j])
+			for (size_t j = start; j < end; ++j) {
+				COMPV_CHECK_CODE_ASSERT(svm_copy(xj[j], &xjMat, xsize));
+				simd_func_ptrs.dot_64f64f(xiMat->data<const double>(), xjMat->data<const double>(), xsize, 1, 0, 0, &dotMatPtr[j]);
+			}
+			// Compute temp out step #1
+			simd_func_ptrs.kernel_rbf1_out_Step1_64f64f(gamma, x_squarei, &x_squarej[start], &dotMatPtr[start], &outMatPtr[start], mt_count);
+			// Compute exp(temp out)
+			simd_func_ptrs.expo(&outMatPtr[start], &outMatPtr[start], mt_count);
+			// Compute temp out step #2
+			for (size_t j = start; j < end; ++j) {
+				outj[j] = static_cast<Qfloat>(yi * yj[j] * outMatPtr[j]);
+			}
+			return COMPV_ERROR_CODE_S_OK;
+		};
+		COMPV_CHECK_CODE_ASSERT(CompVThreadDispatcher::dispatchDividingAcrossY(
+			funcPtr,
+			1,
+			count,
+			1
+		));
 	}
 
 private:
@@ -3522,14 +3541,17 @@ void svm_simd_func_ptrs::init()
 
 	/* From local code - C */
 	kernel_rbf0_out_64f64f = Kernel::svm_kernel_rbf0_out_C;
+	kernel_rbf1_out_Step1_64f64f = Kernel::svm_kernel_rbf1_out_Step1_C;
 
 	/* From local code - SIMD */
 #if COMPV_ARCH_X86
 	if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86(kernel_rbf0_out_64f64f = CompVLibSVM322KernelRbf0Out_64f64f_SSE2);
+		COMPV_EXEC_IFDEF_INTRIN_X86(kernel_rbf1_out_Step1_64f64f = CompVLibSVM322KernelRbf1Out_Step1_64f64f_SSE2);
 	}
 	if (CompVCpu::isEnabled(kCpuFlagAVX)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86(kernel_rbf0_out_64f64f = CompVLibSVM322KernelRbf0Out_64f64f_AVX);
+		COMPV_EXEC_IFDEF_INTRIN_X86(kernel_rbf1_out_Step1_64f64f = CompVLibSVM322KernelRbf1Out_Step1_64f64f_AVX);
 	}
 #elif COMPV_ARCH_ARM
 #endif

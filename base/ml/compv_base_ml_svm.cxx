@@ -8,7 +8,9 @@
 #include "compv/base/math/compv_math_cast.h"
 #include "compv/base/math/compv_math.h"
 #include "compv/base/parallel/compv_parallel.h"
+#include "compv/base/time/compv_time.h"
 #include "compv/base/compv_fileutils.h"
+
 
 #include "compv/base/ml/libsvm-322/libsvm.h"
 
@@ -117,6 +119,7 @@ COMPV_ERROR_CODE CompVMachineLearningSVM::train(const CompVMatPtr& trainLabels, 
 	COMPV_AUTOLOCK_THIS(CompVMachineLearningSVM);
 
 	// Convert "trainVectors" to double
+	const uint64_t timeStart = CompVTime::nowMillis();
 	CompVMatPtr vectors;
 	if (trainVectors->subType() != COMPV_SUBTYPE_RAW_FLOAT64) {
 		COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static<compv_float32_t, compv_float64_t>(trainVectors, &vectors)));
@@ -170,6 +173,8 @@ COMPV_ERROR_CODE CompVMachineLearningSVM::train(const CompVMatPtr& trainLabels, 
 bail:
 	CompVMem::free(reinterpret_cast<void**>(&problem.y));
 	CompVMem::free(reinterpret_cast<void**>(&problem.x));
+	const uint64_t timeEnd = CompVTime::nowMillis();
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Elapsed time (Training) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 	return err;
 }
 

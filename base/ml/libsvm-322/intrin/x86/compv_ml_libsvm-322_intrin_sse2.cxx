@@ -46,6 +46,54 @@ void CompVLibSVM322KernelRbf0Out_64f64f_SSE2(const double& gamma, const double* 
 	}
 }
 
+void CompVLibSVM322KernelRbf1Out_Step1_64f64f_SSE2(const double& gamma, const double& x_squarei, const double* xSquarejPtr, const double* dotMatPtr, double* outPtr, const size_t count)
+{
+	COMPV_DEBUG_INFO_CHECK_SSE2();
+	const size_t count8 = count & -8;
+	const size_t count2 = count & -2;
+	size_t i = 0;
+	const __m128d vecGammaMinus = _mm_set1_pd(-gamma);
+	const __m128d vecTwo = _mm_set1_pd(2.0);
+	const __m128d vecXSquarei = _mm_set1_pd(x_squarei);
+
+	for (; i < count8; i += 8) {
+		const __m128d veca0 = _mm_mul_pd(vecTwo, _mm_loadu_pd(&dotMatPtr[i]));
+		const __m128d veca1 = _mm_mul_pd(vecTwo, _mm_loadu_pd(&dotMatPtr[i + 2]));
+		const __m128d veca2 = _mm_mul_pd(vecTwo, _mm_loadu_pd(&dotMatPtr[i + 4]));
+		const __m128d veca3 = _mm_mul_pd(vecTwo, _mm_loadu_pd(&dotMatPtr[i + 6]));
+		__m128d vecb0 = _mm_add_pd(vecXSquarei, _mm_loadu_pd(&xSquarejPtr[i]));
+		__m128d vecb1 = _mm_add_pd(vecXSquarei, _mm_loadu_pd(&xSquarejPtr[i + 2]));
+		__m128d vecb2 = _mm_add_pd(vecXSquarei, _mm_loadu_pd(&xSquarejPtr[i + 4]));
+		__m128d vecb3 = _mm_add_pd(vecXSquarei, _mm_loadu_pd(&xSquarejPtr[i + 6]));
+		vecb0 = _mm_sub_pd(vecb0, veca0);
+		vecb1 = _mm_sub_pd(vecb1, veca1);
+		vecb2 = _mm_sub_pd(vecb2, veca2);
+		vecb3 = _mm_sub_pd(vecb3, veca3);
+		vecb0 = _mm_mul_pd(vecb0, vecGammaMinus);
+		vecb1 = _mm_mul_pd(vecb1, vecGammaMinus);
+		vecb2 = _mm_mul_pd(vecb2, vecGammaMinus);
+		vecb3 = _mm_mul_pd(vecb3, vecGammaMinus);
+		_mm_storeu_pd(&outPtr[i], vecb0);
+		_mm_storeu_pd(&outPtr[i + 2], vecb1);
+		_mm_storeu_pd(&outPtr[i + 4], vecb2);
+		_mm_storeu_pd(&outPtr[i + 6], vecb3);
+	}
+	for (; i < count2; i += 2) {
+		const __m128d veca0 = _mm_mul_pd(vecTwo, _mm_loadu_pd(&dotMatPtr[i]));
+		__m128d vecb0 = _mm_add_pd(vecXSquarei, _mm_loadu_pd(&xSquarejPtr[i]));
+		vecb0 = _mm_sub_pd(vecb0, veca0);
+		vecb0 = _mm_mul_pd(vecb0, vecGammaMinus);
+		_mm_storeu_pd(&outPtr[i], vecb0);
+	}
+	for (; i < count; i += 1) {
+		const __m128d veca0 = _mm_mul_sd(vecTwo, _mm_load_sd(&dotMatPtr[i]));
+		__m128d vecb0 = _mm_add_sd(vecXSquarei, _mm_load_sd(&xSquarejPtr[i]));
+		vecb0 = _mm_sub_sd(vecb0, veca0);
+		vecb0 = _mm_mul_sd(vecb0, vecGammaMinus);
+		_mm_store_sd(&outPtr[i], vecb0);
+	}
+}
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */

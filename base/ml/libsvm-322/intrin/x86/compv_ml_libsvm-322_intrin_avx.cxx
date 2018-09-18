@@ -54,6 +54,63 @@ void CompVLibSVM322KernelRbf0Out_64f64f_AVX(const double& gamma, const double* x
 	}
 }
 
+// Training function, no need for ASM implementation
+#if defined(__INTEL_COMPILER)
+#	pragma intel optimization_parameter target_arch=avx
+#endif
+void CompVLibSVM322KernelRbf1Out_Step1_64f64f_AVX(const double& gamma, const double& x_squarei, const double* xSquarejPtr, const double* dotMatPtr, double* outPtr, const size_t count)
+{
+	/* AVX instrutions */
+	COMPV_DEBUG_INFO_CHECK_AVX();
+	_mm256_zeroupper();
+	const size_t count16 = count & -16;
+	const size_t count4 = count & -4;
+	size_t i = 0;
+	const __m256d vecGammaMinus = _mm256_set1_pd(-gamma);
+	const __m256d vecTwo = _mm256_set1_pd(2.0);
+	const __m256d vecXSquarei = _mm256_set1_pd(x_squarei);
+
+	for (; i < count16; i += 16) {
+		const __m256d veca0 = _mm256_mul_pd(vecTwo, _mm256_loadu_pd(&dotMatPtr[i]));
+		const __m256d veca1 = _mm256_mul_pd(vecTwo, _mm256_loadu_pd(&dotMatPtr[i + 4]));
+		const __m256d veca2 = _mm256_mul_pd(vecTwo, _mm256_loadu_pd(&dotMatPtr[i + 8]));
+		const __m256d veca3 = _mm256_mul_pd(vecTwo, _mm256_loadu_pd(&dotMatPtr[i + 12]));
+		__m256d vecb0 = _mm256_add_pd(vecXSquarei, _mm256_loadu_pd(&xSquarejPtr[i]));
+		__m256d vecb1 = _mm256_add_pd(vecXSquarei, _mm256_loadu_pd(&xSquarejPtr[i + 4]));
+		__m256d vecb2 = _mm256_add_pd(vecXSquarei, _mm256_loadu_pd(&xSquarejPtr[i + 8]));
+		__m256d vecb3 = _mm256_add_pd(vecXSquarei, _mm256_loadu_pd(&xSquarejPtr[i + 12]));
+		vecb0 = _mm256_sub_pd(vecb0, veca0);
+		vecb1 = _mm256_sub_pd(vecb1, veca1);
+		vecb2 = _mm256_sub_pd(vecb2, veca2);
+		vecb3 = _mm256_sub_pd(vecb3, veca3);
+		vecb0 = _mm256_mul_pd(vecb0, vecGammaMinus);
+		vecb1 = _mm256_mul_pd(vecb1, vecGammaMinus);
+		vecb2 = _mm256_mul_pd(vecb2, vecGammaMinus);
+		vecb3 = _mm256_mul_pd(vecb3, vecGammaMinus);
+		_mm256_storeu_pd(&outPtr[i], vecb0);
+		_mm256_storeu_pd(&outPtr[i + 4], vecb1);
+		_mm256_storeu_pd(&outPtr[i + 8], vecb2);
+		_mm256_storeu_pd(&outPtr[i + 12], vecb3);
+	}
+	for (; i < count4; i += 4) {
+		const __m256d veca0 = _mm256_mul_pd(vecTwo, _mm256_loadu_pd(&dotMatPtr[i]));
+		__m256d vecb0 = _mm256_add_pd(vecXSquarei, _mm256_loadu_pd(&xSquarejPtr[i]));
+		vecb0 = _mm256_sub_pd(vecb0, veca0);
+		vecb0 = _mm256_mul_pd(vecb0, vecGammaMinus);
+		_mm256_storeu_pd(&outPtr[i], vecb0);
+	}
+	_mm256_zeroupper();
+
+	/* SSE instrutions */
+	for (; i < count; i += 1) {
+		const __m128d veca0 = _mm_mul_sd(_mm256_castpd256_pd128(vecTwo), _mm_load_sd(&dotMatPtr[i])); // "_mm256_castpd256_pd128" is a nop -> no AVX/SSE transition issues
+		__m128d vecb0 = _mm_add_sd(_mm256_castpd256_pd128(vecXSquarei), _mm_load_sd(&xSquarejPtr[i])); // "_mm256_castpd256_pd128" is a nop -> no AVX/SSE transition issues
+		vecb0 = _mm_sub_sd(vecb0, veca0);
+		vecb0 = _mm_mul_sd(vecb0, _mm256_castpd256_pd128(vecGammaMinus)); // "_mm256_castpd256_pd128" is a nop -> no AVX/SSE transition issues
+		_mm_store_sd(&outPtr[i], vecb0);
+	}
+}
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */
