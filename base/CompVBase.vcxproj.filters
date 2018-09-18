@@ -199,6 +199,18 @@
     <Filter Include="source\pugixml-1.9">
       <UniqueIdentifier>{ded6b17b-dbbc-4f13-9853-277765338230}</UniqueIdentifier>
     </Filter>
+    <Filter Include="source\ml\libsvm-322\intrin">
+      <UniqueIdentifier>{cb5532c6-dd90-4d4d-a226-07f8ccf1c908}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\ml\libsvm-322\intrin\x86">
+      <UniqueIdentifier>{924f3e5c-ac41-4916-9862-e91f1c8373c5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\ml\libsvm-322\intrin">
+      <UniqueIdentifier>{a0cbc4f9-0d8e-470b-a510-ffe6a0c0bc23}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\ml\libsvm-322\intrin\x86">
+      <UniqueIdentifier>{82f5e4ba-aa10-47c5-a4ce-ffafa2c28e9d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\base\compv_base.h">
@@ -1011,6 +1023,12 @@
     <ClInclude Include="include\compv\base\compv_xml.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\ml\libsvm-322\intrin\x86\compv_ml_libsvm-322_intrin_sse2.h">
+      <Filter>include\ml\libsvm-322\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\ml\libsvm-322\intrin\x86\compv_ml_libsvm-322_intrin_avx.h">
+      <Filter>include\ml\libsvm-322\intrin\x86</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx">
@@ -1636,6 +1654,12 @@
     </ClCompile>
     <ClCompile Include="compv_xml.cxx">
       <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="ml\libsvm-322\intrin\x86\compv_ml_libsvm-322_intrin_sse2.cxx">
+      <Filter>source\ml\libsvm-322\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="ml\libsvm-322\intrin\x86\compv_ml_libsvm-322_intrin_avx.cxx">
+      <Filter>source\ml\libsvm-322\intrin\x86</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

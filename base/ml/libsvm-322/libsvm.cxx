@@ -17,6 +17,9 @@
 #include "compv/base/math/compv_math_dot.h"
 #include "compv/base/math/compv_math_scale.h"
 #include "compv/base/math/compv_math_exp.h"
+#include "compv/base/compv_cpu.h"
+#include "compv/base/ml/libsvm-322/intrin/x86/compv_ml_libsvm-322_intrin_sse2.h"
+#include "compv/base/ml/libsvm-322/intrin/x86/compv_ml_libsvm-322_intrin_avx.h"
 #define COMPV_THIS_CLASSNAME "LIBSVM"
 int libsvm_version = LIBSVM_VERSION;
 static svm_model libsvm_static_model; // Forcing ctor() to be called (e.g. will initialize CompVMat members)
@@ -208,6 +211,21 @@ public:
 		swap(x[i], x[j]);
 		if (x_square) swap(x_square[i], x_square[j]);
 	}
+	static void svm_kernel_rbf0_out_C(const double& gamma, const double* xSquarePtr, const double* dotMatPtr, double* outPtr, const size_t count)
+	{
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found - For training");
+#if 0 // TODO(dmi): next code faster
+		const double gamma_minus = -gamma;
+		for (size_t i = 0; i < count; ++i) {
+			outPtr[i] = gamma_minus * ((xSquarePtr[i] + xSquarePtr[i]) - (2 * dotMatPtr[i]));
+		}
+#else
+		const double gamma_times2_minus = -(2.0 * gamma);
+		for (size_t i = 0; i < count; ++i) {
+			outPtr[i] = gamma_times2_minus * (xSquarePtr[i] - dotMatPtr[i]);
+		}
+#endif
+	}
 protected:
 
 	double (Kernel::*kernel_function)(int i, int j) const;
@@ -227,26 +245,35 @@ protected:
 	}
 
 	void kernel_rbf0(const size_t count, double* out) const {
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found - For training");
-		CompVMatPtr xMat, dotMat;
+		const size_t xsize = svm_count(x[0]);
+		CompVMatPtr dotMat;
 		COMPV_CHECK_CODE_ASSERT(CompVMat::newObjAligned<double>(&dotMat, 1, count));
 		double* dotMatPtr = dotMat->data<double>();
-		const size_t xsize = svm_count(x[0]);
-		// Compute dot(xi, xi)
-		for (size_t i = 0; i < count; ++i) {
-			COMPV_CHECK_CODE_ASSERT(svm_copy(x[i], &xMat, xsize));
-			simd_func_ptrs.dot_64f64f(xMat->data<const double>(), xMat->data<const double>(), xsize, 1, 0, 0, &dotMatPtr[i]);
-		}
-		// Compute temp out
-		for (size_t i = 0; i < count; ++i) {
-			out[i] = (-gamma*(x_square[i] + x_square[i] - 2 * dotMatPtr[i]));
-		}
-		// Compute final out = exp(temp out)
-		simd_func_ptrs.expo(out, out, count);
+		auto funcPtr = [&](const size_t start, const size_t end) -> COMPV_ERROR_CODE {
+			CompVMatPtr xMat;
+			const size_t mt_count = (end - start);
+			// Compute dot(xi, xi)
+			for (size_t i = start; i < end; ++i) {
+				COMPV_CHECK_CODE_ASSERT(svm_copy(x[i], &xMat, xsize)); // convert to CompVMat
+				simd_func_ptrs.dot_64f64f(xMat->data<const double>(), xMat->data<const double>(), xsize, 1, 0, 0, &dotMatPtr[i]);
+			}
+			// Compute temporary output
+			simd_func_ptrs.kernel_rbf0_out_64f64f(gamma, &x_square[start], &dotMatPtr[start], &out[start], mt_count);
+			// Compute final out = exp(temp out)
+			simd_func_ptrs.expo(&out[start], &out[start], mt_count);
+			return COMPV_ERROR_CODE_S_OK;
+		};
+		COMPV_CHECK_CODE_ASSERT(CompVThreadDispatcher::dispatchDividingAcrossY(
+			funcPtr,
+			1,
+			count,
+			1
+		));	
 	}
 
 	void kernel_rbf1(const double& x_squarei, const svm_node* xi, const double& yi, const double* y, const int start, const int end, Qfloat* out) const {
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found - For training");
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation could be found - for training");
 		const svm_node** xj = &x[start];
 		const double* x_squarej = &x_square[start];
 		const double* yj = &y[start];
@@ -3487,8 +3514,23 @@ svm_simd_func_ptrs::svm_simd_func_ptrs()
 
 void svm_simd_func_ptrs::init()
 {
+	/* From external code */
 	COMPV_CHECK_CODE_ASSERT(CompVMathDot::hookDotSub_64f(&dotSub_64f64f));
 	COMPV_CHECK_CODE_ASSERT(CompVMathDot::hookDot_64f(&dot_64f64f));
 	COMPV_CHECK_CODE_ASSERT(CompVMathScale::hookScale_64f(&scale_64f64f));
 	COMPV_CHECK_CODE_ASSERT(CompVMathExp::hookExp_64f(&exp_64f64f_minpackx, &exp_64f64f_minpack));
+
+	/* From local code - C */
+	kernel_rbf0_out_64f64f = Kernel::svm_kernel_rbf0_out_C;
+
+	/* From local code - SIMD */
+#if COMPV_ARCH_X86
+	if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
+		COMPV_EXEC_IFDEF_INTRIN_X86(kernel_rbf0_out_64f64f = CompVLibSVM322KernelRbf0Out_64f64f_SSE2);
+	}
+	if (CompVCpu::isEnabled(kCpuFlagAVX)) {
+		COMPV_EXEC_IFDEF_INTRIN_X86(kernel_rbf0_out_64f64f = CompVLibSVM322KernelRbf0Out_64f64f_AVX);
+	}
+#elif COMPV_ARCH_ARM
+#endif
 }

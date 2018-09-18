@@ -41,6 +41,8 @@ struct svm_simd_func_ptrs
 		= nullptr; // Prediction + training
 	void(*scale_64f64f)(const compv_float64_t* ptrIn, compv_float64_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride, const compv_float64_t* s1)
 		= nullptr; // Prediction
+	void(*kernel_rbf0_out_64f64f)(const double& gamma, const double* xSquarePtr, const double* dotMatPtr, double* outPtr, const size_t count)
+		= nullptr; // Training
 	
 	svm_simd_func_ptrs();
 	void init();
