@@ -20,6 +20,7 @@ COMPV_NAMESPACE_BEGIN()
 
 void CompVLibSVM322KernelRbf0Out_64f64f_AVX(const double& gamma, const double* xSquarePtr, const double* dotMatPtr, double* outPtr, const size_t count);
 void CompVLibSVM322KernelRbf1Out_Step1_64f64f_AVX(const double& gamma, const double& x_squarei, const double* xSquarejPtr, const double* dotMatPtr, double* outPtr, const size_t count);
+void CompVLibSVM322KernelRbf1Out_Step2_64f32f_AVX(const double& yi, const double* yjPtr, const double* outStep1Ptr, float* outPtr, const size_t count);
 
 COMPV_NAMESPACE_END()
 

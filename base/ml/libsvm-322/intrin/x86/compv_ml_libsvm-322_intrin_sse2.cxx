@@ -94,6 +94,35 @@ void CompVLibSVM322KernelRbf1Out_Step1_64f64f_SSE2(const double& gamma, const do
 	}
 }
 
+void CompVLibSVM322KernelRbf1Out_Step2_64f32f_SSE2(const double& yi, const double* yjPtr, const double* outStep1Ptr, float* outPtr, const size_t count)
+{
+	COMPV_DEBUG_INFO_CHECK_SSE2();
+	const size_t count8 = count & -8;
+	const size_t count2 = count & -2;
+	size_t i = 0;
+	const __m128d vecYi = _mm_set1_pd(yi);
+	for (; i < count8; i += 8) {
+		__m128d vec0 = _mm_mul_pd(vecYi, _mm_loadu_pd(&yjPtr[i]));
+		__m128d vec1 = _mm_mul_pd(vecYi, _mm_loadu_pd(&yjPtr[i + 2]));
+		__m128d vec2 = _mm_mul_pd(vecYi, _mm_loadu_pd(&yjPtr[i + 4]));
+		__m128d vec3 = _mm_mul_pd(vecYi, _mm_loadu_pd(&yjPtr[i + 6]));
+		vec0 = _mm_mul_pd(vec0, _mm_loadu_pd(&outStep1Ptr[i]));
+		vec1 = _mm_mul_pd(vec1, _mm_loadu_pd(&outStep1Ptr[i + 2]));
+		vec2 = _mm_mul_pd(vec2, _mm_loadu_pd(&outStep1Ptr[i + 4]));
+		vec3 = _mm_mul_pd(vec3, _mm_loadu_pd(&outStep1Ptr[i + 6]));
+		_mm_storeu_ps(&outPtr[i], _mm_shuffle_ps(_mm_cvtpd_ps(vec0), _mm_cvtpd_ps(vec1), 0x44));
+		_mm_storeu_ps(&outPtr[i + 4], _mm_shuffle_ps(_mm_cvtpd_ps(vec2), _mm_cvtpd_ps(vec3), 0x44));
+	}
+	for (; i < count2; i += 2) {
+		__m128d vec0 = _mm_mul_pd(vecYi, _mm_loadu_pd(&yjPtr[i]));
+		vec0 = _mm_mul_pd(vec0, _mm_loadu_pd(&outStep1Ptr[i]));
+		_mm_storel_pd(reinterpret_cast<double*>(&outPtr[i]), _mm_castps_pd(_mm_cvtpd_ps(vec0))); // no "_mm_storel_ps"
+	}
+	for (; i < count; i += 1) {
+		outPtr[i] = static_cast<float>(yi * yjPtr[i] * outStep1Ptr[i]);
+	}
+}
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */

@@ -111,6 +111,54 @@ void CompVLibSVM322KernelRbf1Out_Step1_64f64f_AVX(const double& gamma, const dou
 	}
 }
 
+// Training function, no need for ASM implementation
+#if defined(__INTEL_COMPILER)
+#	pragma intel optimization_parameter target_arch=avx
+#endif
+void CompVLibSVM322KernelRbf1Out_Step2_64f32f_AVX(const double& yi, const double* yjPtr, const double* outStep1Ptr, float* outPtr, const size_t count)
+{
+	/* AVX instrutions mixed with SSE ones (transition issue if this file not built with "/AVX" flags) */
+	COMPV_DEBUG_INFO_CHECK_AVX();
+	_mm256_zeroupper();
+	const size_t count16 = count & -16;
+	const size_t count4 = count & -4;
+	const size_t count2 = count & -2;
+	size_t i = 0;
+	const __m256d vecYi = _mm256_set1_pd(yi);
+	for (; i < count16; i += 16) {
+		__m256d vec0 = _mm256_mul_pd(vecYi, _mm256_loadu_pd(&yjPtr[i]));
+		__m256d vec1 = _mm256_mul_pd(vecYi, _mm256_loadu_pd(&yjPtr[i + 4]));
+		__m256d vec2 = _mm256_mul_pd(vecYi, _mm256_loadu_pd(&yjPtr[i + 8]));
+		__m256d vec3 = _mm256_mul_pd(vecYi, _mm256_loadu_pd(&yjPtr[i + 12]));
+		vec0 = _mm256_mul_pd(vec0, _mm256_loadu_pd(&outStep1Ptr[i]));
+		vec1 = _mm256_mul_pd(vec1, _mm256_loadu_pd(&outStep1Ptr[i + 4]));
+		vec2 = _mm256_mul_pd(vec2, _mm256_loadu_pd(&outStep1Ptr[i + 8]));
+		vec3 = _mm256_mul_pd(vec3, _mm256_loadu_pd(&outStep1Ptr[i + 12]));
+		_mm_storeu_ps(&outPtr[i], _mm256_cvtpd_ps(vec0));
+		_mm_storeu_ps(&outPtr[i + 4], _mm256_cvtpd_ps(vec1));
+		_mm_storeu_ps(&outPtr[i + 8], _mm256_cvtpd_ps(vec2));
+		_mm_storeu_ps(&outPtr[i + 12], _mm256_cvtpd_ps(vec3));
+	}
+	for (; i < count4; i += 4) {
+		__m256d vec0 = _mm256_mul_pd(vecYi, _mm256_loadu_pd(&yjPtr[i]));
+		vec0 = _mm256_mul_pd(vec0, _mm256_loadu_pd(&outStep1Ptr[i]));
+		_mm_storeu_ps(&outPtr[i], _mm256_cvtpd_ps(vec0));
+	}
+	_mm256_zeroupper();
+
+	/* SSE instrutions */
+	for (; i < count2; i += 2) {
+		__m128d vec0 = _mm_mul_pd(_mm256_castpd256_pd128(vecYi), _mm_loadu_pd(&yjPtr[i])); // "_mm256_castpd256_pd128" is a nop -> no AVX/SSE transition issues
+		vec0 = _mm_mul_pd(vec0, _mm_loadu_pd(&outStep1Ptr[i]));
+		_mm_storel_pd(reinterpret_cast<double*>(&outPtr[i]), _mm_castps_pd(_mm_cvtpd_ps(vec0))); // no "_mm_storel_ps"
+	}
+
+	/* C++ instructions */
+	for (; i < count; i += 1) {
+		outPtr[i] = static_cast<float>(yi * yjPtr[i] * outStep1Ptr[i]);
+	}
+}
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */

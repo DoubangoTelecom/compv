@@ -45,6 +45,8 @@ struct svm_simd_func_ptrs
 		= nullptr; // Training
 	void(*kernel_rbf1_out_Step1_64f64f)(const double& gamma, const double& x_squarei, const double* xSquarejPtr, const double* dotMatPtr, double* outPtr, const size_t count)
 		= nullptr; // Training
+	void(*kernel_rbf1_out_Step2_64f32f)(const double& yi, const double* yjPtr, const double* outStep1Ptr, float* outPtr, const size_t count)
+		= nullptr; // Training
 	
 	svm_simd_func_ptrs();
 	void init();

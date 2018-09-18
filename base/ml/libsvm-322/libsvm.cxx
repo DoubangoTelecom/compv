@@ -236,6 +236,14 @@ public:
 		}
 	}
 
+	static void svm_kernel_rbf1_out_Step2_C(const double& yi, const double* yjPtr, const double* outStep1Ptr, float* outPtr, const size_t count)
+	{
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found - For training");
+		for (size_t j = 0; j < count; ++j) {
+			outPtr[j] = static_cast<float>(yi * yjPtr[j] * outStep1Ptr[j]);
+		}
+	}
+
 protected:
 
 	double (Kernel::*kernel_function)(int i, int j) const;
@@ -254,6 +262,7 @@ protected:
 		return exp(-gamma*(x_squarei + x_square[j] - 2 * dot(xi, x[j])));
 	}
 
+	// Multi-threaded
 	void kernel_rbf0(const size_t count, double* out) const {
 		const size_t xsize = svm_count(x[0]);
 		CompVMatPtr dotMat;
@@ -267,9 +276,9 @@ protected:
 				COMPV_CHECK_CODE_ASSERT(svm_copy(x[i], &xMat, xsize)); // convert to CompVMat
 				simd_func_ptrs.dot_64f64f(xMat->data<const double>(), xMat->data<const double>(), xsize, 1, 0, 0, &dotMatPtr[i]);
 			}
-			// Compute temporary output
+			// Compute output
 			simd_func_ptrs.kernel_rbf0_out_64f64f(gamma, &x_square[start], &dotMatPtr[start], &out[start], mt_count);
-			// Compute final out = exp(temp out)
+			// Compute final out = exp(out)
 			simd_func_ptrs.expo(&out[start], &out[start], mt_count);
 			return COMPV_ERROR_CODE_S_OK;
 		};
@@ -281,13 +290,13 @@ protected:
 		));
 	}
 
-	void kernel_rbf1(const double& x_squarei, const svm_node* xi, const double& yi, const double* y, const int start, const int end, Qfloat* out) const {
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found - For training");
-		const svm_node** xj = &x[start];
-		const double* x_squarej = &x_square[start];
-		const double* yj = &y[start];
-		Qfloat* outj = &out[start];
-		const size_t count = static_cast<size_t>(end - start);
+	// Multi-threaded
+	void kernel_rbf1(const double& x_squarei, const svm_node* xi, const double& yi, const double* y, const int start_, const int end_, Qfloat* out) const {
+		const svm_node** xj = &x[start_];
+		const double* x_squarej = &x_square[start_];
+		const double* yj = &y[start_];
+		Qfloat* outj = &out[start_];
+		const size_t count = static_cast<size_t>(end_ - start_);
 		const size_t xsize = svm_count(x[0]);
 		CompVMatPtr xiMat, dotMat, outMat;
 		COMPV_CHECK_CODE_ASSERT(svm_copy(xi, &xiMat, xsize));
@@ -304,14 +313,12 @@ protected:
 				COMPV_CHECK_CODE_ASSERT(svm_copy(xj[j], &xjMat, xsize));
 				simd_func_ptrs.dot_64f64f(xiMat->data<const double>(), xjMat->data<const double>(), xsize, 1, 0, 0, &dotMatPtr[j]);
 			}
-			// Compute temp out step #1
+			// Compute out step #1
 			simd_func_ptrs.kernel_rbf1_out_Step1_64f64f(gamma, x_squarei, &x_squarej[start], &dotMatPtr[start], &outMatPtr[start], mt_count);
-			// Compute exp(temp out)
+			// Compute exp(out step #1)
 			simd_func_ptrs.expo(&outMatPtr[start], &outMatPtr[start], mt_count);
-			// Compute temp out step #2
-			for (size_t j = start; j < end; ++j) {
-				outj[j] = static_cast<Qfloat>(yi * yj[j] * outMatPtr[j]);
-			}
+			// Compute out step #2
+			simd_func_ptrs.kernel_rbf1_out_Step2_64f32f(yi, &yj[start], &outMatPtr[start], &outj[start], mt_count);
 			return COMPV_ERROR_CODE_S_OK;
 		};
 		COMPV_CHECK_CODE_ASSERT(CompVThreadDispatcher::dispatchDividingAcrossY(
@@ -3542,16 +3549,19 @@ void svm_simd_func_ptrs::init()
 	/* From local code - C */
 	kernel_rbf0_out_64f64f = Kernel::svm_kernel_rbf0_out_C;
 	kernel_rbf1_out_Step1_64f64f = Kernel::svm_kernel_rbf1_out_Step1_C;
+	kernel_rbf1_out_Step2_64f32f = Kernel::svm_kernel_rbf1_out_Step2_C;
 
 	/* From local code - SIMD */
 #if COMPV_ARCH_X86
 	if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86(kernel_rbf0_out_64f64f = CompVLibSVM322KernelRbf0Out_64f64f_SSE2);
 		COMPV_EXEC_IFDEF_INTRIN_X86(kernel_rbf1_out_Step1_64f64f = CompVLibSVM322KernelRbf1Out_Step1_64f64f_SSE2);
+		COMPV_EXEC_IFDEF_INTRIN_X86(kernel_rbf1_out_Step2_64f32f = CompVLibSVM322KernelRbf1Out_Step2_64f32f_SSE2);
 	}
 	if (CompVCpu::isEnabled(kCpuFlagAVX)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86(kernel_rbf0_out_64f64f = CompVLibSVM322KernelRbf0Out_64f64f_AVX);
 		COMPV_EXEC_IFDEF_INTRIN_X86(kernel_rbf1_out_Step1_64f64f = CompVLibSVM322KernelRbf1Out_Step1_64f64f_AVX);
+		COMPV_EXEC_IFDEF_INTRIN_X86(kernel_rbf1_out_Step2_64f32f = CompVLibSVM322KernelRbf1Out_Step2_64f32f_AVX);
 	}
 #elif COMPV_ARCH_ARM
 #endif
