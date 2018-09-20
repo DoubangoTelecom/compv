@@ -348,6 +348,7 @@ COMPV_ERROR_CODE CompVMachineLearningSVM::load(const char* filePath, CompVMachin
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	svm_model* model = nullptr;
 	CompVMachineLearningSVMPtr mlSVM_;
+	const uint64_t timeStart = CompVTime::nowMillis();
 
 	// Load model
 	COMPV_CHECK_EXP_BAIL((!(model = svm_load_model(filePath))), err = COMPV_ERROR_CODE_E_LIBSVM, "svm_load_model failed");
@@ -390,6 +391,8 @@ bail:
 	if (COMPV_ERROR_CODE_IS_NOK(err)) {
 		svm_free_and_destroy_model(&model);
 	}
+	const uint64_t timeEnd = CompVTime::nowMillis();
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Elapsed time (Loading model) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 	return err;
 }
 

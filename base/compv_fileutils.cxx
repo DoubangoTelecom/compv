@@ -356,6 +356,7 @@ COMPV_ERROR_CODE CompVFileUtils::getFilesInDir(const char* dir, std::vector<std:
 	if (dir_path.back() != '/') {
 		dir_path += "/";
 	}
+	COMPV_DEBUG_INFO_EX(kModuleNameFileUtils, "Loading files in %s ...", dir);
 	while ((ent = readdir(dir_))) {
 		const std::string filename = std::string(ent->d_name);
 		if (filename == "." || filename == "..") {
