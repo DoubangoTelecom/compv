@@ -6,6 +6,7 @@
 */
 #include "compv/base/compv_json.h"
 #include "compv/base/jsoncpp-1.8.4/json.h"
+#include "compv/base/compv_fileutils.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -85,6 +86,20 @@ COMPV_ERROR_CODE CompVJSON::read(const Json::Value* root, const char* name, Comp
 	const Json::Value& root_ = *root;
 	COMPV_CHECK_EXP_RETURN(!root_[name].isObject(), COMPV_ERROR_CODE_E_JSON_CPP, "'mean' field is missing or invalid");
 	COMPV_CHECK_CODE_RETURN(readMat(root_[name], mat));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVJSON::parse(const char* filePath, Json::Value* root)
+{
+	COMPV_CHECK_EXP_RETURN(!filePath || !root, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	CompVBufferPtr content;
+	COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wdeprecated-declarations")
+	Json::Reader reader;
+	COMPV_GCC_DISABLE_WARNINGS_END()
+	Json::Value& root_ = *root;
+	COMPV_CHECK_CODE_RETURN(CompVFileUtils::read(filePath, &content));
+	COMPV_CHECK_EXP_RETURN(!reader.parse(reinterpret_cast<const char*>(content->ptr()), reinterpret_cast<const char*>(content->ptr()) + content->size(), root_, false)
+		, COMPV_ERROR_CODE_E_JSON_CPP, "JSON parsing failed");
 	return COMPV_ERROR_CODE_S_OK;
 }
 

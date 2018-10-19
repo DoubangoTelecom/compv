@@ -618,7 +618,7 @@ COMPV_ERROR_CODE CompVImage::scale(const CompVMatPtr& imageIn, CompVMatPtrPtr im
 // dst(x,y) = src*M
 // M = (2x3) matrix
 template<typename T>
-static COMPV_ERROR_CODE CompVImageWarpInverse(const CompVMatPtr& imageIn, CompVMatPtrPtr imageOut, const CompVMatPtr& M, const CompVSizeSz& outSize, COMPV_INTERPOLATION_TYPE interpType COMPV_DEFAULT(COMPV_INTERPOLATION_TYPE_BILINEAR))
+static COMPV_ERROR_CODE CompVImageWarpInverse(const CompVMatPtr& imageIn, CompVMatPtrPtr imageOut, const CompVMatPtr& M, const CompVSizeSz& outSize, COMPV_INTERPOLATION_TYPE interpType COMPV_DEFAULT(COMPV_INTERPOLATION_TYPE_BILINEAR), const uint8_t defaultPixelValue COMPV_DEFAULT(0x00))
 {
 	COMPV_CHECK_EXP_RETURN(!imageIn || !imageOut || !M || !outSize.height || !outSize.width, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_CHECK_EXP_RETURN(M->rows() != 2 || M->cols() != 3 || (M->subType() != COMPV_SUBTYPE_RAW_FLOAT32 && M->subType() != COMPV_SUBTYPE_RAW_FLOAT64), COMPV_ERROR_CODE_E_INVALID_PARAMETER, "M must be (2x3) float or double matrix");
@@ -647,7 +647,7 @@ static COMPV_ERROR_CODE CompVImageWarpInverse(const CompVMatPtr& imageIn, CompVM
 
 	// remap
 	const CompVRectFloat32 inputROI = { 0.f, 0.f, static_cast<compv_float32_t>(imageIn->cols() - 1), static_cast<compv_float32_t>(imageIn->rows() - 1) };
-	COMPV_CHECK_CODE_RETURN(CompVImageRemap::process(imageIn, imageOut, map, interpType, &inputROI, &outSize));
+	COMPV_CHECK_CODE_RETURN(CompVImageRemap::process(imageIn, imageOut, map, interpType, &inputROI, &outSize, defaultPixelValue));
 
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -655,7 +655,7 @@ static COMPV_ERROR_CODE CompVImageWarpInverse(const CompVMatPtr& imageIn, CompVM
 // dst(x,y) = src*inverse(M)
 // M = (2x3) matrix
 template<typename T>
-static COMPV_ERROR_CODE CompVImageWarp(const CompVMatPtr& imageIn, CompVMatPtrPtr imageOut, const CompVMatPtr& M, const CompVSizeSz& outSize, COMPV_INTERPOLATION_TYPE interpType = COMPV_INTERPOLATION_TYPE_BILINEAR)
+static COMPV_ERROR_CODE CompVImageWarp(const CompVMatPtr& imageIn, CompVMatPtrPtr imageOut, const CompVMatPtr& M, const CompVSizeSz& outSize, COMPV_INTERPOLATION_TYPE interpType COMPV_DEFAULT(COMPV_INTERPOLATION_TYPE_BILINEAR), const uint8_t defaultPixelValue COMPV_DEFAULT(0x00))
 {
 	COMPV_CHECK_EXP_RETURN(!imageIn || !imageOut || !M || !outSize.height || !outSize.width, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_CHECK_EXP_RETURN(M->rows() != 2 || M->cols() != 3, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "M must be (2x3) float or double matrix");
@@ -677,24 +677,24 @@ static COMPV_ERROR_CODE CompVImageWarp(const CompVMatPtr& imageIn, CompVMatPtrPt
 	M0ptr[2] = b1; M1ptr[2] = b2;
 
 	// Perform action
-	COMPV_CHECK_CODE_RETURN(CompVImageWarpInverse<T>(imageIn, imageOut, Minverse, outSize, interpType));
+	COMPV_CHECK_CODE_RETURN(CompVImageWarpInverse<T>(imageIn, imageOut, Minverse, outSize, interpType, defaultPixelValue));
 
 	return COMPV_ERROR_CODE_S_OK;
 }
 
 // dst(x,y) = src*inverse(M)
 // M = (2x3) matrix
-COMPV_ERROR_CODE CompVImage::warp(const CompVMatPtr& imageIn, CompVMatPtrPtr imageOut, const CompVMatPtr& M, const CompVSizeSz& outSize, COMPV_INTERPOLATION_TYPE interpType COMPV_DEFAULT(COMPV_INTERPOLATION_TYPE_BILINEAR))
+COMPV_ERROR_CODE CompVImage::warp(const CompVMatPtr& imageIn, CompVMatPtrPtr imageOut, const CompVMatPtr& M, const CompVSizeSz& outSize, COMPV_INTERPOLATION_TYPE interpType COMPV_DEFAULT(COMPV_INTERPOLATION_TYPE_BILINEAR), const uint8_t defaultPixelValue COMPV_DEFAULT(0x00))
 {
-	CompVGenericFloatInvokeCodeRawType(M->subType(), CompVImageWarp, imageIn, imageOut, M, outSize, interpType);
+	CompVGenericFloatInvokeCodeRawType(M->subType(), CompVImageWarp, imageIn, imageOut, M, outSize, interpType, defaultPixelValue);
 	return COMPV_ERROR_CODE_S_OK;
 }
 
 // dst(x,y) = src*M
 // M = (2x3) matrix
-COMPV_ERROR_CODE CompVImage::warpInverse(const CompVMatPtr& imageIn, CompVMatPtrPtr imageOut, const CompVMatPtr& M, const CompVSizeSz& outSize, COMPV_INTERPOLATION_TYPE interpType COMPV_DEFAULT(COMPV_INTERPOLATION_TYPE_BILINEAR))
+COMPV_ERROR_CODE CompVImage::warpInverse(const CompVMatPtr& imageIn, CompVMatPtrPtr imageOut, const CompVMatPtr& M, const CompVSizeSz& outSize, COMPV_INTERPOLATION_TYPE interpType COMPV_DEFAULT(COMPV_INTERPOLATION_TYPE_BILINEAR), const uint8_t defaultPixelValue COMPV_DEFAULT(0x00))
 {
-	CompVGenericFloatInvokeCodeRawType(M->subType(), CompVImageWarpInverse, imageIn, imageOut, M, outSize, interpType);
+	CompVGenericFloatInvokeCodeRawType(M->subType(), CompVImageWarpInverse, imageIn, imageOut, M, outSize, interpType, defaultPixelValue);
 	return COMPV_ERROR_CODE_S_OK;
 }
 
