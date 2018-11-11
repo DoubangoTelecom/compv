@@ -8,6 +8,7 @@
 #include "compv/base/compv_generic_invoke.h"
 
 #include <float.h> /* DBL_EPSILON */
+#include <cmath> /* std::atan2 */
 
 #define COMPV_THIS_CLASSNAME	"CompVMathMoments"
 

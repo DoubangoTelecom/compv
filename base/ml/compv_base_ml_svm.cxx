@@ -144,7 +144,7 @@ COMPV_ERROR_CODE CompVMachineLearningSVM::train(const CompVMatPtr& trainLabels, 
 	// Set Problem's values
 	funcPtr = [&](const size_t start, const size_t end) -> COMPV_ERROR_CODE {
 		for (size_t l = start; l < end; l++) {
-			COMPV_CHECK_CODE_RETURN(CompVMachineLearningSVM::rawToNodeIndexed(vectors->ptr<const double>(l), vectorLength, &m_vecNodeVectors[l]));
+			COMPV_CHECK_CODE_ASSERT(CompVMachineLearningSVM::rawToNodeIndexed(vectors->ptr<const double>(l), vectorLength, &m_vecNodeVectors[l]));
 			problem.x[l] = m_vecNodeVectors[l]->ptr<svm_node>();
 			problem.y[l] = trainLabelsPtr[l];
 		}
@@ -236,7 +236,7 @@ COMPV_ERROR_CODE CompVMachineLearningSVM::trainEx(const struct svm_problem* prob
 			svm_parameter mt_params = *params;
 			mt_params.C = round.C;
 			mt_params.gamma = round.gamma;
-			COMPV_CHECK_CODE_RETURN(CompVMachineLearningSVM::crossValidation(problem, &mt_params, crossValidation->kfold, round.accuracy));
+			COMPV_CHECK_CODE_ASSERT(CompVMachineLearningSVM::crossValidation(problem, &mt_params, crossValidation->kfold, round.accuracy));
 			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Cross Validation progress: %f%%", compv_atomic_inc(&progress) * progress_scale);
 		}
 		return COMPV_ERROR_CODE_S_OK;

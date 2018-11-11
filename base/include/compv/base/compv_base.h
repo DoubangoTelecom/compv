@@ -11,7 +11,7 @@
 #include "compv/base/compv_common.h"
 
 #include <string>
-#if COMPV_OS_ANDROID
+#if COMPV_OS_ANDROID || defined(__CYGWIN__)
 #include <sstream> /* std::ostringstream */
 #endif
 

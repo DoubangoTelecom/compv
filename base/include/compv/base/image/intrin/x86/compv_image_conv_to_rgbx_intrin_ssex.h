@@ -186,7 +186,7 @@ COMPV_NAMESPACE_BEGIN()
 			); \
 			 \
 			/* Store result */ \
-			nameRgbx##_store_##ssex##(&rgbxPtr[k], vecR, vecG, vecB, vecA, vec0lo, vec1lo); \
+			nameRgbx##_store_##ssex(&rgbxPtr[k], vecR, vecG, vecB, vecA, vec0lo, vec1lo); \
 			 \
 		} /* End_Of for (i = 0; i < width; i += 16) */ \
 		yPtr += stride; \
@@ -264,7 +264,7 @@ COMPV_NAMESPACE_BEGIN()
 			); \
 			 \
 			/* Store result */ \
-			nameRgbx##_store_##ssex##(&rgbxPtr[k], vecR, vecG, vecB, vecA, vec0, vec1); \
+			nameRgbx##_store_##ssex(&rgbxPtr[k], vecR, vecG, vecB, vecA, vec0, vec1); \
 		} \
 		rgbxPtr += strideRGBx; \
 		yuvPtr += stride; \

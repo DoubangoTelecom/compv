@@ -680,6 +680,10 @@ void Solver::Solve(int l, const QMatrix& Q, const double *p_, const schar *y_,
 	{
 		// show progress and do shrinking
 
+		if (!(iter & 32767)) {
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Progress: %d/%d", iter, max_iter);
+		}
+
 		if (--counter == 0)
 		{
 			counter = min(l, 1000);

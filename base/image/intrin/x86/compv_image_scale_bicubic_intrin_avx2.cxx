@@ -100,10 +100,10 @@ void CompVImageScaleBicubicHermite_32f32s_Intrin_AVX2(
 	const compv_float32_t yfract2_ = yfract1_ * yfract1_;
 	const __m128 yfract = _mm_setr_ps((yfract2_ * yfract1_), yfract2_, yfract1_, 1.f);
 
-	const __m128 AA = _mm_i32gather_ps(inPtr, vecIdx0, sizeof(compv_float32_t));
-	const __m128 BB = _mm_i32gather_ps(inPtr, vecIdx1, sizeof(compv_float32_t));
-	const __m128 CC = _mm_i32gather_ps(inPtr, vecIdx2, sizeof(compv_float32_t));
-	const __m128 DD = _mm_i32gather_ps(inPtr, vecIdx3, sizeof(compv_float32_t));
+	const __m128 AA = _mm_i32gather_ps(inPtr, vecIdx0, /*sizeof(compv_float32_t)*/4);
+	const __m128 BB = _mm_i32gather_ps(inPtr, vecIdx1, /*sizeof(compv_float32_t)*/4);
+	const __m128 CC = _mm_i32gather_ps(inPtr, vecIdx2, /*sizeof(compv_float32_t)*/4);
+	const __m128 DD = _mm_i32gather_ps(inPtr, vecIdx3, /*sizeof(compv_float32_t)*/4);
 	__m128 EE;
 	HERMITE4_32F_INTRIN_SSE2(
 		AA, BB, CC, DD,
@@ -160,10 +160,10 @@ void CompVImageScaleBicubicPostProcessRow_32f32s_Intrin_AVX2(
 		}
 		else {
 			const __m128i vecXint4 = _mm_load_si128(reinterpret_cast<const __m128i*>(xint4));
-			AA = _mm_i32gather_ps(p0, vecXint4, sizeof(compv_float32_t));
-			BB = _mm_i32gather_ps(p1, vecXint4, sizeof(compv_float32_t));
-			CC = _mm_i32gather_ps(p2, vecXint4, sizeof(compv_float32_t));
-			DD = _mm_i32gather_ps(p3, vecXint4, sizeof(compv_float32_t));
+			AA = _mm_i32gather_ps(p0, vecXint4, /*sizeof(compv_float32_t)*/4);
+			BB = _mm_i32gather_ps(p1, vecXint4, /*sizeof(compv_float32_t)*/4);
+			CC = _mm_i32gather_ps(p2, vecXint4, /*sizeof(compv_float32_t)*/4);
+			DD = _mm_i32gather_ps(p3, vecXint4, /*sizeof(compv_float32_t)*/4);
 		}
 		_MM_TRANSPOSE4_PS(AA, BB, CC, DD);
 
