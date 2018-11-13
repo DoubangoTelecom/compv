@@ -531,6 +531,7 @@ protected:
 	const QMatrix *Q;
 	const double *QD;
 	double eps;
+	double GMin;
 	double Cp, Cn;
 	double *p;
 	int *active_set;
@@ -629,6 +630,7 @@ void Solver::Solve(int l, const QMatrix& Q, const double *p_, const schar *y_,
 	this->Cp = Cp;
 	this->Cn = Cn;
 	this->eps = eps;
+	this->GMin = DBL_MAX;
 	unshrink = false;
 
 	// initialize alpha_status
@@ -679,10 +681,6 @@ void Solver::Solve(int l, const QMatrix& Q, const double *p_, const schar *y_,
 	while (iter < max_iter)
 	{
 		// show progress and do shrinking
-
-		if (!(iter & 32767)) {
-			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Progress: %d/%d", iter, max_iter);
-		}
 
 		if (--counter == 0)
 		{
@@ -993,8 +991,15 @@ int Solver::select_working_set(int &out_i, int &out_j)
 		}
 	}
 
-	if (Gmax + Gmax2 < eps || Gmin_idx == -1)
+	const double GmaxSum = Gmax + Gmax2;
+	if (GmaxSum < this->GMin) {
+		this->GMin = GmaxSum;
+	}
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "GmaxSum = %lf, GMin = %lf", GmaxSum, this->GMin);
+
+	if (GmaxSum < eps || Gmin_idx == -1) {
 		return 1;
+	}
 
 	out_i = Gmax_idx;
 	out_j = Gmin_idx;
