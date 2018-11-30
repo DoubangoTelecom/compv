@@ -60,6 +60,8 @@ COMPV_ERROR_CODE CompVMachineLearningSVM::predict(const CompVMatPtr& vector, int
 	// Must not lock, function will be called from different threads
 	// For example, when called by ultimateText, the MT-decision is per Char
 
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED_GPU("Should use CompVMachineLearningSVMPredict::process which is GPGPU accelerated");
+
 	COMPV_CHECK_EXP_RETURN(!vector || vector->rows() != 1 ||
 		(vector->subType() != COMPV_SUBTYPE_RAW_FLOAT64 && vector->subType() != COMPV_SUBTYPE_RAW_FLOAT32),
 		COMPV_ERROR_CODE_E_INVALID_PARAMETER);

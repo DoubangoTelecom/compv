@@ -111,6 +111,8 @@ static void CompVMathExpExp_minpack1_64f64f_C(const compv_float64_t* ptrIn, comp
 template<typename T>
 static COMPV_ERROR_CODE CompVMathExpExp(const CompVMatPtr &in, CompVMatPtrPtr out)
 {
+	COMPV_CHECK_EXP_RETURN(!in || !in->isRawTypeMatch<T>(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
 	const size_t rows = in->rows();
 	const size_t cols = in->cols();
 	const size_t stride = in->stride();

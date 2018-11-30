@@ -8,6 +8,7 @@
 #include "compv/gpu/compv_gpu_common.h"
 #include "compv/base/compv_base.h"
 #include "compv/base/compv_fileutils.h"
+#include "compv/base/ml/compv_base_ml_svm_predict.h"
 
 #include "compv/gpu/base/math/compv_gpu_math_convlt.h"
 
@@ -58,6 +59,9 @@ COMPV_ERROR_CODE CompVGpu::init()
 						CompVGpuCornerDeteFAST::s_ptrNewObj = reinterpret_cast<newObjGpuCornerDeteFAST>(s_ptrImpl->sym("clNewObjCornerDeteFAST"));
 
 						/*** CompVBase ***/
+						// SVM Predict
+						CompVMachineLearningSVMPredict::s_ptrNewObjBinaryRBF_GPU = reinterpret_cast<newObjBinaryRBFMachineLearningSVMPredict>(s_ptrImpl->sym("clNewObjSVMPredictBinaryRBF_GPU"));
+						
 						// Convolution
 						CompVGpuMathConvlt::convlt1VtHz_8u8u32f = reinterpret_cast<gpu_convlt1VtHz_8u8u32f>(s_ptrImpl->sym("cl_convlt1VtHz_8u8u32f"));
 

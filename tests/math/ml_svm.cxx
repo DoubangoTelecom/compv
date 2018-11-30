@@ -14,17 +14,52 @@
 #define FILE_NAME_OPENGLBOOK			"opengl_programming_guide_8th_edition_200x258_gray.yuv"
 #define FILE_NAME_GRIOTS				"mandekalou_480x640_gray.yuv"
 
-#define SVM_MODEL_FILE		"C:/Projects/GitHub/ultimateText/sysfont/en.trainingdata.ann"
+#define SVM_MODEL_LIBSVM_FILE		"C:/Projects/GitHub/ultimateText/thog-trainning/en.thog.svm.model"
+#define SVM_MODEL_FLAT_FILE			"C:/Projects/GitHub/ultimateText/thog-trainning/en.thog.svm.flat"
+#define THOG_VECTORS				"C:/Projects/GitHub/data/thog/thog00.vectors" // from "Grillage" - should be #(63 x 408)
+#define THOG_LABELS					"C:/Projects/GitHub/data/thog/thog00.labels"
 
-#define LOOP_COUNT			1
+#define LOOP_COUNT			10
 
 COMPV_ERROR_CODE ml_svm_predict()
 {
-	CompVMachineLearningSVMPtr mlSVM;
+	CompVBufferPtr labels, vectors;
+	COMPV_CHECK_CODE_RETURN(CompVFileUtils::read(THOG_LABELS, &labels));
+	COMPV_CHECK_CODE_RETURN(CompVFileUtils::read(THOG_VECTORS, &vectors));
+	const size_t vec_count = (labels->size() / sizeof(int32_t));
+	const size_t vec_len = (vectors->size() / (vec_count * sizeof(compv_float64_t)));
+	COMPV_ASSERT(!((vec_count * sizeof(compv_float64_t)) == vectors->size()));
 
-	// Load model
-	COMPV_CHECK_CODE_RETURN(CompVMachineLearningSVM::load(SVM_MODEL_FILE, &mlSVM));
+	// Create vectors
+	CompVMatPtr matVectors;
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float64_t>(&matVectors, vec_count, vec_len)); // #468 vectors
+	for (size_t j = 0; j < vec_count; ++j) {
+		COMPV_CHECK_CODE_RETURN(CompVMem::copy(matVectors->ptr<compv_float64_t>(j), &reinterpret_cast<const compv_float64_t*>(vectors->ptr())[j * vec_len], matVectors->rowInBytes()));
+	}
+	// Create expect result
+	CompVMatPtr matxResult;
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<int32_t>(&matxResult, 1, vec_count)); // #468 vectors
+	COMPV_CHECK_CODE_RETURN(CompVMem::copy(matxResult->ptr<int32_t>(), labels->ptr(), matxResult->rowInBytes()));
 
+	CompVMachineLearningSVMPredictPtr mlSVM;
+	COMPV_CHECK_CODE_RETURN(CompVMachineLearningSVMPredict::newObjBinaryRBF(&mlSVM, SVM_MODEL_FLAT_FILE, CompVGpu::isActiveAndEnabled()));
+
+	const uint64_t timeStart = CompVTime::nowMillis();
+	CompVMatPtr matResult;
+	for (size_t i = 0; i < LOOP_COUNT; ++i) {
+		COMPV_CHECK_CODE_RETURN(mlSVM->process(matVectors, &matResult));
+	}
+	const uint64_t timeEnd = CompVTime::nowMillis();
+
+	// Check result
+	COMPV_ASSERT(matResult->rows() == 1 && matResult->cols() == vec_count);
+	for (size_t i = 0; i < matResult->cols(); ++i) {
+		//if (*matResult->ptr<const int32_t>(0, i) != *matxResult->ptr<const int32_t>(0, i)) {
+		//	COMPV_DEBUG_ERROR_EX(TAG_TEST, "Failed at %zu (%d != %d)", i, *matResult->ptr<const int32_t>(0, i), *matxResult->ptr<const int32_t>(0, i));
+		//}
+	}
+
+	COMPV_DEBUG_INFO_EX(TAG_TEST, "ML SVM BINARY RBF Predict (GPU=%s) Elapsed time = [[[ %" PRIu64 " millis ]]]", CompVBase::to_string(mlSVM->isGPUAccelerated()).c_str(), (timeEnd - timeStart));
 
 	return COMPV_ERROR_CODE_S_OK;
 }

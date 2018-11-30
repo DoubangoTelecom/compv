@@ -38,9 +38,10 @@ bail:
 COMPV_ERROR_CODE CompVCLUtils::buildProgram(cl_program program, cl_device_id deviceId)
 {
 	COMPV_CHECK_EXP_RETURN(!program, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	std::string options = ""; // FIXME: set to -Werror
-#if DEBUG || _DEBUG
-	options += std::string(" -g");
+	std::string options = ""; // TODO(dmi): maybe add '-Werror' for both release and debug targets
+#if ((defined(_DEBUG) && _DEBUG != 0) || (defined(DEBUG) && DEBUG != 0))
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Enabling debug options for OpenCL build program");
+	options += std::string(" -g -Werror");
 #endif
 	cl_int status = clBuildProgram(program, 0, NULL, options.c_str(), NULL, NULL);
 	if (status != CL_SUCCESS) {

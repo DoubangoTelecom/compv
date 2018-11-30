@@ -135,7 +135,7 @@ struct svm_model *svm_train(const struct svm_problem *prob, const struct svm_par
 void svm_cross_validation(const struct svm_problem *prob, const struct svm_parameter *param, int nr_fold, double *target);
 
 int svm_save_model(const char *model_file_name, const struct svm_model *model);
-struct svm_model *svm_load_model(const char *model_file_name);
+COMPV_BASE_API struct svm_model *svm_load_model(const char *model_file_name);
 
 int svm_get_svm_type(const struct svm_model *model);
 int svm_get_nr_class(const struct svm_model *model);
@@ -150,7 +150,7 @@ double svm_predict_distance(const struct svm_model *model, const struct svm_node
 double svm_predict_probability(const struct svm_model *model, const struct svm_node_base *x, double* prob_estimates);
 
 void svm_free_model_content(struct svm_model *model_ptr);
-void svm_free_and_destroy_model(struct svm_model **model_ptr_ptr);
+COMPV_BASE_API void svm_free_and_destroy_model(struct svm_model **model_ptr_ptr);
 void svm_destroy_param(struct svm_parameter *param);
 
 const char *svm_check_parameter(const struct svm_problem *prob, const struct svm_parameter *param);
@@ -161,7 +161,7 @@ void svm_set_print_string_function(void (*print_func)(const char *));
 
 size_t svm_count(const struct svm_node *x);
 COMPV_ERROR_CODE svm_copy(const struct svm_node *x, CompVMatPtrPtr xMat, size_t count = 0);
-COMPV_ERROR_CODE svm_makeSVs_SIMD_frienly(struct svm_model *model, const size_t expectedSVsize, const bool freeSV = true);
+COMPV_BASE_API COMPV_ERROR_CODE svm_makeSVs_SIMD_frienly(struct svm_model *model, const size_t expectedSVsize, const bool freeSV = true);
 COMPV_ERROR_CODE svm_k_function_rbf(const CompVMatPtr& x, const CompVMatPtr& yy, const size_t count, const double& gamma, CompVMatPtr& kvalues, const struct svm_simd_func_ptrs *simd_func_ptrs);
 
 #ifdef __cplusplus

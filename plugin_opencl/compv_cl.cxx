@@ -14,6 +14,7 @@
 COMPV_NAMESPACE_BEGIN()
 
 bool CompVCL::s_bInitialized = false;
+bool CompVCL::s_cl_khr_fp64_supported = false;
 cl_platform_id CompVCL::s_clPlatformId = NULL;
 cl_device_id CompVCL::s_clDeviceId = NULL;
 cl_context CompVCL::s_clContext = NULL;
@@ -30,11 +31,40 @@ COMPV_ERROR_CODE CompVCL::init()
 
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Initializing [opencl] module (v %s)...", COMPV_VERSION_STRING);
 
+	// Init CompVbase if not already done
 	COMPV_CHECK_CODE_BAIL(err = CompVBase::init());
 
+	// Get a platform
 	COMPV_CHECK_CL_CODE_BAIL(clerr = clGetPlatformIDs(1, &s_clPlatformId, NULL), "clGetPlatformIDs failed");
+	
+	// Display devices and choose GPU one
 	COMPV_CHECK_CODE_NOP(CompVCLUtils::displayDevices(s_clPlatformId, CL_DEVICE_TYPE_GPU));
-	COMPV_CHECK_CL_CODE_BAIL(clerr = clGetDeviceIDs(s_clPlatformId, CL_DEVICE_TYPE_GPU, 1, &s_clDeviceId, NULL), "clGetDeviceIDs(CL_DEVICE_TYPE_GPU) failed");	
+	COMPV_CHECK_CL_CODE_BAIL(clerr = clGetDeviceIDs(s_clPlatformId, CL_DEVICE_TYPE_GPU, 1, &s_clDeviceId, NULL), "clGetDeviceIDs(CL_DEVICE_TYPE_GPU) failed");
+
+	// Print some useful info
+	{
+		cl_uint preferred_vector_width_float;
+		cl_uint preferred_vector_width_double;
+		char buffer[1024];
+		COMPV_CHECK_CL_CODE_BAIL(clerr = clGetDeviceInfo(s_clDeviceId, CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT, sizeof(cl_uint), &preferred_vector_width_float, nullptr));
+		COMPV_CHECK_CL_CODE_BAIL(clerr = clGetDeviceInfo(s_clDeviceId, CL_DEVICE_PREFERRED_VECTOR_WIDTH_DOUBLE, sizeof(cl_uint), &preferred_vector_width_double, nullptr));
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT=%u, CL_DEVICE_PREFERRED_VECTOR_WIDTH_DOUBLE=%u", 
+			preferred_vector_width_float, 
+			preferred_vector_width_double);
+		COMPV_CHECK_CL_CODE_BAIL(clerr = clGetPlatformInfo(s_clPlatformId, CL_PLATFORM_VERSION, sizeof(buffer), buffer, NULL));
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "CL_PLATFORM_VERSION=%s", buffer);
+		COMPV_CHECK_CL_CODE_BAIL(clerr = clGetDeviceInfo(s_clDeviceId, CL_DEVICE_VERSION, sizeof(buffer), buffer, NULL));
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "CL_DEVICE_VERSION=%s", buffer);
+		COMPV_CHECK_CL_CODE_BAIL(clerr = clGetDeviceInfo(s_clDeviceId, CL_DRIVER_VERSION, sizeof(buffer), buffer, NULL));
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "CL_DRIVER_VERSION=%s", buffer);
+		COMPV_CHECK_CL_CODE_BAIL(clerr = clGetDeviceInfo(s_clDeviceId, CL_DEVICE_OPENCL_C_VERSION, sizeof(buffer), buffer, NULL));
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "CL_DEVICE_OPENCL_C_VERSION=%s", buffer);
+		COMPV_CHECK_CL_CODE_BAIL(clerr = clGetDeviceInfo(s_clDeviceId, CL_DEVICE_EXTENSIONS, sizeof(buffer), buffer, NULL));
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "CL_DEVICE_EXTENSIONS=%s", buffer);
+		s_cl_khr_fp64_supported = (strstr(buffer, "cl_khr_fp64") != nullptr);
+	}
+
+	// Create global context and command queue
 	s_clContext = clCreateContext(0, 1, &s_clDeviceId, NULL, NULL, &clerr);
 	COMPV_CHECK_CL_CODE_BAIL(clerr, "clCreateContext failed");	
 	s_clQueue = clCreateCommandQueue(s_clContext, s_clDeviceId, 0, &clerr);

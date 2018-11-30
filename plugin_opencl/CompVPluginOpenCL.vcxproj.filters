@@ -43,6 +43,12 @@
     <Filter Include="Header Files\base\math">
       <UniqueIdentifier>{a82faf85-2347-48b3-9c73-be3bfc8f68a2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\base\ml">
+      <UniqueIdentifier>{09969cac-3770-4248-8682-5440272533c3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\base\ml">
+      <UniqueIdentifier>{600e767b-4cb4-4a5d-a72b-6294cec548a8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_cl.cxx">
@@ -59,6 +65,9 @@
     </ClCompile>
     <ClCompile Include="base\math\compv_cl_math_convlt.cxx">
       <Filter>Source Files\base\math</Filter>
+    </ClCompile>
+    <ClCompile Include="base\ml\compv_cl_ml_svm_predict.cxx">
+      <Filter>Source Files\base\ml</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -79,6 +88,9 @@
     </ClInclude>
     <ClInclude Include="include\compv\cl\base\math\compv_cl_math_convlt.h">
       <Filter>Header Files\base\math</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\cl\base\ml\compv_cl_ml_svm_predict.h">
+      <Filter>Header Files\base\ml</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -26,6 +26,9 @@ public:
 	static COMPV_INLINE bool isInitialized() {
 		return s_bInitialized;
 	}
+	static COMPV_INLINE bool isFloat64Supported() {
+		return s_cl_khr_fp64_supported;
+	}
 	static COMPV_INLINE cl_platform_id clPlatformId() {
 		return s_clPlatformId;
 	}
@@ -44,6 +47,7 @@ private:
 
 private:
 	static bool s_bInitialized;
+	static bool s_cl_khr_fp64_supported;
 	static cl_platform_id s_clPlatformId;
 	static cl_device_id s_clDeviceId;
 	static cl_context s_clContext;

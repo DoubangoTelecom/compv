@@ -207,8 +207,18 @@ public:
 		CompVMatPtr clone_ = (*clone && **clone == this) ? nullptr : *clone;
 		const CompVMatPtr& model = const_cast<CompVMat*>(this);
 		COMPV_CHECK_CODE_RETURN(CompVMat::newObj(&clone_, model));
-		COMPV_CHECK_EXP_RETURN(this->dataSizeInBytes() != clone_->dataSizeInBytes(), COMPV_ERROR_CODE_E_INVALID_CALL);
-		COMPV_CHECK_CODE_RETURN(CompVMem::copy(clone_->ptr<void>(), this->ptr<const void>(), this->dataSizeInBytes()));
+		if (this->dataSizeInBytes() == clone_->dataSizeInBytes()) {
+			COMPV_CHECK_CODE_RETURN(CompVMem::copy(clone_->ptr<void>(), this->ptr<const void>(), this->dataSizeInBytes()));
+		}
+		else {
+			const size_t rows_ = rows();
+			const int planeCount_ = static_cast<int>(planeCount());
+			for (size_t j = 0; j < rows_; ++j) {
+				for (int p = 0; p < planeCount_; ++p) {
+					COMPV_CHECK_CODE_RETURN(CompVMem::copy(clone_->ptr<void>(j, 0, p), this->ptr<const void>(j, 0, p), clone_->rowInBytes(p)));
+				}
+			}
+		}
 		*clone = clone_;
 		return COMPV_ERROR_CODE_S_OK;
 	}

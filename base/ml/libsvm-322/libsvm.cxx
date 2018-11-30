@@ -3506,23 +3506,19 @@ COMPV_ERROR_CODE svm_k_function_rbf(const CompVMatPtr& x, const CompVMatPtr& yy,
 		&& kvalues->subType() == COMPV_SUBTYPE_RAW_FLOAT64 && x->subType() == COMPV_SUBTYPE_RAW_FLOAT64 && yy->subType() == COMPV_SUBTYPE_RAW_FLOAT64
 	);
 
-	CompVMatPtr sumMat;
-	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<double>(&sumMat, 1, count));
-	double* sumMatPtr = sumMat->ptr<double>();
-
 	const compv_uscalar_t xsize = static_cast<compv_uscalar_t>(x->cols());
 	const double* xPtr = x->data<const double>(); // always SIMD-aligned and strided
 	double* kvaluesPtr = kvalues->data<double>(); // always SIMD-aligned and strided
-	const double& gamma_minus = -gamma;
+	const double gamma_minus = -gamma;
 	const size_t ystride = yy->stride();
 	// MT model: https://www.csie.ntu.edu.tw/~cjlin/libsvm/faq.html#f432
 	auto funcPtr = [&](const size_t start, const size_t end) -> COMPV_ERROR_CODE {
 		const double* yPtr = yy->ptr<const double>(start); // always SIMD-aligned and strided
 		for (size_t j = start; j < end; ++j) {
-			simd_func_ptrs->dotSub_64f64f(xPtr, yPtr, xsize, 1, 0, 0, &sumMatPtr[j]);
+			simd_func_ptrs->dotSub_64f64f(xPtr, yPtr, xsize, 1, 0, 0, &kvaluesPtr[j]);
 			yPtr += ystride;
 		}
-		simd_func_ptrs->scale_64f64f(&sumMatPtr[start], &kvaluesPtr[start], (end - start), 1, 0, &gamma_minus); // not aligned-copy (decause of start-indexing)
+		simd_func_ptrs->scale_64f64f(&kvaluesPtr[start], &kvaluesPtr[start], (end - start), 1, 0, &gamma_minus); // not aligned-copy (decause of start-indexing)
 		simd_func_ptrs->expo(&kvaluesPtr[start], &kvaluesPtr[start], (end - start)); // not aligned-copy (decause of start-indexing)
 		
 		return COMPV_ERROR_CODE_S_OK;

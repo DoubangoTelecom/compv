@@ -1029,6 +1029,9 @@
     <ClInclude Include="include\compv\base\ml\libsvm-322\intrin\x86\compv_ml_libsvm-322_intrin_avx.h">
       <Filter>include\ml\libsvm-322\intrin\x86</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\ml\compv_base_ml_svm_predict.h">
+      <Filter>include\ml</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx">
@@ -1660,6 +1663,9 @@
     </ClCompile>
     <ClCompile Include="ml\libsvm-322\intrin\x86\compv_ml_libsvm-322_intrin_avx.cxx">
       <Filter>source\ml\libsvm-322\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="ml\compv_base_ml_svm_predict.cxx">
+      <Filter>source\ml</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

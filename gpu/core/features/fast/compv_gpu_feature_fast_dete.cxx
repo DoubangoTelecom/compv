@@ -9,7 +9,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-newObjGpuCornerDeteFAST CompVGpuCornerDeteFAST::s_ptrNewObj = NULL;
+newObjGpuCornerDeteFAST CompVGpuCornerDeteFAST::s_ptrNewObj = nullptr;
 
 CompVGpuCornerDeteFAST::CompVGpuCornerDeteFAST()
 {

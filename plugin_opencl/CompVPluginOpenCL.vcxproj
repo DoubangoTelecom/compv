@@ -312,6 +312,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="base\math\compv_cl_math_convlt.cxx" />
+    <ClCompile Include="base\ml\compv_cl_ml_svm_predict.cxx" />
     <ClCompile Include="compv_cl.cxx" />
     <ClCompile Include="compv_cl_dllmain.cxx" />
     <ClCompile Include="compv_cl_utils.cxx" />
@@ -319,6 +320,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\cl\base\math\compv_cl_math_convlt.h" />
+    <ClInclude Include="include\compv\cl\base\ml\compv_cl_ml_svm_predict.h" />
     <ClInclude Include="include\compv\cl\compv_cl.h" />
     <ClInclude Include="include\compv\cl\compv_cl_common.h" />
     <ClInclude Include="include\compv\cl\compv_cl_config.h" />

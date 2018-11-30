@@ -15,7 +15,7 @@
 #include "compv/base/compv_base.h"
 #include "compv/base/compv_debug.h"
 
-#define COMPV_THIS_CLASSNAME	"CompVThreadDispatcher"
+#define THIS_CLASSNAME	"CompVThreadDispatcher"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -128,13 +128,20 @@ COMPV_ERROR_CODE CompVThreadDispatcher::dispatchDividingAcrossY(CompVThreadDispa
 	if (threadsCount > 1) {
 		CompVAsyncTaskIds taskIds;
 		taskIds.reserve(threadsCount);
-		const size_t heights = (ycount / threadsCount);
+		// ## "Equal divide and drop" not optimal ##
+		// For example, when ycount = 13 and threadsCount = 8 then:
+		// "equal divide and drop" -> "1, 1, 1, 1, 1, 1, 1, 6" -> not optimal distribution
+		// "buckets" -> "2, 2, 2, 2, 2, 1, 1, 1" -> optimal distribution
+		const size_t heights = ycount / threadsCount;
+		std::vector<size_t> buckets(threadsCount, heights);
+		std::fill(buckets.begin(), buckets.begin() + (ycount % threadsCount), heights + 1);
 		size_t YStart = 0, YEnd;
 		for (size_t threadIdx = 0; threadIdx < threadsCount; ++threadIdx) {
-			YEnd = (threadIdx == (threadsCount - 1)) ? ycount : (YStart + heights);
+			YEnd = (YStart + buckets[threadIdx]);
 			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, YStart, YEnd, threadIdx), taskIds), "Dispatching task failed");
-			YStart += heights;
+			YStart += buckets[threadIdx];
 		}
+		COMPV_ASSERT(YStart == ycount);
 		COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds), "Failed to wait for tasks execution");
 	}
 	else {
@@ -170,17 +177,17 @@ COMPV_ERROR_CODE CompVThreadDispatcher::newObj(CompVThreadDispatcherPtrPtr disp,
 
 	// Check if we're using all available cores
 	if (numThreads < numCores) {
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Not optimized -> Your system have #%d cores but you're only using #%d. Sad!!", maxCores, numThreads);
+		COMPV_DEBUG_INFO_EX(THIS_CLASSNAME, "Not optimized -> Your system have #%d cores but you're only using #%d. Sad!!", maxCores, numThreads);
 	}
 	
 	if (numThreads < 2) {
-		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Multi-threading requires at least #2 threads but you're requesting #%d", numThreads);
+		COMPV_DEBUG_ERROR_EX(THIS_CLASSNAME, "Multi-threading requires at least #2 threads but you're requesting #%d", numThreads);
 #if COMPV_PARALLEL_THREAD_SET_AFFINITY
 		return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
 #endif /* COMPV_PARALLEL_THREAD_SET_AFFINITY */
 	}
 	if (numThreads > numThreadsBest) {
-		COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASSNAME, "You're requesting to use #%d threads but you only have #%d CPU cores, we recommend using %d instead", numThreads, numCores, numThreadsBest);
+		COMPV_DEBUG_WARN_EX(THIS_CLASSNAME, "You're requesting to use #%d threads but you only have #%d CPU cores, we recommend using %d instead", numThreads, numCores, numThreadsBest);
 	}
 
 	CompVThreadDispatcherPtr _disp;
@@ -209,7 +216,7 @@ COMPV_ERROR_CODE CompVThreadDispatcher::newObj(CompVThreadDispatcherPtrPtr disp,
 
 	COMPV_CHECK_EXP_RETURN(!_disp, COMPV_ERROR_CODE_E_NOT_IMPLEMENTED,  "No thread dispatcher implementation found");
 
-	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Thread dispatcher created with #%d threads/#%d cores", numThreads, numCores);
+	COMPV_DEBUG_INFO_EX(THIS_CLASSNAME, "Thread dispatcher created with #%d threads/#%d cores", numThreads, numCores);
 
 	*disp = _disp;
 	return COMPV_ERROR_CODE_S_OK;
