@@ -43,23 +43,50 @@ COMPV_ERROR_CODE CompVCL::init()
 
 	// Print some useful info
 	{
-		cl_uint preferred_vector_width_float;
-		cl_uint preferred_vector_width_double;
+		cl_uint uint_val;
+		cl_ulong ulong_val;
+		size_t size_val;
 		char buffer[1024];
-		COMPV_CHECK_CL_CODE_BAIL(clerr = clGetDeviceInfo(s_clDeviceId, CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT, sizeof(cl_uint), &preferred_vector_width_float, nullptr));
-		COMPV_CHECK_CL_CODE_BAIL(clerr = clGetDeviceInfo(s_clDeviceId, CL_DEVICE_PREFERRED_VECTOR_WIDTH_DOUBLE, sizeof(cl_uint), &preferred_vector_width_double, nullptr));
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT=%u, CL_DEVICE_PREFERRED_VECTOR_WIDTH_DOUBLE=%u", 
-			preferred_vector_width_float, 
-			preferred_vector_width_double);
-		COMPV_CHECK_CL_CODE_BAIL(clerr = clGetPlatformInfo(s_clPlatformId, CL_PLATFORM_VERSION, sizeof(buffer), buffer, NULL));
+		std::vector<size_t> vecMaXWorkItemDimensions;
+		 
+		COMPV_CHECK_CL_CODE_BAIL(clerr = clGetDeviceInfo(s_clDeviceId, CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT, sizeof(uint_val), &uint_val, nullptr));
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT=%u", uint_val);
+		COMPV_CHECK_CL_CODE_BAIL(clerr = clGetDeviceInfo(s_clDeviceId, CL_DEVICE_PREFERRED_VECTOR_WIDTH_DOUBLE, sizeof(uint_val), &uint_val, nullptr));
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "CL_DEVICE_PREFERRED_VECTOR_WIDTH_DOUBLE=%u", uint_val);
+		COMPV_CHECK_CL_CODE_BAIL(clerr = clGetDeviceInfo(s_clDeviceId, CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(uint_val), &uint_val, nullptr));
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "CL_DEVICE_MAX_COMPUTE_UNITS=%u", uint_val);
+		COMPV_CHECK_CL_CODE_BAIL(clerr = clGetDeviceInfo(s_clDeviceId, CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS, sizeof(uint_val), &uint_val, nullptr));
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS=%u", uint_val);
+		vecMaXWorkItemDimensions.resize(uint_val);
+		COMPV_CHECK_CL_CODE_BAIL(clerr = clGetDeviceInfo(s_clDeviceId, CL_DEVICE_MAX_WORK_ITEM_SIZES, sizeof(size_t) * vecMaXWorkItemDimensions.size(), vecMaXWorkItemDimensions.data(), nullptr));
+		{
+			std::string sizes;
+			for (std::vector<size_t>::const_iterator i = vecMaXWorkItemDimensions.begin(); i != vecMaXWorkItemDimensions.end(); ++i) {
+				sizes += CompVBase::to_string(*i) + std::string(", ");
+			}
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "CL_DEVICE_MAX_WORK_ITEM_SIZES=%s", sizes.c_str());
+		}
+		COMPV_CHECK_CL_CODE_BAIL(clerr = clGetDeviceInfo(s_clDeviceId, CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(size_val), &size_val, nullptr));
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "CL_DEVICE_MAX_WORK_GROUP_SIZE=%zu", size_val);
+		COMPV_CHECK_CL_CODE_BAIL(clerr = clGetDeviceInfo(s_clDeviceId, CL_DEVICE_MAX_CLOCK_FREQUENCY, sizeof(uint_val), &uint_val, nullptr));
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "CL_DEVICE_MAX_CLOCK_FREQUENCY=%u MHz", uint_val);
+		COMPV_CHECK_CL_CODE_BAIL(clerr = clGetDeviceInfo(s_clDeviceId, CL_DEVICE_GLOBAL_MEM_CACHELINE_SIZE, sizeof(uint_val), &uint_val, nullptr));
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "CL_DEVICE_GLOBAL_MEM_CACHELINE_SIZE=%u B", uint_val);		
+		COMPV_CHECK_CL_CODE_BAIL(clerr = clGetDeviceInfo(s_clDeviceId, CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(ulong_val), &ulong_val, nullptr));
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "CL_DEVICE_GLOBAL_MEM_SIZE=%llu B (%llu MB)", ulong_val, ulong_val >> 20);
+		COMPV_CHECK_CL_CODE_BAIL(clerr = clGetDeviceInfo(s_clDeviceId, CL_DEVICE_LOCAL_MEM_SIZE, sizeof(ulong_val), &ulong_val, nullptr));
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "CL_DEVICE_LOCAL_MEM_SIZE=%llu B (%llu KB)", ulong_val, ulong_val >> 10);
+		COMPV_CHECK_CL_CODE_BAIL(clerr = clGetDeviceInfo(s_clDeviceId, CL_DEVICE_MAX_MEM_ALLOC_SIZE, sizeof(ulong_val), &ulong_val, nullptr));
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "CL_DEVICE_MAX_MEM_ALLOC_SIZE=%llu MB", ulong_val >> 20);
+		COMPV_CHECK_CL_CODE_BAIL(clerr = clGetPlatformInfo(s_clPlatformId, CL_PLATFORM_VERSION, sizeof(buffer), buffer, nullptr));
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "CL_PLATFORM_VERSION=%s", buffer);
-		COMPV_CHECK_CL_CODE_BAIL(clerr = clGetDeviceInfo(s_clDeviceId, CL_DEVICE_VERSION, sizeof(buffer), buffer, NULL));
+		COMPV_CHECK_CL_CODE_BAIL(clerr = clGetDeviceInfo(s_clDeviceId, CL_DEVICE_VERSION, sizeof(buffer), buffer, nullptr));
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "CL_DEVICE_VERSION=%s", buffer);
-		COMPV_CHECK_CL_CODE_BAIL(clerr = clGetDeviceInfo(s_clDeviceId, CL_DRIVER_VERSION, sizeof(buffer), buffer, NULL));
+		COMPV_CHECK_CL_CODE_BAIL(clerr = clGetDeviceInfo(s_clDeviceId, CL_DRIVER_VERSION, sizeof(buffer), buffer, nullptr));
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "CL_DRIVER_VERSION=%s", buffer);
-		COMPV_CHECK_CL_CODE_BAIL(clerr = clGetDeviceInfo(s_clDeviceId, CL_DEVICE_OPENCL_C_VERSION, sizeof(buffer), buffer, NULL));
+		COMPV_CHECK_CL_CODE_BAIL(clerr = clGetDeviceInfo(s_clDeviceId, CL_DEVICE_OPENCL_C_VERSION, sizeof(buffer), buffer, nullptr));
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "CL_DEVICE_OPENCL_C_VERSION=%s", buffer);
-		COMPV_CHECK_CL_CODE_BAIL(clerr = clGetDeviceInfo(s_clDeviceId, CL_DEVICE_EXTENSIONS, sizeof(buffer), buffer, NULL));
+		COMPV_CHECK_CL_CODE_BAIL(clerr = clGetDeviceInfo(s_clDeviceId, CL_DEVICE_EXTENSIONS, sizeof(buffer), buffer, nullptr));
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "CL_DEVICE_EXTENSIONS=%s", buffer);
 		s_cl_khr_fp64_supported = (strstr(buffer, "cl_khr_fp64") != nullptr);
 	}
@@ -82,7 +109,9 @@ bail:
 
 COMPV_ERROR_CODE CompVCL::deInit()
 {
+#if 0 // MUST not deInit() CompVBase, OpenCL can safely fail loading or initializing
 	COMPV_CHECK_CODE_ASSERT(CompVBase::deInit());
+#endif
 
 	if (s_clQueue) {
 		clReleaseCommandQueue(s_clQueue);

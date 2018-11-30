@@ -54,9 +54,9 @@ COMPV_ERROR_CODE ml_svm_predict()
 	// Check result
 	COMPV_ASSERT(matResult->rows() == 1 && matResult->cols() == vec_count);
 	for (size_t i = 0; i < matResult->cols(); ++i) {
-		//if (*matResult->ptr<const int32_t>(0, i) != *matxResult->ptr<const int32_t>(0, i)) {
-		//	COMPV_DEBUG_ERROR_EX(TAG_TEST, "Failed at %zu (%d != %d)", i, *matResult->ptr<const int32_t>(0, i), *matxResult->ptr<const int32_t>(0, i));
-		//}
+		if (*matResult->ptr<const int32_t>(0, i) != *matxResult->ptr<const int32_t>(0, i)) {
+			COMPV_DEBUG_ERROR_EX(TAG_TEST, "Failed at %zu (%d != %d)", i, *matResult->ptr<const int32_t>(0, i), *matxResult->ptr<const int32_t>(0, i));
+		}
 	}
 
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "ML SVM BINARY RBF Predict (GPU=%s) Elapsed time = [[[ %" PRIu64 " millis ]]]", CompVBase::to_string(mlSVM->isGPUAccelerated()).c_str(), (timeEnd - timeStart));

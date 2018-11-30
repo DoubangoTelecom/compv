@@ -74,27 +74,22 @@ public:
 		// Create result (labels)
 		CompVMatPtr matResult_ = *matResult;
 		COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int32_t>(&matResult_, 1, numvectors));
+		int32_t* matResultPtr = matResult_->ptr<int32_t>();
 
 		const size_t total_sv = m_ptrMatSV->rows();
 		const size_t si = 0;
 		const size_t sj = static_cast<size_t>(m_nrSV[0]);
-		const compv_uscalar_t ci = static_cast<compv_uscalar_t>(m_nrSV[0]);
-		const compv_uscalar_t cj = static_cast<compv_uscalar_t>(m_nrSV[1]);
-		const compv_float64_t *coef1 = m_ptrMatCoeff->ptr<const compv_float64_t>(0, si);
-		const compv_float64_t *coef2 = m_ptrMatCoeff->ptr<const compv_float64_t>(0, sj);
-
+		const compv_float64_t *coefs = m_ptrMatCoeff->ptr<const compv_float64_t>();
+		
 		auto funcPtr = [&](const size_t start, const size_t end) -> COMPV_ERROR_CODE {
 			CompVMatPtr kvalueMat;
 			COMPV_CHECK_CODE_ASSERT(CompVMat::newObjAligned<compv_float64_t>(&kvalueMat, 1, total_sv));
 			compv_float64_t* kvalueMatPtr = kvalueMat->ptr<compv_float64_t>();
-			int32_t* matResultPtr = matResult_->ptr<int32_t>();
+			compv_float64_t sum;
 			for (size_t i = start; i < end; ++i) {
 				COMPV_CHECK_CODE_ASSERT(rbf(matVectorsFloat64->ptr<const compv_float64_t>(i), kvalueMatPtr)); // multithreaded
-				compv_float64_t sumi, sumj;
-				m_func_ptr.dot_64f64f(coef1, &kvalueMatPtr[si], ci, 1, 0, 0, &sumi); // multithreaded
-				m_func_ptr.dot_64f64f(coef2, &kvalueMatPtr[sj], cj, 1, 0, 0, &sumj); // multithreaded
-				const compv_float64_t dec_value = ((sumi + sumj) - m_f64Rho);
-				matResultPtr[i] = m_Labels[(dec_value < 0)];
+				m_func_ptr.dot_64f64f(m_ptrMatCoeff->ptr<const compv_float64_t>(), kvalueMatPtr, total_sv, 1, 0, 0, &sum); // multithreaded
+				matResultPtr[i] = m_Labels[(((sum - m_f64Rho)) < 0)];
 			}
 			return COMPV_ERROR_CODE_S_OK;
 		};
