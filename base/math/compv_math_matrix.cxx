@@ -615,6 +615,9 @@ class CompVMatrixGeneric
 		if (!(*R) || (*R)->rows() != A->cols() || (*R)->cols() != A->rows() || (*R)->subType() != A->subType()) {
 			COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<T>(R, A->cols(), A->rows()));
 		}
+
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation could be found");
+
 		const T* a0_ = A->ptr<const T>();
 		size_t rows_ = A->rows();
 		signed cols_ = static_cast<signed>(A->cols());

@@ -51,13 +51,13 @@ COMPV_ERROR_CODE CompVMathOpMul::mulABt(const CompVMatPtr &A, const CompVMatPtr 
 		const CompVRectFloat32 Aroi = {
 			0.f, // left
 			static_cast<compv_float32_t>(ystart), // top
-			static_cast<compv_float32_t>(A->cols()), // right
+			static_cast<compv_float32_t>(A->cols()), // right (should be "cols-1", but bind will clip the value)
 			static_cast<compv_float32_t>(yend - 1) // bottom
 		};
 		const CompVRectFloat32 Rroi = {
 			0.f, // left
 			static_cast<compv_float32_t>(ystart), // top
-			static_cast<compv_float32_t>(R_->cols()), // right
+			static_cast<compv_float32_t>(R_->cols()), // right (should be "cols-1", but bind will clip the value)
 			static_cast<compv_float32_t>(yend - 1) // bottom
 		};
 		CompVMatPtr Abind, Rbind;

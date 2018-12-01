@@ -21,7 +21,7 @@ enum CompVMachineLearningSVMPredictType {
 
 COMPV_OBJECT_DECLARE_PTRS(MachineLearningSVMPredict)
 
-typedef COMPV_ERROR_CODE(*newObjBinaryRBFMachineLearningSVMPredict)(CompVMachineLearningSVMPredictPtrPtr mlSVM, const compv_float64_t& gamma, const compv_float64_t& rho, const int32_t(&labels)[2], const int32_t(&nr_sv)[2], CompVMatPtr& matSV, CompVMatPtr& matCoeff);
+typedef COMPV_ERROR_CODE(*newObjBinaryRBFMachineLearningSVMPredict)(CompVMachineLearningSVMPredictPtrPtr mlSVM, const compv_float64_t& gamma, const compv_float64_t& rho, const int32_t(&labels)[2], const int32_t(&nr_sv)[2], const CompVMatPtr& matSV, const CompVMatPtr& matCoeff);
 
 //
 //	CompVMachineLearningSVMPredict

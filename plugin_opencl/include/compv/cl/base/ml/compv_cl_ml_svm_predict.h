@@ -23,7 +23,7 @@ COMPV_OBJECT_DECLARE_PTRS(MachineLearningSVMPredictBinaryRBF_GPU);
 class CompVMachineLearningSVMPredictBinaryRBF_GPU : public CompVMachineLearningSVMPredict
 {
 protected:
-	CompVMachineLearningSVMPredictBinaryRBF_GPU(const compv_float64_t& gamma, const compv_float64_t& rho, const int32_t(&labels)[2], const int32_t(&nr_sv)[2], CompVMatPtr& matSV, CompVMatPtr& matCoeff);
+	CompVMachineLearningSVMPredictBinaryRBF_GPU(const compv_float64_t& gamma, const compv_float64_t& rho, const int32_t(&labels)[2], const int32_t(&nr_sv)[2], const CompVMatPtr& matSV, const CompVMatPtr& matCoeff);
 public:
 	virtual ~CompVMachineLearningSVMPredictBinaryRBF_GPU();
 	COMPV_OBJECT_GET_ID(CompVMachineLearningSVMPredictBinaryRBF_GPU);
@@ -32,7 +32,7 @@ public:
 
 	virtual COMPV_ERROR_CODE process(const CompVMatPtr& matVectors, CompVMatPtrPtr matResult) override;
 
-	static COMPV_ERROR_CODE newObj(CompVMachineLearningSVMPredictPtrPtr mlSVM, const compv_float64_t& gamma, const compv_float64_t& rho, const int32_t(&labels)[2], const int32_t(&nr_sv)[2], CompVMatPtr& matSV, CompVMatPtr& matCoeff);
+	static COMPV_ERROR_CODE newObj(CompVMachineLearningSVMPredictPtrPtr mlSVM, const compv_float64_t& gamma, const compv_float64_t& rho, const int32_t(&labels)[2], const int32_t(&nr_sv)[2], const CompVMatPtr& matSV, const CompVMatPtr& matCoeff);
 
 private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)

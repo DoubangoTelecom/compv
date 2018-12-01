@@ -16,7 +16,7 @@ COMPV_NAMESPACE_BEGIN()
 
 class COMPV_BASE_API CompVMathCast
 {
-	static const size_t COMPV_MATH_CAST_PROCESS_STATIC_SAMPLES_PER_THREAD = (50 * 50); // CPU-unfriendly
+	static const size_t COMPV_MATH_CAST_PROCESS_STATIC_SAMPLES_PER_THREAD = (30 * 30); // CPU-unfriendly
 public:
 	template<typename srcType, typename dstType>
 	static COMPV_ERROR_CODE process_static(const CompVMatPtr& src, CompVMatPtrPtr dst)

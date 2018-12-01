@@ -35,7 +35,7 @@ COMPV_EXTERNC COMPV_CL_API COMPV_ERROR_CODE clInit()
 	return CompVCL::init();
 }
 
-COMPV_EXTERNC COMPV_CL_API COMPV_ERROR_CODE clNewObjSVMPredictBinaryRBF_GPU(CompVMachineLearningSVMPredictPtrPtr mlSVM, const compv_float64_t& gamma, const compv_float64_t& rho, const int32_t(&labels)[2], const int32_t(&nr_sv)[2], CompVMatPtr& matSV, CompVMatPtr& matCoeff)
+COMPV_EXTERNC COMPV_CL_API COMPV_ERROR_CODE clNewObjSVMPredictBinaryRBF_GPU(CompVMachineLearningSVMPredictPtrPtr mlSVM, const compv_float64_t& gamma, const compv_float64_t& rho, const int32_t(&labels)[2], const int32_t(&nr_sv)[2], const CompVMatPtr& matSV, const CompVMatPtr& matCoeff)
 {
 	COMPV_CHECK_CODE_RETURN(clInit());
 	COMPV_CHECK_EXP_RETURN(!mlSVM, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
