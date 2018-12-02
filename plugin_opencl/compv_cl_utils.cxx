@@ -80,6 +80,50 @@ bail:
 	return COMPV_ERROR_CODE_S_OK;
 }
 
+COMPV_ERROR_CODE CompVCLUtils::createDataStrideless(const CompVMatPtr& hostdata, cl_mem* devdata, const cl_mem_flags& devdataFlags, cl_context clContext, cl_command_queue clCommand)
+{
+	COMPV_CHECK_EXP_RETURN(!hostdata || hostdata->planeCount() != 1 || !devdata || !clContext || !clCommand, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+	// Release previous
+	if (*devdata) {
+		clReleaseMemObject(*devdata), *devdata = nullptr;
+	}
+
+	cl_int clerr;
+	cl_mem devdata_ = nullptr;
+
+	const size_t stride = hostdata->stride();
+	const size_t cols = hostdata->cols();
+	const size_t rows = hostdata->rows();
+
+	devdata_ = clCreateBuffer(clContext, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, hostdata->planeSizeInBytes(0), hostdata->ptr<void>(0),
+		&clerr);
+	COMPV_CHECK_CL_CODE_BAIL(clerr, "clCreateBuffer failed");
+	if (stride == cols) {
+		*devdata = devdata_;
+		devdata_ = nullptr;
+	}
+	else {
+		*devdata = clCreateBuffer(clContext, devdataFlags, (cols * rows) * sizeof(compv_float64_t), nullptr,
+			&clerr);
+		const size_t src_origin[3] = { 0, 0, 0 };
+		const size_t dst_region[3] = { 0, 0, 0 };
+		const size_t region[3] = { cols * sizeof(compv_float64_t), rows, 1 };
+		COMPV_CHECK_CL_CODE_BAIL(clerr = clEnqueueCopyBufferRect(clCommand, devdata_, *devdata,
+			src_origin, dst_region, region, stride * sizeof(compv_float64_t), 0, 0, 0,
+			0, nullptr, nullptr), "clEnqueueCopyBufferRect failed");
+	}
+
+bail:
+	if (clerr != CL_SUCCESS && *devdata) {
+		clReleaseMemObject(*devdata), *devdata = nullptr;
+	}
+	if (devdata_ != nullptr) {
+		clReleaseMemObject(devdata_), devdata_ = nullptr;
+	}
+	return (clerr == CL_SUCCESS) ? COMPV_ERROR_CODE_S_OK : COMPV_ERROR_CODE_E_OPENCL;
+}
+
 COMPV_ERROR_CODE CompVCLUtils::displayDevices(cl_platform_id platform, cl_device_type deviceType)
 {
 	char tmpString[1024];

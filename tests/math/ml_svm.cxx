@@ -19,7 +19,7 @@
 #define THOG_VECTORS				"C:/Projects/GitHub/data/thog/thog00.vectors" // from "Grillage" - should be #(63 x 408)
 #define THOG_LABELS					"C:/Projects/GitHub/data/thog/thog00.labels"
 
-#define LOOP_COUNT			1
+#define LOOP_COUNT			10
 
 COMPV_ERROR_CODE ml_svm_predict()
 {
@@ -57,15 +57,16 @@ COMPV_ERROR_CODE ml_svm_predict()
 	}
 	const uint64_t timeEnd = CompVTime::nowMillis();
 
+	COMPV_DEBUG_INFO_EX(TAG_TEST, "ML SVM BINARY RBF Predict (GPU=%s) Elapsed time = [[[ %" PRIu64 " millis ]]]", CompVBase::to_string(mlSVM->isGPUAccelerated()).c_str(), (timeEnd - timeStart));
+
 	// Check result
 	COMPV_ASSERT(matResult->rows() == 1 && matResult->cols() == vec_count);
 	for (size_t i = 0; i < matResult->cols(); ++i) {
 		if (*matResult->ptr<const int32_t>(0, i) != *matxResult->ptr<const int32_t>(0, i)) {
 			COMPV_DEBUG_ERROR_EX(TAG_TEST, "Failed at %zu (%d != %d)", i, *matResult->ptr<const int32_t>(0, i), *matxResult->ptr<const int32_t>(0, i));
+			return COMPV_ERROR_CODE_E_UNITTEST_FAILED;
 		}
 	}
-
-	COMPV_DEBUG_INFO_EX(TAG_TEST, "ML SVM BINARY RBF Predict (GPU=%s) Elapsed time = [[[ %" PRIu64 " millis ]]]", CompVBase::to_string(mlSVM->isGPUAccelerated()).c_str(), (timeEnd - timeStart));
 
 	return COMPV_ERROR_CODE_S_OK;
 }

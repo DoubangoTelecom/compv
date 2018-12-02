@@ -35,12 +35,6 @@ public:
 	static COMPV_INLINE cl_device_id clDeviceId() {
 		return s_clDeviceId;
 	}
-	static COMPV_INLINE cl_context clContext() {
-		return s_clContext;
-	}
-	static COMPV_INLINE cl_command_queue clCommandQueue() {
-		return s_clQueue;
-	}
 
 private:
 
@@ -50,8 +44,6 @@ private:
 	static bool s_cl_khr_fp64_supported;
 	static cl_platform_id s_clPlatformId;
 	static cl_device_id s_clDeviceId;
-	static cl_context s_clContext;
-	static cl_command_queue s_clQueue;
 };
 
 COMPV_NAMESPACE_END()

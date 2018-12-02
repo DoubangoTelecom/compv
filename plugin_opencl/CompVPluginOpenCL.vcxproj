@@ -406,6 +406,35 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release_static|x64'">%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
   </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="base\ml\compv_cl_ml_svm_predict.cl">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
+      <FileType>Document</FileType>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release_static|Win32'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug_static|Win32'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release_static|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug_static|x64'">true</DeploymentContent>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">xcopy  %(FullPath) "$(TargetDir)" /d /i /y</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release_static|Win32'">xcopy  %(FullPath) "$(TargetDir)" /d /i /y</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">xcopy  %(FullPath) "$(TargetDir)" /d /i /y</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug_static|Win32'">xcopy  %(FullPath) "$(TargetDir)" /d /i /y</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">xcopy  %(FullPath) "$(TargetDir)" /d /i /y</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release_static|x64'">xcopy  %(FullPath) "$(TargetDir)" /d /i /y</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">xcopy  %(FullPath) "$(TargetDir)" /d /i /y</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug_static|x64'">xcopy  %(FullPath) "$(TargetDir)" /d /i /y</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release_static|Win32'">%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug_static|Win32'">%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release_static|x64'">%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug_static|x64'">%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

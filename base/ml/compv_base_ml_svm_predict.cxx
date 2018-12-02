@@ -32,9 +32,9 @@ protected:
 		: CompVMachineLearningSVMPredict(CompVMachineLearningSVMPredictTypeBinaryRBF)
 	{
 		COMPV_ASSERT(matSV != nullptr && (matSV->rows() == static_cast<size_t>(nr_sv[0] + nr_sv[1])));
-		m_f64Gamma = gamma;
-		m_f64GammaMinus = -gamma;
-		m_f64Rho = rho;
+		m_64fGamma = gamma;
+		m_64fGammaMinus = -gamma;
+		m_64fRho = rho;
 		m_Labels[0] = labels[0]; m_Labels[1] = labels[1];
 		m_nrSV[0] = nr_sv[0]; m_nrSV[1] = nr_sv[1];
 		COMPV_CHECK_CODE_ASSERT(matSV->clone(&m_ptrMatSV));
@@ -93,7 +93,7 @@ public:
 			for (size_t i = start; i < end; ++i) {
 				COMPV_CHECK_CODE_ASSERT(rbf(matVectorsFloat64->ptr<const compv_float64_t>(i), kvalueMatPtr)); // multithreaded
 				m_func_ptr.dot_64f64f(m_ptrMatCoeff->ptr<const compv_float64_t>(), kvalueMatPtr, total_sv, 1, 0, 0, &sum); // multithreaded
-				matResultPtr[i] = m_Labels[(((sum - m_f64Rho)) < 0)];
+				matResultPtr[i] = m_Labels[(((sum - m_64fRho)) < 0)];
 			}
 			return COMPV_ERROR_CODE_S_OK;
 		};
@@ -146,7 +146,7 @@ private:
 			for (size_t j = start; j < end; ++j) {
 				m_func_ptr.dotSub_64f64f(inPtr, m_ptrMatSV->ptr<const compv_float64_t>(j), sv_length, 1, 0, 0, &kvalues[j]); // no memalign required
 			}
-			m_func_ptr.scale_64f64f(&kvalues[start], &kvalues[start], (end - start), 1, 0, &m_f64GammaMinus); // no memalign required
+			m_func_ptr.scale_64f64f(&kvalues[start], &kvalues[start], (end - start), 1, 0, &m_64fGammaMinus); // no memalign required
 			m_func_ptr.expo(&kvalues[start], &kvalues[start], (end - start)); // no memalign required
 
 			return COMPV_ERROR_CODE_S_OK;
@@ -162,9 +162,9 @@ private:
 	}
 
 private:
-	compv_float64_t m_f64Gamma;
-	compv_float64_t m_f64GammaMinus;
-	compv_float64_t m_f64Rho;
+	compv_float64_t m_64fGamma;
+	compv_float64_t m_64fGammaMinus;
+	compv_float64_t m_64fRho;
 	int32_t m_Labels[2];
 	int32_t m_nrSV[2];
 	CompVMatPtr m_ptrMatSV;
@@ -186,9 +186,9 @@ protected:
 		: CompVMachineLearningSVMPredict(CompVMachineLearningSVMPredictTypeBinaryRBF)
 	{
 		COMPV_ASSERT(matSV != nullptr && (matSV->rows() == static_cast<size_t>(nr_sv[0] + nr_sv[1])));
-		m_f64Gamma = gamma;
-		m_f64GammaMinus = -gamma;
-		m_f64Rho = rho;
+		m_64fGamma = gamma;
+		m_64fGammaMinus = -gamma;
+		m_64fRho = rho;
 		m_Labels[0] = labels[0]; m_Labels[1] = labels[1];
 		m_nrSV[0] = nr_sv[0]; m_nrSV[1] = nr_sv[1];
 		COMPV_CHECK_CODE_ASSERT(matSV->clone(&m_ptrMatSV));
@@ -231,14 +231,16 @@ public:
 
 		CompVMatPtr matValues;
 		COMPV_CHECK_CODE_RETURN(process_64f64f(matVectorsFloat64, &matValues));
-		COMPV_ASSERT(matValues->cols() == numvectors);
+		COMPV_ASSERT(matValues->cols() == m_ptrMatSV->rows() && matValues->rows() == numvectors);
 
 		CompVMatPtr matResult_ = *matResult;
 		COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int32_t>(&matResult_, 1, numvectors));
 		const compv_float64_t* matValuesPtr = matValues->ptr<const compv_float64_t>();
+		const size_t matValuesStride = matValues->stride();
 		int32_t* matResultPtr = matResult_->ptr<int32_t>();
 		for (size_t i = 0; i < numvectors; ++i) {
-			matResultPtr[i] = m_Labels[(matValuesPtr[i] < 0)];
+			matResultPtr[i] = m_Labels[(matValuesPtr[0] < 0)];
+			matValuesPtr += matValuesStride;
 		}
 		
 		*matResult = matResult_;
@@ -265,8 +267,12 @@ private:
 		CompVMatPtr C;
 		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float64_t>(&C, vectors->rows(), m_ptrMatSV->rows()));
 
+		// A = vectors
+		// B = m_ptrMatSV
+
 		const compv_float64_t* Aptr = vectors->ptr<const compv_float64_t>();
 		const compv_float64_t* Bptr = m_ptrMatSV->ptr<const compv_float64_t>();
+		const compv_float64_t* CoeffPtr = m_ptrMatCoeff->ptr<const compv_float64_t>();
 		compv_float64_t* Cptr = C->ptr<compv_float64_t>();
 		const compv_uscalar_t Bcols = static_cast<compv_uscalar_t>(m_ptrMatSV->cols());
 		const compv_uscalar_t Arows = static_cast<compv_uscalar_t>(vectors->rows());
@@ -281,48 +287,37 @@ private:
 		// -> like(C = mulABt(vectors, SV))
 		compv_uscalar_t k;
 		for (compv_uscalar_t i = 0; i < Arows; ++i) {
-			const compv_float64_t* B0ptr = Bptr;
 			for (compv_uscalar_t j = 0; j < Brows; ++j) {
 				compv_float64_t sum = 0; 
 				for (k = 0; k < Bcols; k += 1) {
-					const compv_float64_t diff = Aptr[k] - B0ptr[k];
+					const compv_float64_t diff = Aptr[(i * Astride) + k] - Bptr[(j * Bstride) + k];
 					sum += (diff * diff);
 				}
-				Cptr[j] = std::exp(sum * m_f64GammaMinus);
-				B0ptr += Bstride;
+				Cptr[(i * Cstride) + j] = std::exp(sum * m_64fGammaMinus) * CoeffPtr[j];
 			}
-			Aptr += Astride;
-			Cptr += Cstride;
 		}
 
-		// Next code is matrix multiplication-like except we are doing "c=((a*b)-rho)" instead of "c=(a*b)"
-		// -> like(C = mulABt(C, Coeff))
-		
-		COMPV_CHECK_CODE_RETURN(CompVMath::mulABt(C, m_ptrMatCoeff, &C)); // multithreaded, TODO(dmi): GPU -> compute (C - rho) at the same time as mulABt
-
-		// (sum - rho)
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation could be found");
-		CompVMatPtr R_ = *R;
-		COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<compv_float64_t>(&R_, 1, C->rows()));
-		const compv_float64_t* cPtr = C->ptr<compv_float64_t>();
-		compv_float64_t* rPtr = R_->ptr<compv_float64_t>();
-		const size_t cstride = C->stride();
-		const size_t crows = C->rows();
-		for (size_t i = 0; i < crows; ++i) {
-			rPtr[i] = cPtr[0] - m_f64Rho;
-			cPtr += cstride;
+		// GPGPU reduction (horizontal sum)
+		compv_float64_t* Cptr0 = Cptr;
+		const size_t Crows = C->rows();
+		const size_t Ccols = C->cols();
+		for (size_t j = 0; j < Crows; ++j) {
+			compv_float64_t& sum = Cptr0[0];
+			for (size_t i = 1; i < Ccols; ++i) {
+				sum += Cptr0[i];
+			}
+			sum -= m_64fRho;
+			Cptr0 += Cstride;
 		}
 
-
-		*R = R_;
+		*R = C;
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
 private:
-	compv_float64_t m_f64Gamma;
-	compv_float64_t m_f64GammaMinus;
-	compv_float64_t m_f64Rho;
+	compv_float64_t m_64fGamma;
+	compv_float64_t m_64fGammaMinus;
+	compv_float64_t m_64fRho;
 	int32_t m_Labels[2];
 	int32_t m_nrSV[2];
 	CompVMatPtr m_ptrMatSV;
@@ -334,7 +329,7 @@ private:
 //	CompVMachineLearningSVMPredict
 //
 
-newObjBinaryRBFMachineLearningSVMPredict CompVMachineLearningSVMPredict::s_ptrNewObjBinaryRBF_CPU = CompVMachineLearningSVMPredictBinaryRBF_CPU1::newObj; // must be "CPU1", "CPU2" is for testing only 
+newObjBinaryRBFMachineLearningSVMPredict CompVMachineLearningSVMPredict::s_ptrNewObjBinaryRBF_CPU = CompVMachineLearningSVMPredictBinaryRBF_CPU2::newObj; // must be "CPU1", "CPU2" is for testing only 
 newObjBinaryRBFMachineLearningSVMPredict CompVMachineLearningSVMPredict::s_ptrNewObjBinaryRBF_GPU = nullptr;
 
 CompVMachineLearningSVMPredict::CompVMachineLearningSVMPredict(CompVMachineLearningSVMPredictType eType)

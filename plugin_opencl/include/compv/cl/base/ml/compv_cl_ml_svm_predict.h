@@ -28,6 +28,13 @@ public:
 	virtual ~CompVMachineLearningSVMPredictBinaryRBF_GPU();
 	COMPV_OBJECT_GET_ID(CompVMachineLearningSVMPredictBinaryRBF_GPU);
 
+	COMPV_INLINE bool isValid() const {
+		return m_bValid;
+	}
+	COMPV_INLINE bool isInitialized() const {
+		return m_bInitialized;
+	}
+
 	virtual bool isGPUAccelerated() const override { return true; }
 
 	virtual COMPV_ERROR_CODE process(const CompVMatPtr& matVectors, CompVMatPtrPtr matResult) override;
@@ -35,8 +42,25 @@ public:
 	static COMPV_ERROR_CODE newObj(CompVMachineLearningSVMPredictPtrPtr mlSVM, const compv_float64_t& gamma, const compv_float64_t& rho, const int32_t(&labels)[2], const int32_t(&nr_sv)[2], const CompVMatPtr& matSV, const CompVMatPtr& matCoeff);
 
 private:
+	COMPV_ERROR_CODE init(const CompVMatPtr& matSV, const CompVMatPtr& matCoeff);
+	COMPV_ERROR_CODE deInit();
+
+private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
-	
+	bool m_bValid;
+	bool m_bInitialized;
+	cl_int m_nMatSVs_cols;
+	cl_int m_nMatSVs_rows;
+	compv_float64_t m_64fGammaMinus;
+	compv_float64_t m_64fRho;
+	cl_context m_clContext;
+	cl_command_queue m_clCommandQueue;
+	cl_mem m_clMemMatSV;
+	cl_mem m_clMemMatCoeff;
+	cl_program m_clProgram;
+	cl_kernel m_clkernelPart1;
+	cl_kernel m_clkernelPart2;
+	int32_t m_labels[2];
 	COMPV_VS_DISABLE_WARNINGS_END()
 };
 

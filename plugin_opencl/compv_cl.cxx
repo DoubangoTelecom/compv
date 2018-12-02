@@ -15,10 +15,8 @@ COMPV_NAMESPACE_BEGIN()
 
 bool CompVCL::s_bInitialized = false;
 bool CompVCL::s_cl_khr_fp64_supported = false;
-cl_platform_id CompVCL::s_clPlatformId = NULL;
-cl_device_id CompVCL::s_clDeviceId = NULL;
-cl_context CompVCL::s_clContext = NULL;
-cl_command_queue CompVCL::s_clQueue = NULL;
+cl_platform_id CompVCL::s_clPlatformId = nullptr;
+cl_device_id CompVCL::s_clDeviceId = nullptr;
 
 COMPV_ERROR_CODE CompVCL::init()
 {
@@ -91,12 +89,6 @@ COMPV_ERROR_CODE CompVCL::init()
 		s_cl_khr_fp64_supported = (strstr(buffer, "cl_khr_fp64") != nullptr);
 	}
 
-	// Create global context and command queue
-	s_clContext = clCreateContext(0, 1, &s_clDeviceId, NULL, NULL, &clerr);
-	COMPV_CHECK_CL_CODE_BAIL(clerr, "clCreateContext failed");	
-	s_clQueue = clCreateCommandQueue(s_clContext, s_clDeviceId, 0, &clerr);
-	COMPV_CHECK_CL_CODE_BAIL(clerr, "clCreateCommandQueue failed");
-
 	s_bInitialized = true;
 
 bail:
@@ -112,15 +104,6 @@ COMPV_ERROR_CODE CompVCL::deInit()
 #if 0 // MUST not deInit() CompVBase, OpenCL can safely fail loading or initializing
 	COMPV_CHECK_CODE_ASSERT(CompVBase::deInit());
 #endif
-
-	if (s_clQueue) {
-		clReleaseCommandQueue(s_clQueue);
-		s_clQueue = NULL;
-	}
-	if (s_clContext) {
-		clReleaseContext(s_clContext);
-		s_clContext = NULL;
-	}
 
 	s_bInitialized = false;
 	return COMPV_ERROR_CODE_S_OK;

@@ -11,7 +11,7 @@
 #define COMPV_numThreads			COMPV_NUM_THREADS_SINGLE
 #define COMPV_enableIntrinsics		true
 #define COMPV_enableAsm				true
-#define COMPV_enableGPU				false
+#define COMPV_enableGPU				true
 #define COMPV_enableMathFixedPoint	true
 #define COMPV_enableTestingMode		true
 #define COMPV_enableIntelIpp		false

@@ -36,8 +36,10 @@ static COMPV_ERROR_CODE __cl_convlt1VtHz_8u8u32f(const uint8_t* inPtr, uint8_t* 
 		1
 	};
 
+	cl_context FIXME_context = nullptr;
+
 	if (!__cl_convlt1VtHz_8u8u32f_program || !__cl_convlt1VtHz_8u8u32f_kernel) {
-		COMPV_CHECK_CODE_BAIL(err = CompVCLUtils::createProgramWithSource(&__cl_convlt1VtHz_8u8u32f_program, CompVCL::clContext(), "compv_cl_math_convlt.cl"));
+		COMPV_CHECK_CODE_BAIL(err = CompVCLUtils::createProgramWithSource(&__cl_convlt1VtHz_8u8u32f_program, FIXME_context, "compv_cl_math_convlt.cl"));
 		COMPV_CHECK_CODE_BAIL(err = CompVCLUtils::buildProgram(__cl_convlt1VtHz_8u8u32f_program, CompVCL::clDeviceId()));
 		COMPV_CHECK_CODE_BAIL(err = CompVCLUtils::createKernel(&__cl_convlt1VtHz_8u8u32f_kernel, __cl_convlt1VtHz_8u8u32f_program, "clConvlt1VtHz_8u8u32f"));
 	}
@@ -47,11 +49,11 @@ static COMPV_ERROR_CODE __cl_convlt1VtHz_8u8u32f(const uint8_t* inPtr, uint8_t* 
 		COMPV_CHECK_EXP_BAIL(!outPtr, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY), "Failed to allocate out memory");
 	}
 
-	cl_inPtr = clCreateBuffer(CompVCL::clContext(), CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, static_cast<size_t>((trueStride * height) * sizeof(uint8_t)), (void*)inPtr, &clerr);
+	cl_inPtr = clCreateBuffer(FIXME_context, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, static_cast<size_t>((trueStride * height) * sizeof(uint8_t)), (void*)inPtr, &clerr);
 	COMPV_CHECK_EXP_BAIL((clerr != CL_SUCCESS), (err = COMPV_ERROR_CODE_E_OPENCL), "clCreateBuffer failed");
-	cl_outPtr = clCreateBuffer(CompVCL::clContext(), CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, static_cast<size_t>((trueStride * height) * sizeof(uint8_t)), (void*)outPtr, &clerr);
+	cl_outPtr = clCreateBuffer(FIXME_context, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, static_cast<size_t>((trueStride * height) * sizeof(uint8_t)), (void*)outPtr, &clerr);
 	COMPV_CHECK_EXP_BAIL((clerr != CL_SUCCESS), (err = COMPV_ERROR_CODE_E_OPENCL), "clCreateBuffer failed");
-	cl_vthzKernPtr = clCreateBuffer(CompVCL::clContext(), CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, static_cast<size_t>(kernSize * sizeof(compv_float32_t)), (void*)vthzKernPtr, &clerr);
+	cl_vthzKernPtr = clCreateBuffer(FIXME_context, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, static_cast<size_t>(kernSize * sizeof(compv_float32_t)), (void*)vthzKernPtr, &clerr);
 	COMPV_CHECK_EXP_BAIL((clerr != CL_SUCCESS), (err = COMPV_ERROR_CODE_E_OPENCL), "clCreateBuffer failed");
 
 	COMPV_CHECK_EXP_BAIL((clerr = clSetKernelArg(__cl_convlt1VtHz_8u8u32f_kernel, 0, sizeof(cl_mem), &cl_inPtr)) != CL_SUCCESS, (err = COMPV_ERROR_CODE_E_OPENCL), "clSetKernelArg failed");
@@ -63,42 +65,44 @@ static COMPV_ERROR_CODE __cl_convlt1VtHz_8u8u32f(const uint8_t* inPtr, uint8_t* 
 	COMPV_CHECK_EXP_BAIL((clerr = clSetKernelArg(__cl_convlt1VtHz_8u8u32f_kernel, 6, sizeof(cl_mem), &cl_vthzKernPtr)) != CL_SUCCESS, (err = COMPV_ERROR_CODE_E_OPENCL), "clSetKernelArg failed");
 	COMPV_CHECK_EXP_BAIL((clerr = clSetKernelArg(__cl_convlt1VtHz_8u8u32f_kernel, 7, sizeof(unsigned int), &kernSize_)) != CL_SUCCESS, (err = COMPV_ERROR_CODE_E_OPENCL), "clSetKernelArg failed");
 
+	cl_command_queue FIXME_command_queue = nullptr;
+
 	/*  Write */
-	mappedBuff = clEnqueueMapBuffer(CompVCL::clCommandQueue(), cl_inPtr, CL_TRUE,
+	mappedBuff = clEnqueueMapBuffer(FIXME_command_queue, cl_inPtr, CL_TRUE,
 		CL_MAP_WRITE, 0, static_cast<size_t>((trueStride * height) * sizeof(uint8_t)), 0, NULL, NULL, &clerr);
 	COMPV_CHECK_EXP_BAIL((clerr != CL_SUCCESS), (err = COMPV_ERROR_CODE_E_OPENCL), "clEnqueueMapBuffer failed");
 	// FIXME: if (IP == mappedBuff) do  nothing
 	if (mappedBuff != inPtr) {
 		CompVMem::copy(mappedBuff, inPtr, static_cast<size_t>((trueStride * height) * sizeof(uint8_t))); // FIXME: copying for than what is needed (copy width only instead of stride)
 	}
-	COMPV_CHECK_EXP_BAIL((clerr = clEnqueueUnmapMemObject(CompVCL::clCommandQueue(), cl_inPtr, mappedBuff, 0, NULL, NULL)) != CL_SUCCESS,
+	COMPV_CHECK_EXP_BAIL((clerr = clEnqueueUnmapMemObject(FIXME_command_queue, cl_inPtr, mappedBuff, 0, NULL, NULL)) != CL_SUCCESS,
 		(err = COMPV_ERROR_CODE_E_OPENCL), "clEnqueueUnmapMemObject failed"); // FIXME: do async
 
-	mappedBuff = clEnqueueMapBuffer(CompVCL::clCommandQueue(), cl_vthzKernPtr, CL_TRUE,
+	mappedBuff = clEnqueueMapBuffer(FIXME_command_queue, cl_vthzKernPtr, CL_TRUE,
 		CL_MAP_WRITE, 0, static_cast<size_t>(kernSize * sizeof(compv_float32_t)), 0, NULL, NULL, &clerr);
 	COMPV_CHECK_EXP_BAIL((clerr != CL_SUCCESS), (err = COMPV_ERROR_CODE_E_OPENCL), "clEnqueueMapBuffer failed");
 	// FIXME: if (IP == mappedBuff) do  nothing
 	if (mappedBuff != cl_vthzKernPtr) {
 		CompVMem::copy(mappedBuff, cl_vthzKernPtr, static_cast<size_t>(kernSize * sizeof(compv_float32_t))); // FIXME: copying for than what is needed (copy width only instead of stride)
 	}
-	COMPV_CHECK_EXP_BAIL((clerr = clEnqueueUnmapMemObject(CompVCL::clCommandQueue(), cl_vthzKernPtr, mappedBuff, 0, NULL, NULL)) != CL_SUCCESS,
+	COMPV_CHECK_EXP_BAIL((clerr = clEnqueueUnmapMemObject(FIXME_command_queue, cl_vthzKernPtr, mappedBuff, 0, NULL, NULL)) != CL_SUCCESS,
 		(err = COMPV_ERROR_CODE_E_OPENCL), "clEnqueueUnmapMemObject failed"); // FIXME: do async
 
 	/* Execute */
-	COMPV_CHECK_EXP_BAIL((clerr = clEnqueueNDRangeKernel(CompVCL::clCommandQueue(), __cl_convlt1VtHz_8u8u32f_kernel, 2, NULL, global, local, 0, NULL, NULL)) != CL_SUCCESS,
+	COMPV_CHECK_EXP_BAIL((clerr = clEnqueueNDRangeKernel(FIXME_command_queue, __cl_convlt1VtHz_8u8u32f_kernel, 2, NULL, global, local, 0, NULL, NULL)) != CL_SUCCESS,
 		(err = COMPV_ERROR_CODE_E_OPENCL), "clEnqueueNDRangeKernel failed");
-	COMPV_CHECK_EXP_BAIL((clerr = clFinish(CompVCL::clCommandQueue())) != CL_SUCCESS,
+	COMPV_CHECK_EXP_BAIL((clerr = clFinish(FIXME_command_queue)) != CL_SUCCESS,
 		(err = COMPV_ERROR_CODE_E_OPENCL), "clFinish failed");
 
 	// Read
-	mappedBuff = clEnqueueMapBuffer(CompVCL::clCommandQueue(), cl_outPtr, CL_TRUE,
+	mappedBuff = clEnqueueMapBuffer(FIXME_command_queue, cl_outPtr, CL_TRUE,
 		CL_MAP_READ, 0, static_cast<size_t>((trueStride * height) * sizeof(uint8_t)), 0, NULL, NULL, &clerr);
 	COMPV_CHECK_EXP_BAIL((clerr != CL_SUCCESS), (err = COMPV_ERROR_CODE_E_OPENCL), "clEnqueueMapBuffer failed");
 	// FIXME: if (strengths == mappedBuff) do  nothing
 	if (mappedBuff != outPtr) {
 		CompVMem::copy(outPtr, mappedBuff, static_cast<size_t>((trueStride * height) * sizeof(uint8_t))); // FIXME: copying for than what is needed (copy width only instead of stride)
 	}
-	COMPV_CHECK_EXP_BAIL((clerr = clEnqueueUnmapMemObject(CompVCL::clCommandQueue(), cl_outPtr, mappedBuff, 0, NULL, NULL)) != CL_SUCCESS,
+	COMPV_CHECK_EXP_BAIL((clerr = clEnqueueUnmapMemObject(FIXME_command_queue, cl_outPtr, mappedBuff, 0, NULL, NULL)) != CL_SUCCESS,
 		(err = COMPV_ERROR_CODE_E_OPENCL), "clEnqueueUnmapMemObject failed"); // FIXME: do async
 
 bail:

@@ -85,12 +85,13 @@ COMPV_ERROR_CODE CompVCLCornerDeteFAST::init(const uint8_t* IP, uint8_t* strengt
 #endif
 
 	// FIXME: using 'CL_MEM_USE_HOST_PTR' means m_clMemIP and m_clMemStrengths no longer valid when host memory is reallocated -> deInit if change
+	cl_context FIXME_context = nullptr;
 
-	m_clMemPixels16 = clCreateBuffer(CompVCL::clContext(), CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR | addFlags, sizeof(m_arrayPixels16), reinterpret_cast<void*>(m_arrayPixels16), &clerr);
+	m_clMemPixels16 = clCreateBuffer(FIXME_context, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR | addFlags, sizeof(m_arrayPixels16), reinterpret_cast<void*>(m_arrayPixels16), &clerr);
 	COMPV_CHECK_CL_CODE_BAIL(clerr, "clCreateBuffer failed");
-	m_clMemIP = clCreateBuffer(CompVCL::clContext(), CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR | addFlags, static_cast<size_t>((stride * height) * sizeof(uint8_t)), (void*)IP, &clerr);
+	m_clMemIP = clCreateBuffer(FIXME_context, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR | addFlags, static_cast<size_t>((stride * height) * sizeof(uint8_t)), (void*)IP, &clerr);
 	COMPV_CHECK_CL_CODE_BAIL(clerr, "clCreateBuffer failed");
-	m_clMemStrengths = clCreateBuffer(CompVCL::clContext(), CL_MEM_WRITE_ONLY | CL_MEM_USE_HOST_PTR | addFlags, static_cast<size_t>((stride * height) * sizeof(uint8_t)), (void*)strengths, &clerr);
+	m_clMemStrengths = clCreateBuffer(FIXME_context, CL_MEM_WRITE_ONLY | CL_MEM_USE_HOST_PTR | addFlags, static_cast<size_t>((stride * height) * sizeof(uint8_t)), (void*)strengths, &clerr);
 	COMPV_CHECK_CL_CODE_BAIL(clerr, "clCreateBuffer failed");
 
 	COMPV_CHECK_CL_CODE_BAIL(clerr = clSetKernelArg(m_clKernel, 0, sizeof(cl_mem), &m_clMemIP));
@@ -157,32 +158,34 @@ COMPV_ERROR_CODE CompVCLCornerDeteFAST::processData(
 		1
 	};
 
+	cl_command_queue FIXME_command_queue = nullptr;
+
 	// Write
-	mappedBuff = clEnqueueMapBuffer(CompVCL::clCommandQueue(), m_clMemIP, CL_TRUE,
+	mappedBuff = clEnqueueMapBuffer(FIXME_command_queue, m_clMemIP, CL_TRUE,
 		CL_MAP_WRITE, 0, static_cast<size_t>((stride * height) * sizeof(uint8_t)), 0, NULL, NULL, &clerr);
 	COMPV_CHECK_CL_CODE_BAIL(clerr, "clEnqueueMapBuffer failed");
 	// FIXME: if (IP == mappedBuff) do  nothing
 	if (mappedBuff != IP) {
 		CompVMem::copy(mappedBuff, IP, static_cast<size_t>((stride * height) * sizeof(uint8_t))); // FIXME: copying for than what is needed (copy width only instead of stride)
 	}
-	clerr = clEnqueueUnmapMemObject(CompVCL::clCommandQueue(), m_clMemIP, mappedBuff, 0, NULL, NULL);
+	clerr = clEnqueueUnmapMemObject(FIXME_command_queue, m_clMemIP, mappedBuff, 0, NULL, NULL);
 	COMPV_CHECK_CL_CODE_BAIL(clerr, "clEnqueueUnmapMemObject failed");
 	
 	// Execute
-	COMPV_CHECK_CL_CODE_BAIL(clerr = clEnqueueNDRangeKernel(CompVCL::clCommandQueue(), m_clKernel, 2, NULL, global, local, 0, NULL, NULL),
+	COMPV_CHECK_CL_CODE_BAIL(clerr = clEnqueueNDRangeKernel(FIXME_command_queue, m_clKernel, 2, NULL, global, local, 0, NULL, NULL),
 		"clEnqueueNDRangeKernel failed");
-	COMPV_CHECK_CL_CODE_BAIL(clerr = clFinish(CompVCL::clCommandQueue()),
+	COMPV_CHECK_CL_CODE_BAIL(clerr = clFinish(FIXME_command_queue),
 		"clFinish failed");
 
 	// Read
-	mappedBuff = clEnqueueMapBuffer(CompVCL::clCommandQueue(), m_clMemStrengths, CL_TRUE,
+	mappedBuff = clEnqueueMapBuffer(FIXME_command_queue, m_clMemStrengths, CL_TRUE,
 		CL_MAP_READ, 0, static_cast<size_t>((stride * height) * sizeof(uint8_t)), 0, NULL, NULL, &clerr);
 	COMPV_CHECK_CL_CODE_BAIL(clerr, "clEnqueueMapBuffer failed");
 	// FIXME: if (strengths == mappedBuff) do  nothing
 	if (mappedBuff != strengths) {
 		CompVMem::copy(strengths, mappedBuff, static_cast<size_t>((stride * height) * sizeof(uint8_t))); // FIXME: copying for than what is needed (copy width only instead of stride)
 	}
-	clerr = clEnqueueUnmapMemObject(CompVCL::clCommandQueue(), m_clMemStrengths, mappedBuff, 0, NULL, NULL);
+	clerr = clEnqueueUnmapMemObject(FIXME_command_queue, m_clMemStrengths, mappedBuff, 0, NULL, NULL);
 	COMPV_CHECK_CL_CODE_BAIL(clerr, "clEnqueueUnmapMemObject failed");
 
 bail:
@@ -199,7 +202,8 @@ COMPV_ERROR_CODE CompVCLCornerDeteFAST::newObj(CompVCLCornerDeteFASTPtrPtr fast)
 	COMPV_CHECK_EXP_RETURN(!fast, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	CompVCLCornerDeteFASTPtr fast_ = new CompVCLCornerDeteFAST();
 	COMPV_CHECK_EXP_RETURN(!fast_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-	COMPV_CHECK_CODE_RETURN(CompVCLUtils::createProgramWithSource(&fast_->m_clProgram, CompVCL::clContext(), "compv_cl_feature_fast_dete.cl"));
+	cl_context FIXME_context = nullptr;
+	COMPV_CHECK_CODE_RETURN(CompVCLUtils::createProgramWithSource(&fast_->m_clProgram, FIXME_context, "compv_cl_feature_fast_dete.cl"));
 	COMPV_CHECK_CODE_RETURN(CompVCLUtils::buildProgram(fast_->m_clProgram, CompVCL::clDeviceId()));
 	COMPV_CHECK_CODE_RETURN(CompVCLUtils::createKernel(&fast_->m_clKernel, fast_->m_clProgram, "clFAST"));
 	

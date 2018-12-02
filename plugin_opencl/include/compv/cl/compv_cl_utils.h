@@ -9,6 +9,7 @@
 
 #include "compv/cl/compv_cl_config.h"
 #include "compv/cl/compv_cl_common.h"
+#include "compv/base/compv_mat.h"
 
 #include <CL/opencl.h>
 
@@ -24,6 +25,7 @@ public:
 	static COMPV_ERROR_CODE createProgramWithSource(cl_program* program, cl_context context, const char* filename);
 	static COMPV_ERROR_CODE buildProgram(cl_program program, cl_device_id deviceId);
 	static COMPV_ERROR_CODE createKernel(cl_kernel* kernel, cl_program program, const char* name);
+	static COMPV_ERROR_CODE createDataStrideless(const CompVMatPtr& hostdata, cl_mem* devdata, const cl_mem_flags& devdataFlags, cl_context clContext, cl_command_queue clCommand);
 
 	static COMPV_ERROR_CODE displayDevices(cl_platform_id platform, cl_device_type deviceType);
 	static const char* errorString(cl_int err);
