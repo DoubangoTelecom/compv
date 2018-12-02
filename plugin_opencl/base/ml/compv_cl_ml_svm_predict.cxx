@@ -174,7 +174,7 @@ COMPV_ERROR_CODE CompVMachineLearningSVMPredictBinaryRBF_GPU::process(const Comp
 	COMPV_CHECK_CODE_BAIL(err = CompVCLUtils::createDataStrideless(matVectors, &clMemMatVectors, CL_MEM_READ_ONLY, m_clContext, m_clCommandQueue));
 
 	// Create matResult1 memory
-	clMemMatResult1 = clCreateBuffer(m_clContext, CL_MEM_WRITE_ONLY, (matResult1_rows * matResult1_cols) * sizeof(compv_float64_t), nullptr,
+	clMemMatResult1 = clCreateBuffer(m_clContext, CL_MEM_READ_WRITE, (matResult1_rows * matResult1_cols) * sizeof(compv_float64_t), nullptr,
 		&clerr);
 	COMPV_CHECK_CL_CODE_BAIL(clerr, "clCreateBuffer failed");
 
@@ -187,8 +187,8 @@ COMPV_ERROR_CODE CompVMachineLearningSVMPredictBinaryRBF_GPU::process(const Comp
 	// Execute
 	localWorkSize1[0] = 16;
 	localWorkSize1[1] = 16;
-	globalWorkSize1[0] = matResult1_rows;
-	globalWorkSize1[1] = matResult1_cols;
+	globalWorkSize1[0] = matResult1_cols;
+	globalWorkSize1[1] = matResult1_rows;
 	COMPV_CHECK_CL_CODE_BAIL(clerr = clEnqueueNDRangeKernel(m_clCommandQueue, m_clkernelPart1, 2, nullptr, globalWorkSize1, localWorkSize1,
 		0, nullptr, nullptr), "clEnqueueNDRangeKernel failed");
 
@@ -198,9 +198,9 @@ COMPV_ERROR_CODE CompVMachineLearningSVMPredictBinaryRBF_GPU::process(const Comp
 		, "clEnqueueReadBuffer failed");
 
 	// Wait for completion
-	COMPV_CHECK_CL_CODE_BAIL(clerr = clFinish(m_clCommandQueue), "clEnqueueNDRangeKernel failed");	
+	COMPV_CHECK_CL_CODE_BAIL(clerr = clFinish(m_clCommandQueue), "clEnqueueNDRangeKernel failed");
 
-	{
+	if (1){
 		COMPV_DEBUG_INFO_CODE_FOR_TESTING("This is for testing only mus move code to gpu");
 		// GPGPU reduction (horizontal sum)
 		compv_float64_t* Cptr0 = matResult1->ptr<compv_float64_t>();

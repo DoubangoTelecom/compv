@@ -19,7 +19,7 @@
 #define THOG_VECTORS				"C:/Projects/GitHub/data/thog/thog00.vectors" // from "Grillage" - should be #(63 x 408)
 #define THOG_LABELS					"C:/Projects/GitHub/data/thog/thog00.labels"
 
-#define LOOP_COUNT			10
+#define LOOP_COUNT			1
 
 COMPV_ERROR_CODE ml_svm_predict()
 {
@@ -36,6 +36,7 @@ COMPV_ERROR_CODE ml_svm_predict()
 	for (size_t j = 0; j < vec_count; ++j) {
 		COMPV_CHECK_CODE_RETURN(CompVMem::copy(matVectors->ptr<compv_float64_t>(j), &reinterpret_cast<const compv_float64_t*>(vectors->ptr())[j * vec_len], matVectors->rowInBytes()));
 	}
+
 	// Create expect result
 	CompVMatPtr matxResult;
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<int32_t>(&matxResult, 1, vec_count)); // #468 vectors
