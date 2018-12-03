@@ -42,6 +42,8 @@ COMPV_ERROR_CODE CompVCLUtils::buildProgram(cl_program program, cl_device_id dev
 #if ((defined(_DEBUG) && _DEBUG != 0) || (defined(DEBUG) && DEBUG != 0))
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Enabling debug options for OpenCL build program");
 	options += std::string(" -g -Werror");
+#else
+	options += std::string(" -O3");
 #endif
 	cl_int status = clBuildProgram(program, 0, NULL, options.c_str(), NULL, NULL);
 	if (status != CL_SUCCESS) {

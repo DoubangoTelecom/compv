@@ -62,12 +62,17 @@ COMPV_ERROR_CODE ml_svm_predict()
 
 	// Check result
 	COMPV_ASSERT(matResult->rows() == 1 && matResult->cols() == vec_count);
+	//std::map<int32_t, size_t> count;
 	for (size_t i = 0; i < matResult->cols(); ++i) {
-		if (*matResult->ptr<const int32_t>(0, i) != *matxResult->ptr<const int32_t>(0, i)) {
+		const int32_t& xlabel = *matxResult->ptr<const int32_t>(0, i);
+		//count[xlabel]++;
+		if (*matResult->ptr<const int32_t>(0, i) != xlabel) {
 			COMPV_DEBUG_ERROR_EX(TAG_TEST, "Failed at %zu (%d != %d)", i, *matResult->ptr<const int32_t>(0, i), *matxResult->ptr<const int32_t>(0, i));
 			return COMPV_ERROR_CODE_E_UNITTEST_FAILED;
 		}
 	}
+	//const size_t& aa = count[1]; // 9
+	//const size_t& bb = count[-1]; // 399
 
 	return COMPV_ERROR_CODE_S_OK;
 }

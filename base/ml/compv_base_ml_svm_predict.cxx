@@ -271,23 +271,26 @@ private:
 		// B = m_ptrMatSV
 
 		const compv_float64_t* Aptr = vectors->ptr<const compv_float64_t>();
-		const compv_float64_t* Bptr = m_ptrMatSV->ptr<const compv_float64_t>();
 		const compv_float64_t* CoeffPtr = m_ptrMatCoeff->ptr<const compv_float64_t>();
 		compv_float64_t* Cptr = C->ptr<compv_float64_t>();
-		const compv_uscalar_t Bcols = static_cast<compv_uscalar_t>(m_ptrMatSV->cols());
-		const compv_uscalar_t Arows = static_cast<compv_uscalar_t>(vectors->rows());
-		const compv_uscalar_t Brows = static_cast<compv_uscalar_t>(m_ptrMatSV->rows());
-		const compv_uscalar_t Astride = static_cast<compv_uscalar_t>(vectors->stride());
-		const compv_uscalar_t Bstride = static_cast<compv_uscalar_t>(m_ptrMatSV->stride());
-		const compv_uscalar_t Cstride = static_cast<compv_uscalar_t>(C->stride());
+		const size_t Arows = vectors->rows(); // 408
+		const size_t Astride = vectors->stride();
+		const size_t Cstride = C->stride();
+
+		// Matrix multiplication options and cache optiz: http://web.cecs.pdx.edu/~jrb/cs201/lectures/cache.friendly.code.pdf
 
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation could be found, see CompVMathOpMul::mulABt");
 		// Next code is matrix multiplication-like except we are doing "c=(a-b)*(a-b)" instead of "c=(a*b)"
 		// -> like(C = mulABt(vectors, SV))
-		compv_uscalar_t k;
-		for (compv_uscalar_t i = 0; i < Arows; ++i) {
-			for (compv_uscalar_t j = 0; j < Brows; ++j) {
+#if 1 // mulABt
+		const compv_float64_t* Bptr = m_ptrMatSV->ptr<const compv_float64_t>();
+		const size_t Bcols = m_ptrMatSV->cols();
+		const size_t Brows = m_ptrMatSV->rows();
+		const size_t Bstride = m_ptrMatSV->stride();
+		size_t k;
+		for (size_t i = 0; i < Arows; ++i) {
+			for (size_t j = 0; j < Brows; ++j) {
 				compv_float64_t sum = 0; 
 				for (k = 0; k < Bcols; k += 1) {
 					const compv_float64_t diff = Aptr[(i * Astride) + k] - Bptr[(j * Bstride) + k];
@@ -310,6 +313,35 @@ private:
 			Cptr0 += Cstride;
 		}
 
+#else // mulAB
+			CompVMatPtr ptrMatSV_T;
+			COMPV_CHECK_CODE_RETURN(CompVMatrix::transpose(m_ptrMatSV, &ptrMatSV_T));
+			COMPV_CHECK_CODE_RETURN(C->zero_all());
+			const compv_float64_t* Bptr = ptrMatSV_T->ptr<const compv_float64_t>();
+			const size_t Bcols = ptrMatSV_T->cols(); // 56958
+			const size_t Brows = ptrMatSV_T->rows(); // 63
+			const size_t Bstride = ptrMatSV_T->stride();
+			size_t k;
+			for (k = 0; k < Brows; k += 1) {
+				for (size_t i = 0; i < Arows; ++i) {
+					const compv_float64_t& r = Aptr[(i * Astride) + k];
+					for (size_t j = 0; j < Bcols; ++j) {
+						const compv_float64_t diff = r - Bptr[(k * Bstride) + j];
+						Cptr[(i * Cstride) + j] += (diff * diff);
+					}
+				}
+			}
+
+			// GPGPU reduction (horizontal sum)
+			for (size_t i = 0; i < Arows; ++i) {
+				double sum = 0;
+				for (size_t j = 0; j < Bcols; ++j) {
+					sum += std::exp(Cptr[(i * Cstride) + j] * m_64fGammaMinus) * CoeffPtr[j];
+				}
+				Cptr[(i * Cstride) + 0] = (sum - m_64fRho);
+			}
+#endif
+
 		*R = C;
 		return COMPV_ERROR_CODE_S_OK;
 	}
@@ -329,7 +361,7 @@ private:
 //	CompVMachineLearningSVMPredict
 //
 
-newObjBinaryRBFMachineLearningSVMPredict CompVMachineLearningSVMPredict::s_ptrNewObjBinaryRBF_CPU = CompVMachineLearningSVMPredictBinaryRBF_CPU1::newObj; // must be "CPU1", "CPU2" is for testing only 
+newObjBinaryRBFMachineLearningSVMPredict CompVMachineLearningSVMPredict::s_ptrNewObjBinaryRBF_CPU = CompVMachineLearningSVMPredictBinaryRBF_CPU2::newObj; // must be "CPU1", "CPU2" is for testing only 
 newObjBinaryRBFMachineLearningSVMPredict CompVMachineLearningSVMPredict::s_ptrNewObjBinaryRBF_GPU = nullptr;
 
 CompVMachineLearningSVMPredict::CompVMachineLearningSVMPredict(CompVMachineLearningSVMPredictType eType)

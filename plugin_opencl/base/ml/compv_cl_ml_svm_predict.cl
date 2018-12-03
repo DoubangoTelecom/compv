@@ -56,12 +56,12 @@ __kernel void clCompVMachineLearningSVMPredictBinaryRBF_Part1(
 	}
 	matResult[(global_i * matResult_cols) + global_j] = exp(sum * gammaMinus) * matCoeffs[global_j];
 
-#else // OTHER VERSION
+#elif 0 // OCCUPANCY MAXIM
 
-#define SVS 7
+	#define SVS 7
 	const int global_jsvs = get_global_id(0) * SVS; // number of support vectors (e.g. 56958) / SVS
 	const int global_i = get_global_id(1); // number of inputs (e.g. 408)
-	
+
 	for (int j = 0; j < SVS; ++j) {
 		const int global_j = global_jsvs + j;
 		if (global_j < 56958) { // FIXME(dmi): hard-coded
@@ -77,8 +77,168 @@ __kernel void clCompVMachineLearningSVMPredictBinaryRBF_Part1(
 		}
 	}
 
-#endif /* SHARED_MEMORY */
+#elif 1 // CACHED
+	
+	int global_j = get_global_id(0); // number of support vectors (e.g. 56958)
+	int global_i = get_global_id(1); // number of inputs (e.g. 408)
+	int group_j = get_group_id(0);
+	int group_i = get_group_id(1);
+	int local_j = get_local_id(0);
+	int local_i = get_local_id(1);
 
+	// "matVectors" contains the features to classify which means it will be short (N * 63) -> no need for caching
+	/*__local double matVectors_sub[16][63];
+	if (global_i < 1 && global_j < 1) {
+		int m = (local_j * 4);
+		for (int k = 0; k < 4 && m < 63; ++k, ++m) {
+			matVectors_sub[local_i][m] = matVectors[(((group_i * 16) + local_i) * matVectors_cols) + m];
+		}
+	}*/
+
+	__local double matSVs_sub[16][63];
+	/*if (global_i < 408 && global_j < 56958)*/ {
+		int m = (local_i * 4);
+		for (int k = 0; k < 4 && m < 63; ++k, ++m) {
+			matSVs_sub[local_j][m] = matSVs[(((group_j * 16) + local_j) * matSVs_cols) + m];
+		}
+	}
+
+	barrier(CLK_LOCAL_MEM_FENCE);
+
+	if (global_i >= 408 || global_j >= 56958) {
+		return;
+	}
+
+	double sum = 0;
+
+	for (int k = 0; k < matSVs_cols; ++k) {
+		double diff = /*matVectors_sub[local_i][k]*/matVectors[(global_i * matVectors_cols) + k] - matSVs_sub[local_j][k]/*matSVs[(global_j * matSVs_cols) + k]*/;
+		//sum += (diff * diff);
+		sum = fma(diff, diff, sum); // fma instruction is faster
+	}
+
+	matResult[(global_i * matResult_cols) + global_j] = exp(sum * gammaMinus) * matCoeffs[global_j];
+
+#elif 0 // CACHED + OCCUPANCY MAXIM
+
+	#define SVS 7
+	int global_j = get_global_id(0) * SVS; // number of support vectors (e.g. 56958)
+	int global_i = get_global_id(1); // number of inputs (e.g. 408)
+	int group_j = get_group_id(0) * SVS;
+	int group_i = get_group_id(1);
+	int local_j = get_local_id(0);
+	int local_i = get_local_id(1);
+
+	for (int j = 0; j < SVS; ++j) {
+
+		// "matVectors" contains the features to classify which means it will be short (N * 63) -> no need for caching
+		/*__local double matVectors_sub[16][63];
+		int m = (local_j * 4);
+		for (int k = 0; k < 4 && m < 63; ++k, ++m) {
+			matVectors_sub[local_i][m] = 0;//matVectors[(((group_i * 16) + local_i) * matVectors_cols) + m];
+		}*/
+
+		__local double matSVs_sub[16][63];
+		/*if (global_i < 408 && global_j < 56958)*/ {
+			int m = (local_i * 4);
+			for (int k = 0; k < 4 && m < 63; ++k, ++m) {
+				matSVs_sub[local_j][m] = matSVs[(((group_j * 16) + local_j) * matSVs_cols) + m];
+			}
+		}
+
+		barrier(CLK_LOCAL_MEM_FENCE);
+
+		if (global_i >= 408 || global_j >= 56958) {
+			return;
+		}
+
+		double sum = 0;
+
+		for (int k = 0; k < matSVs_cols; ++k) {
+			double diff = /*matVectors_sub[local_i][k]*/matVectors[(global_i * matVectors_cols) + k] - matSVs_sub[local_j][k]/*matSVs[(global_j * matSVs_cols) + k]*/;
+			//sum += (diff * diff);
+			sum = fma(diff, diff, sum); // fma instruction is faster
+		}
+
+		matResult[(global_i * matResult_cols) + global_j] = exp(sum * gammaMinus) * matCoeffs[global_j];
+
+	} // for (int j = 0; j < SVS; ++j)
+	
+#elif 0 // TILED
+#define TILE_SIZE 16
+	const int global_j = get_global_id(0); // number of support vectors (e.g. 56958)
+	const int global_i = get_global_id(1); // number of inputs (e.g. 408)
+	const int group_j = get_group_id(0);
+	const int group_i = get_group_id(1);
+	const int local_j = get_local_id(0);
+	const int local_i = get_local_id(1);
+
+	__local double matVectors_sub[TILE_SIZE][TILE_SIZE];
+	__local double matSVs_sub[TILE_SIZE][TILE_SIZE];
+
+	if (local_i == 0 && local_j == 0) {
+		for (int j = 0; j < TILE_SIZE; ++j) {
+			for (int i = 0; i < TILE_SIZE; ++i) {
+				matVectors_sub[local_i][local_j] = matVectors[(global_i * matVectors_cols) + local_j];
+				matSVs_sub[local_j][local_i] = matSVs[(global_j * matSVs_cols) + local_i];
+			}
+		}
+	}
+
+	double sum = 0;
+
+	const int numTiles = (matSVs_cols + (TILE_SIZE - 1)) / TILE_SIZE;
+	for (int t = 0; t < numTiles; ++t) {
+		matVectors_sub[local_i][local_j] = matVectors[(global_i * matVectors_cols) + local_j];
+		matSVs_sub[local_j][local_i] = matSVs[(global_j * matSVs_cols) + local_i];
+		barrier(CLK_LOCAL_MEM_FENCE);
+
+		for (int k = 0; k < TILE_SIZE; ++k) {
+			const double diff = matVectors_sub[local_i][k] * matSVs_sub[local_j][k];
+			sum += (diff * diff);
+			//sum = fma(diff, diff, sum);
+		}
+	}
+
+	matResult[(global_i * matResult_cols) + global_j] = exp(sum * gammaMinus) * matCoeffs[global_j];
+
+#elif 0 // mulAB instead of mulABt
+
+	const int k = get_global_id(0); // Brows - 63 - k
+	const int i = get_global_id(1); // Arows - 408 - i
+	
+	//double sum = 0;
+
+	const double r = matVectors[(i * matVectors_cols) + k];
+	for (size_t j = 0; j < 56958; ++j) {
+		const double diff = r - matSVs[(k * matSVs_cols) + j];
+		matResult[(i * matResult_cols) + j] += (diff * diff);
+	}
+
+	//for (int k = 0; k < matSVs_cols; ++k) {
+	//	const double diff = matVectors[(global_i * matVectors_cols) + k] - matSVs[(global_j * matSVs_cols) + k];
+		//sum += (diff * diff);
+	//	sum = fma(diff, diff, sum);
+	//}
+
+	//matResult[(global_i * matResult_cols) + global_j] = exp(sum * gammaMinus) * matCoeffs[global_j];
+
+#else // DEFAULT
+	
+	const int global_j = get_global_id(0); // number of support vectors (e.g. 56958)
+	const int global_i = get_global_id(1); // number of inputs (e.g. 408)
+	
+	double sum = 0;
+
+	for (int k = 0; k < matSVs_cols; ++k) {
+		const double diff = matVectors[(global_i * matVectors_cols) + k] - matSVs[(global_j * matSVs_cols) + k];
+		sum += (diff * diff);
+		//sum = fma(diff, diff, sum);
+	}
+
+	matResult[(global_i * matResult_cols) + global_j] = exp(sum * gammaMinus) * matCoeffs[global_j];
+	
+#endif /* SHARED_MEMORY */
 	
 }
 
