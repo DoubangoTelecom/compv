@@ -106,13 +106,13 @@ COMPV_ERROR_CODE CompVCLUtils::createDataStrideless(const CompVMatPtr& hostdata,
 		devdata_ = nullptr;
 	}
 	else {
-		*devdata = clCreateBuffer(clContext, devdataFlags, (cols * rows) * sizeof(compv_float64_t), nullptr,
+		*devdata = clCreateBuffer(clContext, devdataFlags, (cols * rows) * hostdata->elmtInBytes(), nullptr,
 			&clerr);
 		const size_t src_origin[3] = { 0, 0, 0 };
 		const size_t dst_region[3] = { 0, 0, 0 };
-		const size_t region[3] = { cols * sizeof(compv_float64_t), rows, 1 };
+		const size_t region[3] = { cols * hostdata->elmtInBytes(), rows, 1 };
 		COMPV_CHECK_CL_CODE_BAIL(clerr = clEnqueueCopyBufferRect(clCommand, devdata_, *devdata,
-			src_origin, dst_region, region, stride * sizeof(compv_float64_t), 0, 0, 0,
+			src_origin, dst_region, region, stride * hostdata->elmtInBytes(), 0, 0, 0,
 			0, nullptr, nullptr), "clEnqueueCopyBufferRect failed");
 	}
 
