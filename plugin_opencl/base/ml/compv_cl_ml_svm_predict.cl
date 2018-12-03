@@ -22,7 +22,8 @@ __kernel void clCompVMachineLearningSVMPredictBinaryRBF_Part1(
 	const int matResult_cols // 7
 )
 {
-#if 0 // TILED VERSION
+#if 0 // SHARED_MEMORY
+
 	const int local_i = get_local_id(1);
     const int local_j = get_local_id(0);
 	const int global_i = TS*get_group_id(1) + local_i;
@@ -53,21 +54,31 @@ __kernel void clCompVMachineLearningSVMPredictBinaryRBF_Part1(
  
         barrier(CLK_LOCAL_MEM_FENCE);		
 	}
+	matResult[(global_i * matResult_cols) + global_j] = exp(sum * gammaMinus) * matCoeffs[global_j];
 
 #else // OTHER VERSION
-#define SVS 20
+
+#define SVS 7
 	const int global_i = get_global_id(1); // number of inputs (e.g. 408)
-	const int global_j = get_global_id(0); // number of support vectors (e.g. 56958)
+	const int global_jsvs = get_global_id(0); // number of support vectors (e.g. 56958) / SVS
 
-	double sum = 0;
+	for (int j = 0; j < SVS; ++j) {
+		const int global_j = (global_jsvs * SVS) + j;
+		if (global_j < 56958) { // FIXME(dmi): hard-coded
+			double sum = 0;
 
-	for (int k = 0; k < matSVs_cols; ++k) {
-		const double diff = matVectors[(global_i * matVectors_cols) + k] - matSVs[(global_j * matSVs_cols) + k];
-		sum += (diff * diff);
-		//sum = fma(diff, diff, sum);
+			for (int k = 0; k < matSVs_cols; ++k) {
+				const double diff = matVectors[(global_i * matVectors_cols) + k] - matSVs[(global_j * matSVs_cols) + k];
+				//sum += (diff * diff);
+				sum = fma(diff, diff, sum);
+			}
+
+			matResult[(global_i * matResult_cols) + global_j] = exp(sum * gammaMinus) * matCoeffs[global_j];
+		}
 	}
-#endif 
 
-	matResult[(global_i * matResult_cols) + global_j] = exp(sum * gammaMinus) * matCoeffs[global_j];
+#endif /* SHARED_MEMORY */
+
+	
 }
 

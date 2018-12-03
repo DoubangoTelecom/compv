@@ -192,10 +192,10 @@ COMPV_ERROR_CODE CompVMachineLearningSVMPredictBinaryRBF_GPU::process(const Comp
 	COMPV_CHECK_CL_CODE_BAIL(clerr = clSetKernelArg(m_clkernelPart1, 7, sizeof(matResult1_colsInt), (const void*)&matResult1_colsInt), "clSetKernelArg(m_clkernelPart1, matResult_cols, 7) failed");
 
 	// Execute
-#define SVS 20 // must be same number as what is defined in CL script
+#define SVS 7 // must be same number as what is defined in CL script (IMPORTANT: WHY "7" is good by "8" is BAD)?
 	localWorkSize1[0] = 16;
 	localWorkSize1[1] = 16;
-	globalWorkSize1[0] = matResult1_cols; // Number of support vectors (should be large)
+	globalWorkSize1[0] = ((matResult1_cols + (SVS - 1)) / SVS); // matResult1_cols is number of support vectors (should be large, e.g 56958)
 	globalWorkSize1[1] = matResult1_rows; // number of inputs (features, should be small) - variable [1 - INFINIT]
 	COMPV_CHECK_CL_CODE_BAIL(clerr = clEnqueueNDRangeKernel(m_clCommandQueue, m_clkernelPart1, 2, nullptr, globalWorkSize1, localWorkSize1,
 		0, nullptr, &clEventKernel1), "clEnqueueNDRangeKernel failed");
