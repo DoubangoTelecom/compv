@@ -60,10 +60,10 @@ __kernel void clCompVMachineLearningSVMPredictBinaryRBF_Part1(
 
 #define SVS 7
 	const int global_i = get_global_id(1); // number of inputs (e.g. 408)
-	const int global_jsvs = get_global_id(0); // number of support vectors (e.g. 56958) / SVS
+	const int global_jsvs = get_global_id(0) * SVS; // number of support vectors (e.g. 56958) / SVS
 
 	for (int j = 0; j < SVS; ++j) {
-		const int global_j = (global_jsvs * SVS) + j;
+		const int global_j = global_jsvs + j;
 		if (global_j < 56958) { // FIXME(dmi): hard-coded
 			double sum = 0;
 
