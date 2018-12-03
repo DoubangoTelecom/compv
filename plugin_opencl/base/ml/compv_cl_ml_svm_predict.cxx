@@ -11,6 +11,8 @@
 
 #define COMPV_THIS_CLASSNAME	"CompVMachineLearningSVMPredictBinaryRBF_GPU"
 
+#define COMPV_CL_PROFILING_ENABLED	1
+
 COMPV_NAMESPACE_BEGIN()
 
 CompVMachineLearningSVMPredictBinaryRBF_GPU::CompVMachineLearningSVMPredictBinaryRBF_GPU(const compv_float64_t& gamma, const compv_float64_t& rho, const int32_t(&labels)[2], const int32_t(&nr_sv)[2], const CompVMatPtr& matSV, const CompVMatPtr& matCoeff)
@@ -55,13 +57,17 @@ COMPV_ERROR_CODE CompVMachineLearningSVMPredictBinaryRBF_GPU::init(const CompVMa
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	const cl_device_id& device_id = CompVCL::clDeviceId();
 	cl_mem clMemMatSV = nullptr, clMemMatCoeff = nullptr;
-
+	cl_command_queue_properties qprop = 0;
+#if COMPV_CL_PROFILING_ENABLED
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Profiling enabled");
+	qprop |= CL_QUEUE_PROFILING_ENABLE;
+#endif
 	// Create context
 	m_clContext = clCreateContext(nullptr, 1, &device_id, nullptr, nullptr, &clerr);
 	COMPV_CHECK_CL_CODE_BAIL(clerr, "clCreateContext failed");
 
 	// Create a command commands
-	m_clCommandQueue = clCreateCommandQueue(m_clContext, device_id, 0, &clerr);
+	m_clCommandQueue = clCreateCommandQueue(m_clContext, device_id, qprop, &clerr);
 	COMPV_CHECK_CL_CODE_BAIL(clerr, "clCreateCommandQueue failed");
 
 	// Create buffers
@@ -158,6 +164,7 @@ COMPV_ERROR_CODE CompVMachineLearningSVMPredictBinaryRBF_GPU::process(const Comp
 
 	cl_int clerr = CL_SUCCESS;
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
+	cl_event clEventKernel1 = nullptr;
 	CompVMatPtr matResult1, matResult_ = *matResult;
 	const size_t numvectors = matVectors->rows();
 	cl_mem clMemMatVectors = nullptr;
@@ -185,12 +192,28 @@ COMPV_ERROR_CODE CompVMachineLearningSVMPredictBinaryRBF_GPU::process(const Comp
 	COMPV_CHECK_CL_CODE_BAIL(clerr = clSetKernelArg(m_clkernelPart1, 7, sizeof(matResult1_colsInt), (const void*)&matResult1_colsInt), "clSetKernelArg(m_clkernelPart1, matResult_cols, 7) failed");
 
 	// Execute
+#define SVS 20 // must be same number as what is defined in CL script
 	localWorkSize1[0] = 16;
 	localWorkSize1[1] = 16;
-	globalWorkSize1[0] = matResult1_cols;
-	globalWorkSize1[1] = matResult1_rows;
+	globalWorkSize1[0] = matResult1_cols; // Number of support vectors (should be large)
+	globalWorkSize1[1] = matResult1_rows; // number of inputs (features, should be small) - variable [1 - INFINIT]
 	COMPV_CHECK_CL_CODE_BAIL(clerr = clEnqueueNDRangeKernel(m_clCommandQueue, m_clkernelPart1, 2, nullptr, globalWorkSize1, localWorkSize1,
-		0, nullptr, nullptr), "clEnqueueNDRangeKernel failed");
+		0, nullptr, &clEventKernel1), "clEnqueueNDRangeKernel failed");
+
+#if COMPV_CL_PROFILING_ENABLED
+	{
+		cl_ulong startTime, endTime;
+		cl_int eventStatus = CL_QUEUED;
+		cl_ulong nanoSeconds;
+
+		COMPV_CHECK_CL_CODE_BAIL(clerr = clWaitForEvents(1, &clEventKernel1), "clWaitForEvents(clEventKernel1) failed");
+		COMPV_CHECK_CL_CODE_BAIL(clerr = clGetEventProfilingInfo(clEventKernel1, CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &startTime, 0), "clGetEventProfilingInfo(clEventKernel1, CL_PROFILING_COMMAND_START) failed");
+		COMPV_CHECK_CL_CODE_BAIL(clerr = clGetEventProfilingInfo(clEventKernel1, CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &endTime, 0), "clGetEventProfilingInfo(clEventKernel1, CL_PROFILING_COMMAND_END) failed");
+		
+		nanoSeconds = (endTime - startTime); // GPGPU timer resolution = 10e-9 (nanoseconds)
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Kernel1 duration = %lf ms", (nanoSeconds * 1e-6));
+	}
+#endif /* COMPV_CL_PROFILING_ENABLED */
 
 	// Get Data using async read
 	COMPV_CHECK_CODE_RETURN(err = CompVMat::newObjStrideless<compv_float64_t>(&matResult1, matResult1_rows, matResult1_cols));
@@ -235,14 +258,17 @@ bail:
 	if (clerr != CL_SUCCESS) {
 		err = COMPV_ERROR_CODE_E_OPENCL;
 	}
-	if (clMemMatVectors != nullptr) {
+	if (clMemMatVectors) {
 		clReleaseMemObject(clMemMatVectors), clMemMatVectors = nullptr;
 	}
-	if (clMemMatResult1 != nullptr) {
+	if (clMemMatResult1) {
 		clReleaseMemObject(clMemMatResult1), clMemMatResult1 = nullptr;
 	}
-	if (clMemMatResult2 != nullptr) {
+	if (clMemMatResult2) {
 		clReleaseMemObject(clMemMatResult2), clMemMatResult2 = nullptr;
+	}
+	if (clEventKernel1) {
+		clReleaseEvent(clEventKernel1), clEventKernel1 = nullptr;
 	}
 	if (COMPV_ERROR_CODE_IS_OK(err) && clerr != CL_SUCCESS) {
 		err = COMPV_ERROR_CODE_E_OPENCL;

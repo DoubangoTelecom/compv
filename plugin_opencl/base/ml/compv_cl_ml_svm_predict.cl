@@ -22,6 +22,7 @@ __kernel void clCompVMachineLearningSVMPredictBinaryRBF_Part1(
 	const int matResult_cols // 7
 )
 {
+#if 0 // TILED VERSION
 	const int local_i = get_local_id(1);
     const int local_j = get_local_id(0);
 	const int global_i = TS*get_group_id(1) + local_i;
@@ -29,7 +30,6 @@ __kernel void clCompVMachineLearningSVMPredictBinaryRBF_Part1(
 
 	double sum = 0;
 
-#if 0 // TILED VERSION
 	__local double matVectors_sub[TS][TS];
     __local double matSVs_sub[TS][TS];
 	
@@ -55,6 +55,12 @@ __kernel void clCompVMachineLearningSVMPredictBinaryRBF_Part1(
 	}
 
 #else // OTHER VERSION
+#define SVS 20
+	const int global_i = get_global_id(1); // number of inputs (e.g. 408)
+	const int global_j = get_global_id(0); // number of support vectors (e.g. 56958)
+
+	double sum = 0;
+
 	for (int k = 0; k < matSVs_cols; ++k) {
 		const double diff = matVectors[(global_i * matVectors_cols) + k] - matSVs[(global_j * matSVs_cols) + k];
 		sum += (diff * diff);

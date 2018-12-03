@@ -329,7 +329,7 @@ private:
 //	CompVMachineLearningSVMPredict
 //
 
-newObjBinaryRBFMachineLearningSVMPredict CompVMachineLearningSVMPredict::s_ptrNewObjBinaryRBF_CPU = CompVMachineLearningSVMPredictBinaryRBF_CPU2::newObj; // must be "CPU1", "CPU2" is for testing only 
+newObjBinaryRBFMachineLearningSVMPredict CompVMachineLearningSVMPredict::s_ptrNewObjBinaryRBF_CPU = CompVMachineLearningSVMPredictBinaryRBF_CPU1::newObj; // must be "CPU1", "CPU2" is for testing only 
 newObjBinaryRBFMachineLearningSVMPredict CompVMachineLearningSVMPredict::s_ptrNewObjBinaryRBF_GPU = nullptr;
 
 CompVMachineLearningSVMPredict::CompVMachineLearningSVMPredict(CompVMachineLearningSVMPredictType eType)
