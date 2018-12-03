@@ -167,19 +167,19 @@ COMPV_ERROR_CODE CompVMachineLearningSVMPredictBinaryRBF_GPU::process(const Comp
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	cl_event clEventKernel1 = nullptr;
 	CompVMatPtr matResult1, matResult_ = *matResult;
-	const size_t numvectors = matVectors->rows();
+	const size_t numvectors = matVectorsFloat64->rows();
 	cl_mem clMemMatVectors = nullptr;
 	cl_mem clMemMatResult1 = nullptr;
 	cl_mem clMemMatResult2 = nullptr;
 	size_t localWorkSize1[2], globalWorkSize1[2];
 
-	const size_t matResult1_rows = matVectors->rows();
+	const size_t matResult1_rows = matVectorsFloat64->rows();
 	const size_t matResult1_cols = static_cast<size_t>(m_nMatSVs_rows);
 	const cl_int matResult1_colsInt = static_cast<cl_int>(matResult1_cols);
-	const cl_int matVectors_colsInt = static_cast<cl_int>(matVectors->cols());
+	const cl_int matVectors_colsInt = static_cast<cl_int>(matVectorsFloat64->cols());
 
 	// Create matVectors memory
-	COMPV_CHECK_CODE_BAIL(err = CompVCLUtils::createDataStrideless(matVectors, &clMemMatVectors, CL_MEM_READ_ONLY, m_clContext, m_clCommandQueue));
+	COMPV_CHECK_CODE_BAIL(err = CompVCLUtils::createDataStrideless(matVectorsFloat64, &clMemMatVectors, CL_MEM_READ_ONLY, m_clContext, m_clCommandQueue));
 
 	// Create matResult1 memory
 	clMemMatResult1 = clCreateBuffer(m_clContext, CL_MEM_READ_WRITE, (matResult1_rows * matResult1_cols) * sizeof(compv_float64_t), nullptr,
