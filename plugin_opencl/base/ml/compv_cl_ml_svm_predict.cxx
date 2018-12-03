@@ -198,6 +198,7 @@ COMPV_ERROR_CODE CompVMachineLearningSVMPredictBinaryRBF_GPU::process(const Comp
 	localWorkSize1[1] = 16;
 	globalWorkSize1[0] = (((matResult1_cols + (SVS - 1)) / SVS) + 15) & -16; // matResult1_cols is number of support vectors (should be large, e.g 56958)
 	globalWorkSize1[1] = ((matResult1_rows + 15) & -16); // number of inputs (features, should be small) - variable [1 - INFINIT]
+
 	COMPV_CHECK_CL_CODE_BAIL(clerr = clEnqueueNDRangeKernel(m_clCommandQueue, m_clkernelPart1, 2, nullptr, globalWorkSize1, localWorkSize1,
 		0, nullptr, &clEventKernel1), "clEnqueueNDRangeKernel failed");
 
@@ -228,7 +229,7 @@ COMPV_ERROR_CODE CompVMachineLearningSVMPredictBinaryRBF_GPU::process(const Comp
 		COMPV_DEBUG_INFO_CODE_FOR_TESTING("This is for testing only mus move code to gpu");
 		// GPGPU reduction (horizontal sum)
 		compv_float64_t* Cptr0 = matResult1->ptr<compv_float64_t>();
-		//for (int a = 0; a < 10; ++a) { printf("%lf, ", Cptr0[a]); }
+		for (int a = 0; a < 10; ++a) { printf("%lf, ", Cptr0[a]); }
 		const size_t Crows = matResult1->rows();
 		const size_t Ccols = matResult1->cols();
 		const size_t Cstride = matResult1->stride();

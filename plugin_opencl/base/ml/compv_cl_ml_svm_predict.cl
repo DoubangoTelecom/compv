@@ -87,16 +87,9 @@ __kernel void clCompVMachineLearningSVMPredictBinaryRBF_Part1(
 	int local_i = get_local_id(1);
 
 	// "matVectors" contains the features to classify which means it will be short (N * 63) -> no need for caching
-	/*__local double matVectors_sub[16][63];
-	if (global_i < 1 && global_j < 1) {
-		int m = (local_j * 4);
-		for (int k = 0; k < 4 && m < 63; ++k, ++m) {
-			matVectors_sub[local_i][m] = matVectors[(((group_i * 16) + local_i) * matVectors_cols) + m];
-		}
-	}*/
-
+	
 	__local double matSVs_sub[16][63];
-	/*if (global_i < 408 && global_j < 56958)*/ {
+	if (global_j < 56958) {
 		int m = (local_i * 4);
 		for (int k = 0; k < 4 && m < 63; ++k, ++m) {
 			matSVs_sub[local_j][m] = matSVs[(((group_j * 16) + local_j) * matSVs_cols) + m];
@@ -105,19 +98,15 @@ __kernel void clCompVMachineLearningSVMPredictBinaryRBF_Part1(
 
 	barrier(CLK_LOCAL_MEM_FENCE);
 
-	if (global_i >= 408 || global_j >= 56958) {
-		return;
+	if (global_i < 408 && global_j < 56958) {
+		double sum = 0;
+		for (int k = 0; k < matSVs_cols; ++k) {
+			double diff = matVectors[(global_i * matVectors_cols) + k] - matSVs_sub[local_j][k];
+			//sum += (diff * diff);
+			sum = fma(diff, diff, sum); // fma instruction is faster
+		}
+		matResult[(global_i * matResult_cols) + global_j] = exp(sum * gammaMinus) * matCoeffs[global_j];
 	}
-
-	double sum = 0;
-
-	for (int k = 0; k < matSVs_cols; ++k) {
-		double diff = /*matVectors_sub[local_i][k]*/matVectors[(global_i * matVectors_cols) + k] - matSVs_sub[local_j][k]/*matSVs[(global_j * matSVs_cols) + k]*/;
-		//sum += (diff * diff);
-		sum = fma(diff, diff, sum); // fma instruction is faster
-	}
-
-	matResult[(global_i * matResult_cols) + global_j] = exp(sum * gammaMinus) * matCoeffs[global_j];
 
 #elif 0 // CACHED + OCCUPANCY MAXIM
 
