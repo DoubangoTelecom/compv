@@ -108,29 +108,25 @@ __kernel void clCompVMachineLearningSVMPredictBinaryRBF_Part1(
 		
 		matResult[(global_i * matResult_cols) + global_j] = exp(sum * gammaMinus) * matCoeffs[global_j];
 		
-		/* // Next unrolled version is faster -> Add support for T-HOG version using hard-coded values
-		double diff0, diff1, diff2, diff3;
+		/*
+		 // Next unrolled version is faster -> Add support for T-HOG version using hard-coded values
+		double diff0, diff1, diff2, diff3, diff4;
 		double sum = 0;
-		#define ROUND(a, b, c, d) \
+		#define ROUND(a, b, c, d, e) \
 			diff0 = matVectors[(global_i * matVectors_cols) + a] - matSVs_sub[local_j][a]; \
 			diff1 = matVectors[(global_i * matVectors_cols) + b] - matSVs_sub[local_j][b]; \
 			diff2 = matVectors[(global_i * matVectors_cols) + c] - matSVs_sub[local_j][c]; \
 			diff3 = matVectors[(global_i * matVectors_cols) + d] - matSVs_sub[local_j][d]; \
-			sum = fma(diff0, diff0, sum); \
-			sum = fma(diff1, diff1, sum); \
-			sum = fma(diff2, diff2, sum); \
-			sum = fma(diff3, diff3, sum);
+			diff4 = matVectors[(global_i * matVectors_cols) + e] - matSVs_sub[local_j][e]; \
+			sum = fma(diff0, diff0, fma(diff1, diff1, fma(diff2, diff2, fma(diff3, diff3, fma(diff4, diff4, sum)))));
 
-		ROUND(0, 1, 2, 3); ROUND(4, 5, 6, 7); ROUND(8, 9, 10, 11); ROUND(12, 13, 14, 15);
-		ROUND(16, 17, 18, 19); ROUND(20, 21, 22, 23); ROUND(24, 25, 26, 27); ROUND(28, 29, 30, 31);
-		ROUND(32, 33, 34, 35); ROUND(36, 37, 38, 39); ROUND(40, 41, 42, 43); ROUND(44, 45, 46, 47);
-		ROUND(48, 49, 50, 51); ROUND(52, 53, 54, 55); ROUND(56, 57, 58, 59); 
+		ROUND(0, 1, 2, 3, 4); ROUND(5, 6, 7, 8, 9); ROUND(10, 11, 12, 13, 14); ROUND(15, 16, 17, 18, 19);
+		ROUND(20, 21, 22, 23, 24); ROUND(25, 26, 27, 28, 29); ROUND(30, 31, 32, 33, 34); ROUND(35, 36, 37, 38, 39);
+		ROUND(40, 41, 42, 43, 44); ROUND(45, 46, 47, 48, 49); ROUND(50, 51, 52, 53, 54); ROUND(55, 56, 57, 58, 59);
 		diff0 = matVectors[(global_i * matVectors_cols) + 60] - matSVs_sub[local_j][60];
 		diff1 = matVectors[(global_i * matVectors_cols) + 61] - matSVs_sub[local_j][61];
 		diff2 = matVectors[(global_i * matVectors_cols) + 62] - matSVs_sub[local_j][62];
-		sum = fma(diff0, diff0, sum);
-		sum = fma(diff1, diff1, sum);
-		sum = fma(diff2, diff2, sum);
+		sum = fma(diff0, diff0, fma(diff1, diff1, fma(diff2, diff2, sum)));
 		matResult[(global_i * matResult_cols) + global_j] = exp(sum * gammaMinus) * matCoeffs[global_j];
 		*/
 	}
