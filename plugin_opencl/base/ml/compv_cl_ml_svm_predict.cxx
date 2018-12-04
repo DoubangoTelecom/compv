@@ -248,6 +248,7 @@ COMPV_ERROR_CODE CompVMachineLearningSVMPredictBinaryRBF_GPU::process(const Comp
 
 	if (1){
 		COMPV_DEBUG_INFO_CODE_FOR_TESTING("This is for testing only mus move code to gpu");
+		// TODO(dmi): for devices not supporting "cl_khr_fp64 extension" like Intel Iris, this code must be done on CPU (multi-threaded of course) 
 		// GPGPU reduction (horizontal sum)
 		TYP* Cptr0 = matResult1->ptr<TYP>();
 		//for (int a = 0; a < 10; ++a) { printf("%lf, ", Cptr0[a]); }

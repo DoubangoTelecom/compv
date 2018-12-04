@@ -19,6 +19,8 @@
 #define THOG_VECTORS				"C:/Projects/GitHub/data/thog/thog00.vectors" // from "Grillage" - should be #(63 x 408)
 #define THOG_LABELS					"C:/Projects/GitHub/data/thog/thog00.labels"
 
+// TODO(dmi): a (1654 x 2126) image with huge candidates to use as reference -> C:/Projects/ocr_datasets/Seine-et-Marne-Magazine-2017/CD77-113-WEB/CD77-113-WEB-01.jpg
+
 #define LOOP_COUNT			1
 
 COMPV_ERROR_CODE ml_svm_predict()

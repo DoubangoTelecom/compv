@@ -111,7 +111,6 @@ __kernel void clCompVMachineLearningSVMPredictBinaryRBF_Part1(
 		}
 		
 		matResult[(global_i * matResult_cols) + global_j] = exp(sum * gammaMinus) * matCoeffs[global_j];
-		
 
 		/*
 		//mixed type(float, double) - more accurate - 17millis
