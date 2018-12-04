@@ -229,7 +229,7 @@ COMPV_ERROR_CODE CompVMachineLearningSVMPredictBinaryRBF_GPU::process(const Comp
 		COMPV_DEBUG_INFO_CODE_FOR_TESTING("This is for testing only mus move code to gpu");
 		// GPGPU reduction (horizontal sum)
 		compv_float64_t* Cptr0 = matResult1->ptr<compv_float64_t>();
-		for (int a = 0; a < 10; ++a) { printf("%lf, ", Cptr0[a]); }
+		//for (int a = 0; a < 10; ++a) { printf("%lf, ", Cptr0[a]); }
 		const size_t Crows = matResult1->rows();
 		const size_t Ccols = matResult1->cols();
 		const size_t Cstride = matResult1->stride();
