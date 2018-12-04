@@ -88,7 +88,7 @@ __kernel void clCompVMachineLearningSVMPredictBinaryRBF_Part1(
 
 	// "matVectors" contains the features to classify which means it will be short (N * 63) -> no need for caching
 	
-	__local double matSVs_sub[16][63];
+	__local double matSVs_sub[16][63]; // strange, 64 slow, 63 fast, 31 fast and 32 slow
 	if (global_j < 56958) {
 		int m = (local_i * 4);
 		for (int k = 0; k < 4 && m < 63; ++k, ++m) {
@@ -97,15 +97,42 @@ __kernel void clCompVMachineLearningSVMPredictBinaryRBF_Part1(
 	}
 
 	barrier(CLK_LOCAL_MEM_FENCE);
-
+	
 	if (global_i < 408 && global_j < 56958) {
+		
 		double sum = 0;
 		for (int k = 0; k < matSVs_cols; ++k) {
 			double diff = matVectors[(global_i * matVectors_cols) + k] - matSVs_sub[local_j][k];
-			//sum += (diff * diff);
 			sum = fma(diff, diff, sum); // fma instruction is faster
 		}
+		
 		matResult[(global_i * matResult_cols) + global_j] = exp(sum * gammaMinus) * matCoeffs[global_j];
+		
+		/* // Next unrolled version is faster -> Add support for T-HOG version using hard-coded values
+		double diff0, diff1, diff2, diff3;
+		double sum = 0;
+		#define ROUND(a, b, c, d) \
+			diff0 = matVectors[(global_i * matVectors_cols) + a] - matSVs_sub[local_j][a]; \
+			diff1 = matVectors[(global_i * matVectors_cols) + b] - matSVs_sub[local_j][b]; \
+			diff2 = matVectors[(global_i * matVectors_cols) + c] - matSVs_sub[local_j][c]; \
+			diff3 = matVectors[(global_i * matVectors_cols) + d] - matSVs_sub[local_j][d]; \
+			sum = fma(diff0, diff0, sum); \
+			sum = fma(diff1, diff1, sum); \
+			sum = fma(diff2, diff2, sum); \
+			sum = fma(diff3, diff3, sum);
+
+		ROUND(0, 1, 2, 3); ROUND(4, 5, 6, 7); ROUND(8, 9, 10, 11); ROUND(12, 13, 14, 15);
+		ROUND(16, 17, 18, 19); ROUND(20, 21, 22, 23); ROUND(24, 25, 26, 27); ROUND(28, 29, 30, 31);
+		ROUND(32, 33, 34, 35); ROUND(36, 37, 38, 39); ROUND(40, 41, 42, 43); ROUND(44, 45, 46, 47);
+		ROUND(48, 49, 50, 51); ROUND(52, 53, 54, 55); ROUND(56, 57, 58, 59); 
+		diff0 = matVectors[(global_i * matVectors_cols) + 60] - matSVs_sub[local_j][60];
+		diff1 = matVectors[(global_i * matVectors_cols) + 61] - matSVs_sub[local_j][61];
+		diff2 = matVectors[(global_i * matVectors_cols) + 62] - matSVs_sub[local_j][62];
+		sum = fma(diff0, diff0, sum);
+		sum = fma(diff1, diff1, sum);
+		sum = fma(diff2, diff2, sum);
+		matResult[(global_i * matResult_cols) + global_j] = exp(sum * gammaMinus) * matCoeffs[global_j];
+		*/
 	}
 
 #elif 0 // CACHED + OCCUPANCY MAXIM
