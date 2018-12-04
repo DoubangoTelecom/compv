@@ -98,7 +98,7 @@ COMPV_ERROR_CODE CompVCLUtils::createDataStrideless(const CompVMatPtr& hostdata,
 	const size_t cols = hostdata->cols();
 	const size_t rows = hostdata->rows();
 
-	devdata_ = clCreateBuffer(clContext, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, hostdata->planeSizeInBytes(0), hostdata->ptr<void>(0),
+	devdata_ = clCreateBuffer(clContext, devdataFlags | CL_MEM_COPY_HOST_PTR, hostdata->planeSizeInBytes(0), hostdata->ptr<void>(0),
 		&clerr);
 	COMPV_CHECK_CL_CODE_BAIL(clerr, "clCreateBuffer failed");
 	if (stride == cols) {

@@ -9,19 +9,23 @@
 #pragma OPENCL EXTENSION cl_khr_fp64 : enable
 #endif
 
+
+#define TYP float
 #define TS 16 // FIXME(dmi): must not be hard-coded (localsize)
 
 __kernel void clCompVMachineLearningSVMPredictBinaryRBF_Part1(
-	__global const double* matVectors, // 0
-	__global const double* matSVs, // 1
-	__global const double* matCoeffs, // 2
-	__global double* matResult, // 3
-	const double gammaMinus, // 4
-	const int matVectors_cols, // 5
-	const int matSVs_cols, // 6
-	const int matResult_cols // 7
+	__global const TYP* matVectors, // 0
+	__global const TYP* matSVs, // 1
+	__global const TYP* matCoeffs, // 2
+	__global TYP* matResult, // 3
+	const TYP gammaMinus, // 4
+	const int matSVs_cols, // 5 
+	const int matResult_cols, // 6 - max(global(0)) - number of support vectors (e.g. 56958, fixed)
+	const int matVectors_rows // 7 - max(global(1)) - number of features (e.g. 408, variable)
 )
 {
+	const int matVectors_cols = matSVs_cols; // input vectors and SVs have same length
+
 #if 0 // SHARED_MEMORY
 
 	const int local_i = get_local_id(1);
@@ -29,10 +33,10 @@ __kernel void clCompVMachineLearningSVMPredictBinaryRBF_Part1(
 	const int global_i = TS*get_group_id(1) + local_i;
 	const int global_j = TS*get_group_id(0) + local_j;
 
-	double sum = 0;
+	TYP sum = 0;
 
-	__local double matVectors_sub[TS][TS];
-    __local double matSVs_sub[TS][TS];
+	__local TYP matVectors_sub[TS][TS];
+    __local TYP matSVs_sub[TS][TS];
 	
 	const int numTiles = (matSVs_cols) / TS; // FIXME(dmi): not correct because not multiple of TS
 	
@@ -46,7 +50,7 @@ __kernel void clCompVMachineLearningSVMPredictBinaryRBF_Part1(
 
 		for (int k = 0; k < TS; ++k) {
 			/*if ((global_i + (TS*t) + k) < 408 && (global_j + (TS*t) + k) < 56958)*/ {
-				const double diff = matVectors_sub[k][local_i] - matSVs_sub[local_j][k];
+				const TYP diff = matVectors_sub[k][local_i] - matSVs_sub[local_j][k];
 				 sum += (diff * diff);
 				//sum = fma(diff, diff, sum);
 			}
@@ -65,10 +69,10 @@ __kernel void clCompVMachineLearningSVMPredictBinaryRBF_Part1(
 	for (int j = 0; j < SVS; ++j) {
 		const int global_j = global_jsvs + j;
 		if (global_j < 56958) { // FIXME(dmi): hard-coded
-			double sum = 0;
+			TYP sum = 0;
 
 			for (int k = 0; k < matSVs_cols; ++k) {
-				const double diff = matVectors[(global_i * matVectors_cols) + k] - matSVs[(global_j * matSVs_cols) + k];
+				const TYP diff = matVectors[(global_i * matVectors_cols) + k] - matSVs[(global_j * matSVs_cols) + k];
 				//sum += (diff * diff);
 				sum = fma(diff, diff, sum);
 			}
@@ -77,7 +81,7 @@ __kernel void clCompVMachineLearningSVMPredictBinaryRBF_Part1(
 		}
 	}
 
-#elif 1 // CACHED
+#elif 1 // CACHED (good one)
 	
 	int global_j = get_global_id(0); // number of support vectors (e.g. 56958)
 	int global_i = get_global_id(1); // number of inputs (e.g. 408)
@@ -88,8 +92,8 @@ __kernel void clCompVMachineLearningSVMPredictBinaryRBF_Part1(
 
 	// "matVectors" contains the features to classify which means it will be short (N * 63) -> no need for caching
 	
-	__local double matSVs_sub[16][63]; // strange, 64 slow, 63 fast, 31 fast and 32 slow
-	if (global_j < 56958) {
+	__local TYP matSVs_sub[16][63]; // strange, 64 slow, 63 fast, 31 fast and 32 slow
+	if (global_j < matResult_cols) {
 		int m = (local_i * 4);
 		for (int k = 0; k < 4 && m < 63; ++k, ++m) {
 			matSVs_sub[local_j][m] = matSVs[(((group_j * 16) + local_j) * matSVs_cols) + m];
@@ -98,20 +102,45 @@ __kernel void clCompVMachineLearningSVMPredictBinaryRBF_Part1(
 
 	barrier(CLK_LOCAL_MEM_FENCE);
 	
-	if (global_i < 408 && global_j < 56958) {
+	if (global_i < matVectors_rows && global_j < matResult_cols) {
 		
-		double sum = 0;
+		TYP sum = 0;
 		for (int k = 0; k < matSVs_cols; ++k) {
-			double diff = matVectors[(global_i * matVectors_cols) + k] - matSVs_sub[local_j][k];
+			TYP diff = matVectors[(global_i * matVectors_cols) + k] - matSVs_sub[local_j][k];
 			sum = fma(diff, diff, sum); // fma instruction is faster
 		}
 		
 		matResult[(global_i * matResult_cols) + global_j] = exp(sum * gammaMinus) * matCoeffs[global_j];
 		
+
 		/*
-		 // Next unrolled version is faster -> Add support for T-HOG version using hard-coded values
-		double diff0, diff1, diff2, diff3, diff4;
+		//mixed type(float, double) - more accurate - 17millis
+		// Next unrolled version is faster -> Add support for T-HOG version using hard-coded values
+		TYP diff0, diff1, diff2, diff3, diff4;
 		double sum = 0;
+		#define ROUND(a, b, c, d, e) \
+			diff0 = matVectors[(global_i * matVectors_cols) + a] - matSVs_sub[local_j][a]; \
+			diff1 = matVectors[(global_i * matVectors_cols) + b] - matSVs_sub[local_j][b]; \
+			diff2 = matVectors[(global_i * matVectors_cols) + c] - matSVs_sub[local_j][c]; \
+			diff3 = matVectors[(global_i * matVectors_cols) + d] - matSVs_sub[local_j][d]; \
+			diff4 = matVectors[(global_i * matVectors_cols) + e] - matSVs_sub[local_j][e]; \
+			sum += fma(diff0, diff0, fma(diff1, diff1, fma(diff2, diff2, fma(diff3, diff3, diff4 * diff4))));
+
+		ROUND(0, 1, 2, 3, 4); ROUND(5, 6, 7, 8, 9); ROUND(10, 11, 12, 13, 14); ROUND(15, 16, 17, 18, 19);
+		ROUND(20, 21, 22, 23, 24); ROUND(25, 26, 27, 28, 29); ROUND(30, 31, 32, 33, 34); ROUND(35, 36, 37, 38, 39);
+		ROUND(40, 41, 42, 43, 44); ROUND(45, 46, 47, 48, 49); ROUND(50, 51, 52, 53, 54); ROUND(55, 56, 57, 58, 59);
+		diff0 = matVectors[(global_i * matVectors_cols) + 60] - matSVs_sub[local_j][60];
+		diff1 = matVectors[(global_i * matVectors_cols) + 61] - matSVs_sub[local_j][61];
+		diff2 = matVectors[(global_i * matVectors_cols) + 62] - matSVs_sub[local_j][62];
+		sum += fma(diff0, diff0, fma(diff1, diff1, diff2 * diff2));
+		matResult[(global_i * matResult_cols) + global_j] = exp(sum * gammaMinus) * matCoeffs[global_j];
+		*/
+
+		/*
+		 // all float - less accurate - 13millis
+		 // Next unrolled version is faster -> Add support for T-HOG version using hard-coded values
+		TYP diff0, diff1, diff2, diff3, diff4;
+		TYP sum = 0;
 		#define ROUND(a, b, c, d, e) \
 			diff0 = matVectors[(global_i * matVectors_cols) + a] - matSVs_sub[local_j][a]; \
 			diff1 = matVectors[(global_i * matVectors_cols) + b] - matSVs_sub[local_j][b]; \
@@ -144,13 +173,13 @@ __kernel void clCompVMachineLearningSVMPredictBinaryRBF_Part1(
 	for (int j = 0; j < SVS; ++j) {
 
 		// "matVectors" contains the features to classify which means it will be short (N * 63) -> no need for caching
-		/*__local double matVectors_sub[16][63];
+		/*__local TYP matVectors_sub[16][63];
 		int m = (local_j * 4);
 		for (int k = 0; k < 4 && m < 63; ++k, ++m) {
 			matVectors_sub[local_i][m] = 0;//matVectors[(((group_i * 16) + local_i) * matVectors_cols) + m];
 		}*/
 
-		__local double matSVs_sub[16][63];
+		__local TYP matSVs_sub[16][63];
 		/*if (global_i < 408 && global_j < 56958)*/ {
 			int m = (local_i * 4);
 			for (int k = 0; k < 4 && m < 63; ++k, ++m) {
@@ -164,10 +193,10 @@ __kernel void clCompVMachineLearningSVMPredictBinaryRBF_Part1(
 			return;
 		}
 
-		double sum = 0;
+		TYP sum = 0;
 
 		for (int k = 0; k < matSVs_cols; ++k) {
-			double diff = /*matVectors_sub[local_i][k]*/matVectors[(global_i * matVectors_cols) + k] - matSVs_sub[local_j][k]/*matSVs[(global_j * matSVs_cols) + k]*/;
+			TYP diff = /*matVectors_sub[local_i][k]*/matVectors[(global_i * matVectors_cols) + k] - matSVs_sub[local_j][k]/*matSVs[(global_j * matSVs_cols) + k]*/;
 			//sum += (diff * diff);
 			sum = fma(diff, diff, sum); // fma instruction is faster
 		}
@@ -185,8 +214,8 @@ __kernel void clCompVMachineLearningSVMPredictBinaryRBF_Part1(
 	const int local_j = get_local_id(0);
 	const int local_i = get_local_id(1);
 
-	__local double matVectors_sub[TILE_SIZE][TILE_SIZE];
-	__local double matSVs_sub[TILE_SIZE][TILE_SIZE];
+	__local TYP matVectors_sub[TILE_SIZE][TILE_SIZE];
+	__local TYP matSVs_sub[TILE_SIZE][TILE_SIZE];
 
 	if (local_i == 0 && local_j == 0) {
 		for (int j = 0; j < TILE_SIZE; ++j) {
@@ -197,7 +226,7 @@ __kernel void clCompVMachineLearningSVMPredictBinaryRBF_Part1(
 		}
 	}
 
-	double sum = 0;
+	TYP sum = 0;
 
 	const int numTiles = (matSVs_cols + (TILE_SIZE - 1)) / TILE_SIZE;
 	for (int t = 0; t < numTiles; ++t) {
@@ -206,7 +235,7 @@ __kernel void clCompVMachineLearningSVMPredictBinaryRBF_Part1(
 		barrier(CLK_LOCAL_MEM_FENCE);
 
 		for (int k = 0; k < TILE_SIZE; ++k) {
-			const double diff = matVectors_sub[local_i][k] * matSVs_sub[local_j][k];
+			const TYP diff = matVectors_sub[local_i][k] * matSVs_sub[local_j][k];
 			sum += (diff * diff);
 			//sum = fma(diff, diff, sum);
 		}
@@ -219,16 +248,16 @@ __kernel void clCompVMachineLearningSVMPredictBinaryRBF_Part1(
 	const int k = get_global_id(0); // Brows - 63 - k
 	const int i = get_global_id(1); // Arows - 408 - i
 	
-	//double sum = 0;
+	//TYP sum = 0;
 
-	const double r = matVectors[(i * matVectors_cols) + k];
+	const TYP r = matVectors[(i * matVectors_cols) + k];
 	for (size_t j = 0; j < 56958; ++j) {
-		const double diff = r - matSVs[(k * matSVs_cols) + j];
+		const TYP diff = r - matSVs[(k * matSVs_cols) + j];
 		matResult[(i * matResult_cols) + j] += (diff * diff);
 	}
 
 	//for (int k = 0; k < matSVs_cols; ++k) {
-	//	const double diff = matVectors[(global_i * matVectors_cols) + k] - matSVs[(global_j * matSVs_cols) + k];
+	//	const TYP diff = matVectors[(global_i * matVectors_cols) + k] - matSVs[(global_j * matSVs_cols) + k];
 		//sum += (diff * diff);
 	//	sum = fma(diff, diff, sum);
 	//}
@@ -240,15 +269,16 @@ __kernel void clCompVMachineLearningSVMPredictBinaryRBF_Part1(
 	const int global_j = get_global_id(0); // number of support vectors (e.g. 56958)
 	const int global_i = get_global_id(1); // number of inputs (e.g. 408)
 	
-	double sum = 0;
+	if (global_i < matVectors_rows && global_j < matResult_cols) {
+		TYP sum = 0;
+		for (int k = 0; k < matSVs_cols; ++k) {
+			const TYP diff = matVectors[(global_i * matVectors_cols) + k] - matSVs[(global_j * matSVs_cols) + k];
+			//sum += (diff * diff);
+			sum = fma(diff, diff, sum);
+		}
 
-	for (int k = 0; k < matSVs_cols; ++k) {
-		const double diff = matVectors[(global_i * matVectors_cols) + k] - matSVs[(global_j * matSVs_cols) + k];
-		sum += (diff * diff);
-		//sum = fma(diff, diff, sum);
+		matResult[(global_i * matResult_cols) + global_j] = exp(sum * gammaMinus) * matCoeffs[global_j];
 	}
-
-	matResult[(global_i * matResult_cols) + global_j] = exp(sum * gammaMinus) * matCoeffs[global_j];
 	
 #endif /* SHARED_MEMORY */
 	

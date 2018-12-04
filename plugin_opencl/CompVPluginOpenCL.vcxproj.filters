@@ -100,10 +100,8 @@
     <CustomBuild Include="base\math\compv_cl_math_convlt.cl">
       <Filter>Source Files\base\math</Filter>
     </CustomBuild>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="base\ml\compv_cl_ml_svm_predict.cl">
+    <CustomBuild Include="base\ml\compv_cl_ml_svm_predict.cl">
       <Filter>Source Files\base\ml</Filter>
-    </None>
+    </CustomBuild>
   </ItemGroup>
 </Project>
