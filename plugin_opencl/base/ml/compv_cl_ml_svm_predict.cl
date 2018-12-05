@@ -290,7 +290,6 @@ __kernel void clCompVMachineLearningSVMPredictBinaryRBF_Part1(
 
 /* Reduction */
 #define REDUCTION_ALGO(inPtr, outPtr, inCols, inRows, outCols, rho) { \
-	const int i = get_global_id(0); \
 	const int local_id0 = get_local_id(0); \
 	const int global_id0 = get_global_id(0); \
 	const int global_id1 = get_global_id(1); \
