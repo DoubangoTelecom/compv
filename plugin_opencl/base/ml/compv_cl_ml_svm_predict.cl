@@ -288,3 +288,36 @@ __kernel void clCompVMachineLearningSVMPredictBinaryRBF_Part1(
 	
 }
 
+
+
+// Reduction
+__kernel void clCompVMachineLearningSVMPredictBinaryRBF_Part2(
+	__global TYP* matResult1, // 0
+	__global double* matResult2, // 1
+	const int matResult1_cols, // 2
+	const int matResult1_rows, // 3
+	const int matResult2_cols // 4
+)
+{
+	const int i = get_global_id(0);
+	const int local_id0 = get_local_id(0);
+	const int global_id0 = get_global_id(0);
+	const int global_id1 = get_global_id(1);
+
+	const int size0 = get_local_size(0);
+
+	__local double accumulator[256];
+	accumulator[local_id0] = (global_id0 < matResult1_cols && global_id1 < matResult1_rows) ? matResult1[(global_id1 * matResult1_cols) + global_id0] : 0;
+	barrier(CLK_LOCAL_MEM_FENCE);
+
+	for (int stride0 = (size0 >> 1); stride0 > 0; stride0 >>= 1) {
+		if (local_id0 < stride0) {
+			accumulator[local_id0] += accumulator[local_id0 + stride0];
+		}
+		barrier(CLK_LOCAL_MEM_FENCE);
+	}
+
+	if (local_id0 == 0 && get_local_id(1) == 0) {
+		matResult2[(global_id1 * matResult2_cols) + get_group_id(0)] = accumulator[0];
+	}
+}

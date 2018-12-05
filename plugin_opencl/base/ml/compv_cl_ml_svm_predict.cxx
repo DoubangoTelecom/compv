@@ -99,6 +99,7 @@ COMPV_ERROR_CODE CompVMachineLearningSVMPredictBinaryRBF_GPU::init(const CompVMa
 	COMPV_CHECK_CODE_BAIL(err = CompVCLUtils::createProgramWithSource(&m_clProgram, m_clContext, "compv_cl_ml_svm_predict.cl"));
 	COMPV_CHECK_CODE_BAIL(err = CompVCLUtils::buildProgram(m_clProgram, CompVCL::clDeviceId()));
 	COMPV_CHECK_CODE_BAIL(err = CompVCLUtils::createKernel(&m_clkernelPart1, m_clProgram, "clCompVMachineLearningSVMPredictBinaryRBF_Part1"));
+	COMPV_CHECK_CODE_BAIL(err = CompVCLUtils::createKernel(&m_clkernelPart2, m_clProgram, "clCompVMachineLearningSVMPredictBinaryRBF_Part2"));
 
 	// Set Kernel (Part #1) Params
 	COMPV_CHECK_CL_CODE_BAIL(clerr = clSetKernelArg(m_clkernelPart1, 1, sizeof(m_clMemMatSV), (const void*)&m_clMemMatSV), "clSetKernelArg(m_clkernelPart1, matSVs, 1) failed");
@@ -108,7 +109,6 @@ COMPV_ERROR_CODE CompVMachineLearningSVMPredictBinaryRBF_GPU::init(const CompVMa
 
 	// Process
 	COMPV_CHECK_CL_CODE_BAIL(clerr = clFinish(m_clCommandQueue), "clFinish failed");
-	COMPV_CHECK_CL_CODE_BAIL(clerr = clFlush(m_clCommandQueue), "clFlush failed");
 
 	m_bInitialized = true;
 
@@ -185,63 +185,97 @@ COMPV_ERROR_CODE CompVMachineLearningSVMPredictBinaryRBF_GPU::process(const Comp
 
 	cl_int clerr = CL_SUCCESS;
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
-	cl_event clEventKernel1 = nullptr;
-	CompVMatPtr matResult1, matResult_ = *matResult;
+	cl_event clEventKernel1 = nullptr, clEventKernel2 = nullptr;
+	CompVMatPtr matResult1, matResult2, matResult_ = *matResult;
 	const size_t numvectors = matVectorsFloat64->rows();
 	cl_mem clMemMatVectors = nullptr;
 	cl_mem clMemMatResult1 = nullptr;
 	cl_mem clMemMatResult2 = nullptr;
-	size_t localWorkSize1[2], globalWorkSize1[2];
+	size_t localWorkSize[2], globalWorkSize[2];
 
 	const size_t matResult1_rows = matVectorsFloat64->rows();
 	const size_t matResult1_cols = static_cast<size_t>(m_nMatSVs_rows);
 	const cl_int matResult1_colsInt = static_cast<cl_int>(matResult1_cols);
+	const cl_int matResult1_rowsInt = static_cast<cl_int>(matResult1_rows);
 	const cl_int matVectors_colsInt = static_cast<cl_int>(matVectorsFloat64->cols());
 	const cl_int matVectors_rowsInt = static_cast<cl_int>(matVectorsFloat64->rows());
+	cl_int matResult2_colsInt, matResult2_rowsInt = matResult1_rowsInt;
 
 	// Create matVectors memory
 	COMPV_CHECK_CODE_BAIL(err = CompVCLUtils::createDataStrideless(matVectorsFloat64, &clMemMatVectors, CL_MEM_READ_ONLY, m_clContext, m_clCommandQueue));
 
 	// Create matResult1 memory
-	clMemMatResult1 = clCreateBuffer(m_clContext, CL_MEM_READ_WRITE, (matResult1_rows * matResult1_cols) * sizeof(TYP), nullptr,
-		&clerr);
-	COMPV_CHECK_CL_CODE_BAIL(clerr, "clCreateBuffer failed");
+	clMemMatResult1 = clCreateBuffer(m_clContext, CL_MEM_READ_WRITE, (matResult1_rows * matResult1_cols) * sizeof(TYP), nullptr, &clerr);
+	COMPV_CHECK_CL_CODE_BAIL(clerr, "clCreateBuffer(clMemMatResult1) failed");
 
 	// Set kernel arguments (Part #1)
 	COMPV_CHECK_CL_CODE_BAIL(clerr = clSetKernelArg(m_clkernelPart1, 0, sizeof(clMemMatVectors), (const void*)&clMemMatVectors), "clSetKernelArg(m_clkernelPart1, matVectors, 0) failed");
 	COMPV_CHECK_CL_CODE_BAIL(clerr = clSetKernelArg(m_clkernelPart1, 3, sizeof(clMemMatResult1), (const void*)&clMemMatResult1), "clSetKernelArg(m_clkernelPart1, matResult, 3) failed");
 	COMPV_CHECK_CL_CODE_BAIL(clerr = clSetKernelArg(m_clkernelPart1, 6, sizeof(matResult1_colsInt), (const void*)&matResult1_colsInt), "clSetKernelArg(m_clkernelPart1, matResult_cols, 6) failed");
 	COMPV_CHECK_CL_CODE_BAIL(clerr = clSetKernelArg(m_clkernelPart1, 7, sizeof(matVectors_rowsInt), (const void*)&matVectors_rowsInt), "clSetKernelArg(m_clkernelPart1, matVectors_rows, 7) failed");
-
+	
 	// Execute
 #define SVS 1 // must be same number as what is defined in CL script (IMPORTANT: WHY "7" is good by "8" is BAD)?
-	localWorkSize1[0] = 16;
-	localWorkSize1[1] = 16;
-	globalWorkSize1[0] = (((matResult1_cols + (SVS - 1)) / SVS) + 15) & -16; // matResult1_cols is number of support vectors (should be large, e.g 56958)
-	globalWorkSize1[1] = ((matResult1_rows + 15) & -16); // number of inputs (features, should be small) - variable [1 - INFINIT]
+	localWorkSize[0] = 16;
+	localWorkSize[1] = 16;
+	globalWorkSize[0] = (((matResult1_cols + (SVS - 1)) / SVS) + 15) & -16; // matResult1_cols is number of support vectors (should be large, e.g 56958)
+	globalWorkSize[1] = ((matResult1_rows + 15) & -16); // number of inputs (features, should be small) - variable [1 - INFINIT]
 
-	COMPV_CHECK_CL_CODE_BAIL(clerr = clEnqueueNDRangeKernel(m_clCommandQueue, m_clkernelPart1, 2, nullptr, globalWorkSize1, localWorkSize1,
-		0, nullptr, &clEventKernel1), "clEnqueueNDRangeKernel failed");
+	COMPV_CHECK_CL_CODE_BAIL(clerr = clEnqueueNDRangeKernel(m_clCommandQueue, m_clkernelPart1, 2, nullptr, globalWorkSize, localWorkSize,
+		0, nullptr, &clEventKernel1), "clEnqueueNDRangeKernel(m_clkernelPart1) failed");
+
+	// Create clMemMatResult2 for kernel #2 while kernel #1 is running
+	matResult2_colsInt = static_cast<cl_int>(((globalWorkSize[0] + 255) / 256));
+	COMPV_CHECK_CODE_RETURN(err = CompVMat::newObjStrideless<compv_float64_t>(&matResult2, matResult2_rowsInt, matResult2_colsInt));
+	clMemMatResult2 = clCreateBuffer(m_clContext, CL_MEM_READ_WRITE, matResult2->planeSizeInBytes(0), nullptr, &clerr);
+	COMPV_CHECK_CL_CODE_BAIL(clerr, "clCreateBuffer(clMemMatResult2) failed");
+
+	COMPV_CHECK_CL_CODE_BAIL(clerr = clSetKernelArg(m_clkernelPart2, 0, sizeof(clMemMatResult1), (const void*)&clMemMatResult1), "clSetKernelArg(m_clkernelPart2, matResult1, 0) failed");
+	COMPV_CHECK_CL_CODE_BAIL(clerr = clSetKernelArg(m_clkernelPart2, 1, sizeof(clMemMatResult2), (const void*)&clMemMatResult2), "clSetKernelArg(m_clkernelPart2, matResult2, 1) failed");
+	COMPV_CHECK_CL_CODE_BAIL(clerr = clSetKernelArg(m_clkernelPart2, 2, sizeof(matResult1_colsInt), (const void*)&matResult1_colsInt), "clSetKernelArg(m_clkernelPart2, matResult1_cols, 2) failed");
+	COMPV_CHECK_CL_CODE_BAIL(clerr = clSetKernelArg(m_clkernelPart2, 3, sizeof(matResult1_rowsInt), (const void*)&matResult1_rowsInt), "clSetKernelArg(m_clkernelPart2, matResult1_rows, 3) failed");
+	COMPV_CHECK_CL_CODE_BAIL(clerr = clSetKernelArg(m_clkernelPart2, 4, sizeof(matResult2_colsInt), (const void*)&matResult2_colsInt), "clSetKernelArg(m_clkernelPart2, matResult2_cols, 4) failed");
+
+	COMPV_DEBUG_INFO_CODE_TODO("Do we need to wait ?? before running kernel 2?");
+	COMPV_CHECK_CL_CODE_BAIL(clerr = clWaitForEvents(1, &clEventKernel1), "clWaitForEvents(clEventKernel1) failed");
+
+	// Kernel #2
+	localWorkSize[0] = 256;
+	localWorkSize[1] = 1;
+	globalWorkSize[0] = (globalWorkSize[0] + 255) & -256;
+
+
+	COMPV_CHECK_CL_CODE_BAIL(clerr = clEnqueueNDRangeKernel(m_clCommandQueue, m_clkernelPart2, 2, nullptr, globalWorkSize, localWorkSize,
+		0, nullptr, &clEventKernel2), "clEnqueueNDRangeKernel(m_clkernelPart2) failed");
+
+	COMPV_CHECK_CL_CODE_BAIL(clerr = clWaitForEvents(1, &clEventKernel2), "clWaitForEvents(clEventKernel2) failed");
 
 #if COMPV_CL_PROFILING_ENABLED
 	{
-		cl_ulong startTime, endTime;
-		cl_int eventStatus = CL_QUEUED;
-		cl_ulong nanoSeconds;
+		cl_event clEventKernels[] = { clEventKernel1, clEventKernel2 };
+		for (size_t i = 0; i < sizeof(clEventKernels) / sizeof(clEventKernels[0]); ++i) {
+			cl_ulong startTime, endTime;
+			cl_int eventStatus = CL_QUEUED;
+			cl_ulong nanoSeconds;
 
-		COMPV_CHECK_CL_CODE_BAIL(clerr = clWaitForEvents(1, &clEventKernel1), "clWaitForEvents(clEventKernel1) failed");
-		COMPV_CHECK_CL_CODE_BAIL(clerr = clGetEventProfilingInfo(clEventKernel1, CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &startTime, 0), "clGetEventProfilingInfo(clEventKernel1, CL_PROFILING_COMMAND_START) failed");
-		COMPV_CHECK_CL_CODE_BAIL(clerr = clGetEventProfilingInfo(clEventKernel1, CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &endTime, 0), "clGetEventProfilingInfo(clEventKernel1, CL_PROFILING_COMMAND_END) failed");
-		
-		nanoSeconds = (endTime - startTime); // GPGPU timer resolution = 10e-9 (nanoseconds)
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Kernel1 duration = %lf ms", (nanoSeconds * 1e-6));
+			COMPV_CHECK_CL_CODE_BAIL(clerr = clGetEventProfilingInfo(clEventKernels[i], CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &startTime, 0), "clGetEventProfilingInfo(CL_PROFILING_COMMAND_START) failed");
+			COMPV_CHECK_CL_CODE_BAIL(clerr = clGetEventProfilingInfo(clEventKernels[i], CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &endTime, 0), "clGetEventProfilingInfo(CL_PROFILING_COMMAND_END) failed");
+
+			nanoSeconds = (endTime - startTime); // GPGPU timer resolution = 10e-9 (nanoseconds)
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Kernel#%zu duration = %lf ms", (i + 1), (nanoSeconds * 1e-6));
+		}
 	}
 #endif /* COMPV_CL_PROFILING_ENABLED */
 
+	
+
 	// Get Data using async read
-	COMPV_CHECK_CODE_RETURN(err = CompVMat::newObjStrideless<TYP>(&matResult1, matResult1_rows, matResult1_cols));
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Remove matResult1");
+	COMPV_CHECK_CODE_RETURN(err = CompVMat::newObjStrideless<TYP>(&matResult1, matResult1_rows, matResult1_cols)); // FIXME(dmi): remove
 	COMPV_CHECK_CL_CODE_BAIL(clerr = clEnqueueReadBuffer(m_clCommandQueue, clMemMatResult1, CL_FALSE, 0, matResult1->planeSizeInBytes(0), matResult1->ptr<void>(), 0, nullptr, nullptr)
-		, "clEnqueueReadBuffer failed");
+		, "clEnqueueReadBuffer failed"); // FIXME(dmi): remove
+	COMPV_CHECK_CL_CODE_BAIL(clerr = clEnqueueReadBuffer(m_clCommandQueue, clMemMatResult2, CL_FALSE, 0, matResult2->planeSizeInBytes(0), matResult2->ptr<void>(), 0, nullptr, nullptr)
+			, "clEnqueueReadBuffer failed");
 
 	// Wait for completion
 	COMPV_CHECK_CL_CODE_BAIL(clerr = clFinish(m_clCommandQueue), "clEnqueueNDRangeKernel failed");
@@ -250,17 +284,25 @@ COMPV_ERROR_CODE CompVMachineLearningSVMPredictBinaryRBF_GPU::process(const Comp
 		COMPV_DEBUG_INFO_CODE_FOR_TESTING("This is for testing only mus move code to gpu");
 		// TODO(dmi): for devices not supporting "cl_khr_fp64 extension" like Intel Iris, this code must be done on CPU (multi-threaded of course) 
 		// GPGPU reduction (horizontal sum)
-		TYP* Cptr0 = matResult1->ptr<TYP>();
+		double* Cptr0 = matResult2->ptr<double>();
 		//for (int a = 0; a < 10; ++a) { printf("%lf, ", Cptr0[a]); }
-		const size_t Crows = matResult1->rows();
-		const size_t Ccols = matResult1->cols();
-		const size_t Cstride = matResult1->stride();
-		for (size_t j = 0; j < Crows; ++j) {
-			double sum = Cptr0[0]; //!\\ sum must be double because of the large number of support vectors
-			for (size_t i = 1; i < Ccols; ++i) {
+		// Partial sum for first 256 -> 195139.562500
+		/*{
+			TYP sum = 0;
+			for (int i = 0; i < 256; ++i) {
 				sum += Cptr0[i];
 			}
-			Cptr0[0] = float(sum - m_64fRho);
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Psum0=%f", sum);
+		}*/
+		const size_t Crows = matResult2->rows();
+		const size_t Ccols = matResult2->cols();
+		const size_t Cstride = matResult2->stride();
+		for (size_t j = 0; j < Crows; ++j) {
+			double sum = 0; //!\\ sum must be double because of the large number of support vectors
+			for (size_t i = 0; i < Ccols; i += 1) {
+				sum += Cptr0[i];
+			}
+			Cptr0[0] = (sum - m_64fRho);
 			Cptr0 += Cstride;
 		}
 	}
@@ -268,8 +310,8 @@ COMPV_ERROR_CODE CompVMachineLearningSVMPredictBinaryRBF_GPU::process(const Comp
 	{
 		// Building labels
 		COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<int32_t>(&matResult_, 1, numvectors));
-		const TYP* matValuesPtr = matResult1->ptr<const TYP>();
-		const size_t matValuesStride = matResult1->stride();
+		const double* matValuesPtr = matResult2->ptr<const double>();
+		const size_t matValuesStride = matResult2->stride();
 		int32_t* matResultPtr = matResult_->ptr<int32_t>();
 		for (size_t i = 0; i < numvectors; ++i) {
 			matResultPtr[i] = m_labels[(matValuesPtr[0] < 0)];
