@@ -24,7 +24,7 @@ __kernel void clCompVMachineLearningSVMPredictBinaryRBF_Part1(
 	const int matVectors_rows // 7 - max(global(1)) - number of features (e.g. 408, variable)
 )
 {
-	const int matVectors_cols = matSVs_cols; // input vectors and SVs have same length
+	#define matVectors_cols matSVs_cols // input vectors and SVs have same length
 
 #if 0 // SHARED_MEMORY
 
@@ -105,13 +105,18 @@ __kernel void clCompVMachineLearningSVMPredictBinaryRBF_Part1(
 	if (global_i < matVectors_rows && global_j < matResult_cols) {
 		
 		TYP sum = 0;
+		#if 0 // Must use this version instead of unrolling the loop ourself, not recommended for Intel CPUs/GPUs
+		#pragma unroll 63
+		for (int k = 0; k < 63; ++k) {
+		#else
 		for (int k = 0; k < matSVs_cols; ++k) {
+		#endif
 			TYP diff = matVectors[(global_i * matVectors_cols) + k] - matSVs_sub[local_j][k];
 			sum = fma(diff, diff, sum); // fma instruction is faster
 		}
 		
 		matResult[(global_i * matResult_cols) + global_j] = exp(sum * gammaMinus) * matCoeffs[global_j];
-
+		
 		/*
 		//mixed type(float, double) - more accurate - 17millis
 		// Next unrolled version is faster -> Add support for T-HOG version using hard-coded values
