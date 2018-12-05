@@ -60,6 +60,7 @@ private:
 	cl_program m_clProgram;
 	cl_kernel m_clkernelPart1;
 	cl_kernel m_clkernelPart2;
+	cl_kernel m_clkernelReduction;
 	int32_t m_labels[2];
 	COMPV_VS_DISABLE_WARNINGS_END()
 };
