@@ -83,25 +83,33 @@ __kernel void clCompVMachineLearningSVMPredictBinaryRBF_Part1(
 
 #elif 1 // CACHED (good one)
 	
-	int global_j = get_global_id(0); // number of support vectors (e.g. 56958)
-	int global_i = get_global_id(1); // number of inputs (e.g. 408)
+	const int global_j = get_global_id(0); // number of support vectors (e.g. 56958)
+	const int global_i = get_global_id(1); // number of inputs (e.g. 408)
 	const int local_j = get_local_id(0);
+	const int local_i = get_local_id(1);
 
 	// "matVectors" contains the features to classify which means it will be short (N * 63) -> no need for caching
 	
 	__local TYP matSVs_sub[16][63]; // strange, 64 slow, 63 fast, 31 fast and 32 slow
-	if (global_j < matResult_cols) {
-		const int group_j = get_group_id(0);
-		int m = (get_local_id(1) * 4);
+	__local TYP matVectors_sub[16][63];
+	if (global_j < matResult_cols) { // FIXME(dmi): add both conditions and move
+		int m = (local_i * 4);
+		#pragma unroll 4
 		for (int k = 0; k < 4 && m < 63; ++k, ++m) {
-			matSVs_sub[local_j][m] = matSVs[(((group_j * 16) + local_j) * matSVs_cols) + m];
+			matSVs_sub[local_j][m] = matSVs[(global_j * matSVs_cols) + m]; // FIMXE(dmi): global_j
+		}
+	}
+	if (global_i < matVectors_rows) {
+		int n = (local_j * 4);
+		#pragma unroll 4
+		for (int k = 0; k < 4 && n < 63; ++k, ++n) {
+			matVectors_sub[local_i][n] = matVectors[(global_i * matVectors_cols) + n]; // FIMXE(dmi): global_i
 		}
 	}
 
 	barrier(CLK_LOCAL_MEM_FENCE);
 	
 	if (global_i < matVectors_rows && global_j < matResult_cols) {
-		
 		TYP sum = 0;
 		#if 1 // Must use this version instead of unrolling the loop ourself, not recommended for Intel CPUs/GPUs
 		#pragma unroll 63
@@ -109,7 +117,7 @@ __kernel void clCompVMachineLearningSVMPredictBinaryRBF_Part1(
 		#else
 		for (int k = 0; k < matSVs_cols; ++k) {
 		#endif
-			TYP diff = matVectors[(global_i * matVectors_cols) + k] - matSVs_sub[local_j][k];
+			TYP diff = matVectors_sub[local_i][k]/*matVectors[(global_i * matVectors_cols) + k]*/ - matSVs_sub[local_j][k];
 			sum = fma(diff, diff, sum);
 		}
 		
