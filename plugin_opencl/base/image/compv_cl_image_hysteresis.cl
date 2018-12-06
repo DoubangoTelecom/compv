@@ -70,7 +70,6 @@ __kernel void clHysteresisProcess_scanning_8u8u(
 				if (input[position + neighbors8[neighb]] == PIXEL_DE) {
 					input[position] = PIXEL_DE;
 					modified_region = 1;
-					break;
 				}
 			}
 		}

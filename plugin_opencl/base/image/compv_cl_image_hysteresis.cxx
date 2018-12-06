@@ -171,7 +171,7 @@ COMPV_ERROR_CODE CompVCLHysteresis::process_8u8u(const CompVMatPtr& in, CompVMat
 			COMPV_DEBUG_INFO_EX("clHysteresisProcess_8u8u", "%s: duration = %lf ms", clEventKernelsNames[i], millis);
 			durationTotal += millis;
 		}
-		COMPV_DEBUG_INFO_EX("clHysteresisProcess_8u8u", "Scanning: duration = %lf ms", durationScanning);
+		COMPV_DEBUG_INFO_EX("clHysteresisProcess_8u8u", "Scanning: duration = %lf ms, loops = %zu", durationScanning, scanning_rounds);
 		COMPV_DEBUG_INFO_EX("clHysteresisProcess_8u8u", "Total: duration = %lf ms", durationTotal);
 	}
 
