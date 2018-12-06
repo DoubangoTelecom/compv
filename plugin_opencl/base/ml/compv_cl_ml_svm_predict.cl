@@ -85,16 +85,14 @@ __kernel void clCompVMachineLearningSVMPredictBinaryRBF_Part1(
 	
 	int global_j = get_global_id(0); // number of support vectors (e.g. 56958)
 	int global_i = get_global_id(1); // number of inputs (e.g. 408)
-	int group_j = get_group_id(0);
-	int group_i = get_group_id(1);
-	int local_j = get_local_id(0);
-	int local_i = get_local_id(1);
+	const int local_j = get_local_id(0);
 
 	// "matVectors" contains the features to classify which means it will be short (N * 63) -> no need for caching
 	
 	__local TYP matSVs_sub[16][63]; // strange, 64 slow, 63 fast, 31 fast and 32 slow
 	if (global_j < matResult_cols) {
-		int m = (local_i * 4);
+		const int group_j = get_group_id(0);
+		int m = (get_local_id(1) * 4);
 		for (int k = 0; k < 4 && m < 63; ++k, ++m) {
 			matSVs_sub[local_j][m] = matSVs[(((group_j * 16) + local_j) * matSVs_cols) + m];
 		}
@@ -105,14 +103,14 @@ __kernel void clCompVMachineLearningSVMPredictBinaryRBF_Part1(
 	if (global_i < matVectors_rows && global_j < matResult_cols) {
 		
 		TYP sum = 0;
-		#if 0 // Must use this version instead of unrolling the loop ourself, not recommended for Intel CPUs/GPUs
+		#if 1 // Must use this version instead of unrolling the loop ourself, not recommended for Intel CPUs/GPUs
 		#pragma unroll 63
 		for (int k = 0; k < 63; ++k) {
 		#else
 		for (int k = 0; k < matSVs_cols; ++k) {
 		#endif
 			TYP diff = matVectors[(global_i * matVectors_cols) + k] - matSVs_sub[local_j][k];
-			sum = fma(diff, diff, sum); // fma instruction is faster
+			sum = fma(diff, diff, sum);
 		}
 		
 		matResult[(global_i * matResult_cols) + global_j] = exp(sum * gammaMinus) * matCoeffs[global_j];
@@ -296,7 +294,7 @@ __kernel void clCompVMachineLearningSVMPredictBinaryRBF_Part1(
 	\
 	const int size0 = get_local_size(0); \
 	\
-	__local double accumulator[256]; \
+	__local double accumulator[256]; /* FIXME(dmi): 256 must not be hard-coded */\
 	accumulator[local_id0] = (global_id0 < inCols && global_id1 < inRows) ? inPtr[(global_id1 * inCols) + global_id0] : 0; \
 	barrier(CLK_LOCAL_MEM_FENCE); \
 	\
