@@ -9,6 +9,7 @@
 #include "compv/cl/compv_cl.h"
 
 #include "compv/cl/base/ml/compv_cl_ml_svm_predict.h"
+#include "compv/cl/base/image/compv_cl_image_hysteresis.h"
 #include "compv/cl/core/features/fast/compv_cl_feature_fast_dete.h"
 
 #if !COMPV_OS_WINDOWS_CE && COMPV_OS_WINDOWS

@@ -88,7 +88,7 @@ COMPV_ERROR_CODE CompVMachineLearningSVMPredictBinaryRBF_GPU::init(const CompVMa
 	m_clContext = clCreateContext(nullptr, 1, &device_id, nullptr, nullptr, &clerr);
 	COMPV_CHECK_CL_CODE_BAIL(clerr, "clCreateContext failed");
 
-	// Create a command commands
+	// Create a command queue
 	m_clCommandQueue = clCreateCommandQueue(m_clContext, device_id, qprop, &clerr);
 	COMPV_CHECK_CL_CODE_BAIL(clerr, "clCreateCommandQueue failed");
 
@@ -124,10 +124,10 @@ bail:
 	if (clerr != CL_SUCCESS) {
 		err = COMPV_ERROR_CODE_E_OPENCL;
 	}
-	if (clMemMatSV != nullptr) {
+	if (clMemMatSV) {
 		clReleaseMemObject(clMemMatSV), clMemMatSV = nullptr;
 	}
-	if (clMemMatCoeff != nullptr) {
+	if (clMemMatCoeff) {
 		clReleaseMemObject(clMemMatCoeff), clMemMatCoeff = nullptr;
 	}
 	if (COMPV_ERROR_CODE_IS_NOK(err)) {
@@ -309,7 +309,6 @@ COMPV_ERROR_CODE CompVMachineLearningSVMPredictBinaryRBF_GPU::process(const Comp
 				continue;
 			}
 			cl_ulong startTime, endTime;
-			cl_int eventStatus = CL_QUEUED;
 			cl_ulong nanoSeconds;
 
 			COMPV_CHECK_CL_CODE_BAIL(clerr = clGetEventProfilingInfo(clEventKernels[i], CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &startTime, 0), "clGetEventProfilingInfo(CL_PROFILING_COMMAND_START) failed");

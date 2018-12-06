@@ -126,6 +126,24 @@ bail:
 	return (clerr == CL_SUCCESS) ? COMPV_ERROR_CODE_S_OK : COMPV_ERROR_CODE_E_OPENCL;
 }
 
+COMPV_ERROR_CODE CompVCLUtils::duration(cl_event evt, double& millis)
+{
+	COMPV_CHECK_EXP_RETURN(!evt, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+	cl_ulong startTime, endTime;
+	cl_ulong nanoSeconds;
+
+	cl_int clerr;
+	COMPV_CHECK_CL_CODE_BAIL(clerr = clGetEventProfilingInfo(evt, CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &startTime, 0), "clGetEventProfilingInfo(CL_PROFILING_COMMAND_START) failed");
+	COMPV_CHECK_CL_CODE_BAIL(clerr = clGetEventProfilingInfo(evt, CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &endTime, 0), "clGetEventProfilingInfo(CL_PROFILING_COMMAND_END) failed");
+
+	nanoSeconds = (endTime - startTime); // GPGPU timer resolution = 10e-9 (nanoseconds)
+	millis = (nanoSeconds * 1e-6);
+
+bail:
+	return (clerr == CL_SUCCESS) ? COMPV_ERROR_CODE_S_OK : COMPV_ERROR_CODE_E_OPENCL;
+}
+
 COMPV_ERROR_CODE CompVCLUtils::displayDevices(cl_platform_id platform, cl_device_type deviceType)
 {
 	char tmpString[1024];

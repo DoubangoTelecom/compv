@@ -311,6 +311,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="base\image\compv_cl_image_hysteresis.cxx" />
     <ClCompile Include="base\math\compv_cl_math_convlt.cxx" />
     <ClCompile Include="base\ml\compv_cl_ml_svm_predict.cxx" />
     <ClCompile Include="compv_cl.cxx" />
@@ -319,6 +320,7 @@
     <ClCompile Include="core\features\fast\compv_cl_feature_fast_dete.cxx" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\compv\cl\base\image\compv_cl_image_hysteresis.h" />
     <ClInclude Include="include\compv\cl\base\math\compv_cl_math_convlt.h" />
     <ClInclude Include="include\compv\cl\base\ml\compv_cl_ml_svm_predict.h" />
     <ClInclude Include="include\compv\cl\compv_cl.h" />
@@ -414,6 +416,35 @@
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release_static|Win32'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug_static|Win32'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release_static|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug_static|x64'">true</DeploymentContent>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">xcopy  %(FullPath) "$(TargetDir)" /d /i /y</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release_static|Win32'">xcopy  %(FullPath) "$(TargetDir)" /d /i /y</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">xcopy  %(FullPath) "$(TargetDir)" /d /i /y</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug_static|Win32'">xcopy  %(FullPath) "$(TargetDir)" /d /i /y</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">xcopy  %(FullPath) "$(TargetDir)" /d /i /y</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release_static|x64'">xcopy  %(FullPath) "$(TargetDir)" /d /i /y</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">xcopy  %(FullPath) "$(TargetDir)" /d /i /y</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug_static|x64'">xcopy  %(FullPath) "$(TargetDir)" /d /i /y</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release_static|Win32'">%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug_static|Win32'">%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release_static|x64'">%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug_static|x64'">%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="base\image\compv_cl_image_hysteresis.cl">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
+      <FileType>Document</FileType>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release_static|Win32'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug_static|Win32'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release_static|x64'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug_static|x64'">true</DeploymentContent>

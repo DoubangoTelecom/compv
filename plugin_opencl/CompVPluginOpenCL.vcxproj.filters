@@ -49,6 +49,12 @@
     <Filter Include="Header Files\base\ml">
       <UniqueIdentifier>{600e767b-4cb4-4a5d-a72b-6294cec548a8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\base\image">
+      <UniqueIdentifier>{292f5af0-94c1-4596-b274-ddfec8c8f94b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\base\image">
+      <UniqueIdentifier>{648a9edf-f06c-4eb0-9eb0-6e4c675f9768}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_cl.cxx">
@@ -68,6 +74,9 @@
     </ClCompile>
     <ClCompile Include="base\ml\compv_cl_ml_svm_predict.cxx">
       <Filter>Source Files\base\ml</Filter>
+    </ClCompile>
+    <ClCompile Include="base\image\compv_cl_image_hysteresis.cxx">
+      <Filter>Source Files\base\image</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -92,6 +101,9 @@
     <ClInclude Include="include\compv\cl\base\ml\compv_cl_ml_svm_predict.h">
       <Filter>Header Files\base\ml</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\cl\base\image\compv_cl_image_hysteresis.h">
+      <Filter>Header Files\base\image</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="core\features\fast\compv_cl_feature_fast_dete.cl">
@@ -102,6 +114,9 @@
     </CustomBuild>
     <CustomBuild Include="base\ml\compv_cl_ml_svm_predict.cl">
       <Filter>Source Files\base\ml</Filter>
+    </CustomBuild>
+    <CustomBuild Include="base\image\compv_cl_image_hysteresis.cl">
+      <Filter>Source Files\base\image</Filter>
     </CustomBuild>
   </ItemGroup>
 </Project>

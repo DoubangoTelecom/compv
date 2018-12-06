@@ -55,6 +55,7 @@ public:
 		COMPV_CHECK_EXP_RETURN(!matVectors || !(matVectors->isRawTypeMatch<compv_float32_t>() || matVectors->isRawTypeMatch<compv_float64_t>()) || !matResult, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED_GPU("Should use CompVMachineLearningSVMPredictBinaryRBF_GPU::process which is GPGPU accelerated");
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("T-HOG version could be used with single precision float for the first part then, double precision for reduction part. See GPGPU implementation");
 
 		// No need for "matVectors" to be aligned
 
