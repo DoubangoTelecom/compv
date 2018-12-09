@@ -67,7 +67,7 @@ COMPV_UNITTEST_CCL[] =
 static const size_t COMPV_UNITTEST_CCL_COUNT = sizeof(COMPV_UNITTEST_CCL) / sizeof(COMPV_UNITTEST_CCL[0]);
 
 #define LOOP_COUNT		1
-#define TEST_TYPE		TEST_TYPE_DIFFRACT
+#define TEST_TYPE		TEST_TYPE_TEXT
 
 static COMPV_ERROR_CODE check_labels(const CompVConnectedComponentLabelingResultPtr& result, const compv_unittest_ccl* test);
 static COMPV_ERROR_CODE check_segments(const CompVConnectedComponentLabelingResultPtr& result, const compv_unittest_ccl* test);
@@ -100,8 +100,8 @@ COMPV_ERROR_CODE ccl_binar()
 	COMPV_CHECK_CODE_RETURN(ccl_obj->setInt(COMPV_PLSL_SET_INT_TYPE, COMPV_PLSL_TYPE_XRLEZ));
 
 	CompVConnectedComponentLabelingResultPtr result;
-	CompVConnectedComponentPointsVector points; // FIXME(dmi): remove
-	CompVConnectedComponentBoundingBoxesVector boxes; // FIXME(dmi): remove	
+	//CompVConnectedComponentPointsVector points; // FIXME(dmi): remove
+	//CompVConnectedComponentBoundingBoxesVector boxes; // FIXME(dmi): remove	
 	const uint64_t timeStart = CompVTime::nowMillis();
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
 		COMPV_CHECK_CODE_RETURN(ccl_obj->process(binar, &result));

@@ -29,7 +29,7 @@ COMPV_NAMESPACE_BEGIN()
 
 typedef CompVPoint2DInt16Vector CompVConnectedComponentPoints;
 typedef CompVPoint2DInt16 CompVConnectedComponentPoint;
-typedef std::vector<CompVConnectedComponentPoints /* requires constructor */ > CompVConnectedComponentPointsVector;
+typedef std::vector<CompVConnectedComponentPoints, CompVAllocator<CompVConnectedComponentPoints>/*Needs contructors*/ > CompVConnectedComponentPointsVector;
 
 typedef CompVRectInt16 CompVConnectedComponentBoundingBox;
 typedef CompVRectInt16Vector CompVConnectedComponentBoundingBoxesVector;

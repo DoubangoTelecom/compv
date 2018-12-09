@@ -16,7 +16,7 @@ using namespace compv;
 #define UNITTEST_HOUGHSHT						0
 #define UNITTEST_HOUGHKHT						0
 #define UNITTEST_CCL_BINAR						0
-#define UNITTEST_CCL_MSER						0
+#define UNITTEST_CCL_MSER						1
 #define UNITTEST_CCL_BITS						0
 #define UNITTEST_HOG_S							0
 
@@ -27,7 +27,7 @@ using namespace compv;
 #define UNITTEST_PATCH_MOMENTS					0
 
 #define UNITTEST_MATH_MATRIX_OPS				0
-#define UNITTEST_MATH_DOT						1
+#define UNITTEST_MATH_DOT						0
 #define UNITTEST_MATH_EXP						0
 #define UNITTEST_MATH_EIGEN_S					0
 #define UNITTEST_MATH_SVD						0
