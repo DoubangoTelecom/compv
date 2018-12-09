@@ -399,6 +399,7 @@ COMPV_ERROR_CODE CompVCpu::init()
         CompVCpu::s_uFlags |=
             ((cpu_info[1] & 0x00000200) ? kCpuFlagERMS : 0) |
 			(COMPV_CPU_FLAG_IS_SET(cpu_info[I_EBX], 3) ? kCpuFlagBMI1 : 0) |
+			(COMPV_CPU_FLAG_IS_SET(cpu_info[I_EBX], 8) ? kCpuFlagBMI2 : 0) |
             ((COMPV_CPU_FLAG_IS_SET(cpu_info[I_EBX], 5) && TestOsSaveYmm()) ? kCpuFlagAVX2 : 0) |
 			
             (COMPV_CPU_FLAG_IS_SET(cpu_info[I_EBX], 16) ? kCpuFlagAVX512_F : 0) |
@@ -627,6 +628,7 @@ const std::string CompVCpu::flagsAsString(uint64_t uFlags)
         { kCpuFlagERMS, "erms" },
         { kCpuFlagXOP, "xop" },
 		{ kCpuFlagBMI1, "bmi1" },
+		{ kCpuFlagBMI2, "bmi2" },
         { kCpuFlagLZCNT, "lzcnt" },
         { kCpuFlagPOPCNT, "popcnt" },
         { kCpuFlagCMOV, "cmov" },

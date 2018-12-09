@@ -65,7 +65,7 @@ __kernel void clHysteresisProcess_scanning_8u8u(
 		// means all neighbs are available
 		
 		if (input[position] == PIXEL_PE) {
-			//#pragma unroll 8
+			#pragma unroll 8
 			for (int neighb = 0; neighb < 8; ++neighb) {
 				if (input[position + neighbors8[neighb]] == PIXEL_DE) {
 					input[position] = PIXEL_DE;

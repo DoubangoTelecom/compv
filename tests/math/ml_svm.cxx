@@ -26,8 +26,10 @@
 COMPV_ERROR_CODE ml_svm_predict()
 {
 	CompVBufferPtr labels, vectors;
-	COMPV_CHECK_CODE_RETURN(CompVFileUtils::read(THOG_LABELS, &labels));
-	COMPV_CHECK_CODE_RETURN(CompVFileUtils::read(THOG_VECTORS, &vectors));
+	const std::string path_labels = CompVFileUtils::patchFullPath(THOG_LABELS);
+	const std::string path_vectors = CompVFileUtils::patchFullPath(THOG_VECTORS);
+	COMPV_CHECK_CODE_RETURN(CompVFileUtils::read(path_labels.c_str(), &labels));
+	COMPV_CHECK_CODE_RETURN(CompVFileUtils::read(path_vectors.c_str(), &vectors));
 	const size_t vec_count = (labels->size() / sizeof(int32_t));
 	const size_t vec_len = (vectors->size() / (vec_count * sizeof(compv_float64_t)));
 	COMPV_ASSERT(!((vec_count * sizeof(compv_float64_t)) == vectors->size()));
@@ -71,6 +73,8 @@ COMPV_ERROR_CODE ml_svm_predict()
 			return COMPV_ERROR_CODE_E_UNITTEST_FAILED;
 		}
 	}
+
+	getchar();
 
 	return COMPV_ERROR_CODE_S_OK;
 }

@@ -158,7 +158,7 @@ COMPV_ERROR_CODE CompVCLHysteresis::process_8u8u(const CompVMatPtr& in, CompVMat
 		, "clEnqueueReadBuffer failed");
 
 	/* Profiling */
-	{
+	if(1){
 		double durationTotal = durationScanning;
 		cl_event clEventKernels[] = { clEventThresholding, clEventReadModifiedGlobal, clEventRefining, clEventReadOut };
 		const char* clEventKernelsNames[] = { "Thresholding",  "ReadModifiedGlobal", "Refining", "ReadOut" };
