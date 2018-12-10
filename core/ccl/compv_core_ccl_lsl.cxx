@@ -618,7 +618,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 	CompVMatPtr ptr32sA; // the associative table of ancestors
 	int32_t nea1 = 0; // the current number of absolute labels, update of EQ and ERAi
 	int32_t& na1 = result_->na1(); // final number of absolute labels
-	std::vector<int32_t>& vecIds = result_->vecIds(); // List of absolute label ids (one-based)
+	CompVConnectedComponentIdsVector& vecIds = result_->vecIds(); // List of absolute label ids (one-based)
 	bool& sortSegements = result_->sortSegments();
 
 	/* Define whether to sort segments when the user calls extract(SEGMENTS) */

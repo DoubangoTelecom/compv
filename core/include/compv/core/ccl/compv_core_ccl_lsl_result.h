@@ -29,14 +29,13 @@ typedef CompVMemZeroLockedAccumulatorPtr* CompVMemZeroLockedAccumulatorPtrPtr;
 
 static const int32_t kCompVConnectedComponentLabelingLSLBachgroundLabel = 0; // Must be zero because of calloc()
 
-typedef std::vector<CompVRangeInt16 > compv_ccl_rlc_t;
 struct compv_ccl_range_t {
 	int32_t a; // = A[ERA[er]] within [1, na]. /!\ IMPORTANT: not zero-based
 	int16_t start; // RLC[er - 1]
 	int16_t end; // RLC[er]
 };
 typedef std::vector<compv_ccl_range_t, CompVAllocatorNoDefaultConstruct<compv_ccl_range_t> > compv_ccl_lea_1_t;
-typedef std::vector<compv_ccl_lea_1_t > compv_ccl_lea_n_t;
+typedef std::vector<compv_ccl_lea_1_t, CompVAllocator<compv_ccl_lea_1_t>/*Need contructor*/ > compv_ccl_lea_n_t;
 
 
 COMPV_OBJECT_DECLARE_PTRS(ConnectedComponentLabelingResultLSLImpl);
@@ -54,7 +53,7 @@ public:
 	virtual COMPV_ERROR_CODE debugFlatten(CompVMatPtrPtr ptr32sLabels) const override;
 	virtual COMPV_ERROR_CODE extract(CompVConnectedComponentPointsVector& points, COMPV_CCL_EXTRACT_TYPE type = COMPV_CCL_EXTRACT_TYPE_BLOB) const override;
 
-	virtual const std::vector<int32_t>& labelIds() const override;
+	virtual const CompVConnectedComponentIdsVector& labelIds() const override;
 	virtual COMPV_ERROR_CODE boundingBoxes(CompVConnectedComponentBoundingBoxesVector& boxes) const override;
 	virtual COMPV_ERROR_CODE boundingBoxes(const CompVConnectedComponentPointsVector& segments, CompVConnectedComponentBoundingBoxesVector& boxes) const override;
 	virtual COMPV_ERROR_CODE remove(CompVConnectedComponentCallbackRemoveLabel funcPtr, size_t &removedCount) override;
@@ -62,7 +61,7 @@ public:
 	COMPV_INLINE int32_t& na1() { return m_nNa1; }
 	COMPV_INLINE compv_ccl_lea_n_t& vecLEA() { return m_vecLEA; }
 	COMPV_INLINE CompVSizeSz& szInput() { return m_szInput; }
-	COMPV_INLINE std::vector<int32_t>& vecIds() { return m_vecIds; }
+	COMPV_INLINE CompVConnectedComponentIdsVector& vecIds() { return m_vecIds; }
 	COMPV_INLINE bool& sortSegments() { return m_bSortSegements; }
 
 	COMPV_ERROR_CODE reset();
@@ -78,7 +77,7 @@ private:
 	int32_t m_nNa1; // final number of absolute labels
 	compv_ccl_lea_n_t m_vecLEA; // an associative table holding the association between er and ea: ea = ERAi[er]
 	CompVSizeSz m_szInput;
-	std::vector<int32_t> m_vecIds;
+	CompVConnectedComponentIdsVector m_vecIds;
 	CompVMemZeroLockedAccumulatorPtr m_ptrCountPointsSegment;
 	CompVMemZeroLockedAccumulatorPtr m_ptrCountPointsBlobs;
 };

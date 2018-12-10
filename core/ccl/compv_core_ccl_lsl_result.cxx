@@ -128,7 +128,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::extract(CompVConn
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-const std::vector<int32_t>& CompVConnectedComponentLabelingResultLSLImpl::labelIds() const
+const CompVConnectedComponentIdsVector& CompVConnectedComponentLabelingResultLSLImpl::labelIds() const
 {
 	return m_vecIds;
 }
@@ -322,7 +322,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::extract_blobs(Com
 		const size_t count = static_cast<size_t>(ptrxNaPtr[a - 1]);
 		points[a - 1].resize(count);
 	}
-	std::vector<compv_ccl_accumulator_t > szFilled(m_nNa1, 0);
+	std::vector<compv_ccl_accumulator_t, CompVAllocator<compv_ccl_accumulator_t> > szFilled(m_nNa1, 0);
 	auto funcPtrFill = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
 		compv_ccl_lea_1_t::const_iterator it;
 		compv_ccl_lea_n_t::const_iterator j = m_vecLEA.begin() + ystart;
@@ -374,7 +374,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::extract_segments(
 		const size_t count = static_cast<size_t>(ptrxNaPtr[a - 1]);
 		points[a - 1].resize(count);
 	}
-	std::vector<compv_ccl_accumulator_t > szFilled(m_nNa1, 0);
+	std::vector<compv_ccl_accumulator_t, CompVAllocator<compv_ccl_accumulator_t> > szFilled(m_nNa1, 0);
 	auto funcPtrFill = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
 		compv_ccl_lea_1_t::const_iterator it;
 		for (size_t j = ystart; j < yend; ++j) {

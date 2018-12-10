@@ -29,7 +29,10 @@ COMPV_NAMESPACE_BEGIN()
 
 typedef CompVPoint2DInt16Vector CompVConnectedComponentPoints;
 typedef CompVPoint2DInt16 CompVConnectedComponentPoint;
-typedef std::vector<CompVConnectedComponentPoints, CompVAllocator<CompVConnectedComponentPoints>/*Needs contructors*/ > CompVConnectedComponentPointsVector;
+typedef std::vector<CompVConnectedComponentPoints, CompVAllocator<CompVConnectedComponentPoints>/*Need contructor*/ > CompVConnectedComponentPointsVector;
+
+typedef int32_t CompVConnectedComponentId;
+typedef std::vector<CompVConnectedComponentId, CompVAllocatorNoDefaultConstruct<CompVConnectedComponentId> > CompVConnectedComponentIdsVector;
 
 typedef CompVRectInt16 CompVConnectedComponentBoundingBox;
 typedef CompVRectInt16Vector CompVConnectedComponentBoundingBoxesVector;
@@ -145,7 +148,7 @@ public:
 	virtual ~CompVConnectedComponentLabelingResultLSL() {
 	}
 	
-	virtual const std::vector<int32_t>& labelIds() const = 0;
+	virtual const CompVConnectedComponentIdsVector& labelIds() const = 0;
 	
 	virtual COMPV_ERROR_CODE boundingBoxes(CompVConnectedComponentBoundingBoxesVector& boxes) const = 0;
 	virtual COMPV_ERROR_CODE boundingBoxes(const CompVConnectedComponentPointsVector& segments, CompVConnectedComponentBoundingBoxesVector& boxes) const = 0;
