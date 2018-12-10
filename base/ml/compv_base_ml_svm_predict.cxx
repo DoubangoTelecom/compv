@@ -82,9 +82,6 @@ public:
 		int32_t* matResultPtr = matResult_->ptr<int32_t>();
 
 		const size_t total_sv = m_ptrMatSV->rows();
-		const size_t si = 0;
-		const size_t sj = static_cast<size_t>(m_nrSV[0]);
-		const compv_float64_t *coefs = m_ptrMatCoeff->ptr<const compv_float64_t>();
 		
 		auto funcPtr = [&](const size_t start, const size_t end) -> COMPV_ERROR_CODE {
 			CompVMatPtr kvalueMat;
@@ -93,7 +90,7 @@ public:
 			compv_float64_t sum;
 			for (size_t i = start; i < end; ++i) {
 				COMPV_CHECK_CODE_ASSERT(rbf(matVectorsFloat64->ptr<const compv_float64_t>(i), kvalueMatPtr)); // multithreaded
-				m_func_ptr.dot_64f64f(m_ptrMatCoeff->ptr<const compv_float64_t>(), kvalueMatPtr, total_sv, 1, 0, 0, &sum); // multithreaded
+				m_func_ptr.dot_64f64f(m_ptrMatCoeff->data<const compv_float64_t>(), kvalueMatPtr, total_sv, 1, 0, 0, &sum); // multithreaded
 				matResultPtr[i] = m_Labels[(((sum - m_64fRho)) < 0)];
 			}
 			return COMPV_ERROR_CODE_S_OK;

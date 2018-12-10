@@ -56,7 +56,7 @@ public:
 
 	template<class ptrType = const void>
 	COMPV_ALWAYS_INLINE ptrType* data()const {
-		return (ptrType*)m_pDataPtr;
+		return reinterpret_cast<ptrType*>(m_pDataPtr);
 	}
 
 	COMPV_ALWAYS_INLINE bool isMemoryOwed()const {
@@ -67,10 +67,10 @@ public:
     COMPV_ALWAYS_INLINE ptrType* ptr(size_t row = 0, size_t col = 0, int planeId = -1)const {
 		const int planeId_ = planeId < 0 ? 0 : planeId;
         if (planeId_ >= 0 && planeId_ < m_nPlaneCount) {
-            return (row > m_nPlaneRows[planeId_] || col > m_nPlaneCols[planeId_]) ? NULL : (ptrType*)(static_cast<const uint8_t*>(m_pCompPtr[planeId_]) + (row * m_nPlaneStrideInBytes[planeId_]) + (col * m_nPlaneElmtInBytes[planeId_]));
+            return (row > m_nPlaneRows[planeId_] || col > m_nPlaneCols[planeId_]) ? nullptr : (ptrType*)(static_cast<const uint8_t*>(m_pCompPtr[planeId_]) + (row * m_nPlaneStrideInBytes[planeId_]) + (col * m_nPlaneElmtInBytes[planeId_]));
         }
 		COMPV_DEBUG_ERROR_EX("CompVMat", "Invalid parameter %d >= %d", planeId, m_nPlaneCount);
-        return NULL;
+        return nullptr;
     }
 
     COMPV_ALWAYS_INLINE size_t rows(int planeId = -1)const { // In samples
@@ -454,7 +454,7 @@ private:
 			size_t nPlaneRows[COMPV_PLANE_MAX_COUNT];
 			size_t nPlaneSizeInBytes[COMPV_PLANE_MAX_COUNT];
 			size_t nPlaneElmtInBytes[COMPV_PLANE_MAX_COUNT];
-			void* pMem = NULL;
+			void* pMem = nullptr;
 			
 			if (stride >= cols) {
 				// stride is already valid
