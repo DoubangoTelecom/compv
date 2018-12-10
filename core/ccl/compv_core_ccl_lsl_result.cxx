@@ -233,9 +233,9 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::remove(CompVConne
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("You should not use this function unless you know what you're doing. Data will be corrupted after calling it");
 	
 	// Collect labels to remove
-	std::vector<int32_t> vecLabelsToRemove;
+	CompVConnectedComponentIdsVector vecLabelsToRemove;
 	vecLabelsToRemove.reserve(m_vecIds.size());
-	for (std::vector<int32_t>::const_iterator a = m_vecIds.begin(); a < m_vecIds.end(); ++a) {
+	for (CompVConnectedComponentIdsVector::const_iterator a = m_vecIds.begin(); a < m_vecIds.end(); ++a) {
 		if (funcPtr(*a)) {
 			vecLabelsToRemove.push_back(*a);
 		}
@@ -245,12 +245,12 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::remove(CompVConne
 	// Remove collected labels
 	if (removedCount) {
 		auto funcPtrRemove = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
-			std::vector<int32_t>::const_iterator r_begin = vecLabelsToRemove.begin();
-			std::vector<int32_t>::const_iterator r_end = vecLabelsToRemove.end();
+			CompVConnectedComponentIdsVector::const_iterator r_begin = vecLabelsToRemove.begin();
+			CompVConnectedComponentIdsVector::const_iterator r_end = vecLabelsToRemove.end();
 
 			// Remove labels from the vec-id list
 			if (!ystart) {
-				for (std::vector<int32_t>::const_iterator i = r_begin; i < r_end; ++i) {
+				for (CompVConnectedComponentIdsVector::const_iterator i = r_begin; i < r_end; ++i) {
 					m_vecIds.erase(std::remove(m_vecIds.begin(), m_vecIds.end(), *i), m_vecIds.end());
 				}
 				// Must not update "m_nNa1", it's the reference number of labels and never change
