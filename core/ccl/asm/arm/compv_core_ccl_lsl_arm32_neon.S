@@ -304,7 +304,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVConnectedComponentLabelingLSL_Step1Algo13Segment
 				vpadd.u8 q0x, q0x, q0x
 				vpadd.u8 q0x, q0x, q0x
 				vmov.u16 t0, q0x[0]
-				rbit t0, t0
+				rbit t0, t0 @ prepare ctz
 				BeginOfWhile_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_RLCi_8u16s_Asm_NEON32:
 					@ ARM there is no ctz (Count Trailing Zero): ctz = clz(rbit(t0))
 					clz t1, t0

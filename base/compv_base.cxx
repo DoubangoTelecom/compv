@@ -259,7 +259,7 @@ COMPV_ERROR_CODE CompVBase::init(int numThreads COMPV_DEFAULT(-1))
     COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Code built with option /arch:NEON");
 #endif
 
-#if defined(DEBUG) || defined(_DEBUG) || !defined(NDEBUG)
+#if ((defined(_DEBUG) && _DEBUG != 0) || (defined(DEBUG) && DEBUG != 0))
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Code built with debug enabled");
 #endif
 

@@ -180,6 +180,8 @@ COMPV_ERROR_CODE CompVImage::encode(const char* filePath, const CompVMatPtr& ima
 		"This is a quick and dirty way to do it for testing purpose only. You *must not* use it in your final application"
 	);
 
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Encoding %s file... (w=%zu, h=%zu, s=%zu)", filePath, image->cols(), image->rows(), image->stride());
+
 	std::string filePath_ = filePath;
 	const COMPV_IMAGE_FORMAT format = CompVFileUtils::getImageFormat(filePath);
 	int(*write_fn)(stbi_write_func *func, void *context, int x, int y, int comp, const void *data, int stride_bytes)
