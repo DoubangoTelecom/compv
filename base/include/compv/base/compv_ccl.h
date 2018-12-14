@@ -40,7 +40,7 @@ typedef CompVRectInt16Vector CompVConnectedComponentBoundingBoxesVector;
 typedef std::function<bool(const int32_t id)> CompVConnectedComponentCallbackRemoveLabel;
 
 typedef std::array<double, 6> CompVConnectedComponentMoments; // sum(1), sum(x), sum(y), sum(x*x), sum(x*y), sum(y*y)
-typedef std::vector<CompVConnectedComponentMoments, CompVAllocatorNoDefaultConstruct<CompVConnectedComponentMoments> > CompVConnectedComponentMomentsVector;
+typedef std::vector<CompVConnectedComponentMoments, CompVAllocator<CompVConnectedComponentMoments>/*Need contructor*/ > CompVConnectedComponentMomentsVector;
 
 COMPV_OBJECT_DECLARE_PTRS(ConnectedComponentLabeling)
 COMPV_OBJECT_DECLARE_PTRS(ConnectedComponentLabelingResult)

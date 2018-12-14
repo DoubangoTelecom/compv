@@ -2,7 +2,7 @@
 
 using namespace compv;
 
-#define CAMERA_IDX			1
+#define CAMERA_IDX			0
 #define CAMERA_WIDTH		1280
 #define CAMERA_HEIGHT		720
 #define CAMERA_FPS			25
@@ -58,7 +58,7 @@ compv_main()
 			COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 			if (CompVDrawing::isLoopRunning()) {
 				COMPV_CHECK_CODE_BAIL(err = window->beginDraw());
-				COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->surface()->drawImage(image));
+				COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->cover()->drawImage(image));
 				COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->blit());
 			bail:
 				COMPV_CHECK_CODE_NOP(err = window->endDraw()); // Make sure 'endDraw()' will be called regardless the result
