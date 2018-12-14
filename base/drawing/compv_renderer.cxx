@@ -11,8 +11,8 @@ COMPV_NAMESPACE_BEGIN()
 compv_renderer_id_t CompVRenderer::s_nRendererId = 0;
 
 CompVRenderer::CompVRenderer(COMPV_SUBTYPE ePixelFormat)
-    : CompVObj()
-    , m_nId(compv_atomic_inc(&CompVRenderer::s_nRendererId))
+	: CompVObj()
+	, m_nId(compv_atomic_add(&CompVRenderer::s_nRendererId, 1))
     , m_ePixelFormat(ePixelFormat)
 {
 }

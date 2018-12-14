@@ -153,6 +153,22 @@ COMPV_NAMESPACE_BEGIN()
 #	endif
 #endif
 
+// Very important: "compv_atomic_inc" and "compv_atomic_dec" returns different values on Windows vs Linux.
+//		- Windows: The function returns the resulting incremented value (https://docs.microsoft.com/en-us/windows/desktop/api/winnt/nf-winnt-interlockedincrement)
+//		- Linux: The function returns the initial value of the variable that __p points to (https://www.ibm.com/support/knowledgecenter/SSGH2K_13.1.2/com.ibm.xlc131.aix.doc/compiler_ref/bif_gcc_atomic_fetch_add.html)
+//		-> should use "compv_atomic_add(ptr, 1)" or "compv_atomic_sub(ptr, 1)" which returns the same value (the initial one).
+#if defined (_MSC_VER)
+#	define compv_atomic_inc(_ptr_)			InterlockedIncrement((_ptr_)) // For return value, see above
+#	define compv_atomic_dec(_ptr_)			InterlockedDecrement((_ptr_)) // For return value, see above
+#	define compv_atomic_add(_ptr_, value)	InterlockedExchangeAdd((_ptr_), (value))
+#	define compv_atomic_sub(_ptr_, value)	InterlockedExchangeSubtract((_ptr_), (value))
+#else /* defined(__GNUC__) */ // Use C++11 std::atomic<T> if your platform doesn't support atomic increment
+#	define compv_atomic_inc(_ptr_)			__sync_fetch_and_add((_ptr_), 1) // For return value, see above
+#	define compv_atomic_dec(_ptr_)			__sync_fetch_and_sub((_ptr_), 1) // For return value, see above
+#	define compv_atomic_add(_ptr_, value)	__sync_fetch_and_add((_ptr_), (value))
+#	define compv_atomic_sub(_ptr_, value)	__sync_fetch_and_sub((_ptr_), (value))
+#endif /* _MSC_VER */
+
 // Should be defined in <inttypes.h>, include in <compv_config.h>
 #if !defined(PRIu64)
 #	define	PRIu64 "llu"

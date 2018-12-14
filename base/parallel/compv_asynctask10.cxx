@@ -269,7 +269,7 @@ COMPV_ERROR_CODE CompVAsyncTask10::stop()
 compv_asynctoken_id_t CompVAsyncTask10::getUniqueTokenId()
 {
     static long uniqueId = 0;
-    return compv_atomic_inc(&uniqueId);
+    return compv_atomic_add(&uniqueId, 1);
 }
 
 COMPV_ERROR_CODE CompVAsyncTask10::newObj(CompVPtr<CompVAsyncTask10*>* asyncTask)

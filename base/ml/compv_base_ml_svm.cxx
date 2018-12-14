@@ -239,7 +239,7 @@ COMPV_ERROR_CODE CompVMachineLearningSVM::trainEx(const struct svm_problem* prob
 			mt_params.C = round.C;
 			mt_params.gamma = round.gamma;
 			COMPV_CHECK_CODE_ASSERT(CompVMachineLearningSVM::crossValidation(problem, &mt_params, crossValidation->kfold, round.accuracy));
-			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Cross Validation progress: %f%%", compv_atomic_inc(&progress) * progress_scale);
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Cross Validation progress: %f%%", compv_atomic_add(&progress, 1) * progress_scale);
 		}
 		return COMPV_ERROR_CODE_S_OK;
 	};

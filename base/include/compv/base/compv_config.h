@@ -247,18 +247,6 @@
 # 	define COMPV_BASE_API
 #endif
 
-#if defined (_MSC_VER)
-#	define compv_atomic_inc(_ptr_)			InterlockedIncrement((_ptr_))
-#	define compv_atomic_dec(_ptr_)			InterlockedDecrement((_ptr_))
-#	define compv_atomic_add(_ptr_, value)	InterlockedExchangeAdd((_ptr_), (value))
-#	define compv_atomic_sub(_ptr_, value)	InterlockedExchangeSubtract((_ptr_), (value))
-#else /* defined(__GNUC__) */ // Use C++11 std::atomic<T> if your platform doesn't support atomic increment
-#	define compv_atomic_inc(_ptr_)			__sync_fetch_and_add((_ptr_), 1)
-#	define compv_atomic_dec(_ptr_)			__sync_fetch_and_sub((_ptr_), 1)
-#	define compv_atomic_add(_ptr_, value)	__sync_fetch_and_add((_ptr_), (value))
-#	define compv_atomic_sub(_ptr_, value)	__sync_fetch_and_sub((_ptr_), (value))
-#endif
-
 /* define "COMPV_DEPRECATED(func)" macro */
 #if defined(__GNUC__)
 #	define COMPV_DEPRECATED(func) __attribute__ ((deprecated)) func

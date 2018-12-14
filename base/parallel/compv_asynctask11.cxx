@@ -159,7 +159,7 @@ COMPV_ERROR_CODE CompVAsyncTask11::stop()
 long CompVAsyncTask11::uniqueId()
 {
     static long s_UniqueId = 0;
-    return compv_atomic_inc(&s_UniqueId);
+    return compv_atomic_add(&s_UniqueId, 1);
 }
 
 COMPV_ERROR_CODE CompVAsyncTask11::newObj(CompVPtr<CompVAsyncTask11*>* asyncTask)

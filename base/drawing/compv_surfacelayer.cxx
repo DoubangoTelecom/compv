@@ -12,7 +12,7 @@ compv_surfacelayer_id_t CompVSurfaceLayer::s_nSurfaceLayerId = 0;
 
 CompVSurfaceLayer::CompVSurfaceLayer()
     : CompVObj()
-    , m_nId(compv_atomic_inc(&CompVSurfaceLayer::s_nSurfaceLayerId))
+    , m_nId(compv_atomic_add(&CompVSurfaceLayer::s_nSurfaceLayerId, 1))
 {
 
 }

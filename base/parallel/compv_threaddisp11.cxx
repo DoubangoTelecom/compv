@@ -109,7 +109,7 @@ bool CompVThreadDispatcher11::isMotherOfTheCurrentThread() /*Overrides(CompVThre
 long CompVThreadDispatcher11::nextTaskIdx()
 {
 	static long taskIdx = 0;
-	return compv_atomic_inc(&taskIdx) % threadsCount();
+	return compv_atomic_add(&taskIdx, 1) % threadsCount();
 }
 
 COMPV_ERROR_CODE CompVThreadDispatcher11::newObj(CompVThreadDispatcher11PtrPtr disp, int32_t numThreads)
