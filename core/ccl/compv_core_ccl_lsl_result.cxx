@@ -224,6 +224,8 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingResultLSLImpl::boundingBoxes(con
 		COMPV_CCL_LSL_EXTRACT_BOXES_MIN_SAMPLES_PER_THREAD
 	));
 
+	COMPV_ASSERT(segments.size() == boxes.size());
+
 	return COMPV_ERROR_CODE_S_OK;
 }
 

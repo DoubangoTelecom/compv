@@ -147,9 +147,6 @@ void CompVImageScaleBilinear_Intrin_SSE41(
 			vec7 = _mm_adds_epu16(_mm_mullo_epi16(_mm_unpackhi_epi8(vecNeighb2, vecZero), vec1),
 				_mm_mullo_epi16(_mm_unpackhi_epi8(vecNeighb3, vecZero), vec0));
 
-			// FIXME: remove
-			//for (int i = 0; i < 8; ++i) printf("%u, ", vec1.m128i_u16[i]);
-
 			// Let's say:
 			//		A = ((neighb0 * x1) + (neighb1 * x0))
 			//		B = ((neighb2 * x1) + (neighb3 * x0))
