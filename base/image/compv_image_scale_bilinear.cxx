@@ -148,7 +148,6 @@ COMPV_ERROR_CODE CompVImageScaleBilinear::process(const CompVMatPtr& imageIn, Co
 		COMPV_ERROR_CODE_E_NOT_IMPLEMENTED, 
 		"Only 8u subtypes are supported using bilinear scaling"
 	);
-	COMPV_DEBUG_INFO_CODE_TODO("There is no border copy or clipping -> garbage on borders");
 	float float_sx, float_sy;
 	compv_uscalar_t int_sx, int_sy, strideIn, strideOut, widthIn, widthOut, heightIn, heightOut;
 	for (int planeId = 0; planeId < static_cast<int>(imageOut->planeCount()); ++planeId) {
@@ -158,8 +157,8 @@ COMPV_ERROR_CODE CompVImageScaleBilinear::process(const CompVMatPtr& imageIn, Co
 		strideOut = imageOut->stride(planeId);
 		widthOut = imageOut->cols(planeId);
 		heightOut = imageOut->rows(planeId);
-		float_sx = static_cast<float>(widthIn) / widthOut;
-		float_sy = static_cast<float>(heightIn) / heightOut;
+		float_sx = static_cast<float>(widthIn - 1) / widthOut;
+		float_sy = static_cast<float>(heightIn - 1) / heightOut;
 		int_sx = static_cast<compv_scalar_t>(float_sx * 255.f); // do not use "<< 8" to include the error
 		int_sy = static_cast<compv_scalar_t>(float_sy * 255.f);  // do not use "<< 8" to include the error
 		// We're using fixed-point math and requiring factor between ]0-255]
