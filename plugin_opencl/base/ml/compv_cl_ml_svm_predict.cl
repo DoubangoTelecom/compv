@@ -11,7 +11,8 @@
 
 
 #define TYP float
-#define TS 16 // FIXME(dmi): must not be hard-coded (localsize)
+#define SV_SIZ			45 // FIXME(dmi): must not be hard-coded
+#define SV_SIZ_PART		3 // FIXME(dmi): must not be hard-coded round(SV_SIZ / 16)
 
 __kernel void clCompVMachineLearningSVMPredictBinaryRBF_Part1(
 	__global const TYP* matVectors, // 0
@@ -90,19 +91,19 @@ __kernel void clCompVMachineLearningSVMPredictBinaryRBF_Part1(
 
 	// "matVectors" contains the features to classify which means it will be short (N * 63) -> no need for caching
 
-	__local TYP matSVs_sub[16][63]; // strange, 64 slow, 63 fast, 31 fast and 32 slow
-	__local TYP matVectors_sub[16][63];
+	__local TYP matSVs_sub[16][SV_SIZ]; // strange, 64 slow, 63 fast, 31 fast and 32 slow
+	__local TYP matVectors_sub[16][SV_SIZ];
 	if (global_j < matResult_cols) { // FIXME(dmi): add both conditions and move
-		int m = (local_i * 4);
-		#pragma unroll 4
-		for (int k = 0; k < 4 && m < 63; ++k, ++m) {
+		int m = (local_i * SV_SIZ_PART);
+		#pragma unroll SV_SIZ_PART
+		for (int k = 0; k < SV_SIZ_PART && m < SV_SIZ; ++k, ++m) {
 			matSVs_sub[local_j][m] = matSVs[(global_j * matSVs_cols) + m]; // FIMXE(dmi): global_j
 		}
 	}
 	if (global_i < matVectors_rows) {
-		int n = (local_j * 4);
-		#pragma unroll 4
-		for (int k = 0; k < 4 && n < 63; ++k, ++n) {
+		int n = (local_j * SV_SIZ_PART);
+		#pragma unroll SV_SIZ_PART
+		for (int k = 0; k < SV_SIZ_PART && n < SV_SIZ; ++k, ++n) {
 			matVectors_sub[local_i][n] = matVectors[(global_i * matVectors_cols) + n]; // FIMXE(dmi): global_i
 		}
 	}
@@ -112,8 +113,8 @@ __kernel void clCompVMachineLearningSVMPredictBinaryRBF_Part1(
 	if (global_i < matVectors_rows && global_j < matResult_cols) {
 		TYP sum = 0;
 		#if 1 // Must use this version instead of unrolling the loop ourself, not recommended for Intel CPUs/GPUs
-		#pragma unroll 63
-		for (int k = 0; k < 63; ++k) {
+		#pragma unroll SV_SIZ
+		for (int k = 0; k < SV_SIZ; ++k) {
 		#else
 		for (int k = 0; k < matSVs_cols; ++k) {
 		#endif
@@ -137,17 +138,17 @@ __kernel void clCompVMachineLearningSVMPredictBinaryRBF_Part1(
 
 	for (int j = 0; j < SVS; ++j) {
 
-		// "matVectors" contains the features to classify which means it will be short (N * 63) -> no need for caching
-		/*__local TYP matVectors_sub[16][63];
+		// "matVectors" contains the features to classify which means it will be short (N * SV_SIZ) -> no need for caching
+		/*__local TYP matVectors_sub[16][SV_SIZ];
 		int m = (local_j * 4);
-		for (int k = 0; k < 4 && m < 63; ++k, ++m) {
+		for (int k = 0; k < 4 && m < SV_SIZ; ++k, ++m) {
 			matVectors_sub[local_i][m] = 0;//matVectors[(((group_i * 16) + local_i) * matVectors_cols) + m];
 		}*/
 
-		__local TYP matSVs_sub[16][63];
+		__local TYP matSVs_sub[16][SV_SIZ];
 		/*if (global_i < 408 && global_j < 56958)*/ {
 			int m = (local_i * 4);
-			for (int k = 0; k < 4 && m < 63; ++k, ++m) {
+			for (int k = 0; k < 4 && m < SV_SIZ; ++k, ++m) {
 				matSVs_sub[local_j][m] = matSVs[(((group_j * 16) + local_j) * matSVs_cols) + m];
 			}
 		}

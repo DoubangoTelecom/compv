@@ -174,10 +174,13 @@ CompVMachineLearningSVMPredictBinaryRBF_GPU::~CompVMachineLearningSVMPredictBina
 	COMPV_CHECK_CODE_NOP(deInit());
 }
 
+// MUST be thread-safe
 COMPV_ERROR_CODE CompVMachineLearningSVMPredictBinaryRBF_GPU::process(const CompVMatPtr& matVectors, CompVMatPtrPtr matResult)
 {
 	COMPV_CHECK_EXP_RETURN(!isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
 	COMPV_CHECK_EXP_RETURN(!matVectors || !(matVectors->isRawTypeMatch<compv_float32_t>() || matVectors->isRawTypeMatch<compv_float64_t>()) || !matResult, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+	COMPV_DEBUG_INFO_CODE_TODO("Make thread-safe (use context-based for all 'm_xxx' modified here)");
 
 	// Check vector size
 	if (matVectors->cols() != static_cast<size_t>(m_nMatSVs_cols)) {
