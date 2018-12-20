@@ -307,6 +307,8 @@ COMPV_ERROR_CODE CompVMachineLearningSVMPredictBinaryRBF_GPU::process(const Comp
 	{
 		cl_event clEventKernels[] = { clEventKernel1, clEventKernel2, clEventKernelReduction, clEventReadBuffer };
 		const char* clEventKernelsNames[] = { "Part #1", "Part #2", "Reduction", "ReadBuffer" };
+		std::string debug_msg;
+		cl_ulong total_nanoSeconds = 0;
 		for (size_t i = 0; i < sizeof(clEventKernels) / sizeof(clEventKernels[0]); ++i) {
 			if (!clEventKernels[i]) {
 				continue;
@@ -318,8 +320,10 @@ COMPV_ERROR_CODE CompVMachineLearningSVMPredictBinaryRBF_GPU::process(const Comp
 			COMPV_CHECK_CL_CODE_BAIL(clerr = clGetEventProfilingInfo(clEventKernels[i], CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &endTime, 0), "clGetEventProfilingInfo(CL_PROFILING_COMMAND_END) failed");
 
 			nanoSeconds = (endTime - startTime); // GPGPU timer resolution = 10e-9 (nanoseconds)
-			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "%s: duration = %lf ms", clEventKernelsNames[i], (nanoSeconds * 1e-6));
+			total_nanoSeconds += nanoSeconds;
+			debug_msg += std::string(clEventKernelsNames[i]) + std::string(" = ") + CompVBase::to_string((nanoSeconds * 1e-6)) + std::string(".ms, ");
 		}
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "GPGPU Predict info: %s total = %lf.ms", debug_msg.c_str(), (total_nanoSeconds * 1e-6));
 	}
 #endif /* COMPV_CL_PROFILING_ENABLED */
 
