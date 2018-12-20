@@ -12,7 +12,7 @@
 
 #define TYP float
 #define SV_SIZ			45 // FIXME(dmi): must not be hard-coded
-#define SV_SIZ_PART		3 // FIXME(dmi): must not be hard-coded round(SV_SIZ / 16)
+#define SV_SIZ_PART		3 // FIXME(dmi): must not be hard-coded round((SV_SIZ + 15) / 16)
 
 __kernel void clCompVMachineLearningSVMPredictBinaryRBF_Part1(
 	__global const TYP* matVectors, // 0
