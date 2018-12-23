@@ -2699,7 +2699,7 @@ double svm_predict_values(const svm_model *model, const svm_node_base *xx, doubl
 	{
 		double *sv_coef = model->sv_coef[0];
 		double sum = 0;
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation could be found for 'Kernel::k_function' -> https://www.csie.ntu.edu.tw/~cjlin/libsvm/faq.html#f432");
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation could be found for 'Kernel::k_function', see https://www.csie.ntu.edu.tw/~cjlin/libsvm/faq.html#f432");
 		if (xx->type == NODE_TYPE_INDEXED) {
 			const svm_node* x = reinterpret_cast<const svm_node*>(xx->node);
 			for (i = 0; i < model->l; i++) {
