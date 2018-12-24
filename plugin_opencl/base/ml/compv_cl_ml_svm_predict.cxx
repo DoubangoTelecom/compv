@@ -253,7 +253,7 @@ COMPV_ERROR_CODE CompVMachineLearningSVMPredictBinaryRBF_GPU::process(const Comp
 	COMPV_DEBUG_INFO_CODE_TODO("Do we need to wait ?? before running kernel 2?");
 	COMPV_CHECK_CL_CODE_BAIL(clerr = clWaitForEvents(1, &clEventKernel1), "clWaitForEvents(clEventKernel1) failed");
 
-	// Kernel #2
+	// Kernel #2 (kind of reduction)
 	localWorkSize[0] = 256;
 	localWorkSize[1] = 1;
 	globalWorkSize[0] = (globalWorkSize[0] + 255) & -256;
@@ -262,10 +262,6 @@ COMPV_ERROR_CODE CompVMachineLearningSVMPredictBinaryRBF_GPU::process(const Comp
 	COMPV_CHECK_CL_CODE_BAIL(clerr = clEnqueueNDRangeKernel(m_clCommandQueue, m_clkernelPart2, 2, nullptr, globalWorkSize, localWorkSize,
 		0, nullptr, &clEventKernel2), "clEnqueueNDRangeKernel(m_clkernelPart2) failed");
 	COMPV_CHECK_CL_CODE_BAIL(clerr = clWaitForEvents(1, &clEventKernel2), "clWaitForEvents(clEventKernel2) failed");
-
-	if (globalWorkSize[0] > (localWorkSize[0] * localWorkSize[0])) {
-		COMPV_DEBUG_INFO_CODE_NOT_TESTED("Looping more than once not fully tested yet (need SVM with such large number of support vectors)");
-	}
 
 	if ((globalWorkSize[0] = static_cast<size_t>(matResult2_colsInt)) > 1) {
 		const void* inPtrs[2] = { (const void*)&clMemMatResult2, (const void*)&clMemMatResult1 };
@@ -276,8 +272,6 @@ COMPV_ERROR_CODE CompVMachineLearningSVMPredictBinaryRBF_GPU::process(const Comp
 
 		// TODO(dmi): use localsize[0] = 8 when globalSize is now <= 256 ?
 
-		globalWorkSize[0] = (globalWorkSize[0] + 255) & -256;
-
 		while (globalWorkSize[0] > 1) {
 			cl_int reductionIdx_prev;
 			COMPV_CHECK_CL_CODE_BAIL(clerr = clSetKernelArg(m_clkernelReduction, 0, sizeof(cl_mem), inPtrs[reductionIdx]), "clSetKernelArg(m_clkernelReduction, inPtr, 0) failed");
@@ -286,6 +280,7 @@ COMPV_ERROR_CODE CompVMachineLearningSVMPredictBinaryRBF_GPU::process(const Comp
 			COMPV_CHECK_CL_CODE_BAIL(clerr = clSetKernelArg(m_clkernelReduction, 3, sizeof(inRows[reductionIdx]), (const void*)&inRows[reductionIdx]), "clSetKernelArg(m_clkernelReduction, inRows, 3) failed");
 			COMPV_CHECK_CL_CODE_BAIL(clerr = clSetKernelArg(m_clkernelReduction, 4, sizeof(outCols[reductionIdx]), (const void*)&outCols[reductionIdx]), "clSetKernelArg(m_clkernelReduction, outCols, 4) failed");
 
+			globalWorkSize[0] = (globalWorkSize[0] + 255) & -256;
 			COMPV_CHECK_CL_CODE_BAIL(clerr = clEnqueueNDRangeKernel(m_clCommandQueue, m_clkernelReduction, 2, nullptr, globalWorkSize, localWorkSize,
 				0, nullptr, &clEventKernelReduction), "clEnqueueNDRangeKernel(m_clkernelReduction) failed");
 			COMPV_CHECK_CL_CODE_BAIL(clerr = clWaitForEvents(1, &clEventKernelReduction), "clWaitForEvents(clEventKernelReduction) failed");
@@ -294,7 +289,7 @@ COMPV_ERROR_CODE CompVMachineLearningSVMPredictBinaryRBF_GPU::process(const Comp
 			reductionIdx_prev = reductionIdx; // save previous permutation index
 			reductionIdx = (reductionIdx + 1) & 1; // update permutation index to next one
 			inCols[reductionIdx] = outCols[reductionIdx_prev];
-			outCols[reductionIdx] = inCols[reductionIdx] / cl_int(localWorkSize[0]); // no need to align forward alread the case at arrays init
+			outCols[reductionIdx] = (inCols[reductionIdx] + 255) / cl_int(localWorkSize[0]);
 		}
 	}
 

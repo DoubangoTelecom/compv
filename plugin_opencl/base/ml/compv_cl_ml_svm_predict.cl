@@ -10,7 +10,7 @@
 #endif
 
 
-#define TYP float
+#define TYP				float
 #define SV_SIZ			45 // FIXME(dmi): must not be hard-coded
 #define SV_SIZ_PART		3 // FIXME(dmi): must not be hard-coded round((SV_SIZ + 15) / 16)
 
@@ -270,7 +270,7 @@ __kernel void clCompVMachineLearningSVMPredictBinaryRBF_Part1(
 	} \
 	\
 	if (local_id0 == 0 && get_local_id(1) == 0) { \
-		outPtr[(global_id1 * outCols) + get_group_id(0)] = (outCols == 1)? (accumulator[0] - rho) : accumulator[0]; \
+		outPtr[(global_id1 * outCols) + get_group_id(0)] = (outCols == 1) ? (accumulator[0] - rho) : accumulator[0]; \
 	} \
 }
 
