@@ -1,4 +1,4 @@
-/* Copyright (C) 2016-2018 Doubango Telecom <https://www.doubango.org>
+/* Copyright (C) 2016-2019 Doubango Telecom <https://www.doubango.org>
 * File author: Mamadou DIOP (Doubango Telecom, France).
 * License: GPLv3. For commercial license please contact us.
 * Source code: https://github.com/DoubangoTelecom/compv
@@ -23,7 +23,7 @@ public:
 	template<typename T> static COMPV_ERROR_CODE stdev(const T* data, size_t count, T mean, T* std1);
 	static COMPV_ERROR_CODE normL2(const CompVMatPtr& ptrIn, CompVMatPtrPtr ptrOut, const double maxVal = 1.0);
 	static COMPV_ERROR_CODE normMinmax(const CompVMatPtr& ptrIn, CompVMatPtrPtr ptrOut, const double maxVal = 1.0);
-	static COMPV_ERROR_CODE normZscore(const CompVMatPtr& ptrIn, CompVMatPtrPtr ptrOut, const double maxVal = 1.0);
+	static COMPV_ERROR_CODE normZscore(const CompVMatPtr& ptrIn, CompVMatPtrPtr ptrOut, const double eps);
 };
 
 COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathStats::normalize2D_hartley(const compv_float32_t* x, const compv_float32_t* y, size_t numPoints, compv_float32_t* tx1, compv_float32_t* ty1, compv_float32_t* s1);

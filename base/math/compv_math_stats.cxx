@@ -1,4 +1,4 @@
-/* Copyright (C) 2016-2018 Doubango Telecom <https://www.doubango.org>
+/* Copyright (C) 2016-2019 Doubango Telecom <https://www.doubango.org>
 * File author: Mamadou DIOP (Doubango Telecom, France).
 * License: GPLv3. For commercial license please contact us.
 * Source code: https://github.com/DoubangoTelecom/compv
@@ -390,7 +390,7 @@ class CompVMathStatsGeneric {
 
 		// https://docs.tibco.com/pub/spotfire/6.5.1/doc/html/norm/norm_z_score.htm
 		template<typename T>
-		static COMPV_ERROR_CODE normZscore(const CompVMatPtr& ptrIn, CompVMatPtrPtr ptrOut, const double maxVal COMPV_DEFAULT(1.0))
+		static COMPV_ERROR_CODE normZscore(const CompVMatPtr& ptrIn, CompVMatPtrPtr ptrOut, const double eps)
 		{
 			COMPV_CHECK_EXP_RETURN(!ptrIn || !ptrOut, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 			COMPV_CHECK_EXP_RETURN(!ptrIn->isRawTypeMatch<T>(), COMPV_ERROR_CODE_E_INVALID_SUBTYPE);
@@ -415,40 +415,32 @@ class CompVMathStatsGeneric {
 			inPtr = ptrIn->ptr<T>();
 			for (size_t j = 0; j < height; ++j) {
 				for (size_t i = 0; i < width; ++i) {
-					sum += (inPtr[i] * inPtr[i]);
+					sum += inPtr[i];
 				}
 				inPtr += stride;
 			}
 			const T mean = static_cast<T>(sum / static_cast<T>(count));
 
-			double std = 0.0;
+			sum = 0.0;
 			inPtr = ptrIn->ptr<T>();
 			outPtr = ptrOut_->ptr<T>();
 			for (size_t j = 0; j < height; ++j) {
 				for (size_t i = 0; i < width; ++i) {
 					const T v = (inPtr[i] - mean);
-					outPtr[i] = v;
-					std += (v * v);
+					outPtr[i] = v; // saving diff
+					sum += (v * v);
 				}
 				inPtr += stride;
 				outPtr += stride;
 			}
 			
-			std = std::sqrt(std / double(1 - count));
-			const T std_ = static_cast<T>(std);
-
-			if (std::abs(std_) < std::numeric_limits<T>::epsilon()) {
-				COMPV_CHECK_CODE_RETURN(ptrOut_->zero_all());
-			}
-			else {
-				const T scale = static_cast<T>((1. / std_) * maxVal);
-				outPtr = ptrOut_->ptr<T>();
-				for (size_t j = 0; j < height; ++j) {
-					for (size_t i = 0; i < width; ++i) {
-						outPtr[i] *= scale;
-					}
-					outPtr += stride;
+			const T scale = static_cast<T>(1.f / std::sqrt((sum / double(count)) + eps));
+			outPtr = ptrOut_->ptr<T>();
+			for (size_t j = 0; j < height; ++j) {
+				for (size_t i = 0; i < width; ++i) {
+					outPtr[i] *= scale;
 				}
+				outPtr += stride;
 			}
 
 			*ptrOut = ptrOut_;
@@ -552,15 +544,15 @@ COMPV_ERROR_CODE CompVMathStats::normMinmax(const CompVMatPtr& ptrIn, CompVMatPt
 	}
 }
 
-COMPV_ERROR_CODE CompVMathStats::normZscore(const CompVMatPtr& ptrIn, CompVMatPtrPtr ptrOut, const double maxVal COMPV_DEFAULT(1.0))
+COMPV_ERROR_CODE CompVMathStats::normZscore(const CompVMatPtr& ptrIn, CompVMatPtrPtr ptrOut, const double eps)
 {
 	COMPV_CHECK_EXP_RETURN(!ptrIn || !ptrOut, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	switch (ptrIn->subType()) {
 	case COMPV_SUBTYPE_RAW_FLOAT64:
-		COMPV_CHECK_CODE_RETURN((CompVMathStatsGeneric::normZscore<compv_float64_t>(ptrIn, ptrOut, maxVal)));
+		COMPV_CHECK_CODE_RETURN((CompVMathStatsGeneric::normZscore<compv_float64_t>(ptrIn, ptrOut, eps)));
 		return COMPV_ERROR_CODE_S_OK;
 	case COMPV_SUBTYPE_RAW_FLOAT32:
-		COMPV_CHECK_CODE_RETURN((CompVMathStatsGeneric::normZscore<compv_float32_t>(ptrIn, ptrOut, maxVal)));
+		COMPV_CHECK_CODE_RETURN((CompVMathStatsGeneric::normZscore<compv_float32_t>(ptrIn, ptrOut, eps)));
 		return COMPV_ERROR_CODE_S_OK;
 	default:
 		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
