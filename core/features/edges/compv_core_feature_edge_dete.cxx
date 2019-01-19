@@ -108,7 +108,7 @@ COMPV_ERROR_CODE CompVCornerDeteEdgeBase::process(const CompVMatPtr& image, Comp
 		const size_t countLast = countAny + (m_nImageHeight % threadsCount);
 		const size_t countAnyTimesStride = countAny * m_nImageStride;
 		const uint8_t* inPtr_ = image->ptr<const uint8_t>();
-		compv_float32_t* gradDirPtr = gradDir ? gradDir->ptr<compv_float32_t>() : NULL;
+		compv_float32_t* gradDirPtr = gradDir ? gradDir->ptr<compv_float32_t>() : nullptr;
 		uint16_t* gmaxTmp = reinterpret_cast<uint16_t*>(CompVMem::malloc(threadsCount * sizeof(uint16_t)));
 		int16_t* outPtrGx_ = m_pGx;
 		int16_t* outPtrGy_ = m_pGy;
