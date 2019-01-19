@@ -338,6 +338,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathTrigFastAtan2_32f_Asm_FMA_NEON64
         ####################################################
         # for (; i < width; i += 4)
         ####################################################
+		cmp i, width
+		bge EndOf_LoopWidth4_CompVMathTrigHypotNaive_32f_Macro_NEON64\@
         LoopWidth4_CompVMathTrigHypotNaive_32f_Macro_NEON64\@:
             ldr q0, [x], #(1*COMPV_GAS_Q_SZ_BYTES)
             ldr q5, [y], #(1*COMPV_GAS_Q_SZ_BYTES)

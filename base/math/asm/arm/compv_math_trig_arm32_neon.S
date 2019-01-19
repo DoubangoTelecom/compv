@@ -282,10 +282,10 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathTrigFastAtan2_32f_Asm_FMA_NEON32
         tst width16, width16
         beq EndOf_LoopWidth16_CompVMathTrigHypotNaive_32f_Macro_NEON32\@
         LoopWidth16_CompVMathTrigHypotNaive_32f_Macro_NEON32\@:
-            vld1.u8 { q0, q1 }, [x]!
-            vld1.u8 { q2, q3 }, [x]!
-            vld1.u8 { q4, q5 }, [y]!
-            vld1.u8 { q6, q7 }, [y]!
+            vld1.u8 { q0, q1 }, [x :128]!
+            vld1.u8 { q2, q3 }, [x :128]!
+            vld1.u8 { q4, q5 }, [y :128]!
+            vld1.u8 { q6, q7 }, [y :128]!
             pld [x, #(CACHE_LINE_SIZE*3)]
             pld [y, #(CACHE_LINE_SIZE*3)]
             vmul.f32 q0, q0, q0
@@ -330,9 +330,11 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathTrigFastAtan2_32f_Asm_FMA_NEON32
         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         @ for (; i < width; i += 4)
         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+		cmp i, width
+		bge EndOf_LoopWidth4_CompVMathTrigHypotNaive_32f_Macro_NEON32\@
         LoopWidth4_CompVMathTrigHypotNaive_32f_Macro_NEON32\@:
-            vld1.u8 { q0 }, [x]!
-            vld1.u8 { q4 }, [y]!
+            vld1.u8 { q0 }, [x :128]!
+            vld1.u8 { q4 }, [y :128]!
             vmul.f32 q0, q0, q0
             vmla.f32 q0, q4, q4
             @ TODO(dmi): 'vsqrt.f32' not vectorized and not using approx implementaion (to make sure MD5 match) -> !! PERF ISSUE!!
