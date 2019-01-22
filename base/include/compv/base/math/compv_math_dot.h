@@ -11,13 +11,9 @@
 #include "compv/base/compv_common.h"
 #include "compv/base/compv_mat.h"
 
-#if defined(_COMPV_API_H_)
-#error("This is a private file and must not be part of the API")
-#endif
-
 COMPV_NAMESPACE_BEGIN()
 
-class CompVMathDot
+class COMPV_BASE_API CompVMathDot
 {
 public:
 	static COMPV_ERROR_CODE dot(const CompVMatPtr &A, const CompVMatPtr &B, double* ret);
