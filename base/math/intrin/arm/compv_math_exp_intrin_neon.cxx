@@ -67,7 +67,7 @@ void CompVMathExpExp_minpack1_32f32f_Intrin_NEON(COMPV_ALIGNED(NEON) const compv
 	COMPV_DEBUG_INFO_CHECK_NEON();
 	COMPV_DEBUG_INFO_CODE_TODO("ASM implemenation faster (FMA)");
 
-	const float32x4_t vecMagic = vld1q_dup_f32(&var32f[0]); // [0]: (1 << 23) + (1 << 22) - vld1.32 {q0[]}, [r0]
+	const float32x4_t vecMagic = vld1q_dup_f32(&var32f[0]); // [0]: (1 << 23) + (1 << 22) - vld1.32 {d0[]}, [r0]
 	const float32x4_t vecA0 = vld1q_dup_f32(&var32f[1]); // [1]: expVar.a[0]
 	const float32x4_t vecB0 = vld1q_dup_f32(&var32f[2]); // [2]: expVar.b[0]
 	const float32x4_t vecMaxX = vld1q_dup_f32(&var32f[3]); // [3]: expVar.maxX[0]
@@ -90,15 +90,15 @@ void CompVMathExpExp_minpack1_32f32f_Intrin_NEON(COMPV_ALIGNED(NEON) const compv
 			uint32x4_t  vecV = vandq_u32(vecFi, vec1023);
 			vecU = vshlq_n_u32(vshrq_n_u32(vecU, 10), 23);
 
-			// TODO(dmi): ASM, "VMOV d0, r0, r1" then "VMOV d1, r2, r3" -> q0 = (d0, d1)
+			// TODO(dmi): ASM, "VMOV.32 r0, r1, vecVx" then "VMOV.32 vecVx, r0, r1"
 			const uint32_t i0 = vgetq_lane_u32(vecV, 0);
 			const uint32_t i1 = vgetq_lane_u32(vecV, 1);
 			const uint32_t i2 = vgetq_lane_u32(vecV, 2);
 			const uint32_t i3 = vgetq_lane_u32(vecV, 3);
-			uint32x4_t  vecFi0 = (uint32x4_t) { lut32u[i0], lut32u[i1], lut32u[i2], lut32u[i3] };
-			vecFi0 = vorrq_u32(vecFi0, vecU);
+			vecV = (uint32x4_t) { lut32u[i0], lut32u[i1], lut32u[i2], lut32u[i3] };
+			vecV = vorrq_u32(vecV, vecU);
 
-			vst1q_f32(&ptrOut[i], vmlaq_f32(vecFi0, vecT, vecFi0));
+			vst1q_f32(&ptrOut[i], vmlaq_f32(vecV, vecT, vecV));
 		}
 		ptrIn += stride;
 		ptrOut += stride;

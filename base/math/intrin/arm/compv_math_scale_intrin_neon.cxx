@@ -17,7 +17,7 @@ void CompVMathScaleScale_32f32f_Intrin_NEON(COMPV_ALIGNED(NEON) const compv_floa
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM code faster");
 
 	const compv_uscalar_t width32 = width & -32;
-	const float32x4_t vecScale = vdupq_n_f32(*s1);
+	const float32x4_t vecScale = vld1q_dup_f32(s1); // vld1.32 {d0[]}, [r0]
 	compv_uscalar_t i;
 
 	for (compv_uscalar_t j = 0; j < height; ++j) {

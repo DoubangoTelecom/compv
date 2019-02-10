@@ -22,6 +22,10 @@ COMPV_EXTERNC void CompVMathScaleScale_32f32f_Asm_X64_SSE2(COMPV_ALIGNED(SSE) co
 COMPV_EXTERNC void CompVMathScaleScale_32f32f_Asm_X64_AVX(COMPV_ALIGNED(AVX) const compv_float32_t* ptrIn, COMPV_ALIGNED(AVX) compv_float32_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, COMPV_ALIGNED(AVX) const compv_uscalar_t stride, const compv_float32_t* s1);
 #endif /* #if COMPV_ASM && COMPV_ARCH_X64 */
 
+#if COMPV_ASM && COMPV_ARCH_ARM32
+COMPV_EXTERNC void CompVMathScaleScale_32f32f_Asm_NEON32(COMPV_ALIGNED(NEON) const compv_float32_t* ptrIn, COMPV_ALIGNED(NEON) compv_float32_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, COMPV_ALIGNED(NEON) const compv_uscalar_t stride, const compv_float32_t* s1);
+#endif /* COMPV_ARCH_ARM32 */
+
 template<typename T>
 static void CompVMathScaleScale_C(const T* ptrIn, T* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride, const T* s1)
 {
@@ -76,6 +80,7 @@ static COMPV_ERROR_CODE CompVMathScaleScale(const CompVMatPtr &in, const double&
 #elif COMPV_ARCH_ARM
 			if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(ptrIn) && COMPV_IS_ALIGNED_NEON(ptrOut) && COMPV_IS_ALIGNED_NEON(stride * sizeof(compv_float32_t))) {
 				COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMathScale_32f32f = CompVMathScaleScale_32f32f_Intrin_NEON);
+				COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathScale_32f32f = CompVMathScaleScale_32f32f_Asm_NEON32);
 			}
 #endif
 			CompVMathScale_32f32f(
