@@ -5,7 +5,7 @@ using namespace compv;
 #define TAG_UNITTESTS "UnitTests"
 
 #define UNITTEST_SPLIT							0
-#define UNITTEST_SCALE							1
+#define UNITTEST_SCALE							0
 #define UNITTEST_ROTATE							0
 #define UNITTEST_PYRAMID						0
 #define UNITTEST_GRADIENT						0
@@ -28,7 +28,7 @@ using namespace compv;
 
 #define UNITTEST_MATH_MATRIX_OPS				0
 #define UNITTEST_MATH_DOT						0
-#define UNITTEST_MATH_EXP						0
+#define UNITTEST_MATH_EXP						1
 #define UNITTEST_MATH_EIGEN_S					0
 #define UNITTEST_MATH_SVD						0
 #define UNITTEST_MATH_INVERSE					0 // Moore–Penrose pseudoinverse and Inverse3x3 (remove from the unittest, not stable and already part of homography)

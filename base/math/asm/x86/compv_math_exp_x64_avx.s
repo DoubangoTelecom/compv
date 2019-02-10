@@ -12,15 +12,182 @@
 
 COMPV_YASM_DEFAULT_REL
 
+global sym(CompVMathExpExp_minpack1_32f32f_Asm_X64_AVX2)
+global sym(CompVMathExpExp_minpack1_32f32f_Asm_X64_FMA3_AVX2)
 global sym(CompVMathExpExp_minpack1_64f64f_Asm_X64_AVX2)
 global sym(CompVMathExpExp_minpack1_64f64f_Asm_X64_FMA3_AVX2)
 
+
 section .data
+align 32
+data130048 dd 130048, 130048, 130048, 130048, 130048, 130048, 130048, 130048
+data1023 dd 1023, 1023, 1023, 1023, 1023, 1023, 1023, 1023
 
 section .text
 
 %define FMA_OFF	0
 %define FMA_ON	1
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> COMPV_ALIGNED(AVX) const compv_float32_t* ptrIn
+; arg(1) -> COMPV_ALIGNED(AVX) compv_float32_t* ptrOut
+; arg(2) -> const compv_uscalar_t width
+; arg(3) -> const compv_uscalar_t height
+; arg(4) -> COMPV_ALIGNED(AVX) const compv_uscalar_t stride
+; arg(5) -> COMPV_ALIGNED(AVX) const uint32_t* lut32u
+; arg(6) -> COMPV_ALIGNED(AVX) const compv_float32_t* var32f
+; %1 -> FMA
+%macro CompVMathExpExp_minpack1_32f32f_Macro_X64_AVX2 1
+	vzeroupper
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 7
+	COMPV_YASM_SAVE_YMM 15
+	push rsi
+	push rdi
+	push rbx
+	;; end prolog ;;
+
+	%define ptrIn		rax
+	%define ptrOut		rcx
+	%define width		rdx
+	%define height		rsi
+	%define stride		rdi
+	%define lut32u		rbx
+	%define var32f		r8
+
+	%define i			r9
+
+	%define vecMagic	ymm0
+	%define vecA0		ymm1
+	%define vecB0		ymm2
+	%define vecMaxX		ymm3
+	%define vecMinX		ymm4
+	%define vec130048	ymm5
+	%define vec1023		ymm6
+	%define vecX		ymm7
+	%define vecFi		ymm8
+	%define vecT		ymm9
+	%define vecFi0		ymm10
+	%define vecV		ymm11
+	%define vecU		ymm12
+
+	mov ptrIn, arg(0)
+	mov ptrOut, arg(1)
+	mov width, arg(2)
+	mov height, arg(3)
+	mov stride, arg(4)
+	mov lut32u, arg(5)
+	mov var32f, arg(6)
+
+	vpbroadcastd vecMagic, [var32f + (0 * COMPV_YASM_FLOAT32_SZ_BYTES)]
+	vpbroadcastd vecA0, [var32f + (1 * COMPV_YASM_FLOAT32_SZ_BYTES)]
+	vpbroadcastd vecB0, [var32f + (2 * COMPV_YASM_FLOAT32_SZ_BYTES)]
+	vpbroadcastd vecMaxX, [var32f + (3 * COMPV_YASM_FLOAT32_SZ_BYTES)]
+	vpbroadcastd vecMinX, [var32f + (4 * COMPV_YASM_FLOAT32_SZ_BYTES)]
+	vmovaps vec130048, [sym(data130048)]
+	vmovaps vec1023, [sym(data1023)]
+	
+	shl stride, COMPV_YASM_FLOAT32_SHIFT_BYTES
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	; for (compv_uscalar_t j = 0; j < height; ++j)
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	.LoopHeight:
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; for (compv_uscalar_t i = 0; i < width; i += 8)
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		xor i, i
+		.LoopWidth:
+			vmovaps vecX, [ptrIn + (i * COMPV_YASM_FLOAT32_SZ_BYTES)]
+			vminps vecX, vecX, vecMaxX
+			vmaxps vecX, vecX, vecMinX
+			%if %1 == FMA_ON
+				vmovaps vecFi, vecMagic
+				vfmadd231ps vecFi, vecX, vecA0
+			%else
+				vmulps vecFi, vecX, vecA0
+				vaddps vecFi, vecFi, vecMagic
+			%endif	
+			vsubps vecT, vecFi, vecMagic
+			%if %1 == FMA_ON
+				vfnmadd213ps vecT, vecB0, vecX
+			%else
+				vmulps vecT, vecT, vecB0
+				vsubps vecT, vecX, vecT
+			%endif
+						
+			vpand vecV, vecFi, vec1023
+			vpcmpeqq vecX, vecX, vecX ; vecX now contains condition mask: changed after executing "vpgatherdd"
+			vpslld vecV, vecV, COMPV_YASM_UINT32_SHIFT_BYTES
+			vpgatherdd vecFi0, [lut32u+vecV], vecX
+			vpaddd vecU, vecFi, vec130048
+			vpsrld vecU, vecU, 10
+			vpslld vecU, vecU, 23
+			vpor vecFi0, vecFi0, vecU
+
+			%if %1 == FMA_ON
+				vfmadd213ps vecT, vecFi0, vecFi0
+			%else
+				vmulps vecT, vecT, vecFi0
+				vaddps vecT, vecT, vecFi0
+			%endif
+			vmovaps [ptrOut + (i * COMPV_YASM_FLOAT32_SZ_BYTES)], vecT
+
+			add i, 8
+			cmp i, width
+			jl .LoopWidth
+		.EndOf_LoopWidth:
+
+		dec height
+		lea ptrIn, [ptrIn + stride]
+		lea ptrOut, [ptrOut + stride]
+		jnz .LoopHeight
+	.EndOf_LoopHeight:
+
+	%undef ptrIn
+	%undef ptrOut
+	%undef width
+	%undef height
+	%undef stride
+	%undef lut32u
+	%undef var32f
+
+	%undef i
+
+	%undef vecMagic
+	%undef vecA0
+	%undef vecB0
+	%undef vecMaxX
+	%undef vecMinX
+	%undef vec130048
+	%undef vec1023
+	%undef vecX
+	%undef vecFi
+	%undef vecT
+	%undef vecFi0
+	%undef vecV
+	%undef vecU
+
+	;; begin epilog ;;
+	pop rbx
+	pop rdi
+	pop rsi
+	COMPV_YASM_RESTORE_YMM
+	COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	vzeroupper
+	ret
+%endm
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(CompVMathExpExp_minpack1_32f32f_Asm_X64_AVX2):
+	CompVMathExpExp_minpack1_32f32f_Macro_X64_AVX2 FMA_OFF
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(CompVMathExpExp_minpack1_32f32f_Asm_X64_FMA3_AVX2):
+	CompVMathExpExp_minpack1_32f32f_Macro_X64_AVX2 FMA_ON
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

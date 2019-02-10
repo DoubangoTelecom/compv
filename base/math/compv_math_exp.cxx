@@ -23,6 +23,8 @@ COMPV_NAMESPACE_BEGIN()
 #if COMPV_ASM && COMPV_ARCH_X64
 COMPV_EXTERNC void CompVMathExpExp_minpack1_64f64f_Asm_X64_AVX2(const compv_float64_t* ptrIn, compv_float64_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride, const uint64_t* lut64u, const uint64_t* var64u, const compv_float64_t* var64f);
 COMPV_EXTERNC void CompVMathExpExp_minpack1_64f64f_Asm_X64_FMA3_AVX2(const compv_float64_t* ptrIn, compv_float64_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride, const uint64_t* lut64u, const uint64_t* var64u, const compv_float64_t* var64f);
+COMPV_EXTERNC void CompVMathExpExp_minpack1_32f32f_Asm_X64_AVX2(COMPV_ALIGNED(AVX) const compv_float32_t* ptrIn, COMPV_ALIGNED(AVX) compv_float32_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, COMPV_ALIGNED(AVX) const compv_uscalar_t stride, COMPV_ALIGNED(AVX) const uint32_t* lut32u, COMPV_ALIGNED(AVX) const compv_float32_t* var32f);
+COMPV_EXTERNC void CompVMathExpExp_minpack1_32f32f_Asm_X64_FMA3_AVX2(COMPV_ALIGNED(AVX) const compv_float32_t* ptrIn, COMPV_ALIGNED(AVX) compv_float32_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, COMPV_ALIGNED(AVX) const compv_uscalar_t stride, COMPV_ALIGNED(AVX) const uint32_t* lut32u, COMPV_ALIGNED(AVX) const compv_float32_t* var32f);
 #endif /* #if COMPV_ASM && COMPV_ARCH_X64 */
 
 #if COMPV_ASM && COMPV_ARCH_ARM32
@@ -196,7 +198,9 @@ static COMPV_ERROR_CODE CompVMathExpExp(const CompVMatPtr &in, CompVMatPtrPtr ou
 			}
 			if (CompVCpu::isEnabled(kCpuFlagAVX2) && COMPV_IS_ALIGNED_AVX(ptrIn) && COMPV_IS_ALIGNED_AVX(ptrOut) && COMPV_IS_ALIGNED_AVX(stride * sizeof(compv_float32_t))) {
 				COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathExpExp_32f32f = CompVMathExpExp_minpack1_32f32f_Intrin_AVX2);
+				COMPV_EXEC_IFDEF_ASM_X64(CompVMathExpExp_32f32f = CompVMathExpExp_minpack1_32f32f_Asm_X64_AVX2);
 				if (CompVCpu::isEnabled(kCpuFlagFMA3)) {
+					COMPV_EXEC_IFDEF_ASM_X64(CompVMathExpExp_32f32f = CompVMathExpExp_minpack1_32f32f_Asm_X64_FMA3_AVX2);
 				}
 			}
 #elif COMPV_ARCH_ARM
