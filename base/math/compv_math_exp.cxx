@@ -204,7 +204,9 @@ static COMPV_ERROR_CODE CompVMathExpExp(const CompVMatPtr &in, CompVMatPtrPtr ou
 				}
 			}
 #elif COMPV_ARCH_ARM
-
+			if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(ptrIn) && COMPV_IS_ALIGNED_NEON(ptrOut) && COMPV_IS_ALIGNED_NEON(stride * sizeof(compv_float32_t))) {
+				COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMathExpExp_32f32f = CompVMathExpExp_minpack1_32f32f_Intrin_NEON);
+			}
 #endif
 			CompVMathExpExp_32f32f(
 				reinterpret_cast<const compv_float32_t*>(ptrIn), reinterpret_cast<compv_float32_t*>(ptrOut),

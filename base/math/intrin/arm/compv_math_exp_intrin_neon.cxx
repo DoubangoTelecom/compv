@@ -61,6 +61,50 @@ void CompVMathExpExp_minpack2_64f64f_Intrin_NEON64(const compv_float64_t* ptrIn,
 }
 #endif /* COMPV_ARCH_ARM64 */
 
+// "ptrOut" must be correctly strided as this function will write beyond width and up to stride
+void CompVMathExpExp_minpack1_32f32f_Intrin_NEON(COMPV_ALIGNED(NEON) const compv_float32_t* ptrIn, COMPV_ALIGNED(NEON) compv_float32_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, COMPV_ALIGNED(NEON) const compv_uscalar_t stride, COMPV_ALIGNED(NEON) const uint32_t* lut32u, COMPV_ALIGNED(NEON) const compv_float32_t* var32f)
+{
+	COMPV_DEBUG_INFO_CHECK_NEON();
+	COMPV_DEBUG_INFO_CODE_TODO("ASM implemenation faster (FMA)");
+
+	const float32x4_t vecMagic = vld1q_dup_f32(&var32f[0]); // [0]: (1 << 23) + (1 << 22) - vld1.32 {q0[]}, [r0]
+	const float32x4_t vecA0 = vld1q_dup_f32(&var32f[1]); // [1]: expVar.a[0]
+	const float32x4_t vecB0 = vld1q_dup_f32(&var32f[2]); // [2]: expVar.b[0]
+	const float32x4_t vecMaxX = vld1q_dup_f32(&var32f[3]); // [3]: expVar.maxX[0]
+	const float32x4_t vecMinX = vld1q_dup_f32(&var32f[4]); // [4]: expVar.minX[0]
+
+	const uint32x4_t  vec130048 = vdupq_n_u32(130048);
+	const uint32x4_t  vec1023 = vdupq_n_u32(1023);
+
+	for (compv_uscalar_t j = 0; j < height; ++j) {
+		for (compv_uscalar_t i = 0; i < width; i += 4) {
+			float32x4_t vecX = vld1q_f32(&ptrIn[i]);
+
+			vecX = vminq_f32(vecX, vecMaxX);
+			vecX = vmaxq_f32(vecX, vecMinX);
+			float32x4_t vecFi = vmlaq_f32(vecMagic, vecX, vecA0);
+			float32x4_t vecT = vsubq_f32(vecFi, vecMagic);
+			vecT = vmlsq_f32(vecX, vecT, vecB0);
+
+			uint32x4_t  vecU = vaddq_u32(vecFi, vec130048);
+			uint32x4_t  vecV = vandq_u32(vecFi, vec1023);
+			vecU = vshlq_n_u32(vshrq_n_u32(vecU, 10), 23);
+
+			// TODO(dmi): ASM, "VMOV d0, r0, r1" then "VMOV d1, r2, r3" -> q0 = (d0, d1)
+			const uint32_t i0 = vgetq_lane_u32(vecV, 0);
+			const uint32_t i1 = vgetq_lane_u32(vecV, 1);
+			const uint32_t i2 = vgetq_lane_u32(vecV, 2);
+			const uint32_t i3 = vgetq_lane_u32(vecV, 3);
+			uint32x4_t  vecFi0 = (uint32x4_t) { lut32u[i0], lut32u[i1], lut32u[i2], lut32u[i3] };
+			vecFi0 = vorrq_u32(vecFi0, vecU);
+
+			vst1q_f32(&ptrOut[i], vmlaq_f32(vecFi0, vecT, vecFi0));
+		}
+		ptrIn += stride;
+		ptrOut += stride;
+	}
+}
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */

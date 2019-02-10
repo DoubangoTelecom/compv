@@ -10,6 +10,7 @@
 #include "compv/base/compv_cpu.h"
 
 #include "compv/base/math/intrin/x86/compv_math_scale_intrin_sse2.h"
+#include "compv/base/math/intrin/arm/compv_math_scale_intrin_neon.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -73,6 +74,9 @@ static COMPV_ERROR_CODE CompVMathScaleScale(const CompVMatPtr &in, const double&
 				COMPV_EXEC_IFDEF_ASM_X64(CompVMathScale_32f32f = CompVMathScaleScale_32f32f_Asm_X64_AVX);
 			}
 #elif COMPV_ARCH_ARM
+			if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(ptrIn) && COMPV_IS_ALIGNED_NEON(ptrOut) && COMPV_IS_ALIGNED_NEON(stride * sizeof(compv_float32_t))) {
+				COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMathScale_32f32f = CompVMathScaleScale_32f32f_Intrin_NEON);
+			}
 #endif
 			CompVMathScale_32f32f(
 				reinterpret_cast<const compv_float32_t*>(ptrIn), reinterpret_cast<compv_float32_t*>(ptrOut),

@@ -64,7 +64,7 @@ COMPV_ERROR_CODE expo()
 		COMPV_CHECK_CODE_RETURN(CompVMath::exp(inMat, &outMat));
 	}
 	uint64_t timeEnd = CompVTime::nowMillis();
-	COMPV_DEBUG_INFO_EX(TAG_TEST, "Math Dot Elapsed time = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
+	COMPV_DEBUG_INFO_EX(TAG_TEST, "Math Exp Elapsed time = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "MD5=%s", compv_tests_md5(outMat).c_str());
 	const char* xmd5 = compv_tests_is_fma_enabled() ? test->md5_fma : test->md5;
