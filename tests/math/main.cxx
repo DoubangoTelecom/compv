@@ -7,8 +7,8 @@
 #define TEST_MATRIX_OPS_MUL_GA				0
 #define TEST_MATRIX_OPS_IS_SYMETRIC			0
 #define TEST_DOT							0
-#define TEST_EXP							1
-#define TEST_SCALE							0
+#define TEST_EXP							0
+#define TEST_SCALE							1
 #define TEST_EIGEN_S						0
 #define TEST_SVD							0
 #define TEST_PSI							0 // Moore–Penrose pseudoinverse
