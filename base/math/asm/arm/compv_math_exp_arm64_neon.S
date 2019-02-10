@@ -19,6 +19,169 @@
 .equ FMA_YES, 1
 .equ FMA_NO, 0
 
+#########################################################
+# arg(0) -> COMPV_ALIGNED(NEON) const compv_float32_t* ptrIn
+# arg(1) -> COMPV_ALIGNED(NEON) compv_float32_t* ptrOut
+# arg(2) -> const compv_uscalar_t width
+# arg(3) -> const compv_uscalar_t height
+# arg(4) -> COMPV_ALIGNED(NEON) const compv_uscalar_t stride
+# arg(5) -> COMPV_ALIGNED(NEON) const uint32_t* lut32u
+# arg(6) -> COMPV_ALIGNED(NEON) const compv_float32_t* var32f
+COMPV_GAS_FUNCTION_DECLARE CompVMathExpExp_minpack1_32f32f_Asm_NEON64
+	COMPV_GAS_FUNCTION_PROLOG
+	COMPV_GAS_SAVE_NEON_REGS
+
+	## Load arguments ##
+	ptrIn .req r0
+	ptrOut .req r1
+	width .req r2
+	height .req r3
+	stride .req r4
+	lut32u .req r5
+	var32f .req r6
+
+	i .req r7
+	t0 .req r8
+	t0w .req r8w
+	t1 .req r9
+	t1w .req r9w
+	t2 .req r10
+	t2w .req r10w
+	t3 .req r11
+	t3w .req r11w
+
+	vecMagic .req v0
+	vecA0 .req v1
+	vecB0 .req v2
+	vecMaxX .req v3
+	vecMinX .req v4
+	vec130048 .req v5
+	vec1023 .req v6
+	vecX .req v7
+	vecFi .req v8
+	vecT .req v9
+	vecU .req v10
+	vecV .req v11
+
+	prfm pldl1keep, [ptrIn, #(CACHE_LINE_SIZE*0)]
+	prfm pldl1keep, [ptrIn, #(CACHE_LINE_SIZE*1)]
+	prfm pldl1keep, [ptrIn, #(CACHE_LINE_SIZE*2)]
+	prfm pldl1keep, [ptrIn, #(CACHE_LINE_SIZE*3)]
+
+	# Transform stride to padding #
+	add i, width, #3
+	and i, i, #-4
+	sub stride, stride, i
+	lsl stride, stride, #(COMPV_GAS_FLOAT32_SHIFT_BYTES)
+
+
+	ldr r12w, [var32f,  #(0 * COMPV_GAS_FLOAT32_SZ_BYTES)]
+	ldr r13w, [var32f,  #(1 * COMPV_GAS_FLOAT32_SZ_BYTES)]
+	ldr r14w, [var32f,  #(2 * COMPV_GAS_FLOAT32_SZ_BYTES)]
+	ldr r15w, [var32f,  #(3 * COMPV_GAS_FLOAT32_SZ_BYTES)]
+	ldr r16w, [var32f,  #(4 * COMPV_GAS_FLOAT32_SZ_BYTES)]
+	dup vecMagic.4s, r12w
+	dup vecA0.4s, r13w
+	dup vecB0.4s, r14w
+	dup vecMaxX.4s, r15w
+	dup vecMinX.4s, r16w
+	
+	mov r12w, #130048
+	mov r13w, #1023
+	dup vec130048.4s, r12w
+	dup vec1023.4s, r13w
+
+	################################################
+	# for (compv_uscalar_t j = 0; j < height; ++j)
+	################################################
+	LoopHeigth_CompVMathExpExp_minpack1_32f32f_Asm_NEON64:
+		################################################
+		# for (i = 0; i < width; i += 4)
+		################################################
+		mov i, #0
+		LoopWidth_CompVMathExpExp_minpack1_32f32f_Asm_NEON64:
+			ld1 { vecX.4s }, [ptrIn], #(1 * COMPV_GAS_V_SZ_BYTES)
+			prfm pldl1keep, [ptrIn, #(CACHE_LINE_SIZE*4)]
+
+			fmin vecX.4s, vecX.4s, vecMaxX.4s
+			fmax vecX.4s, vecX.4s, vecMinX.4s
+			fmul vecFi.4s, vecX.4s, vecA0.4s
+			fadd vecFi.4s, vecFi.4s, vecMagic.4s			
+			fsub vecT.4s, vecFi.4s, vecMagic.4s
+			fmul vecT.4s, vecT.4s, vecB0.4s
+			fsub vecX.4s, vecX.4s, vecT.4s // vecX = vecT from intrin code
+
+			add vecU.4s, vecFi.4s, vec130048.4s
+			and vecV.16b, vecFi.16b, vec1023.16b
+			ushr vecU.4s, vecU.4s, #10
+			shl vecU.4s, vecU.4s, #23
+
+			umov t0, vecV.d[0]
+			umov t2, vecV.d[1]
+			lsr t1, t0, #32
+			and t0, t0, #0xffffffff
+			lsr t3, t2, #32
+			and t2, t2, #0xffffffff
+			ldr t0w, [lut32u, t0, LSL #(COMPV_GAS_UINT32_SHIFT_BYTES)]
+			ldr t1w, [lut32u, t1, LSL #(COMPV_GAS_UINT32_SHIFT_BYTES)]
+			ldr t2w, [lut32u, t2, LSL #(COMPV_GAS_UINT32_SHIFT_BYTES)]
+			ldr t3w, [lut32u, t3, LSL #(COMPV_GAS_UINT32_SHIFT_BYTES)]
+			orr t0, t0, t1, LSL #32
+			orr t2, t2, t3, LSL #32
+			ins vecV.d[0], t0
+			ins vecV.d[1], t2			
+			orr vecV.16b, vecV.16b, vecU.16b
+
+			fmul vecX.4s, vecX.4s, vecV.4s
+			fadd vecV.4s, vecV.4s, vecX.4s
+			st1 { vecV.4s }, [ptrOut], #(1 * COMPV_GAS_V_SZ_BYTES)
+
+			add i, i, #4
+			cmp i, width
+			blt LoopWidth_CompVMathExpExp_minpack1_32f32f_Asm_NEON64
+		EndOf_LoopWidth_CompVMathExpExp_minpack1_32f32f_Asm_NEON64:
+
+		subs height, height, #1
+		add ptrIn, ptrIn, stride
+		add ptrOut, ptrOut, stride
+		bne  LoopHeigth_CompVMathExpExp_minpack1_32f32f_Asm_NEON64
+	EndOf_LoopHeigth_CompVMathExpExp_minpack1_32f32f_Asm_NEON64:
+
+	.unreq ptrIn
+	.unreq ptrOut
+	.unreq width
+	.unreq height
+	.unreq stride
+	.unreq lut32u
+	.unreq var32f
+
+	.unreq i
+	.unreq t0
+	.unreq t0w
+	.unreq t1
+	.unreq t1w
+	.unreq t2
+	.unreq t2w
+	.unreq t3
+	.unreq t3w
+
+	.unreq vecMagic
+	.unreq vecA0
+	.unreq vecB0
+	.unreq vecMaxX
+	.unreq vecMinX
+	.unreq vec130048
+	.unreq vec1023
+	.unreq vecX
+	.unreq vecFi
+	.unreq vecT
+	.unreq vecU
+	.unreq vecV
+
+	COMPV_GAS_RESTORE_NEON_REGS
+	COMPV_GAS_FUNCTION_EPILOG
+	COMPV_GAS_FUNCTION_RETURN
+
 ########################################################################
 .macro COMPV_MATH_EXP_64F64F_ASM_NEON64 step, fusedMultiplyAdd
 	.if \fusedMultiplyAdd == FMA_YES
