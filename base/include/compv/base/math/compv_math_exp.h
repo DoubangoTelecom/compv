@@ -29,18 +29,27 @@ public:
 	static const uint64_t* lut64u() {
 		return s_arrayLut64u;
 	}
+	static const uint32_t* lut32u() {
+		return s_arrayLut32u;
+	}
 	static const uint64_t* vars64u() {
 		return s_arrayVars64u;
 	}
 	static const compv_float64_t* vars64f() {
-		return s_arrayVars6f4;
+		return s_arrayVars64f;
+	}
+	static const compv_float32_t* vars32f() {
+		return s_arrayVars32f;
 	}
 
 private:
 	static bool s_bInitialized;
 	static COMPV_ALIGN_DEFAULT() const uint64_t s_arrayVars64u[2];
-	static COMPV_ALIGN_DEFAULT() const compv_float64_t s_arrayVars6f4[8];
+	static COMPV_ALIGN_DEFAULT() const compv_float64_t s_arrayVars64f[8];
+	static COMPV_ALIGN_DEFAULT() const compv_float32_t s_arrayVars32f[5];
 	static COMPV_ALIGN_DEFAULT() const uint64_t s_arrayLut64u[2048 /* 1UL << sbit[11] */];
+	static COMPV_ALIGN_DEFAULT() const uint32_t s_arrayLut32u[1024 /* tbl */];
+	
 };
 
 COMPV_NAMESPACE_END()

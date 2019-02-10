@@ -69,6 +69,51 @@ void CompVMathExpExp_minpack4_64f64f_Intrin_AVX2(const compv_float64_t* ptrIn, c
 	_mm256_zeroupper();
 }
 
+#if defined(__INTEL_COMPILER)
+#	pragma intel optimization_parameter target_arch=avx2
+#endif
+void CompVMathExpExp_minpack1_32f32f_Intrin_AVX2(COMPV_ALIGNED(AVX) const compv_float32_t* ptrIn, COMPV_ALIGNED(AVX) compv_float32_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, COMPV_ALIGNED(AVX) const compv_uscalar_t stride, COMPV_ALIGNED(AVX) const uint32_t* lut32u, COMPV_ALIGNED(AVX) const compv_float32_t* var32f)
+{
+	COMPV_DEBUG_INFO_CHECK_AVX2();
+	COMPV_DEBUG_INFO_CODE_TODO("ASM implemenation faster (AVX + FMA)");
+
+	_mm256_zeroupper();
+
+	const __m256 vecMagic = _mm256_set1_ps(var32f[0]); // [0]: (1 << 23) + (1 << 22)
+	const __m256 vecA0 = _mm256_set1_ps(var32f[1]); // [1]: expVar.a[0]
+	const __m256 vecB0 = _mm256_set1_ps(var32f[2]); // [2]: expVar.b[0]
+	const __m256 vecMaxX = _mm256_set1_ps(var32f[3]); // [3]: expVar.maxX[0]
+	const __m256 vecMinX = _mm256_set1_ps(var32f[4]); // [4]: expVar.minX[0]
+
+	const __m256i vec130048 = _mm256_set1_epi32(130048);
+	const __m256i vec1023 = _mm256_set1_epi32(1023);
+
+	for (compv_uscalar_t j = 0; j < height; ++j) {
+		for (compv_uscalar_t i = 0; i < width; i += 8) {
+			__m256 vecX = _mm256_load_ps(&ptrIn[i]);
+
+			vecX = _mm256_min_ps(vecX, vecMaxX);
+			vecX = _mm256_max_ps(vecX, vecMinX);
+			__m256 vecFi = _mm256_add_ps(_mm256_mul_ps(vecX, vecA0), vecMagic); // TODO(dmi): FMA
+			__m256 vecT = _mm256_sub_ps(vecFi, vecMagic);
+			vecT = _mm256_sub_ps(vecX, _mm256_mul_ps(vecT, vecB0)); // TODO(dmi): FMA instruction "vecT = _mm256_fnmadd_ps(vecT, vecB0, vecX)"
+
+			__m256i vecU = _mm256_add_epi32(_mm256_castps_si256(vecFi), vec130048);
+			__m256i vecV = _mm256_and_si256(_mm256_castps_si256(vecFi), vec1023);
+			vecU = _mm256_slli_epi32(_mm256_srli_epi32(vecU, 10), 23);
+
+			__m256i vecFi0 = _mm256_i32gather_epi32(reinterpret_cast<const int32_t *>(lut32u), vecV, 4); // 4 = sizeof(int32_t)
+			vecFi0 = _mm256_or_si256(vecFi0, vecU);
+
+			_mm256_store_ps(&ptrOut[i], _mm256_add_ps(_mm256_mul_ps(vecT, _mm256_castsi256_ps(vecFi0)), _mm256_castsi256_ps(vecFi0))); // TODO(dmi): FMA
+		}
+		ptrIn += stride;
+		ptrOut += stride;
+	}
+
+	_mm256_zeroupper();
+}
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */

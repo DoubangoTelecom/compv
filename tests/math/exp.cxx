@@ -23,14 +23,12 @@ static const struct compv_unittest_exp {
 	const char* md5;
 	const char* md5_fma;
 } COMPV_UNITTEST_EXP[] = {
-#if 0 // Not implemented yet (std::exp used and produce different result on different CPUs)
-	{ FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, false, "19b57f18429b1075c8ad945b40967d55", "19b57f18429b1075c8ad945b40967d55" }, // exp_32f32f - No FMA yet
-#endif
+	{ FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, false, "1af2fcefccf15004c436393338d021ba", "1af2fcefccf15004c436393338d021ba" }, // exp_32f32f - No FMA yet
 	{ FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, true, "a19b56020ec76de44fefd60787ee237d", "f69e3f6f9203952f1f29ce2b73930f17" }, // exp_64f64f
 };
 static const size_t COMPV_UNITTEST_EXP_COUNT = sizeof(COMPV_UNITTEST_EXP) / sizeof(COMPV_UNITTEST_EXP[0]);
 
-#define EXP_FLOAT64			true
+#define EXP_FLOAT64			false
 #define FILE_NAME			FILE_NAME_EQUIRECTANGULAR
 
 #define LOOP_COUNT			1
