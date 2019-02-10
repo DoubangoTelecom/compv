@@ -279,7 +279,9 @@
 #define COMPV_OVERRIDE_DECL1(base_class, ret_type, method) virtual ret_type method
 
 #if defined(_MSC_VER)
+#	if !defined(_CRT_SECURE_NO_WARNINGS)
 #	define _CRT_SECURE_NO_WARNINGS
+#	endif
 #	define COMPV_SHOULD_INLINE		__inline
 #	define COMPV_ALWAYS_INLINE		__forceinline
 #	define COMPV_ALIGN(x)			__declspec(align(x))
@@ -377,8 +379,12 @@
 #endif
 
 #if COMPV_OS_WINDOWS
+#	if !defined(_WINSOCKAPI_)
 #	define _WINSOCKAPI_
+#	endif
+#	if !defined(NOMINMAX)
 #	define NOMINMAX
+#	endif
 #	include <windows.h>
 #endif
 #include <stdlib.h>

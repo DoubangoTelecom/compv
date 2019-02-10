@@ -19,6 +19,7 @@
 COMPV_NAMESPACE_BEGIN()
 
 void CompVMathScaleScale_64f64f_Intrin_SSE2(const compv_float64_t* ptrIn, compv_float64_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride, const compv_float64_t* s1);
+void CompVMathScaleScale_32f32f_Intrin_SSE2(COMPV_ALIGNED(SSE) const compv_float32_t* ptrIn, COMPV_ALIGNED(SSE) compv_float32_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, COMPV_ALIGNED(SSE) const compv_uscalar_t stride, const compv_float32_t* s1);
 
 COMPV_NAMESPACE_END()
 

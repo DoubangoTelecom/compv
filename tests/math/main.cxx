@@ -8,6 +8,7 @@
 #define TEST_MATRIX_OPS_IS_SYMETRIC			0
 #define TEST_DOT							0
 #define TEST_EXP							0
+#define TEST_SCALE							1
 #define TEST_EIGEN_S						0
 #define TEST_SVD							0
 #define TEST_PSI							0 // Moore–Penrose pseudoinverse
@@ -28,7 +29,7 @@
 #define TEST_HISTOGRAM_PROJ					0
 #define TEST_CONVLT							0
 #define TEST_MORPH							0
-#define TEST_ML_SVM_PREDICT					1
+#define TEST_ML_SVM_PREDICT					0
 #define TEST_ML_SVM_RBF						0
 #define TEST_PCA							0
 
@@ -63,6 +64,10 @@ compv_main()
 #if TEST_EXP
 		extern COMPV_ERROR_CODE expo();
 		COMPV_CHECK_CODE_BAIL(err = expo(), TAG_TEST "Math matrix exp test failed");
+#endif
+#if TEST_SCALE
+		extern COMPV_ERROR_CODE scale();
+		COMPV_CHECK_CODE_BAIL(err = scale(), TAG_TEST "Math matrix scale test failed");
 #endif
 #if TEST_EIGEN_S
 		extern COMPV_ERROR_CODE eigenS();

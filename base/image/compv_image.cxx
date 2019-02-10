@@ -618,12 +618,12 @@ COMPV_ERROR_CODE CompVImage::scale(const CompVMatPtr& imageIn, CompVMatPtrPtr im
 }
 
 // dst(x,y) = src*M
-// M = (2x3) matrix
+// M = (2x3) or (3x3) matrix
 template<typename T>
 static COMPV_ERROR_CODE CompVImageWarpInverse(const CompVMatPtr& imageIn, CompVMatPtrPtr imageOut, const CompVMatPtr& M, const CompVSizeSz& outSize, COMPV_INTERPOLATION_TYPE interpType COMPV_DEFAULT(COMPV_INTERPOLATION_TYPE_BILINEAR), const uint8_t defaultPixelValue COMPV_DEFAULT(0x00))
 {
 	COMPV_CHECK_EXP_RETURN(!imageIn || !imageOut || !M || !outSize.height || !outSize.width, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_CHECK_EXP_RETURN(M->rows() != 2 || M->cols() != 3 || (M->subType() != COMPV_SUBTYPE_RAW_FLOAT32 && M->subType() != COMPV_SUBTYPE_RAW_FLOAT64), COMPV_ERROR_CODE_E_INVALID_PARAMETER, "M must be (2x3) float or double matrix");
+	COMPV_CHECK_EXP_RETURN((M->rows() != 2 && M->rows() != 3) || M->cols() != 3 || (M->subType() != COMPV_SUBTYPE_RAW_FLOAT32 && M->subType() != COMPV_SUBTYPE_RAW_FLOAT64), COMPV_ERROR_CODE_E_INVALID_PARAMETER, "M must be (2x3) float or double matrix");
 	COMPV_CHECK_EXP_RETURN(!M->isRawTypeMatch<T>() || (M->subType() != COMPV_SUBTYPE_RAW_FLOAT32 && M->subType() != COMPV_SUBTYPE_RAW_FLOAT64), COMPV_ERROR_CODE_E_INVALID_SUBTYPE);
 
 	// Set map
@@ -646,6 +646,9 @@ static COMPV_ERROR_CODE CompVImageWarpInverse(const CompVMatPtr& imageIn, CompVM
 	}
 	// Compute map(x,y) = src*M
 	COMPV_CHECK_CODE_RETURN(CompVMath::mulABt(M, map, &map));
+	if (M->rows() == 3) {
+		COMPV_CHECK_CODE_RETURN(CompVMathTransform::homogeneousToCartesian2D(map, &map));
+	}
 
 	// remap
 	const CompVRectFloat32 inputROI = { 0.f, 0.f, static_cast<compv_float32_t>(imageIn->cols() - 1), static_cast<compv_float32_t>(imageIn->rows() - 1) };
@@ -655,28 +658,33 @@ static COMPV_ERROR_CODE CompVImageWarpInverse(const CompVMatPtr& imageIn, CompVM
 }
 
 // dst(x,y) = src*inverse(M)
-// M = (2x3) matrix
+// M = (2x3) or (3 x 3) matrix
 template<typename T>
 static COMPV_ERROR_CODE CompVImageWarp(const CompVMatPtr& imageIn, CompVMatPtrPtr imageOut, const CompVMatPtr& M, const CompVSizeSz& outSize, COMPV_INTERPOLATION_TYPE interpType COMPV_DEFAULT(COMPV_INTERPOLATION_TYPE_BILINEAR), const uint8_t defaultPixelValue COMPV_DEFAULT(0x00))
 {
 	COMPV_CHECK_EXP_RETURN(!imageIn || !imageOut || !M || !outSize.height || !outSize.width, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_CHECK_EXP_RETURN(M->rows() != 2 || M->cols() != 3, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "M must be (2x3) float or double matrix");
+	COMPV_CHECK_EXP_RETURN((M->rows() != 2 && M->rows() != 3) || M->cols() != 3, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "M must be (2x3) float or double matrix");
 	COMPV_CHECK_EXP_RETURN(!M->isRawTypeMatch<T>() || (M->subType() != COMPV_SUBTYPE_RAW_FLOAT32 && M->subType() != COMPV_SUBTYPE_RAW_FLOAT64), COMPV_ERROR_CODE_E_INVALID_SUBTYPE);
 	// No need to check other parameters -> up2 CompVImage::warpInverse
 
 	// inverse(M)
 	CompVMatPtr Minverse;
-	COMPV_CHECK_CODE_RETURN(M->clone(&Minverse));
-	T* M0ptr = Minverse->ptr<T>(0);
-	T* M1ptr = Minverse->ptr<T>(1);
-	T D = M0ptr[0] * M1ptr[1] - M0ptr[1] * M1ptr[0];
-	D = D != 0 ? static_cast<T>(1.0 / D) : 0;
-	const T A11 = M1ptr[1] * D, A22 = M0ptr[0] * D;
-	M0ptr[0] = A11; M0ptr[1] *= -D;
-	M1ptr[0] *= -D; M1ptr[1] = A22;
-	const T b1 = -M0ptr[0] * M0ptr[2] - M0ptr[1] * M1ptr[2];
-	const T b2 = -M1ptr[0] * M0ptr[2] - M1ptr[1] * M1ptr[2];
-	M0ptr[2] = b1; M1ptr[2] = b2;
+	if (M->rows() == 2) {
+		COMPV_CHECK_CODE_RETURN(M->clone(&Minverse));
+		T* M0ptr = Minverse->ptr<T>(0);
+		T* M1ptr = Minverse->ptr<T>(1);
+		T D = M0ptr[0] * M1ptr[1] - M0ptr[1] * M1ptr[0];
+		D = D != 0 ? static_cast<T>(1.0 / D) : 0;
+		const T A11 = M1ptr[1] * D, A22 = M0ptr[0] * D;
+		M0ptr[0] = A11; M0ptr[1] *= -D;
+		M1ptr[0] *= -D; M1ptr[1] = A22;
+		const T b1 = -M0ptr[0] * M0ptr[2] - M0ptr[1] * M1ptr[2];
+		const T b2 = -M1ptr[0] * M0ptr[2] - M1ptr[1] * M1ptr[2];
+		M0ptr[2] = b1; M1ptr[2] = b2;
+	}
+	else {
+		COMPV_CHECK_CODE_RETURN(CompVMatrix::invA3x3(M, &Minverse));
+	}
 
 	// Perform action
 	COMPV_CHECK_CODE_RETURN(CompVImageWarpInverse<T>(imageIn, imageOut, Minverse, outSize, interpType, defaultPixelValue));

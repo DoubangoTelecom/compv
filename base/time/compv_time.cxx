@@ -35,9 +35,6 @@
 #define DELTA_EPOCH_IN_MICROSECS 11644473600000000ULL
 #endif
 
-#if COMPV_OS_WINDOWS_CE
-#endif
-
 struct timezone {
     int  tz_minuteswest; // minutes W of Greenwich
     int  tz_dsttime;     // type of dst correction

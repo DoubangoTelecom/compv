@@ -16,6 +16,9 @@ COMPV_NAMESPACE_BEGIN()
 #if COMPV_ASM && COMPV_ARCH_X64
 COMPV_EXTERNC void CompVMathScaleScale_64f64f_Asm_X64_SSE2(const compv_float64_t* ptrIn, compv_float64_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride, const compv_float64_t* s1);
 COMPV_EXTERNC void CompVMathScaleScale_64f64f_Asm_X64_AVX(const compv_float64_t* ptrIn, compv_float64_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride, const compv_float64_t* s1);
+
+COMPV_EXTERNC void CompVMathScaleScale_32f32f_Asm_X64_SSE2(COMPV_ALIGNED(SSE) const compv_float32_t* ptrIn, COMPV_ALIGNED(SSE) compv_float32_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, COMPV_ALIGNED(SSE) const compv_uscalar_t stride, const compv_float32_t* s1);
+COMPV_EXTERNC void CompVMathScaleScale_32f32f_Asm_X64_AVX(COMPV_ALIGNED(AVX) const compv_float32_t* ptrIn, COMPV_ALIGNED(AVX) compv_float32_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, COMPV_ALIGNED(AVX) const compv_uscalar_t stride, const compv_float32_t* s1);
 #endif /* #if COMPV_ASM && COMPV_ARCH_X64 */
 
 template<typename T>
@@ -56,6 +59,25 @@ static COMPV_ERROR_CODE CompVMathScaleScale(const CompVMatPtr &in, const double&
 				reinterpret_cast<const compv_float64_t*>(ptrIn), reinterpret_cast<compv_float64_t*>(ptrOut),
 				cols, (yend - ystart), stride,
 				reinterpret_cast<const compv_float64_t*>(&ss)
+			);
+		}
+		else if (std::is_same<T, compv_float32_t>::value) {
+			void(*CompVMathScale_32f32f)(const compv_float32_t* ptrIn, compv_float32_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride, const compv_float32_t* s1)
+				= CompVMathScaleScale_C;
+#if COMPV_ARCH_X86
+			if (CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(ptrIn) && COMPV_IS_ALIGNED_SSE(ptrOut) && COMPV_IS_ALIGNED_SSE(stride * sizeof(compv_float32_t))) {
+				COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathScale_32f32f = CompVMathScaleScale_32f32f_Intrin_SSE2);
+				COMPV_EXEC_IFDEF_ASM_X64(CompVMathScale_32f32f = CompVMathScaleScale_32f32f_Asm_X64_SSE2);
+			}
+			if (CompVCpu::isEnabled(kCpuFlagAVX) && COMPV_IS_ALIGNED_AVX(ptrIn) && COMPV_IS_ALIGNED_AVX(ptrOut) && COMPV_IS_ALIGNED_AVX(stride * sizeof(compv_float32_t))) {
+				COMPV_EXEC_IFDEF_ASM_X64(CompVMathScale_32f32f = CompVMathScaleScale_32f32f_Asm_X64_AVX);
+			}
+#elif COMPV_ARCH_ARM
+#endif
+			CompVMathScale_32f32f(
+				reinterpret_cast<const compv_float32_t*>(ptrIn), reinterpret_cast<compv_float32_t*>(ptrOut),
+				cols, (yend - ystart), stride,
+				reinterpret_cast<const compv_float32_t*>(&ss)
 			);
 		}
 		else {
@@ -105,5 +127,6 @@ COMPV_ERROR_CODE CompVMathScale::hookScale_64f(
 #endif
 	return COMPV_ERROR_CODE_S_OK;
 }
+
 
 COMPV_NAMESPACE_END()

@@ -44,6 +44,38 @@ void CompVMathScaleScale_64f64f_Intrin_SSE2(const compv_float64_t* ptrIn, compv_
 	}
 }
 
+void CompVMathScaleScale_32f32f_Intrin_SSE2(COMPV_ALIGNED(SSE) const compv_float32_t* ptrIn, COMPV_ALIGNED(SSE) compv_float32_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, COMPV_ALIGNED(SSE) const compv_uscalar_t stride, const compv_float32_t* s1)
+{
+	COMPV_DEBUG_INFO_CHECK_SSE2();
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("See ASM code with support for AVX");
+
+	const compv_uscalar_t width32 = width & -32;
+	const compv_uscalar_t width4 = width & -4;
+	const __m128 vecScale = _mm_set1_ps(*s1);
+	compv_uscalar_t i;
+
+	for (compv_uscalar_t j = 0; j < height; ++j) {
+		for (i = 0; i < width32; i += 32) { // test "width16, width16"
+			_mm_store_ps(&ptrOut[i], _mm_mul_ps(_mm_load_ps(&ptrIn[i]), vecScale));
+			_mm_store_ps(&ptrOut[i + 4], _mm_mul_ps(_mm_load_ps(&ptrIn[i + 4]), vecScale));
+			_mm_store_ps(&ptrOut[i + 8], _mm_mul_ps(_mm_load_ps(&ptrIn[i + 8]), vecScale));
+			_mm_store_ps(&ptrOut[i + 12], _mm_mul_ps(_mm_load_ps(&ptrIn[i + 12]), vecScale));
+			_mm_store_ps(&ptrOut[i + 16], _mm_mul_ps(_mm_load_ps(&ptrIn[i + 16]), vecScale));
+			_mm_store_ps(&ptrOut[i + 20], _mm_mul_ps(_mm_load_ps(&ptrIn[i + 20]), vecScale));
+			_mm_store_ps(&ptrOut[i + 24], _mm_mul_ps(_mm_load_ps(&ptrIn[i + 24]), vecScale));
+			_mm_store_ps(&ptrOut[i + 28], _mm_mul_ps(_mm_load_ps(&ptrIn[i + 28]), vecScale));
+		}
+		for (; i < width4; i += 4) { // not "test width4, width4" but "cmp i, width4"
+			_mm_store_ps(&ptrOut[i], _mm_mul_ps(_mm_load_ps(&ptrIn[i]), vecScale));
+		}
+		for (; i < width; i += 1) {
+			_mm_store_ss(&ptrOut[i], _mm_mul_ss(_mm_load_ss(&ptrIn[i]), vecScale));
+		}
+		ptrIn += stride;
+		ptrOut += stride;
+	}
+}
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */
