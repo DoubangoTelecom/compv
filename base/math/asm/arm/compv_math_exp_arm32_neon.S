@@ -15,7 +15,10 @@ data1023: .word 1023, 1023, 1023, 1023
 
 .text
 
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+.equ FMA_YES, 1
+.equ FMA_NO, 0
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @ arg(0) -> COMPV_ALIGNED(NEON) const compv_float32_t* ptrIn
 @ arg(1) -> COMPV_ALIGNED(NEON) compv_float32_t* ptrOut
 @ arg(2) -> const compv_uscalar_t width
@@ -23,7 +26,7 @@ data1023: .word 1023, 1023, 1023, 1023
 @ arg(4) -> COMPV_ALIGNED(NEON) const compv_uscalar_t stride
 @ arg(5) -> COMPV_ALIGNED(NEON) const uint32_t* lut32u
 @ arg(6) -> COMPV_ALIGNED(NEON) const compv_float32_t* var32f
-COMPV_GAS_FUNCTION_DECLARE CompVMathExpExp_minpack1_32f32f_Asm_NEON32
+.macro CompVMathExpExp_minpack1_32f32f_Macro_NEON32 fusedMultiplyAdd
 	COMPV_GAS_FUNCTION_PROLOG
 	COMPV_GAS_SHADOW_ARGS_TO_STACK 7
 	COMPV_GAS_SAVE_NEON_REGS
@@ -94,21 +97,29 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathExpExp_minpack1_32f32f_Asm_NEON32
 	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	@ for (compv_uscalar_t j = 0; j < height; ++j)
 	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-	LoopHeigth_CompVMathExpExp_minpack1_32f32f_Asm_NEON32:
+	LoopHeigth_CompVMathExpExp_minpack1_32f32f_Asm_NEON32\@:
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 		@ for (i = 0; i < width; i += 4)
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 		mov i, #0
-		LoopWidth_CompVMathExpExp_minpack1_32f32f_Asm_NEON32:
+		LoopWidth_CompVMathExpExp_minpack1_32f32f_Asm_NEON32\@:
 			vld1.f32 { vecX }, [ptrIn :128]!
 			pld [ptrIn, #(CACHE_LINE_SIZE*4)]
 
 			vmin.f32 vecX, vecX, vecMaxX
 			vmax.f32 vecX, vecX, vecMinX
 			vmov vecFi, vecMagic
-			vmla.f32 vecFi, vecX, vecA0
+			.if \fusedMultiplyAdd == FMA_YES
+				vfma.f32 vecFi, vecX, vecA0
+			.else
+				vmla.f32 vecFi, vecX, vecA0
+			.endif
 			vsub.f32 vecT, vecFi, vecMagic
-			vmls.f32 vecX, vecT, vecB0 @ vecX = vecT from intrin code
+			.if \fusedMultiplyAdd == FMA_YES
+				vfms.f32 vecX, vecT, vecB0 @ vecX = vecT from intrin code
+			.else
+				vmls.f32 vecX, vecT, vecB0 @ vecX = vecT from intrin code
+			.endif
 
 			vadd.u32 vecU, vecFi, vec130048
 			vand.u32 vecV, vecFi, vec1023
@@ -125,19 +136,23 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathExpExp_minpack1_32f32f_Asm_NEON32
 			vmov.32 vecVy, t2, t3
 			vorr.u32 vecV, vecV, vecU
 
-			vmla.f32 vecV, vecX, vecV
+			.if \fusedMultiplyAdd == FMA_YES
+				vfma.f32 vecV, vecX, vecV
+			.else
+				vmla.f32 vecV, vecX, vecV
+			.endif
 			vst1.f32 { vecV }, [ptrOut :128]!
 
 			add i, i, #4
 			cmp i, width
-			blt LoopWidth_CompVMathExpExp_minpack1_32f32f_Asm_NEON32
-		EndOf_LoopWidth_CompVMathExpExp_minpack1_32f32f_Asm_NEON32:
+			blt LoopWidth_CompVMathExpExp_minpack1_32f32f_Asm_NEON32\@
+		EndOf_LoopWidth_CompVMathExpExp_minpack1_32f32f_Asm_NEON32\@:
 
 		subs height, height, #1
 		add ptrIn, ptrIn, stride
 		add ptrOut, ptrOut, stride
-		bne  LoopHeigth_CompVMathExpExp_minpack1_32f32f_Asm_NEON32
-	EndOf_LoopHeigth_CompVMathExpExp_minpack1_32f32f_Asm_NEON32:
+		bne  LoopHeigth_CompVMathExpExp_minpack1_32f32f_Asm_NEON32\@
+	EndOf_LoopHeigth_CompVMathExpExp_minpack1_32f32f_Asm_NEON32\@:
 
 	.unreq ptrIn
 	.unreq ptrOut
@@ -182,11 +197,17 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathExpExp_minpack1_32f32f_Asm_NEON32
 	COMPV_GAS_UNSHADOW_ARGS 7
 	COMPV_GAS_FUNCTION_EPILOG
 	COMPV_GAS_FUNCTION_RETURN
+.endm
 
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+COMPV_GAS_FUNCTION_DECLARE CompVMathExpExp_minpack1_32f32f_Asm_NEON32
+	CompVMathExpExp_minpack1_32f32f_Macro_NEON32 FMA_NO
 
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+COMPV_GAS_FUNCTION_DECLARE CompVMathExpExp_minpack1_32f32f_Asm_FMA_NEON32
+	CompVMathExpExp_minpack1_32f32f_Macro_NEON32 FMA_YES
 
-
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @ arg(0) -> const compv_float64_t* ptrIn
 @ arg(1) -> compv_float64_t* ptrOut
 @ arg(2) -> const compv_uscalar_t width

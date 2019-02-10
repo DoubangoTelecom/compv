@@ -31,12 +31,14 @@ COMPV_EXTERNC void CompVMathExpExp_minpack1_32f32f_Asm_X64_FMA3_AVX2(COMPV_ALIGN
 COMPV_EXTERNC void CompVMathExpExp_minpack1_64f64f_Asm_NEON32(const compv_float64_t* ptrIn, compv_float64_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride, const uint64_t* lut64u, const uint64_t* var64u, const compv_float64_t* var64f);
 COMPV_EXTERNC void CompVMathExpExp_minpack1_64f64f_Asm_FMA_NEON32(const compv_float64_t* ptrIn, compv_float64_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride, const uint64_t* lut64u, const uint64_t* var64u, const compv_float64_t* var64f);
 COMPV_EXTERNC void CompVMathExpExp_minpack1_32f32f_Asm_NEON32(COMPV_ALIGNED(NEON) const compv_float32_t* ptrIn, COMPV_ALIGNED(NEON) compv_float32_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, COMPV_ALIGNED(NEON) const compv_uscalar_t stride, COMPV_ALIGNED(NEON) const uint32_t* lut32u, COMPV_ALIGNED(NEON) const compv_float32_t* var32f);
+COMPV_EXTERNC void CompVMathExpExp_minpack1_32f32f_Asm_FMA_NEON32(COMPV_ALIGNED(NEON) const compv_float32_t* ptrIn, COMPV_ALIGNED(NEON) compv_float32_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, COMPV_ALIGNED(NEON) const compv_uscalar_t stride, COMPV_ALIGNED(NEON) const uint32_t* lut32u, COMPV_ALIGNED(NEON) const compv_float32_t* var32f);
 #endif /* COMPV_ASM && COMPV_ARCH_ARM32 */
 
 #if COMPV_ASM && COMPV_ARCH_ARM64
 COMPV_EXTERNC void CompVMathExpExp_minpack1_64f64f_Asm_NEON64(const compv_float64_t* ptrIn, compv_float64_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride, const uint64_t* lut64u, const uint64_t* var64u, const compv_float64_t* var64f);
 COMPV_EXTERNC void CompVMathExpExp_minpack1_64f64f_Asm_FMA_NEON64(const compv_float64_t* ptrIn, compv_float64_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride, const uint64_t* lut64u, const uint64_t* var64u, const compv_float64_t* var64f);
 COMPV_EXTERNC void CompVMathExpExp_minpack1_32f32f_Asm_NEON64(COMPV_ALIGNED(NEON) const compv_float32_t* ptrIn, COMPV_ALIGNED(NEON) compv_float32_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, COMPV_ALIGNED(NEON) const compv_uscalar_t stride, COMPV_ALIGNED(NEON) const uint32_t* lut32u, COMPV_ALIGNED(NEON) const compv_float32_t* var32f);
+COMPV_EXTERNC void CompVMathExpExp_minpack1_32f32f_Asm_FMA_NEON64(COMPV_ALIGNED(NEON) const compv_float32_t* ptrIn, COMPV_ALIGNED(NEON) compv_float32_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, COMPV_ALIGNED(NEON) const compv_uscalar_t stride, COMPV_ALIGNED(NEON) const uint32_t* lut32u, COMPV_ALIGNED(NEON) const compv_float32_t* var32f);
 #endif /* COMPV_ASM && COMPV_ARCH_ARM64 */
 
 bool CompVMathExp::s_bInitialized = false;
@@ -210,6 +212,10 @@ static COMPV_ERROR_CODE CompVMathExpExp(const CompVMatPtr &in, CompVMatPtrPtr ou
 				COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMathExpExp_32f32f = CompVMathExpExp_minpack1_32f32f_Intrin_NEON);
 				COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathExpExp_32f32f = CompVMathExpExp_minpack1_32f32f_Asm_NEON32);
 				COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathExpExp_32f32f = CompVMathExpExp_minpack1_32f32f_Asm_NEON64);
+				if (CompVCpu::isEnabled(kCpuFlagARM_NEON_FMA)) {
+					COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathExpExp_32f32f = CompVMathExpExp_minpack1_32f32f_Asm_FMA_NEON32);
+					COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathExpExp_32f32f = CompVMathExpExp_minpack1_32f32f_Asm_FMA_NEON64);
+				}
 			}
 #endif
 			CompVMathExpExp_32f32f(

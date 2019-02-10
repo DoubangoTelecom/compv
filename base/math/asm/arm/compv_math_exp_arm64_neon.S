@@ -27,7 +27,7 @@
 # arg(4) -> COMPV_ALIGNED(NEON) const compv_uscalar_t stride
 # arg(5) -> COMPV_ALIGNED(NEON) const uint32_t* lut32u
 # arg(6) -> COMPV_ALIGNED(NEON) const compv_float32_t* var32f
-COMPV_GAS_FUNCTION_DECLARE CompVMathExpExp_minpack1_32f32f_Asm_NEON64
+.macro CompVMathExpExp_minpack1_32f32f_Macro_NEON64 fusedMultiplyAdd
 	COMPV_GAS_FUNCTION_PROLOG
 	COMPV_GAS_SAVE_NEON_REGS
 
@@ -94,22 +94,31 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathExpExp_minpack1_32f32f_Asm_NEON64
 	################################################
 	# for (compv_uscalar_t j = 0; j < height; ++j)
 	################################################
-	LoopHeigth_CompVMathExpExp_minpack1_32f32f_Asm_NEON64:
+	LoopHeigth_CompVMathExpExp_minpack1_32f32f_Asm_NEON64\@:
 		################################################
 		# for (i = 0; i < width; i += 4)
 		################################################
 		mov i, #0
-		LoopWidth_CompVMathExpExp_minpack1_32f32f_Asm_NEON64:
+		LoopWidth_CompVMathExpExp_minpack1_32f32f_Asm_NEON64\@:
 			ld1 { vecX.4s }, [ptrIn], #(1 * COMPV_GAS_V_SZ_BYTES)
 			prfm pldl1keep, [ptrIn, #(CACHE_LINE_SIZE*4)]
 
 			fmin vecX.4s, vecX.4s, vecMaxX.4s
 			fmax vecX.4s, vecX.4s, vecMinX.4s
-			fmul vecFi.4s, vecX.4s, vecA0.4s
-			fadd vecFi.4s, vecFi.4s, vecMagic.4s			
+			.if \fusedMultiplyAdd == FMA_YES
+				mov vecFi.16b, vecMagic.16b
+				fmla vecFi.4s, vecX.4s, vecA0.4s
+			.else
+				fmul vecFi.4s, vecX.4s, vecA0.4s
+				fadd vecFi.4s, vecFi.4s, vecMagic.4s
+			.endif			
 			fsub vecT.4s, vecFi.4s, vecMagic.4s
-			fmul vecT.4s, vecT.4s, vecB0.4s
-			fsub vecX.4s, vecX.4s, vecT.4s // vecX = vecT from intrin code
+			.if \fusedMultiplyAdd == FMA_YES
+				fmls vecX.4s, vecT.4s, vecB0.4s
+			.else
+				fmul vecT.4s, vecT.4s, vecB0.4s
+				fsub vecX.4s, vecX.4s, vecT.4s // vecX = vecT from intrin code
+			.endif
 
 			add vecU.4s, vecFi.4s, vec130048.4s
 			and vecV.16b, vecFi.16b, vec1023.16b
@@ -132,20 +141,24 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathExpExp_minpack1_32f32f_Asm_NEON64
 			ins vecV.d[1], t2			
 			orr vecV.16b, vecV.16b, vecU.16b
 
-			fmul vecX.4s, vecX.4s, vecV.4s
-			fadd vecV.4s, vecV.4s, vecX.4s
+			.if \fusedMultiplyAdd == FMA_YES
+				fmla vecV.4s, vecX.4s, vecV.4s
+			.else
+				fmul vecX.4s, vecX.4s, vecV.4s
+				fadd vecV.4s, vecV.4s, vecX.4s
+			.endif
 			st1 { vecV.4s }, [ptrOut], #(1 * COMPV_GAS_V_SZ_BYTES)
 
 			add i, i, #4
 			cmp i, width
-			blt LoopWidth_CompVMathExpExp_minpack1_32f32f_Asm_NEON64
-		EndOf_LoopWidth_CompVMathExpExp_minpack1_32f32f_Asm_NEON64:
+			blt LoopWidth_CompVMathExpExp_minpack1_32f32f_Asm_NEON64\@
+		EndOf_LoopWidth_CompVMathExpExp_minpack1_32f32f_Asm_NEON64\@:
 
 		subs height, height, #1
 		add ptrIn, ptrIn, stride
 		add ptrOut, ptrOut, stride
-		bne  LoopHeigth_CompVMathExpExp_minpack1_32f32f_Asm_NEON64
-	EndOf_LoopHeigth_CompVMathExpExp_minpack1_32f32f_Asm_NEON64:
+		bne LoopHeigth_CompVMathExpExp_minpack1_32f32f_Asm_NEON64\@
+	EndOf_LoopHeigth_CompVMathExpExp_minpack1_32f32f_Asm_NEON64\@:
 
 	.unreq ptrIn
 	.unreq ptrOut
@@ -181,6 +194,15 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathExpExp_minpack1_32f32f_Asm_NEON64
 	COMPV_GAS_RESTORE_NEON_REGS
 	COMPV_GAS_FUNCTION_EPILOG
 	COMPV_GAS_FUNCTION_RETURN
+.endm
+
+########################################################################
+COMPV_GAS_FUNCTION_DECLARE CompVMathExpExp_minpack1_32f32f_Asm_NEON64
+	CompVMathExpExp_minpack1_32f32f_Macro_NEON64 FMA_NO
+
+########################################################################
+COMPV_GAS_FUNCTION_DECLARE CompVMathExpExp_minpack1_32f32f_Asm_FMA_NEON64
+	CompVMathExpExp_minpack1_32f32f_Macro_NEON64 FMA_YES
 
 ########################################################################
 .macro COMPV_MATH_EXP_64F64F_ASM_NEON64 step, fusedMultiplyAdd
