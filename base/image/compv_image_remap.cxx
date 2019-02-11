@@ -94,9 +94,9 @@ private:
 			// Bilinear filtering: https://en.wikipedia.org/wiki/Bilinear_interpolation#Unit_square
 			uint8_t* outputPtr = output->ptr<uint8_t>(ystart);
 			const uint8_t* inputPtr = input->ptr<uint8_t>();
-			const size_t stride = input->stride();
-			const int inWidthMinus1 = static_cast<int>(input->cols() - 1);
-			const int inHeightMinus1 = static_cast<int>(input->rows() - 1);
+			const int32_t stride = static_cast<int32_t>(input->stride());
+			const int32_t inWidthMinus1 = static_cast<int32_t>(input->cols() - 1);
+			const int32_t inHeightMinus1 = static_cast<int32_t>(input->rows() - 1);
 			size_t i, j, k;
 			for (j = ystart, k = (ystart * outputWidth); j < yend; ++j) {
 				for (i = 0; i < outputWidth; ++i, ++k) {
@@ -107,12 +107,12 @@ private:
 					}
 					else {
 #if 0
-						const int x1 = static_cast<int>(x);
-						const int x2 = static_cast<int>(x + 1.f);
+						const int32_t x1 = static_cast<int32_t>(x);
+						const int32_t x2 = static_cast<int32_t>(x + 1.f);
 						const T xfractpart = x - x1;
 						const T one_minus_xfractpart = 1.f - xfractpart;
-						const int y1 = static_cast<int>(y);
-						const int y2 = static_cast<int>(y + 1.f);
+						const int32_t y1 = static_cast<int32_t>(y);
+						const int32_t y2 = static_cast<int32_t>(y + 1.f);
 						const T yfractpart = y - y1;
 						const T one_minus_yfractpart = 1.f - yfractpart;
 						const uint8_t* inputY1 = &inputPtr[y1 * stride];
@@ -124,11 +124,11 @@ private:
 							+ (inputY2[x2] * yfractpart * xfractpart)
 						);
 #else // Next code is faster (less multiplications)
-						const int x1 = static_cast<int>(x);
-						const int x2 = std::min(static_cast<int>(x + 1.f), inWidthMinus1);
+						const int32_t x1 = static_cast<int32_t>(x);
+						const int32_t x2 = std::min(static_cast<int32_t>(x + 1.f), inWidthMinus1);
 						const T xfractpart = x - x1;
-						const int y1 = static_cast<int>(y);
-						const int y2 = std::min(static_cast<int>(y + 1.f), inHeightMinus1);
+						const int32_t y1 = static_cast<int32_t>(y);
+						const int32_t y2 = std::min(static_cast<int32_t>(y + 1.f), inHeightMinus1);
 						const T yfractpart = y - y1;
 						const T xyfractpart = (xfractpart * yfractpart);
 						const uint8_t* inputY1 = &inputPtr[y1 * stride];

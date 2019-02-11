@@ -82,6 +82,12 @@ We have better result compared to OpenCV. OpenCV's Bicubic implementation produc
 OpenCV uses SSE2 and multithreading.
 OpenCV uses fixed-point implementation while we use floating-point implementation.
 
+=== Image rotation (Bilinear) from (1282, 720) (45°), (#1k times) ===
+CompV: 2495.ms(mt,avx2)
+OpenCV: 6854.ms(full optiz)
+Remarque: 
+OpenCV uses SSE2 and multithreading.
+
 === Image rotation (Bicubic) from (1282, 720) (45°), (#10k times) ===
 CompV: Shame!!
 OpenCV: 74464.ms(full optiz)

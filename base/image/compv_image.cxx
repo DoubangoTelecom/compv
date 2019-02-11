@@ -625,28 +625,136 @@ static COMPV_ERROR_CODE CompVImageWarpInverse(const CompVMatPtr& imageIn, CompVM
 	COMPV_CHECK_EXP_RETURN(!imageIn || !imageOut || !M || !outSize.height || !outSize.width, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_CHECK_EXP_RETURN((M->rows() != 2 && M->rows() != 3) || M->cols() != 3 || (M->subType() != COMPV_SUBTYPE_RAW_FLOAT32 && M->subType() != COMPV_SUBTYPE_RAW_FLOAT64), COMPV_ERROR_CODE_E_INVALID_PARAMETER, "M must be (2x3) float or double matrix");
 	COMPV_CHECK_EXP_RETURN(!M->isRawTypeMatch<T>() || (M->subType() != COMPV_SUBTYPE_RAW_FLOAT32 && M->subType() != COMPV_SUBTYPE_RAW_FLOAT64), COMPV_ERROR_CODE_E_INVALID_SUBTYPE);
+	
+	const size_t count = (outSize.width * outSize.height);
+	const size_t& width = outSize.width;
+	const size_t width4 = width & -4;
+	const size_t& height = outSize.height;
 
-	// Set map
-	const T width = static_cast<T>(outSize.width);
-	const T height = static_cast<T>(outSize.height);
-	const size_t count = static_cast<size_t>(width * height);
-
-	// Compute map transposed
 	CompVMatPtr map;
-	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<T>(&map, count, 3));
-	T* mapPtr = map->ptr<T>();
-	const size_t mapStride = map->stride();
-	T x, y;
-	for (y = 0; y < height; y += 1) {
-		for (x = 0; x < width; x += 1, mapPtr += mapStride) {
-			mapPtr[0] = x;
-			mapPtr[1] = y;
-			mapPtr[2] = 1;
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<T>(&map, M->rows(), count));
+
+	if (M->rows() == 2) {
+		const T* M0 = M->ptr<const T>(0);
+		const T* M1 = M->ptr<const T>(1);
+		const T& a = M0[0];
+		const T& b = M0[1];
+		const T& c = M0[2];
+		const T& d = M1[0];
+		const T& e = M1[1];
+		const T& f = M1[2];
+
+		CompVMatPtr ac; // (a*0+c*1), (a*1+c*1), (a*2+c*1)....(a*width+c*1)
+		CompVMatPtr df; // (d*0+f*1), (d*1+f*1), (d*2+f*1)....(d*width+f*1)
+		COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<T>(&ac, 1, width));
+		COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<T>(&df, 1, width));
+		
+		// Build indices for a single row
+		T* acPtr = ac->ptr<T>();
+		T* dfPtr = df->ptr<T>();
+		acPtr[0] = c; // (a*0+c*1)
+		dfPtr[0] = f; // (d*0+f*1)
+		for (size_t x = 1; x < width; ++x) {
+			acPtr[x] = acPtr[x - 1] + a;
+			dfPtr[x] = dfPtr[x - 1] + d;
+		}
+
+		// Build entire map using the single row indices built for #0 (just increment by "b" or "e" for each row)
+		T* mapPtrX = map->ptr<T>(0);
+		T* mapPtrY = map->ptr<T>(1);
+		T by = 0; // b * y
+		T ey = 0; // e * y
+		size_t x;
+		for (size_t y = 0, k = 0; y < height; ++y, by += b, ey += e) {
+			// mapPtrX[k] = (a*x+c) + b*y
+			// mapPtrY[k] = (d*x+f) + e*y
+			for (x = 0; x < width4; x += 4, k += 4) {
+				mapPtrX[k] = acPtr[x] + by;
+				mapPtrX[k + 1] = acPtr[x + 1] + by;
+				mapPtrX[k + 2] = acPtr[x + 2] + by;
+				mapPtrX[k + 3] = acPtr[x + 3] + by;
+
+				mapPtrY[k] = dfPtr[x] + ey; 
+				mapPtrY[k + 1] = dfPtr[x + 1] + ey;
+				mapPtrY[k + 2] = dfPtr[x + 2] + ey;
+				mapPtrY[k + 3] = dfPtr[x + 3] + ey;
+			}
+			for (; x < width; ++x, ++k) {
+				mapPtrX[k] = acPtr[x] + by;
+				mapPtrY[k] = dfPtr[x] + ey;
+			}
 		}
 	}
-	// Compute map(x,y) = src*M
-	COMPV_CHECK_CODE_RETURN(CompVMath::mulABt(M, map, &map));
-	if (M->rows() == 3) {
+	else {
+		const T* M0 = M->ptr<const T>(0);
+		const T* M1 = M->ptr<const T>(1);
+		const T* M2 = M->ptr<const T>(2);
+		const T& a = M0[0];
+		const T& b = M0[1];
+		const T& c = M0[2];
+		const T& d = M1[0];
+		const T& e = M1[1];
+		const T& f = M1[2];
+		const T& g = M2[0];
+		const T& h = M2[1];
+		const T& i = M2[2];
+		
+		CompVMatPtr ac; // (a*0+c*1), (a*1+c*1), (a*2+c*1)....(a*width+c*1)
+		CompVMatPtr df; // (d*0+f*1), (d*1+f*1), (d*2+f*1)....(d*width+f*1)
+		CompVMatPtr gi; // (g*0+i*1), (g*1+i*1), (g*2+i*1)....(g*width+i*1)		
+		COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<T>(&ac, 1, width));
+		COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<T>(&df, 1, width));
+		COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<T>(&gi, 1, width));
+
+		// Build indices for a single row
+		T* acPtr = ac->ptr<T>();
+		T* dfPtr = df->ptr<T>();
+		T* giPtr = gi->ptr<T>();
+		acPtr[0] = c; // (a*0+c*1)
+		dfPtr[0] = f; // (d*0+f*1)			
+		giPtr[0] = i; // (g*0+i*1)
+		for (size_t x = 1; x < width; ++x) {
+			acPtr[x] = acPtr[x - 1] + a;
+			dfPtr[x] = dfPtr[x - 1] + d;
+			giPtr[x] = giPtr[x - 1] + g;
+		}
+		
+		// Build entire map using the single row indices built for #0 (just increment by "b" or "e" for each row)
+		T* mapPtrX = map->ptr<T>(0);
+		T* mapPtrY = map->ptr<T>(1);
+		T* mapPtrZ = map->ptr<T>(2);
+		T by = 0; // b * y
+		T ey = 0; // e * y
+		T hy = 0; // h * y
+		size_t x;
+		for (size_t y = 0, k = 0; y < height; ++y, by += b, ey += e, hy += h) {
+			// mapPtrX[k] = (a*x+c) + b*y
+			// mapPtrY[k] = (d*x+f) + e*y
+			// mapPtrZ[k] = (g*x+f) + h*y
+			for (x = 0; x < width4; x += 4, k += 4) {
+				mapPtrX[k] = acPtr[x] + by;
+				mapPtrX[k + 1] = acPtr[x + 1] + by;
+				mapPtrX[k + 2] = acPtr[x + 2] + by;
+				mapPtrX[k + 3] = acPtr[x + 3] + by;
+
+				mapPtrY[k] = dfPtr[x] + ey;
+				mapPtrY[k + 1] = dfPtr[x + 1] + ey;
+				mapPtrY[k + 2] = dfPtr[x + 2] + ey;
+				mapPtrY[k + 3] = dfPtr[x + 3] + ey;
+
+				mapPtrZ[k] = giPtr[x] + hy;
+				mapPtrZ[k + 1] = giPtr[x + 1] + hy;
+				mapPtrZ[k + 2] = giPtr[x + 2] + hy;
+				mapPtrZ[k + 3] = giPtr[x + 3] + hy;
+			}
+			for (; x < width; ++x, ++k) {
+				mapPtrX[k] = acPtr[x] + by;
+				mapPtrY[k] = dfPtr[x] + ey;
+				mapPtrZ[k] = giPtr[x] + hy;
+			}
+		}
+
+		// Homogeneous to cartesian (3*n) -> (2*n)
 		COMPV_CHECK_CODE_RETURN(CompVMathTransform::homogeneousToCartesian2D(map, &map));
 	}
 
