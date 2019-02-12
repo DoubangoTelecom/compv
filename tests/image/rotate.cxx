@@ -37,15 +37,15 @@ COMPV_UNITTEST_ROTATE[] =
 
 	{ FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, COMPV_INTERPOLATION_TYPE_BILINEAR, ANGLE_45, false, "489c6b8747c6fa7c52d17c00621fe000" },
 	{ FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, COMPV_INTERPOLATION_TYPE_BILINEAR, ANGLE_180, true, "ada2eb40c50ad02a270a26c746bc52a8" },
-	//{ FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, COMPV_INTERPOLATION_TYPE_BILINEAR_FLOAT32, ANGLE_180, false, "-" },
-	//{ FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, COMPV_INTERPOLATION_TYPE_BILINEAR_FLOAT32, ANGLE_45, true, "-" },
+	{ FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, COMPV_INTERPOLATION_TYPE_BILINEAR_FLOAT32, ANGLE_180, false, "6b7b15daaf46c0939a4cbebd2787df51" },
+	{ FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, COMPV_INTERPOLATION_TYPE_BILINEAR_FLOAT32, ANGLE_45, true, "333df22146b77d369dc8db496f757788" },
 };
 static const size_t COMPV_UNITTEST_ROTATE_COUNT = sizeof(COMPV_UNITTEST_ROTATE) / sizeof(COMPV_UNITTEST_ROTATE[0]);
 
 #define LOOP_COUNT			1
 #define FILE_NAME			FILE_NAME_EQUIRECTANGULAR
 #define DEFAULT_PIXEL		0x00
-#define DOUBLE_PRECISION	true
+#define DOUBLE_PRECISION	false
 #define INTERPOLATION		COMPV_INTERPOLATION_TYPE_BILINEAR
 
 
@@ -84,9 +84,16 @@ COMPV_ERROR_CODE rotate()
 
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "MD5: %s", compv_tests_md5(imageOut).c_str());
 
-#if COMPV_OS_WINDOWS && 0
+#if COMPV_OS_WINDOWS && 1
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Do not write the file to the hd");
-	COMPV_CHECK_CODE_RETURN(compv_tests_write_to_file(imageOut, compv_tests_build_filename(imageOut).c_str()));
+	CompVMatPtr imageOut8u;
+	if (imageOut->isRawTypeMatch<compv_float32_t>()) {
+		COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static<compv_float32_t, uint8_t>(imageOut, &imageOut8u)));
+	}
+	else {
+		imageOut8u = imageOut;
+	}
+	COMPV_CHECK_CODE_RETURN(compv_tests_write_to_file(imageOut8u, compv_tests_build_filename(imageOut8u).c_str()));
 #endif
 
 	COMPV_CHECK_EXP_RETURN(std::string(test->md5).compare(compv_tests_md5(imageOut)) != 0, (COMPV_ERROR_CODE_E_UNITTEST_FAILED), "Image rotation MD5 mismatch");

@@ -13,6 +13,10 @@
 #include "compv/base/parallel/compv_parallel.h"
 #include "compv/base/compv_base.h"
 #include "compv/base/compv_generic_invoke.h"
+#include "compv/base/compv_cpu.h"
+
+#include "compv/base/image/intrin/x86/compv_image_remap_intrin_sse41.h"
+#include "compv/base/image/intrin/x86/compv_image_remap_intrin_avx2.h"
 
 #define COMPV_THIS_CLASSNAME	"CompVImageRemap"
 
@@ -72,77 +76,131 @@ private:
 
 		return COMPV_ERROR_CODE_S_OK;
 	}
+
+	// "outputPtr" values always within [0, 256[ which means we can use static cast without clip(0, 255)
+	template <typename T>
+	static void remapBilinear_8uXf_C(
+		const T* mapXPtr, const T* mapYPtr,
+		const uint8_t* inputPtr,  T* outputPtr,
+		const T* roi, const int32_t* size, 
+		const T* defaultPixelValue1,
+		const compv_uscalar_t count
+	)
+	{
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
+
+		const T& roi_left = roi[0];
+		const T& roi_right = roi[1];
+		const T& roi_top = roi[2];
+		const T& roi_bottom = roi[3];
+
+		const int32_t& inWidthMinus1 = size[0];
+		const int32_t& inHeightMinus1 = size[1];
+		const int32_t& stride = size[2];
+
+		const T& defaultPixelValue = *defaultPixelValue1;
+
+		for (compv_uscalar_t i = 0; i < count; ++i) {
+			const T& x = mapXPtr[i];
+			const T& y = mapYPtr[i];
+			if (x >= roi_left && x <= roi_right && y >= roi_top && y <= roi_bottom) {
+				const int32_t x1 = static_cast<int32_t>(x);
+				const int32_t x2 = std::min(static_cast<int32_t>(x + 1.f), inWidthMinus1);
+				const T xfractpart = x - x1;
+				int32_t y1 = static_cast<int32_t>(y);
+				int32_t y2 = std::min(static_cast<int32_t>(y + 1.f), inHeightMinus1);
+				const T yfractpart = y - y1;
+				const T xyfractpart = (xfractpart * yfractpart);
+				y1 *= stride;
+				y2 *= stride;
+				const int32_t y1x1 = y1 + x1;
+				const int32_t y1x2 = y1 + x2;
+				const int32_t y2x1 = y2 + x1;
+				const int32_t y2x2 = y2 + x2;
+				const T pixel = (
+					(inputPtr[y1x1] * (1 - xfractpart - yfractpart + xyfractpart))
+					+ (inputPtr[y1x2] * (xfractpart - xyfractpart))
+					+ (inputPtr[y2x1] * (yfractpart - xyfractpart))
+					+ (inputPtr[y2x2] * xyfractpart)
+					);
+#if ((defined(_DEBUG) && _DEBUG != 0) || (defined(DEBUG) && DEBUG != 0))
+				COMPV_ASSERT(pixel >= 0 && pixel < 256);
+#endif
+				outputPtr[i] = pixel;
+			}
+			else {
+				outputPtr[i] = defaultPixelValue;
+			}
+		}
+	}
 	
-	static COMPV_ERROR_CODE process_bilinear(const CompVMatPtr& input, CompVMatPtr& output, const CompVMatPtr& map, const CompVRectFloat32 inputROI, const uint8_t defaultPixelValue = 0x00)
+	static COMPV_ERROR_CODE process_bilinear(const CompVMatPtr& input, CompVMatPtr& output, const CompVMatPtr& map, const CompVRectFloat32 inputROI, const COMPV_INTERPOLATION_TYPE bilinearType, const uint8_t defaultPixelValue = 0x00)
 	{
 		// Private function, no need to check input parameters. Up to the caller.
 
-		const T roi_left = static_cast<T>(inputROI.left);
-		const T roi_right = static_cast<T>(inputROI.right);
-		const T roi_top = static_cast<T>(inputROI.top);
-		const T roi_bottom = static_cast<T>(inputROI.bottom);
+		COMPV_ALIGN_DEFAULT() const T roi[] = { static_cast<T>(inputROI.left), static_cast<T>(inputROI.right), static_cast<T>(inputROI.top), static_cast<T>(inputROI.bottom) };
+		COMPV_ALIGN_DEFAULT() const int32_t size[] = { static_cast<int32_t>(input->cols() - 1), static_cast<int32_t>(input->rows() - 1), static_cast<int32_t>(input->stride()) };
 		const T* mapXPtr = map->ptr<const T>(0);
 		const T* mapYPtr = map->ptr<const T>(1);
 		const size_t outputWidth = output->cols();
 		const size_t outputHeight = output->rows();
 		const size_t  outputStride = output->stride();
+		const bool isT32f = std::is_same<T, compv_float32_t>::value;
 
-		// xfract and yfract could be computed once
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
+		CompVMatPtr outT;
+		if (bilinearType == COMPV_INTERPOLATION_TYPE_BILINEAR_FLOAT32 && std::is_same<T, compv_float32_t>::value && output->isRawTypeMatch<compv_float32_t>()) {
+			outT = output;
+		}
+		else {
+			COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<T>(&outT, outputHeight, outputWidth, outputStride));
+		}
+
+		int align = 1;
+		const T defaultPixelValueT = static_cast<T>(defaultPixelValue);
+		void(*CompVImageRemapBilinear_8u32f)(
+			const compv_float32_t* mapXPtr, const compv_float32_t* mapYPtr,
+			const uint8_t* inputPtr, compv_float32_t* outputPtr,
+			const compv_float32_t* roi, const int32_t* size,
+			const compv_float32_t* defaultPixelValue1,
+			const compv_uscalar_t count
+			) = remapBilinear_8uXf_C;
+#if COMPV_ARCH_X86
+		if (CompVCpu::isEnabled(kCpuFlagSSE41) && map->isAlignedSSE()) {
+			COMPV_EXEC_IFDEF_INTRIN_X86((CompVImageRemapBilinear_8u32f = CompVImageRemapBilinear_8u32f_Intrin_SSE41, align = 4));
+		}
+		if (CompVCpu::isEnabled(kCpuFlagAVX2) && map->isAlignedAVX()) {
+			COMPV_EXEC_IFDEF_INTRIN_X86((CompVImageRemapBilinear_8u32f = CompVImageRemapBilinear_8u32f_Intrin_AVX2, align = 8));
+		}
+#elif COMPV_ARCH_ARM
+#endif
 
 		auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
 			// Bilinear filtering: https://en.wikipedia.org/wiki/Bilinear_interpolation#Unit_square
-			uint8_t* outputPtr = output->ptr<uint8_t>(ystart);
+			T* outTPtr = outT->ptr<T>(ystart);
 			const uint8_t* inputPtr = input->ptr<uint8_t>();
-			const int32_t stride = static_cast<int32_t>(input->stride());
-			const int32_t inWidthMinus1 = static_cast<int32_t>(input->cols() - 1);
-			const int32_t inHeightMinus1 = static_cast<int32_t>(input->rows() - 1);
-			size_t i, j, k;
-			for (j = ystart, k = (ystart * outputWidth); j < yend; ++j) {
-				for (i = 0; i < outputWidth; ++i, ++k) {
-					const T& x = mapXPtr[k];
-					const T& y = mapYPtr[k];
-					if (x < roi_left || x > roi_right || y < roi_top || y > roi_bottom) {
-						outputPtr[i] = defaultPixelValue; // TODO(dmi): or mean
-					}
-					else {
-#if 0
-						const int32_t x1 = static_cast<int32_t>(x);
-						const int32_t x2 = static_cast<int32_t>(x + 1.f);
-						const T xfractpart = x - x1;
-						const T one_minus_xfractpart = 1.f - xfractpart;
-						const int32_t y1 = static_cast<int32_t>(y);
-						const int32_t y2 = static_cast<int32_t>(y + 1.f);
-						const T yfractpart = y - y1;
-						const T one_minus_yfractpart = 1.f - yfractpart;
-						const uint8_t* inputY1 = &inputPtr[y1 * stride];
-						const uint8_t* inputY2 = &inputPtr[y2 * stride];
-						outputPtr[i] = static_cast<uint8_t>(
-							(inputY1[x1] * one_minus_yfractpart * one_minus_xfractpart)
-							+ (inputY1[x2] * one_minus_yfractpart * xfractpart)
-							+ (inputY2[x1] * yfractpart * one_minus_xfractpart)
-							+ (inputY2[x2] * yfractpart * xfractpart)
+			for (size_t j = ystart, k = (ystart * outputWidth); j < yend; ++j) {
+				const int kalignedSIMD = static_cast<int>(k & -align); // make SIMD-friendly (unchanged when SIMD disabled)
+				const int extraSIMD = static_cast<int>(k - kalignedSIMD); // extra (zero when SIMD disabled)
+				if (isT32f) {
+					CompVImageRemapBilinear_8u32f(
+						reinterpret_cast<const compv_float32_t*>(&mapXPtr[kalignedSIMD]), reinterpret_cast<const compv_float32_t*>(&mapYPtr[kalignedSIMD]),
+						inputPtr, reinterpret_cast<compv_float32_t*>(&outTPtr[-extraSIMD]), // no-aligned access
+						reinterpret_cast<const compv_float32_t*>(roi), size,
+						reinterpret_cast<const compv_float32_t*>(&defaultPixelValueT),
+						outputWidth + extraSIMD
 						);
-#else // Next code is faster (less multiplications)
-						const int32_t x1 = static_cast<int32_t>(x);
-						const int32_t x2 = std::min(static_cast<int32_t>(x + 1.f), inWidthMinus1);
-						const T xfractpart = x - x1;
-						const int32_t y1 = static_cast<int32_t>(y);
-						const int32_t y2 = std::min(static_cast<int32_t>(y + 1.f), inHeightMinus1);
-						const T yfractpart = y - y1;
-						const T xyfractpart = (xfractpart * yfractpart);
-						const uint8_t* inputY1 = &inputPtr[y1 * stride];
-						const uint8_t* inputY2 = &inputPtr[y2 * stride];
-						outputPtr[i] = static_cast<uint8_t>(
-							(inputY1[x1] * (1.f - xfractpart - yfractpart + xyfractpart))
-							+ (inputY1[x2] * (xfractpart - xyfractpart))
-							+ (inputY2[x1] * (yfractpart - xyfractpart))
-							+ (inputY2[x2] * xyfractpart)
-							);
-#endif
-					}
 				}
-				outputPtr += outputStride;
+				else {
+					remapBilinear_8uXf_C<T>(
+						&mapXPtr[kalignedSIMD], &mapYPtr[kalignedSIMD],
+						inputPtr, &outTPtr[-extraSIMD],
+						roi, size,
+						&defaultPixelValueT,
+						outputWidth + extraSIMD
+						);
+				}
+				k += outputWidth;
+				outTPtr += outputStride;
 			}
 			return COMPV_ERROR_CODE_S_OK;
 		};
@@ -152,6 +210,18 @@ private:
 			outputHeight,
 			COMPV_IMAGE_REMAP_BILINEAR_SAMPLES_PER_THREAD
 		));
+
+		if (bilinearType == COMPV_INTERPOLATION_TYPE_BILINEAR_FLOAT32) {
+			if (!isT32f) {
+				COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static<T, compv_float32_t>(outT, &output))); // no need for clip, output already within [0, 256[
+			}
+			else if (outT != output) {
+				output = outT;
+			}
+		}
+		else {
+			COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static<T, uint8_t>(outT, &output))); // no need for clip, output already within [0, 256[
+		}
 
 		return COMPV_ERROR_CODE_S_OK;
 	}
@@ -297,7 +367,7 @@ public:
 		COMPV_CHECK_EXP_RETURN(map->rows() < 2 || map->cols() != outputElmtCount, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Invalid map size");
 
 		// Create output
-		if (interType == COMPV_INTERPOLATION_TYPE_BICUBIC_FLOAT32) {
+		if (interType == COMPV_INTERPOLATION_TYPE_BICUBIC_FLOAT32 || interType == COMPV_INTERPOLATION_TYPE_BILINEAR_FLOAT32) {
 			COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float32_t>(&output_, outputSize_.height, outputSize_.width, (input->stride() >= outputSize_.width) ? input->stride() : 0));
 		}
 		else {
@@ -312,8 +382,9 @@ public:
 			COMPV_CHECK_CODE_RETURN(CompVImageRemapGeneric::process_bicubic(input, output_, map, inputROI_, interType, defaultPixelValue));
 			break;
 		case COMPV_INTERPOLATION_TYPE_BILINEAR:
+		case COMPV_INTERPOLATION_TYPE_BILINEAR_FLOAT32:
 			COMPV_CHECK_EXP_RETURN(input->elmtInBytes() != sizeof(uint8_t), COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Requires 8u as input");
-			COMPV_CHECK_CODE_RETURN(CompVImageRemapGeneric::process_bilinear(input, output_, map, inputROI_, defaultPixelValue));
+			COMPV_CHECK_CODE_RETURN(CompVImageRemapGeneric::process_bilinear(input, output_, map, inputROI_, interType, defaultPixelValue));
 			break;
 		case COMPV_INTERPOLATION_TYPE_NEAREST:
 			COMPV_CHECK_EXP_RETURN(input->elmtInBytes() != sizeof(uint8_t), COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Requires 8u as input");

@@ -582,7 +582,7 @@ COMPV_ERROR_CODE CompVImage::scale(const CompVMatPtr& imageIn, CompVMatPtrPtr im
 			// *outImage = This is enought
 			return COMPV_ERROR_CODE_S_OK;
 		}
-		if (scaleType == COMPV_INTERPOLATION_TYPE_BICUBIC_FLOAT32) {
+		if (scaleType == COMPV_INTERPOLATION_TYPE_BICUBIC_FLOAT32 || scaleType == COMPV_INTERPOLATION_TYPE_BILINEAR_FLOAT32) {
 			COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static<uint8_t, compv_float32_t>(imageIn, imageOut)));
 		}
 		else {
@@ -607,6 +607,10 @@ COMPV_ERROR_CODE CompVImage::scale(const CompVMatPtr& imageIn, CompVMatPtrPtr im
 		break;
 	case COMPV_INTERPOLATION_TYPE_BILINEAR:
 		COMPV_CHECK_CODE_RETURN(CompVImageScaleBilinear::process(imageIn, imageOut_));
+		break;
+	case COMPV_INTERPOLATION_TYPE_BILINEAR_FLOAT32: // TODO(dmi): This is a hack, for now the scaler cannot output float type
+		COMPV_CHECK_CODE_RETURN(CompVImageScaleBilinear::process(imageIn, imageOut_));
+		COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static<uint8_t, compv_float32_t>(imageOut_, &imageOut_)));
 		break;
 	default:
 		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "%d not supported as scaling type", scaleType);
@@ -646,8 +650,12 @@ static COMPV_ERROR_CODE CompVImageWarpInverse(const CompVMatPtr& imageIn, CompVM
 
 		CompVMatPtr ac; // (a*0+c*1), (a*1+c*1), (a*2+c*1)....(a*width+c*1)
 		CompVMatPtr df; // (d*0+f*1), (d*1+f*1), (d*2+f*1)....(d*width+f*1)
+		CompVMatPtr by; // (b*0), (b*1), (b*2)....(b*height)
+		CompVMatPtr ey; // (e*0), (e*1), (e*2)....(e*height)
 		COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<T>(&ac, 1, width));
 		COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<T>(&df, 1, width));
+		COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<T>(&by, 1, height));
+		COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<T>(&ey, 1, height));
 		
 		// Build indices for a single row
 		T* acPtr = ac->ptr<T>();
@@ -659,31 +667,51 @@ static COMPV_ERROR_CODE CompVImageWarpInverse(const CompVMatPtr& imageIn, CompVM
 			dfPtr[x] = dfPtr[x - 1] + d;
 		}
 
-		// Build entire map using the single row indices built for #0 (just increment by "b" or "e" for each row)
-		T* mapPtrX = map->ptr<T>(0);
-		T* mapPtrY = map->ptr<T>(1);
-		T by = 0; // b * y
-		T ey = 0; // e * y
-		size_t x;
-		for (size_t y = 0, k = 0; y < height; ++y, by += b, ey += e) {
-			// mapPtrX[k] = (a*x+c) + b*y
-			// mapPtrY[k] = (d*x+f) + e*y
-			for (x = 0; x < width4; x += 4, k += 4) {
-				mapPtrX[k] = acPtr[x] + by;
-				mapPtrX[k + 1] = acPtr[x + 1] + by;
-				mapPtrX[k + 2] = acPtr[x + 2] + by;
-				mapPtrX[k + 3] = acPtr[x + 3] + by;
-
-				mapPtrY[k] = dfPtr[x] + ey; 
-				mapPtrY[k + 1] = dfPtr[x + 1] + ey;
-				mapPtrY[k + 2] = dfPtr[x + 2] + ey;
-				mapPtrY[k + 3] = dfPtr[x + 3] + ey;
-			}
-			for (; x < width; ++x, ++k) {
-				mapPtrX[k] = acPtr[x] + by;
-				mapPtrY[k] = dfPtr[x] + ey;
-			}
+		T* byPtr = by->ptr<T>();
+		T* eyPtr = ey->ptr<T>();
+		byPtr[0] = 0; //(b*0)
+		eyPtr[0] = 0; //(e*0)
+		for (size_t y = 1; y < height; ++y) {
+			byPtr[y] = byPtr[y - 1] + b;
+			eyPtr[y] = eyPtr[y - 1] + e;
 		}
+
+		// Build entire map using the single row indices built for #0 (just increment by "b" or "e" for each row)
+		auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
+			T* mapPtrX = map->ptr<T>(0, (ystart * width));
+			T* mapPtrY = map->ptr<T>(1, (ystart * width));
+			const T* byPtr = by->data<T>(); // b * y
+			const T* eyPtr = ey->data<T>(); // e * y
+			size_t x;
+			for (size_t y = ystart, k = 0; y < yend; ++y) {
+				const T& by_ = byPtr[y]; // b*y
+				const T& ey_ = eyPtr[y]; // e*y
+				// mapPtrX[k] = (a*x+c) + b*y
+				// mapPtrY[k] = (d*x+f) + e*y
+				for (x = 0; x < width4; x += 4, k += 4) {
+					mapPtrX[k] = acPtr[x] + by_;
+					mapPtrX[k + 1] = acPtr[x + 1] + by_;
+					mapPtrX[k + 2] = acPtr[x + 2] + by_;
+					mapPtrX[k + 3] = acPtr[x + 3] + by_;
+
+					mapPtrY[k] = dfPtr[x] + ey_;
+					mapPtrY[k + 1] = dfPtr[x + 1] + ey_;
+					mapPtrY[k + 2] = dfPtr[x + 2] + ey_;
+					mapPtrY[k + 3] = dfPtr[x + 3] + ey_;
+				}
+				for (; x < width; ++x, ++k) {
+					mapPtrX[k] = acPtr[x] + by_;
+					mapPtrY[k] = dfPtr[x] + ey_;
+				}
+			}
+			return COMPV_ERROR_CODE_S_OK;
+		};
+		COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+			funcPtr,
+			width,
+			height,
+			(100 * 100)
+		));
 	}
 	else {
 		const T* M0 = M->ptr<const T>(0);
@@ -702,9 +730,15 @@ static COMPV_ERROR_CODE CompVImageWarpInverse(const CompVMatPtr& imageIn, CompVM
 		CompVMatPtr ac; // (a*0+c*1), (a*1+c*1), (a*2+c*1)....(a*width+c*1)
 		CompVMatPtr df; // (d*0+f*1), (d*1+f*1), (d*2+f*1)....(d*width+f*1)
 		CompVMatPtr gi; // (g*0+i*1), (g*1+i*1), (g*2+i*1)....(g*width+i*1)		
+		CompVMatPtr by; // (b*0), (b*1), (b*2)....(b*height)
+		CompVMatPtr ey; // (e*0), (e*1), (e*2)....(e*height)
+		CompVMatPtr hy; // (h*0), (h*1), (h*2)....(h*height)
 		COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<T>(&ac, 1, width));
 		COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<T>(&df, 1, width));
 		COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<T>(&gi, 1, width));
+		COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<T>(&by, 1, height));
+		COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<T>(&ey, 1, height));
+		COMPV_CHECK_CODE_RETURN(CompVMat::newObjStrideless<T>(&hy, 1, height));
 
 		// Build indices for a single row
 		T* acPtr = ac->ptr<T>();
@@ -718,41 +752,65 @@ static COMPV_ERROR_CODE CompVImageWarpInverse(const CompVMatPtr& imageIn, CompVM
 			dfPtr[x] = dfPtr[x - 1] + d;
 			giPtr[x] = giPtr[x - 1] + g;
 		}
+
+		T* byPtr = by->ptr<T>();
+		T* eyPtr = ey->ptr<T>();
+		T* hyPtr = hy->ptr<T>();
+		byPtr[0] = 0; //(b*0)
+		eyPtr[0] = 0; //(e*0)
+		hyPtr[0] = 0; //(h*0)
+		for (size_t y = 1; y < height; ++y) {
+			byPtr[y] = byPtr[y - 1] + b;
+			eyPtr[y] = eyPtr[y - 1] + e;
+			hyPtr[y] = hyPtr[y - 1] + h;
+		}
 		
 		// Build entire map using the single row indices built for #0 (just increment by "b" or "e" for each row)
-		T* mapPtrX = map->ptr<T>(0);
-		T* mapPtrY = map->ptr<T>(1);
-		T* mapPtrZ = map->ptr<T>(2);
-		T by = 0; // b * y
-		T ey = 0; // e * y
-		T hy = 0; // h * y
-		size_t x;
-		for (size_t y = 0, k = 0; y < height; ++y, by += b, ey += e, hy += h) {
-			// mapPtrX[k] = (a*x+c) + b*y
-			// mapPtrY[k] = (d*x+f) + e*y
-			// mapPtrZ[k] = (g*x+f) + h*y
-			for (x = 0; x < width4; x += 4, k += 4) {
-				mapPtrX[k] = acPtr[x] + by;
-				mapPtrX[k + 1] = acPtr[x + 1] + by;
-				mapPtrX[k + 2] = acPtr[x + 2] + by;
-				mapPtrX[k + 3] = acPtr[x + 3] + by;
+		auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
+			T* mapPtrX = map->ptr<T>(0, (ystart * width));
+			T* mapPtrY = map->ptr<T>(1, (ystart * width));
+			T* mapPtrZ = map->ptr<T>(2, (ystart * width));
+			const T* byPtr = by->data<T>(); // b * y
+			const T* eyPtr = ey->data<T>(); // e * y
+			const T* hyPtr = hy->data<T>(); // h * y
+			size_t x;
+			for (size_t y = 0, k = 0; y < height; ++y) {
+				const T& by_ = byPtr[y]; // b*y
+				const T& ey_ = eyPtr[y]; // e*y
+				const T& hy_ = hyPtr[y]; // h*y
+				// mapPtrX[k] = (a*x+c) + b*y
+				// mapPtrY[k] = (d*x+f) + e*y
+				// mapPtrZ[k] = (g*x+f) + h*y
+				for (x = 0; x < width4; x += 4, k += 4) {
+					mapPtrX[k] = acPtr[x] + by_;
+					mapPtrX[k + 1] = acPtr[x + 1] + by_;
+					mapPtrX[k + 2] = acPtr[x + 2] + by_;
+					mapPtrX[k + 3] = acPtr[x + 3] + by_;
 
-				mapPtrY[k] = dfPtr[x] + ey;
-				mapPtrY[k + 1] = dfPtr[x + 1] + ey;
-				mapPtrY[k + 2] = dfPtr[x + 2] + ey;
-				mapPtrY[k + 3] = dfPtr[x + 3] + ey;
+					mapPtrY[k] = dfPtr[x] + ey_;
+					mapPtrY[k + 1] = dfPtr[x + 1] + ey_;
+					mapPtrY[k + 2] = dfPtr[x + 2] + ey_;
+					mapPtrY[k + 3] = dfPtr[x + 3] + ey_;
 
-				mapPtrZ[k] = giPtr[x] + hy;
-				mapPtrZ[k + 1] = giPtr[x + 1] + hy;
-				mapPtrZ[k + 2] = giPtr[x + 2] + hy;
-				mapPtrZ[k + 3] = giPtr[x + 3] + hy;
+					mapPtrZ[k] = giPtr[x] + hy_;
+					mapPtrZ[k + 1] = giPtr[x + 1] + hy_;
+					mapPtrZ[k + 2] = giPtr[x + 2] + hy_;
+					mapPtrZ[k + 3] = giPtr[x + 3] + hy_;
+				}
+				for (; x < width; ++x, ++k) {
+					mapPtrX[k] = acPtr[x] + by_;
+					mapPtrY[k] = dfPtr[x] + ey_;
+					mapPtrZ[k] = giPtr[x] + hy_;
+				}
 			}
-			for (; x < width; ++x, ++k) {
-				mapPtrX[k] = acPtr[x] + by;
-				mapPtrY[k] = dfPtr[x] + ey;
-				mapPtrZ[k] = giPtr[x] + hy;
-			}
-		}
+			return COMPV_ERROR_CODE_S_OK;
+		};
+		COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+			funcPtr,
+			width,
+			height,
+			(100 * 100)
+		));
 
 		// Homogeneous to cartesian (3*n) -> (2*n)
 		COMPV_CHECK_CODE_RETURN(CompVMathTransform::homogeneousToCartesian2D(map, &map));
