@@ -858,6 +858,9 @@
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_scale_intrin_neon.h">
       <Filter>include\math\intrin\arm</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\compv\base\image\intrin\arm\compv_image_remap_intrin_neon.h">
+      <Filter>include\image\intrin\arm</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_base.cxx">
@@ -1429,6 +1432,9 @@
     </ClCompile>
     <ClCompile Include="..\math\intrin\arm\compv_math_scale_intrin_neon.cxx">
       <Filter>source\math\intrin\arm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\image\intrin\arm\compv_image_remap_intrin_neon.cxx">
+      <Filter>source\image\intrin\arm</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

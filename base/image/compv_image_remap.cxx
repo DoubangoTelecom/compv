@@ -17,6 +17,7 @@
 
 #include "compv/base/image/intrin/x86/compv_image_remap_intrin_sse41.h"
 #include "compv/base/image/intrin/x86/compv_image_remap_intrin_avx2.h"
+#include "compv/base/image/intrin/arm/compv_image_remap_intrin_neon.h"
 
 #define COMPV_THIS_CLASSNAME	"CompVImageRemap"
 
@@ -78,46 +79,46 @@ private:
 	}
 
 	// "outputPtr" values always within [0, 256[ which means we can use static cast without clip(0, 255)
-	template <typename T>
+	template <typename U>
 	static void remapBilinear_8uXf_C(
-		const T* mapXPtr, const T* mapYPtr,
-		const uint8_t* inputPtr,  T* outputPtr,
-		const T* roi, const int32_t* size, 
-		const T* defaultPixelValue1,
+		const U* mapXPtr, const U* mapYPtr,
+		const uint8_t* inputPtr, U* outputPtr,
+		const U* roi, const int32_t* size,
+		const U* defaultPixelValue1,
 		const compv_uscalar_t count
 	)
 	{
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
 
-		const T& roi_left = roi[0];
-		const T& roi_right = roi[1];
-		const T& roi_top = roi[2];
-		const T& roi_bottom = roi[3];
+		const U& roi_left = roi[0];
+		const U& roi_right = roi[1];
+		const U& roi_top = roi[2];
+		const U& roi_bottom = roi[3];
 
 		const int32_t& inWidthMinus1 = size[0];
 		const int32_t& inHeightMinus1 = size[1];
 		const int32_t& stride = size[2];
 
-		const T& defaultPixelValue = *defaultPixelValue1;
+		const U& defaultPixelValue = *defaultPixelValue1;
 
 		for (compv_uscalar_t i = 0; i < count; ++i) {
-			const T& x = mapXPtr[i];
-			const T& y = mapYPtr[i];
+			const U& x = mapXPtr[i];
+			const U& y = mapYPtr[i];
 			if (x >= roi_left && x <= roi_right && y >= roi_top && y <= roi_bottom) {
 				const int32_t x1 = static_cast<int32_t>(x);
 				const int32_t x2 = std::min(static_cast<int32_t>(x + 1.f), inWidthMinus1);
-				const T xfractpart = x - x1;
+				const U xfractpart = x - x1;
 				int32_t y1 = static_cast<int32_t>(y);
 				int32_t y2 = std::min(static_cast<int32_t>(y + 1.f), inHeightMinus1);
-				const T yfractpart = y - y1;
-				const T xyfractpart = (xfractpart * yfractpart);
+				const U yfractpart = y - y1;
+				const U xyfractpart = (xfractpart * yfractpart);
 				y1 *= stride;
 				y2 *= stride;
 				const int32_t y1x1 = y1 + x1;
 				const int32_t y1x2 = y1 + x2;
 				const int32_t y2x1 = y2 + x1;
 				const int32_t y2x2 = y2 + x2;
-				const T pixel = (
+				const U pixel = (
 					(inputPtr[y1x1] * (1 - xfractpart - yfractpart + xyfractpart))
 					+ (inputPtr[y1x2] * (xfractpart - xyfractpart))
 					+ (inputPtr[y2x1] * (yfractpart - xyfractpart))
@@ -172,6 +173,9 @@ private:
 			COMPV_EXEC_IFDEF_INTRIN_X86((CompVImageRemapBilinear_8u32f = CompVImageRemapBilinear_8u32f_Intrin_AVX2, align = 8));
 		}
 #elif COMPV_ARCH_ARM
+		if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && map->isAlignedNEON()) {
+			COMPV_EXEC_IFDEF_INTRIN_ARM((CompVImageRemapBilinear_8u32f = CompVImageRemapBilinear_8u32f_Intrin_NEON, align = 4));
+		}
 #endif
 
 		auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
@@ -220,7 +224,7 @@ private:
 			}
 		}
 		else {
-			COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static<T, uint8_t>(outT, &output))); // no need for clip, output already within [0, 256[
+			COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static_pixel8(outT, &output)));
 		}
 
 		return COMPV_ERROR_CODE_S_OK;

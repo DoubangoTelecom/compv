@@ -20,7 +20,7 @@ void CompVMathCastProcess_static_8u32f_Intrin_SSE2(
 )
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
-	static const __m128i vecZero = _mm_setzero_si128();
+	const __m128i vecZero = _mm_setzero_si128();
 	for (compv_uscalar_t j = 0; j < height; ++j) {
 		for (compv_uscalar_t i = 0; i < width; i += 16) {
 			__m128i vec1 = _mm_load_si128(reinterpret_cast<const __m128i*>(&src[i]));
