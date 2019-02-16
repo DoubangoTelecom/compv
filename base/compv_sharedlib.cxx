@@ -31,10 +31,10 @@ void* CompVSharedLib::sym(const char* name)
     return CompVSharedLib::sym(m_pHandle, name);
 }
 
-COMPV_ERROR_CODE CompVSharedLib::open(const char* filePath, void** handle)
+COMPV_ERROR_CODE CompVSharedLib::open(const char* filePath, void** handle, bool quiet COMPV_DEFAULT(false))
 {
     COMPV_CHECK_EXP_RETURN(!filePath || !handle, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-    void* handle_ = NULL;
+    void* handle_ = nullptr;
 #if COMPV_OS_WINDOWS
 #	if COMPV_OS_WINDOWS_RT
     wchar_t* szPath = (wchar_t*)tsk_calloc(tsk_strlen(path) + 1, sizeof(wchar_t));
@@ -55,10 +55,13 @@ COMPV_ERROR_CODE CompVSharedLib::open(const char* filePath, void** handle)
 #endif /* !COMPV_OS_WINDOWS_CE */
 #	endif /*end-of-else-COMPV_OS_WINDOWS_RT*/
 #else
-    handle_ = dlopen(filePath, RTLD_NOW);
+    handle_ = dlopen(filePath, RTLD_LAZY);
 #endif
 
     if (!handle_) {
+		if (quiet) {
+			return COMPV_ERROR_CODE_E_NOT_FOUND;
+		}
         COMPV_DEBUG_ERROR("Failed to load library with path=%s", filePath);
         COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_FOUND);
     }
@@ -98,12 +101,15 @@ bail:
     return sym_;
 }
 
-COMPV_ERROR_CODE CompVSharedLib::newObj(CompVSharedLibPtrPtr sharedlib, const char* filePath)
+COMPV_ERROR_CODE CompVSharedLib::newObj(CompVSharedLibPtrPtr sharedlib, const char* filePath, bool quiet COMPV_DEFAULT(false))
 {
     COMPV_CHECK_EXP_RETURN(!sharedlib || !filePath, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-    void* handle_ = NULL;
-    COMPV_CHECK_CODE_RETURN(CompVSharedLib::open(filePath, &handle_));
-    COMPV_ERROR_CODE err;
+    void* handle_ = nullptr;
+	COMPV_ERROR_CODE err = CompVSharedLib::open(filePath, &handle_, quiet);
+	if (quiet && COMPV_ERROR_CODE_IS_NOK(err)) {
+		return err;
+	}
+	COMPV_CHECK_CODE_BAIL(err);
     COMPV_CHECK_CODE_BAIL(err = CompVSharedLib::newObj(sharedlib, handle_));
     COMPV_DEBUG_INFO("Loaded shared lib: %s", filePath);
 bail:

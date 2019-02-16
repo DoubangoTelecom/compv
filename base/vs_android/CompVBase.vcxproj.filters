@@ -852,9 +852,6 @@
     <ClInclude Include="..\include\compv\base\pugixml-1.9\pugixml.h">
       <Filter>include\pugixml-1.9</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\compv\base\ml\compv_base_ml_svm_predict.h">
-      <Filter>include\ml</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_scale_intrin_neon.h">
       <Filter>include\math\intrin\arm</Filter>
     </ClInclude>
@@ -1426,9 +1423,6 @@
     </ClCompile>
     <ClCompile Include="..\pugixml-1.9\pugixml.cxx">
       <Filter>source\pugixml-1.9</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ml\compv_base_ml_svm_predict.cxx">
-      <Filter>source\ml</Filter>
     </ClCompile>
     <ClCompile Include="..\math\intrin\arm\compv_math_scale_intrin_neon.cxx">
       <Filter>source\math\intrin\arm</Filter>

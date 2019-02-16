@@ -222,7 +222,6 @@
     <ClInclude Include="include\compv\base\ml\annoy-1.11.4\mman.h" />
     <ClInclude Include="include\compv\base\ml\compv_base_ml_knn.h" />
     <ClInclude Include="include\compv\base\ml\compv_base_ml_svm.h" />
-    <ClInclude Include="include\compv\base\ml\compv_base_ml_svm_predict.h" />
     <ClInclude Include="include\compv\base\ml\libsvm-322\intrin\x86\compv_ml_libsvm-322_intrin_avx.h" />
     <ClInclude Include="include\compv\base\ml\libsvm-322\intrin\x86\compv_ml_libsvm-322_intrin_sse2.h" />
     <ClInclude Include="include\compv\base\ml\libsvm-322\libsvm.h" />
@@ -1117,7 +1116,6 @@
     <ClCompile Include="math\lmfit-6.1\lmmin.cxx" />
     <ClCompile Include="ml\compv_base_ml_knn.cxx" />
     <ClCompile Include="ml\compv_base_ml_svm.cxx" />
-    <ClCompile Include="ml\compv_base_ml_svm_predict.cxx" />
     <ClCompile Include="ml\libsvm-322\intrin\x86\compv_ml_libsvm-322_intrin_avx.cxx">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug_sdk|Win32'">AdvancedVectorExtensions</EnableEnhancedInstructionSet>

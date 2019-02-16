@@ -27,11 +27,11 @@ public:
 
     void* sym(const char* name);
 
-    static COMPV_ERROR_CODE open(const char* filePath, void** handle);
+    static COMPV_ERROR_CODE open(const char* filePath, void** handle, bool quiet = false);
     static COMPV_ERROR_CODE close(void* handle);
     static void* sym(void* handle, const char* name);
 
-    static COMPV_ERROR_CODE newObj(CompVSharedLibPtrPtr sharedlib, const char* filePath);
+    static COMPV_ERROR_CODE newObj(CompVSharedLibPtrPtr sharedlib, const char* filePath, bool quiet = false);
     static COMPV_ERROR_CODE newObj(CompVSharedLibPtrPtr sharedlib, void* handle);
 
 private:

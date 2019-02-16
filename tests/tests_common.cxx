@@ -8,7 +8,7 @@
 
 #define TAG_TESTS_COMMON	"TESTS_COMMON"
 
-#define COMPV_numThreads			COMPV_NUM_THREADS_SINGLE
+#define COMPV_numThreads			COMPV_NUM_THREADS_MULTI
 #define COMPV_enableIntrinsics		true
 #define COMPV_enableAsm				true
 #define COMPV_enableGPU				true
@@ -19,6 +19,9 @@
 #define COMPV_cpuDisable			kCpuFlagNone
 
 COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-function")
+
+const int compv_tests_var_numThreads() { return COMPV_numThreads; }
+const bool compv_tests_var_enableGPU() { return COMPV_enableGPU; }
 
 const COMPV_ERROR_CODE compv_tests_init()
 {
