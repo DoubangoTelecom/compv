@@ -55,7 +55,7 @@ CompVMachineLearningSVM::~CompVMachineLearningSVM()
 }
 
 // Must be MT-friendly
-COMPV_ERROR_CODE CompVMachineLearningSVM::predict(const CompVMatPtr& vector, int& label, double* distance COMPV_DEFAULT(nullptr))
+COMPV_ERROR_CODE CompVMachineLearningSVM::predict(const CompVMatPtr& vector, int& label, double* distance COMPV_DEFAULT(nullptr)) const
 {
 	// Must not lock, function will be called from different threads
 	// For example, when called by ultimateText, the MT-decision is per Char

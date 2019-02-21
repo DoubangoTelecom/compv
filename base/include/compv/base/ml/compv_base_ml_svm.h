@@ -89,7 +89,7 @@ public:
 		return m_nVectorSize;
 	}
 
-	COMPV_ERROR_CODE predict(const CompVMatPtr& vector, int& label, double* distance = nullptr);
+	COMPV_ERROR_CODE predict(const CompVMatPtr& vector, int& label, double* distance = nullptr) const;
 	COMPV_ERROR_CODE train(const CompVMatPtr& trainLabels, const CompVMatPtr& trainVectors, const CompVMachineLearningSVMCrossValidation* crossValidation = nullptr);
 	COMPV_ERROR_CODE save(const char* filePath, const bool releaseVectors_ = true);
 
