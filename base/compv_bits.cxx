@@ -6,6 +6,7 @@
 */
 #include "compv/base/compv_bits.h"
 #include "compv/base/compv_cpu.h"
+#include "compv/base/math/compv_math.h"
 #include "compv/base/parallel/compv_parallel.h"
 #include "compv/base/compv_generic_invoke.h"
 
@@ -57,12 +58,13 @@ static void CompVBitsLogicalAnd_8u_C(const uint8_t* Aptr, const uint8_t* Bptr, u
 static void CompVBitsLogicalNotAnd_8u_C(const uint8_t* Aptr, const uint8_t* Bptr, uint8_t* Rptr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t Astride, compv_uscalar_t Bstride, compv_uscalar_t Rstride);
 static void CompVBitsLogicalNot_8u_C(const uint8_t* Aptr, uint8_t* Rptr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t Astride, compv_uscalar_t Rstride);
 static void CompVBitsLogicalXorVt_8u_C(const uint8_t* Aptr, const uint8_t* A_Minus1_ptr, uint8_t* Rptr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t Astride, compv_uscalar_t Rstride);
+static void CompVBitsLogicalOr_8u_C(const uint8_t* Aptr, const uint8_t* Bptr, uint8_t* Rptr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t Astride, compv_uscalar_t Bstride, compv_uscalar_t Rstride);
+static void CompVBitsLogicalClipNot_8u_C(const uint8_t* Aptr, uint8_t* Rptr, const uint8_t* minn1, const uint8_t* maxx1, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t Astride, compv_uscalar_t Rstride);
 
 // R = (A & B)
-// Supports and type (float, double, uint8, uint16....)
 COMPV_ERROR_CODE CompVBits::logical_and(const CompVMatPtr& A, const CompVMatPtr& B, CompVMatPtrPtr R)
 {
-	COMPV_CHECK_EXP_RETURN(!A || !B || !R || A->cols() != B->cols() || A->rows() != B->rows() || A->planeCount() != B->planeCount(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(!A || !B || !R || A->cols() != B->cols() || A->rows() != B->rows() || A->planeCount() != B->planeCount() || A->elmtInBytes() != sizeof(uint8_t) || B->elmtInBytes() != sizeof(uint8_t), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	CompVMatPtr R_ = *R;
 	if (!R_ || (R_ != A && R_ != B)) { // This function allows R to be equal to A or B
 		COMPV_CHECK_CODE_RETURN(CompVMat::newObj(&R_, A));
@@ -108,10 +110,9 @@ COMPV_ERROR_CODE CompVBits::logical_and(const CompVMatPtr& A, const CompVMatPtr&
 }
 
 // R = (~A & B)
-// Supports and type (float, double, uint8, uint16....)
 COMPV_ERROR_CODE CompVBits::logical_not_and(const CompVMatPtr& A, const CompVMatPtr& B, CompVMatPtrPtr R)
 {
-	COMPV_CHECK_EXP_RETURN(!A || !B || !R || A->cols() != B->cols() || A->rows() != B->rows() || A->planeCount() != B->planeCount(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(!A || !B || !R || A->cols() != B->cols() || A->rows() != B->rows() || A->planeCount() != B->planeCount() || A->elmtInBytes() != sizeof(uint8_t) || B->elmtInBytes() != sizeof(uint8_t), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	CompVMatPtr R_ = *R;
 	if (!R_ || (R_ != A && R_ != B)) { // This function allows R to be equal to A or B
 		COMPV_CHECK_CODE_RETURN(CompVMat::newObj(&R_, A));
@@ -157,10 +158,9 @@ COMPV_ERROR_CODE CompVBits::logical_not_and(const CompVMatPtr& A, const CompVMat
 }
 
 // R = ~A
-// Supports and type (float, double, uint8, uint16....)
 COMPV_ERROR_CODE CompVBits::logical_not(const CompVMatPtr& A, CompVMatPtrPtr R)
 {
-	COMPV_CHECK_EXP_RETURN(!A || !R, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(!A || !R || A->elmtInBytes() != sizeof(uint8_t), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	CompVMatPtr R_ = (!A->isMemoryOwed() && A == *R) ? nullptr : *R;
 	if (!R_ || R_ != A) { // This function allows R to be equal to A
 		if (A->isMemoryOwed()) {
@@ -168,7 +168,7 @@ COMPV_ERROR_CODE CompVBits::logical_not(const CompVMatPtr& A, CompVMatPtrPtr R)
 		}
 		else { 
 			// Memory not owed means A is a bind which means the "stride" is probably too large compared to "cols" -> do not waste memory
-			// For example, calling binary not from ultimateText T-HOG classifier (text/nontext classification).
+			// For example, calling binary not from ultimateText classifier (text/nontext classification).
 			CompVGenericInvokeCodeRawType(A->subType(), CompVMat::newObjAligned, &R_, A->rows(), A->cols());
 		}
 	}
@@ -216,7 +216,7 @@ COMPV_ERROR_CODE CompVBits::logical_not(const CompVMatPtr& A, CompVMatPtrPtr R)
 // Line[(n)*stride] ^= Line[(n-1)*stride]
 COMPV_ERROR_CODE CompVBits::logical_xorvt(const CompVMatPtr& A, CompVMatPtrPtr R)
 {
-	COMPV_CHECK_EXP_RETURN(!A || !R, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(!A || !R || A->elmtInBytes() != sizeof(uint8_t), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
 	CompVMatPtr R_ = (A == *R) ? nullptr : *R; // This function doesn't allow R to be equal to A
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObj(&R_, A));
@@ -253,17 +253,126 @@ COMPV_ERROR_CODE CompVBits::logical_xorvt(const CompVMatPtr& A, CompVMatPtrPtr R
 
 	const int planesCount = static_cast<int>(A->planeCount());
 	for (planeId = 0; planeId < planesCount; ++planeId) {
-#if 1
 		COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
 			funcPtr,
 			A->cols(planeId),
 			A->rows(planeId),
 			COMPV_BITS_XORVT_SAMPLES_PER_THREAD
 		));
-#else
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation could be found");
-		COMPV_CHECK_CODE_RETURN(funcPtr(0, A->rows(planeId)));
+	}
+
+	*R = R_;
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// R = A | B
+COMPV_ERROR_CODE CompVBits::logical_or(const CompVMatPtr& A, const CompVMatPtr& B, CompVMatPtrPtr R)
+{
+	COMPV_CHECK_EXP_RETURN(!A || !B || !R || A->cols() != B->cols() || A->rows() != B->rows() || A->planeCount() != B->planeCount() || A->elmtInBytes() != sizeof(uint8_t) || B->elmtInBytes() != sizeof(uint8_t), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	CompVMatPtr R_ = *R;
+	if (!R_ || (R_ != A && R_ != B)) { // This function allows R to be equal to A or B
+		if (A->isMemoryOwed()) {
+			COMPV_CHECK_CODE_RETURN(CompVMat::newObj(&R_, A));
+		}
+		else {
+			// Memory not owed means A is a bind which means the "stride" is probably too large compared to "cols" -> do not waste memory
+			// For example, calling binary not from ultimateText classifier (text/nontext classification).
+			CompVGenericInvokeCodeRawType(A->subType(), CompVMat::newObjAligned, &R_, A->rows(), A->cols());
+		}
+	}
+
+	void(*CompVBitsLogicalOr_8u)(const uint8_t* Aptr, const uint8_t* Bptr, uint8_t* Rptr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t Astride, compv_uscalar_t Bstride, compv_uscalar_t Rstride)
+		= CompVBitsLogicalOr_8u_C;
+#if COMPV_ARCH_X86
+	if (CompVCpu::isEnabled(kCpuFlagSSE2) && A->isAlignedSSE() && B->isAlignedSSE() && R_->isAlignedSSE()) {
+		//COMPV_EXEC_IFDEF_INTRIN_X86(CompVBitsLogicalOr_8u = CompVBitsLogicalOr_8u_Intrin_SSE2);
+		//COMPV_EXEC_IFDEF_ASM_X64(CompVBitsLogicalOr_8u = CompVBitsLogicalOr_8u_Asm_X64_SSE2);
+	}
+#elif COMPV_ARCH_ARM
+	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && A->isAlignedNEON() && B->isAlignedNEON() && R_->isAlignedNEON()) {
+		//COMPV_EXEC_IFDEF_INTRIN_ARM(CompVBitsLogicalOr_8u = CompVBitsLogicalOr_8u_Intrin_NEON);
+		//COMPV_EXEC_IFDEF_ASM_ARM32(CompVBitsLogicalOr_8u = CompVBitsLogicalOr_8u_Asm_NEON32);
+		//COMPV_EXEC_IFDEF_ASM_ARM64(CompVBitsLogicalOr_8u = CompVBitsLogicalOr_8u_Asm_NEON64);
+	}
 #endif
+
+	int planeId = 0;
+	auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
+		CompVBitsLogicalOr_8u(
+			A->ptr<const uint8_t>(ystart, 0, planeId), B->ptr<const uint8_t>(ystart, 0, planeId), R_->ptr<uint8_t>(ystart, 0, planeId),
+			static_cast<compv_uscalar_t>(A->cols(planeId)), static_cast<compv_uscalar_t>(yend - ystart),
+			static_cast<compv_uscalar_t>(A->strideInBytes(planeId)), static_cast<compv_uscalar_t>(B->strideInBytes(planeId)), static_cast<compv_uscalar_t>(R_->strideInBytes(planeId))
+		);
+		return COMPV_ERROR_CODE_S_OK;
+	};
+
+	const int planesCount = static_cast<int>(A->planeCount());
+	for (planeId = 0; planeId < planesCount; ++planeId) {
+		COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+			funcPtr,
+			A->cols(planeId),
+			A->rows(planeId),
+			COMPV_BITS_AND_SAMPLES_PER_THREAD
+		));
+	}
+
+	*R = R_;
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// R = !(inGrayPtr[i] >= minn && inGrayPtr[i] <= maxx) = (inGrayPtr[i] < minn || inGrayPtr[i] > maxx)
+COMPV_ERROR_CODE CompVBits::logical_clip_not(const CompVMatPtr& A, CompVMatPtrPtr R, const double& minn, const double& maxx)
+{
+	COMPV_CHECK_EXP_RETURN(!A || !R || A->elmtInBytes() != sizeof(uint8_t) || minn < 0 || maxx < 0 || minn > maxx, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	CompVMatPtr R_ = (!A->isMemoryOwed() && A == *R) ? nullptr : *R;
+	if (!R_ || R_ != A) { // This function allows R to be equal to A
+		if (A->isMemoryOwed()) {
+			COMPV_CHECK_CODE_RETURN(CompVMat::newObj(&R_, A));
+		}
+		else {
+			// Memory not owed means A is a bind which means the "stride" is probably too large compared to "cols" -> do not waste memory
+			// For example, calling binary not from ultimateText classifier (text/nontext classification).
+			CompVGenericInvokeCodeRawType(A->subType(), CompVMat::newObjAligned, &R_, A->rows(), A->cols());
+		}
+	}
+
+	void(*CompVBitsLogicalClipNot_8u)(const uint8_t* Aptr, uint8_t* Rptr, const uint8_t* minn1, const uint8_t* maxx1, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t Astride, compv_uscalar_t Rstride)
+	= CompVBitsLogicalClipNot_8u_C;
+#if COMPV_ARCH_X86
+	if (CompVCpu::isEnabled(kCpuFlagSSE2) && A->isAlignedSSE() && R_->isAlignedSSE()) {
+		//COMPV_EXEC_IFDEF_INTRIN_X86(CompVBitsLogicalClipNot_8u = CompVBitsLogicalClipNot_8u_Intrin_SSE2);
+		//COMPV_EXEC_IFDEF_ASM_X64(CompVBitsLogicalClipNot_8u = CompVBitsLogicalClipNot_8u_Asm_X64_SSE2);
+	}
+#elif COMPV_ARCH_ARM
+	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && A->isAlignedNEON() && R_->isAlignedNEON()) {
+		//COMPV_EXEC_IFDEF_INTRIN_ARM(CompVBitsLogicalClipNot_8u = CompVBitsLogicalClipNot_8u_Intrin_NEON);
+		//COMPV_EXEC_IFDEF_ASM_ARM32(CompVBitsLogicalClipNot_8u = CompVBitsLogicalClipNot_8u_Asm_NEON32);
+		//COMPV_EXEC_IFDEF_ASM_ARM64(CompVBitsLogicalClipNot_8u = CompVBitsLogicalClipNot_8u_Asm_NEON64);
+	}
+#endif
+
+	const uint8_t minn_8u = COMPV_MATH_ROUNDFU_2_NEAREST_INT(COMPV_MATH_CLIP3(0, 255, minn), uint8_t);
+	const uint8_t maxx_8u = COMPV_MATH_ROUNDFU_2_NEAREST_INT(COMPV_MATH_CLIP3(0, 255, maxx), uint8_t);
+
+	int planeId = 0;
+	auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
+		CompVBitsLogicalClipNot_8u(
+			A->ptr<const uint8_t>(ystart, 0, planeId), R_->ptr<uint8_t>(ystart, 0, planeId),
+			&minn_8u, &maxx_8u,
+			static_cast<compv_uscalar_t>(A->cols(planeId)), static_cast<compv_uscalar_t>(yend - ystart),
+			static_cast<compv_uscalar_t>(A->strideInBytes(planeId)), static_cast<compv_uscalar_t>(R_->strideInBytes(planeId))
+		);
+		return COMPV_ERROR_CODE_S_OK;
+	};
+
+	const int planesCount = static_cast<int>(A->planeCount());
+	for (planeId = 0; planeId < planesCount; ++planeId) {
+		COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+			funcPtr,
+			A->cols(planeId),
+			A->rows(planeId),
+			COMPV_BITS_AND_SAMPLES_PER_THREAD
+		));
 	}
 
 	*R = R_;
@@ -318,6 +427,33 @@ static void CompVBitsLogicalXorVt_8u_C(const uint8_t* Aptr, const uint8_t* A_Min
 		Rptr += Rstride;
 		Aptr += Astride;
 		A_Minus1_ptr += Astride;
+	}
+}
+
+static void CompVBitsLogicalOr_8u_C(const uint8_t* Aptr, const uint8_t* Bptr, uint8_t* Rptr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t Astride, compv_uscalar_t Bstride, compv_uscalar_t Rstride)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
+	for (compv_uscalar_t j = 0; j < height; ++j) {
+		for (compv_uscalar_t i = 0; i < width; ++i) {
+			Rptr[i] = (Aptr[i] | Bptr[i]);
+		}
+		Rptr += Rstride;
+		Aptr += Astride;
+		Bptr += Bstride;
+	}
+}
+
+static void CompVBitsLogicalClipNot_8u_C(const uint8_t* Aptr, uint8_t* Rptr, const uint8_t* minn1, const uint8_t* maxx1, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t Astride, compv_uscalar_t Rstride)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
+	const uint8_t& minn = *minn1;
+	const uint8_t& maxx = *maxx1;
+	for (compv_uscalar_t j = 0; j < height; ++j) {
+		for (compv_uscalar_t i = 0; i < width; ++i) {
+			Rptr[i] = (Aptr[i] < minn || Aptr[i] > maxx) ? 0xFF : 0x00; // SIMD friendly as both SSE and NEON compare functions already return 0xFF or 0x00
+		}
+		Rptr += Rstride;
+		Aptr += Astride;
 	}
 }
 
