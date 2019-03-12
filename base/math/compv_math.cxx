@@ -11,6 +11,7 @@ Most of trig approx. are implemented using document at "documentation/trig_appro
 #include "compv/base/math/compv_math_trig.h"
 #include "compv/base/math/compv_math_op_sub.h"
 #include "compv/base/math/compv_math_op_mul.h"
+#include "compv/base/math/compv_math_op_minmax.h"
 #include "compv/base/math/compv_math_clip.h"
 #include "compv/base/math/compv_math_dot.h"
 #include "compv/base/math/compv_math_scale.h"
@@ -111,6 +112,12 @@ COMPV_ERROR_CODE CompVMath::scale(const CompVMatPtr &in, const double& s, CompVM
 COMPV_ERROR_CODE CompVMath::exp(const CompVMatPtr &in, CompVMatPtrPtr out)
 {
 	COMPV_CHECK_CODE_RETURN(CompVMathExp::exp(in, out));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVMath::minMax(const CompVMatPtr &A, double& minn, double& maxx)
+{
+	COMPV_CHECK_CODE_RETURN(CompVMathOpMinMax::minMax(A, minn, maxx));
 	return COMPV_ERROR_CODE_S_OK;
 }
 

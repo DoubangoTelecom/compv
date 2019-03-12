@@ -1035,6 +1035,9 @@
     <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_remap_intrin_avx2.h">
       <Filter>include\image\intrin\x86</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\math\compv_math_op_minmax.h">
+      <Filter>include\math</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx">
@@ -1672,6 +1675,9 @@
     </ClCompile>
     <ClCompile Include="image\intrin\x86\compv_image_remap_intrin_avx2.cxx">
       <Filter>source\image\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="math\compv_math_op_minmax.cxx">
+      <Filter>source\math</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

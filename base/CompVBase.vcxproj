@@ -170,6 +170,7 @@
     <ClInclude Include="include\compv\base\math\compv_math_matrix.h" />
     <ClInclude Include="include\compv\base\math\compv_math_moments.h" />
     <ClInclude Include="include\compv\base\math\compv_math_morph.h" />
+    <ClInclude Include="include\compv\base\math\compv_math_op_minmax.h" />
     <ClInclude Include="include\compv\base\math\compv_math_op_mul.h" />
     <ClInclude Include="include\compv\base\math\compv_math_op_sub.h" />
     <ClInclude Include="include\compv\base\math\compv_math_pca.h" />
@@ -753,6 +754,7 @@
     <ClCompile Include="math\compv_math_matrix.cxx" />
     <ClCompile Include="math\compv_math_moments.cxx" />
     <ClCompile Include="math\compv_math_morph.cxx" />
+    <ClCompile Include="math\compv_math_op_minmax.cxx" />
     <ClCompile Include="math\compv_math_op_mul.cxx" />
     <ClCompile Include="math\compv_math_op_sub.cxx" />
     <ClCompile Include="math\compv_math_pca.cxx" />
