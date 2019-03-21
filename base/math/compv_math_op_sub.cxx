@@ -44,7 +44,7 @@ COMPV_ERROR_CODE CompVMathOpSub::sub(const CompVMatPtr& A, const CompVMatPtr& B,
 		const CompVRectFloat32 roi = {
 			0.f, // left
 			static_cast<compv_float32_t>(ystart), // top
-			static_cast<compv_float32_t>(A->cols()), // right
+			static_cast<compv_float32_t>(A->cols() - 1), // right
 			static_cast<compv_float32_t>(yend - 1) // bottom
 		};
 		CompVMatPtr Abind, Bbind, Rbind;

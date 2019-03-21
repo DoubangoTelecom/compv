@@ -29,8 +29,8 @@ protected:
 public:
 	virtual ~CompVThreadDispatcher();
 	COMPV_OBJECT_GET_ID(CompVThreadDispatcher);
-	COMPV_INLINE int32_t threadsCount() { return m_nTasksCount; }
-	COMPV_INLINE int32_t tasksCount() { return m_nTasksCount; }
+	COMPV_INLINE int32_t threadsCount() const { return m_nTasksCount; }
+	COMPV_INLINE int32_t tasksCount() const { return m_nTasksCount; }
 
 #if COMPV_CPP11
 	virtual COMPV_ERROR_CODE invoke(std::function<void()> fFunc, CompVAsyncTaskIds& taskIds) = 0;
@@ -40,7 +40,8 @@ public:
 	virtual COMPV_ERROR_CODE execute(uint32_t threadIdx, compv_asynctoken_id_t tokenId, compv_asynctoken_f f_func, ...) = 0;
 	virtual COMPV_ERROR_CODE wait(uint32_t threadIdx, compv_asynctoken_id_t tokenId, uint64_t u_timeout = 86400000/* 1 day */) = 0;
 #endif
-	virtual bool isMotherOfTheCurrentThread() = 0;
+	virtual uint32_t threadIdxCurrent() const = 0;
+	virtual bool isMotherOfTheCurrentThread() const = 0;
 	
 	static size_t guessNumThreadsDividingAcrossY(const size_t xcount, const size_t ycount, const size_t minSamplesPerThread, CompVThreadDispatcherPtr threadDisp = nullptr);
 	static size_t guessNumThreadsDividingAcrossY(const size_t xcount, const size_t ycount, const size_t maxThreads, const size_t minSamplesPerThread);

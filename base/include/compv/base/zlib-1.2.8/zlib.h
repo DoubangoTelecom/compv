@@ -2613,6 +2613,7 @@ extern z_const char * const z_errmsg[10]; /* indexed by 2-zlib_error */
 #include <fcntl.h>
 
 #ifdef _WIN32
+#	include <windows.h>
 #  include <stddef.h>
 #endif
 

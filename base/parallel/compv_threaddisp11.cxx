@@ -82,19 +82,20 @@ COMPV_ERROR_CODE CompVThreadDispatcher11::waitOne(const CompVAsyncTask11Id& task
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-uint32_t CompVThreadDispatcher11::threadIdxCurrent()
+// Zero-based index, Zero if not the mother of the current one
+uint32_t CompVThreadDispatcher11::threadIdxCurrent() const
 {
 	const compv_thread_id_t currentThreadId = CompVThread::idCurrent();
-	const int32_t tasksCount = threadsCount();
-	for (int32_t i = 0; i < tasksCount; ++i) {
+	const uint32_t tasksCount = static_cast<uint32_t>(threadsCount());
+	for (uint32_t i = 0; i < tasksCount; ++i) {
 		if (m_ppTasks[i]->thread()->id() == currentThreadId) {
-			return (uint32_t)i;
+			return i;
 		}
 	}
 	return 0;
 }
 
-bool CompVThreadDispatcher11::isMotherOfTheCurrentThread() /*Overrides(CompVThreadDispatcher)*/
+bool CompVThreadDispatcher11::isMotherOfTheCurrentThread() const
 {
 	const compv_thread_id_t currentThreadId = CompVThread::idCurrent();
 	const int32_t tasksCount = threadsCount();
