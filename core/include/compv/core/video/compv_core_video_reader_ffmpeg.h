@@ -38,10 +38,10 @@ public:
 	COMPV_OBJECT_GET_ID(CompVVideoReaderFFmpeg);
 
 	virtual COMPV_ERROR_CODE open(const char* path) override;
-	virtual bool isOpen()const override;
+	virtual bool isOpen() const override;
 	virtual COMPV_ERROR_CODE close() override;
 	virtual COMPV_ERROR_CODE read(CompVMatPtrPtr frame) override;
-	virtual int frameRate()const override;
+	virtual double frameRate( )const override;
 
 	static COMPV_ERROR_CODE newObj(CompVVideoReaderFFmpegPtrPtr reader);
 
@@ -54,7 +54,7 @@ private:
 	int m_nStreamIdx;
 	COMPV_SUBTYPE m_eSubType;
 	AVPixelFormat m_ePixFmt;
-	int m_nFrameRate;
+	double m_nFrameRate;
 };
 
 COMPV_NAMESPACE_END()

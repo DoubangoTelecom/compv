@@ -54,7 +54,7 @@ CompVVideoReaderFFmpeg::CompVVideoReaderFFmpeg()
 	, m_pDecCtx(nullptr)
 	, m_pFrame(nullptr)
 	, m_ePixFmt(AV_PIX_FMT_NONE)
-	, m_nFrameRate(-1)
+	, m_nFrameRate(-1.0)
 {
 
 }
@@ -88,7 +88,7 @@ COMPV_ERROR_CODE CompVVideoReaderFFmpeg::open(const char* path)
 			return COMPV_ERROR_CODE_E_FFMPEG;
 		}
 		m_pStream = m_pFmtCtx->streams[m_nStreamIdx];
-		m_nFrameRate = m_pStream->avg_frame_rate.num / m_pStream->avg_frame_rate.den;
+		m_nFrameRate = double(m_pStream->avg_frame_rate.num) / double(m_pStream->avg_frame_rate.den);
 
 		m_bOpened = true;
 		return COMPV_ERROR_CODE_S_OK;
@@ -213,7 +213,7 @@ COMPV_ERROR_CODE CompVVideoReaderFFmpeg::read(CompVMatPtrPtr frame)
 	}
 }
 
-int CompVVideoReaderFFmpeg::frameRate()const
+double CompVVideoReaderFFmpeg::frameRate()const
 {
 	return m_nFrameRate;
 }
