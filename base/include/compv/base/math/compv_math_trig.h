@@ -23,6 +23,12 @@ public:
 	static COMPV_ERROR_CODE rodriguesMatrixToVector(const CompVMatPtr& matrix, FloatType(&vector)[3]);
 
 	static COMPV_ERROR_CODE fastAtan2(const CompVMatPtr& y, const CompVMatPtr& x, CompVMatPtrPtr r, const bool angleInDeg);
+	template<typename FloatType>
+	static FloatType stdAtan2(const FloatType& y, const FloatType& x) {
+		// atan2 is within [-pi, pi] and undefined from (y==0 && x==0) - https://en.wikipedia.org/wiki/Atan2#Definition_and_computation
+		const static FloatType eps = std::numeric_limits<FloatType>::epsilon();
+		return (std::abs(y) <= eps && std::abs(x) <= eps) ? 0 : std::atan2(y, x);
+	}
 	static COMPV_ERROR_CODE hypot(const CompVMatPtr& x, const CompVMatPtr& y, CompVMatPtrPtr r);
 	static COMPV_ERROR_CODE hypot_naive(const CompVMatPtr& x, const CompVMatPtr& y, CompVMatPtrPtr r);
 };

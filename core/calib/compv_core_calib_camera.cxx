@@ -795,7 +795,7 @@ COMPV_ERROR_CODE CompVCalibCamera::subdivision(const size_t image_width, const s
 	CompVLineFloat32Vector::const_iterator it_cartesian;
 	compv_float32_t angle;
 	for (it_hough = lines.lines_hough.begin(), it_cartesian = lines.lines_cartesian.begin(); it_cartesian < lines.lines_cartesian.end(); ++it_cartesian, ++it_hough) {
-		angle = std::atan2((it_cartesian->b.y - it_cartesian->a.y), (it_cartesian->b.x - it_cartesian->a.x)); // inclinaison angle, within [-pi/2, pi/2]
+		angle = CompVMathTrig::stdAtan2((it_cartesian->b.y - it_cartesian->a.y), (it_cartesian->b.x - it_cartesian->a.x)); // inclinaison angle, within [-pi/2, pi/2]
 		if (std::abs(std::sin(angle)) > 0.7071067691f) { // sin(angle) within [-1, 1] > sin(45)
 			lines_vt.lines_hough.push_back(*it_hough);
 			lines_vt.lines_cartesian.push_back(*it_cartesian);
