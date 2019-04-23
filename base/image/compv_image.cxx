@@ -10,6 +10,7 @@
 #include "compv/base/image/compv_image_conv_to_grayscale.h"
 #include "compv/base/image/compv_image_conv_to_rgbx.h"
 #include "compv/base/image/compv_image_conv_hsv.h"
+#include "compv/base/image/compv_image_integral.h"
 #include "compv/base/image/compv_image_scale_bilinear.h"
 #include "compv/base/image/compv_image_scale_bicubic.h"
 #include "compv/base/image/compv_image_threshold.h"
@@ -563,6 +564,12 @@ COMPV_ERROR_CODE CompVImage::thresholdAdaptive(const CompVMatPtr& input, CompVMa
 COMPV_ERROR_CODE CompVImage::thresholdAdaptive(const CompVMatPtr& input, CompVMatPtrPtr output, const CompVMatPtr& kernel, const double& delta, const double& maxVal COMPV_DEFAULT(255.0), bool invert COMPV_DEFAULT(false))
 {
 	COMPV_CHECK_CODE_RETURN(CompVImageThreshold::adaptive(input, output, kernel, delta, maxVal, invert));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVImage::integral(const CompVMatPtr& imageIn, CompVMatPtrPtr imageSum, CompVMatPtrPtr imageSumsq)
+{
+	COMPV_CHECK_CODE_RETURN(CompVImageIntegral::process(imageIn, imageSum, imageSumsq));
 	return COMPV_ERROR_CODE_S_OK;
 }
 

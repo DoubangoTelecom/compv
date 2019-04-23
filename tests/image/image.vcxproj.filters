@@ -74,6 +74,9 @@
     <ClCompile Include="rotate.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="integral.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\tests_common.h">

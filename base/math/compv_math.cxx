@@ -121,4 +121,10 @@ COMPV_ERROR_CODE CompVMath::minMax(const CompVMatPtr &A, double& minn, double& m
 	return COMPV_ERROR_CODE_S_OK;
 }
 
+COMPV_ERROR_CODE CompVMath::minn(const CompVMatPtr &A, double& minn)
+{
+	COMPV_CHECK_CODE_RETURN(CompVMathOpMinMax::minn(A, minn));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 COMPV_NAMESPACE_END()

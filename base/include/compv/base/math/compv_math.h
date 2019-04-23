@@ -102,6 +102,7 @@ public:
 	static COMPV_ERROR_CODE scale(const CompVMatPtr &in, const double& s, CompVMatPtrPtr out);
 	static COMPV_ERROR_CODE exp(const CompVMatPtr &in, CompVMatPtrPtr out);
 	static COMPV_ERROR_CODE minMax(const CompVMatPtr &A, double& minn, double& maxx);
+	static COMPV_ERROR_CODE minn(const CompVMatPtr &A, double& minn);
 };
 
 COMPV_NAMESPACE_END()

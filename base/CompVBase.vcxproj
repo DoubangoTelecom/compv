@@ -109,6 +109,7 @@
     <ClInclude Include="include\compv\base\image\compv_image_conv_to_rgbx.h" />
     <ClInclude Include="include\compv\base\image\compv_image_conv_to_yuv444p.h" />
     <ClInclude Include="include\compv\base\image\compv_image_decoder.h" />
+    <ClInclude Include="include\compv\base\image\compv_image_integral.h" />
     <ClInclude Include="include\compv\base\image\compv_image_remap.h" />
     <ClInclude Include="include\compv\base\image\compv_image_scale_bicubic.h" />
     <ClInclude Include="include\compv\base\image\compv_image_scale_bilinear.h" />
@@ -201,6 +202,7 @@
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_matrix_intrin_sse41.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_morph_intrin_avx2.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_morph_intrin_sse2.h" />
+    <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_op_minmax_sse2.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_op_mul_intrin_sse2.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_op_sub_intrin_sse2.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_scale_intrin_sse2.h" />
@@ -380,6 +382,7 @@
     <ClCompile Include="image\compv_image_conv_to_rgbx.cxx" />
     <ClCompile Include="image\compv_image_conv_to_yuv444p.cxx" />
     <ClCompile Include="image\compv_image_decoder.cxx" />
+    <ClCompile Include="image\compv_image_integral.cxx" />
     <ClCompile Include="image\compv_image_remap.cxx" />
     <ClCompile Include="image\compv_image_scale_bicubic.cxx" />
     <ClCompile Include="image\compv_image_scale_bilinear.cxx" />
@@ -983,6 +986,7 @@
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release_static|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release_sdk|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
+    <ClCompile Include="math\intrin\x86\compv_math_op_minmax_sse2.cxx" />
     <ClCompile Include="math\intrin\x86\compv_math_op_mul_intrin_sse2.cxx">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug_static|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>

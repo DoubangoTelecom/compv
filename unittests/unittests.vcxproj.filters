@@ -123,5 +123,8 @@
     <ClCompile Include="math_exp.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="integral.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -4,8 +4,9 @@ using namespace compv;
 
 #define TAG_TEST_IMAGE "TestImage"
 
+#define TEST_INTEGRAL				1
 #define TEST_SCALE					0
-#define TEST_ROTATE					1
+#define TEST_ROTATE					0
 #define TEST_PYRAMID				0
 #define TEST_CHROMA_CONV			0
 #define TEST_FEATURE_FAST			0
@@ -32,6 +33,11 @@ compv_main()
 	{
         
 		COMPV_CHECK_CODE_BAIL(err = compv_tests_init());
+
+#if TEST_INTEGRAL
+		extern COMPV_ERROR_CODE integral();
+		COMPV_CHECK_CODE_BAIL(err = integral(), TAG_TEST_IMAGE "Image integral test failed");
+#endif
 #if TEST_SCALE
 		extern COMPV_ERROR_CODE scale();
 		COMPV_CHECK_CODE_BAIL(err = scale(), TAG_TEST_IMAGE "Image scaling test failed");

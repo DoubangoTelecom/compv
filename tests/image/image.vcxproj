@@ -170,6 +170,7 @@
     <ClCompile Include="hog_std.cxx" />
     <ClCompile Include="houghkht.cxx" />
     <ClCompile Include="houghsht.cxx" />
+    <ClCompile Include="integral.cxx" />
     <ClCompile Include="main.cxx" />
     <ClCompile Include="ccl_mser.cxx" />
     <ClCompile Include="patch.cxx" />

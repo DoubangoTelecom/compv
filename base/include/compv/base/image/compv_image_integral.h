@@ -4,26 +4,24 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#if !defined(_COMPV_BASE_MATH_OP_MINMAX_H_)
-#define _COMPV_BASE_MATH_OP_MINMAX_H_
-
-#include "compv/base/compv_config.h"
-#include "compv/base/compv_common.h"
-#include "compv/base/compv_mat.h"
+#if !defined(_COMPV_BASE_IMAGE_INTEGRAL_H_)
+#define _COMPV_BASE_IMAGE_INTEGRAL_H_
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
 #endif
 
+#include "compv/base/compv_config.h"
+#include "compv/base/compv_mat.h"
+
 COMPV_NAMESPACE_BEGIN()
 
-class CompVMathOpMinMax
+class CompVImageIntegral
 {
 public:
-	static COMPV_ERROR_CODE minMax(const CompVMatPtr &A, double& minn, double& maxx);
-	static COMPV_ERROR_CODE minn(const CompVMatPtr &A, double& minn);
+	static COMPV_ERROR_CODE process(const CompVMatPtr& imageIn, CompVMatPtrPtr imageSum, CompVMatPtrPtr imageSumsq);
 };
 
 COMPV_NAMESPACE_END()
 
-#endif /* _COMPV_BASE_MATH_OP_MINMAX_H_ */
+#endif /* _COMPV_BASE_IMAGE_INTEGRAL_H_ */

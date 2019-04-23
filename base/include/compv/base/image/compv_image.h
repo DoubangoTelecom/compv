@@ -50,6 +50,8 @@ public:
 	static COMPV_ERROR_CODE thresholdAdaptive(const CompVMatPtr& input, CompVMatPtrPtr output, const size_t& blockSize, const double& delta, const double& maxVal = 255.0, bool invert = false);
 	static COMPV_ERROR_CODE thresholdAdaptive(const CompVMatPtr& input, CompVMatPtrPtr output, const CompVMatPtr& kernel, const double& delta, const double& maxVal = 255.0, bool invert = false);
 
+	static COMPV_ERROR_CODE integral(const CompVMatPtr& imageIn, CompVMatPtrPtr imageSum, CompVMatPtrPtr imageSumsq);
+
 	static COMPV_ERROR_CODE scale(const CompVMatPtr& imageIn, CompVMatPtrPtr imageOut, size_t widthOut, size_t heightOut, COMPV_INTERPOLATION_TYPE scaleType = COMPV_INTERPOLATION_TYPE_BILINEAR);
 
 	static COMPV_ERROR_CODE warp(const CompVMatPtr& imageIn, CompVMatPtrPtr imageOut, const CompVMatPtr& M, const CompVSizeSz& outSize, COMPV_INTERPOLATION_TYPE interpType = COMPV_INTERPOLATION_TYPE_BILINEAR, const uint8_t defaultPixelValue = 0x00);

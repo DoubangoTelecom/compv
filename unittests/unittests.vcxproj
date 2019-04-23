@@ -170,6 +170,7 @@
     <ClCompile Include="hog_t.cxx" />
     <ClCompile Include="houghkht.cxx" />
     <ClCompile Include="houghsht.cxx" />
+    <ClCompile Include="integral.cxx" />
     <ClCompile Include="main.cxx" />
     <ClCompile Include="matches_bruteforce.cxx" />
     <ClCompile Include="math_calib_homography.cxx" />
@@ -213,9 +214,6 @@
     </ProjectReference>
     <ProjectReference Include="..\gpu\CompVGPU.vcxproj">
       <Project>{f3fdf15a-8ae4-4d9d-aa7b-0b7f6e940146}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\plugin_opencl\CompVPluginOpenCL.vcxproj">
-      <Project>{8dffe598-89e4-4dc0-af73-8e879d7d4530}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

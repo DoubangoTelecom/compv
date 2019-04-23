@@ -4,9 +4,10 @@ using namespace compv;
 
 #define TAG_UNITTESTS "UnitTests"
 
+#define UNITTEST_INTEGRAL						1
 #define UNITTEST_SPLIT							0
 #define UNITTEST_SCALE							0
-#define UNITTEST_ROTATE							1
+#define UNITTEST_ROTATE							0
 #define UNITTEST_PYRAMID						0
 #define UNITTEST_GRADIENT						0
 #define UNITTEST_SOBEL							0
@@ -105,7 +106,11 @@ compv_main()
 								COMPV_CHECK_CODE_BAIL(err = CompVCpu::flagsDisable(UNITTESTS_CPUFLAGS_DISABLED[e]));
 								COMPV_CHECK_CODE_BAIL(err = CompVParallel::multiThreadingSetMaxThreads(UNITTESTS_MAXTHREADS[d]));
 								COMPV_CHECK_CODE_BAIL(err = CompVGpu::setEnabled(f == 1));
-								
+					
+#if UNITTEST_INTEGRAL || !defined(COMPV_TEST_LOCAL)
+								extern COMPV_ERROR_CODE unittest_integral();
+								COMPV_CHECK_CODE_BAIL(err = unittest_integral(), "Image integral unittest failed");
+#endif
 #if UNITTEST_SPLIT || !defined(COMPV_TEST_LOCAL)
 								extern COMPV_ERROR_CODE unittest_split();
 								COMPV_CHECK_CODE_BAIL(err = unittest_split(), "Image split unittest failed");
