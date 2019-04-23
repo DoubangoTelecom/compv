@@ -32,9 +32,10 @@ void CompVMathCastProcess_static_64f32f_Intrin_SSE2(
 			_mm_store_ps(&dst[i], _mm_shuffle_ps(_mm_cvtpd_ps(vec0), _mm_cvtpd_ps(vec1), 0x44));
 			_mm_store_ps(&dst[i + 4], _mm_shuffle_ps(_mm_cvtpd_ps(vec2), _mm_cvtpd_ps(vec3), 0x44));
 		}
-		for (; i < width; i += 2) {
+		for (; i < width; i += 4) {
 			const __m128d vec0 = _mm_load_pd(&src[i]);
-			_mm_store_ps(&dst[i], _mm_cvtpd_ps(vec0)); // SSE-aligned -> can write beyond width and up to stride
+			const __m128d vec1 = _mm_load_pd(&src[i + 2]);
+			_mm_store_ps(&dst[i], _mm_shuffle_ps(_mm_cvtpd_ps(vec0), _mm_cvtpd_ps(vec1), 0x44)); // SSE-aligned -> can write beyond width and up to stride
 		}
 		src += stride;
 		dst += stride;
