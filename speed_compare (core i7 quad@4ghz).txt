@@ -59,14 +59,14 @@ OpenCV is MT'ing both histogram generation and equalization. We're faster but th
 We need more optiz in CompV. For now with low prio because not used in any comercial product.
 
 === Integral and Square integral on grayscal 8u image (1282, 720) (#1k times) ===
-CompV: 1832.ms 
+CompV: 1832.ms (No optiz)
 OpenCV: 8221.ms (full optiz)
 Remarque:
 
 === Wolf binarization on grayscal 8u image (1282, 720), window (41, 41) (#1k times) ===
-CompV: 9181.ms 
+CompV: 8721.ms (partial optiz)
 OpenCV: 21683.ms (full optiz)
-Remarque:
+Remarque: Integral computation not optimized yet
 OpenCV's Wolf implementation is based on https://github.com/chriswolfvision/local_adaptive_binarization
 
 

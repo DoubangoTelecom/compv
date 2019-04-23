@@ -18,6 +18,14 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+void CompVMathCastProcess_static_64f32f_Intrin_SSE2(
+	COMPV_ALIGNED(SSE) const compv_float64_t* src,
+	COMPV_ALIGNED(SSE) compv_float32_t* dst,
+	const compv_uscalar_t width,
+	const compv_uscalar_t height,
+	COMPV_ALIGNED(SSE) const compv_uscalar_t stride
+);
+
 void CompVMathCastProcess_static_8u32f_Intrin_SSE2(
 	COMPV_ALIGNED(SSE) const uint8_t* src,
 	COMPV_ALIGNED(SSE) compv_float32_t* dst,

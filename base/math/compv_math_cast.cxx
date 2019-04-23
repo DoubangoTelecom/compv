@@ -60,6 +60,9 @@ COMPV_ERROR_CODE CompVMathCast::process_static(const compv_float64_t* src, compv
 	};
 
 #if COMPV_ARCH_X86
+	if (CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(src) && COMPV_IS_ALIGNED_SSE(dst) && COMPV_IS_ALIGNED_SSE(stride * sizeof(compv_float64_t)) && COMPV_IS_ALIGNED_SSE(stride * sizeof(compv_float32_t))) {
+		COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathCastProcessStatic_64f32f = CompVMathCastProcess_static_64f32f_Intrin_SSE2);
+	}
 #elif COMPV_ARCH_ARM
 #endif
 
@@ -78,7 +81,7 @@ COMPV_ERROR_CODE CompVMathCast::process_static(const uint8_t* src, compv_float32
 	};
 
 #if COMPV_ARCH_X86
-	if (CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(src) && COMPV_IS_ALIGNED_SSE(dst) && COMPV_IS_ALIGNED_SSE(stride)) {
+	if (CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(src) && COMPV_IS_ALIGNED_SSE(dst) && COMPV_IS_ALIGNED_SSE(stride * sizeof(uint8_t)) && COMPV_IS_ALIGNED_SSE(stride * sizeof(compv_float32_t))) {
 		COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathCastProcessStatic_8u32f = CompVMathCastProcess_static_8u32f_Intrin_SSE2);
 		COMPV_EXEC_IFDEF_ASM_X64(CompVMathCastProcessStatic_8u32f = CompVMathCastProcess_static_8u32f_Asm_X64_SSE2);
 	}

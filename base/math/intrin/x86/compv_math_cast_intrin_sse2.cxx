@@ -11,6 +11,36 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+void CompVMathCastProcess_static_64f32f_Intrin_SSE2(
+	COMPV_ALIGNED(SSE) const compv_float64_t* src,
+	COMPV_ALIGNED(SSE) compv_float32_t* dst,
+	const compv_uscalar_t width,
+	const compv_uscalar_t height,
+	COMPV_ALIGNED(SSE) const compv_uscalar_t stride
+)
+{
+	COMPV_DEBUG_INFO_CHECK_SSE2();
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Please add ASM implementation");
+	const compv_uscalar_t width8 = width & -8;
+	for (compv_uscalar_t j = 0; j < height; ++j) {
+		compv_uscalar_t i = 0;
+		for (; i < width8; i += 8) {
+			const __m128d vec0 = _mm_load_pd(&src[i]);
+			const __m128d vec1 = _mm_load_pd(&src[i + 2]);
+			const __m128d vec2 = _mm_load_pd(&src[i + 4]);
+			const __m128d vec3 = _mm_load_pd(&src[i + 6]);
+			_mm_store_ps(&dst[i], _mm_shuffle_ps(_mm_cvtpd_ps(vec0), _mm_cvtpd_ps(vec1), 0x44));
+			_mm_store_ps(&dst[i + 4], _mm_shuffle_ps(_mm_cvtpd_ps(vec2), _mm_cvtpd_ps(vec3), 0x44));
+		}
+		for (; i < width; i += 2) {
+			const __m128d vec0 = _mm_load_pd(&src[i]);
+			_mm_store_ps(&dst[i], _mm_cvtpd_ps(vec0)); // SSE-aligned -> can write beyond width and up to stride
+		}
+		src += stride;
+		dst += stride;
+	}
+}
+
 void CompVMathCastProcess_static_8u32f_Intrin_SSE2(
 	COMPV_ALIGNED(SSE) const uint8_t* src,
 	COMPV_ALIGNED(SSE) compv_float32_t* dst,
