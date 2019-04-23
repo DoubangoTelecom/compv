@@ -64,7 +64,7 @@ OpenCV: 8221.ms (full optiz)
 Remarque:
 
 === Wolf binarization on grayscal 8u image (1282, 720), window (41, 41) (#1k times) ===
-CompV: 10581.ms 
+CompV: 9181.ms 
 OpenCV: 21683.ms (full optiz)
 Remarque:
 OpenCV's Wolf implementation is based on https://github.com/chriswolfvision/local_adaptive_binarization
