@@ -7,7 +7,6 @@
 #include "compv/base/compv_mem.h"
 #include "compv/base/compv_cpu.h"
 #include "compv/base/compv_debug.h"
-#include "compv/base/compv_dlmalloc.h"
 #include "compv/base/math/compv_math_utils.h"
 
 #include "compv/base/parallel/compv_mutex.h"
@@ -17,6 +16,10 @@
 #include "compv/base/intrin/x86/compv_mem_intrin_sse2.h"
 #include "compv/base/intrin/x86/compv_mem_intrin_ssse3.h"
 #include "compv/base/intrin/x86/compv_mem_intrin_avx.h"
+
+#if COMPV_DLMALLOC
+#include "compv/base/compv_dlmalloc.h"
+#endif /* COMPV_DLMALLOC */
 
 #if COMPV_TBBMALLOC
 #include "compv/base/tbbmalloc/scalable_allocator.h"

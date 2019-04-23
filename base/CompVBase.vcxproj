@@ -68,7 +68,6 @@
     <ClInclude Include="include\compv\base\compv_config.h" />
     <ClInclude Include="include\compv\base\compv_cpu.h" />
     <ClInclude Include="include\compv\base\compv_debug.h" />
-    <ClInclude Include="include\compv\base\compv_dlmalloc.h" />
     <ClInclude Include="include\compv\base\compv_errno.h" />
     <ClInclude Include="include\compv\base\compv_features.h" />
     <ClInclude Include="include\compv\base\compv_fileutils.h" />
@@ -297,7 +296,6 @@
     <ClInclude Include="include\compv\base\utf8\utf8.h" />
     <ClInclude Include="include\compv\base\video\compv_video_reader.h" />
     <ClInclude Include="include\compv\base\video\compv_video_writer.h" />
-    <ClInclude Include="include\compv\base\zlib-1.2.8\zlib.h" />
     <ClInclude Include="ml\LightGBM-stable-f1f18dd\application\predictor.hpp" />
     <ClInclude Include="ml\LightGBM-stable-f1f18dd\boosting\dart.hpp" />
     <ClInclude Include="ml\LightGBM-stable-f1f18dd\boosting\gbdt.h" />
@@ -345,7 +343,6 @@
     <ClCompile Include="compv_common.cxx" />
     <ClCompile Include="compv_cpu.cxx" />
     <ClCompile Include="compv_debug.cxx" />
-    <ClCompile Include="compv_dlmalloc.c" />
     <ClCompile Include="compv_features.cxx" />
     <ClCompile Include="compv_fileutils.cxx" />
     <ClCompile Include="compv_gradient_fast.cxx" />
@@ -1230,7 +1227,6 @@
     <ClCompile Include="time\compv_timer.cxx" />
     <ClCompile Include="video\compv_video_reader.cxx" />
     <ClCompile Include="video\compv_video_writer.cxx" />
-    <ClCompile Include="zlib-1.2.8\zlib.c" />
   </ItemGroup>
   <ItemGroup>
     <YASM Include="asm\x86\compv_bits_macros_x86.s">

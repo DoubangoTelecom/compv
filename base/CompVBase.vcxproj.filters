@@ -151,12 +151,6 @@
     <Filter Include="include\jsoncpp-1.8.4">
       <UniqueIdentifier>{bbeac524-247e-40e8-b681-313bf135832f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\zlib-1.2.8">
-      <UniqueIdentifier>{569c8acc-2466-4d52-a12d-f247a7e367b6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="source\zlib-1.2.8">
-      <UniqueIdentifier>{ac6125f9-c968-4f07-b099-efeba67cbaac}</UniqueIdentifier>
-    </Filter>
     <Filter Include="include\ml\libsvm-322">
       <UniqueIdentifier>{c21e9fb7-bf05-4d93-9688-abf6e1726c12}</UniqueIdentifier>
     </Filter>
@@ -651,9 +645,6 @@
     <ClInclude Include="include\compv\base\compv_ccl.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\compv\base\compv_dlmalloc.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="include\compv\base\tbbmalloc\aligned_space.h">
       <Filter>include\tbbmalloc</Filter>
     </ClInclude>
@@ -755,9 +746,6 @@
     </ClInclude>
     <ClInclude Include="include\compv\base\jsoncpp-1.8.4\json-forwards.h">
       <Filter>include\jsoncpp-1.8.4</Filter>
-    </ClInclude>
-    <ClInclude Include="include\compv\base\zlib-1.2.8\zlib.h">
-      <Filter>include\zlib-1.2.8</Filter>
     </ClInclude>
     <ClInclude Include="include\compv\base\ml\libsvm-322\libsvm.h">
       <Filter>include\ml\libsvm-322</Filter>
@@ -1454,9 +1442,6 @@
     <ClCompile Include="compv_ccl.cxx">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="compv_dlmalloc.c">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="tbbmalloc\frontend.cpp">
       <Filter>source\tbbmalloc</Filter>
     </ClCompile>
@@ -1498,9 +1483,6 @@
     </ClCompile>
     <ClCompile Include="jsoncpp-1.8.4\jsoncpp.cxx">
       <Filter>source\jsoncpp-1.8.4</Filter>
-    </ClCompile>
-    <ClCompile Include="zlib-1.2.8\zlib.c">
-      <Filter>source\zlib-1.2.8</Filter>
     </ClCompile>
     <ClCompile Include="ml\libsvm-322\libsvm.cxx">
       <Filter>source\ml\libsvm-322</Filter>
