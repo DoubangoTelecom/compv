@@ -1029,11 +1029,11 @@
     <ClInclude Include="include\compv\base\image\compv_image_integral.h">
       <Filter>include\image</Filter>
     </ClInclude>
-    <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_op_minmax_sse2.h">
-      <Filter>include\math\intrin\x86</Filter>
-    </ClInclude>
     <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_integral_intrin_ssse3.h">
       <Filter>include\image\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_op_minmax_intrin_sse2.h">
+      <Filter>include\math\intrin\x86</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1673,11 +1673,11 @@
     <ClCompile Include="image\compv_image_integral.cxx">
       <Filter>source\image</Filter>
     </ClCompile>
-    <ClCompile Include="math\intrin\x86\compv_math_op_minmax_sse2.cxx">
-      <Filter>source\math\intrin\x86</Filter>
-    </ClCompile>
     <ClCompile Include="image\intrin\x86\compv_image_integral_intrin_ssse3.cxx">
       <Filter>source\image\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="math\intrin\x86\compv_math_op_minmax_intrin_sse2.cxx">
+      <Filter>source\math\intrin\x86</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

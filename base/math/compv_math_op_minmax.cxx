@@ -10,7 +10,7 @@
 #include "compv/base/parallel/compv_parallel.h"
 #include "compv/base/compv_cpu.h"
 
-#include "compv/base/math/intrin/x86/compv_math_op_minmax_sse2.h"
+#include "compv/base/math/intrin/x86/compv_math_op_minmax_intrin_sse2.h"
 
 #define COMPV_MATH_OP_MINMAX_SAMPLES_PER_THREAD (50 * 50)
 

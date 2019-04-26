@@ -64,7 +64,7 @@ COMPV_ERROR_CODE CompVMathPCA::compute(const CompVMatPtr& observations, const in
 	}
 
 	// Check input (must have at least #2 rows/observations)
-	COMPV_CHECK_EXP_RETURN(input->rows() <= 1 || input->rows() <= maxDimensions, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(input->rows() <= 1 || input->rows() <= static_cast<size_t>(maxDimensions), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
 	// Compute mean and covar
 	CompVMatPtr mean, covar;

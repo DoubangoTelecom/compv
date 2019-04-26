@@ -331,7 +331,8 @@ COMPV_ERROR_CODE CompVMachineLearningSVM::rawToNodeIndexed(const double* rawVect
 	// Private function, do not check parameters
 	COMPV_CHECK_CODE_RETURN((CompVMat::newObjStrideless<svm_node, COMPV_MAT_TYPE_STRUCT>(node, 1, count + 1)));
 	svm_node* xnodePtr = (*node)->ptr<svm_node>();
-	for (int i = 0; i < count; ++i) {
+	const int countInt = static_cast<int>(count);
+	for (int i = 0; i < countInt; ++i) {
 		xnodePtr[i].index = (i + 1); // index must start at #1 and finish at #-1
 		xnodePtr[i].value = rawVector[i];
 	}

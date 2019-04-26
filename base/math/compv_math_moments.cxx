@@ -78,7 +78,8 @@ static COMPV_ERROR_CODE CompVMathMomentsRawFirstOrderGeneric(const CompVMatPtr& 
 	moments[0] = 0.0; // M00(area)
 	moments[1] = 0.0; // M01(y)
 	moments[2] = 0.0; // M10(x)
-	for (int plane = 0; plane < ptrIn->planeCount(); ++plane) {
+	const int planeCountInt = static_cast<int>(ptrIn->planeCount());
+	for (int plane = 0; plane < planeCountInt; ++plane) {
 		CompVMathMomentsRawFirstOrder(
 			ptrIn->ptr<const T>(0, 0, plane),
 			ptrIn->cols(plane), ptrIn->rows(plane), ptrIn->stride(plane),
@@ -106,7 +107,8 @@ static COMPV_ERROR_CODE CompVMathMomentsRawSecondOrderGeneric(const CompVMatPtr&
 	moments[3] = 0.0; // M11(x*y)
 	moments[4] = 0.0; // M02(y*y)
 	moments[5] = 0.0; // M20(x*x)
-	for (int plane = 0; plane < ptrIn->planeCount(); ++plane) {
+	const int planeCountInt = static_cast<int>(ptrIn->planeCount());
+	for (int plane = 0; plane < planeCountInt; ++plane) {
 		CompVMathMomentsRawSecondOrder(
 			ptrIn->ptr<const T>(0, 0, plane),
 			ptrIn->cols(plane), ptrIn->rows(plane), ptrIn->stride(plane),
@@ -128,7 +130,8 @@ static COMPV_ERROR_CODE CompVMathMomentsSkewnessGeneric(const CompVMatPtr& ptrIn
 {
 	COMPV_CHECK_EXP_RETURN(!ptrIn || ptrIn->elmtInBytes() != sizeof(T), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	double m00 = 0, m01 = 0, m10 = 0, m11 = 0, m02 = 0, m20 = 0;
-	for (int plane = 0; plane < ptrIn->planeCount(); ++plane) {
+	const int planeCountInt = static_cast<int>(ptrIn->planeCount());
+	for (int plane = 0; plane < planeCountInt; ++plane) {
 		CompVMathMomentsRawSecondOrder(
 			ptrIn->ptr<const T>(0, 0, plane),
 			ptrIn->cols(plane), ptrIn->rows(plane), ptrIn->stride(plane),
@@ -163,7 +166,8 @@ static COMPV_ERROR_CODE CompVMathMomentsOrientationGeneric(const CompVMatPtr& pt
 {
 	COMPV_CHECK_EXP_RETURN(!ptrIn || ptrIn->elmtInBytes() != sizeof(T), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	double m00 = 0, m01 = 0, m10 = 0, m11 = 0, m02 = 0, m20 = 0;
-	for (int plane = 0; plane < ptrIn->planeCount(); ++plane) {
+	const int planeCountInt = static_cast<int>(ptrIn->planeCount());
+	for (int plane = 0; plane < planeCountInt; ++plane) {
 		CompVMathMomentsRawSecondOrder(
 			ptrIn->ptr<const T>(0, 0, plane),
 			ptrIn->cols(plane), ptrIn->rows(plane), ptrIn->stride(plane),

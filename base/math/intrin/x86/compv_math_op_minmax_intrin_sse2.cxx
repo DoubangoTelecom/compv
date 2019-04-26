@@ -4,7 +4,7 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#include "compv/base/math/intrin/x86/compv_math_op_minmax_sse2.h"
+#include "compv/base/math/intrin/x86/compv_math_op_minmax_intrin_sse2.h"
 
 #if COMPV_ARCH_X86 && COMPV_INTRINSIC
 #include "compv/base/math/compv_math.h"

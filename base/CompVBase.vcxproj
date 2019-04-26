@@ -202,7 +202,7 @@
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_matrix_intrin_sse41.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_morph_intrin_avx2.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_morph_intrin_sse2.h" />
-    <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_op_minmax_sse2.h" />
+    <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_op_minmax_intrin_sse2.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_op_mul_intrin_sse2.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_op_sub_intrin_sse2.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_scale_intrin_sse2.h" />
@@ -1011,7 +1011,7 @@
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release_static|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release_sdk|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
-    <ClCompile Include="math\intrin\x86\compv_math_op_minmax_sse2.cxx" />
+    <ClCompile Include="math\intrin\x86\compv_math_op_minmax_intrin_sse2.cxx" />
     <ClCompile Include="math\intrin\x86\compv_math_op_mul_intrin_sse2.cxx">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug_static|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>

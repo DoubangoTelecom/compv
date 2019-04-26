@@ -2,6 +2,7 @@
 *.suo
 *.opensdf
 *.sdf
+*.obj
 *.xcuserdatad
 *.DS_Store
 /ipch
@@ -18,6 +19,7 @@ Release_sdk
 *.orig
 *.tlog
 Debug
+build
 *.gray
 *.yuv
 *.rgb
