@@ -85,8 +85,8 @@ section .text
 	vpbroadcastd vecB0, [var32f + (2 * COMPV_YASM_FLOAT32_SZ_BYTES)]
 	vpbroadcastd vecMaxX, [var32f + (3 * COMPV_YASM_FLOAT32_SZ_BYTES)]
 	vpbroadcastd vecMinX, [var32f + (4 * COMPV_YASM_FLOAT32_SZ_BYTES)]
-	vmovaps vec130048, [sym(data130048)]
-	vmovaps vec1023, [sym(data1023)]
+	vmovaps vec130048, [data130048]
+	vmovaps vec1023, [data1023]
 	
 	shl stride, COMPV_YASM_FLOAT32_SHIFT_BYTES
 

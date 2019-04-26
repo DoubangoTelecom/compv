@@ -4,6 +4,7 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
+#include "compv/base/jsoncpp-1.8.4/json.h"
 #include "compv/base/math/compv_math_pca.h"
 #include "compv/base/math/compv_math_matrix.h"
 #include "compv/base/math/compv_math_eigen.h"
@@ -14,7 +15,6 @@
 #include "compv/base/compv_cpu.h"
 #include "compv/base/compv_fileutils.h"
 #include "compv/base/parallel/compv_parallel.h"
-#include "compv/base/jsoncpp-1.8.4/json.h"
 
 /*
 	Implemenation for Principal component analysis (PCA)

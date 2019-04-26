@@ -69,11 +69,13 @@ COMPV_ERROR_CODE CompVJSON::write(Json::Value* root, const char* name, const Com
 	case COMPV_SUBTYPE_RAW_UINT16: COMPV_CHECK_CODE_RETURN(writeMat<uint16_t>(vectors, mat)); break;
 	case COMPV_SUBTYPE_RAW_INT32: COMPV_CHECK_CODE_RETURN(writeMat<int32_t>(vectors, mat)); break;
 	case COMPV_SUBTYPE_RAW_UINT32: COMPV_CHECK_CODE_RETURN(writeMat<uint32_t>(vectors, mat)); break;
+#if 0
 	case COMPV_SUBTYPE_RAW_SIZE: COMPV_CHECK_CODE_RETURN(writeMat<size_t>(vectors, mat)); break;
+    case COMPV_SUBTYPE_RAW_USCALAR: COMPV_CHECK_CODE_RETURN(writeMat<compv_uscalar_t>(vectors, mat)); break;
+    case COMPV_SUBTYPE_RAW_SCALAR: COMPV_CHECK_CODE_RETURN(writeMat<compv_scalar_t>(vectors, mat)); break;
+#endif
 	case COMPV_SUBTYPE_RAW_FLOAT32: COMPV_CHECK_CODE_RETURN(writeMat<compv_float32_t>(vectors, mat)); break;
 	case COMPV_SUBTYPE_RAW_FLOAT64: COMPV_CHECK_CODE_RETURN(writeMat<compv_float64_t>(vectors, mat)); break;
-	case COMPV_SUBTYPE_RAW_USCALAR: COMPV_CHECK_CODE_RETURN(writeMat<compv_uscalar_t>(vectors, mat)); break;
-	case COMPV_SUBTYPE_RAW_SCALAR: COMPV_CHECK_CODE_RETURN(writeMat<compv_scalar_t>(vectors, mat)); break;
 	default: COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_SUBTYPE); break;
 	}
 	(*root)[name] = vectors;
@@ -114,7 +116,7 @@ static COMPV_ERROR_CODE writeMat(Json::Value& root, const CompVMatPtr& mat)
 	const size_t vectors_rows = mat->rows();
 	const size_t vectors_cols = mat->cols();
 	const size_t vectors_stride = mat->stride();
-	vectors_size[0] = vectors_rows, vectors_size[1] = vectors_cols;
+	vectors_size[0] = static_cast<Json::UInt>(vectors_rows), vectors_size[1] = static_cast<Json::UInt>(vectors_cols);
 	const T* vectorsPtr = mat->ptr<const T>();
 	for (size_t j = 0; j < vectors_rows; ++j) {
 		for (size_t i = 0; i < vectors_cols; ++i) {
@@ -145,11 +147,13 @@ JSONMatVal_decl(JSONMatValInt16, int16_t, asInt)
 JSONMatVal_decl(JSONMatValUInt16, uint16_t, asUInt)
 JSONMatVal_decl(JSONMatValInt32, int32_t, asInt)
 JSONMatVal_decl(JSONMatValUInt32, uint32_t, asUInt)
+#if 0
 JSONMatVal_decl(JSONMatValSz, size_t, asUInt)
-JSONMatVal_decl(JSONMatValFloat32, compv_float32_t, asFloat)
-JSONMatVal_decl(JSONMatValFloat64, compv_float64_t, asDouble)
 JSONMatVal_decl(JSONMatValUscal, compv_uscalar_t, asLargestUInt)
 JSONMatVal_decl(JSONMatValScal, compv_scalar_t, asLargestInt)
+#endif
+JSONMatVal_decl(JSONMatValFloat32, compv_float32_t, asFloat)
+JSONMatVal_decl(JSONMatValFloat64, compv_float64_t, asDouble)
 
 template<typename T>
 static COMPV_ERROR_CODE fillMat(const Json::Value& data, const size_t& rows, const size_t& cols, const JSONMatVal<T>& valEx, CompVMatPtrPtr mat)
@@ -194,11 +198,13 @@ static COMPV_ERROR_CODE readMat(const Json::Value& root, CompVMatPtrPtr mat)
 	case COMPV_SUBTYPE_RAW_UINT16: COMPV_CHECK_CODE_RETURN(fillMat<uint16_t>(data, static_cast<size_t>(rows), static_cast<size_t>(cols), JSONMatValUInt16(), mat)); break;
 	case COMPV_SUBTYPE_RAW_INT32: COMPV_CHECK_CODE_RETURN(fillMat<int32_t>(data, static_cast<size_t>(rows), static_cast<size_t>(cols), JSONMatValInt32(), mat)); break;
 	case COMPV_SUBTYPE_RAW_UINT32: COMPV_CHECK_CODE_RETURN(fillMat<uint32_t>(data, static_cast<size_t>(rows), static_cast<size_t>(cols), JSONMatValUInt32(), mat)); break;
+#if 0
 	case COMPV_SUBTYPE_RAW_SIZE: COMPV_CHECK_CODE_RETURN(fillMat<size_t>(data, static_cast<size_t>(rows), static_cast<size_t>(cols), JSONMatValSz(), mat)); break;
+    case COMPV_SUBTYPE_RAW_USCALAR: COMPV_CHECK_CODE_RETURN(fillMat<compv_uscalar_t>(data, static_cast<size_t>(rows), static_cast<size_t>(cols), JSONMatValUscal(), mat)); break;
+    case COMPV_SUBTYPE_RAW_SCALAR: COMPV_CHECK_CODE_RETURN(fillMat<compv_scalar_t>(data, static_cast<size_t>(rows), static_cast<size_t>(cols), JSONMatValScal(), mat)); break;
+#endif
 	case COMPV_SUBTYPE_RAW_FLOAT32: COMPV_CHECK_CODE_RETURN(fillMat<compv_float32_t>(data, static_cast<size_t>(rows), static_cast<size_t>(cols), JSONMatValFloat32(), mat)); break;
 	case COMPV_SUBTYPE_RAW_FLOAT64: COMPV_CHECK_CODE_RETURN(fillMat<compv_float64_t>(data, static_cast<size_t>(rows), static_cast<size_t>(cols), JSONMatValFloat64(), mat)); break;
-	case COMPV_SUBTYPE_RAW_USCALAR: COMPV_CHECK_CODE_RETURN(fillMat<compv_uscalar_t>(data, static_cast<size_t>(rows), static_cast<size_t>(cols), JSONMatValUscal(), mat)); break;
-	case COMPV_SUBTYPE_RAW_SCALAR: COMPV_CHECK_CODE_RETURN(fillMat<compv_scalar_t>(data, static_cast<size_t>(rows), static_cast<size_t>(cols), JSONMatValScal(), mat)); break;
 	default: COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_SUBTYPE); break;
 	}
 

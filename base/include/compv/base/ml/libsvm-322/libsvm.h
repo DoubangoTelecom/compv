@@ -9,6 +9,8 @@
 #include "compv/base/compv_common.h"
 #include "compv/base/math/compv_math_exp.h"
 
+#include <cmath> /* std::exp */
+
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
 #endif
