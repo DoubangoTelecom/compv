@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0)
 
 project(libcompv_base VERSION 1.0.0 LANGUAGES CXX C)
 
-include(../arch.cmake)
+include(${CMAKE_SOURCE_DIR}/../arch.cmake)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCOMPV_BASE_EXPORTS")
 if (WIN32)
