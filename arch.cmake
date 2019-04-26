@@ -13,6 +13,17 @@ else()
 	message(FATAL_ERROR "Not a valid processor" ${CMAKE_SYSTEM_PROCESSOR})
 endif()
 
+## COMPILER FLAGS (http://www.brianlheim.com/2018/04/09/cmake-cheat-sheet.html) ##
+if (${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
+	# Clang
+elseif (${CMAKE_CXX_COMPILER_ID} MATCHES "GNU")
+	set(COMPILER_CXX_FLAGS "${COMPILER_CXX_FLAGS} -Wno-pragmas")
+elseif (${CMAKE_CXX_COMPILER_ID} MATCHES "Intel")
+	# Intel C++
+elseif (${CMAKE_CXX_COMPILER_ID} MATCHES "MSVC")
+	# Visual Studio C++
+endif()
+
 ## Detect SIMD flags ##
 if (MSVC)
 	set(FLAGS_SSE "/arch:SSE")
@@ -27,7 +38,7 @@ if (MSVC)
 else()
 	set(FLAGS_SSE "-msse")
 	set(FLAGS_SSE2 "-msse2")
-	set(FLAGS_SSSE3 "-msse3")
+	set(FLAGS_SSSE3 "-mssse3")
 	set(FLAGS_SSE41 "-msse4.1")
 	set(FLAGS_SSE42 "-msse4.2")
 	set(FLAGS_AVX "-mavx")

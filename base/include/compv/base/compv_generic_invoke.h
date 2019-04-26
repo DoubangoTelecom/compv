@@ -12,10 +12,11 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-#define CompVGenericCheckVoid(code)	COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-value") ((code)) COMPV_GCC_DISABLE_WARNINGS_END()
+#define CompVGenericCheckVoid(code)	((code)) 
 #define CompVGenericCheckCode(code) COMPV_CHECK_CODE_RETURN((code))
 
 #define CompVGenericInvokeRawType(subType, func, check, ...) \
+	COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-value") \
 	switch (subType) { \
 		case COMPV_SUBTYPE_RAW_INT8: CompVGenericCheck##check(func<int8_t>(__VA_ARGS__)); break; \
 		case COMPV_SUBTYPE_RAW_UINT8: case COMPV_SUBTYPE_PIXELS_Y: CompVGenericCheck##check(func<uint8_t>(__VA_ARGS__)); break; \
@@ -32,7 +33,8 @@ COMPV_NAMESPACE_BEGIN()
 			CompVGenericCheck##check(COMPV_ERROR_CODE_E_INVALID_SUBTYPE); \
 			COMPV_ASSERT(false); /* Called for void functions only */ \
 			break; \
-	}
+	} \
+	COMPV_GCC_DISABLE_WARNINGS_END()
 
 #define CompVGenericFloatInvokeRawType(subType, func, check, ...) \
 	switch (subType) { \

@@ -11,6 +11,8 @@
 #include "compv/base/compv_common.h"
 #include "compv/base/compv_mat.h"
 
+#include <cmath> /* std::atan2 */
+
 COMPV_NAMESPACE_BEGIN()
 
 class COMPV_BASE_API CompVMathTrig

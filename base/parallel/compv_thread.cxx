@@ -207,7 +207,7 @@ COMPV_ERROR_CODE CompVThread::setAffinity(compv_core_id_t coreId)
         cpu_set_t cpuset;
         CPU_ZERO(&cpuset);
         CPU_SET(coreId, &cpuset);
-        if (pthread_setaffinity_np((pthread_t*)m_pHandle, sizeof(cpu_set_t), &cpuset) != 0) {
+        if (pthread_setaffinity_np(*((pthread_t*)m_pHandle), sizeof(cpu_set_t), &cpuset) != 0) {
             COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_PTHREAD, "pthread_setaffinity_np failed");
         }
     }

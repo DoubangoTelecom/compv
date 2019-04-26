@@ -1,10 +1,12 @@
 cmake_minimum_required(VERSION 3.0)
 
+set(CMAKE_VERBOSE_MAKEFILE on)
+
 project(libcompv_base VERSION 1.0.0 LANGUAGES CXX C)
 
 include(${CMAKE_SOURCE_DIR}/../arch.cmake)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCOMPV_BASE_EXPORTS")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COMPILER_CXX_FLAGS} -DCOMPV_BASE_EXPORTS")
 if (WIN32)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_WIN32_WINNT=0x0501")
 endif()
@@ -265,6 +267,7 @@ if("${TARGET_ARCH}" STREQUAL "x86" OR "${TARGET_ARCH}" STREQUAL "x64")
 		asm/x86/compv_patch_x86_avx.s
 		asm/x86/compv_patch_x86_sse.s
 		asm/x86/compv_utils_x86.s
+		asm/x86/compv_vldx_vstx_macros_x86.s
 
 		###### image/asm/x86 ######
 		image/asm/x86/compv_image_conv_grayscale_x86_sse.s
@@ -350,7 +353,7 @@ if (WIN32)
 endif()
 
 if(NOT WIN32 AND ENABLE_SHARED)
-  set_target_properties(simd PROPERTIES POSITION_INDEPENDENT_CODE 1)
+  set_target_properties(compv_base PROPERTIES POSITION_INDEPENDENT_CODE 1)
 endif()
 
 install(TARGETS compv_base DESTINATION lib)
