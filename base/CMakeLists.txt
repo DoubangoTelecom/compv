@@ -4,7 +4,7 @@ set(CMAKE_VERBOSE_MAKEFILE on)
 
 project(libcompv_base VERSION 1.0.0 LANGUAGES CXX C)
 
-include(${CMAKE_SOURCE_DIR}/../arch.cmake)
+include(${CMAKE_SOURCE_DIR}/../common.cmake)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COMPILER_CXX_FLAGS} -DCOMPV_BASE_EXPORTS")
 if (WIN32)
@@ -165,7 +165,7 @@ set(compv_base_SOURCES
 
 ###### --- X86 / X64 --- ######
 if("${TARGET_ARCH}" STREQUAL "x86" OR "${TARGET_ARCH}" STREQUAL "x64")
-	set(compv_base_SOURCES ${compv_base_SOURCES}
+	set(INTRIN_FILES ${INTRIN_FILES}
 		###### image/intrin/x86 ######
 		image/intrin/x86/compv_image_conv_grayscale_intrin_ssse3.cxx
 		image/intrin/x86/compv_image_conv_hsv_intrin_avx2.cxx
@@ -236,18 +236,7 @@ if("${TARGET_ARCH}" STREQUAL "x86" OR "${TARGET_ARCH}" STREQUAL "x64")
 	)
 
 	###### Set FLAGS for intrin files ######
-	file(GLOB_RECURSE INTRIN_FILES_SSE2 "${CMAKE_CURRENT_SOURCE_DIR}/*_intrin_sse2.cxx")
-	file(GLOB_RECURSE INTRIN_FILES_SSSE3 "${CMAKE_CURRENT_SOURCE_DIR}/*_intrin_ssse3.cxx")
-	file(GLOB_RECURSE INTRIN_FILES_SSE41 "${CMAKE_CURRENT_SOURCE_DIR}/*_intrin_sse41.cxx")
-	file(GLOB_RECURSE INTRIN_FILES_SSE42 "${CMAKE_CURRENT_SOURCE_DIR}/*_intrin_sse42.cxx")
-	file(GLOB_RECURSE INTRIN_FILES_AVX "${CMAKE_CURRENT_SOURCE_DIR}/*_intrin_avx.cxx")
-	file(GLOB_RECURSE INTRIN_FILES_AVX2 "${CMAKE_CURRENT_SOURCE_DIR}/*_intrin_avx2.cxx")
-	set_source_files_properties(${INTRIN_FILES_SSE2} PROPERTIES COMPILE_FLAGS "${FLAGS_SSE2}")
-	set_source_files_properties(${INTRIN_FILES_SSSE3} PROPERTIES COMPILE_FLAGS "${FLAGS_SSSE3}")
-	set_source_files_properties(${INTRIN_FILES_SSE41} PROPERTIES COMPILE_FLAGS "${FLAGS_SSE41}")
-	set_source_files_properties(${INTRIN_FILES_SSE42} PROPERTIES COMPILE_FLAGS "${FLAGS_SSE42}")
-	set_source_files_properties(${INTRIN_FILES_AVX} PROPERTIES COMPILE_FLAGS "${FLAGS_AVX}")
-	set_source_files_properties(${INTRIN_FILES_AVX2} PROPERTIES COMPILE_FLAGS "${FLAGS_AVX2}")
+	set_INTRIN_COMPILE_FLAGS (${INTRIN_FILES})
 
 	###### ASM files ######
 	set(ASM_FILES ${ASM_FILES}
@@ -328,20 +317,13 @@ if("${TARGET_ARCH}" STREQUAL "x86" OR "${TARGET_ARCH}" STREQUAL "x64")
 		math/asm/x86/compv_math_utils_x86_sse.s
 	)
 
-	###### Set building rukes for ASM files ######
+	###### Set building rules for ASM files ######
 	set (YASM_ARGS ${YASM_ARGS} -i "${CMAKE_SOURCE_DIR}/asm/x86")
-	foreach (file ${ASM_FILES})
-		get_filename_component(file_name ${file} NAME_WE)
-		get_filename_component(file_dir ${file} DIRECTORY)
-		set(ASM_OBJECT ${CMAKE_SOURCE_DIR}/${file_dir}/${file_name}.obj)
-		set(ASM_FILE ${CMAKE_SOURCE_DIR}/${file_dir}/${file_name}.s)
-		add_custom_command(OUTPUT ${ASM_OBJECT} DEPENDS ${file} COMMAND "${YASM_EXE}" ${YASM_ARGS} "${ASM_FILE}" -o "${ASM_OBJECT}")
-		set(ASM_OBJECTS ${ASM_OBJECTS} ${ASM_OBJECT})
-	endforeach()
+	set_ASM_OBJECTS(${ASM_FILES})
 endif()
 
 ###### The library ######
-add_library(compv_base SHARED ${compv_base_SOURCES} ${ASM_OBJECTS})
+add_library(compv_base ${LIB_BUILD_TYPE} ${compv_base_SOURCES} ${INTRIN_FILES} ${ASM_OBJECTS})
 if (MSVC)
 	add_custom_target(compv_base-asm-objects DEPENDS ${ASM_OBJECTS})
 	add_dependencies(compv_base compv_base-asm-objects)

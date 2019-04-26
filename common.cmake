@@ -1,3 +1,6 @@
+## Set Libs build type (STATIC or SHARED) ##
+set(LIB_BUILD_TYPE SHARED)
+
 ## Detect TARGET_ARCH ##
 if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "i386|i686|amd64|x86_64|AMD64")
 	if (CMAKE_SIZEOF_VOID_P EQUAL 8)
@@ -82,3 +85,36 @@ if ("${TARGET_ARCH}" STREQUAL "x86" OR "${TARGET_ARCH}" STREQUAL "x64")
 	endif ()
 
 endif()
+
+
+## Helper macro to build ASM/YASM objects ##
+macro(set_ASM_OBJECTS)
+	foreach (file ${ARGN})
+		get_filename_component(file_name ${file} NAME_WE)
+		get_filename_component(file_dir ${file} DIRECTORY)
+		set(ASM_OBJECT ${CMAKE_SOURCE_DIR}/${file_dir}/${file_name}.obj)
+		set(ASM_FILE ${CMAKE_SOURCE_DIR}/${file_dir}/${file_name}.s)
+		add_custom_command(OUTPUT ${ASM_OBJECT} DEPENDS ${file} COMMAND "${YASM_EXE}" ${YASM_ARGS} "${ASM_FILE}" -o "${ASM_OBJECT}")
+		set(ASM_OBJECTS ${ASM_OBJECTS} ${ASM_OBJECT})
+	endforeach()
+endmacro()
+
+## Helper macro to set compiler options for intrin files ##
+macro(set_INTRIN_COMPILE_FLAGS)
+	foreach (file ${ARGN})
+		get_filename_component(file_name ${file} NAME)
+		if (${file_name} MATCHES "_intrin_sse2.cxx")
+			set_source_files_properties(${file} PROPERTIES COMPILE_FLAGS "${FLAGS_SSE2}")
+		elseif (${file_name} MATCHES "_intrin_ssse3.cxx")
+			set_source_files_properties(${file} PROPERTIES COMPILE_FLAGS "${FLAGS_SSSE3}")
+		elseif (${file_name} MATCHES "_intrin_sse41.cxx")
+			set_source_files_properties(${file} PROPERTIES COMPILE_FLAGS "${FLAGS_SSE41}")
+		elseif (${file_name} MATCHES "_intrin_sse42.cxx")
+			set_source_files_properties(${file} PROPERTIES COMPILE_FLAGS "${FLAGS_SSE42}")
+		elseif (${file_name} MATCHES "_intrin_avx.cxx")
+			set_source_files_properties(${file} PROPERTIES COMPILE_FLAGS "${FLAGS_AVX}")
+		elseif (${file_name} MATCHES "_intrin_avx2.cxx")
+			set_source_files_properties(${file} PROPERTIES COMPILE_FLAGS "${FLAGS_AVX2}")
+		endif ()
+	endforeach()
+endmacro()
