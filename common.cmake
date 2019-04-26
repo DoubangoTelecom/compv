@@ -16,7 +16,7 @@ else()
 	message(FATAL_ERROR "Not a valid processor" ${CMAKE_SYSTEM_PROCESSOR})
 endif()
 
-## COMPILER FLAGS (http://www.brianlheim.com/2018/04/09/cmake-cheat-sheet.html) ##
+## COMPILER FLAGS ##
 if (${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
 	set(COMPILER_CXX_FLAGS "${COMPILER_CXX_FLAGS} -Wno-pragmas -std=c++11")
 elseif (${CMAKE_CXX_COMPILER_ID} MATCHES "GNU")
