@@ -31,7 +31,8 @@ void* CompVGLUtils::currentContext()
     COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "EAGL not implemented yet");
     return NULL;
 #	elif COMPV_OS_APPLE
-    return static_cast<void*>(eglGetCurrentContext());
+    COMPV_ASSERT(false);
+    return static_cast<void*>(/*aglGetCurrentContext()*/nullptr);
 #	else
     return static_cast<void*>(glXGetCurrentContext());
 #	endif

@@ -62,7 +62,7 @@
 #	include <GL/GLU.h>
 #elif ((COMPV_OS_OSX && !COMPV_OS_IPHONE) || (defined(HAVE_OPENGL_GL_H) && defined(HAVE_OPENGL_GLU_H))) && !defined(COMPV_GL_DISABLE) // TARGET_OS_MAC is 1 on iOS
 #	define HAVE_OPENGL	1
-#	include <OpenGL/gl.h>
+#	include <OpenGL/gl3.h>
 #	include <OpenGL/glu.h>
 #elif ((COMPV_OS_LINUX && !COMPV_OS_ANDROID) || (defined(HAVE_GL_GL_H) && defined(HAVE_GL_GLU_H))) && !defined(COMPV_GL_DISABLE)
 #	define HAVE_OPENGL	1

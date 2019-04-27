@@ -75,6 +75,8 @@ target_link_libraries(compv_gl PRIVATE compv_base)
 add_dependencies(compv_gl contrib_compv_base)
 if (WIN32)
   target_link_libraries(compv_gl PRIVATE OpenGL32.lib Glu32.lib glew32s.lib freetype.lib)
+else()
+  target_link_libraries(compv_gl PRIVATE GL GLU)
 endif()
 
 if(NOT WIN32 AND ENABLE_SHARED)
