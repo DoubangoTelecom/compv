@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0)
 
 project(libcompv_base VERSION 1.0.0 LANGUAGES CXX C)
 
-include(${CMAKE_SOURCE_DIR}/../common.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/../common.cmake)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 if (WIN32)
@@ -313,7 +313,7 @@ if("${TARGET_ARCH}" STREQUAL "x86" OR "${TARGET_ARCH}" STREQUAL "x64")
 	)
 
 	###### Set building rules for ASM files ######
-	set (YASM_ARGS ${YASM_ARGS} -i "${CMAKE_SOURCE_DIR}/asm/x86")
+	set (YASM_ARGS ${YASM_ARGS} -i "${CMAKE_CURRENT_SOURCE_DIR}/asm/x86")
 	set_ASM_OBJECTS(${ASM_FILES})
 endif()
 
@@ -326,7 +326,7 @@ endif()
 
 ###### 3rd parties libs ######
 if (WIN32)
-  target_link_libraries(compv_base Shlwapi.lib Winmm.lib)
+  target_link_libraries(compv_base PRIVATE Shlwapi.lib Winmm.lib)
 endif()
 
 if(NOT WIN32 AND ENABLE_SHARED)
@@ -335,7 +335,7 @@ endif()
 
 ###### Install Headers ######
 install (
-    DIRECTORY ${CMAKE_SOURCE_DIR}/include/
+    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
     DESTINATION include
     FILES_MATCHING PATTERN "*.h*"
 )

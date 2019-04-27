@@ -104,8 +104,8 @@ macro(set_ASM_OBJECTS)
 	foreach (file ${ARGN})
 		get_filename_component(file_name ${file} NAME_WE)
 		get_filename_component(file_dir ${file} DIRECTORY)
-		set(ASM_OBJECT ${CMAKE_SOURCE_DIR}/${file_dir}/${file_name}.${OBJECT_EXT})
-		set(ASM_FILE ${CMAKE_SOURCE_DIR}/${file_dir}/${file_name}.s)
+		set(ASM_OBJECT ${CMAKE_CURRENT_SOURCE_DIR}/${file_dir}/${file_name}.${OBJECT_EXT})
+		set(ASM_FILE ${CMAKE_CURRENT_SOURCE_DIR}/${file_dir}/${file_name}.s)
 		add_custom_command(OUTPUT ${ASM_OBJECT} DEPENDS ${file} COMMAND "${YASM_EXE}" ${YASM_ARGS} "${ASM_FILE}" -o "${ASM_OBJECT}")
 		set(ASM_OBJECTS ${ASM_OBJECTS} ${ASM_OBJECT})
 	endforeach()
@@ -132,15 +132,15 @@ macro(set_INTRIN_COMPILE_FLAGS)
 endmacro()
 
 ## Helper macro to add contribs ##
-macro(add_contribs)
-	foreach (contrib ${ARGN})
-		ExternalProject_Add (external_${contrib}
+macro(add_contrib src_dir project_name)
+	if (NOT TARGET contrib_${project_name})
+		ExternalProject_Add (contrib_${project_name}
 			UPDATE_COMMAND ""
 			DOWNLOAD_COMMAND ""
 			PREFIX "${CMAKE_BINARY_DIR}/contrib"
-			SOURCE_DIR "${CMAKE_SOURCE_DIR}/../base/"
+			SOURCE_DIR "${src_dir}"
 			CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/contrib"
-			BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/${contrib}"
+			BINARY_DIR "${CMAKE_BINARY_DIR}/contrib_${project_name}/${contrib}"
 		)
-	endforeach()
+	endif ()
 endmacro()
