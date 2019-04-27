@@ -5,14 +5,7 @@ project(libcompv_camera VERSION 1.0.0 LANGUAGES CXX C)
 include(ExternalProject)
 include(${CMAKE_SOURCE_DIR}/../common.cmake)
 
-ExternalProject_Add (external_compv_base
-	UPDATE_COMMAND ""
-	DOWNLOAD_COMMAND ""
-	PREFIX "${CMAKE_BINARY_DIR}/contrib"
-    SOURCE_DIR "${CMAKE_SOURCE_DIR}/../base/"
-	CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/contrib"
-	BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/compv_base"
-)
+add_contribs(compv_base)
 
 include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}/include

@@ -131,3 +131,16 @@ macro(set_INTRIN_COMPILE_FLAGS)
 	endforeach()
 endmacro()
 
+## Helper macro to add contribs ##
+macro(add_contribs)
+	foreach (contrib ${ARGN})
+		ExternalProject_Add (external_${contrib}
+			UPDATE_COMMAND ""
+			DOWNLOAD_COMMAND ""
+			PREFIX "${CMAKE_BINARY_DIR}/contrib"
+			SOURCE_DIR "${CMAKE_SOURCE_DIR}/../base/"
+			CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/contrib"
+			BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/${contrib}"
+		)
+	endforeach()
+endmacro()
