@@ -19,9 +19,6 @@ if (WIN32)
 	)
 endif()
 
-link_directories(
-	${CMAKE_BINARY_DIR}/contrib/lib
-)
 if (WIN32)
 	if ("${TARGET_ARCH}" STREQUAL "x64")
 		set(LIB_WIN_DIR_SUFFIX win64)

@@ -12,10 +12,6 @@ include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}/../base/include
 )
 
-link_directories(
-	${CMAKE_BINARY_DIR}/contrib/lib
-)
-
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COMPILER_CXX_FLAGS} -DCOMPV_GPU_EXPORTS")
 
 set(compv_gpu_SOURCES 
