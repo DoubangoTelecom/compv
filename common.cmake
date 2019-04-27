@@ -1,3 +1,5 @@
+set(CMAKE_VERBOSE_MAKEFILE on)
+
 ## Set Libs build type (STATIC or SHARED) ##
 set(LIB_BUILD_TYPE SHARED)
 
@@ -25,6 +27,10 @@ elseif (${CMAKE_CXX_COMPILER_ID} MATCHES "Intel")
 	# Intel C++
 elseif (${CMAKE_CXX_COMPILER_ID} MATCHES "MSVC")
 	# Visual Studio C++
+endif()
+
+if (WIN32)
+  set(COMPILER_CXX_FLAGS "${COMPILER_CXX_FLAGS} -D_WIN32_WINNT=0x0501")
 endif()
 
 ## Detect SIMD flags ##
@@ -86,13 +92,19 @@ if ("${TARGET_ARCH}" STREQUAL "x86" OR "${TARGET_ARCH}" STREQUAL "x64")
 
 endif()
 
+## Objects extension ##
+if (MSVC)
+	set(OBJECT_EXT obj)
+else ()
+	set(OBJECT_EXT o)
+endif()
 
 ## Helper macro to build ASM/YASM objects ##
 macro(set_ASM_OBJECTS)
 	foreach (file ${ARGN})
 		get_filename_component(file_name ${file} NAME_WE)
 		get_filename_component(file_dir ${file} DIRECTORY)
-		set(ASM_OBJECT ${CMAKE_SOURCE_DIR}/${file_dir}/${file_name}.obj)
+		set(ASM_OBJECT ${CMAKE_SOURCE_DIR}/${file_dir}/${file_name}.${OBJECT_EXT})
 		set(ASM_FILE ${CMAKE_SOURCE_DIR}/${file_dir}/${file_name}.s)
 		add_custom_command(OUTPUT ${ASM_OBJECT} DEPENDS ${file} COMMAND "${YASM_EXE}" ${YASM_ARGS} "${ASM_FILE}" -o "${ASM_OBJECT}")
 		set(ASM_OBJECTS ${ASM_OBJECTS} ${ASM_OBJECT})
@@ -118,3 +130,4 @@ macro(set_INTRIN_COMPILE_FLAGS)
 		endif ()
 	endforeach()
 endmacro()
+

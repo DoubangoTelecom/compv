@@ -1,20 +1,15 @@
 cmake_minimum_required(VERSION 3.0)
 
-set(CMAKE_VERBOSE_MAKEFILE on)
-
 project(libcompv_base VERSION 1.0.0 LANGUAGES CXX C)
 
 include(${CMAKE_SOURCE_DIR}/../common.cmake)
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COMPILER_CXX_FLAGS} -DCOMPV_BASE_EXPORTS")
-if (WIN32)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_WIN32_WINNT=0x0501")
-endif()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 if (WIN32)
   include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../thirdparties/include/windows)
 endif()
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COMPILER_CXX_FLAGS} -DCOMPV_BASE_EXPORTS")
 
 set(compv_base_SOURCES 
 	###### android ######
@@ -338,6 +333,12 @@ if(NOT WIN32 AND ENABLE_SHARED)
   set_target_properties(compv_base PROPERTIES POSITION_INDEPENDENT_CODE 1)
 endif()
 
-install(TARGETS compv_base DESTINATION lib)
+###### Install Headers ######
+install (
+    DIRECTORY ${CMAKE_SOURCE_DIR}/include/
+    DESTINATION include
+    FILES_MATCHING PATTERN "*.h*"
+)
 
-install(FILES test.h DESTINATION include) # FIXME(dmi): change 'test.h' to include headers
+###### Install Libs ######
+install(TARGETS compv_base DESTINATION lib)
