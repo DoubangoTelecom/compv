@@ -11,12 +11,12 @@ add_contrib("${CMAKE_CURRENT_SOURCE_DIR}/../gl/" compv_gl)
 include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}/include
 	${CMAKE_BINARY_DIR}/contrib/include
+	${CMAKE_CURRENT_SOURCE_DIR}/../thirdparties/include/common/glm-0.9.8.2
 )
 if (WIN32)
 	include_directories(
 		${CMAKE_CURRENT_SOURCE_DIR}/../thirdparties/include/common/sdl-2.0.5
 		${CMAKE_CURRENT_SOURCE_DIR}/../thirdparties/include/common/glew-2.3.4
-		${CMAKE_CURRENT_SOURCE_DIR}/../thirdparties/include/common/glm-0.9.8.2
 	)
 endif()
 
