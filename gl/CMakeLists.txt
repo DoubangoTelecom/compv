@@ -74,7 +74,7 @@ add_library(compv_gl ${LIB_BUILD_TYPE} ${compv_gl_SOURCES})
 
 ###### 3rd parties libs ######
 target_link_libraries(compv_gl PRIVATE compv_base)
-add_dependencies(compv_gl contrib_compv_base)
+add_dependencies(compv_gl compv_base)
 if (WIN32)
   target_link_libraries(compv_gl PRIVATE OpenGL32.lib Glu32.lib glew32s.lib freetype.lib)
 endif()

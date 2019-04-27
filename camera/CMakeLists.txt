@@ -31,7 +31,7 @@ add_library(compv_camera ${LIB_BUILD_TYPE} ${compv_camera_SOURCES})
 
 ###### 3rd parties libs ######
 target_link_libraries(compv_camera PRIVATE compv_base)
-add_dependencies(compv_camera contrib_compv_base)
+add_dependencies(compv_camera compv_base)
 
 if(NOT WIN32 AND ENABLE_SHARED)
   set_target_properties(compv_camera PROPERTIES POSITION_INDEPENDENT_CODE 1)

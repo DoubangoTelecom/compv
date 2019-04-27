@@ -60,7 +60,7 @@ add_library(compv_drawing ${LIB_BUILD_TYPE} ${compv_drawing_SOURCES})
 
 ###### 3rd parties libs ######
 target_link_libraries(compv_drawing PRIVATE compv_base compv_gl)
-add_dependencies(compv_drawing contrib_compv_base contrib_compv_gl)
+add_dependencies(compv_drawing compv_base compv_gl)
 if (WIN32)
   target_link_libraries(compv_drawing PRIVATE OpenGL32.lib Glu32.lib glew32s.lib SDL2.lib Winmm.lib imm32.lib version.lib)
 endif()

@@ -133,14 +133,14 @@ endmacro()
 
 ## Helper macro to add contribs ##
 macro(add_contrib src_dir project_name)
-	if (NOT TARGET contrib_${project_name})
-		ExternalProject_Add (contrib_${project_name}
+	if (NOT TARGET ${project_name})
+		ExternalProject_Add (${project_name}
 			UPDATE_COMMAND ""
 			DOWNLOAD_COMMAND ""
 			PREFIX "${CMAKE_BINARY_DIR}/contrib"
 			SOURCE_DIR "${src_dir}"
 			CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/contrib"
-			BINARY_DIR "${CMAKE_BINARY_DIR}/contrib_${project_name}/${contrib}"
+			BINARY_DIR "${CMAKE_BINARY_DIR}/${contrib}/${project_name}"
 		)
 	endif ()
 endmacro()
