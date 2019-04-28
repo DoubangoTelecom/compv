@@ -319,10 +319,10 @@ endif()
 
 ###### The library ######
 add_library(compv_base ${LIB_BUILD_TYPE} ${compv_base_SOURCES} ${INTRIN_FILES} ${ASM_OBJECTS})
-if (MSVC)
-	add_custom_target(compv_base-asm-objects DEPENDS ${ASM_OBJECTS})
-	add_dependencies(compv_base compv_base-asm-objects)
-endif()
+#if (MSVC)
+#	add_custom_target(compv_base-asm-objects DEPENDS ${ASM_OBJECTS})
+#	add_dependencies(compv_base compv_base-asm-objects)
+#endif()
 
 ###### 3rd parties libs ######
 if (WIN32)
