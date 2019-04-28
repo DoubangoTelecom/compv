@@ -78,7 +78,7 @@ section .text
 	vmovdqa vecThreshold, ymm0
 	vmovdqa vecNMinSumMinusOne, ymm1
 	vmovdqa vecNMinusOne, ymm2
-	vmovdqu ymm3, [sym(k1_8s)]
+	vmovdqu ymm3, [k1_8s]
 	vpcmpeqb ymm4, ymm4
 	vpxor ymm5, ymm5
 	vmovdqa vecOne, ymm3

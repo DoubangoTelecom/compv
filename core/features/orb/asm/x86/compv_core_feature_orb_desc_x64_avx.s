@@ -89,7 +89,7 @@ section .text
 	vmovaps[vecSinT], ymm1
 
 	; Compute vec128 ;
-	vmovdqu ymm2, [sym(k128_8u)]
+	vmovdqu ymm2, [k128_8u]
 	vmovdqa [vec128], ymm2
 
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

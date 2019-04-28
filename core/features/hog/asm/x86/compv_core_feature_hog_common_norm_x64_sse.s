@@ -47,7 +47,7 @@ section .text
 
 	movaps xmm0, xmm5
 	addps xmm0, xmm6
-	movss xmm2, [sym(One)]
+	movss xmm2, [One]
 	movaps xmm3, xmm0
 	shufps xmm3, xmm3, 0x0E
 	addps xmm0, xmm3
@@ -101,7 +101,7 @@ sym(CompVHogCommonNormL1Sqrt_9_32f_Asm_X64_SSE2):
 	mulps xmm0, xmm0
 	movaps xmm1, xmm6
 	mulps xmm1, xmm1
-	movss xmm2, [sym(One)]
+	movss xmm2, [One]
 	addps xmm0, xmm1
 	movaps xmm3, xmm0
 	shufps xmm3, xmm3, 0x0E
@@ -181,7 +181,7 @@ sym(CompVHogCommonNormL2Hys_9_32f_Asm_X64_SSE2):
 	movss xmm7, [inOutPtr + 8*COMPV_YASM_FLOAT32_SZ_BYTES]
 	
 	CompVHogCommonNormL2_9_32f_Macro_X64_SSE2
-	movss xmm0, [sym(ZeroDot2)]
+	movss xmm0, [ZeroDot2]
 	shufps xmm0, xmm0, 0x00
 	minps xmm5, xmm0
 	minps xmm6, xmm0

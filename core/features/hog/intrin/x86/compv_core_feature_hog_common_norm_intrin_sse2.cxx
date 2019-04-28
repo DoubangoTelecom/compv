@@ -225,7 +225,7 @@ void CompVHogCommonNormL2Hys_32f_Intrin_SSE2(compv_float32_t* inOutPtr, const co
 	for (; i < count4; i += 4) {
 		_mm_storeu_ps(&inOutPtr[i], _mm_min_ps(_mm_loadu_ps(&inOutPtr[i]), vecMax));
 	}
-	for (i; i < count; ++i) {
+	for (; i < count; ++i) {
 		_mm_store_ss(&inOutPtr[i], _mm_min_ss(_mm_load_ss(&inOutPtr[i]), vecMax));
 	}
 	CompVHogCommonNormL2_32f_Intrin_SSE2(inOutPtr, eps_square1, count);

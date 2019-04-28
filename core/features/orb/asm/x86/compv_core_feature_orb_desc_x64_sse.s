@@ -83,7 +83,7 @@ sym(CompVOrbBrief256_31_32f_Asm_X64_SSE41):
 	movaps[vecSinT], xmm1
 
 	; Compute vec128 ;
-	movdqu xmm2, [sym(k128_8u)]
+	movdqu xmm2, [k128_8u]
 	movdqa [vec128], xmm2
 
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

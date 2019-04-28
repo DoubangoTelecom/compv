@@ -83,7 +83,7 @@ section .text
 	movdqa vecThreshold, xmm0
 	movdqa vecNMinSumMinusOne, xmm1
 	movdqa vecNMinusOne, xmm2
-	movdqu xmm3, [sym(k1_8s)]
+	movdqu xmm3, [k1_8s]
 	pcmpeqb xmm4, xmm4
 	pxor xmm5, xmm5
 	movdqa vecOne, xmm3

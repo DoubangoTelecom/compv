@@ -76,7 +76,7 @@ section .text
 	vpbroadcastb ymm8, xmm8
 	vpbroadcastb ymm9, xmm9
 	vpbroadcastb ymm10, xmm10
-	vmovdqu vecOne, [sym(k1_8s)]
+	vmovdqu vecOne, [k1_8s]
 	vpcmpeqb vec0xFF, vec0xFF
 	vpxor vecZero, vecZero
 
