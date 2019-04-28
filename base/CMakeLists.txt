@@ -326,7 +326,7 @@ endif()
 
 ###### 3rd parties libs ######
 if (WIN32)
-  target_link_libraries(compv_base PRIVATE Shlwapi.lib Winmm.lib)
+  target_link_libraries(compv_base ${LIB_LINK_SCOPE} Shlwapi.lib Winmm.lib)
 endif()
 
 if(NOT WIN32 AND ENABLE_SHARED)

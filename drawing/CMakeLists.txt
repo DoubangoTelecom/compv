@@ -28,7 +28,6 @@ if (WIN32)
 		set(LIB_WIN_DIR_SUFFIX win32)
 	endif()
 	link_directories(
-		${LINK_DIRECTORIES}
 		${CMAKE_CURRENT_SOURCE_DIR}/../thirdparties/libraries/windows/glew-2.3.4-${LIB_WIN_DIR_SUFFIX}
 		${CMAKE_CURRENT_SOURCE_DIR}/../thirdparties/libraries/windows/sdl-2.0.5-${LIB_WIN_DIR_SUFFIX}-release
 	)
@@ -57,10 +56,10 @@ set(compv_drawing_SOURCES
 add_library(compv_drawing ${LIB_BUILD_TYPE} ${compv_drawing_SOURCES})
 
 ###### 3rd parties libs ######
-target_link_libraries(compv_drawing PRIVATE compv_base compv_gl)
+target_link_libraries(compv_drawing ${LIB_LINK_SCOPE} compv_base compv_gl)
 add_dependencies(compv_drawing compv_base compv_gl)
 if (WIN32)
-  target_link_libraries(compv_drawing PRIVATE OpenGL32.lib Glu32.lib glew32s.lib SDL2.lib Winmm.lib imm32.lib version.lib)
+  target_link_libraries(compv_drawing ${LIB_LINK_SCOPE} OpenGL32.lib Glu32.lib glew32s.lib SDL2.lib Winmm.lib imm32.lib version.lib)
 endif()
 
 if(NOT WIN32 AND ENABLE_SHARED)

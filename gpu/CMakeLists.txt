@@ -29,7 +29,7 @@ set(compv_gpu_SOURCES
 add_library(compv_gpu ${LIB_BUILD_TYPE} ${compv_gpu_SOURCES})
 
 ###### 3rd parties libs ######
-target_link_libraries(compv_gpu PRIVATE compv_base)
+target_link_libraries(compv_gpu ${LIB_LINK_SCOPE} compv_base)
 add_dependencies(compv_gpu compv_base)
 
 if(NOT WIN32 AND ENABLE_SHARED)

@@ -26,7 +26,7 @@ set(compv_camera_SOURCES
 add_library(compv_camera ${LIB_BUILD_TYPE} ${compv_camera_SOURCES})
 
 ###### 3rd parties libs ######
-target_link_libraries(compv_camera PRIVATE compv_base)
+target_link_libraries(compv_camera ${LIB_LINK_SCOPE} compv_base)
 add_dependencies(compv_camera compv_base)
 
 if(NOT WIN32 AND ENABLE_SHARED)

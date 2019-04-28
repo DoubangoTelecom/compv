@@ -2,6 +2,11 @@ set(CMAKE_VERBOSE_MAKEFILE on)
 
 ## Set Libs build type (STATIC or SHARED) ##
 set(LIB_BUILD_TYPE SHARED)
+if ("${LIB_BUILD_TYPE}" MATCHES "SHARED")
+    set(LIB_LINK_SCOPE PRIVATE)
+  else()
+    set(LIB_LINK_SCOPE PUBLIC)
+endif()
 
 ## Detect TARGET_ARCH ##
 if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "i386|i686|amd64|x86_64|AMD64")

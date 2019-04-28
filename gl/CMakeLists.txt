@@ -70,10 +70,10 @@ set(compv_gl_SOURCES ${compv_gl_SOURCES}
 add_library(compv_gl ${LIB_BUILD_TYPE} ${compv_gl_SOURCES})
 
 ###### 3rd parties libs ######
-target_link_libraries(compv_gl PRIVATE compv_base)
+target_link_libraries(compv_gl ${LIB_LINK_SCOPE} compv_base)
 add_dependencies(compv_gl compv_base)
 if (WIN32)
-  target_link_libraries(compv_gl PRIVATE OpenGL32.lib Glu32.lib glew32s.lib freetype.lib)
+  target_link_libraries(compv_gl ${LIB_LINK_SCOPE} OpenGL32.lib Glu32.lib glew32s.lib freetype.lib)
 endif()
 
 if(NOT WIN32 AND ENABLE_SHARED)
