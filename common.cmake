@@ -168,3 +168,10 @@ macro(add_contrib src_dir project_name)
 		)
 	endif ()
 endmacro()
+
+## Helper macro to check if project already included ##
+macro(target_check_return_if_exist target_name)
+	if (TARGET ${target_name})
+		return()
+	endif()
+endmacro()

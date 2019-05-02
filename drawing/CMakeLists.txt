@@ -1,10 +1,12 @@
 cmake_minimum_required(VERSION 3.0)
 
+include(${CMAKE_CURRENT_SOURCE_DIR}/../common.cmake)
+
+target_check_return_if_exist(compv_drawing)
+
 project(libcompv_drawing VERSION 1.0.0 LANGUAGES CXX C)
 
 include(ExternalProject)
-include(${CMAKE_CURRENT_SOURCE_DIR}/../common.cmake)
-
 add_contrib("${CMAKE_CURRENT_SOURCE_DIR}/../base/" compv_base)
 add_contrib("${CMAKE_CURRENT_SOURCE_DIR}/../gl/" compv_gl)
 

@@ -1,8 +1,10 @@
 cmake_minimum_required(VERSION 3.0)
 
-project(libcompv_base VERSION 1.0.0 LANGUAGES CXX C)
-
 include(${CMAKE_CURRENT_SOURCE_DIR}/../common.cmake)
+
+target_check_return_if_exist(compv_base)
+
+project(libcompv_base VERSION 1.0.0 LANGUAGES CXX C)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 if (WIN32)
