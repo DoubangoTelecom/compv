@@ -281,9 +281,9 @@ public:
         return (absolutemax > 0 ? absolutemax : 1);
     }
 #if __TBB_ALLOCATOR_CONSTRUCT_VARIADIC
-    template<typename U, typename... Args>
-    void construct(U *p, Args&&... args)
-        { ::new((void *)p) U(std::forward<Args>(args)...); }
+    template<typename Utype, typename... Args>
+    void construct(Utype *p, Args&&... args)
+        { ::new((void *)p) Utype(std::forward<Args>(args)...); }
 #else /* __TBB_ALLOCATOR_CONSTRUCT_VARIADIC */
 #if __TBB_CPP11_RVALUE_REF_PRESENT
     void construct( pointer p, value_type&& value ) { ::new((void*)(p)) value_type( std::move( value ) ); }
