@@ -1,11 +1,13 @@
 set(CMAKE_VERBOSE_MAKEFILE on)
 
 ## Set Libs build type (STATIC or SHARED) ##
-set(LIB_BUILD_TYPE SHARED)
+if (NOT LIB_BUILD_TYPE)
+	set(LIB_BUILD_TYPE SHARED)
+endif()
 if ("${LIB_BUILD_TYPE}" MATCHES "SHARED")
-    set(LIB_LINK_SCOPE PRIVATE)
+	set(LIB_LINK_SCOPE PRIVATE)
   else()
-    set(LIB_LINK_SCOPE PUBLIC)
+	set(LIB_LINK_SCOPE PUBLIC)
 endif()
 
 ## Detect TARGET_ARCH ##
