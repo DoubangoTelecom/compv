@@ -13,6 +13,8 @@
 #include "compv/core/features/hough/intrin/x86/compv_core_feature_houghsht_intrin_sse41.h"
 #include "compv/core/features/hough/intrin/x86/compv_core_feature_houghsht_intrin_avx2.h"
 
+#include <limits.h> /* INT_MAX */
+
 #define COMPV_THIS_CLASSNAME	"CompVHoughSht"
 
 #define COMPV_FEATURE_HOUGHSHT_NMS_MIN_SAMPLES_PER_THREAD		(40*40)

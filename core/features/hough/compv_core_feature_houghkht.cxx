@@ -20,6 +20,7 @@
 #include <algorithm> /* std::reverse */
 #include <float.h> /* DBL_MAX */
 #include <iterator> /* std::back_inserter */
+#include <limits.h> /* INT_MAX */
 
 #define COMPV_THIS_CLASSNAME	"CompVHoughKht"
 

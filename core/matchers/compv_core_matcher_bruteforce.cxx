@@ -10,6 +10,8 @@
 #include "compv/base/parallel/compv_parallel.h"
 #include "compv/base/compv_cpu.h"
 
+#include <limits.h> /* INT_MAX */
+
 #define COMPV_MATCHER_BRUTEFORCE_MIN_SAMPLES_PER_THREAD					1 // use max threads
 #define COMPV_MATCHER_BRUTEFORCE_MIN_SAMPLES_PER_THREAD_POPCNT_SIMD		160 // for hamming distance (Fast Popcnt using Mula's formula)
 
