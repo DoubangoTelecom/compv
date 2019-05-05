@@ -85,8 +85,8 @@ COMPV_ERROR_CODE CompVGLWindowFW3::draw(CompVMatPtr mat)
 #else
         if (!m_Program) {
             COMPV_CHECK_CODE_NOP(CompVProgram::newObj(&m_Program));
-            COMPV_CHECK_CODE_NOP(m_Program->shadAttachVertexFile("C:/Projects/GitHub/compv/ui/glsl/test.vert.glsl"));
-            COMPV_CHECK_CODE_NOP(m_Program->shadAttachFragmentFile("C:/Projects/GitHub/compv/ui/glsl/test.frag.glsl"));
+            COMPV_CHECK_CODE_NOP(m_Program->shadAttachVertexFile("C:/Projects/GitHub/ultimate/compv/ui/glsl/test.vert.glsl"));
+            COMPV_CHECK_CODE_NOP(m_Program->shadAttachFragmentFile("C:/Projects/GitHub/ultimate/compv/ui/glsl/test.frag.glsl"));
             COMPV_CHECK_CODE_NOP(m_Program->link());
         }
 

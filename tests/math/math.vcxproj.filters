@@ -69,9 +69,6 @@
     <ClCompile Include="morph.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ml_svm.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="pca.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
