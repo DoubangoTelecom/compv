@@ -187,8 +187,12 @@
 #endif
 
 // ASM / INTRINSIC enable/disable
-#define COMPV_ASM                       1
-#define COMPV_INTRINSIC                 1
+#if !defined(COMPV_ASM)
+#	define COMPV_ASM                       1
+#endif /* COMPV_ASM */
+#if !defined(COMPV_INTRINSIC)
+#	define COMPV_INTRINSIC                 1
+#endif /* COMPV_INTRINSIC */
 
 // Intel TBBMalloc
 #define  COMPV_TBBMALLOC				1
