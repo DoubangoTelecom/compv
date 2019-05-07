@@ -8,7 +8,6 @@
 
 #if COMPV_ARCH_X86 && COMPV_INTRINSIC
 #include "compv/base/intrin/x86/compv_intrin_sse.h"
-#include "compv/base/compv_simd_globals.h"
 #include "compv/base/compv_debug.h"
 
 #define _mm_fast_check(a, b) \
@@ -88,6 +87,9 @@ void CompVFastDataRow_Intrin_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_us
 	const __m128i vecThreshold = _mm_set1_epi8(static_cast<int8_t>(threshold));
 	const __m128i vecNMinSumMinusOne = _mm_set1_epi8(static_cast<int8_t>(minsum - 1)); // no '_mm_cmpge_epu8'
 	const __m128i vecNMinusOne = _mm_set1_epi8(static_cast<int8_t>(NminusOne)); // no '_mm_cmpge_epu8'
+	static const COMPV_ALIGN_SSE() int8_t k1_8s[] = {
+		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+	};
 	static const __m128i vecOne = _mm_load_si128(reinterpret_cast<const __m128i*>(k1_8s));
 	static const __m128i vecZero = _mm_setzero_si128();
 	static const __m128i vec0xFF = _mm_cmpeq_epi8(vecZero, vecZero); // 0xFF
