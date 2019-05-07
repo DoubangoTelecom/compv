@@ -247,6 +247,12 @@
 #	else
 # 		define COMPV_BASE_API		__declspec(dllimport)
 #	endif
+#elif defined(__GNUC__) && !defined(COMPV_STATIC)
+#	if defined(COMPV_BASE_EXPORTS)
+# 		define COMPV_BASE_API		__attribute__((dllexport))
+#	else
+# 		define COMPV_BASE_API		__attribute__((dllimport))
+#	endif
 #else
 # 	define COMPV_BASE_API
 #endif
