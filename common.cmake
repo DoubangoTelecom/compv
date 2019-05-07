@@ -27,9 +27,9 @@ endif()
 
 ## COMPILER FLAGS ##
 if (${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
-	set(COMPILER_CXX_FLAGS "${COMPILER_CXX_FLAGS} -Wno-pragmas -std=c++11 -fvisibility=hidden")
+	set(COMPILER_CXX_FLAGS "${COMPILER_CXX_FLAGS} -Wno-pragmas -std=c++11")
 elseif (${CMAKE_CXX_COMPILER_ID} MATCHES "GNU")
-	set(COMPILER_CXX_FLAGS "${COMPILER_CXX_FLAGS} -Wno-pragmas -std=gnu++11 -fvisibility=hidden")
+	set(COMPILER_CXX_FLAGS "${COMPILER_CXX_FLAGS} -Wno-pragmas -std=gnu++11")
 elseif (${CMAKE_CXX_COMPILER_ID} MATCHES "Intel")
 	# Intel C++
 elseif (${CMAKE_CXX_COMPILER_ID} MATCHES "MSVC")

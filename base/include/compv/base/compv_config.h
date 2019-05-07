@@ -220,6 +220,13 @@
 #	define COMPV_GCC_DISABLE_WARNINGS_END()
 #endif /* __GNUC__ */
 
+// Hidden symbols (used on ASM code to avoid export outside the shared lib)
+#if defined(__GNUC__)
+#	define COMPV_GCC_VISIBILITY_HIDDEN __attribute__((visibility("hidden")))
+#else
+#	define COMPV_GCC_VISIBILITY_HIDDEN
+#endif
+
 // Guards against C++ name mangling
 #if defined(__cplusplus)
 #	define COMPV_EXTERNC_BEGIN() extern "C" {
@@ -246,12 +253,6 @@
 # 		define COMPV_BASE_API		__declspec(dllexport)
 #	else
 # 		define COMPV_BASE_API		__declspec(dllimport)
-#	endif
-#elif defined(__GNUC__) && !defined(COMPV_STATIC)
-#	if defined(COMPV_BASE_EXPORTS)
-# 		define COMPV_BASE_API		__attribute__((dllexport))
-#	else
-# 		define COMPV_BASE_API		__attribute__((dllimport))
 #	endif
 #else
 # 	define COMPV_BASE_API
