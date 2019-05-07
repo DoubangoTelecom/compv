@@ -8,7 +8,6 @@
 
 #if COMPV_ARCH_X86 && COMPV_INTRINSIC
 #include "compv/base/intrin/x86/compv_intrin_avx.h"
-#include "compv/base/compv_simd_globals.h"
 #include "compv/base/compv_debug.h"
 
 COMPV_NAMESPACE_BEGIN()
@@ -36,6 +35,10 @@ void CompVOrbBrief256_31_32f_Intrin_FMA3_AVX2(
 
 	uint32_t* outPtr = reinterpret_cast<uint32_t*>(out); // uint32_t for AVX
 
+	static COMPV_ALIGN_AVX() const uint8_t k128_8u[] = {
+		128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128,
+		128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128,
+	};
 	const __m256i vec128 = _mm256_load_si256(reinterpret_cast<const __m256i*>(k128_8u));
 	const __m256 vecStride = _mm256_set1_ps(static_cast<compv_float32_t>(img_stride));
 	const __m256 vecCosT = _mm256_set1_ps(*cos1);

@@ -8,7 +8,6 @@
 
 #if COMPV_ARCH_X86 && COMPV_INTRINSIC
 #include "compv/base/intrin/x86/compv_intrin_sse.h"
-#include "compv/base/compv_simd_globals.h"
 #include "compv/base/compv_debug.h"
 
 COMPV_NAMESPACE_BEGIN()
@@ -28,7 +27,9 @@ void CompVOrbBrief256_31_32f_Intrin_SSE41(
 	__m128i vecX[4], vecY[4], vecR;
 
 	uint16_t* outPtr = reinterpret_cast<uint16_t*>(out); // uint32_t for AVX
-
+	static COMPV_ALIGN_SSE() const uint8_t k128_8u[] = {
+		128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128
+	};
 	const __m128i vec128 = _mm_load_si128(reinterpret_cast<const __m128i*>(k128_8u));
 	const __m128i vecStride = _mm_set1_epi32(static_cast<int>(img_stride));
 	const __m128 vecCosT = _mm_set1_ps(*cos1);
