@@ -26,7 +26,6 @@ else()
 endif()
 
 ## COMPILER FLAGS ##
-set(CMAKE_CXX_VISIBILITY_PRESET hidden) # -fvisibility=hidden
 if (${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
 	set(COMPILER_CXX_FLAGS "${COMPILER_CXX_FLAGS} -Wno-pragmas -std=c++11 -fvisibility=hidden")
 elseif (${CMAKE_CXX_COMPILER_ID} MATCHES "GNU")
