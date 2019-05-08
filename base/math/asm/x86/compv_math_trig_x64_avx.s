@@ -18,6 +18,7 @@ global sym(CompVMathTrigHypotNaive_32f_Asm_X64_AVX)
 global sym(CompVMathTrigHypotNaive_32f_Asm_X64_FMA3_AVX)
 
 section .data
+	dataAtan2_sign dd 0x7fffffff
 	extern sym(kAtan2Eps_32f)
 	extern sym(kAtan2P1_32f)
 	extern sym(kAtan2P3_32f)
@@ -56,9 +57,7 @@ section .text
 
 	%define vecAtan2_zero		ymm0
 	%define vecAtan2_sign		ymm1
-	%define vecAtan2_signn		xmm1
 	%define vecAtan2_scale		ymm2
-	%define vecAtan2_scalen		xmm2
 	%define vecAtan2_plus90		ymm3
 	%define vecAtan2_plus180	ymm4
 	%define vecAtan2_plus360	ymm5
@@ -75,13 +74,10 @@ section .text
 
 	vxorps vecAtan2_zero, vecAtan2_zero
 
-	mov eax, 0x7fffffff
-	vmovd vecAtan2_signn, eax
-	vbroadcastss vecAtan2_sign, vecAtan2_signn
+	vbroadcastss vecAtan2_sign, [dataAtan2_sign] ; vbroadcastss ymm, xmm is AVX2 - https://www.felixcloutier.com/x86/vbroadcast
 
 	mov rax, arg(3)
-	vmovss vecAtan2_scalen, [rax]
-	vbroadcastss vecAtan2_scale, vecAtan2_scalen
+	vbroadcastss vecAtan2_scale, [rax] ; vbroadcastss ymm, xmm is AVX2 - https://www.felixcloutier.com/x86/vbroadcast
 
 	vmovaps vecAtan2_plus90, [sym(k90_32f)]
 	vmovaps vecAtan2_plus180, [sym(k180_32f)]
@@ -191,9 +187,7 @@ section .text
 
 	%undef vecAtan2_zero		
 	%undef vecAtan2_sign
-	%undef vecAtan2_signn	
 	%undef vecAtan2_scale
-	%undef vecAtan2_scalen
 	%undef vecAtan2_plus90		
 	%undef vecAtan2_plus180	
 	%undef vecAtan2_plus360	
