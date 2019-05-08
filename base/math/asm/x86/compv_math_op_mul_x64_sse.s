@@ -148,7 +148,7 @@ sym(CompVMathOpMulMulABt_32f32f32f_Asm_X64_SSE2):
 				inc k
 				cmp k, Bcols
 				addss xmm0, xmm4
-				jl .LoopBcols4
+				jl .LoopBcols1
 			.EndOf_LoopBcols1:
 
 			movss [Rptr + j*COMPV_YASM_FLOAT32_SZ_BYTES], xmm0
