@@ -85,7 +85,7 @@ section .text
 		; for (j = 0; j < bRows; ++j)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		.LoopBRows:
-			vpxor ymm4, ymm4 ; ymm4 = vecSum
+			vxorpd ymm4, ymm4, ymm4 ; ymm4 = vecSum - "vpxor YMM" is AVX2 despite what is said on Intel website - https://www.felixcloutier.com/x86/pxor
 			xor k, k
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			; for (k = 0; k < bColsSigned - 15; k += 16)
