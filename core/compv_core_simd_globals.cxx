@@ -10,7 +10,7 @@
 
 #define COMPV_MM_SHUFFLE_EPI8_AVX(a, b, c, d) COMPV_MM_SHUFFLE_EPI8(a+16, b+16, c+16, d+16)
 
-COMPV_EXTERNC COMPV_CORE_API COMPV_ALIGN_DEFAULT() int32_t kShuffleEpi8_DUP_16s7_32s[] = { // To be used with _mm_shuffle_epi8 to duplicate the last (7th) element in epi16, use vdup.u16 q0, d1[] for ARM NEON
+COMPV_CORE_API COMPV_ALIGN_DEFAULT() int32_t kShuffleEpi8_DUP_16s7_32s[] = { // To be used with _mm_shuffle_epi8 to duplicate the last (7th) element in epi16, use vdup.u16 q0, d1[] for ARM NEON
 	COMPV_MM_SHUFFLE_EPI8(15, 14, 15, 14), COMPV_MM_SHUFFLE_EPI8(15, 14, 15, 14), COMPV_MM_SHUFFLE_EPI8(15, 14, 15, 14), COMPV_MM_SHUFFLE_EPI8(15, 14, 15, 14), // 128bits SSE register
 	COMPV_MM_SHUFFLE_EPI8_AVX(15, 14, 15, 14), COMPV_MM_SHUFFLE_EPI8_AVX(15, 14, 15, 14), COMPV_MM_SHUFFLE_EPI8_AVX(15, 14, 15, 14), COMPV_MM_SHUFFLE_EPI8_AVX(15, 14, 15, 14) // 256bits AVX register
 };
