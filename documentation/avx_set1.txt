@@ -17,7 +17,10 @@ movzx eax, word ptr [rax+rcx*2]
 vmovd xmm0, eax  
 vpbroadcastw ymm0, xmm0
 
-*** _mm256_set1_ps(a) ***
+*** _mm256_set1_ps(a) - AVX2 ***
 vmovss xmm0, [rax]
 vbroadcastss ymm0, xmm0
+
+*** _mm256_set1_ps(a) - AVX ***
+vbroadcastss ymm0, [rax]
 
