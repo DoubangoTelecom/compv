@@ -51,7 +51,7 @@ void CompVMathExpExp_minpack4_64f64f_Intrin_AVX2(const compv_float64_t* ptrIn, c
 			__m256i vecU = _mm256_slli_epi64(_mm256_srli_epi64(_mm256_add_epi64(_mm256_castpd_si256(vecDI), vecCADJ), 11), 52);
 			__m256d vecY = _mm256_mul_pd(vecT, vecT);
 			vecDI = _mm256_castsi256_pd(_mm256_and_si256(_mm256_castpd_si256(vecDI), vecMask));
-			const __m256i vecLUT = _mm256_i64gather_epi64(reinterpret_cast<const int64_t*>(lut64u), _mm256_castpd_si256(vecDI), /*sizeof(int64_t)*/8);
+			const __m256i vecLUT = _mm256_i64gather_epi64(reinterpret_cast<const long long*>(lut64u), _mm256_castpd_si256(vecDI), /*sizeof(int64_t)*/8);
 			vecY = _mm256_mul_pd(vecY, _mm256_sub_pd(vecC30, vecT));
 			vecU = _mm256_or_si256(vecU, vecLUT);
 #if defined(__FMA3__)
