@@ -367,7 +367,7 @@
       <WarningLevel>Level3</WarningLevel>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <Optimization>MaxSpeed</Optimization>
+      <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_WIN32_WINNT=0x0501;_USRDLL;COMPV_DRAWING_EXPORTS;HAVE_GL_GLEW_H;GLEW_STATIC;HAVE_SDL_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -439,7 +439,7 @@
       <WarningLevel>Level3</WarningLevel>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <Optimization>MaxSpeed</Optimization>
+      <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;_WIN32_WINNT=0x0501;_USRDLL;COMPV_DRAWING_EXPORTS;HAVE_GL_GLEW_H;GLEW_STATIC;HAVE_SDL_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>

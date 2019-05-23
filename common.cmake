@@ -10,6 +10,15 @@ if ("${LIB_BUILD_TYPE}" MATCHES "SHARED")
 	set(LIB_LINK_SCOPE PUBLIC)
 endif()
 
+## Set Libs build scheme (Debug or Release) ##
+if (NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release)
+endif()
+
+## Set default build flags ##
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g")
+set(CMAKE_CXX_FLAGS_RELEASE " ${CMAKE_CXX_FLAGS_RELEASE} -O3")
+
 ## Detect TARGET_ARCH ##
 if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "i386|i686|amd64|x86_64|AMD64")
 	if (CMAKE_SIZEOF_VOID_P EQUAL 8)
