@@ -350,7 +350,7 @@ COMPV_ERROR_CODE CompVImageUtils::copy(COMPV_SUBTYPE ePixelFormat, const void* i
 		
 		// TODO(dmi): divide across Y and multi-thread
 		for (size_t j = 0; j < outPlaneHeight; ++j) {
-			CompVMem::copy(outPtr_, inPtr_, outPlaneWidthInBytes);
+			COMPV_CHECK_CODE_RETURN(CompVMem::copy(outPtr_, inPtr_, outPlaneWidthInBytes));
 			outPtr_ += outPlaneStrideInBytes;
 			inPtr_ += inPlaneStrideInBytes;
 		}
