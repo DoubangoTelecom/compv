@@ -7,7 +7,7 @@
   - ... and many more 
 
 ### Online demo apps using our code ###
- - <a target="_blank" href="https://doubango.org/webapps/alpr/">Automatic Number Plate Recognition (ANPR/ALPR)</a>
+ - <a target="_blank" href="https://doubango.org/webapps/alpr/">Automatic Number/License Plate Recognition (ANPR/ALPR)</a>
  - <a target="_blank" href="https://doubango.org/webapps/mrz/">Machine-readable zone/passport (MRZ/MRP)</a>
  - <a target="_blank" href="https://doubango.org/webapps/cbir/">Content-Based Image Retrieval (CBIR)</a>
  - <a target="_blank" href="https://doubango.org/webapps/ocr/">Scene text recognition (TextInWild)</a>
