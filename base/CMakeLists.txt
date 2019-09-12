@@ -89,6 +89,9 @@ set(compv_base_SOURCES
 	ml/compv_base_ml_knn.cxx
 	ml/compv_base_ml_svm.cxx
 
+	###### easyexif ######
+	easyexif/easyexif.cxx
+
 	###### ml/libsvm-322 ######
 	ml/libsvm-322/libsvm.cxx
 
@@ -140,6 +143,7 @@ set(compv_base_SOURCES
 	compv_common.cxx
 	compv_cpu.cxx
 	compv_debug.cxx
+	compv_exif.cxx
 	compv_features.cxx
 	compv_fileutils.cxx
 	compv_gradient_fast.cxx

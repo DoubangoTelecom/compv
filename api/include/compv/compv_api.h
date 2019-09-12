@@ -17,6 +17,7 @@
 #include <compv/base/compv_ccl.h>
 #include <compv/base/compv_cpu.h>
 #include <compv/base/compv_debug.h>
+#include <compv/base/compv_exif.h>
 #include <compv/base/compv_features.h>
 #include <compv/base/compv_fileutils.h>
 #include <compv/base/compv_gradient_fast.h>

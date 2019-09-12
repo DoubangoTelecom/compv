@@ -205,6 +205,12 @@
     <Filter Include="include\ml\libsvm-322\intrin\x86">
       <UniqueIdentifier>{82f5e4ba-aa10-47c5-a4ce-ffafa2c28e9d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\easyexif">
+      <UniqueIdentifier>{06b8305a-4144-446d-955f-1bb26bbb0e8a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\easyexif">
+      <UniqueIdentifier>{e6355546-218b-4bfa-8199-6de67e923b70}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\base\compv_base.h">
@@ -1035,6 +1041,12 @@
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_op_minmax_intrin_sse2.h">
       <Filter>include\math\intrin\x86</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\easyexif\easyexif.h">
+      <Filter>include\easyexif</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\compv_exif.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx">
@@ -1678,6 +1690,12 @@
     </ClCompile>
     <ClCompile Include="math\intrin\x86\compv_math_op_minmax_intrin_sse2.cxx">
       <Filter>source\math\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="easyexif\easyexif.cxx">
+      <Filter>source\easyexif</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_exif.cxx">
+      <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
