@@ -30,7 +30,10 @@ COMPV_ERROR_CODE CompVExif::parse(const void* jpegBufferPtr, const size_t jpegBu
 	try {
 #endif
 		int err = result.parseFrom(reinterpret_cast<const unsigned char*>(jpegBufferPtr), static_cast<unsigned>(jpegBufferSizeInBytes));
-		if (err != PARSE_EXIF_SUCCESS) {
+		if (err == PARSE_EXIF_ERROR_NO_EXIF) {
+			return COMPV_ERROR_CODE_S_OK;
+		}
+		else if (err != PARSE_EXIF_SUCCESS) {
 			COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "[easyexif] Parse returned %d", err);
 			COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_THIRD_PARTY_LIB);
 		}
