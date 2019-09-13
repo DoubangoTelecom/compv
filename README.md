@@ -14,4 +14,4 @@
  - <a target="_blank" href="https://doubango.org/webapps/ocr/">Scene text recognition (TextInWild)</a>
  
  ### Technical questions ###
- Please check our [discussion group](https://groups.google.com/forum/#!forum/doubango-ai)
+ Please check our [discussion group](https://groups.google.com/forum/#!forum/doubango-ai) or [twitter account](https://twitter.com/doubangotelecom?lang=en)
