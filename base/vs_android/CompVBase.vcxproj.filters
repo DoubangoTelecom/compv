@@ -160,12 +160,6 @@
     <Filter Include="source\jsoncpp-1.8.4">
       <UniqueIdentifier>{792cb387-205a-4e34-b824-9b7afaa36d8a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\zlib-1.2.8">
-      <UniqueIdentifier>{aa622ba7-f0b3-4ede-85af-f696f2f82992}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="source\zlib-1.2.8">
-      <UniqueIdentifier>{ee697d1c-a157-48e8-a140-560f50902830}</UniqueIdentifier>
-    </Filter>
     <Filter Include="include\ml\libsvm-322">
       <UniqueIdentifier>{b1d309b5-a603-4e67-b206-a83afe0f2925}</UniqueIdentifier>
     </Filter>
@@ -726,9 +720,6 @@
     <ClInclude Include="..\include\compv\base\jsoncpp-1.8.4\json-forwards.h">
       <Filter>include\jsoncpp-1.8.4</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\compv\base\zlib-1.2.8\zlib.h">
-      <Filter>include\zlib-1.2.8</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\compv\base\ml\libsvm-322\libsvm.h">
       <Filter>include\ml\libsvm-322</Filter>
     </ClInclude>
@@ -857,6 +848,15 @@
     </ClInclude>
     <ClInclude Include="..\include\compv\base\image\intrin\arm\compv_image_remap_intrin_neon.h">
       <Filter>include\image\intrin\arm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\image\compv_image_integral.h">
+      <Filter>include\image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\math\compv_math_op_minmax.h">
+      <Filter>include\math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\compv_xml.h">
+      <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1310,9 +1310,6 @@
     <ClCompile Include="..\jsoncpp-1.8.4\jsoncpp.cxx">
       <Filter>source\jsoncpp-1.8.4</Filter>
     </ClCompile>
-    <ClCompile Include="..\zlib-1.2.8\zlib.c">
-      <Filter>source\zlib-1.2.8</Filter>
-    </ClCompile>
     <ClCompile Include="..\ml\libsvm-322\libsvm.cxx">
       <Filter>source\ml\libsvm-322</Filter>
     </ClCompile>
@@ -1429,6 +1426,15 @@
     </ClCompile>
     <ClCompile Include="..\image\intrin\arm\compv_image_remap_intrin_neon.cxx">
       <Filter>source\image\intrin\arm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\image\compv_image_integral.cxx">
+      <Filter>source\image</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\compv_math_op_minmax.cxx">
+      <Filter>source\math</Filter>
+    </ClCompile>
+    <ClCompile Include="..\compv_xml.cxx">
+      <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

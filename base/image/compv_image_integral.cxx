@@ -6,7 +6,6 @@
 */
 #include "compv/base/image/compv_image_integral.h"
 
-
 COMPV_NAMESPACE_BEGIN()
 
 template<typename InputType, typename OutputType>
@@ -29,9 +28,11 @@ static void CompVImageIntegralProcess_C(const InputType* in, OutputType* sum, Ou
 		sumsq += sum_stride;
 	}
 }
+COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-function")
 static void CompVImageIntegralProcess_8u64f_C(const uint8_t* in, compv_float64_t* sum, compv_float64_t* sumsq, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t in_stride, const compv_uscalar_t sum_stride) {
 	CompVImageIntegralProcess_C<uint8_t, compv_float64_t>(in, sum, sumsq, width, height, in_stride, sum_stride);
 }
+COMPV_GCC_DISABLE_WARNINGS_END()
 
 // For now only grayscale images (Single plane, 8u) are accepted as input
 // Output is always double

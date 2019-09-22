@@ -71,6 +71,7 @@
     <ClInclude Include="..\include\compv\base\compv_patch.h" />
     <ClInclude Include="..\include\compv\base\compv_sharedlib.h" />
     <ClInclude Include="..\include\compv\base\compv_simd_globals.h" />
+    <ClInclude Include="..\include\compv\base\compv_xml.h" />
     <ClInclude Include="..\include\compv\base\drawing\compv_canvas.h" />
     <ClInclude Include="..\include\compv\base\drawing\compv_mvp.h" />
     <ClInclude Include="..\include\compv\base\drawing\compv_renderer.h" />
@@ -90,6 +91,7 @@
     <ClInclude Include="..\include\compv\base\image\compv_image_conv_to_rgbx.h" />
     <ClInclude Include="..\include\compv\base\image\compv_image_conv_to_yuv444p.h" />
     <ClInclude Include="..\include\compv\base\image\compv_image_decoder.h" />
+    <ClInclude Include="..\include\compv\base\image\compv_image_integral.h" />
     <ClInclude Include="..\include\compv\base\image\compv_image_remap.h" />
     <ClInclude Include="..\include\compv\base\image\compv_image_scale_bicubic.h" />
     <ClInclude Include="..\include\compv\base\image\compv_image_scale_bilinear.h" />
@@ -155,6 +157,7 @@
     <ClInclude Include="..\include\compv\base\math\compv_math_matrix.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_moments.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_morph.h" />
+    <ClInclude Include="..\include\compv\base\math\compv_math_op_minmax.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_op_mul.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_op_sub.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_pca.h" />
@@ -260,7 +263,6 @@
     <ClInclude Include="..\include\compv\base\utf8\core.h" />
     <ClInclude Include="..\include\compv\base\utf8\unchecked.h" />
     <ClInclude Include="..\include\compv\base\utf8\utf8.h" />
-    <ClInclude Include="..\include\compv\base\zlib-1.2.8\zlib.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\android\compv_android_cpu-features.cxx" />
@@ -293,6 +295,7 @@
     <ClCompile Include="..\compv_patch.cxx" />
     <ClCompile Include="..\compv_sharedlib.cxx" />
     <ClCompile Include="..\compv_simd_globals.cxx" />
+    <ClCompile Include="..\compv_xml.cxx" />
     <ClCompile Include="..\drawing\compv_canvas.cxx" />
     <ClCompile Include="..\drawing\compv_mvp.cxx" />
     <ClCompile Include="..\drawing\compv_renderer.cxx" />
@@ -312,6 +315,7 @@
     <ClCompile Include="..\image\compv_image_conv_to_rgbx.cxx" />
     <ClCompile Include="..\image\compv_image_conv_to_yuv444p.cxx" />
     <ClCompile Include="..\image\compv_image_decoder.cxx" />
+    <ClCompile Include="..\image\compv_image_integral.cxx" />
     <ClCompile Include="..\image\compv_image_remap.cxx" />
     <ClCompile Include="..\image\compv_image_scale_bicubic.cxx" />
     <ClCompile Include="..\image\compv_image_scale_bilinear.cxx" />
@@ -398,6 +402,7 @@
     <ClCompile Include="..\math\compv_math_matrix.cxx" />
     <ClCompile Include="..\math\compv_math_moments.cxx" />
     <ClCompile Include="..\math\compv_math_morph.cxx" />
+    <ClCompile Include="..\math\compv_math_op_minmax.cxx" />
     <ClCompile Include="..\math\compv_math_op_mul.cxx" />
     <ClCompile Include="..\math\compv_math_op_sub.cxx" />
     <ClCompile Include="..\math\compv_math_pca.cxx" />
@@ -480,7 +485,6 @@
     <ClCompile Include="..\tbbmalloc\tbbmalloc.cpp" />
     <ClCompile Include="..\time\compv_time.cxx" />
     <ClCompile Include="..\time\compv_timer.cxx" />
-    <ClCompile Include="..\zlib-1.2.8\zlib.c" />
   </ItemGroup>
   <ItemGroup>
     <GAS Include="..\asm\arm\compv_test_arm.S">
