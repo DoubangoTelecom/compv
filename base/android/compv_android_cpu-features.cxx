@@ -77,6 +77,7 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <sys/system_properties.h>
 
 static  pthread_once_t     g_once;

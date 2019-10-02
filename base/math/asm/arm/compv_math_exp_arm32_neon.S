@@ -126,14 +126,14 @@ data1023: .word 1023, 1023, 1023, 1023
 			vshr.u32 vecU, vecU, #10
 			vshl.u32 vecU, vecU, #23
 
-			vmov.32 t0, t1, vecVx
-			vmov.32 t2, t3, vecVy
+			vmov t0, t1, vecVx
+			vmov t2, t3, vecVy
 			ldr t0, [lut32u, t0, LSL #(COMPV_GAS_UINT32_SHIFT_BYTES)]
 			ldr t1, [lut32u, t1, LSL #(COMPV_GAS_UINT32_SHIFT_BYTES)]
 			ldr t2, [lut32u, t2, LSL #(COMPV_GAS_UINT32_SHIFT_BYTES)]
 			ldr t3, [lut32u, t3, LSL #(COMPV_GAS_UINT32_SHIFT_BYTES)]			
-			vmov.32 vecVx, t0, t1
-			vmov.32 vecVy, t2, t3
+			vmov vecVx, t0, t1
+			vmov vecVy, t2, t3
 			vorr.u32 vecV, vecV, vecU
 
 			.if \fusedMultiplyAdd == FMA_YES

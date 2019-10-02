@@ -189,6 +189,8 @@
       <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Release|x86'">true</ArmNeon>
       <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ArmNeon>
       <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ArmNeon>
+      <Parser Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">1</Parser>
+      <ObjectFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(IntDir)%(Filename).obj</ObjectFile>
     </GAS>
     <GAS Include="..\features\fast\asm\arm\compv_core_feature_fast_dete_macros_neon.S">
       <FileType>Document</FileType>
@@ -200,6 +202,8 @@
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x86'">$(ProjectDir)../features/fast/asm/arm</IncludePaths>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)../features/fast/asm/arm</IncludePaths>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)../features/fast/asm/arm</IncludePaths>
+      <Parser Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">1</Parser>
+      <ObjectFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(IntDir)%(Filename).obj</ObjectFile>
     </GAS>
     <GAS Include="..\features\fast\asm\arm\compv_core_feature_fast_dete_arm64_neon.S">
       <FileType>Document</FileType>
@@ -207,6 +211,8 @@
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">$(ProjectDir)../../base/asm/arm;$(ProjectDir)../features/fast/asm/arm;%(IncludePaths)</IncludePaths>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(ProjectDir)../../base/asm/arm;$(ProjectDir)../features/fast/asm/arm;%(IncludePaths)</IncludePaths>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(ProjectDir)../../base/asm/arm;$(ProjectDir)../features/fast/asm/arm;%(IncludePaths)</IncludePaths>
+      <Parser Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">1</Parser>
+      <ObjectFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(IntDir)%(Filename).obj</ObjectFile>
     </GAS>
     <GAS Include="..\features\edges\asm\arm\compv_core_feature_canny_dete_arm32_neon.S">
       <FileType>Document</FileType>
@@ -220,6 +226,8 @@
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)../../base/asm/arm;$(ProjectDir)../features/fast/asm/arm;%(IncludePaths)</IncludePaths>
       <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ArmNeon>
       <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ArmNeon>
+      <Parser Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">1</Parser>
+      <ObjectFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(IntDir)%(Filename).obj</ObjectFile>
     </GAS>
     <GAS Include="..\features\edges\asm\arm\compv_core_feature_canny_dete_arm64_neon.S">
       <FileType>Document</FileType>
@@ -231,6 +239,8 @@
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x86'">$(ProjectDir)../../base/asm/arm;$(ProjectDir)../features/fast/asm/arm;%(IncludePaths)</IncludePaths>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)../../base/asm/arm;$(ProjectDir)../features/fast/asm/arm;%(IncludePaths)</IncludePaths>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)../../base/asm/arm;$(ProjectDir)../features/fast/asm/arm;%(IncludePaths)</IncludePaths>
+      <Parser Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">1</Parser>
+      <ObjectFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(IntDir)%(Filename).obj</ObjectFile>
     </GAS>
     <GAS Include="..\ccl\asm\arm\compv_core_ccl_lsl_arm32_neon.S">
       <FileType>Document</FileType>
@@ -246,6 +256,8 @@
       <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ArmNeon>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'"> %(AdditionalOptions)</AdditionalOptions>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|ARM'"> %(AdditionalOptions)</AdditionalOptions>
+      <Parser Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">1</Parser>
+      <ObjectFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(IntDir)%(Filename).obj</ObjectFile>
     </GAS>
     <GAS Include="..\ccl\asm\arm\compv_core_ccl_lsl_arm32.S">
       <FileType>Document</FileType>
@@ -257,6 +269,8 @@
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x86'">$(ProjectDir)../../base/asm/arm;$(ProjectDir)../features/fast/asm/arm;%(IncludePaths)</IncludePaths>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)../../base/asm/arm;$(ProjectDir)../features/fast/asm/arm;%(IncludePaths)</IncludePaths>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)../../base/asm/arm;$(ProjectDir)../features/fast/asm/arm;%(IncludePaths)</IncludePaths>
+      <Parser Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">1</Parser>
+      <ObjectFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(IntDir)%(Filename).obj</ObjectFile>
     </GAS>
     <GAS Include="..\ccl\asm\arm\compv_core_ccl_lsl_arm64.S">
       <FileType>Document</FileType>
@@ -268,6 +282,8 @@
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x86'">$(ProjectDir)../../base/asm/arm;$(ProjectDir)../features/fast/asm/arm;%(IncludePaths)</IncludePaths>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)../../base/asm/arm;$(ProjectDir)../features/fast/asm/arm;%(IncludePaths)</IncludePaths>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)../../base/asm/arm;$(ProjectDir)../features/fast/asm/arm;%(IncludePaths)</IncludePaths>
+      <Parser Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">1</Parser>
+      <ObjectFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(IntDir)%(Filename).obj</ObjectFile>
     </GAS>
     <GAS Include="..\ccl\asm\arm\compv_core_ccl_lsl_arm64_neon.S">
       <FileType>Document</FileType>
@@ -279,6 +295,8 @@
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x86'">$(ProjectDir)../../base/asm/arm;$(ProjectDir)../features/fast/asm/arm;%(IncludePaths)</IncludePaths>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)../../base/asm/arm;$(ProjectDir)../features/fast/asm/arm;%(IncludePaths)</IncludePaths>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)../../base/asm/arm;$(ProjectDir)../features/fast/asm/arm;%(IncludePaths)</IncludePaths>
+      <Parser Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">1</Parser>
+      <ObjectFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(IntDir)%(Filename).obj</ObjectFile>
     </GAS>
     <None Include="..\ccl\asm\x86\compv_core_ccl_lsl_x64.s" />
     <None Include="..\ccl\asm\x86\compv_core_ccl_lsl_x64_avx.s" />
@@ -307,6 +325,8 @@
       <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ArmNeon>
       <ArmNeonFma Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ArmNeonFma>
       <ArmNeonFma Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ArmNeonFma>
+      <Parser Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">1</Parser>
+      <ObjectFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(IntDir)%(Filename).obj</ObjectFile>
     </GAS>
     <GAS Include="..\features\orb\asm\arm\compv_core_feature_orb_desc_arm64.S">
       <FileType>Document</FileType>
@@ -318,6 +338,8 @@
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x86'">$(ProjectDir)../../base/asm/arm;</IncludePaths>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)../../base/asm/arm;</IncludePaths>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)../../base/asm/arm;</IncludePaths>
+      <Parser Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">1</Parser>
+      <ObjectFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(IntDir)%(Filename).obj</ObjectFile>
     </GAS>
     <GAS Include="..\features\hough\asm\arm\compv_core_feature_houghkht_arm32.S">
       <FileType>Document</FileType>
@@ -339,6 +361,8 @@
       <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ArmNeon>
       <ArmNeonFma Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ArmNeonFma>
       <ArmNeonFma Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ArmNeonFma>
+      <Parser Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">1</Parser>
+      <ObjectFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(IntDir)%(Filename).obj</ObjectFile>
     </GAS>
     <GAS Include="..\features\hough\asm\arm\compv_core_feature_houghkht_arm64.S">
       <FileType>Document</FileType>
@@ -350,6 +374,8 @@
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x86'">$(ProjectDir)../../base/asm/arm;</IncludePaths>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)../../base/asm/arm;</IncludePaths>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)../../base/asm/arm;</IncludePaths>
+      <Parser Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">1</Parser>
+      <ObjectFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(IntDir)%(Filename).obj</ObjectFile>
     </GAS>
     <GAS Include="..\features\hog\asm\arm\compv_core_feature_hog_common_norm_arm32_neon.S">
       <FileType>Document</FileType>
@@ -363,6 +389,8 @@
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)../../base/asm/arm;$(ProjectDir)../features/fast/asm/arm;%(IncludePaths)</IncludePaths>
       <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ArmNeon>
       <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ArmNeon>
+      <Parser Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">1</Parser>
+      <ObjectFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(IntDir)%(Filename).obj</ObjectFile>
     </GAS>
     <GAS Include="..\features\hog\asm\arm\compv_core_feature_hog_common_norm_arm64_neon.S">
       <FileType>Document</FileType>
@@ -374,6 +402,8 @@
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x86'">$(ProjectDir)../../base/asm/arm;$(ProjectDir)../features/fast/asm/arm;%(IncludePaths)</IncludePaths>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)../../base/asm/arm;$(ProjectDir)../features/fast/asm/arm;%(IncludePaths)</IncludePaths>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)../../base/asm/arm;$(ProjectDir)../features/fast/asm/arm;%(IncludePaths)</IncludePaths>
+      <Parser Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">1</Parser>
+      <ObjectFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(IntDir)%(Filename).obj</ObjectFile>
     </GAS>
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -425,7 +455,7 @@
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>Clang_3_8</PlatformToolset>
-    <AndroidAPILevel>android-18</AndroidAPILevel>
+    <AndroidAPILevel>android-21</AndroidAPILevel>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
