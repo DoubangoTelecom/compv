@@ -19,19 +19,25 @@ COMPV_NAMESPACE_BEGIN()
 void CompVImageConvYuv420p_to_Rgba32_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* yPtr, COMPV_ALIGNED(SSE) const uint8_t* uPtr, COMPV_ALIGNED(SSE) const uint8_t* vPtr, COMPV_ALIGNED(SSE) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride)
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
+	COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-variable")
 	CompVImageConvYuvPlanar_to_Rgbx_Intrin_SSEx(yuv420p, rgba32, SSE2);
+	COMPV_GCC_DISABLE_WARNINGS_END()
 }
 
 void CompVImageConvYuv422p_to_Rgba32_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* yPtr, COMPV_ALIGNED(SSE) const uint8_t* uPtr, COMPV_ALIGNED(SSE) const uint8_t* vPtr, COMPV_ALIGNED(SSE) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride)
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
+	COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-variable")
 	CompVImageConvYuvPlanar_to_Rgbx_Intrin_SSEx(yuv422p, rgba32, SSE2);
+	COMPV_GCC_DISABLE_WARNINGS_END()
 }
 
 void CompVImageConvYuv444p_to_Rgba32_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* yPtr, COMPV_ALIGNED(SSE) const uint8_t* uPtr, COMPV_ALIGNED(SSE) const uint8_t* vPtr, COMPV_ALIGNED(SSE) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride)
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
+	COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-variable")
 	CompVImageConvYuvPlanar_to_Rgbx_Intrin_SSEx(yuv444p, rgba32, SSE2);
+	COMPV_GCC_DISABLE_WARNINGS_END()
 }
 
 COMPV_NAMESPACE_END()

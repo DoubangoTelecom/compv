@@ -25,7 +25,6 @@ void COMPV_DEPRECATED(CompVMathMatrixMulABt_64f_Intrin_AVX)(const COMPV_ALIGNED(
 
 	compv_uscalar_t i, j;
 	__m256d vec0, vec1, vec2, vec3, vecSum;
-	const __m256d vecZero = _mm256_setzero_pd();
 	__m128d vec0n;
 	
 	for (i = 0; i < aRows; ++i) {

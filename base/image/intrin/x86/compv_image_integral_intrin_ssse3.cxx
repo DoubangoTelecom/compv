@@ -11,6 +11,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+#if 0
 static const COMPV_ALIGN_SSE() int32_t kShuffleEpi8_DUP_SHL0_8u_32s[]{ // To be used with _mm_shuffle_epi8, use vdup.u8[0]/vshl.u8#0 for ARM NEON
 	COMPV_MM_SHUFFLE_EPI8(0, 0, 0, 0), COMPV_MM_SHUFFLE_EPI8(0, 0, 0, 0), COMPV_MM_SHUFFLE_EPI8(0, 0, 0, 0), COMPV_MM_SHUFFLE_EPI8(0, 0, 0, 0), // 128bits SSE register
 };
@@ -59,6 +60,7 @@ static const COMPV_ALIGN_SSE() int32_t kShuffleEpi8_DUP_SHL14_8u_32s[] = { // To
 static const COMPV_ALIGN_SSE() int32_t kShuffleEpi8_DUP_SHL15_8u_32s[] = { // To be used with _mm_shuffle_epi8, use vdup.u8[15]/vshl.u8#15 for ARM NEON
 	COMPV_MM_SHUFFLE_EPI8(0x80, 0x80, 0x80, 0x80), COMPV_MM_SHUFFLE_EPI8(0x80, 0x80, 0x80, 0x80), COMPV_MM_SHUFFLE_EPI8(0x80, 0x80, 0x80, 0x80), COMPV_MM_SHUFFLE_EPI8(15, 0x80, 0x80, 0x80), // 128bits SSE register
 };
+#endif
 
 void CompVImageIntegralProcess_8u64f_Intrin_SSSE3(const uint8_t* in, compv_float64_t* sum, compv_float64_t* sumsq, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t in_stride, const compv_uscalar_t sum_stride)
 {

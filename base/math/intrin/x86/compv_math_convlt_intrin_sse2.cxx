@@ -182,7 +182,6 @@ void CompVMathConvlt1VtHz_32f32f32f_Intrin_SSE2(const compv_float32_t* inPtr, co
 	const compv_uscalar_t stride = (width + pad);
 	const compv_uscalar_t width16 = width & -16;
 	__m128 vecCoeff, vecSum0, vecSum1, vecSum2, vecSum3, vec0f, vec1f, vec2f, vec3f;
-	const __m128i vecZero = _mm_setzero_si128();
 	COMPV_ALIGN_SSE() compv_float32_t mem[16];
 
 	for (j = 0; j < height; ++j) {
@@ -235,7 +234,6 @@ void CompVMathConvlt1VtHz_32f32f8u_Intrin_SSE2(const compv_float32_t* inPtr, uin
 	const compv_uscalar_t stride = (width + pad);
 	const compv_uscalar_t width16 = width & -16;
 	__m128 vecCoeff, vecSum0, vecSum1, vecSum2, vecSum3, vec0f, vec1f, vec2f, vec3f;
-	const __m128i vecZero = _mm_setzero_si128();
 	COMPV_ALIGN_SSE() uint8_t mem[16];
 
 	for (j = 0; j < height; ++j) {

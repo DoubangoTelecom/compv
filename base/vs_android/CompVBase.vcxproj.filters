@@ -172,6 +172,12 @@
     <Filter Include="source\pugixml-1.9">
       <UniqueIdentifier>{bd9540e1-0c16-4802-bccd-6ce395a9d014}</UniqueIdentifier>
     </Filter>
+    <Filter Include="source\ml\libsvm-322\intrin">
+      <UniqueIdentifier>{71add3be-5f18-49b1-b86b-c3edaead2f94}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\ml\libsvm-322\intrin\x86">
+      <UniqueIdentifier>{542f5474-f0f0-45a3-8a8f-16be16341c22}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\compv\base\compv_base.h">
@@ -1436,249 +1442,414 @@
     <ClCompile Include="..\compv_xml.cxx">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="..\image\intrin\x86\compv_image_integral_intrin_ssse3.cxx">
+      <Filter>source\image\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\image\intrin\x86\compv_image_remap_intrin_avx2.cxx">
+      <Filter>source\image\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\image\intrin\x86\compv_image_remap_intrin_sse41.cxx">
+      <Filter>source\image\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ml\libsvm-322\intrin\x86\compv_ml_libsvm-322_intrin_avx.cxx">
+      <Filter>source\ml\libsvm-322\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ml\libsvm-322\intrin\x86\compv_ml_libsvm-322_intrin_sse2.cxx">
+      <Filter>source\ml\libsvm-322\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\intrin\x86\compv_math_op_minmax_intrin_sse2.cxx">
+      <Filter>source\math\intrin\x86</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\asm\x86\compv_bits_macros_x86.s">
+    <YASM Include="..\asm\x86\compv_bits_x86.s">
       <Filter>source\asm\x86</Filter>
-    </None>
-    <None Include="..\asm\x86\compv_bits_x86.s">
+    </YASM>
+    <YASM Include="..\asm\x86\compv_mem_x64.s">
       <Filter>source\asm\x86</Filter>
-    </None>
-    <None Include="..\asm\x86\compv_common_x86.s">
+    </YASM>
+    <YASM Include="..\asm\x86\compv_bits_macros_x86.s">
       <Filter>source\asm\x86</Filter>
-    </None>
-    <None Include="..\asm\x86\compv_mem_x64.s">
+    </YASM>
+    <YASM Include="..\asm\x86\compv_common_x86.s">
       <Filter>source\asm\x86</Filter>
-    </None>
-    <None Include="..\asm\x86\compv_mem_x64_avx.s">
+    </YASM>
+    <YASM Include="..\asm\x86\compv_mem_x64_avx.s">
       <Filter>source\asm\x86</Filter>
-    </None>
-    <None Include="..\asm\x86\compv_mem_x64_sse.s">
+    </YASM>
+    <YASM Include="..\asm\x86\compv_mem_x64_sse.s">
       <Filter>source\asm\x86</Filter>
-    </None>
-    <None Include="..\asm\x86\compv_mem_x86.s">
+    </YASM>
+    <YASM Include="..\asm\x86\compv_mem_x86.s">
       <Filter>source\asm\x86</Filter>
-    </None>
-    <None Include="..\asm\x86\compv_mem_x86_avx.s">
+    </YASM>
+    <YASM Include="..\asm\x86\compv_mem_x86_avx.s">
       <Filter>source\asm\x86</Filter>
-    </None>
-    <None Include="..\asm\x86\compv_mem_x86_sse.s">
+    </YASM>
+    <YASM Include="..\asm\x86\compv_mem_x86_sse.s">
       <Filter>source\asm\x86</Filter>
-    </None>
-    <None Include="..\asm\x86\compv_utils_x86.s">
+    </YASM>
+    <YASM Include="..\asm\x86\compv_utils_x86.s">
       <Filter>source\asm\x86</Filter>
-    </None>
-    <None Include="..\math\asm\x86\compv_math_macros_x86.s">
+    </YASM>
+    <YASM Include="..\image\asm\x86\compv_image_conv_grayscale_x86_sse.s">
+      <Filter>source\image\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\image\asm\x86\compv_image_conv_macros.s">
+      <Filter>source\image\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\image\asm\x86\compv_image_conv_rgbfamily_x64_avx.s">
+      <Filter>source\image\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\image\asm\x86\compv_image_conv_rgbfamily_x64_sse.s">
+      <Filter>source\image\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\image\asm\x86\compv_image_conv_rgbfamily_x86_avx.s">
+      <Filter>source\image\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\image\asm\x86\compv_image_conv_rgbfamily_x86_sse.s">
+      <Filter>source\image\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\image\asm\x86\compv_image_scale_bilinear_macros.s">
+      <Filter>source\image\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\image\asm\x86\compv_image_scale_bilinear_x64_avx.s">
+      <Filter>source\image\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\image\asm\x86\compv_image_scale_bilinear_x64_sse.s">
+      <Filter>source\image\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\image\asm\x86\compv_image_scale_bilinear_x86_avx.s">
+      <Filter>source\image\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\image\asm\x86\compv_image_scale_bilinear_x86_sse.s">
+      <Filter>source\image\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\math\asm\x86\compv_math_macros_x86.s">
       <Filter>source\math\asm\x86</Filter>
-    </None>
-    <None Include="..\math\asm\x86\compv_math_utils_x86.s">
+    </YASM>
+    <YASM Include="..\math\asm\x86\compv_math_utils_x86.s">
       <Filter>source\math\asm\x86</Filter>
-    </None>
-    <None Include="..\math\asm\x86\compv_math_utils_x86_avx.s">
+    </YASM>
+    <YASM Include="..\math\asm\x86\compv_math_utils_x86_avx.s">
       <Filter>source\math\asm\x86</Filter>
-    </None>
-    <None Include="..\math\asm\x86\compv_math_utils_x86_sse.s">
+    </YASM>
+    <YASM Include="..\math\asm\x86\compv_math_utils_x86_sse.s">
       <Filter>source\math\asm\x86</Filter>
-    </None>
-    <None Include="..\image\asm\x86\compv_image_conv_macros.s">
+    </YASM>
+    <YASM Include="..\math\asm\x86\compv_math_cast_x64_sse.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\math\asm\x86\compv_math_convlt_x64_avx.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\math\asm\x86\compv_math_convlt_x64_sse.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\math\asm\x86\compv_math_convlt_x86_avx.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\math\asm\x86\compv_math_convlt_x86_sse.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\math\asm\x86\compv_math_distance_x64.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\math\asm\x86\compv_math_distance_x64_avx.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\math\asm\x86\compv_math_distance_x64_sse.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\math\asm\x86\compv_math_distance_x86_sse.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\math\asm\x86\compv_math_dot_x64_avx.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\math\asm\x86\compv_math_dot_x64_sse.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\math\asm\x86\compv_math_exp_x64_avx.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\math\asm\x86\compv_math_histogram_x64.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\math\asm\x86\compv_math_histogram_x64_avx.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\math\asm\x86\compv_math_histogram_x64_sse.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\math\asm\x86\compv_math_matrix_x64_avx.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\math\asm\x86\compv_math_matrix_x64_sse.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\math\asm\x86\compv_math_matrix_x86_avx.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\math\asm\x86\compv_math_matrix_x86_sse.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\math\asm\x86\compv_math_morph_x64_avx.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\math\asm\x86\compv_math_morph_x64_sse.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\math\asm\x86\compv_math_op_mul_x64_avx.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\math\asm\x86\compv_math_op_mul_x64_sse.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\math\asm\x86\compv_math_op_sub_x64_avx.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\math\asm\x86\compv_math_op_sub_x64_sse.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\math\asm\x86\compv_math_scale_x64_avx.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\math\asm\x86\compv_math_scale_x64_sse.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\math\asm\x86\compv_math_stats_x64_sse.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\math\asm\x86\compv_math_stats_x86_avx.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\math\asm\x86\compv_math_stats_x86_sse.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\math\asm\x86\compv_math_transform_x86_avx.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\math\asm\x86\compv_math_transform_x86_sse.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\math\asm\x86\compv_math_trig_x64_avx.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\math\asm\x86\compv_math_trig_x64_sse.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\math\asm\x86\compv_math_utils_x64_avx.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\math\asm\x86\compv_math_utils_x64_sse.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\asm\x86\compv_bits_x64_sse.s">
+      <Filter>source\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\asm\x86\compv_gradient_fast_x64_sse.s">
+      <Filter>source\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\asm\x86\compv_patch_x64_avx.s">
+      <Filter>source\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\asm\x86\compv_patch_x64_sse.s">
+      <Filter>source\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\asm\x86\compv_patch_x86_avx.s">
+      <Filter>source\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\asm\x86\compv_patch_x86_sse.s">
+      <Filter>source\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\asm\x86\compv_vldx_vstx_macros_x86.s">
+      <Filter>source\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\image\asm\x86\compv_image_conv_hsv_x64_avx.s">
       <Filter>source\image\asm\x86</Filter>
-    </None>
-    <None Include="..\image\asm\x86\compv_image_conv_rgbfamily_x64_avx.s">
+    </YASM>
+    <YASM Include="..\image\asm\x86\compv_image_conv_hsv_x64_sse.s">
       <Filter>source\image\asm\x86</Filter>
-    </None>
-    <None Include="..\image\asm\x86\compv_image_conv_rgbfamily_x64_sse.s">
+    </YASM>
+    <YASM Include="..\image\asm\x86\compv_image_conv_to_rgbx_x64_avx.s">
       <Filter>source\image\asm\x86</Filter>
-    </None>
-    <None Include="..\image\asm\x86\compv_image_conv_rgbfamily_x86_avx.s">
+    </YASM>
+    <YASM Include="..\image\asm\x86\compv_image_conv_to_rgbx_x64_sse.s">
       <Filter>source\image\asm\x86</Filter>
-    </None>
-    <None Include="..\image\asm\x86\compv_image_conv_rgbfamily_x86_sse.s">
+    </YASM>
+    <YASM Include="..\image\asm\x86\compv_image_threshold_x64_avx.s">
       <Filter>source\image\asm\x86</Filter>
-    </None>
-    <None Include="..\image\asm\x86\compv_image_conv_grayscale_x86_sse.s">
+    </YASM>
+    <YASM Include="..\image\asm\x86\compv_image_threshold_x64_sse.s">
       <Filter>source\image\asm\x86</Filter>
-    </None>
-    <None Include="..\image\asm\x86\compv_image_scale_bilinear_macros.s">
-      <Filter>source\image\asm\x86</Filter>
-    </None>
-    <None Include="..\image\asm\x86\compv_image_scale_bilinear_x64_avx.s">
-      <Filter>source\image\asm\x86</Filter>
-    </None>
-    <None Include="..\image\asm\x86\compv_image_scale_bilinear_x64_sse.s">
-      <Filter>source\image\asm\x86</Filter>
-    </None>
-    <None Include="..\image\asm\x86\compv_image_scale_bilinear_x86_avx.s">
-      <Filter>source\image\asm\x86</Filter>
-    </None>
-    <None Include="..\image\asm\x86\compv_image_scale_bilinear_x86_sse.s">
-      <Filter>source\image\asm\x86</Filter>
-    </None>
+    </YASM>
   </ItemGroup>
   <ItemGroup>
-    <GAS Include="..\image\asm\arm\compv_image_conv_rgbfamily_arm32_neon.S">
-      <Filter>source\image\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\asm\arm\compv_test_arm.S">
+    <None Include="..\asm\arm\compv_bits_arm32_neon.S">
       <Filter>source\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\asm\arm\compv_common_arm.S">
+    </None>
+    <None Include="..\asm\arm\compv_bits_arm64_neon.S">
       <Filter>source\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\asm\arm\compv_common_arm32.S">
+    </None>
+    <None Include="..\asm\arm\compv_common_arm.S">
       <Filter>source\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\image\asm\arm\compv_image_scale_bilinear_arm32_neon.S">
-      <Filter>source\image\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\image\asm\arm\compv_image_conv_grayscale_arm32_neon.S">
-      <Filter>source\image\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\image\asm\arm\compv_image_conv_rgbfamily_arm64_neon.S">
-      <Filter>source\image\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\asm\arm\compv_common_arm64.S">
+    </None>
+    <None Include="..\asm\arm\compv_common_arm32.S">
       <Filter>source\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\image\asm\arm\compv_image_conv_grayscale_arm64_neon.S">
-      <Filter>source\image\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\image\asm\arm\compv_image_scale_bilinear_arm64_neon.S">
-      <Filter>source\image\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\math\asm\arm\compv_math_convlt_arm64_neon.S">
-      <Filter>source\math\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\math\asm\arm\compv_math_convlt_arm32_neon.S">
-      <Filter>source\math\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\math\asm\arm\compv_math_distance_arm32_neon.S">
-      <Filter>source\math\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\math\asm\arm\compv_math_distance_arm64_neon.S">
-      <Filter>source\math\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\asm\arm\compv_patch_arm32_neon.S">
+    </None>
+    <None Include="..\asm\arm\compv_common_arm64.S">
       <Filter>source\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\asm\arm\compv_patch_arm64_neon.S">
-      <Filter>source\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\math\asm\arm\compv_math_matrix_arm64_neon.S">
-      <Filter>source\math\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\math\asm\arm\compv_math_matrix_arm32_neon.S">
-      <Filter>source\math\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\math\asm\arm\compv_math_transform_arm32_neon.S">
-      <Filter>source\math\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\math\asm\arm\compv_math_stats_arm32_neon.S">
-      <Filter>source\math\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\math\asm\arm\compv_math_transform_arm64_neon.S">
-      <Filter>source\math\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\math\asm\arm\compv_math_utils_arm64_neon.S">
-      <Filter>source\math\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\math\asm\arm\compv_math_stats_arm64_neon.S">
-      <Filter>source\math\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\math\asm\arm\compv_math_utils_arm32_neon.S">
-      <Filter>source\math\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\image\asm\arm\compv_image_conv_to_rgbx_arm64_neon.S">
+    </None>
+    <None Include="..\image\asm\arm\compv_image_conv_grayscale_arm32_neon.S">
       <Filter>source\image\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\image\asm\arm\compv_image_conv_hsv_arm32_neon.S">
+    </None>
+    <None Include="..\image\asm\arm\compv_image_conv_grayscale_arm64_neon.S">
       <Filter>source\image\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\image\asm\arm\compv_image_conv_hsv_arm64_neon.S">
+    </None>
+    <None Include="..\image\asm\arm\compv_image_conv_hsv_arm32_neon.S">
       <Filter>source\image\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\image\asm\arm\compv_image_conv_to_rgbx_arm32_neon.S">
+    </None>
+    <None Include="..\image\asm\arm\compv_image_conv_hsv_arm64_neon.S">
       <Filter>source\image\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\math\asm\arm\compv_math_histogram_arm32_neon.S">
-      <Filter>source\math\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\math\asm\arm\compv_math_histogram_arm64_neon.S">
-      <Filter>source\math\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\asm\arm\compv_mem_arm64_neon.S">
-      <Filter>source\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\asm\arm\compv_mem_arm32_neon.S">
-      <Filter>source\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\image\asm\arm\compv_image_threshold_arm32_neon.S">
+    </None>
+    <None Include="..\image\asm\arm\compv_image_conv_rgbfamily_arm32_neon.S">
       <Filter>source\image\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\image\asm\arm\compv_image_threshold_arm64_neon.S">
+    </None>
+    <None Include="..\image\asm\arm\compv_image_conv_rgbfamily_arm64_neon.S">
       <Filter>source\image\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\math\asm\arm\compv_math_morph_arm32_neon.S">
+    </None>
+    <None Include="..\image\asm\arm\compv_image_conv_to_rgbx_arm32_neon.S">
+      <Filter>source\image\asm\arm</Filter>
+    </None>
+    <None Include="..\image\asm\arm\compv_image_conv_to_rgbx_arm64_neon.S">
+      <Filter>source\image\asm\arm</Filter>
+    </None>
+    <None Include="..\image\asm\arm\compv_image_scale_bilinear_arm32_neon.S">
+      <Filter>source\image\asm\arm</Filter>
+    </None>
+    <None Include="..\image\asm\arm\compv_image_scale_bilinear_arm64_neon.S">
+      <Filter>source\image\asm\arm</Filter>
+    </None>
+    <None Include="..\image\asm\arm\compv_image_threshold_arm32_neon.S">
+      <Filter>source\image\asm\arm</Filter>
+    </None>
+    <None Include="..\image\asm\arm\compv_image_threshold_arm64_neon.S">
+      <Filter>source\image\asm\arm</Filter>
+    </None>
+    <None Include="..\math\asm\arm\compv_math_cast_arm32_neon.S">
       <Filter>source\math\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\math\asm\arm\compv_math_morph_arm64_neon.S">
+    </None>
+    <None Include="..\math\asm\arm\compv_math_cast_arm64_neon.S">
       <Filter>source\math\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\parallel\asm\arm\compv_parallel_arm32.S">
-      <Filter>source\parallel\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\asm\arm\compv_bits_arm32_neon.S">
+    </None>
+    <None Include="..\math\asm\arm\compv_math_convlt_arm32_neon.S">
+      <Filter>source\math\asm\arm</Filter>
+    </None>
+    <None Include="..\math\asm\arm\compv_math_convlt_arm64_neon.S">
+      <Filter>source\math\asm\arm</Filter>
+    </None>
+    <None Include="..\math\asm\arm\compv_math_distance_arm32_neon.S">
+      <Filter>source\math\asm\arm</Filter>
+    </None>
+    <None Include="..\math\asm\arm\compv_math_distance_arm64_neon.S">
+      <Filter>source\math\asm\arm</Filter>
+    </None>
+    <None Include="..\math\asm\arm\compv_math_dot_arm32_neon.S">
+      <Filter>source\math\asm\arm</Filter>
+    </None>
+    <None Include="..\math\asm\arm\compv_math_dot_arm64_neon.S">
+      <Filter>source\math\asm\arm</Filter>
+    </None>
+    <None Include="..\math\asm\arm\compv_math_exp_arm32_neon.S">
+      <Filter>source\math\asm\arm</Filter>
+    </None>
+    <None Include="..\math\asm\arm\compv_math_exp_arm64_neon.S">
+      <Filter>source\math\asm\arm</Filter>
+    </None>
+    <None Include="..\math\asm\arm\compv_math_histogram_arm32_neon.S">
+      <Filter>source\math\asm\arm</Filter>
+    </None>
+    <None Include="..\math\asm\arm\compv_math_histogram_arm64_neon.S">
+      <Filter>source\math\asm\arm</Filter>
+    </None>
+    <None Include="..\math\asm\arm\compv_math_matrix_arm32_neon.S">
+      <Filter>source\math\asm\arm</Filter>
+    </None>
+    <None Include="..\math\asm\arm\compv_math_matrix_arm64_neon.S">
+      <Filter>source\math\asm\arm</Filter>
+    </None>
+    <None Include="..\math\asm\arm\compv_math_morph_arm32_neon.S">
+      <Filter>source\math\asm\arm</Filter>
+    </None>
+    <None Include="..\math\asm\arm\compv_math_morph_arm64_neon.S">
+      <Filter>source\math\asm\arm</Filter>
+    </None>
+    <None Include="..\math\asm\arm\compv_math_op_mul_arm32_neon.S">
+      <Filter>source\math\asm\arm</Filter>
+    </None>
+    <None Include="..\math\asm\arm\compv_math_op_mul_arm64_neon.S">
+      <Filter>source\math\asm\arm</Filter>
+    </None>
+    <None Include="..\math\asm\arm\compv_math_op_sub_arm32_neon.S">
+      <Filter>source\math\asm\arm</Filter>
+    </None>
+    <None Include="..\math\asm\arm\compv_math_op_sub_arm64_neon.S">
+      <Filter>source\math\asm\arm</Filter>
+    </None>
+    <None Include="..\math\asm\arm\compv_math_scale_arm32_neon.S">
+      <Filter>source\math\asm\arm</Filter>
+    </None>
+    <None Include="..\math\asm\arm\compv_math_scale_arm64_neon.S">
+      <Filter>source\math\asm\arm</Filter>
+    </None>
+    <None Include="..\math\asm\arm\compv_math_stats_arm32_neon.S">
+      <Filter>source\math\asm\arm</Filter>
+    </None>
+    <None Include="..\math\asm\arm\compv_math_stats_arm64_neon.S">
+      <Filter>source\math\asm\arm</Filter>
+    </None>
+    <None Include="..\math\asm\arm\compv_math_transform_arm32_neon.S">
+      <Filter>source\math\asm\arm</Filter>
+    </None>
+    <None Include="..\math\asm\arm\compv_math_transform_arm64_neon.S">
+      <Filter>source\math\asm\arm</Filter>
+    </None>
+    <None Include="..\math\asm\arm\compv_math_trig_arm32_neon.S">
+      <Filter>source\math\asm\arm</Filter>
+    </None>
+    <None Include="..\math\asm\arm\compv_math_trig_arm64_neon.S">
+      <Filter>source\math\asm\arm</Filter>
+    </None>
+    <None Include="..\math\asm\arm\compv_math_utils_arm32_neon.S">
+      <Filter>source\math\asm\arm</Filter>
+    </None>
+    <None Include="..\math\asm\arm\compv_math_utils_arm64_neon.S">
+      <Filter>source\math\asm\arm</Filter>
+    </None>
+    <None Include="..\asm\arm\compv_patch_arm64_neon.S">
       <Filter>source\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\asm\arm\compv_bits_arm64_neon.S">
+    </None>
+    <None Include="..\asm\arm\compv_mem_arm32_neon.S">
       <Filter>source\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\asm\arm\compv_gradient_fast_arm32_neon.S">
+    </None>
+    <None Include="..\asm\arm\compv_mem_arm64_neon.S">
       <Filter>source\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\asm\arm\compv_gradient_fast_arm64_neon.S">
+    </None>
+    <None Include="..\parallel\asm\arm\compv_parallel_arm32.S">
       <Filter>source\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\math\asm\arm\compv_math_trig_arm32_neon.S">
-      <Filter>source\math\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\math\asm\arm\compv_math_trig_arm64_neon.S">
-      <Filter>source\math\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\math\asm\arm\compv_math_op_mul_arm32_neon.S">
-      <Filter>source\math\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\math\asm\arm\compv_math_op_mul_arm64_neon.S">
-      <Filter>source\math\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\math\asm\arm\compv_math_op_sub_arm32_neon.S">
-      <Filter>source\math\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\math\asm\arm\compv_math_op_sub_arm64_neon.S">
-      <Filter>source\math\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\math\asm\arm\compv_math_cast_arm32_neon.S">
-      <Filter>source\math\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\math\asm\arm\compv_math_cast_arm64_neon.S">
-      <Filter>source\math\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\math\asm\arm\compv_math_exp_arm32_neon.S">
-      <Filter>source\math\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\math\asm\arm\compv_math_exp_arm64_neon.S">
-      <Filter>source\math\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\math\asm\arm\compv_math_dot_arm64_neon.S">
-      <Filter>source\math\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\math\asm\arm\compv_math_dot_arm32_neon.S">
-      <Filter>source\math\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\math\asm\arm\compv_math_scale_arm32_neon.S">
-      <Filter>source\math\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\math\asm\arm\compv_math_scale_arm64_neon.S">
-      <Filter>source\math\asm\arm</Filter>
-    </GAS>
+    </None>
+    <None Include="..\asm\arm\compv_patch_arm32_neon.S">
+      <Filter>source\asm\arm</Filter>
+    </None>
+    <None Include="..\asm\arm\compv_gradient_fast_arm32_neon.S">
+      <Filter>source\asm\arm</Filter>
+    </None>
+    <None Include="..\asm\arm\compv_gradient_fast_arm64_neon.S">
+      <Filter>source\asm\arm</Filter>
+    </None>
+    <None Include="..\asm\arm\compv_test_arm.S">
+      <Filter>source\asm\arm</Filter>
+    </None>
   </ItemGroup>
 </Project>

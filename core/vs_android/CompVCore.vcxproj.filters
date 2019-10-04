@@ -214,6 +214,15 @@
     <Filter Include="source\features\hog\asm\arm">
       <UniqueIdentifier>{f85544a5-0d63-404f-936e-401f5f7d0eec}</UniqueIdentifier>
     </Filter>
+    <Filter Include="source\features\hog\asm\x86">
+      <UniqueIdentifier>{7a151824-75c8-4956-acfe-780a4ef4705e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\features\hough\asm\x86">
+      <UniqueIdentifier>{aa616d39-9fe6-4353-8bca-887009b16a2a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\features\orb\asm\x86">
+      <UniqueIdentifier>{b2d87d9d-49a2-4e9b-9cd6-c2161afed246}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\compv\core\compv_core.h">
@@ -523,91 +532,118 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\features\fast\asm\x86\compv_core_feature_fast_dete_macros_x86_avx.s">
-      <Filter>source\features\fast\asm\x86</Filter>
-    </None>
-    <None Include="..\features\fast\asm\x86\compv_core_feature_fast_dete_macros_x86_sse.s">
-      <Filter>source\features\fast\asm\x86</Filter>
-    </None>
-    <None Include="..\features\fast\asm\x86\compv_core_feature_fast_dete_x64_avx.s">
-      <Filter>source\features\fast\asm\x86</Filter>
-    </None>
-    <None Include="..\features\fast\asm\x86\compv_core_feature_fast_dete_x64_sse.s">
-      <Filter>source\features\fast\asm\x86</Filter>
-    </None>
-    <None Include="..\features\fast\asm\x86\compv_core_feature_fast_dete_x86_avx.s">
-      <Filter>source\features\fast\asm\x86</Filter>
-    </None>
-    <None Include="..\features\fast\asm\x86\compv_core_feature_fast_dete_x86_sse.s">
-      <Filter>source\features\fast\asm\x86</Filter>
-    </None>
-    <None Include="..\features\edges\asm\x86\compv_core_feature_canny_dete_x64_avx.s">
-      <Filter>source\features\edges\asm\x86</Filter>
-    </None>
-    <None Include="..\features\edges\asm\x86\compv_core_feature_canny_dete_x64_sse.s">
-      <Filter>source\features\edges\asm\x86</Filter>
-    </None>
-    <None Include="..\features\edges\asm\x86\compv_core_feature_canny_dete_x86_avx.s">
-      <Filter>source\features\edges\asm\x86</Filter>
-    </None>
-    <None Include="..\features\edges\asm\x86\compv_core_feature_canny_dete_x86_sse.s">
-      <Filter>source\features\edges\asm\x86</Filter>
-    </None>
-    <None Include="..\ccl\asm\x86\compv_core_ccl_lsl_x64.s">
+    <YASM Include="..\ccl\asm\x86\compv_core_ccl_lsl_x64.s">
       <Filter>source\ccl\asm\x86</Filter>
-    </None>
-    <None Include="..\ccl\asm\x86\compv_core_ccl_lsl_x64_avx.s">
+    </YASM>
+    <YASM Include="..\ccl\asm\x86\compv_core_ccl_lsl_x64_avx.s">
       <Filter>source\ccl\asm\x86</Filter>
-    </None>
-    <None Include="..\ccl\asm\x86\compv_core_ccl_lsl_x64_sse.s">
+    </YASM>
+    <YASM Include="..\ccl\asm\x86\compv_core_ccl_lsl_x64_sse.s">
       <Filter>source\ccl\asm\x86</Filter>
-    </None>
+    </YASM>
+    <YASM Include="..\features\edges\asm\x86\compv_core_feature_canny_dete_x64_avx.s">
+      <Filter>source\features\edges\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\features\edges\asm\x86\compv_core_feature_canny_dete_x64_sse.s">
+      <Filter>source\features\edges\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\features\edges\asm\x86\compv_core_feature_canny_dete_x86_avx.s">
+      <Filter>source\features\edges\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\features\edges\asm\x86\compv_core_feature_canny_dete_x86_sse.s">
+      <Filter>source\features\edges\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\features\fast\asm\x86\compv_core_feature_fast_dete_macros_x86_avx.s">
+      <Filter>source\features\fast\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\features\fast\asm\x86\compv_core_feature_fast_dete_macros_x86_sse.s">
+      <Filter>source\features\fast\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\features\fast\asm\x86\compv_core_feature_fast_dete_x64_avx.s">
+      <Filter>source\features\fast\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\features\fast\asm\x86\compv_core_feature_fast_dete_x64_sse.s">
+      <Filter>source\features\fast\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\features\fast\asm\x86\compv_core_feature_fast_dete_x86_avx.s">
+      <Filter>source\features\fast\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\features\fast\asm\x86\compv_core_feature_fast_dete_x86_sse.s">
+      <Filter>source\features\fast\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\features\hog\asm\x86\compv_core_feature_hog_common_norm_x64_sse.s">
+      <Filter>source\features\hog\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\features\hough\asm\x86\compv_core_feature_houghkht_x64_avx.s">
+      <Filter>source\features\hough\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\features\hough\asm\x86\compv_core_feature_houghkht_x64_sse.s">
+      <Filter>source\features\hough\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\features\hough\asm\x86\compv_core_feature_houghsht_x86_avx.s">
+      <Filter>source\features\hough\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\features\hough\asm\x86\compv_core_feature_houghsht_x86_sse.s">
+      <Filter>source\features\hough\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\features\orb\asm\x86\compv_core_feature_orb_desc_x64_avx.s">
+      <Filter>source\features\orb\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\features\orb\asm\x86\compv_core_feature_orb_desc_x64_sse.s">
+      <Filter>source\features\orb\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\features\orb\asm\x86\compv_core_feature_orb_desc_x86_avx.s">
+      <Filter>source\features\orb\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\features\orb\asm\x86\compv_core_feature_orb_desc_x86_sse.s">
+      <Filter>source\features\orb\asm\x86</Filter>
+    </YASM>
   </ItemGroup>
   <ItemGroup>
-    <GAS Include="..\features\fast\asm\arm\compv_core_feature_fast_dete_macros_neon.S">
-      <Filter>source\features\fast\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\features\fast\asm\arm\compv_core_feature_fast_dete_arm32_neon.S">
-      <Filter>source\features\fast\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\features\fast\asm\arm\compv_core_feature_fast_dete_arm64_neon.S">
-      <Filter>source\features\fast\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\features\orb\asm\arm\compv_core_feature_orb_desc_arm32.S">
-      <Filter>source\features\orb\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\features\orb\asm\arm\compv_core_feature_orb_desc_arm64.S">
-      <Filter>source\features\orb\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\features\edges\asm\arm\compv_core_feature_canny_dete_arm32_neon.S">
+    <None Include="..\ccl\asm\arm\compv_core_ccl_lsl_arm32.S">
+      <Filter>source\ccl\asm\arm</Filter>
+    </None>
+    <None Include="..\ccl\asm\arm\compv_core_ccl_lsl_arm32_neon.S">
+      <Filter>source\ccl\asm\arm</Filter>
+    </None>
+    <None Include="..\ccl\asm\arm\compv_core_ccl_lsl_arm64.S">
+      <Filter>source\ccl\asm\arm</Filter>
+    </None>
+    <None Include="..\ccl\asm\arm\compv_core_ccl_lsl_arm64_neon.S">
+      <Filter>source\ccl\asm\arm</Filter>
+    </None>
+    <None Include="..\features\edges\asm\arm\compv_core_feature_canny_dete_arm32_neon.S">
       <Filter>source\features\edges\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\features\edges\asm\arm\compv_core_feature_canny_dete_arm64_neon.S">
+    </None>
+    <None Include="..\features\edges\asm\arm\compv_core_feature_canny_dete_arm64_neon.S">
       <Filter>source\features\edges\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\features\hough\asm\arm\compv_core_feature_houghkht_arm32.S">
-      <Filter>source\features\hough\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\features\hough\asm\arm\compv_core_feature_houghkht_arm64.S">
-      <Filter>source\features\hough\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\ccl\asm\arm\compv_core_ccl_lsl_arm32_neon.S">
-      <Filter>source\ccl\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\ccl\asm\arm\compv_core_ccl_lsl_arm32.S">
-      <Filter>source\ccl\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\ccl\asm\arm\compv_core_ccl_lsl_arm64.S">
-      <Filter>source\ccl\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\ccl\asm\arm\compv_core_ccl_lsl_arm64_neon.S">
-      <Filter>source\ccl\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\features\hog\asm\arm\compv_core_feature_hog_common_norm_arm32_neon.S">
+    </None>
+    <None Include="..\features\fast\asm\arm\compv_core_feature_fast_dete_arm32_neon.S">
+      <Filter>source\features\fast\asm\arm</Filter>
+    </None>
+    <None Include="..\features\fast\asm\arm\compv_core_feature_fast_dete_arm64_neon.S">
+      <Filter>source\features\fast\asm\arm</Filter>
+    </None>
+    <None Include="..\features\fast\asm\arm\compv_core_feature_fast_dete_macros_neon.S">
+      <Filter>source\features\fast\asm\arm</Filter>
+    </None>
+    <None Include="..\features\hog\asm\arm\compv_core_feature_hog_common_norm_arm32_neon.S">
       <Filter>source\features\hog\asm\arm</Filter>
-    </GAS>
-    <GAS Include="..\features\hog\asm\arm\compv_core_feature_hog_common_norm_arm64_neon.S">
+    </None>
+    <None Include="..\features\hog\asm\arm\compv_core_feature_hog_common_norm_arm64_neon.S">
       <Filter>source\features\hog\asm\arm</Filter>
-    </GAS>
+    </None>
+    <None Include="..\features\hough\asm\arm\compv_core_feature_houghkht_arm32.S">
+      <Filter>source\features\hough\asm\arm</Filter>
+    </None>
+    <None Include="..\features\hough\asm\arm\compv_core_feature_houghkht_arm64.S">
+      <Filter>source\features\hough\asm\arm</Filter>
+    </None>
+    <None Include="..\features\orb\asm\arm\compv_core_feature_orb_desc_arm64.S">
+      <Filter>source\features\orb\asm\arm</Filter>
+    </None>
+    <None Include="..\features\orb\asm\arm\compv_core_feature_orb_desc_arm32.S">
+      <Filter>source\features\orb\asm\arm</Filter>
+    </None>
   </ItemGroup>
 </Project>

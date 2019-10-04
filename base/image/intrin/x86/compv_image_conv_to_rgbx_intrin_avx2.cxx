@@ -231,7 +231,9 @@ COMPV_NAMESPACE_BEGIN()
 #endif
 void CompVImageConvYuv420p_to_Rgba32_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t* yPtr, COMPV_ALIGNED(AVX) const uint8_t* uPtr, COMPV_ALIGNED(AVX) const uint8_t* vPtr, COMPV_ALIGNED(AVX) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride)
 {
+	COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-variable")
 	CompVImageConvYuvPlanar_to_Rgbx_Intrin_AVX2(yuv420p, rgba32);
+	COMPV_GCC_DISABLE_WARNINGS_END()
 }
 
 #if defined(__INTEL_COMPILER)
@@ -239,7 +241,9 @@ void CompVImageConvYuv420p_to_Rgba32_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_
 #endif
 void CompVImageConvYuv420p_to_Rgb24_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t* yPtr, COMPV_ALIGNED(AVX) const uint8_t* uPtr, COMPV_ALIGNED(AVX) const uint8_t* vPtr, COMPV_ALIGNED(AVX) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride)
 {
+	COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-variable")
 	CompVImageConvYuvPlanar_to_Rgbx_Intrin_AVX2(yuv420p, rgb24);
+	COMPV_GCC_DISABLE_WARNINGS_END()
 }
 
 #if defined(__INTEL_COMPILER)
@@ -247,7 +251,9 @@ void CompVImageConvYuv420p_to_Rgb24_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t
 #endif
 void CompVImageConvYuv422p_to_Rgba32_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t* yPtr, COMPV_ALIGNED(AVX) const uint8_t* uPtr, COMPV_ALIGNED(AVX) const uint8_t* vPtr, COMPV_ALIGNED(AVX) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride)
 {
+	COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-variable")
 	CompVImageConvYuvPlanar_to_Rgbx_Intrin_AVX2(yuv422p, rgba32);
+	COMPV_GCC_DISABLE_WARNINGS_END()
 }
 
 #if defined(__INTEL_COMPILER)
@@ -255,7 +261,9 @@ void CompVImageConvYuv422p_to_Rgba32_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_
 #endif
 void CompVImageConvYuv422p_to_Rgb24_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t* yPtr, COMPV_ALIGNED(AVX) const uint8_t* uPtr, COMPV_ALIGNED(AVX) const uint8_t* vPtr, COMPV_ALIGNED(AVX) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride)
 {
+	COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-variable")
 	CompVImageConvYuvPlanar_to_Rgbx_Intrin_AVX2(yuv422p, rgb24);
+	COMPV_GCC_DISABLE_WARNINGS_END()
 }
 
 #if defined(__INTEL_COMPILER)
@@ -263,7 +271,9 @@ void CompVImageConvYuv422p_to_Rgb24_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t
 #endif
 void CompVImageConvYuv444p_to_Rgba32_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t* yPtr, COMPV_ALIGNED(AVX) const uint8_t* uPtr, COMPV_ALIGNED(AVX) const uint8_t* vPtr, COMPV_ALIGNED(AVX) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride)
 {
+	COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-variable")
 	CompVImageConvYuvPlanar_to_Rgbx_Intrin_AVX2(yuv444p, rgba32);
+	COMPV_GCC_DISABLE_WARNINGS_END()
 }
 
 #if defined(__INTEL_COMPILER)
@@ -271,7 +281,9 @@ void CompVImageConvYuv444p_to_Rgba32_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_
 #endif
 void CompVImageConvYuv444p_to_Rgb24_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t* yPtr, COMPV_ALIGNED(AVX) const uint8_t* uPtr, COMPV_ALIGNED(AVX) const uint8_t* vPtr, COMPV_ALIGNED(AVX) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride)
 {
+	COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-variable")
 	CompVImageConvYuvPlanar_to_Rgbx_Intrin_AVX2(yuv444p, rgb24);
+	COMPV_GCC_DISABLE_WARNINGS_END()
 }
 
 #if defined(__INTEL_COMPILER)
@@ -279,7 +291,9 @@ void CompVImageConvYuv444p_to_Rgb24_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t
 #endif
 void CompVImageConvNv12_to_Rgba32_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t* yPtr, COMPV_ALIGNED(AVX) const uint8_t* uvPtr, COMPV_ALIGNED(AVX) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride)
 {
+	COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-variable")
 	CompVImageConvYuvPlanar_to_Rgbx_Intrin_AVX2(nv12, rgba32);
+	COMPV_GCC_DISABLE_WARNINGS_END()
 }
 
 #if defined(__INTEL_COMPILER)
@@ -287,7 +301,9 @@ void CompVImageConvNv12_to_Rgba32_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t* 
 #endif
 void CompVImageConvNv12_to_Rgb24_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t* yPtr, COMPV_ALIGNED(AVX) const uint8_t* uvPtr, COMPV_ALIGNED(AVX) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride)
 {
+	COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-variable")
 	CompVImageConvYuvPlanar_to_Rgbx_Intrin_AVX2(nv12, rgb24);
+	COMPV_GCC_DISABLE_WARNINGS_END()
 }
 
 #if defined(__INTEL_COMPILER)
@@ -295,7 +311,9 @@ void CompVImageConvNv12_to_Rgb24_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t* y
 #endif
 void CompVImageConvNv21_to_Rgba32_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t* yPtr, COMPV_ALIGNED(AVX) const uint8_t* uvPtr, COMPV_ALIGNED(AVX) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride)
 {
+	COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-variable")
 	CompVImageConvYuvPlanar_to_Rgbx_Intrin_AVX2(nv21, rgba32);
+	COMPV_GCC_DISABLE_WARNINGS_END()
 }
 
 #if defined(__INTEL_COMPILER)
@@ -303,7 +321,9 @@ void CompVImageConvNv21_to_Rgba32_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t* 
 #endif
 void CompVImageConvNv21_to_Rgb24_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t* yPtr, COMPV_ALIGNED(AVX) const uint8_t* uvPtr, COMPV_ALIGNED(AVX) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride)
 {
+	COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-variable")
 	CompVImageConvYuvPlanar_to_Rgbx_Intrin_AVX2(nv21, rgb24);
+	COMPV_GCC_DISABLE_WARNINGS_END()
 }
 
 #define yuyv422_mask	kShuffleEpi8_Yuyv422ToYuv_i32
@@ -395,7 +415,9 @@ void CompVImageConvNv21_to_Rgb24_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t* y
 #endif
 void CompVImageConvYuyv422_to_Rgba32_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t* yuvPtr, COMPV_ALIGNED(AVX) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride)
 {
+	COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-variable")
 	CompVImageConvYuvPacked_to_Rgbx_Intrin_AVX2(yuyv422, rgba32);
+	COMPV_GCC_DISABLE_WARNINGS_END()
 }
 
 #if defined(__INTEL_COMPILER)
@@ -403,7 +425,9 @@ void CompVImageConvYuyv422_to_Rgba32_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_
 #endif
 void CompVImageConvYuyv422_to_Rgb24_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t* yuvPtr, COMPV_ALIGNED(AVX) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride)
 {
+	COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-variable")
 	CompVImageConvYuvPacked_to_Rgbx_Intrin_AVX2(yuyv422, rgb24);
+	COMPV_GCC_DISABLE_WARNINGS_END()
 }
 
 #if defined(__INTEL_COMPILER)
@@ -411,7 +435,9 @@ void CompVImageConvYuyv422_to_Rgb24_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t
 #endif
 void CompVImageConvUyvy422_to_Rgba32_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t* yuvPtr, COMPV_ALIGNED(AVX) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride)
 {
+	COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-variable")
 	CompVImageConvYuvPacked_to_Rgbx_Intrin_AVX2(uyvy422, rgba32);
+	COMPV_GCC_DISABLE_WARNINGS_END()
 }
 
 #if defined(__INTEL_COMPILER)
@@ -419,7 +445,9 @@ void CompVImageConvUyvy422_to_Rgba32_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_
 #endif
 void CompVImageConvUyvy422_to_Rgb24_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t* yuvPtr, COMPV_ALIGNED(AVX) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride)
 {
+	COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-variable")
 	CompVImageConvYuvPacked_to_Rgbx_Intrin_AVX2(uyvy422, rgb24);
+	COMPV_GCC_DISABLE_WARNINGS_END()
 }
 
 COMPV_NAMESPACE_END()
