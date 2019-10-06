@@ -88,8 +88,8 @@ void CompVMemUnpack3_Intrin_NEON(
 }
 
 // TODO(dmi) ASM code slightly faster on both ARM32 and ARM64 (tested on MediaPad2)
-// TODO(dmi): On MediaPad2 ARM64, 1282x720, 1 thread, "Unpack+Pack" -> Intrin: 504ms, ASM: 429ms
-// TODO(dmi): On MediaPad2 ARM32, 1282x720, 1 thread, "Unpack+Pack" -> Intrin: 502ms, ASM: 443ms
+// TODO(dmi): On MediaPad2 ARM64, 1282x720, 1 thread, "Unpack+Pack" -> Intrin: 504ms, ASM: 409ms
+// TODO(dmi): On MediaPad2 ARM32, 1282x720, 1 thread, "Unpack+Pack" -> Intrin: 502ms, ASM: 439ms
 void CompVMemPack3_Intrin_NEON(
 	COMPV_ALIGNED(NEON) compv_uint8x3_t* dstPtr,
 	COMPV_ALIGNED(NEON) const uint8_t* srcPt0, COMPV_ALIGNED(NEON) const uint8_t* srcPt1, COMPV_ALIGNED(NEON) const uint8_t* srcPt2,

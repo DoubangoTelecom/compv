@@ -290,12 +290,12 @@ COMPV_GAS_FUNCTION_DECLARE CompVMemPack3_Asm_NEON32
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 		mov i, width1
 		LoopWidth_CompVMemPack3_Asm_NEON32:
-			pld [srcPt0, #(CACHE_LINE_SIZE*3)]
-			pld [srcPt1, #(CACHE_LINE_SIZE*3)]
-			pld [srcPt2, #(CACHE_LINE_SIZE*3)]
 			vld1.u8 {q0}, [srcPt0 :128]!
 			vld1.u8 {q1}, [srcPt1 :128]!
 			vld1.u8 {q2}, [srcPt2 :128]!
+			pld [srcPt0, #(CACHE_LINE_SIZE*3)]
+			pld [srcPt1, #(CACHE_LINE_SIZE*3)]
+			pld [srcPt2, #(CACHE_LINE_SIZE*3)]
 			vst3.u8 {q0x, q1x, q2x}, [dstPtr: 64]!
 			vst3.u8 {q0y, q1y, q2y}, [dstPtr: 64]!
 			subs i, i, #16

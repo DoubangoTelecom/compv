@@ -297,12 +297,12 @@ COMPV_GAS_FUNCTION_DECLARE CompVMemPack3_Asm_NEON64
 		#################################################
 		mov i, #0
 		LoopWidth_CompVMemPack3_Asm_NEON64:
-			prfm pstl1keep, [srcPt0, #(CACHE_LINE_SIZE*4)]
-			prfm pstl1keep, [srcPt1, #(CACHE_LINE_SIZE*4)]
-			prfm pstl1keep, [srcPt2, #(CACHE_LINE_SIZE*4)]
 			ld1 {v0.16b}, [srcPt0], #(16*COMPV_GAS_UINT8_SZ_BYTES)
 			ld1 {v1.16b}, [srcPt1], #(16*COMPV_GAS_UINT8_SZ_BYTES)
 			ld1 {v2.16b}, [srcPt2], #(16*COMPV_GAS_UINT8_SZ_BYTES)
+			prfm pstl1keep, [srcPt0, #(CACHE_LINE_SIZE*4)]
+			prfm pstl1keep, [srcPt1, #(CACHE_LINE_SIZE*4)]
+			prfm pstl1keep, [srcPt2, #(CACHE_LINE_SIZE*4)]
 			st3 { v0.16b, v1.16b, v2.16b }, [dstPtr], #(16*3*COMPV_GAS_UINT8_SZ_BYTES)
 			add i, i, #16
 			cmp i, width
