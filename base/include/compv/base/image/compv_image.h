@@ -25,7 +25,8 @@ public:
 	static COMPV_ERROR_CODE wrap(COMPV_SUBTYPE ePixelFormat, const void* dataPtr, const size_t dataWidth, const size_t dataHeight, const size_t dataStride, CompVMatPtrPtr image, const size_t imageStride = 0);
 	static COMPV_ERROR_CODE clone(const CompVMatPtr& imageIn, CompVMatPtrPtr imageOut);
 	static COMPV_ERROR_CODE crop(const CompVMatPtr& imageIn, const CompVRectFloat32& roi, CompVMatPtrPtr imageOut);
-	static COMPV_ERROR_CODE split(const CompVMatPtr& imageIn, CompVMatPtrVector& outputs);
+	static COMPV_ERROR_CODE unpack(const CompVMatPtr& imageIn, CompVMatPtrVector& outputs);
+	static COMPV_ERROR_CODE pack(const CompVMatPtrVector& inputs, CompVMatPtrPtr output);
 	static COMPV_ERROR_CODE remap(const CompVMatPtr& imageIn, CompVMatPtrPtr output, const CompVMatPtr& map, COMPV_INTERPOLATION_TYPE interType = COMPV_INTERPOLATION_TYPE_BILINEAR, const CompVRectFloat32* inputROI = nullptr);
 
 	static COMPV_ERROR_CODE convert(const CompVMatPtr& imageIn, COMPV_SUBTYPE pixelFormatOut, CompVMatPtrPtr imageOut);

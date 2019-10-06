@@ -211,6 +211,9 @@
     <Filter Include="source\easyexif">
       <UniqueIdentifier>{e6355546-218b-4bfa-8199-6de67e923b70}</UniqueIdentifier>
     </Filter>
+    <Filter Include="source\asm\arm">
+      <UniqueIdentifier>{2a4cf357-ab5b-4cd1-8216-06aac9f117e6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\base\compv_base.h">
@@ -1922,6 +1925,42 @@
     </None>
     <None Include="asm\x86\compv_vldx_vstx_macros_x86.s">
       <Filter>source\asm\x86</Filter>
+    </None>
+    <None Include="asm\arm\compv_bits_arm32_neon.S">
+      <Filter>source\asm\arm</Filter>
+    </None>
+    <None Include="asm\arm\compv_bits_arm64_neon.S">
+      <Filter>source\asm\arm</Filter>
+    </None>
+    <None Include="asm\arm\compv_common_arm.S">
+      <Filter>source\asm\arm</Filter>
+    </None>
+    <None Include="asm\arm\compv_common_arm32.S">
+      <Filter>source\asm\arm</Filter>
+    </None>
+    <None Include="asm\arm\compv_common_arm64.S">
+      <Filter>source\asm\arm</Filter>
+    </None>
+    <None Include="asm\arm\compv_gradient_fast_arm32_neon.S">
+      <Filter>source\asm\arm</Filter>
+    </None>
+    <None Include="asm\arm\compv_gradient_fast_arm64_neon.S">
+      <Filter>source\asm\arm</Filter>
+    </None>
+    <None Include="asm\arm\compv_mem_arm32_neon.S">
+      <Filter>source\asm\arm</Filter>
+    </None>
+    <None Include="asm\arm\compv_mem_arm64_neon.S">
+      <Filter>source\asm\arm</Filter>
+    </None>
+    <None Include="asm\arm\compv_patch_arm32_neon.S">
+      <Filter>source\asm\arm</Filter>
+    </None>
+    <None Include="asm\arm\compv_patch_arm64_neon.S">
+      <Filter>source\asm\arm</Filter>
+    </None>
+    <None Include="asm\arm\compv_test_arm.S">
+      <Filter>source\asm\arm</Filter>
     </None>
   </ItemGroup>
 </Project>

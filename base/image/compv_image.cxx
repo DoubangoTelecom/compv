@@ -334,7 +334,7 @@ COMPV_ERROR_CODE CompVImage::crop(const CompVMatPtr& imageIn, const CompVRectFlo
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVImage::split(const CompVMatPtr& imageIn, CompVMatPtrVector& outputs)
+COMPV_ERROR_CODE CompVImage::unpack(const CompVMatPtr& imageIn, CompVMatPtrVector& outputs)
 {
 	COMPV_CHECK_EXP_RETURN(!imageIn || imageIn->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
@@ -361,7 +361,7 @@ COMPV_ERROR_CODE CompVImage::split(const CompVMatPtr& imageIn, CompVMatPtrVector
 		if (!ptr8uImg2 || ptr8uImg2->cols() != width || ptr8uImg2->rows() != height || ptr8uImg2->stride() != stride || ptr8uImg2->elmtInBytes() != sizeof(uint8_t) || ptr8uImg2->planeCount() != 1) {
 			COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&ptr8uImg2, COMPV_SUBTYPE_PIXELS_Y, width, height, stride));
 		}
-		COMPV_CHECK_CODE_RETURN(CompVMem::copy3(ptr8uImg0->ptr<uint8_t>(), ptr8uImg1->ptr<uint8_t>(), ptr8uImg2->ptr<uint8_t>(),
+		COMPV_CHECK_CODE_RETURN(CompVMem::unpack3(ptr8uImg0->ptr<uint8_t>(), ptr8uImg1->ptr<uint8_t>(), ptr8uImg2->ptr<uint8_t>(),
 			imageIn->ptr<const compv_uint8x3_t>(), width, height, stride));
 		if (outputs.size() != 3) {
 			outputs.resize(3);
@@ -375,6 +375,30 @@ COMPV_ERROR_CODE CompVImage::split(const CompVMatPtr& imageIn, CompVMatPtrVector
 		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Splitting %s not supported yet", CompVGetSubtypeString(imageIn->subType()));
 		return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
 	}
+}
+
+// For now we only support: pack(#3,#8u,#1dim)
+COMPV_ERROR_CODE CompVImage::pack(const CompVMatPtrVector& inputs, CompVMatPtrPtr output)
+{
+	COMPV_CHECK_EXP_RETURN(inputs.empty() || !output, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+	// Make sure there are #3 inputs and they are 8u 1dim values and with same size
+	COMPV_CHECK_EXP_RETURN(inputs.size() != 3, COMPV_ERROR_CODE_E_NOT_IMPLEMENTED, "For now only packing 3 inputs is supported");
+	const size_t width = inputs[0]->cols();
+	const size_t height = inputs[0]->rows();
+	const size_t stride = inputs[0]->stride();
+	for (const auto& it : inputs) {
+		COMPV_CHECK_EXP_RETURN(it->cols() != width || it->rows() != height || it->stride() != stride, COMPV_ERROR_CODE_E_INVALID_IMAGE_FORMAT, "Invalid size. All inputs must have same size.");
+		COMPV_CHECK_EXP_RETURN(it->elmtInBytes() != sizeof(uint8_t) || it->planeCount() != 1, COMPV_ERROR_CODE_E_INVALID_IMAGE_FORMAT, "Inputs must be #8 bits values and #1 dimension.");		
+	}
+	// The output could be any of packed #3 formats "COMPV_SUBTYPE_PIXELS_HSV", "COMPV_SUBTYPE_PIXELS_HSL", "COMPV_SUBTYPE_PIXELS_RGB24" or "COMPV_SUBTYPE_PIXELS_BGR24"
+	// For now we will choose "COMPV_SUBTYPE_PIXELS_RGB24" as default
+	CompVMatPtr& output_ = *output;
+	COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&output_, COMPV_SUBTYPE_PIXELS_RGB24, width, height, stride));
+	COMPV_CHECK_CODE_RETURN(CompVMem::pack3(output_->ptr<compv_uint8x3_t>(), inputs[0]->ptr<const uint8_t>(), inputs[1]->ptr<const uint8_t>(), inputs[2]->ptr<const uint8_t>(),
+		width, height, stride));
+
+	return  COMPV_ERROR_CODE_S_OK;
 }
 
 // map = (x, y) values

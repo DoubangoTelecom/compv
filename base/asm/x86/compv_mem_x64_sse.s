@@ -14,10 +14,14 @@
 COMPV_YASM_DEFAULT_REL
 
 global sym(CompVMemCopyNTA_Asm_Aligned11_X64_SSE2)
-global sym(CompVMemCopy3_Asm_X64_SSSE3)
+global sym(CompVMemUnpack3_Asm_X64_SSSE3)
+global sym(CompVMemPack3_Asm_X64_SSSE3)
 
 section .data
 	extern sym(kShuffleEpi8_Deinterleave8uL3_32s)
+	extern sym(kShuffleEpi8_Interleave8uL3_Step0_s32)
+	extern sym(kShuffleEpi8_Interleave8uL3_Step1_s32)
+	extern sym(kShuffleEpi8_Interleave8uL3_Step2_s32)
 
 section .text
 
@@ -121,7 +125,7 @@ sym(CompVMemCopyNTA_Asm_Aligned11_X64_SSE2):
 ; arg(4) -> compv_uscalar_t width
 ; arg(5) -> compv_uscalar_t height
 ; arg(6) -> COMPV_ALIGNED(SSE) compv_uscalar_t stride
-sym(CompVMemCopy3_Asm_X64_SSSE3):
+sym(CompVMemUnpack3_Asm_X64_SSSE3):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 7
@@ -206,5 +210,89 @@ sym(CompVMemCopy3_Asm_X64_SSSE3):
 	ret
 	
 	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> COMPV_ALIGNED(SSE) compv_uint8x3_t* dstPtr
+; arg(1) -> COMPV_ALIGNED(SSE) const uint8_t* srcPt0
+; arg(2) -> COMPV_ALIGNED(SSE) const uint8_t* srcPt1
+; arg(3) -> COMPV_ALIGNED(SSE) const uint8_t* srcPt2
+; arg(4) -> compv_uscalar_t width
+; arg(5) -> compv_uscalar_t height
+; arg(6) -> COMPV_ALIGNED(SSE) compv_uscalar_t stride
+sym(CompVMemPack3_Asm_X64_SSSE3):
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 7
+	push rsi
+	push rdi
+	push rbx
+	;; end prolog ;;
+
+	%define dstPtr		rax
+	%define srcPt0		rdx
+	%define srcPt1		rcx
+	%define srcPt2		r8
+	%define width		r9
+	%define height		r10
+	%define stride		r11
+	%define stride3		rsi
+	%define i			rdi
+	%define k			rbx
+
+	mov dstPtr, arg(0)
+	mov srcPt0, arg(1)
+	mov srcPt1, arg(2)
+	mov srcPt2, arg(3)
+	mov width, arg(4)
+	mov height, arg(5)
+	mov stride, arg(6)
+	lea stride3, [stride*3*COMPV_YASM_UINT8_SZ_BYTES]
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	; for (compv_uscalar_t j = 0; j < height; ++j)
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	.LoopHeight:
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; for (compv_uscalar_t i = 0; i < width; i += 16)
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		xor i, i
+		xor k, k
+		.LoopWidth:
+			movdqa xmm0, [srcPt0 + i*COMPV_YASM_UINT8_SZ_BYTES]
+			movdqa xmm1, [srcPt1 + i*COMPV_YASM_UINT8_SZ_BYTES]
+			movdqa xmm2, [srcPt2 + i*COMPV_YASM_UINT8_SZ_BYTES]
+			COMPV_VST3_U8_SSSE3 dstPtr + k, xmm0, xmm1, xmm2, xmm3, xmm4, xmm5
+			add i, (16*1*COMPV_YASM_UINT8_SZ_BYTES)
+			cmp i, width
+			lea k, [k + (16*3*COMPV_YASM_UINT8_SZ_BYTES)]
+			jl .LoopWidth
+		.EndOf_LoopWidth:
+
+		dec height
+		lea srcPt0, [srcPt0 + stride*COMPV_YASM_UINT8_SZ_BYTES]
+		lea srcPt1, [srcPt1 + stride*COMPV_YASM_UINT8_SZ_BYTES]
+		lea srcPt2, [srcPt2 + stride*COMPV_YASM_UINT8_SZ_BYTES]
+		lea dstPtr, [dstPtr + stride3*COMPV_YASM_UINT8_SZ_BYTES]
+		jnz .LoopHeight
+	.EndOf_LoopHeight:
+
+	%undef dstPt0		
+	%undef dstPt1		
+	%undef dstPt2		
+	%undef srcPtr		
+	%undef width		
+	%undef height		
+	%undef stride
+	%undef stride3	
+	%undef i			
+	%undef k			
+
+	;; begin epilog ;;
+	pop rbx
+	pop rdi
+	pop rsi
+	COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	ret
 
 %endif ; COMPV_YASM_ABI_IS_64BIT

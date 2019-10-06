@@ -17,9 +17,14 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-void CompVMemCopy3_Intrin_SSSE3(
+void CompVMemUnpack3_Intrin_SSSE3(
 	COMPV_ALIGNED(SSE) uint8_t* dstPt0, COMPV_ALIGNED(SSE) uint8_t* dstPt1, COMPV_ALIGNED(SSE) uint8_t* dstPt2, 
 	COMPV_ALIGNED(SSE) const compv_uint8x3_t* srcPtr, 
+	compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
+
+void CompVMemPack3_Intrin_SSSE3(
+	COMPV_ALIGNED(SSE) compv_uint8x3_t* dstPtr,
+	COMPV_ALIGNED(SSE) const uint8_t* srcPt0, COMPV_ALIGNED(SSE) const uint8_t* srcPt1, COMPV_ALIGNED(SSE) const uint8_t* srcPt2,
 	compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
 
 COMPV_NAMESPACE_END()

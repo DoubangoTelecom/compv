@@ -19,9 +19,13 @@ COMPV_NAMESPACE_BEGIN()
 
 void CompVMemCopy_Intrin_NEON(COMPV_ALIGNED(NEON) void* dataDstPtr, COMPV_ALIGNED(NEON) const void* dataSrcPtr, compv_uscalar_t size);
 void CompVMemZero_Intrin_NEON(COMPV_ALIGNED(NEON) void* dstPtr, compv_uscalar_t size);
-void CompVMemCopy3_Intrin_NEON(
+void CompVMemUnpack3_Intrin_NEON(
 	COMPV_ALIGNED(NEON) uint8_t* dstPt0, COMPV_ALIGNED(NEON) uint8_t* dstPt1, COMPV_ALIGNED(NEON) uint8_t* dstPt2,
 	COMPV_ALIGNED(NEON) const compv_uint8x3_t* srcPtr,
+	compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
+void CompVMemPack3_Intrin_NEON(
+	COMPV_ALIGNED(NEON) compv_uint8x3_t* dstPtr,
+	COMPV_ALIGNED(NEON) const uint8_t* srcPt0, COMPV_ALIGNED(NEON) const uint8_t* srcPt1, COMPV_ALIGNED(NEON) const uint8_t* srcPt2,
 	compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
 
 COMPV_NAMESPACE_END()

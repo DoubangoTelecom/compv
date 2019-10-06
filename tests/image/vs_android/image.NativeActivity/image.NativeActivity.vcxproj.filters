@@ -15,13 +15,13 @@
     <ClCompile Include="..\..\houghkht.cxx" />
     <ClCompile Include="..\..\houghsht.cxx" />
     <ClCompile Include="..\..\threshold.cxx" />
-    <ClCompile Include="..\..\split.cxx" />
     <ClCompile Include="..\..\ccl_binar.cxx" />
     <ClCompile Include="..\..\ccl_mser.cxx" />
     <ClCompile Include="..\..\bits.cxx" />
     <ClCompile Include="..\..\hog_std.cxx" />
     <ClCompile Include="..\..\gradient.cxx" />
     <ClCompile Include="..\..\rotate.cxx" />
+    <ClCompile Include="..\..\packing.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\tests_common.h" />

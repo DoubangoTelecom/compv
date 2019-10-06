@@ -4,7 +4,7 @@ using namespace compv;
 
 #define TAG_TEST_IMAGE "TestImage"
 
-#define TEST_INTEGRAL				1
+#define TEST_INTEGRAL				0
 #define TEST_SCALE					0
 #define TEST_ROTATE					0
 #define TEST_PYRAMID				0
@@ -23,7 +23,7 @@ using namespace compv;
 #define TEST_HOUGHKHT				0
 #define TEST_HOGSTD					0
 #define TEST_BRUTEFORCE				0
-#define TEST_SPLIT3					0
+#define TEST_PACKING				1
 #define TEST_BITS					0
 
 /* Entry point function */
@@ -117,9 +117,9 @@ compv_main()
 #endif
 
 
-#if TEST_SPLIT3
-		extern COMPV_ERROR_CODE split3();
-		COMPV_CHECK_CODE_BAIL(err = split3(), TAG_TEST_IMAGE "Split3 test failed");
+#if TEST_PACKING
+		extern COMPV_ERROR_CODE packing();
+		COMPV_CHECK_CODE_BAIL(err = packing(), TAG_TEST_IMAGE "Packing test failed");
 #endif
 
 #if TEST_BITS
