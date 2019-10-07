@@ -777,10 +777,14 @@ class CompVMatrixGeneric
 
 		// Each point (x, y) contribute two rows in M which means has (2 x numPoints) rows
 		// "h" is a vector representing H (3x3) and is a 9x1 vector. This means M has 9 columns.
-		const size_t M_rows = 2 * numPoints;
+		// When "numPoints==4" there are more colums then rows -> add fake row with zeros at the end
+		const size_t M_rows = (2 * numPoints) + (numPoints == 4);
 		const size_t M_cols = 9;
 		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<T>(M, M_rows, M_cols));
 		const size_t M_strideInBytes = (*M)->strideInBytes();
+		if (numPoints == 4) {
+			COMPV_CHECK_CODE_RETURN((*M)->zero_row(8));
+		}
 
 		if (std::is_same<T, compv_float64_t>::value) {
 			void (*CompVMathMatrixBuildHomographyEqMatrix_64f)(const COMPV_ALIGNED(SSE) compv_float64_t* srcX, const COMPV_ALIGNED(SSE) compv_float64_t* srcY, const COMPV_ALIGNED(SSE) compv_float64_t* dstX, const COMPV_ALIGNED(SSE) compv_float64_t* dstY, COMPV_ALIGNED(SSE) compv_float64_t* M, COMPV_ALIGNED(SSE) compv_uscalar_t M_strideInBytes, compv_uscalar_t numPoints)
