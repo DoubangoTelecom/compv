@@ -181,7 +181,7 @@ section .text
 			.LoopBCols1:
 				vmovsd xmm0, [A + (k + 0)*COMPV_YASM_FLOAT64_SZ_BYTES]
 				%if %1
-					vmovsd xmm5, xmm4
+					vmovapd xmm5, xmm4 ; "vmovapd" instead of "vmovsd" to preserve the higher 64bits instead of filling it with zeros
 					vfmadd231sd xmm5, xmm0, [B0 + (k + 0)*COMPV_YASM_FLOAT64_SZ_BYTES]
 				%else
 					vmulsd xmm0, [B0 + (k + 0)*COMPV_YASM_FLOAT64_SZ_BYTES]
