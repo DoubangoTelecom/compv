@@ -101,6 +101,7 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::process(const CompVMatPtr& imageIn, COMPV
 	case COMPV_SUBTYPE_PIXELS_RGBA32:
 	case COMPV_SUBTYPE_PIXELS_RGB24:
 		if (imageIn->subType() == rgbxFormat) {
+			COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASSNAME, "Source and destination formats are the same. Useless, cloning.");
 			COMPV_CHECK_CODE_RETURN(CompVImage::clone(imageIn, &imageOut));
 			break;
 		}
