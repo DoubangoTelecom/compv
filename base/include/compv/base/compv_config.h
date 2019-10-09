@@ -326,7 +326,11 @@
 #define COMPV_ALIGNV_SIMD_AVX2		COMPV_ALIGNV_SIMD_AVX
 #define COMPV_ALIGNV_SIMD_AVX512	64
 #define COMPV_ALIGNV_SIMD_NEON		16 // ARM NEON
-#define COMPV_ALIGNV_SIMD_DEFAULT	64 // This is max to make sure all requirements will work (also equal to expected cache line)
+#if COMPV_ARCH_ARM
+#	define COMPV_ALIGNV_SIMD_DEFAULT	COMPV_ALIGNV_SIMD_NEON
+#else
+#	define COMPV_ALIGNV_SIMD_DEFAULT	COMPV_ALIGNV_SIMD_AVX512
+#endif
 
 // GPU Alignment
 #define COMPV_ALIGNV_GPU_PAGE		4096 // In Bytes
