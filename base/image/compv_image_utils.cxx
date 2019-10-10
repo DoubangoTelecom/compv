@@ -7,8 +7,11 @@
 #include "compv/base/image/compv_image_utils.h"
 #include "compv/base/math/compv_math_utils.h"
 #include "compv/base/compv_mem.h"
+#include "compv/base/parallel/compv_parallel.h"
 
 COMPV_NAMESPACE_BEGIN()
+
+#define COMPV_IMAGEUTILS_COPY_MIN_SAMPLES_PER_THREAD	(100 * 100)
 
 COMPV_ERROR_CODE CompVImageUtils::bestStride(size_t stride, size_t *bestStride)
 {
@@ -348,12 +351,29 @@ COMPV_ERROR_CODE CompVImageUtils::copy(COMPV_SUBTYPE ePixelFormat, const void* i
 		outPlaneStrideInBytes = outPlaneStride * planeBytesCount;
 		inPlaneStrideInBytes = inPlaneStride * planeBytesCount;
 		
-		// TODO(dmi): divide across Y and multi-thread
-		for (size_t j = 0; j < outPlaneHeight; ++j) {
-			COMPV_CHECK_CODE_RETURN(CompVMem::copy(outPtr_, inPtr_, outPlaneWidthInBytes));
-			outPtr_ += outPlaneStrideInBytes;
-			inPtr_ += inPlaneStrideInBytes;
-		}
+		auto funcPtr = [&](const size_t start, const size_t end) -> COMPV_ERROR_CODE {
+			uint8_t* mt_outPtr_ = outPtr_ + (start * outPlaneStrideInBytes);
+			const uint8_t* mt_inPtr_ = inPtr_ + (start * inPlaneStrideInBytes);
+			for (size_t i = start; i < end; ++i) {
+				COMPV_CHECK_CODE_RETURN(CompVMem::copy(mt_outPtr_, mt_inPtr_, outPlaneWidthInBytes));
+				mt_outPtr_ += outPlaneStrideInBytes;
+				mt_inPtr_ += inPlaneStrideInBytes;
+			}
+			return COMPV_ERROR_CODE_S_OK;
+		};
+#if 1 // MT
+		COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+			funcPtr,
+			outPlaneWidthInBytes,
+			outPlaneHeight,
+			COMPV_IMAGEUTILS_COPY_MIN_SAMPLES_PER_THREAD
+		));
+#else // ST
+		COMPV_CHECK_CODE_RETURN(funcPtr(0, outPlaneHeight));
+#endif
+
+		outPtr_ += outPlaneHeight * outPlaneStrideInBytes;
+		inPtr_ += outPlaneHeight * inPlaneStrideInBytes;
 	}
 
 	return COMPV_ERROR_CODE_S_OK;

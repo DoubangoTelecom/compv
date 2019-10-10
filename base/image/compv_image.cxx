@@ -281,12 +281,12 @@ COMPV_ERROR_CODE CompVImage::wrap(COMPV_SUBTYPE ePixelFormat, const void* dataPt
 	}
 	COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(image, ePixelFormat, dataWidth, dataHeight, bestStride)
 		, "Failed to allocate new image");
-
-	if (dataPtr) {
-		COMPV_CHECK_CODE_RETURN(CompVImageUtils::copy(ePixelFormat,
-			dataPtr, dataWidth, dataHeight, dataStride,
-			(void*)(*image)->ptr(), (*image)->cols(), (*image)->rows(), (*image)->stride()), "Failed to copy image"); // copy data
-	}
+	
+	// Copy data using different strides
+	COMPV_CHECK_CODE_RETURN(CompVImageUtils::copy(ePixelFormat,
+		dataPtr, dataWidth, dataHeight, dataStride,
+		(void*)(*image)->ptr(), (*image)->cols(), (*image)->rows(), (*image)->stride()), "Failed to copy image"); // copy data
+	
 
 	return COMPV_ERROR_CODE_S_OK;
 }
