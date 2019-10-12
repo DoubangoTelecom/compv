@@ -138,10 +138,12 @@ COMPV_ERROR_CODE CompVMem::copy(void* dstPtr, const void* srcPtr, size_t size)
     COMPV_CHECK_EXP_RETURN(!dstPtr || !srcPtr || !size, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     CompVMemCopy cpy = CompVMemCopy_C;
 	
-	if (size >= 64 && CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(dstPtr) && COMPV_IS_ALIGNED_NEON(srcPtr)) {
+	if (size >= 64 && CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
 		COMPV_EXEC_IFDEF_INTRIN_ARM(cpy = CompVMemCopy_Intrin_NEON);
-		COMPV_EXEC_IFDEF_ASM_ARM32(cpy = CompVMemCopy_Asm_NEON32);
-		COMPV_EXEC_IFDEF_ASM_ARM64(cpy = CompVMemCopy_Asm_NEON64);
+		if (COMPV_IS_ALIGNED_NEON(dstPtr) && COMPV_IS_ALIGNED_NEON(srcPtr)) { // ASM requires src and dst to be aligned
+			COMPV_EXEC_IFDEF_ASM_ARM32(cpy = CompVMemCopy_Asm_NEON32);
+			COMPV_EXEC_IFDEF_ASM_ARM64(cpy = CompVMemCopy_Asm_NEON64);
+		}
 	}
 
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
@@ -221,10 +223,12 @@ COMPV_ERROR_CODE CompVMem::unpack3(uint8_t* dstPt0, uint8_t* dstPt1, uint8_t* ds
 		// No need for AVX2 implementation, tried and slower
 	}
 #elif COMPV_ARCH_ARM
-	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(dstPt0) && COMPV_IS_ALIGNED_NEON(dstPt1) && COMPV_IS_ALIGNED_NEON(dstPt2) && COMPV_IS_ALIGNED_NEON(srcPtr) && COMPV_IS_ALIGNED_NEON(stride)) {
+	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(dstPt0) && COMPV_IS_ALIGNED_NEON(dstPt1) && COMPV_IS_ALIGNED_NEON(dstPt2) && COMPV_IS_ALIGNED_NEON(stride)) {
 		COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMemUnpack3 = CompVMemUnpack3_Intrin_NEON);
-		COMPV_EXEC_IFDEF_ASM_ARM32(CompVMemUnpack3 = CompVMemUnpack3_Asm_NEON32);
-		COMPV_EXEC_IFDEF_ASM_ARM64(CompVMemUnpack3 = CompVMemUnpack3_Asm_NEON64);
+		if (COMPV_IS_ALIGNED_NEON(srcPtr)) { // ASM requires src to be aligned
+			COMPV_EXEC_IFDEF_ASM_ARM32(CompVMemUnpack3 = CompVMemUnpack3_Asm_NEON32);
+			COMPV_EXEC_IFDEF_ASM_ARM64(CompVMemUnpack3 = CompVMemUnpack3_Asm_NEON64);
+		}
 	}
 #endif
 	// Processing
