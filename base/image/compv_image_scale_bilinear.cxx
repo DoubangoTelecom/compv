@@ -144,9 +144,9 @@ COMPV_ERROR_CODE CompVImageScaleBilinear::process(const CompVMatPtr& imageIn, Co
 	// Internal function, no need to check for input parameters
 	// For now only grascale images are fully tested
 	COMPV_CHECK_EXP_RETURN(
-		imageIn->elmtInBytes() != sizeof(uint8_t), 
+		imageIn->elmtInBytes() != sizeof(uint8_t) || imageIn->planeCount() != 1,
 		COMPV_ERROR_CODE_E_NOT_IMPLEMENTED, 
-		"Only 8u subtypes are supported using bilinear scaling"
+		"Only 8u/1dim subtypes are supported using bilinear scaling"
 	);
 	float float_sx, float_sy;
 	compv_uscalar_t int_sx, int_sy, strideIn, strideOut, widthIn, widthOut, heightIn, heightOut;

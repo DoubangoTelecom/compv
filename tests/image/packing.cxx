@@ -12,7 +12,7 @@
 
 #define LOOP_COUNT				1
 
-#define TEST_SUBTYPE			COMPV_SUBTYPE_PIXELS_YUV444P
+#define TEST_SUBTYPE			COMPV_SUBTYPE_PIXELS_NV21
 
 static const struct compv_unittest_packing {
 	const char* filename;
@@ -46,6 +46,12 @@ COMPV_ERROR_CODE packing()
 		}
 	}
 	COMPV_ASSERT(imageIn != nullptr);
+
+#if COMPV_OS_WINDOWS && 0 // To generate tensor input
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Do not write the file to the hd");
+	COMPV_CHECK_CODE_RETURN(CompVImage::scaleYuvToRGB24(imageIn, &imageOut, 250, 500));
+	COMPV_CHECK_CODE_RETURN(CompVImage::encode("rgb24.png", imageOut));
+#endif
 
 	uint64_t timeStart = CompVTime::nowMillis();
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {

@@ -20,7 +20,7 @@ COMPV_NAMESPACE_BEGIN()
 class CompVImageConvToRGBx
 {
 public:
-	static COMPV_ERROR_CODE process(const CompVMatPtr& imageIn, COMPV_SUBTYPE rgbxFormat, CompVMatPtrPtr imageRGBx);
+	static COMPV_ERROR_CODE process(const CompVMatPtr& imageIn, const COMPV_SUBTYPE rgbxFormat, CompVMatPtrPtr imageRGBx);
 
 private:
 	static COMPV_ERROR_CODE yuvPlanar(const CompVMatPtr& imageIn, CompVMatPtr& imageRGBx);

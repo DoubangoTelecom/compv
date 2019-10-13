@@ -89,7 +89,7 @@ static void yuyv422_to_rgb24_C(const uint8_t* yuyvPtr, uint8_t* rgbxPtr, compv_u
 static void uyvy422_to_rgba32_C(const uint8_t* yuyvPtr, uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
 static void uyvy422_to_rgb24_C(const uint8_t* yuyvPtr, uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
 
-COMPV_ERROR_CODE CompVImageConvToRGBx::process(const CompVMatPtr& imageIn, COMPV_SUBTYPE rgbxFormat, CompVMatPtrPtr imageRGBx)
+COMPV_ERROR_CODE CompVImageConvToRGBx::process(const CompVMatPtr& imageIn, const COMPV_SUBTYPE rgbxFormat, CompVMatPtrPtr imageRGBx)
 {
 	// Internal function, do not check input parameters (already done)
 	//	-> rgbxFormat must be RGBA32 or RGB24

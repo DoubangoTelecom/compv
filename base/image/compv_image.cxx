@@ -704,7 +704,7 @@ COMPV_ERROR_CODE CompVImage::integral(const CompVMatPtr& imageIn, CompVMatPtrPtr
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVImage::scale(const CompVMatPtr& imageIn, CompVMatPtrPtr imageOut, size_t widthOut, size_t heightOut, COMPV_INTERPOLATION_TYPE scaleType COMPV_DEFAULT(COMPV_INTERPOLATION_TYPE_BILINEAR))
+COMPV_ERROR_CODE CompVImage::scale(const CompVMatPtr& imageIn, CompVMatPtrPtr imageOut, const size_t widthOut, const size_t heightOut, const COMPV_INTERPOLATION_TYPE scaleType COMPV_DEFAULT(COMPV_INTERPOLATION_TYPE_BILINEAR))
 {
 	COMPV_CHECK_EXP_RETURN(!imageIn || !imageOut || imageIn->isEmpty() || !widthOut || !heightOut, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
@@ -756,6 +756,90 @@ COMPV_ERROR_CODE CompVImage::scale(const CompVMatPtr& imageIn, CompVMatPtrPtr im
 		break;
 	}
 	*imageOut = imageOut_;
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// Used by many deep-learning function to scale an image to a fixed size and convert it to rgb24
+COMPV_ERROR_CODE CompVImage::scaleYuvToRGB24(const CompVMatPtr& imageIn, CompVMatPtrPtr imageOut, const size_t widthOut, const size_t heightOut, const COMPV_INTERPOLATION_TYPE scaleType COMPV_DEFAULT(COMPV_INTERPOLATION_TYPE_BILINEAR))
+{
+	COMPV_CHECK_EXP_RETURN(!imageIn || !imageOut || !widthOut || !heightOut, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	
+	const COMPV_SUBTYPE subType = imageIn->subType();	
+
+	// Make sure it's YUV
+	if (subType != COMPV_SUBTYPE_PIXELS_NV12
+		&& subType != COMPV_SUBTYPE_PIXELS_NV21 // Android Camera
+		&& subType != COMPV_SUBTYPE_PIXELS_YUV420P
+		&& subType != COMPV_SUBTYPE_PIXELS_YVU420P
+		&& subType != COMPV_SUBTYPE_PIXELS_YUV422P
+		&& subType != COMPV_SUBTYPE_PIXELS_YUYV422 // DirectShow/MediaFoundation
+		&& subType != COMPV_SUBTYPE_PIXELS_UYVY422
+		&& subType != COMPV_SUBTYPE_PIXELS_YUV444P)
+	{
+		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Input type not YUV (%s)", CompVGetSubtypeString(subType));
+		return COMPV_ERROR_CODE_E_INVALID_IMAGE_FORMAT;
+	}
+
+	// Convert only if size matches
+	if (imageIn->cols() == widthOut && imageIn->rows() == heightOut) {
+		COMPV_CHECK_CODE_RETURN(CompVImage::convert(imageIn, COMPV_SUBTYPE_PIXELS_RGB24, imageOut));
+		return COMPV_ERROR_CODE_S_OK;
+	}
+	
+	CompVMatPtrVector planes;
+	COMPV_CHECK_CODE_RETURN(CompVImage::unpack(imageIn, planes));
+	const double sx = double(widthOut) / double(imageIn->cols());
+	const double sy = double(heightOut) / double(imageIn->rows());
+	auto funcPtr = [&](const size_t start, const size_t end) -> COMPV_ERROR_CODE {
+		for (size_t i = start; i < end; ++i) {
+			const size_t plane_widthOut = COMPV_MATH_ROUNDFU_2_NEAREST_INT(planes[i]->cols() * sx, size_t);
+			const size_t plane_heightOut = COMPV_MATH_ROUNDFU_2_NEAREST_INT(planes[i]->rows() * sy, size_t);
+			COMPV_CHECK_CODE_RETURN(CompVImage::scale(planes[i], &planes[i], plane_widthOut, plane_heightOut, scaleType));
+		}
+		return COMPV_ERROR_CODE_S_OK;
+	};
+	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+		funcPtr,
+		1,
+		planes.size(),
+		1
+	));
+
+	// Convert to planar (faster to convert to RGB24) if packed
+	const bool packedUV = (subType == COMPV_SUBTYPE_PIXELS_NV12 || subType == COMPV_SUBTYPE_PIXELS_NV21); // Android Camera == NV21
+	CompVMatPtr yuvPlanar;
+	if (packedUV) {
+		COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&yuvPlanar, COMPV_SUBTYPE_PIXELS_YUV420P, widthOut, heightOut));
+		if (subType == COMPV_SUBTYPE_PIXELS_NV21) {
+			std::iter_swap(planes.begin() + 1, planes.begin() + 2); // Swap U/V
+		}
+		auto funcPtr = [&](const size_t start, const size_t end) -> COMPV_ERROR_CODE {
+			COMPV_ASSERT(start >= 0 && end <= 3);
+			for (int planeId = static_cast<int>(start); planeId < static_cast<int>(end); ++planeId) {
+				COMPV_ASSERT(planes[planeId]->cols() == yuvPlanar->cols(planeId) && planes[planeId]->rows() == yuvPlanar->rows(planeId)); // Output size should be even
+				COMPV_CHECK_CODE_RETURN(CompVImageUtils::copy( // will copy minimum size
+					COMPV_SUBTYPE_PIXELS_Y,
+					planes[planeId]->ptr<const void>(), planes[planeId]->cols(), planes[planeId]->rows(), planes[planeId]->stride(),
+					yuvPlanar->ptr<void>(0, 0, planeId), yuvPlanar->cols(planeId), yuvPlanar->rows(planeId), yuvPlanar->stride(planeId)
+				));
+			}
+			return COMPV_ERROR_CODE_S_OK;
+		};
+		COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+			funcPtr,
+			1,
+			planes.size(),
+			1
+		));
+	}
+	else {
+		COMPV_CHECK_CODE_RETURN(CompVImage::pack(planes, subType, &yuvPlanar));
+	}
+	
+	// Convert from planar YUV to RGB24
+	COMPV_CHECK_CODE_RETURN(CompVImage::convert(yuvPlanar, COMPV_SUBTYPE_PIXELS_RGB24, imageOut));
+	COMPV_ASSERT((*imageOut)->cols() == widthOut && (*imageOut)->rows() == heightOut);
+		
 	return COMPV_ERROR_CODE_S_OK;
 }
 
