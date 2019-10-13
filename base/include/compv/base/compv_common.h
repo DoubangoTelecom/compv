@@ -201,6 +201,7 @@ typedef compv_float32_t compv_float32x2_t[2];
 typedef compv_float32_t compv_float32x3_t[3];
 typedef compv_float32_t compv_float32x4_t[4];
 typedef compv_float64_t compv_float64x3_t[3];
+typedef uint8_t compv_uint8x2_t[2];
 typedef uint8_t compv_uint8x3_t[3];
 typedef uint8_t compv_uint8x4_t[4];
 typedef uint8_t compv_uint8x256_t[256];

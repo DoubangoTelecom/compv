@@ -1,6 +1,6 @@
-#include "../tests_common.h"
+#include "../tests/tests_common.h"
 
-#define TAG_TEST								"TestImagePacking"
+#define TAG_TEST								"UnitTestSplit"
 #if COMPV_OS_WINDOWS
 #	define COMPV_TEST_IMAGE_FOLDER				"C:/Projects/GitHub/data/colorspace"
 #elif COMPV_OS_OSX
@@ -9,10 +9,6 @@
 #	define COMPV_TEST_IMAGE_FOLDER				NULL
 #endif
 #define COMPV_TEST_PATH_TO_FILE(filename)		compv_tests_path_from_file(filename, COMPV_TEST_IMAGE_FOLDER)
-
-#define LOOP_COUNT				1
-
-#define TEST_SUBTYPE			COMPV_SUBTYPE_PIXELS_YUV444P
 
 static const struct compv_unittest_packing {
 	const char* filename;
@@ -33,33 +29,18 @@ COMPV_UNITTEST_PACKINGS[] =
 };
 static const size_t COMPV_UNITTEST_PACKINGS_COUNT = sizeof(COMPV_UNITTEST_PACKINGS) / sizeof(COMPV_UNITTEST_PACKINGS[0]);
 
-COMPV_ERROR_CODE packing()
+COMPV_ERROR_CODE unittest_packing()
 {
-	CompVMatPtr imageIn, imageOut;
-	CompVMatPtrVector imageOutVector;
-
 	for (size_t i = 0; i < COMPV_UNITTEST_PACKINGS_COUNT; ++i) {
+		CompVMatPtr imageIn, imageOut;
 		const compv_unittest_packing& test = COMPV_UNITTEST_PACKINGS[i];
-		if (test.subtype == TEST_SUBTYPE) {
-			COMPV_CHECK_CODE_RETURN(CompVImage::read(test.subtype, test.width, test.height, test.stride, COMPV_TEST_PATH_TO_FILE(test.filename).c_str(), &imageIn));
-			break;
-		}
-	}
-	COMPV_ASSERT(imageIn != nullptr);
-
-	uint64_t timeStart = CompVTime::nowMillis();
-	for (size_t i = 0; i < LOOP_COUNT; ++i) {
+		COMPV_CHECK_CODE_RETURN(CompVImage::read(test.subtype, test.width, test.height, test.stride, COMPV_TEST_PATH_TO_FILE(test.filename).c_str(), &imageIn));		
+		COMPV_DEBUG_INFO_EX(TAG_TEST, "== Trying new test: packing -> %s ==", test.filename);
+		std::vector<CompVMatPtr> imageOutVector;
 		COMPV_CHECK_CODE_RETURN(CompVImage::unpack(imageIn, imageOutVector));
-#if COMPV_OS_WINDOWS && 0
-		COMPV_DEBUG_INFO_CODE_FOR_TESTING("Do not write the file to the hd");
-		COMPV_CHECK_CODE_RETURN(compv_tests_write_to_file(imageOutVector[2], compv_tests_build_filename(imageOutVector[2]).c_str()));
-#endif
-		COMPV_CHECK_CODE_RETURN(CompVImage::pack(imageOutVector, TEST_SUBTYPE, &imageOut));
+		COMPV_CHECK_CODE_RETURN(CompVImage::pack(imageOutVector, test.subtype, &imageOut));
+		COMPV_CHECK_EXP_RETURN(compv_tests_md5(imageOut).compare(compv_tests_md5(imageIn)) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Packing MD5 mismatch");
+		COMPV_DEBUG_INFO_EX(TAG_TEST, "** Test OK **");
 	}
-	uint64_t timeEnd = CompVTime::nowMillis();
-	COMPV_DEBUG_INFO_EX(TAG_TEST, "Pack/Unpack Elapsed time = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
-
-	COMPV_CHECK_EXP_RETURN(compv_tests_md5(imageOut).compare(compv_tests_md5(imageIn)) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Pack/Unpack MD5 mismatch");
-
 	return COMPV_ERROR_CODE_S_OK;
 }

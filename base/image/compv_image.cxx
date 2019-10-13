@@ -349,6 +349,9 @@ COMPV_ERROR_CODE CompVImage::unpack(const CompVMatPtr& imageIn, CompVMatPtrVecto
 			ptr8uImg1 = outputs[1];
 			ptr8uImg2 = outputs[2];
 		}
+		else {
+			outputs.resize(3);
+		}
 		const size_t width = imageIn->cols();
 		const size_t height = imageIn->rows();
 		const size_t stride = imageIn->stride();
@@ -363,12 +366,52 @@ COMPV_ERROR_CODE CompVImage::unpack(const CompVMatPtr& imageIn, CompVMatPtrVecto
 		}
 		COMPV_CHECK_CODE_RETURN(CompVMem::unpack3(ptr8uImg0->ptr<uint8_t>(), ptr8uImg1->ptr<uint8_t>(), ptr8uImg2->ptr<uint8_t>(),
 			imageIn->ptr<const compv_uint8x3_t>(), width, height, stride));
-		if (outputs.size() != 3) {
-			outputs.resize(3);
-		}
 		outputs[0] = ptr8uImg0;
 		outputs[1] = ptr8uImg1;
 		outputs[2] = ptr8uImg2;
+		return COMPV_ERROR_CODE_S_OK;
+	}
+	case COMPV_SUBTYPE_PIXELS_NV12:
+	case COMPV_SUBTYPE_PIXELS_NV21: 
+	case COMPV_SUBTYPE_PIXELS_YUV420P:
+	case COMPV_SUBTYPE_PIXELS_YVU420P:
+	case COMPV_SUBTYPE_PIXELS_YUV422P: 
+	case COMPV_SUBTYPE_PIXELS_YUV444P: {
+		CompVMatPtr ptr8uImgY, ptr8uImgU, ptr8uImgV;
+		const bool packedUV = (imageIn->subType() == COMPV_SUBTYPE_PIXELS_NV12 || imageIn->subType() == COMPV_SUBTYPE_PIXELS_NV21);
+		const int planeU = packedUV ? COMPV_PLANE_UV : COMPV_PLANE_U;
+		const int planeV = packedUV ? COMPV_PLANE_UV : COMPV_PLANE_V;
+		if (outputs.size() == 3) {
+			ptr8uImgY = outputs[0];
+			ptr8uImgU = outputs[1];
+			ptr8uImgV = outputs[2];
+		}
+		else {
+			outputs.resize(3);
+		}
+		// Wrap Luma - Y
+		COMPV_CHECK_CODE_RETURN(CompVImage::wrap(COMPV_SUBTYPE_PIXELS_Y,
+			imageIn->ptr<uint8_t>(0, 0, COMPV_PLANE_Y), imageIn->cols(COMPV_PLANE_Y), imageIn->rows(COMPV_PLANE_Y), imageIn->stride(COMPV_PLANE_Y),
+			&ptr8uImgY, imageIn->stride(COMPV_PLANE_Y)));
+		// UV
+		COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&ptr8uImgU, COMPV_SUBTYPE_PIXELS_Y, imageIn->cols(planeU), imageIn->rows(planeU), imageIn->stride(planeU)));
+		COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&ptr8uImgV, COMPV_SUBTYPE_PIXELS_Y, imageIn->cols(planeV), imageIn->rows(planeV), imageIn->stride(planeV)));
+		if (packedUV) { // Interleaved UV
+			COMPV_CHECK_CODE_RETURN(CompVMem::unpack2(ptr8uImgU->ptr<uint8_t>(), ptr8uImgV->ptr<uint8_t>(),
+				imageIn->ptr<const compv_uint8x2_t>(0, 0, COMPV_PLANE_UV), imageIn->cols(COMPV_PLANE_UV), imageIn->rows(COMPV_PLANE_UV), imageIn->stride(COMPV_PLANE_UV)));
+		}
+		else { // Planar UV
+			COMPV_CHECK_CODE_RETURN(CompVImage::wrap(COMPV_SUBTYPE_PIXELS_Y,
+				imageIn->ptr<uint8_t>(0, 0, planeU), imageIn->cols(planeU), imageIn->rows(planeU), imageIn->stride(planeU),
+				&ptr8uImgU, imageIn->stride(planeU)));
+			COMPV_CHECK_CODE_RETURN(CompVImage::wrap(COMPV_SUBTYPE_PIXELS_Y,
+				imageIn->ptr<uint8_t>(0, 0, planeV), imageIn->cols(planeV), imageIn->rows(planeV), imageIn->stride(planeV),
+				&ptr8uImgV, imageIn->stride(planeV)));
+		}
+		// Set result
+		outputs[0] = ptr8uImgY;
+		outputs[1] = ptr8uImgU;
+		outputs[2] = ptr8uImgV;
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	default:
@@ -378,25 +421,89 @@ COMPV_ERROR_CODE CompVImage::unpack(const CompVMatPtr& imageIn, CompVMatPtrVecto
 }
 
 // For now we only support: pack(#3,#8u,#1dim)
-COMPV_ERROR_CODE CompVImage::pack(const CompVMatPtrVector& inputs, CompVMatPtrPtr output)
+COMPV_ERROR_CODE CompVImage::pack(const CompVMatPtrVector& inputs, const COMPV_SUBTYPE& pixelFormat, CompVMatPtrPtr output)
 {
 	COMPV_CHECK_EXP_RETURN(inputs.empty() || !output, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
-	// Make sure there are #3 inputs and they are 8u 1dim values and with same size
-	COMPV_CHECK_EXP_RETURN(inputs.size() != 3, COMPV_ERROR_CODE_E_NOT_IMPLEMENTED, "For now only packing 3 inputs is supported");
-	const size_t width = inputs[0]->cols();
-	const size_t height = inputs[0]->rows();
-	const size_t stride = inputs[0]->stride();
-	for (const auto& it : inputs) {
-		COMPV_CHECK_EXP_RETURN(it->cols() != width || it->rows() != height || it->stride() != stride, COMPV_ERROR_CODE_E_INVALID_IMAGE_FORMAT, "Invalid size. All inputs must have same size.");
-		COMPV_CHECK_EXP_RETURN(it->elmtInBytes() != sizeof(uint8_t) || it->planeCount() != 1, COMPV_ERROR_CODE_E_INVALID_IMAGE_FORMAT, "Inputs must be #8 bits values and #1 dimension.");		
+	switch (pixelFormat) {
+	case COMPV_SUBTYPE_PIXELS_HSV:
+	case COMPV_SUBTYPE_PIXELS_HSL:
+	case COMPV_SUBTYPE_PIXELS_RGB24:
+	case COMPV_SUBTYPE_PIXELS_BGR24: {
+		// Make sure there are #3 inputs and they are 8u 1dim values and with same size
+		COMPV_CHECK_EXP_RETURN(inputs.size() != 3, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Requires #3 lanes");
+		const size_t width = inputs[0]->cols();
+		const size_t height = inputs[0]->rows();
+		const size_t stride = inputs[0]->stride();
+		for (const auto& it : inputs) {
+			COMPV_CHECK_EXP_RETURN(it->cols() != width || it->rows() != height || it->stride() != stride, COMPV_ERROR_CODE_E_INVALID_IMAGE_FORMAT, "Invalid size. All inputs must have same size.");
+			COMPV_CHECK_EXP_RETURN(it->elmtInBytes() != sizeof(uint8_t) || it->planeCount() != 1, COMPV_ERROR_CODE_E_INVALID_IMAGE_FORMAT, "Inputs must be #8 bits values and #1 dimension.");
+		}
+		// Packing
+		CompVMatPtr& output_ = *output;
+		COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&output_, pixelFormat, width, height, stride));
+		COMPV_CHECK_CODE_RETURN(CompVMem::pack3(output_->ptr<compv_uint8x3_t>(), inputs[0]->ptr<const uint8_t>(), inputs[1]->ptr<const uint8_t>(), inputs[2]->ptr<const uint8_t>(),
+			width, height, stride));
+
+		return COMPV_ERROR_CODE_S_OK;
 	}
-	// The output could be any of packed #3 formats "COMPV_SUBTYPE_PIXELS_HSV", "COMPV_SUBTYPE_PIXELS_HSL", "COMPV_SUBTYPE_PIXELS_RGB24" or "COMPV_SUBTYPE_PIXELS_BGR24"
-	// For now we will choose "COMPV_SUBTYPE_PIXELS_RGB24" as default
-	CompVMatPtr& output_ = *output;
-	COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&output_, COMPV_SUBTYPE_PIXELS_RGB24, width, height, stride));
-	COMPV_CHECK_CODE_RETURN(CompVMem::pack3(output_->ptr<compv_uint8x3_t>(), inputs[0]->ptr<const uint8_t>(), inputs[1]->ptr<const uint8_t>(), inputs[2]->ptr<const uint8_t>(),
-		width, height, stride));
+	case COMPV_SUBTYPE_PIXELS_NV12:
+	case COMPV_SUBTYPE_PIXELS_NV21:
+	case COMPV_SUBTYPE_PIXELS_YUV420P:
+	case COMPV_SUBTYPE_PIXELS_YVU420P:
+	case COMPV_SUBTYPE_PIXELS_YUV422P:
+	case COMPV_SUBTYPE_PIXELS_YUV444P: {
+		// Make sure there are #3 inputs and they are 8u 1dim values
+		COMPV_CHECK_EXP_RETURN(inputs.size() != 3, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Requires #3 lanes");
+		CompVMatPtr& output_ = *output;
+		COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&output_, pixelFormat, inputs[0]->cols(), inputs[0]->rows(), inputs[0]->stride()));
+		const bool packedUV = (pixelFormat == COMPV_SUBTYPE_PIXELS_NV12 || pixelFormat == COMPV_SUBTYPE_PIXELS_NV21);
+		const int planeU = packedUV ? COMPV_PLANE_UV : COMPV_PLANE_U;
+		const int planeV = packedUV ? COMPV_PLANE_UV : COMPV_PLANE_V;
+		for (size_t i = 0; i < 3; ++i) { // make sure the memory layout matches
+			const CompVMatPtr& imagePlane = inputs[i];
+			COMPV_CHECK_EXP_RETURN(imagePlane->elmtInBytes() != sizeof(uint8_t) || imagePlane->planeCount() != 1, COMPV_ERROR_CODE_E_INVALID_IMAGE_FORMAT, "Inputs must be #8 bits values and #1 dimension.");
+			const int planeId = (i == 0) ? COMPV_PLANE_Y : (i == 1 ? planeU : planeV);
+			COMPV_CHECK_EXP_RETURN(
+				output_->cols(planeId) != imagePlane->cols()
+				|| output_->rows(planeId) != imagePlane->rows()
+				|| output_->stride(planeId) != imagePlane->stride()
+				, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Invalid size for the planes"
+			);
+		}		
+		// Copy Luma - Y
+		COMPV_CHECK_CODE_RETURN(CompVImageUtils::copy(
+			COMPV_SUBTYPE_PIXELS_Y,
+			inputs[0]->ptr<const void>(), inputs[0]->cols(), inputs[0]->rows(), inputs[0]->stride(),
+			output_->ptr<void>(0, 0, COMPV_PLANE_Y), output_->cols(COMPV_PLANE_Y), output_->rows(COMPV_PLANE_Y), output_->stride(COMPV_PLANE_Y)
+		));
+		// Copy UV
+		if (packedUV) { // Interleaved UV
+			COMPV_CHECK_CODE_RETURN(CompVMem::pack2(
+				output_->ptr<compv_uint8x2_t>(0, 0, COMPV_PLANE_UV),
+				inputs[1]->ptr<uint8_t>(), inputs[2]->ptr<uint8_t>(), 
+				output_->cols(COMPV_PLANE_UV), output_->rows(COMPV_PLANE_UV), output_->stride(COMPV_PLANE_UV))
+			);
+		}
+		else { // Planar UV
+			COMPV_CHECK_CODE_RETURN(CompVImageUtils::copy(
+				COMPV_SUBTYPE_PIXELS_Y,
+				inputs[1]->ptr<uint8_t>(), inputs[1]->cols(), inputs[1]->rows(), inputs[1]->stride(),
+				output_->ptr<void>(0, 0, planeU), output_->cols(planeU), output_->rows(planeU), output_->stride(planeU)
+			));
+			COMPV_CHECK_CODE_RETURN(CompVImageUtils::copy(
+				COMPV_SUBTYPE_PIXELS_Y,
+				inputs[2]->ptr<uint8_t>(), inputs[2]->cols(), inputs[2]->rows(), inputs[2]->stride(),
+				output_->ptr<void>(0, 0, planeV), output_->cols(planeV), output_->rows(planeV), output_->stride(planeV)
+			));
+		}
+
+		return COMPV_ERROR_CODE_S_OK;
+	}
+	default:
+		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Splitting %s not supported yet", CompVGetSubtypeString(pixelFormat));
+		return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
+	}
 
 	return  COMPV_ERROR_CODE_S_OK;
 }

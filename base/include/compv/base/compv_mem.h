@@ -38,7 +38,9 @@ public:
     static COMPV_ERROR_CODE copy(void* dstPtr, const void* srcPtr, size_t size);
     static COMPV_ERROR_CODE copyNTA(void* dstPtr, const void* srcPtr, size_t size);
 	static COMPV_ERROR_CODE unpack3(uint8_t* dstPt0, uint8_t* dstPt1, uint8_t* dstPt2, const compv_uint8x3_t* srcPtr, size_t width, size_t height, size_t stride);
+	static COMPV_ERROR_CODE unpack2(uint8_t* dstPt0, uint8_t* dstPt1, const compv_uint8x2_t* srcPtr, size_t width, size_t height, size_t stride);
 	static COMPV_ERROR_CODE pack3(compv_uint8x3_t* dstPtr, const uint8_t* srcPt0, const uint8_t* srcPt1, const uint8_t* srcPt2, size_t width, size_t height, size_t stride);
+	static COMPV_ERROR_CODE pack2(compv_uint8x2_t* dstPtr, const uint8_t* srcPt0, const uint8_t* srcPt1, size_t width, size_t height, size_t stride);
 
     static COMPV_ERROR_CODE set(void* dstPtr, compv_scalar_t val, compv_uscalar_t count, compv_uscalar_t sizeOfEltInBytes = 1);
 

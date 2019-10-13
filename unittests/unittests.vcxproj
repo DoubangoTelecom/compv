@@ -188,12 +188,12 @@
     <ClCompile Include="math_stats_variance.cxx" />
     <ClCompile Include="math_svd.cxx" />
     <ClCompile Include="math_transform.cxx" />
+    <ClCompile Include="packing.cxx" />
     <ClCompile Include="patch.cxx" />
     <ClCompile Include="pyramid.cxx" />
     <ClCompile Include="rotate.cxx" />
     <ClCompile Include="scale.cxx" />
     <ClCompile Include="sobel.cxx" />
-    <ClCompile Include="split.cxx" />
     <ClCompile Include="threshold.cxx" />
   </ItemGroup>
   <ItemGroup>

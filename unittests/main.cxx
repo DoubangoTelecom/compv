@@ -4,8 +4,8 @@ using namespace compv;
 
 #define TAG_UNITTESTS "UnitTests"
 
-#define UNITTEST_INTEGRAL						1
-#define UNITTEST_SPLIT							0
+#define UNITTEST_INTEGRAL						0
+#define UNITTEST_PACKING						1
 #define UNITTEST_SCALE							0
 #define UNITTEST_ROTATE							0
 #define UNITTEST_PYRAMID						0
@@ -111,9 +111,9 @@ compv_main()
 								extern COMPV_ERROR_CODE unittest_integral();
 								COMPV_CHECK_CODE_BAIL(err = unittest_integral(), "Image integral unittest failed");
 #endif
-#if UNITTEST_SPLIT || !defined(COMPV_TEST_LOCAL)
-								extern COMPV_ERROR_CODE unittest_split();
-								COMPV_CHECK_CODE_BAIL(err = unittest_split(), "Image split unittest failed");
+#if UNITTEST_PACKING || !defined(COMPV_TEST_LOCAL)
+								extern COMPV_ERROR_CODE unittest_packing();
+								COMPV_CHECK_CODE_BAIL(err = unittest_packing(), "Image packing unittest failed");
 #endif
 #if UNITTEST_SCALE || !defined(COMPV_TEST_LOCAL)
 								extern COMPV_ERROR_CODE unittest_scale();

@@ -56,7 +56,9 @@ COMPV_NAMESPACE_BEGIN()
 #define COMPV_MEM_CPY_SIZE_MIN_SIMD						(32 * 16) // no real gain on small sizes
 #define COMPV_MEM_CPY_COUNT_MIN_SAMPLES_PER_THREAD		(4096 * 5) // Should be multiple of 4096 (cache friendly)
 #define COMPV_MEM_UNPACK3_COUNT_MIN_SAMPLES_PER_THREAD	(50 * 50)
+#define COMPV_MEM_UNPACK2_COUNT_MIN_SAMPLES_PER_THREAD	(50 * 50)
 #define COMPV_MEM_PACK3_COUNT_MIN_SAMPLES_PER_THREAD	(50 * 50)
+#define COMPV_MEM_PACK2_COUNT_MIN_SAMPLES_PER_THREAD	(50 * 50)
 
 // X86
 #if COMPV_ARCH_X86 && COMPV_ASM
@@ -103,7 +105,9 @@ typedef void(*CompVMemCopy)(void* dstPtr, const void*srcPtr, compv_uscalar_t siz
 
 static void CompVMemCopy_C(void* dstPtr, const void*srcPtr, compv_uscalar_t size);
 static void CompVMemUnpack3_C(uint8_t* dstPt0, uint8_t* dstPt1, uint8_t* dstPt2, const compv_uint8x3_t* srcPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
+static void CompVMemUnpack2_C(uint8_t* dstPt0, uint8_t* dstPt1, const compv_uint8x2_t* srcPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
 static void CompVMemPack3_C(compv_uint8x3_t* dstPtr, const uint8_t* srcPt0, const uint8_t* srcPt1, const uint8_t* srcPt2, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
+static void CompVMemPack2_C(compv_uint8x2_t* dstPtr, const uint8_t* srcPt0, const uint8_t* srcPt1, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
 
 COMPV_ERROR_CODE CompVMem::init()
 {
@@ -248,6 +252,44 @@ COMPV_ERROR_CODE CompVMem::unpack3(uint8_t* dstPt0, uint8_t* dstPt1, uint8_t* ds
 	return COMPV_ERROR_CODE_S_OK;
 }
 
+COMPV_ERROR_CODE CompVMem::unpack2(uint8_t* dstPt0, uint8_t* dstPt1, const compv_uint8x2_t* srcPtr, size_t width, size_t height, size_t stride)
+{
+	COMPV_CHECK_EXP_RETURN(!dstPt0 || !dstPt1 || !srcPtr || !width || !height || stride < width, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+	void(*CompVMemUnpack2)(uint8_t* dstPt0, uint8_t* dstPt1, const compv_uint8x2_t* srcPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
+		= CompVMemUnpack2_C;
+#if COMPV_ARCH_X86
+	if (CompVCpu::isEnabled(kCpuFlagSSSE3) && COMPV_IS_ALIGNED_SSE(dstPt0) && COMPV_IS_ALIGNED_SSE(dstPt1) && COMPV_IS_ALIGNED_SSE(srcPtr) && COMPV_IS_ALIGNED_SSE(stride)) {
+		//COMPV_EXEC_IFDEF_INTRIN_X86(CompVMemUnpack2 = CompVMemUnpack2_Intrin_SSSE3);
+		//COMPV_EXEC_IFDEF_ASM_X64(CompVMemUnpack2 = CompVMemUnpack2_Asm_X64_SSSE3);
+		// No need for AVX2 implementation, tried and slower
+	}
+#elif COMPV_ARCH_ARM
+	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(dstPt0) && COMPV_IS_ALIGNED_NEON(dstPt1) && COMPV_IS_ALIGNED_NEON(stride)) {
+		//COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMemUnpack2 = CompVMemUnpack3_Intrin_NEON);
+		if (COMPV_IS_ALIGNED_NEON(srcPtr)) { // ASM requires src to be aligned
+			//COMPV_EXEC_IFDEF_ASM_ARM32(CompVMemUnpack2 = CompVMemUnpack2_Asm_NEON32);
+			//COMPV_EXEC_IFDEF_ASM_ARM64(CompVMemUnpack2 = CompVMemUnpack2_Asm_NEON64);
+		}
+	}
+#endif
+	// Processing
+	auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
+		const size_t offset = (ystart * stride);
+		CompVMemUnpack2((dstPt0 + offset), (dstPt1 + offset), (srcPtr + offset),
+			static_cast<compv_uscalar_t>(width), static_cast<compv_uscalar_t>(yend - ystart), static_cast<compv_uscalar_t>(stride));
+		return COMPV_ERROR_CODE_S_OK;
+	};
+	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+		funcPtr,
+		width,
+		height,
+		COMPV_MEM_UNPACK2_COUNT_MIN_SAMPLES_PER_THREAD
+	));
+
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 // like arm neon vst3
 COMPV_ERROR_CODE CompVMem::pack3(compv_uint8x3_t* dstPtr, const uint8_t* srcPt0, const uint8_t* srcPt1, const uint8_t* srcPt2, size_t width, size_t height, size_t stride)
 {
@@ -281,6 +323,43 @@ COMPV_ERROR_CODE CompVMem::pack3(compv_uint8x3_t* dstPtr, const uint8_t* srcPt0,
 		width,
 		height,
 		COMPV_MEM_PACK3_COUNT_MIN_SAMPLES_PER_THREAD
+	));
+
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVMem::pack2(compv_uint8x2_t* dstPtr, const uint8_t* srcPt0, const uint8_t* srcPt1, size_t width, size_t height, size_t stride)
+{
+	COMPV_CHECK_EXP_RETURN(!dstPtr || !srcPt0 || !srcPt1 || !width || !height || stride < width, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+	void(*CompVMemPack2)(compv_uint8x2_t* dstPtr, const uint8_t* srcPt0, const uint8_t* srcPt1, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
+		= CompVMemPack2_C;
+
+	// Processing
+	auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
+		const size_t offset = (ystart * stride);
+		CompVMemPack2((dstPtr + offset), (srcPt0 + offset), (srcPt1 + offset),
+			static_cast<compv_uscalar_t>(width), static_cast<compv_uscalar_t>(yend - ystart), static_cast<compv_uscalar_t>(stride));
+		return COMPV_ERROR_CODE_S_OK;
+	};
+#if COMPV_ARCH_X86
+	if (CompVCpu::isEnabled(kCpuFlagSSSE3) && COMPV_IS_ALIGNED_SSE(dstPtr) && COMPV_IS_ALIGNED_SSE(srcPt0) && COMPV_IS_ALIGNED_SSE(srcPt1) && COMPV_IS_ALIGNED_SSE(stride)) {
+		//COMPV_EXEC_IFDEF_INTRIN_X86(CompVMemPack2 = CompVMemPack2_Intrin_SSSE3);
+		//COMPV_EXEC_IFDEF_ASM_X64(CompVMemPack2 = CompVMemPack2_Asm_X64_SSSE3);
+		// No need for AVX2 implementation, tried and slower
+	}
+#elif COMPV_ARCH_ARM
+	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(dstPtr) && COMPV_IS_ALIGNED_NEON(srcPt0) && COMPV_IS_ALIGNED_NEON(srcPt1) && COMPV_IS_ALIGNED_NEON(stride)) {
+		//COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMemPack2 = CompVMemPack2_Intrin_NEON);
+		//COMPV_EXEC_IFDEF_ASM_ARM32(CompVMemPack2 = CompVMemPack2_Asm_NEON32);
+		//COMPV_EXEC_IFDEF_ASM_ARM64(CompVMemPack2 = CompVMemPack2_Asm_NEON64);
+	}
+#endif
+	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+		funcPtr,
+		width,
+		height,
+		COMPV_MEM_PACK2_COUNT_MIN_SAMPLES_PER_THREAD
 	));
 
 	return COMPV_ERROR_CODE_S_OK;
@@ -795,6 +874,21 @@ static void CompVMemUnpack3_C(uint8_t* dstPt0, uint8_t* dstPt1, uint8_t* dstPt2,
 	}
 }
 
+static void CompVMemUnpack2_C(uint8_t* dstPt0, uint8_t* dstPt1, const compv_uint8x2_t* srcPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
+	for (compv_uscalar_t j = 0; j < height; ++j) {
+		for (compv_uscalar_t i = 0; i < width; ++i) {
+			const compv_uint8x2_t& src = srcPtr[i];
+			dstPt0[i] = src[0];
+			dstPt1[i] = src[1];
+		}
+		dstPt0 += stride;
+		dstPt1 += stride;
+		srcPtr += stride;
+	}
+}
+
 static void CompVMemPack3_C(compv_uint8x3_t* dstPtr, const uint8_t* srcPt0, const uint8_t* srcPt1, const uint8_t* srcPt2, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
@@ -809,6 +903,21 @@ static void CompVMemPack3_C(compv_uint8x3_t* dstPtr, const uint8_t* srcPt0, cons
 		srcPt0 += stride;
 		srcPt1 += stride;
 		srcPt2 += stride;
+	}
+}
+
+static void CompVMemPack2_C(compv_uint8x2_t* dstPtr, const uint8_t* srcPt0, const uint8_t* srcPt1, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
+	for (compv_uscalar_t j = 0; j < height; ++j) {
+		for (compv_uscalar_t i = 0; i < width; ++i) {
+			compv_uint8x2_t& dst = dstPtr[i];
+			dst[0] = srcPt0[i];
+			dst[1] = srcPt1[i];
+		}
+		dstPtr += stride;
+		srcPt0 += stride;
+		srcPt1 += stride;
 	}
 }
 

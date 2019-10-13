@@ -21,7 +21,6 @@
     <ClCompile Include="..\..\houghsht.cxx" />
     <ClCompile Include="..\..\threshold.cxx" />
     <ClCompile Include="..\..\math_histogram.cxx" />
-    <ClCompile Include="..\..\split.cxx" />
     <ClCompile Include="..\..\math_convlt.cxx" />
     <ClCompile Include="..\..\math_morph.cxx" />
     <ClCompile Include="..\..\ccl_binar.cxx" />
@@ -32,5 +31,6 @@
     <ClCompile Include="..\..\gradient.cxx" />
     <ClCompile Include="..\..\math_dot.cxx" />
     <ClCompile Include="..\..\math_exp.cxx" />
+    <ClCompile Include="..\..\packing.cxx" />
   </ItemGroup>
 </Project>

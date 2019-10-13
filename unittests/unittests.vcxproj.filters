@@ -87,9 +87,6 @@
     <ClCompile Include="threshold.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="split.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="math_convlt.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -124,6 +121,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="integral.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="packing.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
