@@ -20,18 +20,18 @@ COMPV_NAMESPACE_BEGIN()
 void CompVMemCopy_Intrin_NEON(COMPV_ALIGNED(NEON) void* dataDstPtr, COMPV_ALIGNED(NEON) const void* dataSrcPtr, compv_uscalar_t size);
 void CompVMemZero_Intrin_NEON(COMPV_ALIGNED(NEON) void* dstPtr, compv_uscalar_t size);
 void CompVMemUnpack3_Intrin_NEON(
-	COMPV_ALIGNED(NEON) uint8_t* dstPt0, COMPV_ALIGNED(NEON) uint8_t* dstPt1, COMPV_ALIGNED(NEON) uint8_t* dstPt2,
-	COMPV_ALIGNED(NEON) const compv_uint8x3_t* srcPtr,
+	uint8_t* dstPt0, uint8_t* dstPt1, uint8_t* dstPt2,
+	const compv_uint8x3_t* srcPtr,
 	compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
 void CompVMemUnpack2_Intrin_NEON(
-	COMPV_ALIGNED(NEON) uint8_t* dstPt0, COMPV_ALIGNED(NEON) uint8_t* dstPt1, COMPV_ALIGNED(NEON) const compv_uint8x2_t* srcPtr,
+	uint8_t* dstPt0, uint8_t* dstPt1, const compv_uint8x2_t* srcPtr,
 	compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
 void CompVMemPack3_Intrin_NEON(
-	COMPV_ALIGNED(NEON) compv_uint8x3_t* dstPtr,
-	COMPV_ALIGNED(NEON) const uint8_t* srcPt0, COMPV_ALIGNED(NEON) const uint8_t* srcPt1, COMPV_ALIGNED(NEON) const uint8_t* srcPt2,
+	compv_uint8x3_t* dstPtr,
+	const uint8_t* srcPt0, const uint8_t* srcPt1, const uint8_t* srcPt2,
 	compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
 void CompVMemPack2_Intrin_NEON(
-	COMPV_ALIGNED(NEON) compv_uint8x2_t* dstPtr, COMPV_ALIGNED(NEON) const uint8_t* srcPt0, COMPV_ALIGNED(NEON) const uint8_t* srcPt1,
+	compv_uint8x2_t* dstPtr, const uint8_t* srcPt0, const uint8_t* srcPt1,
 	compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
 
 COMPV_NAMESPACE_END()

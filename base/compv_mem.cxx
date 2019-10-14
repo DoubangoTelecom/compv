@@ -148,12 +148,10 @@ COMPV_ERROR_CODE CompVMem::copy(void* dstPtr, const void* srcPtr, size_t size)
     COMPV_CHECK_EXP_RETURN(!dstPtr || !srcPtr || !size, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     CompVMemCopy cpy = CompVMemCopy_C;
 	
-	if (size >= 64 && CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
-		COMPV_EXEC_IFDEF_INTRIN_ARM(cpy = CompVMemCopy_Intrin_NEON);
-		if (COMPV_IS_ALIGNED_NEON(dstPtr) && COMPV_IS_ALIGNED_NEON(srcPtr)) { // ASM requires src and dst to be aligned
-			COMPV_EXEC_IFDEF_ASM_ARM32(cpy = CompVMemCopy_Asm_NEON32);
-			COMPV_EXEC_IFDEF_ASM_ARM64(cpy = CompVMemCopy_Asm_NEON64);
-		}
+	if (size >= 64 && CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(dstPtr) && COMPV_IS_ALIGNED_NEON(srcPtr)) {
+		COMPV_EXEC_IFDEF_INTRIN_ARM(cpy = CompVMemCopy_Intrin_NEON); // IMPORTANT: this intrin implementation uses "__compv_builtin_assume_aligned" to require memory alignment
+		COMPV_EXEC_IFDEF_ASM_ARM32(cpy = CompVMemCopy_Asm_NEON32);
+		COMPV_EXEC_IFDEF_ASM_ARM64(cpy = CompVMemCopy_Asm_NEON64);
 	}
 
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
