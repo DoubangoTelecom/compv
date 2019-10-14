@@ -200,9 +200,9 @@ COMPV_GAS_FUNCTION_DECLARE CompVMemUnpack3_Asm_NEON32
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 		mov i, width1
 		LoopWidth_CompVMemUnpack3_Asm_NEON32:
-			pld [srcPtr, #(CACHE_LINE_SIZE*3)]
 			vld3.u8 {q0x, q1x, q2x}, [srcPtr :64]!
 			vld3.u8 {q0y, q1y, q2y}, [srcPtr :64]!
+			pld [srcPtr, #(CACHE_LINE_SIZE*3)]
 			vst1.u8 {q0}, [dstPt0: 128]!
 			vst1.u8 {q1}, [dstPt1: 128]!
 			vst1.u8 {q2}, [dstPt2: 128]!
@@ -234,14 +234,87 @@ COMPV_GAS_FUNCTION_DECLARE CompVMemUnpack3_Asm_NEON32
 	COMPV_GAS_FUNCTION_EPILOG
 	COMPV_GAS_FUNCTION_RETURN
 
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@ arg(0) -> COMPV_ALIGNED(NEON) uint8_t* dstPt0
+@ arg(1) -> COMPV_ALIGNED(NEON) uint8_t* dstPt1
+@ arg(2) -> COMPV_ALIGNED(NEON) const compv_uint8x2_t* srcPtr
+@ arg(3) -> compv_uscalar_t width
+@ arg(4) -> compv_uscalar_t height
+@ arg(5) -> COMPV_ALIGNED(NEON) compv_uscalar_t stride
+COMPV_GAS_FUNCTION_DECLARE CompVMemUnpack2_Asm_NEON32
+	COMPV_GAS_FUNCTION_PROLOG
+	COMPV_GAS_SHADOW_ARGS_TO_STACK 6
+	COMPV_GAS_SAVE_NEON_REGS
 
+	@@ Declare input arguments @@
+	ldm_args r0-r5
+	dstPt0 .req r0
+	dstPt1 .req r1
+	srcPtr .req r2
+	width .req r3
+	height .req r4
+	stride .req r5
 
+	pld [srcPtr, #(CACHE_LINE_SIZE*0)]
+	pld [srcPtr, #(CACHE_LINE_SIZE*1)]
+	pld [srcPtr, #(CACHE_LINE_SIZE*2)]
+	
+	@@ Declare local vectors @@
+	pad .req r6
+	pad2 .req r7
+	width1 .req r8
+	i .req r9
+
+	add width1, width, #15
+	and width1, width1, #-16
+	sub pad, stride, width1
+	lsl pad2, pad, #1
+
+	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	@ for (compv_uscalar_t j = 0; j < height; ++j)
+	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	LoopHeight_CompVMemUnpack2_Asm_NEON32:
+		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+		@ for (compv_uscalar_t i = 0; i < width; i += 16)
+		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+		mov i, width1
+		LoopWidth_CompVMemUnpack2_Asm_NEON32:
+			vld2.u8 {q0x, q1x}, [srcPtr :64]!
+			vld2.u8 {q0y, q1y}, [srcPtr :64]!
+			pld [srcPtr, #(CACHE_LINE_SIZE*3)]
+			vst1.u8 {q0}, [dstPt0: 128]!
+			vst1.u8 {q1}, [dstPt1: 128]!
+			subs i, i, #16
+			bne LoopWidth_CompVMemUnpack2_Asm_NEON32
+		EndOf_LoopWidth_CompVMemUnpack2_Asm_NEON32:
+		subs height, height, #1
+		add dstPt0, dstPt0, pad
+		add dstPt1, dstPt1, pad
+		add srcPtr, srcPtr, pad2
+		bne LoopHeight_CompVMemUnpack2_Asm_NEON32
+	EndOf_LoopHeight_CompVMemUnpack2_Asm_NEON32:
+
+	.unreq dstPt0
+	.unreq dstPt1
+	.unreq srcPtr
+	.unreq width
+	.unreq height
+	.unreq stride
+	.unreq pad
+	.unreq pad2
+	.unreq width1
+	.unreq i
+
+	COMPV_GAS_RESTORE_NEON_REGS
+	COMPV_GAS_UNSHADOW_ARGS 6
+	COMPV_GAS_FUNCTION_EPILOG
+	COMPV_GAS_FUNCTION_RETURN
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-@ arg(0) -> COMPV_ALIGNED(NEON) uint8_t* dstPtr
-@ arg(1) -> COMPV_ALIGNED(NEON) uint8_t* srcPt0
-@ arg(2) -> COMPV_ALIGNED(NEON) uint8_t* srcPt1
-@ arg(3) -> COMPV_ALIGNED(NEON) const compv_uint8x3_t* srcPt2
+@ arg(0) -> COMPV_ALIGNED(NEON) compv_uint8x3_t* dstPtr
+@ arg(1) -> COMPV_ALIGNED(NEON) const uint8_t* srcPt0
+@ arg(2) -> COMPV_ALIGNED(NEON) const uint8_t* srcPt1
+@ arg(3) -> COMPV_ALIGNED(NEON) const uint8_t* srcPt2
 @ arg(4) -> compv_uscalar_t width
 @ arg(5) -> compv_uscalar_t height
 @ arg(6) -> COMPV_ALIGNED(NEON) compv_uscalar_t stride
@@ -323,6 +396,86 @@ COMPV_GAS_FUNCTION_DECLARE CompVMemPack3_Asm_NEON32
 
 	COMPV_GAS_RESTORE_NEON_REGS
 	COMPV_GAS_UNSHADOW_ARGS 7
+	COMPV_GAS_FUNCTION_EPILOG
+	COMPV_GAS_FUNCTION_RETURN
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@ arg(0) -> COMPV_ALIGNED(NEON) compv_uint8x2_t* dstPtr
+@ arg(1) -> COMPV_ALIGNED(NEON) const uint8_t* srcPt0
+@ arg(2) -> COMPV_ALIGNED(NEON) const uint8_t* srcPt1
+@ arg(3) -> compv_uscalar_t width
+@ arg(4) -> compv_uscalar_t height
+@ arg(5) -> COMPV_ALIGNED(NEON) compv_uscalar_t stride
+COMPV_GAS_FUNCTION_DECLARE CompVMemPack2_Asm_NEON32
+	COMPV_GAS_FUNCTION_PROLOG
+	COMPV_GAS_SHADOW_ARGS_TO_STACK 6
+	COMPV_GAS_SAVE_NEON_REGS
+
+	@@ Declare input arguments @@
+	ldm_args r0-r5
+	dstPtr .req r0
+	srcPt0 .req r1
+	srcPt1 .req r2
+	width .req r3
+	height .req r4
+	stride .req r5
+
+	pld [srcPt0, #(CACHE_LINE_SIZE*0)]
+	pld [srcPt0, #(CACHE_LINE_SIZE*1)]
+	pld [srcPt0, #(CACHE_LINE_SIZE*2)]
+	pld [srcPt1, #(CACHE_LINE_SIZE*0)]
+	pld [srcPt1, #(CACHE_LINE_SIZE*1)]
+	pld [srcPt1, #(CACHE_LINE_SIZE*2)]
+	
+	@@ Declare local vectors @@
+	pad .req r6
+	pad2 .req r7
+	width1 .req r8
+	i .req r9
+
+	add width1, width, #15
+	and width1, width1, #-16
+	sub pad, stride, width1
+	lsl pad2, pad, #1
+
+	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	@ for (compv_uscalar_t j = 0; j < height; ++j)
+	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	LoopHeight_CompVMemPack2_Asm_NEON32:
+		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+		@ for (compv_uscalar_t i = 0; i < width; i += 16)
+		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+		mov i, width1
+		LoopWidth_CompVMemPack2_Asm_NEON32:
+			vld1.u8 {q0}, [srcPt0 :128]!
+			vld1.u8 {q1}, [srcPt1 :128]!
+			pld [srcPt0, #(CACHE_LINE_SIZE*3)]
+			pld [srcPt1, #(CACHE_LINE_SIZE*3)]
+			vst2.u8 {q0x, q1x}, [dstPtr: 64]!
+			vst2.u8 {q0y, q1y}, [dstPtr: 64]!
+			subs i, i, #16
+			bne LoopWidth_CompVMemPack2_Asm_NEON32
+		EndOf_LoopWidth_CompVMemPack2_Asm_NEON32:
+		subs height, height, #1
+		add srcPt0, srcPt0, pad
+		add srcPt1, srcPt1, pad
+		add dstPtr, dstPtr, pad2
+		bne LoopHeight_CompVMemPack2_Asm_NEON32
+	EndOf_LoopHeight_CompVMemPack2_Asm_NEON32:
+
+	.unreq dstPtr
+	.unreq srcPt0
+	.unreq srcPt1
+	.unreq width
+	.unreq height
+	.unreq stride
+	.unreq pad
+	.unreq pad2
+	.unreq width1
+	.unreq i
+
+	COMPV_GAS_RESTORE_NEON_REGS
+	COMPV_GAS_UNSHADOW_ARGS 6
 	COMPV_GAS_FUNCTION_EPILOG
 	COMPV_GAS_FUNCTION_RETURN
 

@@ -87,6 +87,24 @@ void CompVMemUnpack3_Intrin_NEON(
 	}
 }
 
+void CompVMemUnpack2_Intrin_NEON(
+	COMPV_ALIGNED(NEON) uint8_t* dstPt0, COMPV_ALIGNED(NEON) uint8_t* dstPt1, COMPV_ALIGNED(NEON) const compv_uint8x2_t* srcPtr,
+	compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM code faster");
+	COMPV_DEBUG_INFO_CHECK_NEON();
+	for (compv_uscalar_t j = 0; j < height; ++j) {
+		for (compv_uscalar_t i = 0; i < width; i += 16) {
+			const uint8x16x2_t& v2 = vld2q_u8(reinterpret_cast<const uint8_t*>(&srcPtr[i]));
+			vst1q_u8(&dstPt0[i], v2.val[0]);
+			vst1q_u8(&dstPt1[i], v2.val[1]);
+		}
+		dstPt0 += stride;
+		dstPt1 += stride;
+		srcPtr += stride;
+	}
+}
+
 // TODO(dmi) ASM code slightly faster on both ARM32 and ARM64 (tested on MediaPad2)
 // TODO(dmi): On MediaPad2 ARM64, 1282x720, 1 thread, "Unpack+Pack" -> Intrin: 504ms, ASM: 409ms
 // TODO(dmi): On MediaPad2 ARM32, 1282x720, 1 thread, "Unpack+Pack" -> Intrin: 502ms, ASM: 439ms
@@ -106,6 +124,23 @@ void CompVMemPack3_Intrin_NEON(
 		srcPt0 += stride;
 		srcPt1 += stride;
 		srcPt2 += stride;
+	}
+}
+
+void CompVMemPack2_Intrin_NEON(
+	COMPV_ALIGNED(NEON) compv_uint8x2_t* dstPtr, COMPV_ALIGNED(NEON) const uint8_t* srcPt0, COMPV_ALIGNED(NEON) const uint8_t* srcPt1,
+	compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
+{
+	COMPV_DEBUG_INFO_CHECK_NEON();
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM code faster");
+	for (compv_uscalar_t j = 0; j < height; ++j) {
+		for (compv_uscalar_t i = 0; i < width; i += 16) { // strided/SSE-aligned -> can write beyond width
+			const uint8x16x2_t vecSrc = { { vld1q_u8(&srcPt0[i]), vld1q_u8(&srcPt1[i]) } };
+			vst2q_u8(reinterpret_cast<uint8_t*>(&dstPtr[i]), vecSrc);
+		}
+		dstPtr += stride;
+		srcPt0 += stride;
+		srcPt1 += stride;
 	}
 }
 
