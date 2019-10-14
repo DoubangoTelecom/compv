@@ -16,7 +16,7 @@ COMPV_NAMESPACE_BEGIN()
 // TODO(dmi): add ASM version
 // size must be > 16 and it's up to the caller to check it
 // size should be multiple of 16, if not the remaining will be ignored
-void MemCopy_Intrin_Aligned_SSE2(COMPV_ALIGNED(SSE) void* dataDstPtr, COMPV_ALIGNED(SSE) const void* dataSrcPtr, compv_uscalar_t size)
+void CompVMemCopy_Intrin_Aligned_SSE2(COMPV_ALIGNED(SSE) void* dataDstPtr, COMPV_ALIGNED(SSE) const void* dataSrcPtr, compv_uscalar_t size)
 {
     COMPV_DEBUG_INFO_CHECK_SSE2();
     const __m128i* xmmSrc = (const __m128i*)dataSrcPtr;
@@ -55,7 +55,7 @@ void MemCopy_Intrin_Aligned_SSE2(COMPV_ALIGNED(SSE) void* dataDstPtr, COMPV_ALIG
     }
 }
 
-void MemCopyNTA_Intrin_Aligned_SSE2(COMPV_ALIGNED(SSE) void* dataDstPtr, COMPV_ALIGNED(SSE) const void* dataSrcPtr, compv_uscalar_t size)
+void CompVMemCopyNTA_Intrin_Aligned_SSE2(COMPV_ALIGNED(SSE) void* dataDstPtr, COMPV_ALIGNED(SSE) const void* dataSrcPtr, compv_uscalar_t size)
 {
     COMPV_DEBUG_INFO_CHECK_SSE2();
     const __m128i* xmmSrc = (const __m128i*)dataSrcPtr;
@@ -99,7 +99,7 @@ void MemCopyNTA_Intrin_Aligned_SSE2(COMPV_ALIGNED(SSE) void* dataDstPtr, COMPV_A
     _mm_mfence(); // flush latest WC (Write Combine) buffers to memory
 }
 
-void MemZeroNTA_Intrin_Aligned_SSE2(COMPV_ALIGNED(SSE) void* dstPtr, compv_uscalar_t size)
+void CompVMemZeroNTA_Intrin_Aligned_SSE2(COMPV_ALIGNED(SSE) void* dstPtr, compv_uscalar_t size)
 {
     COMPV_DEBUG_INFO_CHECK_SSE2();
     __m128i *xmmDst = (__m128i*)dstPtr, xmmZero;
@@ -140,6 +140,24 @@ void MemZeroNTA_Intrin_Aligned_SSE2(COMPV_ALIGNED(SSE) void* dstPtr, compv_uscal
         ++xmmDst;
     }
     _mm_mfence(); // flush latest WC (Write Combine) buffers to memory
+}
+
+void CompVMemPack2_Intrin_SSE2(
+	COMPV_ALIGNED(SSE) compv_uint8x2_t* dstPtr, COMPV_ALIGNED(SSE) const uint8_t* srcPt0, COMPV_ALIGNED(SSE) const uint8_t* srcPt1,
+	compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride)
+{
+	COMPV_DEBUG_INFO_CHECK_SSE2();
+	for (compv_uscalar_t j = 0; j < height; ++j) {
+		for (compv_uscalar_t i = 0; i < width; i += 16) { // strided/SSE-aligned -> can write beyond width
+			const __m128i vec0 = _mm_load_si128(reinterpret_cast<const __m128i*>(&srcPt0[i])); // UVUVUVUVUVUVUVUV
+			const __m128i vec1 = _mm_load_si128(reinterpret_cast<const __m128i*>(&srcPt1[i])); // UVUVUVUVUVUVUVUV
+			_mm_store_si128(reinterpret_cast<__m128i*>(&dstPtr[i]), _mm_unpacklo_epi8(vec0, vec1)); // UUUUUUUUUUUUUUUU
+			_mm_store_si128(reinterpret_cast<__m128i*>(&dstPtr[i + 8]), _mm_unpackhi_epi8(vec0, vec1)); // VVVVVVVVVVVVVVVV
+		}
+		dstPtr += stride;
+		srcPt0 += stride;
+		srcPt1 += stride;
+	}
 }
 
 COMPV_NAMESPACE_END()
