@@ -20,17 +20,32 @@
 
 COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-function")
 
+static AAssetManager* __compv_android_assetmgr = nullptr;
+
+static void compv_android_set_assetmgr(AAssetManager* assetmgr)
+{
+	__compv_android_assetmgr = assetmgr;
+}
+
+static AAssetManager* compv_android_get_assetmgr()
+{
+	ANativeActivity* activity = ANativeActivity_get();
+	return (activity && activity->assetManager) 
+		? activity->assetManager
+		: __compv_android_assetmgr;
+}
+
 static bool compv_android_have_assetmgr()
 {
-    return (ANativeActivity_get() != NULL);
+    return (compv_android_get_assetmgr() != nullptr);
 }
 
 static bool compv_android_asset_fexist(const char* pcPath)
 {
     if (pcPath) {
-        ANativeActivity* activity = ANativeActivity_get();
-        if (activity) {
-            AAsset* asset = AAssetManager_open(activity->assetManager, pcPath, 0);
+		AAssetManager* assetmgr = compv_android_get_assetmgr();
+        if (assetmgr) {
+            AAsset* asset = AAssetManager_open(assetmgr, pcPath, 0);
             if (asset) {
                 AAsset_close(asset);
                 return true;
@@ -44,9 +59,9 @@ static bool compv_android_asset_fexist(const char* pcPath)
 static size_t compv_android_asset_fsize(const char* pcPath)
 {
     if (pcPath) {
-        ANativeActivity* activity = ANativeActivity_get();
-        if (activity) {
-            AAsset* asset = AAssetManager_open(activity->assetManager, pcPath, 0);
+		AAssetManager* assetmgr = compv_android_get_assetmgr();
+        if (assetmgr) {
+            AAsset* asset = AAssetManager_open(assetmgr, pcPath, 0);
             if (asset) {
                 size_t size = static_cast<size_t>(AAsset_getLength(asset));
                 AAsset_close(asset);
@@ -65,7 +80,7 @@ static int compv_android_asset_fread(void* cookie, char* buf, int size)
 
 static int compv_android_asset_fwrite(void* cookie, const char* buf, int size)
 {
-    COMPV_DEBUG_ERROR("Not implemented");
+    COMPV_DEBUG_ERROR_EX("AndroidFileUtils", "Not implemented");
     return EACCES;
 }
 
@@ -83,16 +98,16 @@ static int compv_android_asset_fclose(void* cookie)
 static FILE* compv_android_asset_fopen(const char* fname, const char* mode)
 {
     if (fname) {
-        ANativeActivity* activity = ANativeActivity_get();
-        if (activity) {
-            AAsset* asset = AAssetManager_open(activity->assetManager, fname, 0);
+		AAssetManager* assetmgr = compv_android_get_assetmgr();
+        if (assetmgr) {
+            AAsset* asset = AAssetManager_open(assetmgr, fname, 0);
             if (!asset) {
-                return NULL;
+                return nullptr;
             }
             return funopen(asset, compv_android_asset_fread, compv_android_asset_fwrite, compv_android_asset_fseek, compv_android_asset_fclose);
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 COMPV_GCC_DISABLE_WARNINGS_END()

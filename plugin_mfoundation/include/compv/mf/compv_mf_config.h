@@ -20,7 +20,7 @@
 # 		define COMPV_PLUGIN_MFOUNDATION_API		__declspec(dllimport)
 #	endif
 #else
-#	define COMPV_PLUGIN_MFOUNDATION_API
+#	define COMPV_PLUGIN_MFOUNDATION_API			__attribute__((visibility("default")))
 #endif
 
 #define COMPV_MF_SAFE_RELEASE(ppT) \

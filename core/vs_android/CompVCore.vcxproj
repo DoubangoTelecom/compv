@@ -1003,6 +1003,7 @@
       <FloatABI>
       </FloatABI>
       <PreprocessorDefinitions>DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalOptions>-fvisibility=hidden %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -1015,6 +1016,7 @@
       <EnableNeonCodegen>false</EnableNeonCodegen>
       <FloatABI>
       </FloatABI>
+      <AdditionalOptions>-fvisibility=hidden %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
@@ -1028,6 +1030,7 @@
       <FloatABI>
       </FloatABI>
       <PreprocessorDefinitions>DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalOptions>-fvisibility=hidden %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
@@ -1040,6 +1043,7 @@
       <EnableNeonCodegen>false</EnableNeonCodegen>
       <FloatABI>
       </FloatABI>
+      <AdditionalOptions>-fvisibility=hidden %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
@@ -1053,6 +1057,7 @@
       <FloatABI>
       </FloatABI>
       <PreprocessorDefinitions>DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalOptions>-fvisibility=hidden %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
@@ -1066,6 +1071,7 @@
       <FloatABI>
       </FloatABI>
       <PreprocessorDefinitions>DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalOptions>-fvisibility=hidden %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
@@ -1078,6 +1084,7 @@
       <EnableNeonCodegen>true</EnableNeonCodegen>
       <FloatABI />
       <PreprocessorDefinitions>DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalOptions>-mfpu=neon -fvisibility=hidden %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
@@ -1089,6 +1096,7 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableNeonCodegen>true</EnableNeonCodegen>
       <FloatABI />
+      <AdditionalOptions>-mfpu=neon -fvisibility=hidden %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

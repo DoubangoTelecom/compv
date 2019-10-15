@@ -255,7 +255,7 @@
 # 		define COMPV_BASE_API		__declspec(dllimport)
 #	endif
 #else
-# 	define COMPV_BASE_API
+# 	define COMPV_BASE_API			__attribute__((visibility("default")))
 #endif
 
 /* define "COMPV_DEPRECATED(func)" macro */

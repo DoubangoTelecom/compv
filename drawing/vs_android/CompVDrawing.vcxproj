@@ -162,6 +162,7 @@
       <EnableNeonCodegen>false</EnableNeonCodegen>
       <FloatABI>
       </FloatABI>
+      <AdditionalOptions>-fvisibility=hidden %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -182,6 +183,7 @@
       <EnableNeonCodegen>false</EnableNeonCodegen>
       <FloatABI>
       </FloatABI>
+      <AdditionalOptions>-fvisibility=hidden %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -202,6 +204,7 @@
       <EnableNeonCodegen>false</EnableNeonCodegen>
       <FloatABI>
       </FloatABI>
+      <AdditionalOptions>-fvisibility=hidden %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -222,6 +225,7 @@
       <EnableNeonCodegen>false</EnableNeonCodegen>
       <FloatABI>
       </FloatABI>
+      <AdditionalOptions>-fvisibility=hidden %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -242,6 +246,7 @@
       <EnableNeonCodegen>true</EnableNeonCodegen>
       <FloatABI>
       </FloatABI>
+      <AdditionalOptions>-fvisibility=hidden %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -262,6 +267,7 @@
       <EnableNeonCodegen>true</EnableNeonCodegen>
       <FloatABI>
       </FloatABI>
+      <AdditionalOptions>-fvisibility=hidden %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -281,6 +287,7 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableNeonCodegen>true</EnableNeonCodegen>
       <FloatABI />
+      <AdditionalOptions>-mfpu=neon -fvisibility=hidden %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -300,6 +307,7 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableNeonCodegen>true</EnableNeonCodegen>
       <FloatABI />
+      <AdditionalOptions>-mfpu=neon -fvisibility=hidden %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>

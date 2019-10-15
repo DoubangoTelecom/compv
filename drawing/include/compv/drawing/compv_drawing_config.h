@@ -18,7 +18,7 @@
 # 		define COMPV_DRAWING_API		__declspec(dllimport)
 #	endif
 #else
-#	define COMPV_DRAWING_API
+#	define COMPV_DRAWING_API			__attribute__((visibility("default")))
 #endif
 
 #endif /* _COMPV_DRAWING_CONFIG_H_ */

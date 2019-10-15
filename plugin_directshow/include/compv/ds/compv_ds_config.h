@@ -20,7 +20,7 @@
 # 		define COMPV_PLUGIN_DIRECTSHOW_API		__declspec(dllimport)
 #	endif
 #else
-#	define COMPV_PLUGIN_DIRECTSHOW_API
+#	define COMPV_PLUGIN_DIRECTSHOW_API			__attribute__((visibility("default")))
 #endif
 
 #define COMPV_DS_SAFE_RELEASE(x) if ((x)) { (x)->Release(); (x) = NULL; }

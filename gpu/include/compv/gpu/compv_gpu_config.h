@@ -17,7 +17,7 @@
 # 		define COMPV_GPU_API		__declspec(dllimport)
 #	endif
 #else
-#	define COMPV_GPU_API
+#	define COMPV_GPU_API			__attribute__((visibility("default")))
 #endif
 
 #endif /* _COMPV_GPU_CONFIG_H_ */

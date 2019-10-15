@@ -64,7 +64,7 @@ COMPV_ERROR_CODE CompVBase::init(int numThreads COMPV_DEFAULT(-1))
 #if COMPV_OS_ANDROID
     struct android_app* androidApp = AndroidApp_get();
     JavaVM* jVM = androidApp ? (androidApp->activity ? androidApp->activity->vm : NULL) : NULL;
-#endif
+#endif /* COMPV_OS_ANDROID */
     s_bInitializing = true;
 
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Initializing [base] modules (v %s, nt %d)...", COMPV_VERSION_STRING, numThreads);
@@ -178,10 +178,10 @@ COMPV_ERROR_CODE CompVBase::init(int numThreads COMPV_DEFAULT(-1))
             jVM->DetachCurrentThread();
         }
     }
-    else {
+    else if (androidApp && androidApp->activity) {
         COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "sdkVersion: %d", androidApp->activity->sdkVersion); // can also use 'AConfiguration_getSdkVersion'
     }
-#endif
+#endif /* COMPV_OS_ANDROID */
 
     /* Window registery */
     COMPV_CHECK_CODE_BAIL(err_ = CompVWindowRegistry::init());
@@ -299,7 +299,7 @@ COMPV_ERROR_CODE CompVBase::init(int numThreads COMPV_DEFAULT(-1))
 			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "IPP lib version: %s %s", lib->Name, lib->Version);
 		}
 	}
-#endif
+#endif /* COMPV_HAVE_INTEL_IPP */
 
 #if 0
     /* Features */

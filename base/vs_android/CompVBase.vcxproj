@@ -2949,6 +2949,7 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableNeonCodegen>false</EnableNeonCodegen>
       <Optimization>Disabled</Optimization>
+      <AdditionalOptions>-fvisibility=hidden %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -2961,6 +2962,7 @@
       <ExceptionHandling>Disabled</ExceptionHandling>
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableNeonCodegen>false</EnableNeonCodegen>
+      <AdditionalOptions>-fvisibility=hidden %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
@@ -2975,6 +2977,7 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableNeonCodegen>false</EnableNeonCodegen>
       <Optimization>Disabled</Optimization>
+      <AdditionalOptions>-fvisibility=hidden %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
@@ -2987,6 +2990,7 @@
       <ExceptionHandling>Disabled</ExceptionHandling>
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableNeonCodegen>false</EnableNeonCodegen>
+      <AdditionalOptions>-fvisibility=hidden %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
@@ -3001,6 +3005,7 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableNeonCodegen>true</EnableNeonCodegen>
       <Optimization>Disabled</Optimization>
+      <AdditionalOptions>-fvisibility=hidden %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
@@ -3014,6 +3019,7 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableNeonCodegen>true</EnableNeonCodegen>
       <PreprocessorDefinitions>DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalOptions>-fvisibility=hidden %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
@@ -3029,6 +3035,7 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <FloatABI />
       <Optimization>Disabled</Optimization>
+      <AdditionalOptions>-mfpu=neon -fvisibility=hidden %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
@@ -3042,6 +3049,7 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableNeonCodegen>true</EnableNeonCodegen>
       <FloatABI />
+      <AdditionalOptions>-mfpu=neon -fvisibility=hidden %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
