@@ -1016,8 +1016,11 @@
       <EnableNeonCodegen>false</EnableNeonCodegen>
       <FloatABI>
       </FloatABI>
-      <AdditionalOptions>-fvisibility=hidden %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-fvisibility=hidden -ffunction-sections -O3 -ftree-vectorize %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
+    <Lib>
+      <AdditionalOptions>-Wl,-gc-sections -Wl,--strip-all %(AdditionalOptions)</AdditionalOptions>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <ClCompile>
@@ -1043,8 +1046,11 @@
       <EnableNeonCodegen>false</EnableNeonCodegen>
       <FloatABI>
       </FloatABI>
-      <AdditionalOptions>-fvisibility=hidden %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-fvisibility=hidden -ffunction-sections -O3 -ftree-vectorize %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
+    <Lib>
+      <AdditionalOptions>-Wl,-gc-sections -Wl,--strip-all %(AdditionalOptions)</AdditionalOptions>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <ClCompile>
@@ -1071,8 +1077,11 @@
       <FloatABI>
       </FloatABI>
       <PreprocessorDefinitions>DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalOptions>-fvisibility=hidden %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-fvisibility=hidden -O3 -ftree-vectorize %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
+    <Lib>
+      <AdditionalOptions>-Wl,-gc-sections -Wl,--strip-all %(AdditionalOptions)</AdditionalOptions>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <ClCompile>
@@ -1096,8 +1105,11 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableNeonCodegen>true</EnableNeonCodegen>
       <FloatABI />
-      <AdditionalOptions>-mfpu=neon -fvisibility=hidden %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-mfpu=neon -fvisibility=hidden -ffunction-sections -O3 -ftree-vectorize %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
+    <Lib>
+      <AdditionalOptions>-Wl,-gc-sections -Wl,--strip-all %(AdditionalOptions)</AdditionalOptions>
+    </Lib>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -22,6 +22,7 @@
 *
 */
 #include "compv/base/android/compv_android_native_activity.h"
+
 #if COMPV_OS_ANDROID
 #include "compv/base/compv_debug.h"
 #include "compv/base/android/compv_android_dexclassloader.h"
@@ -244,7 +245,12 @@ static void* android_app_entry(void* param)
     pthread_cond_broadcast(&android_app->cond);
     pthread_mutex_unlock(&android_app->mutex);
 
-    android_main(android_app);
+	if (android_app->android_main) {
+		android_app->android_main(android_app);
+	}
+	else {
+		COMPV_DEBUG_FATAL_EX(kModuleNameAndroidNativeActivity, "No pointer function defined for android_main");
+	}
 
     android_app_destroy(android_app);
     return NULL;
@@ -255,12 +261,13 @@ static void* android_app_entry(void* param)
 // --------------------------------------------------------------------
 
 static struct android_app* android_app_create(ANativeActivity* activity,
-        void* savedState, size_t savedStateSize)
+        void* savedState, size_t savedStateSize, void(*android_main)(struct android_app* app))
 {
 	// Important: do not use CompVMem::malloc to make sure CompVMem::isEmpty check will be ok before exiting the app. No memory leak, free will be call by onDestroy
     androidApp = static_cast<struct android_app*>(malloc(sizeof(struct android_app)));
     memset(androidApp, 0, sizeof(struct android_app));
     androidApp->activity = activity;
+	androidApp->android_main = android_main;
 
     pthread_mutex_init(&androidApp->mutex, NULL);
     pthread_cond_init(&androidApp->cond, NULL);
@@ -468,7 +475,7 @@ ANativeActivity* ANativeActivity_get()
     return aNativeActivity;
 }
 
-void ANativeActivity_onCreatePriv(ANativeActivity* activity, void* savedState, size_t savedStateSize)
+void ANativeActivity_onCreatePriv(ANativeActivity* activity, void* savedState, size_t savedStateSize, void(*android_main)(struct android_app* app))
 {
     aNativeActivity = activity;
     COMPV_DEBUG_INFO_EX(kModuleNameAndroidNativeActivity, "Creating: %p", activity);
@@ -486,7 +493,7 @@ void ANativeActivity_onCreatePriv(ANativeActivity* activity, void* savedState, s
     activity->callbacks->onInputQueueCreated = onInputQueueCreated;
     activity->callbacks->onInputQueueDestroyed = onInputQueueDestroyed;
 
-    activity->instance = android_app_create(activity, savedState, savedStateSize);
+    activity->instance = android_app_create(activity, savedState, savedStateSize, android_main);
 }
 
 #endif /* COMPV_OS_ANDROID */

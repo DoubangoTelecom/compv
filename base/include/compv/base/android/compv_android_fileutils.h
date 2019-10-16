@@ -20,7 +20,7 @@
 
 COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-function")
 
-static AAssetManager* __compv_android_assetmgr = nullptr;
+extern AAssetManager* __compv_android_assetmgr;
 
 static void compv_android_set_assetmgr(AAssetManager* assetmgr)
 {

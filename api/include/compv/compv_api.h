@@ -102,7 +102,10 @@
 #	define compv_main_return(code) return (code)
 #elif COMPV_OS_ANDROID
 #	define compv_main() \
-		void ANativeActivity_onCreate(ANativeActivity* activity, void* savedState, size_t savedStateSize) { ANativeActivity_onCreatePriv(activity, savedState, savedStateSize); } \
+		extern void android_main(struct android_app* state); \
+		void ANativeActivity_onCreate(ANativeActivity* activity, void* savedState, size_t savedStateSize) { \
+			ANativeActivity_onCreatePriv(activity, savedState, savedStateSize, android_main); \
+		} \
 		void android_main(struct android_app* state) 
 #	define compv_main_return(code)	/* exit(code) - must not, after return the app must not exit, could be restarted (swithing orientation, put on background....) */
 #elif COMPV_OS_IPHONE

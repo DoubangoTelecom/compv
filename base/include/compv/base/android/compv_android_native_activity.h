@@ -23,7 +23,9 @@
 
 #ifndef _COMPV_ANDROID_NATIVE_ACTIVITY_H
 #define _COMPV_ANDROID_NATIVE_ACTIVITY_H
+
 #include "compv/base/compv_config.h"
+
 #if COMPV_OS_ANDROID
 
 #include <poll.h>
@@ -129,6 +131,10 @@ struct android_app {
     // return.  Return 1 if you have handled the event, 0 for any default
     // dispatching.
     int32_t(*onInputEvent)(struct android_app* app, AInputEvent* event);
+
+	// Function added by Doubango Telecom to allow hooking the main function (entry point)
+	// This function could be used to override "extern android_main"
+	void(*android_main)(struct android_app* app);
 
     // The ANativeActivity object instance that this app is running in.
     ANativeActivity* activity;
@@ -343,14 +349,17 @@ struct android_app* AndroidApp_get();
 
 ANativeActivity* ANativeActivity_get();
 
-void ANativeActivity_onCreatePriv(ANativeActivity* activity,
-                                  void* savedState, size_t savedStateSize);
+COMPV_BASE_API void ANativeActivity_onCreatePriv(ANativeActivity* activity,
+                                  void* savedState, size_t savedStateSize, void(*android_main)(struct android_app* app));
+
 
 /**
 * This is the function that application code must implement, representing
 * the main entry to the app.
 */
+#if 0 // TODO(dmi): replaced with function pointer in "struct android_app"
 extern void android_main(struct android_app* app);
+#endif
 
 #ifdef __cplusplus
 }

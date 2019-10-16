@@ -24,6 +24,10 @@
 #   import <Foundation/Foundation.h>
 #endif /* COMPV_OS_IPHONE */
 
+#if COMPV_OS_ANDROID
+AAssetManager* __compv_android_assetmgr = nullptr; // defined as extern in "compv/base/android/compv_android_fileutils.h"
+#endif /* COMPV_OS_ANDROID */
+
 #include <algorithm> // std::transform(), ...
 #include <sys/stat.h>
 #include <dirent.h>
