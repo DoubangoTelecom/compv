@@ -103,7 +103,7 @@
 #elif COMPV_OS_ANDROID
 #	define compv_main() \
 		extern void android_main(struct android_app* state); \
-		void ANativeActivity_onCreate(ANativeActivity* activity, void* savedState, size_t savedStateSize) { \
+		COMPV_BASE_API void ANativeActivity_onCreate(ANativeActivity* activity, void* savedState, size_t savedStateSize) { \
 			ANativeActivity_onCreatePriv(activity, savedState, savedStateSize, android_main); \
 		} \
 		void android_main(struct android_app* state) 
