@@ -2943,7 +2943,7 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>../include;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <CppLanguageStandard>c++11</CppLanguageStandard>
       <PreprocessorDefinitions>DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ExceptionHandling>Disabled</ExceptionHandling>
       <TreatWarningAsError>true</TreatWarningAsError>
@@ -2958,7 +2958,7 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>../include;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <CppLanguageStandard>c++11</CppLanguageStandard>
       <ExceptionHandling>Disabled</ExceptionHandling>
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableNeonCodegen>false</EnableNeonCodegen>
@@ -2974,7 +2974,7 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>../include;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <CppLanguageStandard>c++11</CppLanguageStandard>
       <PreprocessorDefinitions>DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ExceptionHandling>Disabled</ExceptionHandling>
       <TreatWarningAsError>true</TreatWarningAsError>
@@ -2989,7 +2989,7 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>../include;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <CppLanguageStandard>c++11</CppLanguageStandard>
       <ExceptionHandling>Disabled</ExceptionHandling>
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableNeonCodegen>false</EnableNeonCodegen>
@@ -3005,7 +3005,7 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>../include;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <CppLanguageStandard>c++11</CppLanguageStandard>
       <PreprocessorDefinitions>DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ExceptionHandling>Disabled</ExceptionHandling>
       <TreatWarningAsError>true</TreatWarningAsError>
@@ -3020,7 +3020,7 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>../include;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <CppLanguageStandard>c++11</CppLanguageStandard>
       <ExceptionHandling>Disabled</ExceptionHandling>
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableNeonCodegen>true</EnableNeonCodegen>
@@ -3038,7 +3038,7 @@
       </PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>../include;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <CppLanguageStandard>c++11</CppLanguageStandard>
       <ExceptionHandling>Disabled</ExceptionHandling>
       <EnableNeonCodegen>true</EnableNeonCodegen>
       <TreatWarningAsError>true</TreatWarningAsError>
@@ -3053,7 +3053,7 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>../include;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <CppLanguageStandard>c++11</CppLanguageStandard>
       <ExceptionHandling>Disabled</ExceptionHandling>
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableNeonCodegen>true</EnableNeonCodegen>

@@ -23,7 +23,7 @@ public:
 	static COMPV_ERROR_CODE planeBitsCountForPixelFormat(COMPV_SUBTYPE ePixelFormat, size_t planeId, size_t* bitsCount);
     static COMPV_ERROR_CODE planeCount(COMPV_SUBTYPE ePixelFormat, size_t *planeCount);
     static COMPV_ERROR_CODE isPlanePacked(COMPV_SUBTYPE ePixelFormat, bool *packed);
-	static COMPV_ERROR_CODE copy(COMPV_SUBTYPE ePixelFormat, const void* inPtr, size_t inWidth, size_t inHeight, size_t inStride, void* outPtr, size_t outWidth, size_t outHeight, size_t outStride);
+	static COMPV_ERROR_CODE copy(const COMPV_SUBTYPE ePixelFormat, const void* inPtr, const size_t inWidth, const size_t inHeight, const size_t inStride, void* outPtr, const size_t outWidth, const size_t outHeight, const size_t outStride, const bool enforceSingleThread = false);
 
 private:
 };

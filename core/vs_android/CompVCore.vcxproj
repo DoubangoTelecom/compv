@@ -997,7 +997,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>../include;../../base/include;../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <CppLanguageStandard>c++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableNeonCodegen>false</EnableNeonCodegen>
       <FloatABI>
@@ -1011,7 +1011,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>../include;../../base/include;../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <CppLanguageStandard>c++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableNeonCodegen>false</EnableNeonCodegen>
       <FloatABI>
@@ -1027,7 +1027,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>../include;../../base/include;../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <CppLanguageStandard>c++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableNeonCodegen>false</EnableNeonCodegen>
       <FloatABI>
@@ -1041,7 +1041,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>../include;../../base/include;../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <CppLanguageStandard>c++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableNeonCodegen>false</EnableNeonCodegen>
       <FloatABI>
@@ -1057,7 +1057,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>../include;../../base/include;../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <CppLanguageStandard>c++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableNeonCodegen>true</EnableNeonCodegen>
       <FloatABI>
@@ -1071,7 +1071,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>../include;../../base/include;../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <CppLanguageStandard>c++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableNeonCodegen>true</EnableNeonCodegen>
       <FloatABI>
@@ -1088,7 +1088,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>../include;../../base/include;../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <CppLanguageStandard>c++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableNeonCodegen>true</EnableNeonCodegen>
       <FloatABI />
@@ -1101,7 +1101,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>../include;../../base/include;../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <CppLanguageStandard>c++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableNeonCodegen>true</EnableNeonCodegen>
       <FloatABI />

@@ -319,7 +319,7 @@ COMPV_ERROR_CODE CompVImageUtils::isPlanePacked(COMPV_SUBTYPE ePixelFormat, bool
     }
 }
 
-COMPV_ERROR_CODE CompVImageUtils::copy(COMPV_SUBTYPE ePixelFormat, const void* inPtr, size_t inWidth, size_t inHeight, size_t inStride, void* outPtr, size_t outWidth, size_t outHeight, size_t outStride)
+COMPV_ERROR_CODE CompVImageUtils::copy(const COMPV_SUBTYPE ePixelFormat, const void* inPtr, size_t inWidth, const size_t inHeight, const size_t inStride, void* outPtr, const size_t outWidth, const size_t outHeight, const size_t outStride, const bool enforceSingleThread COMPV_DEFAULT(false))
 {
 	COMPV_CHECK_EXP_RETURN(!inPtr || !inWidth || !inHeight || !inStride || inWidth > inStride || !outWidth || !outHeight || outWidth > outStride,
 		COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -366,7 +366,7 @@ COMPV_ERROR_CODE CompVImageUtils::copy(COMPV_SUBTYPE ePixelFormat, const void* i
 			funcPtr,
 			outPlaneWidthInBytes,
 			outPlaneHeight,
-			COMPV_IMAGEUTILS_COPY_MIN_SAMPLES_PER_THREAD
+			enforceSingleThread ? SIZE_MAX : COMPV_IMAGEUTILS_COPY_MIN_SAMPLES_PER_THREAD
 		));
 #else // ST
 		COMPV_CHECK_CODE_RETURN(funcPtr(0, outPlaneHeight));

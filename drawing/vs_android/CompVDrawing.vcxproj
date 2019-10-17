@@ -156,7 +156,7 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>../include;../../base/include;../../gl/include;../../thirdparties/include/common/skia-m55/libjpeg-turbo;../../thirdparties/include/common/skia-m55/skia/core;../../thirdparties/include/common/skia-m55/skia/config;../../thirdparties/include/common/skia-m55/skia/gpu;../../thirdparties/include/common/skia-m55/skia/utils;../../thirdparties/include/common/glm-0.9.8.2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <CppLanguageStandard>c++11</CppLanguageStandard>
       <PreprocessorDefinitions>DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableNeonCodegen>false</EnableNeonCodegen>
@@ -177,7 +177,7 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>../include;../../base/include;../../gl/include;../../thirdparties/include/common/skia-m55/libjpeg-turbo;../../thirdparties/include/common/skia-m55/skia/core;../../thirdparties/include/common/skia-m55/skia/config;../../thirdparties/include/common/skia-m55/skia/gpu;../../thirdparties/include/common/skia-m55/skia/utils;../../thirdparties/include/common/glm-0.9.8.2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <CppLanguageStandard>c++11</CppLanguageStandard>
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableNeonCodegen>false</EnableNeonCodegen>
@@ -201,7 +201,7 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>../include;../../base/include;../../gl/include;../../thirdparties/include/common/skia-m55/libjpeg-turbo;../../thirdparties/include/common/skia-m55/skia/core;../../thirdparties/include/common/skia-m55/skia/config;../../thirdparties/include/common/skia-m55/skia/gpu;../../thirdparties/include/common/skia-m55/skia/utils;../../thirdparties/include/common/glm-0.9.8.2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <CppLanguageStandard>c++11</CppLanguageStandard>
       <PreprocessorDefinitions>DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableNeonCodegen>false</EnableNeonCodegen>
@@ -222,7 +222,7 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>../include;../../base/include;../../gl/include;../../thirdparties/include/common/skia-m55/libjpeg-turbo;../../thirdparties/include/common/skia-m55/skia/core;../../thirdparties/include/common/skia-m55/skia/config;../../thirdparties/include/common/skia-m55/skia/gpu;../../thirdparties/include/common/skia-m55/skia/utils;../../thirdparties/include/common/glm-0.9.8.2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <CppLanguageStandard>c++11</CppLanguageStandard>
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableNeonCodegen>false</EnableNeonCodegen>
@@ -246,7 +246,7 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>../include;../../base/include;../../gl/include;../../thirdparties/include/common/skia-m55/libjpeg-turbo;../../thirdparties/include/common/skia-m55/skia/core;../../thirdparties/include/common/skia-m55/skia/config;../../thirdparties/include/common/skia-m55/skia/gpu;../../thirdparties/include/common/skia-m55/skia/utils;../../thirdparties/include/common/glm-0.9.8.2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <CppLanguageStandard>c++11</CppLanguageStandard>
       <PreprocessorDefinitions>DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableNeonCodegen>true</EnableNeonCodegen>
@@ -267,7 +267,7 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>../include;../../base/include;../../gl/include;../../thirdparties/include/common/skia-m55/libjpeg-turbo;../../thirdparties/include/common/skia-m55/skia/core;../../thirdparties/include/common/skia-m55/skia/config;../../thirdparties/include/common/skia-m55/skia/gpu;../../thirdparties/include/common/skia-m55/skia/utils;../../thirdparties/include/common/glm-0.9.8.2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <CppLanguageStandard>c++11</CppLanguageStandard>
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableNeonCodegen>true</EnableNeonCodegen>
@@ -291,7 +291,7 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>../include;../../base/include;../../gl/include;../../thirdparties/include/common/skia-m55/libjpeg-turbo;../../thirdparties/include/common/skia-m55/skia/core;../../thirdparties/include/common/skia-m55/skia/config;../../thirdparties/include/common/skia-m55/skia/gpu;../../thirdparties/include/common/skia-m55/skia/utils;../../thirdparties/include/common/glm-0.9.8.2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <CppLanguageStandard>c++11</CppLanguageStandard>
       <PreprocessorDefinitions>DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableNeonCodegen>true</EnableNeonCodegen>
@@ -311,7 +311,7 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>../include;../../base/include;../../gl/include;../../thirdparties/include/common/skia-m55/libjpeg-turbo;../../thirdparties/include/common/skia-m55/skia/core;../../thirdparties/include/common/skia-m55/skia/config;../../thirdparties/include/common/skia-m55/skia/gpu;../../thirdparties/include/common/skia-m55/skia/utils;../../thirdparties/include/common/glm-0.9.8.2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <CppLanguageStandard>c++11</CppLanguageStandard>
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableNeonCodegen>true</EnableNeonCodegen>

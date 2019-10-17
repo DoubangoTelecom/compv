@@ -279,14 +279,16 @@ COMPV_ERROR_CODE CompVImage::wrap(COMPV_SUBTYPE ePixelFormat, const void* dataPt
 	if (bestStride < dataWidth) { // Compute newStride for the wrapped image is not defined or invalid
 		COMPV_CHECK_CODE_RETURN(CompVImageUtils::bestStride(dataWidth, &bestStride));
 	}
-	COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(image, ePixelFormat, dataWidth, dataHeight, bestStride)
+	CompVMatPtr image_ = ((*image) && (*image)->data<const void>() == dataPtr) ? nullptr : *image;
+	COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&image_, ePixelFormat, dataWidth, dataHeight, bestStride)
 		, "Failed to allocate new image");
 	
 	// Copy data using different strides
 	COMPV_CHECK_CODE_RETURN(CompVImageUtils::copy(ePixelFormat,
 		dataPtr, dataWidth, dataHeight, dataStride,
-		(void*)(*image)->ptr(), (*image)->cols(), (*image)->rows(), (*image)->stride()), "Failed to copy image"); // copy data
+		(void*)image_->ptr(), image_->cols(), image_->rows(), image_->stride()), "Failed to copy image"); // copy data
 	
+	*image = image_;
 
 	return COMPV_ERROR_CODE_S_OK;
 }

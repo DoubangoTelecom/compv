@@ -171,7 +171,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>../include;../../base/include;../../thirdparties/include/common/glm-0.9.8.2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <CppLanguageStandard>c++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableNeonCodegen>false</EnableNeonCodegen>
       <AdditionalOptions>-fvisibility=hidden %(AdditionalOptions)</AdditionalOptions>
@@ -182,7 +182,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>../include;../../base/include;../../thirdparties/include/common/glm-0.9.8.2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <CppLanguageStandard>c++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableNeonCodegen>false</EnableNeonCodegen>
       <AdditionalOptions>-fvisibility=hidden -ffunction-sections -O3 -ftree-vectorize %(AdditionalOptions)</AdditionalOptions>
@@ -197,7 +197,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>../include;../../base/include;../../thirdparties/include/common/glm-0.9.8.2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <CppLanguageStandard>c++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableNeonCodegen>false</EnableNeonCodegen>
       <AdditionalOptions>-fvisibility=hidden %(AdditionalOptions)</AdditionalOptions>
@@ -208,7 +208,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>../include;../../base/include;../../thirdparties/include/common/glm-0.9.8.2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <CppLanguageStandard>c++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableNeonCodegen>false</EnableNeonCodegen>
       <AdditionalOptions>-fvisibility=hidden -ffunction-sections -O3 -ftree-vectorize %(AdditionalOptions)</AdditionalOptions>
@@ -223,7 +223,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>../include;../../base/include;../../thirdparties/include/common/glm-0.9.8.2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <CppLanguageStandard>c++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableNeonCodegen>true</EnableNeonCodegen>
       <AdditionalOptions>-fvisibility=hidden %(AdditionalOptions)</AdditionalOptions>
@@ -234,7 +234,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>../include;../../base/include;../../thirdparties/include/common/glm-0.9.8.2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <CppLanguageStandard>c++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableNeonCodegen>true</EnableNeonCodegen>
       <AdditionalOptions>-fvisibility=hidden -O3 -ftree-vectorize %(AdditionalOptions)</AdditionalOptions>
@@ -249,7 +249,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>../include;../../base/include;../../thirdparties/include/common/glm-0.9.8.2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <CppLanguageStandard>c++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableNeonCodegen>true</EnableNeonCodegen>
       <AdditionalOptions>-mfpu=neon -fvisibility=hidden %(AdditionalOptions)</AdditionalOptions>
@@ -260,7 +260,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>../include;../../base/include;../../thirdparties/include/common/glm-0.9.8.2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <CppLanguageStandard>c++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableNeonCodegen>true</EnableNeonCodegen>
       <AdditionalOptions>-mfpu=neon -fvisibility=hidden -ffunction-sections -O3 -ftree-vectorize %(AdditionalOptions)</AdditionalOptions>
