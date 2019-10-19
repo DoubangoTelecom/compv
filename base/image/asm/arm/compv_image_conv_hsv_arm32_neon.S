@@ -8,9 +8,20 @@
 #if defined(__arm__) && !defined(__aarch64__)
 .include "compv_common_arm32.S" @
 
+#if !defined(PIC) // Position-Independent Code
+#	define PIC	1
+#endif
+
 .data
-.align 4
-data255f: .word 0x437f0000, 0x437f0000, 0x437f0000, 0x437f0000
+#if !PIC
+	.align 4
+	data255f: .word 0x437f0000, 0x437f0000, 0x437f0000, 0x437f0000
+#else
+	.equ data255f, 0x437f0000
+#	if !defined(__APPLE__)
+		.arch armv7-a @ for movw and movt
+#	endif
+#endif
 
 .text
 
@@ -106,8 +117,14 @@ data255f: .word 0x437f0000, 0x437f0000, 0x437f0000, 0x437f0000
 	pld [rgbxPtr, #(CACHE_LINE_SIZE*1)]
 	pld [rgbxPtr, #(CACHE_LINE_SIZE*2)]
 
+#if !PIC
     ldr i, =data255f
     vld1.s32 {vec255f}, [i]
+#else
+	movw i, #:lower16:data255f
+    movt i, #:upper16:data255f
+	vdup.s32 vec255f, i
+#endif
     veor.s32 vecZero, vecZero, vecZero
     mov valHalf, #0x3f000000 @ 0.5f
     mov val85, #85
