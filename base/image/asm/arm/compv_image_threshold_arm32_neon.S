@@ -8,9 +8,15 @@
 #if defined(__arm__) && !defined(__aarch64__)
 .include "compv_common_arm32.S"
 
+#if !defined(PIC) // Position-Independent Code
+#	define PIC	1
+#endif
+
 .data
- .align 4
-data0123: .word 0x0, 0x1, 0x2, 0x3
+#if !PIC
+	.align 4
+	data0123: .word 0x0, 0x1, 0x2, 0x3
+#endif
 
 .text
 
@@ -122,6 +128,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageThresholdOtsuSum_32s32s_Asm_NEON32
 	i .req r3
 	vecIndicesInc .req q0
 	vecIndices0 .req q1
+	vecIndices0x .req q1x
+	vecIndices0y .req q1y
 	vecIndices1 .req q2
 	vecIndices2 .req q3
 	vecIndices3 .req q4
@@ -136,11 +144,20 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageThresholdOtsuSum_32s32s_Asm_NEON32
 
 	mov r4, #16
 	vdup.u32 vecIndicesInc, r4
-
-	mov r4, #4
+	
+#if !PIC
 	ldr r5, =data0123
-	vdup.u32 q14, r4
 	vld1.u32 {vecIndices0}, [r5]
+#else
+	mov r4, #0
+	mov r5, #1
+	vmov vecIndices0x, r4, r5
+	mov r4, #2
+	mov r5, #3
+	vmov vecIndices0y, r4, r5
+#endif
+	mov r4, #4
+	vdup.u32 q14, r4
 	vadd.u32 vecIndices1, vecIndices0, q14
 	vadd.u32 vecIndices2, vecIndices1, q14
 	vadd.u32 vecIndices3, vecIndices2, q14
@@ -190,6 +207,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageThresholdOtsuSum_32s32s_Asm_NEON32
 	.unreq i
 	.unreq vecIndicesInc
 	.unreq vecIndices0
+	.unreq vecIndices0x
+	.unreq vecIndices0y
 	.unreq vecIndices1
 	.unreq vecIndices2
 	.unreq vecIndices3
