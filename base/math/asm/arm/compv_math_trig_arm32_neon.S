@@ -8,17 +8,34 @@
 #if defined(__arm__) && !defined(__aarch64__)
 .include "compv_common_arm32.S"
 
-.data
+#if !defined(PIC) // Position-Independent Code
+#	define PIC	1
+#endif
 
-.align 4
-kAtan2Eps_32f: .single 2.2204460492503131e-016, 2.2204460492503131e-016, 2.2204460492503131e-016, 2.2204460492503131e-016
-kAtan2P1_32f: .single 57.2836266, 57.2836266, 57.2836266, 57.2836266
-kAtan2P3_32f: .single -18.6674461, -18.6674461, -18.6674461, -18.6674461
-kAtan2P5_32f: .single 8.91400051, 8.91400051, 8.91400051, 8.91400051
-kAtan2P7_32f: .single -2.53972459, -2.53972459, -2.53972459, -2.53972459
-k90_32f: .single 90.0, 90.0, 90.0, 90.0
-k180_32f: .single 180.0, 180.0, 180.0, 180.0
-k360_32f: .single 360.0, 360.0, 360.0, 360.0
+.data
+#if !PIC
+	.align 4
+	kAtan2Eps_32f: .single 2.2204460492503131e-016, 2.2204460492503131e-016, 2.2204460492503131e-016, 2.2204460492503131e-016
+	kAtan2P1_32f: .single 57.2836266, 57.2836266, 57.2836266, 57.2836266
+	kAtan2P3_32f: .single -18.6674461, -18.6674461, -18.6674461, -18.6674461
+	kAtan2P5_32f: .single 8.91400051, 8.91400051, 8.91400051, 8.91400051
+	kAtan2P7_32f: .single -2.53972459, -2.53972459, -2.53972459, -2.53972459
+	k90_32f: .single 90.0, 90.0, 90.0, 90.0
+	k180_32f: .single 180.0, 180.0, 180.0, 180.0
+	k360_32f: .single 360.0, 360.0, 360.0, 360.0
+#else
+	.equ kAtan2Eps_32f, 0x25800000
+	.equ kAtan2P1_32f, 0x4265226f
+	.equ kAtan2P3_32f, 0xc19556ee
+	.equ kAtan2P5_32f, 0x410e9fbf
+	.equ kAtan2P7_32f, 0xc0228ad9
+	.equ k90_32f, 0x42b40000
+	.equ k180_32f, 0x43340000
+	.equ k360_32f, 0x43b40000
+#	if !defined(__APPLE__)
+		.arch armv7-a @ for movw and movt
+#	endif
+#endif
 
 .extern
 
@@ -75,6 +92,7 @@ k360_32f: .single 360.0, 360.0, 360.0, 360.0
 	pld [y, #(CACHE_LINE_SIZE*2)]
 
     ldr scale1, [scale1]
+#if !PIC
     ldr r7, =kAtan2Eps_32f
     ldr r8, =k90_32f
     ldr r9, =kAtan2P3_32f
@@ -89,6 +107,29 @@ k360_32f: .single 360.0, 360.0, 360.0, 360.0
     ldr r8, =k360_32f
     vld1.f32 { vecAtan2_plus180 }, [r7]
     vld1.f32 { vecAtan2_plus360 }, [r8]
+#else
+	movw r7, #:lower16:kAtan2Eps_32f
+    movt r7, #:upper16:kAtan2Eps_32f
+	movw r8, #:lower16:k90_32f
+    movt r8, #:upper16:k90_32f
+	movw r9, #:lower16:kAtan2P3_32f
+    movt r9, #:upper16:kAtan2P3_32f
+	movw r10, #:lower16:kAtan2P5_32f
+    movt r10, #:upper16:kAtan2P5_32f
+	movw r11, #:lower16:kAtan2P7_32f
+    movt r11, #:upper16:kAtan2P7_32f
+    vdup.f32 vecAtan2_eps, r7
+    vdup.f32 vecAtan2_plus90, r8
+    vdup.f32 vecAtan2_p3, r9
+    vdup.f32 vecAtan2_p5, r10
+    vdup.f32 vecAtan2_p7, r11
+	movw r7, #:lower16:k180_32f
+    movt r7, #:upper16:k180_32f
+	movw r8, #:lower16:k360_32f
+    movt r8, #:upper16:k360_32f	
+    vdup.f32 vecAtan2_plus180, r7
+    vdup.f32 vecAtan2_plus360, r8
+#endif
     vdup.f32 vecAtan2_scale, scale1    
 
     @ Transform stride to padding then from samples to bytes @
@@ -97,7 +138,12 @@ k360_32f: .single 360.0, 360.0, 360.0, 360.0
 	sub stride, stride, r11
     lsl stride, stride, #(COMPV_GAS_FLOAT32_SHIFT_BYTES)
 
+#if !PIC
 	ldr r_vecAtan2_p1, =kAtan2P1_32f
+#else
+	movw r_vecAtan2_p1, #:lower16:kAtan2P1_32f
+    movt r_vecAtan2_p1, #:upper16:kAtan2P1_32f
+#endif
 
     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     @ for (compv_uscalar_t j = 0; j < height; ++j)
@@ -139,7 +185,11 @@ k360_32f: .single 360.0, 360.0, 360.0, 360.0
             vdiv.f32 s3, s3, s7
             vmov.f32 vecAx, vecAtan2_p5
             vmov.f32 vecAy, vecAtan2_p3
+#if !PIC
 			vld1.f32 { vec0 }, [r_vecAtan2_p1]
+#else
+			vdup.f32 vec0, r_vecAtan2_p1
+#endif
             vmul.f32 vec2, vec1, vec1
 
             @ a = (((atan2_p7*c2 + atan2_p5)*c2 + atan2_p3)*c2 + atan2_p1)*c

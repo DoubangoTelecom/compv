@@ -6,10 +6,14 @@
 # WebSite: http://compv.org                                             #
 #########################################################################
 #if defined(__arm__) && !defined(__aarch64__)
-.include "compv_common_arm32.S" @
+.include "compv_common_arm32.S"
+
+#if !defined(PIC) // Position-Independent Code
+#	define PIC	1
+#endif
 
 .data
-#if 0 // not PIC (Position-Independent Code)
+#if !PIC
 	.align 4
 	data130048: .word 130048, 130048, 130048, 130048
 	data1023: .word 1023, 1023, 1023, 1023
@@ -97,7 +101,7 @@
 	vld1.32 {vecMaxXx[], vecMaxXy[]}, [var32f]! @ duplicate
 	vld1.32 {vecMinXx[], vecMinXy[]}, [var32f]! @ duplicate
 	
-#if 0 // not PIC (Position-Independent Code)
+#if !PIC
 	ldr i, =data130048
 	vld1.u32 {vec130048}, [i]
 	ldr i, =data1023

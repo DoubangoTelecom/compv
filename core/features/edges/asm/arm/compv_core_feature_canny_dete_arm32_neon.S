@@ -15,7 +15,6 @@
 #endif
 
 .data
-.align 2
 kCannyTangentPiOver8Int: .word 27145
 kCannyTangentPiTimes3Over8Int: .word 158217
 

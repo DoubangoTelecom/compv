@@ -18,12 +18,12 @@ using namespace compv;
 #define TEST_SOBEL					0
 #define TEST_CANNY					0
 #define TEST_ADAPT_THRESH			0
-#define TEST_OTSU_THRESH			0
+#define TEST_OTSU_THRESH			1
 #define TEST_HOUGHSHT				0
 #define TEST_HOUGHKHT				0
 #define TEST_HOGSTD					0
 #define TEST_BRUTEFORCE				0
-#define TEST_PACKING				1
+#define TEST_PACKING				0
 #define TEST_BITS					0
 
 /* Entry point function */
