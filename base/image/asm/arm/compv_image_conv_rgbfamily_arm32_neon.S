@@ -14,9 +14,19 @@
 #   define sym(funcname) funcname
 #endif
 
-.data
+#if !defined(PIC) // Position-Independent Code
+#	define PIC	1
+#endif
 
-.extern sym(k16_16s), sym(k128_16s)
+.data
+#if !PIC
+	.extern sym(k128_16s)
+#else
+	.equ k128_16s, 128
+#	if !defined(__APPLE__)
+		.arch armv7-a @ for movw and movt
+#	endif
+#endif
  
 .text
 
@@ -361,8 +371,13 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb565befamily_to_y_Asm_NEON32
 	vecCoeffV2 .req q6
 	vecCoeffV3 .req q7
 
+#if !PIC
 	ldr r10, =sym(k128_16s)
-	vld1.u16 {q15x, q15y}, [r10 :128]
+	vld1.u16 {q15}, [r10 :128]
+#else
+	movw r10, #:lower16:k128_16s
+	vdup.u16 q15, r10
+#endif
 	vec128 .req q15
 
 	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -532,8 +547,13 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgba32family_to_uv_planar_11_Asm_NEON32
 	vecCoeffV1 .req q4
 	vecCoeffV2 .req q5
 
+#if !PIC
 	ldr r10, =sym(k128_16s)
-	vld1.u16 {q6x, q6y}, [r10 :128]
+	vld1.u16 {q6}, [r10 :128]
+#else
+	movw r10, #:lower16:k128_16s
+	vdup.u16 q6, r10
+#endif
 	vec128 .req q6
 
 	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
