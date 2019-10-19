@@ -8,14 +8,21 @@
 #if defined(__arm__) && !defined(__aarch64__)
 .include "compv_common_arm32.S"
 
-#if !defined(__APPLE__)
-.arch armv7-a @ for rbit
+#if !defined(PIC) // Position-Independent Code
+#	define PIC	1
 #endif
 
 .data
-
-.align 4
-mask: .word 0x8040201, 0x80402010, 0x8040201, 0x80402010
+#if !PIC
+	.align 4
+	mask: .word 0x8040201, 0x80402010, 0x8040201, 0x80402010
+#else
+	.equ mask0, 0x8040201
+    .equ mask1, 0x80402010
+#	if !defined(__APPLE__)
+		.arch armv7-a @ for movw and movt
+#	endif
+#endif
 
 .extern
  
@@ -255,6 +262,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVConnectedComponentLabelingLSL_Step1Algo13Segment
     height .req r6
 
 	vecMask .req q10
+	vecMaskx .req q10x
+	vecMasky .req q10y
 	width16 .req r7
 	i .req r8
 	t0 .req r9
@@ -265,8 +274,17 @@ COMPV_GAS_FUNCTION_DECLARE CompVConnectedComponentLabelingLSL_Step1Algo13Segment
 	sub width16, width, #1
 	and width16, width16, #-16
 
+#if !PIC
 	ldr t0, =mask
 	vld1.u32 {vecMask}, [t0]
+#else
+	movw t0, #:lower16:mask0
+    movt t0, #:upper16:mask0
+    movw t1, #:lower16:mask1
+    movt t1, #:upper16:mask1
+    vmov vecMaskx, t0, t1
+    vmov vecMasky, t0, t1
+#endif
 	mov rMask, #0x80000000 @ << #0x8000000000000000 for ARM64
 
 	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -363,6 +381,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVConnectedComponentLabelingLSL_Step1Algo13Segment
     .unreq height
 
 	.unreq vecMask
+	.unreq vecMaskx
+	.unreq vecMasky
 	.unreq width16
 	.unreq i
 	.unreq t0
