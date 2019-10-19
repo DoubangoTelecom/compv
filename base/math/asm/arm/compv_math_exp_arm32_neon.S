@@ -9,13 +9,13 @@
 .include "compv_common_arm32.S" @
 
 .data
-#if 0 // not PIC
+#if 0 // not PIC (Position-Independent Code)
 	.align 4
 	data130048: .word 130048, 130048, 130048, 130048
 	data1023: .word 1023, 1023, 1023, 1023
 #else
-	.equ data130048_word, 0x0001fc00
-	.equ data1023_word, 0x000003ff
+	.equ data130048_word, 130048
+	.equ data1023_word, 1023
 #	if !defined(__APPLE__)
 		.arch armv7-a @ for movw and movt
 #	endif
@@ -97,7 +97,7 @@
 	vld1.32 {vecMaxXx[], vecMaxXy[]}, [var32f]! @ duplicate
 	vld1.32 {vecMinXx[], vecMinXy[]}, [var32f]! @ duplicate
 	
-#if 0 // not PIC
+#if 0 // not PIC (Position-Independent Code)
 	ldr i, =data130048
 	vld1.u32 {vec130048}, [i]
 	ldr i, =data1023
