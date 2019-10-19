@@ -8,12 +8,31 @@
 #if defined(__arm__) && !defined(__aarch64__)
 .include "compv_common_arm32.S"
 
+#if !defined(PIC) // Position-Independent Code
+#	define PIC	1
+#endif
+
 .data
-.align 4
-twoPi: .quad 0x401921fb54442d18, 0x401921fb54442d18
-one: .quad 0x3ff0000000000000, 0x3ff0000000000000
-four: .quad 0x4010000000000000, 0x4010000000000000
-zeroDotOne: .quad 0x3fb999999999999a, 0x3fb999999999999a
+#if !PIC
+	.align 4
+	twoPi: .quad 0x401921fb54442d18, 0x401921fb54442d18
+	one: .quad 0x3ff0000000000000, 0x3ff0000000000000
+	four: .quad 0x4010000000000000, 0x4010000000000000
+	zeroDotOne: .quad 0x3fb999999999999a, 0x3fb999999999999a
+#else
+	.equ twoPi_low, 0x54442d18
+	.equ twoPi_high, 0x401921fb
+	.equ one_low, 0x00000000
+	.equ one_high, 0x3ff00000
+	.equ four_low, 0x00000000
+	.equ four_high, 0x40100000
+	.equ zeroDotOne_low, 0x9999999a
+	.equ zeroDotOne_high, 0x3fb99999
+#	if !defined(__APPLE__)
+		.arch armv7-a @ for movw and movt
+#	endif
+#endif
+
 
 .text
 
@@ -70,6 +89,7 @@ zeroDotOne: .quad 0x3fb999999999999a, 0x3fb999999999999a
 	vecMaskEqZero .req d13
 	vecTmp0 .req d14
 
+#if !PIC
     ldr t0, =twoPi
     vld1.f64 {vecTwoPi}, [t0 :64]
 	ldr t0, =one
@@ -78,6 +98,32 @@ zeroDotOne: .quad 0x3fb999999999999a, 0x3fb999999999999a
 	vld1.f64 {vecFour}, [t0 :64]
     ldr t0, =zeroDotOne
 	vld1.f64 {vecZeroDotOne}, [t0 :64]
+#else
+	movw t0, #:lower16:twoPi_low
+    movt t0, #:upper16:twoPi_low
+	vmov vecTwoPi[0], t0
+	movw t0, #:lower16:twoPi_high
+    movt t0, #:upper16:twoPi_high
+	vmov vecTwoPi[1], t0
+	movw t0, #:lower16:one_low
+    movt t0, #:upper16:one_low
+	vmov vecOne[0], t0
+	movw t0, #:lower16:one_high
+    movt t0, #:upper16:one_high
+	vmov vecOne[1], t0
+	movw t0, #:lower16:four_low
+    movt t0, #:upper16:four_low
+	vmov vecFour[0], t0
+	movw t0, #:lower16:four_high
+    movt t0, #:upper16:four_high
+	vmov vecFour[1], t0
+	movw t0, #:lower16:zeroDotOne_low
+    movt t0, #:upper16:zeroDotOne_low
+	vmov vecZeroDotOne[0], t0
+	movw t0, #:lower16:zeroDotOne_high
+    movt t0, #:upper16:zeroDotOne_high
+	vmov vecZeroDotOne[1], t0
+#endif
 
 	lsl count, count, #3 @ convert from float64 to bytes
 
