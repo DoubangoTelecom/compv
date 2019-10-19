@@ -8,16 +8,27 @@
 #if defined(__arm__) && !defined(__aarch64__)
 .include "compv_common_arm32.S"
 
+#if !defined(PIC) // Position-Independent Code
+#	define PIC	1
+#endif
+
 .equ normL1, 0
 .equ normL1Sqrt, 1
 .equ normL2, 2
 .equ normL2Hys, 3
 
 .data
-
-.align 4
-kOne_32f: .single 1.0
-kZeroDotTwo_32f: .single 0.2
+#if !PIC
+	.align 4
+	kOne_32f: .single 1.0
+	kZeroDotTwo_32f: .single 0.2
+#else
+	.equ kOne_32f, 0x3f800000
+	.equ kZeroDotTwo_32f, 0x3e4ccccd
+#	if !defined(__APPLE__)
+		.arch armv7-a @ for movw and movt
+#	endif
+#endif
 
 .extern
 
@@ -43,9 +54,18 @@ kZeroDotTwo_32f: .single 0.2
     veca .req q1 @ Must not change
     vecb .req q2 @ Must not change
 
+#if !PIC
     ldr r11, =kOne_32f
+#else
+	movw r11, #:lower16:kOne_32f
+    movt r11, #:upper16:kOne_32f
+#endif
     add idx8, inOutPtr, #(8 * COMPV_GAS_FLOAT32_SZ_BYTES)
+#if !PIC
     vld1.f32 {d11[0]}, [r11] @ s22 = vecOne
+#else
+	vmov.f32 d11[0], r11 @ s22 = vecOne
+#endif
     vld1.f32 {d11[1]}, [eps1] @ s23 = vecEps
     vld1.f32 {veca, vecb}, [inOutPtr]
     vld1.f32 {d12[0]}, [idx8] @ s24 = vvb
@@ -140,15 +160,29 @@ COMPV_GAS_FUNCTION_DECLARE CompVHogCommonNormL1Sqrt_9_32f_Asm_NEON32
     vecb .req q2 @ Must not change
     vec1 .req q3
 
+#if !PIC
     ldr r11, =kOne_32f
+#else
+	movw r11, #:lower16:kOne_32f
+    movt r11, #:upper16:kOne_32f
+#endif
     add idx8, inOutPtr, #(8 * COMPV_GAS_FLOAT32_SZ_BYTES)
+#if !PIC
     vld1.f32 {d11[0]}, [r11] @ s22 = vecOne
+#else
+	vmov.f32 d11[0], r11 @ s22 = vecOne
+#endif
     vld1.f32 {d11[1]}, [eps1] @ s23 = vecEps
     vld1.f32 {veca, vecb}, [inOutPtr]
     vld1.f32 {d12[0]}, [idx8] @ s24 = vvb - ARM64: idx not needed, ldr accepts pre-index
     .if \norm == normL2Hys
+#if !PIC
         ldr r11, =kZeroDotTwo_32f
         ldr r11, [r11]
+#else
+		movw r11, #:lower16:kZeroDotTwo_32f
+		movt r11, #:upper16:kZeroDotTwo_32f
+#endif
         vdup.f32 q7, r11 @ q7(d14, d15)(s28, s29, s30, s31) = vecMax
     .endif
     
