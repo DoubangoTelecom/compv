@@ -14,9 +14,21 @@
 #   define sym(funcname) funcname
 #endif
 
+#if !defined(PIC) // Position-Independent Code
+#	define PIC	1
+#endif
+
 .data
-kCannyTangentPiOver8Int: .word 27145
-kCannyTangentPiTimes3Over8Int: .word 158217
+#if !PIC
+	kCannyTangentPiOver8Int: .word 27145
+	kCannyTangentPiTimes3Over8Int: .word 158217
+#else
+	.equ kCannyTangentPiOver8Int, 27145
+	.equ kCannyTangentPiTimes3Over8Int, 158217
+#	if !defined(__APPLE__)
+		.arch armv7-a @ for movw and movt
+#	endif
+#endif
 
 .extern
 
@@ -62,10 +74,16 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
 	vecAbsGY0 .req q14
 	vecAbsGY1 .req q15
 	
+#if !PIC
     ldr r8, =kCannyTangentPiOver8Int
     ldr r9, =kCannyTangentPiTimes3Over8Int
     ldrh r8, [r8]
     ldr r9, [r9]
+#else
+	movw r8, #:lower16:kCannyTangentPiOver8Int
+	movw r9, #:lower16:kCannyTangentPiTimes3Over8Int
+    movt r9, #:upper16:kCannyTangentPiTimes3Over8Int
+#endif
     ldrh r10, [tLow1]
 
     vdup.u16 vecTangentPiOver8Intx, r8
