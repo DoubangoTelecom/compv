@@ -9,9 +9,17 @@
 .include "compv_common_arm32.S" @
 
 .data
-.align 4
-data130048: .word 130048, 130048, 130048, 130048
-data1023: .word 1023, 1023, 1023, 1023
+#if 0 // not PIC
+	.align 4
+	data130048: .word 130048, 130048, 130048, 130048
+	data1023: .word 1023, 1023, 1023, 1023
+#else
+	.equ data130048_word, 0x0001fc00
+	.equ data1023_word, 0x000003ff
+#	if !defined(__APPLE__)
+		.arch armv7-a @ for movw and movt
+#	endif
+#endif
 
 .text
 
@@ -89,10 +97,19 @@ data1023: .word 1023, 1023, 1023, 1023
 	vld1.32 {vecMaxXx[], vecMaxXy[]}, [var32f]! @ duplicate
 	vld1.32 {vecMinXx[], vecMinXy[]}, [var32f]! @ duplicate
 	
+#if 0 // not PIC
 	ldr i, =data130048
 	vld1.u32 {vec130048}, [i]
 	ldr i, =data1023
 	vld1.u32 {vec1023}, [i]
+#else
+	movw t0, #:lower16:data130048_word
+    movt t0, #:upper16:data130048_word
+	movw t1, #:lower16:data1023_word
+    movt t1, #:upper16:data1023_word
+	vdup.u32 vec130048, t0
+	vdup.u32 vec1023, t1
+#endif
 
 	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	@ for (compv_uscalar_t j = 0; j < height; ++j)
