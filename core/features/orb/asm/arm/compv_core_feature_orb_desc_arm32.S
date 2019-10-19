@@ -14,10 +14,21 @@
 #   define sym(funcname) funcname
 #endif
 
-.data
+#if !defined(PIC) // Position-Independent Code
+#	define PIC	1
+#endif
 
-.align 4
-mask: .word 0x8040201, 0x80402010, 0x8040201, 0x80402010
+.data
+#if !PIC
+	.align 4
+	mask: .word 0x8040201, 0x80402010, 0x8040201, 0x80402010
+#else
+	.equ mask0, 0x8040201
+    .equ mask1, 0x80402010
+#	if !defined(__APPLE__)
+		.arch armv7-a @ for movw and movt
+#	endif
+#endif
 
 .extern
  
@@ -78,20 +89,17 @@ mask: .word 0x8040201, 0x80402010, 0x8040201, 0x80402010
     vdup.f32 vecCosT, r9
     vdup.f32 vecSinT, r10
 
-#if 0 // movw and movt are ARMv7 instructions
-    .equ mask0, 0x8040201
-    .equ mask1, 0x80402010
-    movw r9, #:lower16:mask0
+#if !PIC
+	ldr r9, =mask
+	vld1.u32 {vecMask}, [r9]
+#else
+	movw r9, #:lower16:mask0
     movt r9, #:upper16:mask0
     movw r10, #:lower16:mask1
     movt r10, #:upper16:mask1
     vmov vecMaskx, r9, r10
     vmov vecMasky, r9, r10
-#else
-	ldr r9, =mask
-	vld1.u32 {vecMask}, [r9]
 #endif
-
     .unreq img_stride
     .unreq cos1
     .unreq sin1
