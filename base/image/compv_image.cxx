@@ -469,7 +469,7 @@ COMPV_ERROR_CODE CompVImage::pack(const CompVMatPtrVector& inputs, const COMPV_S
 			COMPV_CHECK_EXP_RETURN(
 				output_->cols(planeId) != imagePlane->cols()
 				|| output_->rows(planeId) != imagePlane->rows()
-				|| output_->stride(planeId) != imagePlane->stride()
+				|| (packedUV && output_->stride(planeId) != imagePlane->stride()) // Non-packed formats use "CompVImageUtils::copy" which support having different strides
 				, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Invalid size for the planes"
 			);
 		}		
