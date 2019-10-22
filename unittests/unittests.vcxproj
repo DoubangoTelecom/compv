@@ -195,6 +195,7 @@
     <ClCompile Include="scale.cxx" />
     <ClCompile Include="sobel.cxx" />
     <ClCompile Include="threshold.cxx" />
+    <ClCompile Include="wrap_yuv.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\base\CompVBase.vcxproj">

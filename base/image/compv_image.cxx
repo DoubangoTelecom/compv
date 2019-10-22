@@ -174,7 +174,7 @@ COMPV_ERROR_CODE CompVImage::encode(const char* filePath, const CompVMatPtr& ima
 	COMPV_CHECK_EXP_RETURN(
 		image->subType() != COMPV_SUBTYPE_PIXELS_RGB24 &&
 		image->subType() != COMPV_SUBTYPE_PIXELS_RGBA32 &&
-		(image->subType() != COMPV_SUBTYPE_PIXELS_Y && image->elmtInBytes() != sizeof(uint8_t) && image->planeCount() != 1),
+		(image->subType() != COMPV_SUBTYPE_PIXELS_Y || image->elmtInBytes() != sizeof(uint8_t) || image->planeCount() != 1),
 		COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(
 		"This function uses STBI instead of libjpeg-turbo or libpng to decode pictures."
@@ -268,6 +268,112 @@ COMPV_ERROR_CODE CompVImage::write(const char* filePath, const CompVMatPtr& imag
 	fclose(file);
 
 	return COMPV_ERROR_CODE_S_OK;
+}
+
+// "uvPixelStride" should be 1 for planar and 2 for packed/interleaved formats. Used by Android Camera2 to fake NV12/NV21 (a.k.a YUV420SP) as YUV20P
+COMPV_ERROR_CODE CompVImage::wrapYuv(
+	COMPV_SUBTYPE ePixelFormat,
+	const void* yPtr,
+	const void* uPtr,
+	const void* vPtr,
+	const size_t width,
+	const size_t height,
+	const size_t yStrideInBytes,
+	const size_t uStrideInBytes,
+	const size_t vStrideInBytes,
+	CompVMatPtrPtr outImage,
+	const size_t uvPixelStrideInBytes COMPV_DEFAULT(0),
+	const size_t outImageStrideInBytes COMPV_DEFAULT(0)
+)
+{
+	COMPV_CHECK_EXP_RETURN(!yPtr || !uPtr || !vPtr || !width || !height || !yStrideInBytes || !uStrideInBytes || !vStrideInBytes || yStrideInBytes < width,
+		COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(uvPixelStrideInBytes != 0 && uvPixelStrideInBytes != 1 && uvPixelStrideInBytes != 2,
+		COMPV_ERROR_CODE_E_INVALID_PARAMETER, "uvPixelStride should be 1 for planar and 2 for packed/interleaved formats. Set to zero for auto detection");
+
+	switch (ePixelFormat) {
+		case COMPV_SUBTYPE_PIXELS_NV12:
+		case COMPV_SUBTYPE_PIXELS_NV21:
+		case COMPV_SUBTYPE_PIXELS_YUV420P:
+		case COMPV_SUBTYPE_PIXELS_YVU420P:
+		case COMPV_SUBTYPE_PIXELS_YUV422P:
+		case COMPV_SUBTYPE_PIXELS_YUV444P: {
+			const bool outPacked = (ePixelFormat == COMPV_SUBTYPE_PIXELS_NV12 || ePixelFormat == COMPV_SUBTYPE_PIXELS_NV21);
+			const bool inPackedUV = (outPacked || uvPixelStrideInBytes == 2);
+			COMPV_CHECK_EXP_RETURN(inPackedUV && (uStrideInBytes != vStrideInBytes), COMPV_ERROR_CODE_E_INVALID_PARAMETER, "For interleaved UV uStrideInBytes must be equal to vStrideInBytes");
+			COMPV_CHECK_EXP_RETURN(inPackedUV && (std::abs(long long(uintptr_t(uPtr) - uintptr_t(vPtr))) != 1), COMPV_ERROR_CODE_E_INVALID_PARAMETER, "For interleaved UV distance(uPtr, vPtr) must be equal to 1");
+			CompVMatPtr outImage_;
+			size_t bestStride = outImageStrideInBytes;
+			if (bestStride < width) { // Compute newStride for the wrapped image is not defined or invalid
+				COMPV_CHECK_CODE_RETURN(CompVImageUtils::bestStride(width, &bestStride));
+			}
+			COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&outImage_, ePixelFormat, width, height, bestStride));
+			COMPV_CHECK_EXP_RETURN(uStrideInBytes < outImage_->rowInBytes(COMPV_PLANE_UV) || vStrideInBytes < outImage_->rowInBytes(COMPV_PLANE_UV), COMPV_ERROR_CODE_E_INVALID_PARAMETER, "uvStride too short to be valid");
+			// Copy Luma - Y
+			COMPV_CHECK_CODE_RETURN(CompVImageUtils::copy(
+				COMPV_SUBTYPE_PIXELS_Y,
+				yPtr, width, height, yStrideInBytes,
+				outImage_->ptr<void>(0, 0, COMPV_PLANE_Y), outImage_->rowInBytes(COMPV_PLANE_Y), outImage_->rows(COMPV_PLANE_Y), outImage_->strideInBytes(COMPV_PLANE_Y)
+			));
+			// Copy Luma - UV
+			const size_t uvHeight = outImage_->rows(COMPV_PLANE_UV);
+			if (inPackedUV) { // Interleaved/packed UV
+				COMPV_ASSERT(uStrideInBytes == vStrideInBytes); // already tested, see above
+				const bool uFirst = (uintptr_t(uPtr) < uintptr_t(vPtr)); // For NV21: V is first: https://www.fourcc.org/pixel-format/yuv-nv21/
+				const void* uvPtr = uFirst ? uPtr : vPtr; // distance is equal to #1 and take the min
+				const size_t uvStrideInBytes = uStrideInBytes;
+				if (outPacked) { // In and Out are both packed -> copy "AS IS"
+					const size_t uvWidthInBytes = outImage_->rowInBytes(COMPV_PLANE_UV); // Same width as they're both packed
+					COMPV_CHECK_CODE_RETURN(CompVImageUtils::copy(
+						COMPV_SUBTYPE_PIXELS_Y,
+						uvPtr, uvWidthInBytes, uvHeight, uvStrideInBytes,
+						outImage_->ptr<void>(0, 0, COMPV_PLANE_UV), outImage_->rowInBytes(COMPV_PLANE_UV), outImage_->rows(COMPV_PLANE_UV), outImage_->strideInBytes(COMPV_PLANE_UV)
+					));
+				}
+				else { // In packed and Out planer -> unpack and copy
+					CompVMatPtr ptr8uImgU, ptr8uImgV;
+					const size_t uvWidthInBytes = width; // Out is planar while In is packed -> do not use "outImage_->rowInBytes(COMPV_PLANE_UV)", same width as luma
+					COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&ptr8uImgU, COMPV_SUBTYPE_PIXELS_Y, (uvWidthInBytes + 1) >> 1, uvHeight, (uvStrideInBytes + 1) >> 1));
+					COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&ptr8uImgV, COMPV_SUBTYPE_PIXELS_Y, (uvWidthInBytes + 1) >> 1, uvHeight, (uvStrideInBytes + 1) >> 1));
+					COMPV_CHECK_CODE_RETURN(CompVMem::unpack2(ptr8uImgU->ptr<uint8_t>(), ptr8uImgV->ptr<uint8_t>(),
+						reinterpret_cast<const compv_uint8x2_t*>(uvPtr), (uvWidthInBytes + 1) >> 1, uvHeight, (uvStrideInBytes + 1) >> 1));
+					const int planeU = uFirst ? COMPV_PLANE_U : COMPV_PLANE_V;
+					const int planeV = uFirst ? COMPV_PLANE_V : COMPV_PLANE_U;
+					COMPV_CHECK_CODE_RETURN(CompVImageUtils::copy(
+						COMPV_SUBTYPE_PIXELS_Y,
+						ptr8uImgU->ptr<const void>(), ptr8uImgU->cols(), ptr8uImgU->rows(), ptr8uImgU->stride(),
+						outImage_->ptr<void>(0, 0, planeU), outImage_->cols(planeU), outImage_->rows(planeU), outImage_->stride(planeU)
+					));
+					COMPV_CHECK_CODE_RETURN(CompVImageUtils::copy(
+						COMPV_SUBTYPE_PIXELS_Y,
+						ptr8uImgV->ptr<const void>(), ptr8uImgV->cols(), ptr8uImgV->rows(), ptr8uImgV->stride(),
+						outImage_->ptr<void>(0, 0, planeV), outImage_->cols(planeV), outImage_->rows(planeV), outImage_->stride(planeV)
+					));
+				}
+			}
+			else { // Planar UV for both input and output
+				const size_t uvWidthInBytes = outImage_->rowInBytes(COMPV_PLANE_UV); // Same width as they're both planar
+				COMPV_CHECK_CODE_RETURN(CompVImageUtils::copy(
+					COMPV_SUBTYPE_PIXELS_Y,
+					uPtr, uvWidthInBytes, uvHeight, uStrideInBytes,
+					outImage_->ptr<void>(0, 0, COMPV_PLANE_U), outImage_->rowInBytes(COMPV_PLANE_U), outImage_->rows(COMPV_PLANE_U), outImage_->strideInBytes(COMPV_PLANE_U)
+				));
+				COMPV_CHECK_CODE_RETURN(CompVImageUtils::copy(
+					COMPV_SUBTYPE_PIXELS_Y,
+					vPtr, uvWidthInBytes, uvHeight, vStrideInBytes,
+					outImage_->ptr<void>(0, 0, COMPV_PLANE_V), outImage_->rowInBytes(COMPV_PLANE_V), outImage_->rows(COMPV_PLANE_V), outImage_->strideInBytes(COMPV_PLANE_V)
+				));
+			}
+
+			*outImage = outImage_;
+
+			return COMPV_ERROR_CODE_S_OK;
+		}
+		default: {
+			COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Wrapping %s not supported yet", CompVGetSubtypeString(ePixelFormat));
+			return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
+		}
+	}
 }
 
 COMPV_ERROR_CODE CompVImage::wrap(COMPV_SUBTYPE ePixelFormat, const void* dataPtr, const size_t dataWidth, const size_t dataHeight, const size_t dataStride, CompVMatPtrPtr image, const size_t imageStride COMPV_DEFAULT(0))

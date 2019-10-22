@@ -5,7 +5,8 @@ using namespace compv;
 #define TAG_UNITTESTS "UnitTests"
 
 #define UNITTEST_INTEGRAL						0
-#define UNITTEST_PACKING						1
+#define UNITTEST_PACKING						0
+#define UNITTEST_WRAP_YUV						1
 #define UNITTEST_SCALE							0
 #define UNITTEST_ROTATE							0
 #define UNITTEST_PYRAMID						0
@@ -114,6 +115,10 @@ compv_main()
 #if UNITTEST_PACKING || !defined(COMPV_TEST_LOCAL)
 								extern COMPV_ERROR_CODE unittest_packing();
 								COMPV_CHECK_CODE_BAIL(err = unittest_packing(), "Image packing unittest failed");
+#endif
+#if UNITTEST_WRAP_YUV || !defined(COMPV_TEST_LOCAL)
+								extern COMPV_ERROR_CODE unittest_wrapYuv();
+								COMPV_CHECK_CODE_BAIL(err = unittest_wrapYuv(), "Image wrapYUV unittest failed");
 #endif
 #if UNITTEST_SCALE || !defined(COMPV_TEST_LOCAL)
 								extern COMPV_ERROR_CODE unittest_scale();

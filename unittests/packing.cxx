@@ -1,6 +1,6 @@
 #include "../tests/tests_common.h"
 
-#define TAG_TEST								"UnitTestSplit"
+#define TAG_TEST								"UnitTestPacking"
 #if COMPV_OS_WINDOWS
 #	define COMPV_TEST_IMAGE_FOLDER				"C:/Projects/GitHub/data/colorspace"
 #elif COMPV_OS_OSX

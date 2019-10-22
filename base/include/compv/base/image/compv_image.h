@@ -23,6 +23,20 @@ public:
 	static COMPV_ERROR_CODE encode(const char* filePath, const CompVMatPtr& image);
 	static COMPV_ERROR_CODE write(const char* filePath, const CompVMatPtr& image);
 	static COMPV_ERROR_CODE wrap(COMPV_SUBTYPE ePixelFormat, const void* dataPtr, const size_t dataWidth, const size_t dataHeight, const size_t dataStride, CompVMatPtrPtr image, const size_t imageStride = 0);
+	static COMPV_ERROR_CODE wrapYuv(
+		COMPV_SUBTYPE ePixelFormat, 
+		const void* yPtr, 
+		const void* uPtr,
+		const void* vPtr,
+		const size_t width,
+		const size_t height,
+		const size_t yStrideInBytes,
+		const size_t uStrideInBytes,
+		const size_t vStrideInBytes,
+		CompVMatPtrPtr outImage, 
+		const size_t uvPixelStrideInBytes = 0,
+		const size_t outImageStrideInBytes = 0
+	);
 	static COMPV_ERROR_CODE clone(const CompVMatPtr& imageIn, CompVMatPtrPtr imageOut);
 	static COMPV_ERROR_CODE crop(const CompVMatPtr& imageIn, const CompVRectFloat32& roi, CompVMatPtrPtr imageOut);
 	static COMPV_ERROR_CODE unpack(const CompVMatPtr& imageIn, CompVMatPtrVector& outputs);

@@ -8,7 +8,7 @@ using namespace compv;
 #define TEST_SCALE					0
 #define TEST_ROTATE					0
 #define TEST_PYRAMID				0
-#define TEST_CHROMA_CONV			1
+#define TEST_CHROMA_CONV			0
 #define TEST_FEATURE_FAST			0
 #define TEST_FEATURE_ORB			0
 #define TEST_PATCH_MOMENTS			0
@@ -24,6 +24,7 @@ using namespace compv;
 #define TEST_HOGSTD					0
 #define TEST_BRUTEFORCE				0
 #define TEST_PACKING				0
+#define TEST_WRAPYUV				1
 #define TEST_BITS					0
 
 /* Entry point function */
@@ -120,6 +121,10 @@ compv_main()
 #if TEST_PACKING
 		extern COMPV_ERROR_CODE packing();
 		COMPV_CHECK_CODE_BAIL(err = packing(), TAG_TEST_IMAGE "Packing test failed");
+#endif
+#if TEST_WRAPYUV
+		extern COMPV_ERROR_CODE wrap_yuv();
+		COMPV_CHECK_CODE_BAIL(err = wrap_yuv(), TAG_TEST_IMAGE "wrapYuv test failed");
 #endif
 
 #if TEST_BITS

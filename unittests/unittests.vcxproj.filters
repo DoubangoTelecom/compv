@@ -126,5 +126,8 @@
     <ClCompile Include="packing.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="wrap_yuv.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
