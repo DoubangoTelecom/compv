@@ -81,7 +81,7 @@ COMPV_ERROR_CODE wrap_yuv()
 			imageIn->strideInBytes(planeV),
 			&imageOut
 		));
-#if COMPV_OS_WINDOWS && 1
+#if COMPV_OS_WINDOWS && 0
 		COMPV_DEBUG_INFO_CODE_FOR_TESTING("Do not write the file to the hd");
 		CompVMatPtr imageRGB24;
 		COMPV_CHECK_CODE_RETURN(CompVImage::convert(imageOut, COMPV_SUBTYPE_PIXELS_RGB24, &imageRGB24));
