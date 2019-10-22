@@ -301,7 +301,7 @@ COMPV_ERROR_CODE CompVImage::wrapYuv(
 			const bool outPacked = (ePixelFormat == COMPV_SUBTYPE_PIXELS_NV12 || ePixelFormat == COMPV_SUBTYPE_PIXELS_NV21);
 			const bool inPackedUV = (outPacked || uvPixelStrideInBytes == 2);
 			COMPV_CHECK_EXP_RETURN(inPackedUV && (uStrideInBytes != vStrideInBytes), COMPV_ERROR_CODE_E_INVALID_PARAMETER, "For interleaved UV uStrideInBytes must be equal to vStrideInBytes");
-			COMPV_CHECK_EXP_RETURN(inPackedUV && (std::abs(long long(uintptr_t(uPtr) - uintptr_t(vPtr))) != 1), COMPV_ERROR_CODE_E_INVALID_PARAMETER, "For interleaved UV distance(uPtr, vPtr) must be equal to 1");
+			COMPV_CHECK_EXP_RETURN(inPackedUV && (std::abs((long long)(reinterpret_cast<const uintptr_t>(uPtr) - reinterpret_cast<const uintptr_t>(vPtr))) != 1), COMPV_ERROR_CODE_E_INVALID_PARAMETER, "For interleaved UV distance(uPtr, vPtr) must be equal to 1");
 			CompVMatPtr outImage_;
 			size_t bestStride = outImageStrideInBytes;
 			if (bestStride < width) { // Compute newStride for the wrapped image is not defined or invalid
@@ -319,7 +319,7 @@ COMPV_ERROR_CODE CompVImage::wrapYuv(
 			const size_t uvHeight = outImage_->rows(COMPV_PLANE_UV);
 			if (inPackedUV) { // Interleaved/packed UV
 				COMPV_ASSERT(uStrideInBytes == vStrideInBytes); // already tested, see above
-				const bool uFirst = (uintptr_t(uPtr) < uintptr_t(vPtr)); // For NV21: V is first: https://www.fourcc.org/pixel-format/yuv-nv21/
+				const bool uFirst = (reinterpret_cast<const uintptr_t>(uPtr) < reinterpret_cast<const uintptr_t>(vPtr)); // For NV21: V is first: https://www.fourcc.org/pixel-format/yuv-nv21/
 				const void* uvPtr = uFirst ? uPtr : vPtr; // distance is equal to #1 and take the min
 				const size_t uvStrideInBytes = uStrideInBytes;
 				if (outPacked) { // In and Out are both packed -> copy "AS IS"
