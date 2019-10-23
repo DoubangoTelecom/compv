@@ -206,15 +206,7 @@ COMPV_ERROR_CODE CompVImage::encode(const char* filePath, const CompVMatPtr& ima
 	}
 
 	FILE* file_ = nullptr;
-#if COMPV_OS_ANDROID
-	if (compv_android_have_assetmgr()) {
-		file_ = compv_android_asset_fopen(filePath, "rb");
-	}
-	else {
-		COMPV_DEBUG_INFO_CODE_ONCE("Not using asset manager");
-	}
-#endif /* COMPV_OS_ANDROID */
-	if (!file_ && (file_ = fopen(filePath_.c_str(), "wb+")) == nullptr) {
+	if (!(file_ = CompVFileUtils::open(filePath_.c_str(), "wb+")) ) {
 		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Can't create %s", filePath_.c_str());
 		return COMPV_ERROR_CODE_E_FILE_NOT_FOUND;
 	}

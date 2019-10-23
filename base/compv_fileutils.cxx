@@ -259,15 +259,7 @@ COMPV_ERROR_CODE CompVFileUtils::read(const char* pcPath, CompVBufferPtrPtr buff
 	else {
         FILE* file_ = nullptr;
         void* mem_ = nullptr;
-#if COMPV_OS_ANDROID
-        if (compv_android_have_assetmgr()) {
-            file_ = compv_android_asset_fopen(pcPath, "rb");
-        }
-        else {
-            COMPV_DEBUG_INFO_CODE_ONCE("Not using asset manager");
-        }
-#endif /* COMPV_OS_ANDROID */
-        if (!file_ && (file_ = fopen(pcPath, "rb")) == nullptr) {
+        if (!(file_ = CompVFileUtils::open(pcPath, "rb"))) {
             COMPV_DEBUG_ERROR_EX(kModuleNameFileUtils, "Can't open %s", pcPath);
             return COMPV_ERROR_CODE_E_FILE_NOT_FOUND;
         }
@@ -303,17 +295,24 @@ FILE* CompVFileUtils::open(const char* fname, const char* mode)
         COMPV_DEBUG_ERROR_EX(kModuleNameFileUtils, "Invalid parameter (%s, %s)", fname, mode);
         return nullptr;
     }
-	if (!std::string(mode).compare("w+") && !CompVFileUtils::exists(fname)) {
-		COMPV_DEBUG_ERROR_EX(kModuleNameFileUtils, "File doesn't exist (%s)", fname);
-		return nullptr;
-	}
+
 #if COMPV_OS_ANDROID
-    if (compv_android_have_assetmgr()) {
-        return compv_android_asset_fopen(fname, mode);
-    }
-    else {
-        COMPV_DEBUG_INFO_CODE_ONCE("Not using asset manager");
-    }
+	const std::string mode_ = mode;
+	const bool openForWriteOperations = 
+		(mode_.find('w') != std::string::npos) || (mode_.back() == '+');
+	if (openForWriteOperations) {
+		// Using standard file operations to write to internal folder (e.g. '/storage/emulated/0/Android/data/org.doubango.ultimateAlpr/files')
+		// works fine when the app is called from Java Activity (e.g. ultimateALPR-SDK use case).
+		COMPV_DEBUG_INFO_EX(kModuleNameFileUtils, "Asset manager can't handle write operations, using standard file ops");
+	}
+	else {
+		if (compv_android_have_assetmgr()) {
+			return compv_android_asset_fopen(fname, mode);
+		}
+		else {
+			COMPV_DEBUG_INFO_CODE_ONCE("Not using asset manager");
+		}
+	}
 #endif /* COMPV_OS_ANDROID */
     return fopen(fname, mode);
 }
