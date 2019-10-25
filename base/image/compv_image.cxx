@@ -377,7 +377,7 @@ COMPV_ERROR_CODE CompVImage::wrap(COMPV_SUBTYPE ePixelFormat, const void* dataPt
 	if (bestStride < dataWidth) { // Compute newStride for the wrapped image is not defined or invalid
 		COMPV_CHECK_CODE_RETURN(CompVImageUtils::bestStride(dataWidth, &bestStride));
 	}
-	CompVMatPtr image_ = ((*image) && (*image)->data<const void>() == dataPtr) ? nullptr : *image;
+	CompVMatPtr image_ = ((*image) && ((*image)->data<const void>() == dataPtr || !(*image)->isMemoryOwed())) ? nullptr : *image;
 	COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&image_, ePixelFormat, dataWidth, dataHeight, bestStride)
 		, "Failed to allocate new image");
 	
