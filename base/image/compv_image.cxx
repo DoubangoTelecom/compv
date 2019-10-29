@@ -294,7 +294,7 @@ COMPV_ERROR_CODE CompVImage::wrapYuv(
 			const bool inPackedUV = (outPacked || uvPixelStrideInBytes == 2);
 			COMPV_CHECK_EXP_RETURN(inPackedUV && (uStrideInBytes != vStrideInBytes), COMPV_ERROR_CODE_E_INVALID_PARAMETER, "For interleaved UV uStrideInBytes must be equal to vStrideInBytes");
 			COMPV_CHECK_EXP_RETURN(inPackedUV && (std::abs((long long)(reinterpret_cast<const uintptr_t>(uPtr) - reinterpret_cast<const uintptr_t>(vPtr))) != 1), COMPV_ERROR_CODE_E_INVALID_PARAMETER, "For interleaved UV distance(uPtr, vPtr) must be equal to 1");
-			CompVMatPtr outImage_;
+			CompVMatPtr outImage_; // do not set to "*outImage" as the can try to override the input (input == output)
 			size_t bestStride = outImageStrideInBytes;
 			if (bestStride < width) { // Compute newStride for the wrapped image is not defined or invalid
 				COMPV_CHECK_CODE_RETURN(CompVImageUtils::bestStride(width, &bestStride));

@@ -126,13 +126,13 @@ COMPV_ERROR_CODE CompVImageUtils::planeSizeForPixelFormat(COMPV_SUBTYPE ePixelFo
 	case COMPV_SUBTYPE_PIXELS_YVU420P: // 'Y', 'V', 'U' planes: uint8, uint8, uint8
         COMPV_CHECK_EXP_RETURN(planeId >= 3, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
         if (planeId == 0)  *compWidth = imgWidth, *compHeight = imgHeight;
-        else  *compWidth = imgWidth >> 1, *compHeight = imgHeight >> 1; // subsampled : 2x2
+        else  *compWidth = (imgWidth + 1) >> 1, *compHeight = (imgHeight + 1) >> 1; // subsampled : 2x2
         return COMPV_ERROR_CODE_S_OK;
 	case COMPV_SUBTYPE_PIXELS_NV12: // 'Y', 'UV' planes, uint8, uint16
 	case COMPV_SUBTYPE_PIXELS_NV21: // 'Y', 'VU' planes, uint8, uint16
 		COMPV_CHECK_EXP_RETURN(planeId >= 2, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 		if (planeId == 0)  *compWidth = imgWidth, *compHeight = imgHeight;
-		else  *compWidth = imgWidth >> 1, *compHeight = imgHeight >> 1; // Width and Height and subsampled : 2x2, UV packed
+		else  *compWidth = (imgWidth + 1) >> 1, *compHeight = (imgHeight + 1) >> 1; // Width and Height and subsampled : 2x2, UV packed
 		return COMPV_ERROR_CODE_S_OK;
 	case COMPV_SUBTYPE_PIXELS_YUYV422: // Single packed plane: [Y0U0Y1V0], uint32
 	case COMPV_SUBTYPE_PIXELS_UYVY422: // Single packed plane: [U0Y0V0Y1], uint32
@@ -142,7 +142,7 @@ COMPV_ERROR_CODE CompVImageUtils::planeSizeForPixelFormat(COMPV_SUBTYPE ePixelFo
 	case COMPV_SUBTYPE_PIXELS_YUV422P: // 'Y', 'U', 'V' planes: uint8, uint8, uint8
 		COMPV_CHECK_EXP_RETURN(planeId >= 3, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 		if (planeId == 0)  *compWidth = imgWidth, *compHeight = imgHeight;
-		else  *compWidth = imgWidth >> 1, *compHeight = imgHeight; // subsampled 2x1, YUV planes
+		else  *compWidth = (imgWidth + 1) >> 1, *compHeight = imgHeight; // subsampled 2x1, YUV planes
 		return COMPV_ERROR_CODE_S_OK;
 	case COMPV_SUBTYPE_PIXELS_YUV444P: // 'Y', 'U', 'V' planes: uint8, uint8, uint8
 		COMPV_CHECK_EXP_RETURN(planeId >= 3, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
