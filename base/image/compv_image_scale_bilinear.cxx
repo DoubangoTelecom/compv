@@ -166,7 +166,11 @@ COMPV_ERROR_CODE CompVImageScaleBilinear::process(const CompVMatPtr& imageIn, Co
 		// We expect image sizes to be within [16 - 4080] which means any (down/up)scaling will be ok. Off course you can (up/down)sample a 5k image if you want.
 		// Most of the time scaling is used to create pyramids with scaling factor is ]0, 1[ and each time level has a scaling factor equal to (sf(n-1)<<1).
 		if (float_sx <= 0.f || float_sx >= 255.f || float_sy <= 0.f || float_sy >= 255.f) {
-			COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASSNAME, "Invalid scaling factor: (%f, %f)", float_sx, float_sy);
+			COMPV_DEBUG_WARN_EX(
+				COMPV_THIS_CLASSNAME, 
+				"Invalid scaling factor: (float_sx: %f, float_sy: %f, widthIn: %zu, widthOut: %zu, heightIn: %zu, heightOut: %zu)", 
+				float_sx, float_sy, (size_t)widthIn, (size_t)widthOut, (size_t)heightIn, (size_t)heightOut
+			);
 			// We'll have a small distortion but do not break the conversion
 		}
 		COMPV_CHECK_CODE_RETURN(scaleBilinear(
