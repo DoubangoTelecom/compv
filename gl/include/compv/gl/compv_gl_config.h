@@ -10,7 +10,9 @@
 #include "compv/base/compv_config.h"
 
 // Windows's symbols export
-#if COMPV_OS_WINDOWS && !defined(COMPV_STATIC)
+#if defined(COMPV_STATIC)
+# 		define COMPV_GL_API
+#elif COMPV_OS_WINDOWS
 #	if defined(COMPV_GL_EXPORTS)
 # 		define COMPV_GL_API		__declspec(dllexport)
 #	else
