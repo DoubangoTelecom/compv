@@ -174,7 +174,8 @@ COMPV_ERROR_CODE CompVImage::encode(const char* filePath, const CompVMatPtr& ima
 	COMPV_CHECK_EXP_RETURN(
 		image->subType() != COMPV_SUBTYPE_PIXELS_RGB24 &&
 		image->subType() != COMPV_SUBTYPE_PIXELS_RGBA32 &&
-		(image->subType() != COMPV_SUBTYPE_PIXELS_Y || image->elmtInBytes() != sizeof(uint8_t) || image->planeCount() != 1),
+		image->subType() != COMPV_SUBTYPE_PIXELS_Y && 
+		(image->elmtInBytes() != sizeof(uint8_t) || image->planeCount() != 1),
 		COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(
 		"This function uses STBI instead of libjpeg-turbo or libpng to decode pictures."
