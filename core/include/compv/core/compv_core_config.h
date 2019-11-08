@@ -18,10 +18,8 @@
 #	else
 # 		define COMPV_CORE_API		__declspec(dllimport)
 #	endif
-#elif defined (COMPV_SYMBOLS_HIDDEN)
-#	define COMPV_CORE_API			__attribute__((visibility("default")))
 #else
-#	define COMPV_CORE_API
+#	define COMPV_CORE_API			__attribute__((visibility("default")))
 #endif
 
 #endif /* _COMPV_CORE_CONFIG_H_ */
