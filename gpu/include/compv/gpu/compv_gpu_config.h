@@ -18,8 +18,10 @@
 #	else
 # 		define COMPV_GPU_API		__declspec(dllimport)
 #	endif
-#else
+#elif defined (COMPV_SYMBOLS_HIDDEN)
 #	define COMPV_GPU_API			__attribute__((visibility("default")))
+#else
+#	define COMPV_GPU_API
 #endif
 
 #endif /* _COMPV_GPU_CONFIG_H_ */

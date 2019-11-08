@@ -18,8 +18,10 @@
 #	else
 # 		define COMPV_GL_API		__declspec(dllimport)
 #	endif
-#else
+#elif defined (COMPV_SYMBOLS_HIDDEN)
 #	define COMPV_GL_API			__attribute__((visibility("default")))
+#else
+#	define COMPV_GL_API	
 #endif
 
 #if !defined(COMPV_GL_SWAP_INTERVAL)

@@ -256,8 +256,10 @@
 #	else
 # 		define COMPV_BASE_API		__declspec(dllimport)
 #	endif
-#else
+#elif defined (COMPV_SYMBOLS_HIDDEN)
 # 	define COMPV_BASE_API			__attribute__((visibility("default")))
+#else
+# 	define COMPV_BASE_API
 #endif
 
 /* define "COMPV_DEPRECATED(func)" macro */

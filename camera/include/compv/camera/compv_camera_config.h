@@ -18,8 +18,10 @@
 #	else
 # 		define COMPV_CAMERA_API		__declspec(dllimport)
 #	endif
-#else
+#elif defined (COMPV_SYMBOLS_HIDDEN)
 #	define COMPV_CAMERA_API			__attribute__((visibility("default")))
+#else
+#	define COMPV_CAMERA_API
 #endif
 
 #endif /* _COMPV_CAMERA_CONFIG_H_ */
