@@ -8,7 +8,6 @@
 
 #if COMPV_ARCH_ARM && COMPV_INTRINSIC
 #include "compv/base/intrin/arm/compv_intrin_neon.h"
-#include "compv/base/compv_simd_globals.h"
 #include "compv/base/compv_cpu.h"
 #include "compv/base/compv_debug.h"
 

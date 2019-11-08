@@ -9,7 +9,6 @@
 #if COMPV_ARCH_X86 && COMPV_INTRINSIC
 #include "compv/core/compv_core_simd_globals.h"
 #include "compv/base/intrin/x86/compv_intrin_avx.h"
-#include "compv/base/compv_simd_globals.h"
 #include "compv/base/compv_debug.h"
 
 COMPV_NAMESPACE_BEGIN()

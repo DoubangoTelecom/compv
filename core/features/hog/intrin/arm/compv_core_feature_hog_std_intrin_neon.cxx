@@ -8,7 +8,6 @@
 
 #if COMPV_ARCH_ARM && COMPV_INTRINSIC
 #include "compv/base/intrin/x86/compv_intrin_sse.h"
-#include "compv/base/compv_simd_globals.h"
 #include "compv/base/compv_debug.h"
 
 #define USE_EXT 0

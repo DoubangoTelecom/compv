@@ -23,7 +23,6 @@
 #include "compv/base/compv_matchers.h"
 #include "compv/base/compv_base.h"
 #include "compv/base/parallel/compv_mutex.h"
-#include "compv/base/compv_simd_globals.h"
 
 #if defined(HAVE_FFMPEG)
 COMPV_EXTERNC_BEGIN()
