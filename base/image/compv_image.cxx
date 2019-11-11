@@ -1097,7 +1097,7 @@ static COMPV_ERROR_CODE CompVImageWarpInverse(const CompVMatPtr& imageIn, CompVM
 			const T* eyPtr = ey->data<T>(); // e * y
 			const T* hyPtr = hy->data<T>(); // h * y
 			size_t x;
-			for (size_t y = 0, k = 0; y < height; ++y) {
+			for (size_t y = ystart, k = 0; y < yend; ++y) {
 				const T& by_ = byPtr[y]; // b*y
 				const T& ey_ = eyPtr[y]; // e*y
 				const T& hy_ = hyPtr[y]; // h*y
