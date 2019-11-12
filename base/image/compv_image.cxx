@@ -440,36 +440,36 @@ COMPV_ERROR_CODE CompVImage::unpack(const CompVMatPtr& imageIn, CompVMatPtrVecto
 	COMPV_CHECK_EXP_RETURN(!imageIn || imageIn->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
 	switch (imageIn->subType()) {
+	case COMPV_SUBTYPE_PIXELS_ARGB32:
+	case COMPV_SUBTYPE_PIXELS_RGBA32:
+	case COMPV_SUBTYPE_PIXELS_BGRA32:
 	case COMPV_SUBTYPE_PIXELS_HSV:
 	case COMPV_SUBTYPE_PIXELS_HSL:
 	case COMPV_SUBTYPE_PIXELS_RGB24:
 	case COMPV_SUBTYPE_PIXELS_BGR24: {
-		CompVMatPtr ptr8uImg0, ptr8uImg1, ptr8uImg2;
-		if (outputs.size() == 3) {
-			ptr8uImg0 = outputs[0];
-			ptr8uImg1 = outputs[1];
-			ptr8uImg2 = outputs[2];
-		}
-		else {
-			outputs.resize(3);
+		size_t bitsCount;
+		COMPV_CHECK_CODE_RETURN(CompVImageUtils::bitsCountForPixelFormat(imageIn->subType(), &bitsCount));
+		COMPV_ASSERT(bitsCount == 24 || bitsCount == 32);
+		const size_t numSamplesPerPixel = bitsCount >> 3;
+		if (outputs.size() != numSamplesPerPixel) {
+			outputs.resize(numSamplesPerPixel);
 		}
 		const size_t width = imageIn->cols();
 		const size_t height = imageIn->rows();
 		const size_t stride = imageIn->stride();
-		if (!ptr8uImg0 || ptr8uImg0->cols() != width || ptr8uImg0->rows() != height || ptr8uImg0->stride() != stride || ptr8uImg0->elmtInBytes() != sizeof(uint8_t) || ptr8uImg0->planeCount() != 1) {
-			COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&ptr8uImg0, COMPV_SUBTYPE_PIXELS_Y, width, height, stride));
+		for (auto& it : outputs) {
+			if (!it || it->cols() != width || it->rows() != height || it->stride() != stride || it->elmtInBytes() != sizeof(uint8_t) || it->planeCount() != 1) {
+				COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&it, COMPV_SUBTYPE_PIXELS_Y, width, height, stride));
+			}
 		}
-		if (!ptr8uImg1 || ptr8uImg1->cols() != width || ptr8uImg1->rows() != height || ptr8uImg1->stride() != stride || ptr8uImg1->elmtInBytes() != sizeof(uint8_t) || ptr8uImg1->planeCount() != 1) {
-			COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&ptr8uImg1, COMPV_SUBTYPE_PIXELS_Y, width, height, stride));
+		if (outputs.size() == 4) {
+			COMPV_CHECK_CODE_RETURN(CompVMem::unpack4(outputs[0]->ptr<uint8_t>(), outputs[1]->ptr<uint8_t>(), outputs[2]->ptr<uint8_t>(), outputs[3]->ptr<uint8_t>(),
+				imageIn->ptr<const compv_uint8x4_t>(), width, height, stride));
 		}
-		if (!ptr8uImg2 || ptr8uImg2->cols() != width || ptr8uImg2->rows() != height || ptr8uImg2->stride() != stride || ptr8uImg2->elmtInBytes() != sizeof(uint8_t) || ptr8uImg2->planeCount() != 1) {
-			COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&ptr8uImg2, COMPV_SUBTYPE_PIXELS_Y, width, height, stride));
+		else {
+			COMPV_CHECK_CODE_RETURN(CompVMem::unpack3(outputs[0]->ptr<uint8_t>(), outputs[1]->ptr<uint8_t>(), outputs[2]->ptr<uint8_t>(),
+				imageIn->ptr<const compv_uint8x3_t>(), width, height, stride));
 		}
-		COMPV_CHECK_CODE_RETURN(CompVMem::unpack3(ptr8uImg0->ptr<uint8_t>(), ptr8uImg1->ptr<uint8_t>(), ptr8uImg2->ptr<uint8_t>(),
-			imageIn->ptr<const compv_uint8x3_t>(), width, height, stride));
-		outputs[0] = ptr8uImg0;
-		outputs[1] = ptr8uImg1;
-		outputs[2] = ptr8uImg2;
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	case COMPV_SUBTYPE_PIXELS_NV12:
@@ -527,12 +527,18 @@ COMPV_ERROR_CODE CompVImage::pack(const CompVMatPtrVector& inputs, const COMPV_S
 	COMPV_CHECK_EXP_RETURN(inputs.empty() || !output, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
 	switch (pixelFormat) {
+	case COMPV_SUBTYPE_PIXELS_ARGB32:
+	case COMPV_SUBTYPE_PIXELS_RGBA32:
+	case COMPV_SUBTYPE_PIXELS_BGRA32:
 	case COMPV_SUBTYPE_PIXELS_HSV:
 	case COMPV_SUBTYPE_PIXELS_HSL:
 	case COMPV_SUBTYPE_PIXELS_RGB24:
 	case COMPV_SUBTYPE_PIXELS_BGR24: {
-		// Make sure there are #3 inputs and they are 8u 1dim values and with same size
-		COMPV_CHECK_EXP_RETURN(inputs.size() != 3, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Requires #3 lanes");
+		size_t bitsCount;
+		COMPV_CHECK_CODE_RETURN(CompVImageUtils::bitsCountForPixelFormat(pixelFormat, &bitsCount));
+		COMPV_ASSERT(bitsCount == 24 || bitsCount == 32);
+		const size_t numSamplesPerPixel = bitsCount >> 3;
+		COMPV_CHECK_EXP_RETURN(inputs.size() != numSamplesPerPixel, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Invalid number of inputs");
 		const size_t width = inputs[0]->cols();
 		const size_t height = inputs[0]->rows();
 		const size_t stride = inputs[0]->stride();
@@ -543,8 +549,14 @@ COMPV_ERROR_CODE CompVImage::pack(const CompVMatPtrVector& inputs, const COMPV_S
 		// Packing
 		CompVMatPtr& output_ = *output;
 		COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&output_, pixelFormat, width, height, stride));
-		COMPV_CHECK_CODE_RETURN(CompVMem::pack3(output_->ptr<compv_uint8x3_t>(), inputs[0]->ptr<const uint8_t>(), inputs[1]->ptr<const uint8_t>(), inputs[2]->ptr<const uint8_t>(),
-			width, height, stride));
+		if (inputs.size() == 4) {
+			COMPV_CHECK_CODE_RETURN(CompVMem::pack4(output_->ptr<compv_uint8x4_t>(), inputs[0]->ptr<const uint8_t>(), inputs[1]->ptr<const uint8_t>(), inputs[2]->ptr<const uint8_t>(), inputs[3]->ptr<const uint8_t>(),
+				width, height, stride));
+		}
+		else {
+			COMPV_CHECK_CODE_RETURN(CompVMem::pack3(output_->ptr<compv_uint8x3_t>(), inputs[0]->ptr<const uint8_t>(), inputs[1]->ptr<const uint8_t>(), inputs[2]->ptr<const uint8_t>(),
+				width, height, stride));
+		}
 
 		return COMPV_ERROR_CODE_S_OK;
 	}

@@ -7,6 +7,7 @@
 #include "compv/base/intrin/x86/compv_mem_intrin_sse2.h"
 
 #if COMPV_ARCH_X86 && COMPV_INTRINSIC
+#include "compv/base/intrin/x86/compv_intrin_sse.h"
 #include "compv/base/compv_simd_globals.h"
 #include "compv/base/math/compv_math.h"
 #include "compv/base/compv_debug.h"
@@ -140,6 +141,29 @@ void CompVMemZeroNTA_Intrin_Aligned_SSE2(COMPV_ALIGNED(SSE) void* dstPtr, compv_
         ++xmmDst;
     }
     _mm_mfence(); // flush latest WC (Write Combine) buffers to memory
+}
+
+void CompVMemPack4_Intrin_SSE2(
+	COMPV_ALIGNED(SSE) compv_uint8x4_t* dstPtr,
+	COMPV_ALIGNED(SSE) const uint8_t* srcPt0, COMPV_ALIGNED(SSE) const uint8_t* srcPt1, COMPV_ALIGNED(SSE) const uint8_t* srcPt2, COMPV_ALIGNED(SSE) const uint8_t* srcPt3,
+	compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride)
+{
+	COMPV_DEBUG_INFO_CHECK_SSE2();
+	__m128i vecLane0, vecLane1, vecLane2, vecLane3, vectmp0, vectmp1;
+	for (compv_uscalar_t j = 0; j < height; ++j) {
+		for (compv_uscalar_t i = 0; i < width; i += 16) { // strided/SSE-aligned -> can write beyond width
+			vecLane0 = _mm_load_si128(reinterpret_cast<const __m128i*>(&srcPt0[i]));
+			vecLane1 = _mm_load_si128(reinterpret_cast<const __m128i*>(&srcPt1[i]));
+			vecLane2 = _mm_load_si128(reinterpret_cast<const __m128i*>(&srcPt2[i]));
+			vecLane3 = _mm_load_si128(reinterpret_cast<const __m128i*>(&srcPt3[i]));
+			COMPV_VST4_U8_SSE2(&dstPtr[i], vecLane0, vecLane1, vecLane2, vecLane3, vectmp0, vectmp1);
+		}
+		dstPtr += stride;
+		srcPt0 += stride;
+		srcPt1 += stride;
+		srcPt2 += stride;
+		srcPt3 += stride;
+	}
 }
 
 void CompVMemPack2_Intrin_SSE2(

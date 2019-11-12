@@ -37,6 +37,7 @@ global sym(CompVImageConvYuyv422_to_Rgb24_Asm_X64_SSSE3)
 global sym(CompVImageConvYuyv422_to_Rgba32_Asm_X64_SSSE3)
 global sym(CompVImageConvUyvy422_to_Rgb24_Asm_X64_SSSE3)
 global sym(CompVImageConvUyvy422_to_Rgba32_Asm_X64_SSSE3)
+global sym(CompVImageConvRgba32_to_Rgb24_Asm_X64_SSSE3)
 
 section .data
 	extern sym(k16_16s)
@@ -49,6 +50,7 @@ section .data
 	extern sym(kShuffleEpi8_Interleave8uL3_Step1_s32)
 	extern sym(kShuffleEpi8_Interleave8uL3_Step2_s32)
 	extern sym(kShuffleEpi8_Deinterleave8uL2_32s)
+	extern sym(kShuffleEpi8_Deinterleave8uL4_32s)
 	extern sym(kShuffleEpi8_Yuyv422ToYuv_i32)
 	extern sym(kShuffleEpi8_Uyvy422ToYuv_i32)
 
@@ -477,5 +479,75 @@ sym(CompVImageConvUyvy422_to_Rgb24_Asm_X64_SSSE3):
 sym(CompVImageConvUyvy422_to_Rgba32_Asm_X64_SSSE3):
 	CompVImageConvYuv_to_Rgbx_Macro_X64 rgba32Family, uyvy422Family
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> COMPV_ALIGNED(SSE) const uint8_t* rgba32Ptr
+; arg(1) -> COMPV_ALIGNED(SSE) uint8_t* rgb24Ptr
+; arg(2) -> compv_uscalar_t width
+; arg(3) -> compv_uscalar_t height
+; arg(4) -> COMPV_ALIGNED(SSE) compv_uscalar_t stride
+sym(CompVImageConvRgba32_to_Rgb24_Asm_X64_SSSE3):
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 5
+	push rsi
+	;; end prolog ;;
+
+	%define rgba32Ptr	rax
+	%define rgb24Ptr	rcx
+	%define width		rdx
+	%define height		r8
+	%define stride		r9
+	%define stride3		r10
+	%define i			r11
+	%define k			rsi
+
+	mov rgba32Ptr, arg(0)
+	mov rgb24Ptr, arg(1)
+	mov width, arg(2)
+	mov height, arg(3)
+	mov stride, arg(4)
+	lea stride3, [stride*3]
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	; for (compv_uscalar_t j = 0; j < height; ++j)
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	.LoopHeight:
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; for (compv_uscalar_t i = 0; i < width; i += 16)
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		xor i, i
+		xor k, k
+		.LoopWidth:
+			COMPV_VLD4_U8_SSSE3 rgba32Ptr + (i*4), xmm0, xmm1, xmm2, xmm3, xmm4, xmm5
+			COMPV_VST3_U8_SSSE3 rgb24Ptr + k, xmm0, xmm1, xmm2, xmm3, xmm4, xmm5
+
+			add i, (16*1*COMPV_YASM_UINT8_SZ_BYTES)
+			cmp i, width
+			lea k, [k + (16*3*COMPV_YASM_UINT8_SZ_BYTES)]
+			jl .LoopWidth
+		.EndOf_LoopWidth:
+
+		dec height
+		lea rgba32Ptr, [rgba32Ptr + stride*4*COMPV_YASM_UINT8_SZ_BYTES]
+		lea rgb24Ptr, [rgb24Ptr + stride3*COMPV_YASM_UINT8_SZ_BYTES]
+		
+		jnz .LoopHeight
+	.EndOf_LoopHeight:
+	
+	%undef rgba32Ptr
+	%undef rgb24Ptr
+	%undef width
+	%undef height
+	%undef stride
+	%undef stride3
+	%undef i
+	%undef k	
+
+	;; begin epilog ;;
+	pop rsi
+	COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	ret
 
 %endif ; COMPV_YASM_ABI_IS_64BIT

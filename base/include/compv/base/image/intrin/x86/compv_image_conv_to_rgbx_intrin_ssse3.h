@@ -31,6 +31,8 @@ void CompVImageConvYuyv422_to_Rgba32_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8
 void CompVImageConvUyvy422_to_Rgb24_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* yuvPtr, COMPV_ALIGNED(SSE) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
 void CompVImageConvUyvy422_to_Rgba32_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* yuvPtr, COMPV_ALIGNED(SSE) uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
 
+void CompVImageConvRgba32_to_Rgb24_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgba32Ptr, COMPV_ALIGNED(SSE) uint8_t* rgb24Ptr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */

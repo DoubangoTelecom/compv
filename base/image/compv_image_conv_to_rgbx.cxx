@@ -45,6 +45,7 @@ COMPV_NAMESPACE_BEGIN()
 	COMPV_EXTERNC void CompVImageConvYuyv422_to_Rgba32_Asm_X64_AVX2(COMPV_ALIGNED(AVX) const uint8_t* yuvPtr, COMPV_ALIGNED(AVX) uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride);
 	COMPV_EXTERNC void CompVImageConvUyvy422_to_Rgb24_Asm_X64_AVX2(COMPV_ALIGNED(AVX) const uint8_t* yuvPtr, COMPV_ALIGNED(AVX) uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride);
 	COMPV_EXTERNC void CompVImageConvUyvy422_to_Rgba32_Asm_X64_AVX2(COMPV_ALIGNED(AVX) const uint8_t* yuvPtr, COMPV_ALIGNED(AVX) uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride);
+	COMPV_EXTERNC void CompVImageConvRgba32_to_Rgb24_Asm_X64_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgba32Ptr, COMPV_ALIGNED(SSE) uint8_t* rgb24Ptr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
 #	elif COMPV_ARCH_ARM32
 	COMPV_EXTERNC void CompVImageConvYuv420p_to_Rgb24_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* yPtr, COMPV_ALIGNED(NEON) const uint8_t* uPtr, COMPV_ALIGNED(NEON) const uint8_t* vPtr, COMPV_ALIGNED(NEON) uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
     COMPV_EXTERNC void CompVImageConvYuv420p_to_Rgba32_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* yPtr, COMPV_ALIGNED(NEON) const uint8_t* uPtr, COMPV_ALIGNED(NEON) const uint8_t* vPtr, COMPV_ALIGNED(NEON) uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
@@ -88,6 +89,7 @@ static void yuyv422_to_rgba32_C(const uint8_t* yuyvPtr, uint8_t* rgbxPtr, compv_
 static void yuyv422_to_rgb24_C(const uint8_t* yuyvPtr, uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
 static void uyvy422_to_rgba32_C(const uint8_t* yuyvPtr, uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
 static void uyvy422_to_rgb24_C(const uint8_t* yuyvPtr, uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
+static void rgba32_to_rgb24_C(const uint8_t* rgba32Ptr, uint8_t* rgb24Ptr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
 
 COMPV_ERROR_CODE CompVImageConvToRGBx::process(const CompVMatPtr& imageIn, const COMPV_SUBTYPE rgbxFormat, CompVMatPtrPtr imageRGBx)
 {
@@ -100,15 +102,7 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::process(const CompVMatPtr& imageIn, const
 	switch (imageIn->subType()) {
 	case COMPV_SUBTYPE_PIXELS_RGBA32:
 	case COMPV_SUBTYPE_PIXELS_RGB24:
-		if (imageIn->subType() == rgbxFormat) {
-			COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASSNAME, "Source and destination formats are the same. Useless, cloning.");
-			COMPV_CHECK_CODE_RETURN(CompVImage::clone(imageIn, &imageOut));
-			break;
-		}
-		else {
-			COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "%s -> %s not supported", CompVGetSubtypeString(imageIn->subType()), CompVGetSubtypeString(rgbxFormat));
-			return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
-		}
+		COMPV_CHECK_CODE_RETURN(CompVImageConvToRGBx::rgbx(imageIn, imageOut));
 		break;
 
 	case COMPV_SUBTYPE_PIXELS_YUV420P:
@@ -503,6 +497,70 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::yuvPacked(const CompVMatPtr& imageIn, Com
 	return COMPV_ERROR_CODE_S_OK;
 }
 
+// RGBx -> RGBx
+COMPV_ERROR_CODE CompVImageConvToRGBx::rgbx(const CompVMatPtr& imageIn, CompVMatPtr& imageRGBx)
+{
+	// Internal function, do not check input parameters (already done) ... but I want to feel good
+	COMPV_ASSERT(imageRGBx->cols() == imageIn->cols() && imageRGBx->rows() == imageIn->rows() && imageRGBx->stride() == imageIn->stride());
+	const COMPV_SUBTYPE inPixelFormat = imageIn->subType();
+	const COMPV_SUBTYPE outPixelFormat = imageRGBx->subType();
+
+	if (inPixelFormat == outPixelFormat) {
+		COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASSNAME, "Source and destination formats are the same. Useless, cloning.");
+		COMPV_CHECK_CODE_RETURN(CompVImage::clone(imageIn, &imageRGBx));
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
+	void(*fptr_rgbx_to_rgbx)(const uint8_t* rgbxInPtr, uint8_t* rgbxOutPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
+		= nullptr;
+
+	const size_t width = imageRGBx->cols();
+	const size_t height = imageRGBx->rows();
+	const size_t stride = imageRGBx->stride();
+	
+	// Support for RGBA32 -> RGB24 is very important because many deep learning functions
+	// expect RGB_888 as input.
+	if (inPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32 && outPixelFormat == COMPV_SUBTYPE_PIXELS_RGB24) {
+		fptr_rgbx_to_rgbx = rgba32_to_rgb24_C;
+#if COMPV_ARCH_X86
+		if (CompVCpu::isEnabled(kCpuFlagSSSE3) && imageRGBx->isAlignedSSE() && imageIn->isAlignedSSE() && COMPV_IS_ALIGNED_SSE(stride)) {
+			COMPV_EXEC_IFDEF_INTRIN_X86(fptr_rgbx_to_rgbx = CompVImageConvRgba32_to_Rgb24_Intrin_SSSE3);
+			COMPV_EXEC_IFDEF_ASM_X64(fptr_rgbx_to_rgbx = CompVImageConvRgba32_to_Rgb24_Asm_X64_SSSE3);
+		}
+#elif COMPV_ARCH_ARM
+		if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && imageRGBx->isAlignedNEON() && imageIn->isAlignedNEON() && COMPV_IS_ALIGNED_NEON(stride)) {
+			COMPV_EXEC_IFDEF_INTRIN_ARM(fptr_packed_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? CompVImageConvUyvy422_to_Rgba32_Intrin_NEON : CompVImageConvUyvy422_to_Rgb24_Intrin_NEON);
+			COMPV_EXEC_IFDEF_ASM_ARM32(fptr_packed_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? CompVImageConvUyvy422_to_Rgba32_Asm_NEON32 : CompVImageConvUyvy422_to_Rgb24_Asm_NEON32);
+			COMPV_EXEC_IFDEF_ASM_ARM64(fptr_packed_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? CompVImageConvUyvy422_to_Rgba32_Asm_NEON64 : CompVImageConvUyvy422_to_Rgb24_Asm_NEON64);
+		}
+#endif
+	}
+
+	// Check if the function is correctly hooked
+	if (!fptr_rgbx_to_rgbx) {
+		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "%s -> %s not supported", CompVGetSubtypeString(inPixelFormat), CompVGetSubtypeString(outPixelFormat));
+		return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
+	}
+
+	// Processing
+	auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
+		fptr_rgbx_to_rgbx(
+			imageIn->ptr<const uint8_t>(ystart),
+			imageRGBx->ptr<uint8_t>(ystart),
+			static_cast<compv_uscalar_t>(width), static_cast<compv_uscalar_t>(yend - ystart), static_cast<compv_uscalar_t>(stride)
+		);
+		return COMPV_ERROR_CODE_S_OK;
+	};
+	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+		funcPtr,
+		width,
+		height,
+		COMPV_IMAGE_CONV_MIN_SAMPLES_PER_THREAD
+	));
+
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 // R = (37Y' + 0U' + 51V') >> 5
 // G = (37Y' - 13U' - 26V') >> 5
 // B = (37Y' + 65U' + 0V') >> 5
@@ -674,6 +732,25 @@ static void uyvy422_to_rgba32_C(const uint8_t* yuyvPtr, uint8_t* rgbxPtr, compv_
 static void uyvy422_to_rgb24_C(const uint8_t* yuyvPtr, uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
 {
 	packed_to_rgbx(uyvy422, 3, yuyvPtr, rgbxPtr, width, height, stride);
+}
+
+static void rgba32_to_rgb24_C(const uint8_t* rgba32Ptr, uint8_t* rgb24Ptr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
+
+	const compv_uint8x4_t* rgba32Ptr_ = reinterpret_cast<const compv_uint8x4_t*>(rgba32Ptr);
+	compv_uint8x3_t* rgb24Ptr_ = reinterpret_cast<compv_uint8x3_t*>(rgb24Ptr);
+	for (compv_uscalar_t j = 0; j < height; ++j) {
+		for (compv_uscalar_t i = 0; i < width; ++i) {
+			const compv_uint8x4_t& rgba = rgba32Ptr_[i];
+			compv_uint8x3_t& rgb = rgb24Ptr_[i];
+			rgb[0] = rgba[0];
+			rgb[1] = rgba[1];
+			rgb[2] = rgba[2];
+		}
+		rgba32Ptr_ += stride;
+		rgb24Ptr_ += stride;
+	}
 }
 
 COMPV_NAMESPACE_END()

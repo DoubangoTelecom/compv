@@ -13,6 +13,30 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+void CompVMemUnpack4_Intrin_SSSE3(
+	COMPV_ALIGNED(SSE) uint8_t* dstPt0, COMPV_ALIGNED(SSE) uint8_t* dstPt1, COMPV_ALIGNED(SSE) uint8_t* dstPt2, COMPV_ALIGNED(SSE) uint8_t* dstPt3,
+	COMPV_ALIGNED(SSE) const compv_uint8x4_t* srcPtr,
+	compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride)
+{
+	COMPV_DEBUG_INFO_CHECK_SSSE3();
+	__m128i vecLane0, vecLane1, vecLane2, vecLane3, vectmp0, vectmp1;
+
+	for (compv_uscalar_t j = 0; j < height; ++j) {
+		for (compv_uscalar_t i = 0; i < width; i += 16) { // strided/SSE-aligned -> can write beyond width
+			COMPV_VLD4_U8_SSSE3(&srcPtr[i], vecLane0, vecLane1, vecLane2, vecLane3, vectmp0, vectmp1);
+			_mm_store_si128(reinterpret_cast<__m128i*>(&dstPt0[i]), vecLane0);
+			_mm_store_si128(reinterpret_cast<__m128i*>(&dstPt1[i]), vecLane1);
+			_mm_store_si128(reinterpret_cast<__m128i*>(&dstPt2[i]), vecLane2);
+			_mm_store_si128(reinterpret_cast<__m128i*>(&dstPt3[i]), vecLane3);
+		}
+		dstPt0 += stride;
+		dstPt1 += stride;
+		dstPt2 += stride;
+		dstPt3 += stride;
+		srcPtr += stride;
+	}
+}
+
 void CompVMemUnpack3_Intrin_SSSE3(
 	COMPV_ALIGNED(SSE) uint8_t* dstPt0, COMPV_ALIGNED(SSE) uint8_t* dstPt1, COMPV_ALIGNED(SSE) uint8_t* dstPt2,
 	COMPV_ALIGNED(SSE) const compv_uint8x3_t* srcPtr,

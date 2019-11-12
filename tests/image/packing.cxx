@@ -12,7 +12,7 @@
 
 #define LOOP_COUNT				1
 
-#define TEST_SUBTYPE			COMPV_SUBTYPE_PIXELS_NV21
+#define TEST_SUBTYPE			COMPV_SUBTYPE_PIXELS_RGBA32
 
 static const struct compv_unittest_packing {
 	const char* filename;
@@ -23,6 +23,9 @@ static const struct compv_unittest_packing {
 }
 COMPV_UNITTEST_PACKINGS[] =
 {
+	{ "equirectangular_1282x720_argb.rgb", 1282, 720, 1282, COMPV_SUBTYPE_PIXELS_ARGB32 },
+	{ "equirectangular_1282x720_rgba.rgb", 1282, 720, 1282, COMPV_SUBTYPE_PIXELS_RGBA32 },
+	{ "equirectangular_1282x720_bgra.rgb", 1282, 720, 1282, COMPV_SUBTYPE_PIXELS_BGRA32 },
 	{ "equirectangular_1282x720_bgr.rgb", 1282, 720, 1282, COMPV_SUBTYPE_PIXELS_BGR24 },
 	{ "equirectangular_1282x720_rgb.rgb", 1282, 720, 1282, COMPV_SUBTYPE_PIXELS_RGB24 },
 	{ "equirectangular_1282x720_nv12.yuv", 1282, 720, 1282, COMPV_SUBTYPE_PIXELS_NV12 },

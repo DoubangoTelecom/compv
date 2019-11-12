@@ -118,6 +118,21 @@ void CompVImageConvUyvy422_to_Rgba32_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8
 #	undef rgba32_store_SSSE3
 }
 
+void CompVImageConvRgba32_to_Rgb24_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgba32Ptr, COMPV_ALIGNED(SSE) uint8_t* rgb24Ptr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride)
+{
+	__m128i vecLaneR, vecLaneG, vecLaneB, vecLaneA, vectmp0, vectmp1;
+	const compv_uint8x4_t* rgba32Ptr_ = reinterpret_cast<const compv_uint8x4_t*>(rgba32Ptr);
+	compv_uint8x3_t* rgb24Ptr_ = reinterpret_cast<compv_uint8x3_t*>(rgb24Ptr);
+	for (compv_uscalar_t j = 0; j < height; ++j) {
+		for (compv_uscalar_t i = 0; i < width; i += 16) { // strided/SSE-aligned -> can write beyond width
+			COMPV_VLD4_U8_SSSE3(&rgba32Ptr_[i], vecLaneR, vecLaneG, vecLaneB, vecLaneA, vectmp0, vectmp1);
+			COMPV_VST3_U8_SSSE3(&rgb24Ptr_[i], vecLaneR, vecLaneG, vecLaneB, vectmp0, vectmp1);
+		}
+		rgba32Ptr_ += stride;
+		rgb24Ptr_ += stride;
+	}
+}
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */

@@ -6,7 +6,7 @@ using namespace compv;
 
 #define UNITTEST_INTEGRAL						0
 #define UNITTEST_PACKING						0
-#define UNITTEST_WRAP_YUV						1
+#define UNITTEST_WRAP_YUV						0
 #define UNITTEST_SCALE							0
 #define UNITTEST_ROTATE							0
 #define UNITTEST_PYRAMID						0
@@ -23,7 +23,7 @@ using namespace compv;
 #define UNITTEST_HOG_S							0
 
 #define UNITTEST_FEATURE_FAST					0
-#define UNITTEST_CHROMA_CONV					0
+#define UNITTEST_CHROMA_CONV					1
 #define UNITTEST_BRUTEFORCE						0
 
 #define UNITTEST_PATCH_MOMENTS					0
