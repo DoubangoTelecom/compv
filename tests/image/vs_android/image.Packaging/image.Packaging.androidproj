@@ -121,6 +121,10 @@
     </AntPackage>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <Content Include="..\..\..\..\..\..\data\colorspace\equirectangular_1282x720_argb.rgb">
+      <Link>assets\equirectangular_1282x720_argb.rgb</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="..\..\..\..\..\..\data\colorspace\equirectangular_1282x720_bgr.rgb">
       <Link>assets\equirectangular_1282x720_bgr.rgb</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -131,6 +135,10 @@
     </Content>
     <Content Include="..\..\..\..\..\..\data\colorspace\equirectangular_1282x720_bgr565le.rgb">
       <Link>assets\equirectangular_1282x720_bgr565le.rgb</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\..\..\..\..\data\colorspace\equirectangular_1282x720_bgra.rgb">
+      <Link>assets\equirectangular_1282x720_bgra.rgb</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="..\..\..\..\..\..\data\colorspace\equirectangular_1282x720_gray.yuv">

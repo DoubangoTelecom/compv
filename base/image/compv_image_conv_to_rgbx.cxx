@@ -59,6 +59,7 @@ COMPV_NAMESPACE_BEGIN()
     COMPV_EXTERNC void CompVImageConvYuyv422_to_Rgba32_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* yuvPtr, COMPV_ALIGNED(NEON) uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
     COMPV_EXTERNC void CompVImageConvUyvy422_to_Rgb24_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* yuvPtr, COMPV_ALIGNED(NEON) uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
     COMPV_EXTERNC void CompVImageConvUyvy422_to_Rgba32_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* yuvPtr, COMPV_ALIGNED(NEON) uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
+	COMPV_EXTERNC void CompVImageConvRgba32_to_Rgb24_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* rgba32Ptr, COMPV_ALIGNED(NEON) uint8_t* rgb24Ptr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
 #	elif COMPV_ARCH_ARM64
 	COMPV_EXTERNC void CompVImageConvYuv420p_to_Rgb24_Asm_NEON64(COMPV_ALIGNED(NEON) const uint8_t* yPtr, COMPV_ALIGNED(NEON) const uint8_t* uPtr, COMPV_ALIGNED(NEON) const uint8_t* vPtr, COMPV_ALIGNED(NEON) uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
     COMPV_EXTERNC void CompVImageConvYuv420p_to_Rgba32_Asm_NEON64(COMPV_ALIGNED(NEON) const uint8_t* yPtr, COMPV_ALIGNED(NEON) const uint8_t* uPtr, COMPV_ALIGNED(NEON) const uint8_t* vPtr, COMPV_ALIGNED(NEON) uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
@@ -72,6 +73,7 @@ COMPV_NAMESPACE_BEGIN()
     COMPV_EXTERNC void CompVImageConvYuyv422_to_Rgba32_Asm_NEON64(COMPV_ALIGNED(NEON) const uint8_t* yuvPtr, COMPV_ALIGNED(NEON) uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
     COMPV_EXTERNC void CompVImageConvUyvy422_to_Rgb24_Asm_NEON64(COMPV_ALIGNED(NEON) const uint8_t* yuvPtr, COMPV_ALIGNED(NEON) uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
     COMPV_EXTERNC void CompVImageConvUyvy422_to_Rgba32_Asm_NEON64(COMPV_ALIGNED(NEON) const uint8_t* yuvPtr, COMPV_ALIGNED(NEON) uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
+	COMPV_EXTERNC void CompVImageConvRgba32_to_Rgb24_Asm_NEON64(COMPV_ALIGNED(NEON) const uint8_t* rgba32Ptr, COMPV_ALIGNED(NEON) uint8_t* rgb24Ptr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
 #	endif /* COMPV_ARCH_X64 */
 #endif /* COMPV_ASM */
 
@@ -528,10 +530,12 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::rgbx(const CompVMatPtr& imageIn, CompVMat
 			COMPV_EXEC_IFDEF_ASM_X64(fptr_rgbx_to_rgbx = CompVImageConvRgba32_to_Rgb24_Asm_X64_SSSE3);
 		}
 #elif COMPV_ARCH_ARM
-		if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && imageRGBx->isAlignedNEON() && imageIn->isAlignedNEON() && COMPV_IS_ALIGNED_NEON(stride)) {
-			COMPV_EXEC_IFDEF_INTRIN_ARM(fptr_packed_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? CompVImageConvUyvy422_to_Rgba32_Intrin_NEON : CompVImageConvUyvy422_to_Rgb24_Intrin_NEON);
-			COMPV_EXEC_IFDEF_ASM_ARM32(fptr_packed_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? CompVImageConvUyvy422_to_Rgba32_Asm_NEON32 : CompVImageConvUyvy422_to_Rgb24_Asm_NEON32);
-			COMPV_EXEC_IFDEF_ASM_ARM64(fptr_packed_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? CompVImageConvUyvy422_to_Rgba32_Asm_NEON64 : CompVImageConvUyvy422_to_Rgb24_Asm_NEON64);
+		if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(stride)) {
+			COMPV_EXEC_IFDEF_INTRIN_ARM(fptr_rgbx_to_rgbx = CompVImageConvRgba32_to_Rgb24_Intrin_NEON);
+			if (imageRGBx->isAlignedNEON() && imageIn->isAlignedNEON()) { // ASM requires mem to be aligned
+				COMPV_EXEC_IFDEF_ASM_ARM32(fptr_rgbx_to_rgbx = CompVImageConvRgba32_to_Rgb24_Asm_NEON32);
+				COMPV_EXEC_IFDEF_ASM_ARM64(fptr_rgbx_to_rgbx = CompVImageConvRgba32_to_Rgb24_Asm_NEON64);
+			}
 		}
 #endif
 	}

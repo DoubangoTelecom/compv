@@ -65,6 +65,28 @@ void CompVMemZero_Intrin_NEON(COMPV_ALIGNED(NEON) void* dstPtr, compv_uscalar_t 
 	}
 }
 
+void CompVMemUnpack4_Intrin_NEON(
+	uint8_t* dstPt0, uint8_t* dstPt1, uint8_t* dstPt2, uint8_t* dstPt3,
+	const compv_uint8x4_t* srcPtr,
+	compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
+{
+	COMPV_DEBUG_INFO_CHECK_NEON();
+	for (compv_uscalar_t j = 0; j < height; ++j) {
+		for (compv_uscalar_t i = 0; i < width; i += 16) {
+			const uint8x16x4_t& v4 = vld4q_u8(reinterpret_cast<const uint8_t*>(&srcPtr[i]));
+			vst1q_u8(&dstPt0[i], v4.val[0]);
+			vst1q_u8(&dstPt1[i], v4.val[1]);
+			vst1q_u8(&dstPt2[i], v4.val[2]);
+			vst1q_u8(&dstPt3[i], v4.val[3]);
+		}
+		dstPt0 += stride;
+		dstPt1 += stride;
+		dstPt2 += stride;
+		dstPt3 += stride;
+		srcPtr += stride;
+	}
+}
+
 // TODO(dmi) ASM code slightly faster on both ARM32 and ARM64 (tested on MediaPad2)
 void CompVMemUnpack3_Intrin_NEON(
 	uint8_t* dstPt0, uint8_t* dstPt1, uint8_t* dstPt2,
@@ -102,6 +124,25 @@ void CompVMemUnpack2_Intrin_NEON(
 		dstPt0 += stride;
 		dstPt1 += stride;
 		srcPtr += stride;
+	}
+}
+
+void CompVMemPack4_Intrin_NEON(
+	compv_uint8x4_t* dstPtr,
+	const uint8_t* srcPt0, const uint8_t* srcPt1, const uint8_t* srcPt2, const uint8_t* srcPt3,
+	compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
+{
+	COMPV_DEBUG_INFO_CHECK_NEON();
+	for (compv_uscalar_t j = 0; j < height; ++j) {
+		for (compv_uscalar_t i = 0; i < width; i += 16) { // strided/SSE-aligned -> can write beyond width
+			const uint8x16x4_t vecSrc = { { vld1q_u8(&srcPt0[i]), vld1q_u8(&srcPt1[i]), vld1q_u8(&srcPt2[i]), vld1q_u8(&srcPt3[i]) } };
+			vst4q_u8(reinterpret_cast<uint8_t*>(&dstPtr[i]), vecSrc);
+		}
+		dstPtr += stride;
+		srcPt0 += stride;
+		srcPt1 += stride;
+		srcPt2 += stride;
+		srcPt3 += stride;
 	}
 }
 

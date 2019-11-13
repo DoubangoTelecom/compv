@@ -456,4 +456,81 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvUyvy422_to_Rgb24_Asm_NEON32
 COMPV_GAS_FUNCTION_DECLARE CompVImageConvUyvy422_to_Rgba32_Asm_NEON32
 	CompVImageConvYuv_to_Rgbx_Macro_NEON32 rgba32Family, uyvy422Family
 
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@ arg(0) -> COMPV_ALIGNED(NEON) const uint8_t* rgba32Ptr
+@ arg(1) -> COMPV_ALIGNED(NEON) uint8_t* rgb24Ptr
+@ arg(2) -> compv_uscalar_t width
+@ arg(3) -> compv_uscalar_t height
+@ arg(4) -> COMPV_ALIGNED(NEON) compv_uscalar_t stride
+COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgba32_to_Rgb24_Asm_NEON32
+	COMPV_GAS_FUNCTION_PROLOG
+	COMPV_GAS_SHADOW_ARGS_TO_STACK 5
+	COMPV_GAS_SAVE_NEON_REGS
+
+	@@ Declare input arguments @@
+	ldm_args r0-r4
+	rgba32Ptr .req r0
+	rgb24Ptr .req r1
+	width .req r2
+	height .req r3
+	stride .req r4
+
+	pld [rgba32Ptr, #(CACHE_LINE_SIZE*0)]
+	pld [rgba32Ptr, #(CACHE_LINE_SIZE*1)]
+	pld [rgba32Ptr, #(CACHE_LINE_SIZE*2)]
+	pld [rgba32Ptr, #(CACHE_LINE_SIZE*3)]
+	
+	@@ Declare local vectors @@
+	pad .req r5
+	pad3 .req r6
+	pad4 .req r7
+	width1 .req r8
+	i .req r9
+
+	add width1, width, #15
+	and width1, width1, #-16
+	sub pad, stride, width1
+	add pad3, pad, pad, LSL #1
+	lsl pad4, pad, #2
+
+	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	@ for (compv_uscalar_t j = 0; j < height; ++j)
+	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	LoopHeight_CompVImageConvRgba32_to_Rgb24_Asm_NEON32:
+		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+		@ for (compv_uscalar_t i = 0; i < width; i += 16)
+		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+		mov i, width1
+		LoopWidth_CompVImageConvRgba32_to_Rgb24_Asm_NEON32:
+			vld4.u8 {q0x, q1x, q2x, q3x}, [rgba32Ptr :64]!
+			vld4.u8 {q0y, q1y, q2y, q3y}, [rgba32Ptr :64]!
+			pld [rgba32Ptr, #(CACHE_LINE_SIZE*4)]
+			vst3.u8 {q0x, q1x, q2x}, [rgb24Ptr: 64]!
+			vst3.u8 {q0y, q1y, q2y}, [rgb24Ptr: 64]!
+			subs i, i, #16
+			bne LoopWidth_CompVImageConvRgba32_to_Rgb24_Asm_NEON32
+		EndOf_LoopWidth_CompVImageConvRgba32_to_Rgb24_Asm_NEON32:
+		subs height, height, #1
+		add rgb24Ptr, rgb24Ptr, pad3
+		add rgba32Ptr, rgba32Ptr, pad4
+		bne LoopHeight_CompVImageConvRgba32_to_Rgb24_Asm_NEON32
+	EndOf_LoopHeight_CompVImageConvRgba32_to_Rgb24_Asm_NEON32:
+
+	.unreq rgba32Ptr
+	.unreq rgb24Ptr
+	.unreq width
+	.unreq height
+	.unreq stride
+	.unreq pad
+	.unreq pad3
+	.unreq pad4
+	.unreq width1
+	.unreq i
+
+	COMPV_GAS_RESTORE_NEON_REGS
+	COMPV_GAS_UNSHADOW_ARGS 5
+	COMPV_GAS_FUNCTION_EPILOG
+	COMPV_GAS_FUNCTION_RETURN
+
 #endif /* defined(__arm__) && !defined(__aarch64__) */

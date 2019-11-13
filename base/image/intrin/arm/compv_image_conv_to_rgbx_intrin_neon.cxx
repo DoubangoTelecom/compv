@@ -367,6 +367,22 @@ void CompVImageConvUyvy422_to_Rgba32_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8
 	CompVImageConvYuvPacked_to_Rgbx_Intrin_NEON(uyvy422, rgba32);
 }
 
+void CompVImageConvRgba32_to_Rgb24_Intrin_NEON(const uint8_t* rgba32Ptr, uint8_t* rgb24Ptr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
+{
+	COMPV_DEBUG_INFO_CHECK_NEON();
+	const compv_uint8x4_t* rgba32Ptr_ = reinterpret_cast<const compv_uint8x4_t*>(rgba32Ptr);
+	compv_uint8x3_t* rgb24Ptr_ = reinterpret_cast<compv_uint8x3_t*>(rgb24Ptr);
+	for (compv_uscalar_t j = 0; j < height; ++j) {
+		for (compv_uscalar_t i = 0; i < width; i += 16) { // strided/SSE-aligned -> can write beyond width
+			const uint8x16x4_t& vecRGBA = vld4q_u8(reinterpret_cast<const uint8_t*>(&rgba32Ptr_[i]));
+			const uint8x16x3_t vecRGB = { { vecRGBA.val[0], vecRGBA.val[1], vecRGBA.val[2] } };
+			vst3q_u8(reinterpret_cast<uint8_t*>(&rgb24Ptr_[i]), vecRGB);
+		}
+		rgba32Ptr_ += stride;
+		rgb24Ptr_ += stride;
+	}
+}
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_ARM && COMPV_INTRINSIC */

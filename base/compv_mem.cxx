@@ -86,9 +86,11 @@ COMPV_EXTERNC void CompVMemPack2_Asm_X64_SSE2(COMPV_ALIGNED(SSE) compv_uint8x2_t
 #if COMPV_ARCH_ARM32 && COMPV_ASM
 COMPV_EXTERNC void CompVMemCopy_Asm_NEON32(COMPV_ALIGNED(NEON) void* dstPtr, COMPV_ALIGNED(NEON) const void*srcPtr, compv_uscalar_t size);
 COMPV_EXTERNC void CompVMemZero_Asm_NEON32(COMPV_ALIGNED(NEON) void* dstPtr, compv_uscalar_t size);
+COMPV_EXTERNC void CompVMemUnpack4_Asm_NEON32(COMPV_ALIGNED(NEON) uint8_t* dstPt0, COMPV_ALIGNED(NEON) uint8_t* dstPt1, COMPV_ALIGNED(NEON) uint8_t* dstPt2, COMPV_ALIGNED(NEON) uint8_t* dstPt3, COMPV_ALIGNED(NEON) const compv_uint8x4_t* srcPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
 COMPV_EXTERNC void CompVMemUnpack3_Asm_NEON32(COMPV_ALIGNED(NEON) uint8_t* dstPt0, COMPV_ALIGNED(NEON) uint8_t* dstPt1, COMPV_ALIGNED(NEON) uint8_t* dstPt2, COMPV_ALIGNED(NEON) const compv_uint8x3_t* srcPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
-COMPV_EXTERNC void CompVMemPack3_Asm_NEON32(COMPV_ALIGNED(NEON) compv_uint8x3_t* dstPtr, COMPV_ALIGNED(NEON) const uint8_t* srcPt0, COMPV_ALIGNED(NEON) const uint8_t* srcPt1, COMPV_ALIGNED(NEON) const uint8_t* srcPt2, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
 COMPV_EXTERNC void CompVMemUnpack2_Asm_NEON32(COMPV_ALIGNED(NEON) uint8_t* dstPt0, COMPV_ALIGNED(NEON) uint8_t* dstPt1, COMPV_ALIGNED(NEON) const compv_uint8x2_t* srcPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
+COMPV_EXTERNC void CompVMemPack4_Asm_NEON32(COMPV_ALIGNED(NEON) compv_uint8x4_t* dstPtr, COMPV_ALIGNED(NEON) const uint8_t* srcPt0, COMPV_ALIGNED(NEON) const uint8_t* srcPt1, COMPV_ALIGNED(NEON) const uint8_t* srcPt2, COMPV_ALIGNED(NEON) const uint8_t* srcPt3, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
+COMPV_EXTERNC void CompVMemPack3_Asm_NEON32(COMPV_ALIGNED(NEON) compv_uint8x3_t* dstPtr, COMPV_ALIGNED(NEON) const uint8_t* srcPt0, COMPV_ALIGNED(NEON) const uint8_t* srcPt1, COMPV_ALIGNED(NEON) const uint8_t* srcPt2, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
 COMPV_EXTERNC void CompVMemPack2_Asm_NEON32(COMPV_ALIGNED(NEON) compv_uint8x2_t* dstPtr, COMPV_ALIGNED(NEON) const uint8_t* srcPt0, COMPV_ALIGNED(NEON) const uint8_t* srcPt1, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
 #endif /* COMPV_ARCH_ARM32 && COMPV_ASM */
 
@@ -96,9 +98,11 @@ COMPV_EXTERNC void CompVMemPack2_Asm_NEON32(COMPV_ALIGNED(NEON) compv_uint8x2_t*
 #if COMPV_ARCH_ARM64 && COMPV_ASM
 COMPV_EXTERNC void CompVMemCopy_Asm_NEON64(COMPV_ALIGNED(NEON) void* dstPtr, COMPV_ALIGNED(NEON) const void*srcPtr, compv_uscalar_t size);
 COMPV_EXTERNC void CompVMemZero_Asm_NEON64(COMPV_ALIGNED(NEON) void* dstPtr, compv_uscalar_t size);
+COMPV_EXTERNC void CompVMemUnpack4_Asm_NEON64(COMPV_ALIGNED(NEON) uint8_t* dstPt0, COMPV_ALIGNED(NEON) uint8_t* dstPt1, COMPV_ALIGNED(NEON) uint8_t* dstPt2, COMPV_ALIGNED(NEON) uint8_t* dstPt3, COMPV_ALIGNED(NEON) const compv_uint8x4_t* srcPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
 COMPV_EXTERNC void CompVMemUnpack3_Asm_NEON64(COMPV_ALIGNED(NEON) uint8_t* dstPt0, COMPV_ALIGNED(NEON) uint8_t* dstPt1, COMPV_ALIGNED(NEON) uint8_t* dstPt2, COMPV_ALIGNED(NEON) const compv_uint8x3_t* srcPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
-COMPV_EXTERNC void CompVMemPack3_Asm_NEON64(COMPV_ALIGNED(NEON) compv_uint8x3_t* dstPtr, COMPV_ALIGNED(NEON) const uint8_t* srcPt0, COMPV_ALIGNED(NEON) const uint8_t* srcPt1, COMPV_ALIGNED(NEON) const uint8_t* srcPt2, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
 COMPV_EXTERNC void CompVMemUnpack2_Asm_NEON64(COMPV_ALIGNED(NEON) uint8_t* dstPt0, COMPV_ALIGNED(NEON) uint8_t* dstPt1, COMPV_ALIGNED(NEON) const compv_uint8x2_t* srcPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
+COMPV_EXTERNC void CompVMemPack4_Asm_NEON64(COMPV_ALIGNED(NEON) compv_uint8x4_t* dstPtr, COMPV_ALIGNED(NEON) const uint8_t* srcPt0, COMPV_ALIGNED(NEON) const uint8_t* srcPt1, COMPV_ALIGNED(NEON) const uint8_t* srcPt2, COMPV_ALIGNED(NEON) const uint8_t* srcPt3, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
+COMPV_EXTERNC void CompVMemPack3_Asm_NEON64(COMPV_ALIGNED(NEON) compv_uint8x3_t* dstPtr, COMPV_ALIGNED(NEON) const uint8_t* srcPt0, COMPV_ALIGNED(NEON) const uint8_t* srcPt1, COMPV_ALIGNED(NEON) const uint8_t* srcPt2, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
 COMPV_EXTERNC void CompVMemPack2_Asm_NEON64(COMPV_ALIGNED(NEON) compv_uint8x2_t* dstPtr, COMPV_ALIGNED(NEON) const uint8_t* srcPt0, COMPV_ALIGNED(NEON) const uint8_t* srcPt1, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
 #endif /* COMPV_ARCH_ARM64 && COMPV_ASM */
 
@@ -235,13 +239,13 @@ COMPV_ERROR_CODE CompVMem::unpack4(uint8_t* dstPt0, uint8_t* dstPt1, uint8_t* ds
 		// No need for AVX2 implementation, tried and slower
 	}
 #elif COMPV_ARCH_ARM
-	//if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(stride)) {
-		//COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMemUnpack3 = CompVMemUnpack3_Intrin_NEON);
-	//	if (COMPV_IS_ALIGNED_NEON(dstPt0) && COMPV_IS_ALIGNED_NEON(dstPt1) && COMPV_IS_ALIGNED_NEON(dstPt2) && COMPV_IS_ALIGNED_NEON(srcPtr)) { // ASM requires mem to be aligned
-			//COMPV_EXEC_IFDEF_ASM_ARM32(CompVMemUnpack3 = CompVMemUnpack3_Asm_NEON32);
-			//COMPV_EXEC_IFDEF_ASM_ARM64(CompVMemUnpack3 = CompVMemUnpack3_Asm_NEON64);
-	//	}
-	//}
+	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(stride)) {
+		COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMemUnpack4 = CompVMemUnpack4_Intrin_NEON);
+		if (COMPV_IS_ALIGNED_NEON(dstPt0) && COMPV_IS_ALIGNED_NEON(dstPt1) && COMPV_IS_ALIGNED_NEON(dstPt2) && COMPV_IS_ALIGNED_NEON(dstPt3) && COMPV_IS_ALIGNED_NEON(srcPtr)) { // ASM requires mem to be aligned
+			COMPV_EXEC_IFDEF_ASM_ARM32(CompVMemUnpack4 = CompVMemUnpack4_Asm_NEON32);
+			COMPV_EXEC_IFDEF_ASM_ARM64(CompVMemUnpack4 = CompVMemUnpack4_Asm_NEON64);
+		}
+	}
 #endif
 	// Processing
 	auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
@@ -351,13 +355,13 @@ COMPV_ERROR_CODE CompVMem::pack4(compv_uint8x4_t* dstPtr, const uint8_t* srcPt0,
 		// No need for AVX2 implementation, tried and slower
 	}
 #elif COMPV_ARCH_ARM
-	//if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(stride)) {
-	//	COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMemPack3 = CompVMemPack3_Intrin_NEON);
-	//	if (COMPV_IS_ALIGNED_NEON(dstPtr) && COMPV_IS_ALIGNED_NEON(srcPt0) && COMPV_IS_ALIGNED_NEON(srcPt1) && COMPV_IS_ALIGNED_NEON(srcPt2)) { // ASM requires mem to be aligned
-	//		COMPV_EXEC_IFDEF_ASM_ARM32(CompVMemPack3 = CompVMemPack3_Asm_NEON32);
-	//		COMPV_EXEC_IFDEF_ASM_ARM64(CompVMemPack3 = CompVMemPack3_Asm_NEON64);
-	//	}
-	//}
+	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(stride)) {
+		COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMemPack4 = CompVMemPack4_Intrin_NEON);
+		if (COMPV_IS_ALIGNED_NEON(dstPtr) && COMPV_IS_ALIGNED_NEON(srcPt0) && COMPV_IS_ALIGNED_NEON(srcPt1) && COMPV_IS_ALIGNED_NEON(srcPt2) && COMPV_IS_ALIGNED_NEON(srcPt2)) { // ASM requires mem to be aligned
+			COMPV_EXEC_IFDEF_ASM_ARM32(CompVMemPack4 = CompVMemPack4_Asm_NEON32);
+			COMPV_EXEC_IFDEF_ASM_ARM64(CompVMemPack4 = CompVMemPack4_Asm_NEON64);
+		}
+	}
 #endif
 
 	// Processing

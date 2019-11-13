@@ -6,7 +6,7 @@
 # WebSite: http://compv.org                                             #
 #########################################################################
 #if defined(__aarch64__)
-.include "compv_common_arm64.S" //"
+.include "compv_common_arm64.S"
 
 .data
 
@@ -400,5 +400,76 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvUyvy422_to_Rgb24_Asm_NEON64
 ########################################################################
 COMPV_GAS_FUNCTION_DECLARE CompVImageConvUyvy422_to_Rgba32_Asm_NEON64
 	CompVImageConvYuv_to_Rgbx_Macro_NEON64 rgba32Family, uyvy422Family
+
+
+#########################################################################
+# arg(0) -> COMPV_ALIGNED(NEON) const uint8_t* rgba32Ptr
+# arg(1) -> COMPV_ALIGNED(NEON) uint8_t* rgb24Ptr
+# arg(2) -> compv_uscalar_t width
+# arg(3) -> compv_uscalar_t height
+# arg(4) -> COMPV_ALIGNED(NEON) compv_uscalar_t stride
+COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgba32_to_Rgb24_Asm_NEON64
+	COMPV_GAS_FUNCTION_PROLOG
+	COMPV_GAS_SAVE_NEON_REGS
+
+	## Declare input arguments ##
+	rgba32Ptr .req r0
+	rgb24Ptr .req r1
+	width .req r2
+	height .req r3
+	stride .req r4
+
+	prfm pldl1keep, [rgba32Ptr, #(CACHE_LINE_SIZE*0)]
+	prfm pldl1keep, [rgba32Ptr, #(CACHE_LINE_SIZE*1)]
+	prfm pldl1keep, [rgba32Ptr, #(CACHE_LINE_SIZE*2)]
+	prfm pldl1keep, [rgba32Ptr, #(CACHE_LINE_SIZE*3)]
+	
+	## Declare local vectors ##
+	pad .req r5
+	pad3 .req r6
+	pad4 .req r7
+	i .req r8
+
+	add pad, width, #15
+	and pad, pad, #-16
+	sub pad, stride, pad
+	add pad3, pad, pad, LSL #1
+	lsl pad4, pad, #2
+
+	#################################################
+	# for (compv_uscalar_t j = 0; j < height; ++j)
+	#################################################
+	LoopHeight_CompVImageConvRgba32_to_Rgb24_Asm_NEON64:
+		#################################################
+		# for (compv_uscalar_t i = 0; i < width; i += 16)
+		#################################################
+		mov i, #0
+		LoopWidth_CompVImageConvRgba32_to_Rgb24_Asm_NEON64:
+			ld4 {v0.16b, v1.16b, v2.16b, v3.16b}, [rgba32Ptr], #((16*4)*COMPV_GAS_UINT8_SZ_BYTES)
+			prfm pldl1keep, [rgba32Ptr, #(CACHE_LINE_SIZE*4)]
+			st3 { v0.16b, v1.16b, v2.16b }, [rgb24Ptr], #((16*3)*COMPV_GAS_UINT8_SZ_BYTES)
+			add i, i, #16
+			cmp i, width
+			blt LoopWidth_CompVImageConvRgba32_to_Rgb24_Asm_NEON64
+		EndOf_LoopWidth_CompVImageConvRgba32_to_Rgb24_Asm_NEON64:
+		subs height, height, #1
+		add rgb24Ptr, rgb24Ptr, pad3
+		add rgba32Ptr, rgba32Ptr, pad4
+		bne LoopHeight_CompVImageConvRgba32_to_Rgb24_Asm_NEON64
+	EndOf_LoopHeight_CompVImageConvRgba32_to_Rgb24_Asm_NEON64:
+
+	.unreq rgba32Ptr
+	.unreq rgb24Ptr
+	.unreq width
+	.unreq height
+	.unreq stride
+	.unreq pad
+	.unreq pad3
+	.unreq pad4
+	.unreq i
+
+	COMPV_GAS_RESTORE_NEON_REGS
+	COMPV_GAS_FUNCTION_EPILOG
+	COMPV_GAS_FUNCTION_RETURN
 
 #endif /* defined(__aarch64__) */
