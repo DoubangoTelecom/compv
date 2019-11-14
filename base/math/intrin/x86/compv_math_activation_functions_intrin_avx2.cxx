@@ -28,6 +28,7 @@ void CompVMathActivationFunctionsTanh_64f64f_Intrin_AVX2(
 )
 {
 	COMPV_DEBUG_INFO_CHECK_AVX2();
+	_mm256_zeroupper();
 	static const __m256d vecZero = _mm256_setzero_pd();
 	static const __m256d vecMinus1 = _mm256_set1_pd(-1.0);
 	static const __m256d vecPlus1 = _mm256_set1_pd(1.0);
@@ -36,8 +37,7 @@ void CompVMathActivationFunctionsTanh_64f64f_Intrin_AVX2(
 	const __m128i vecLut_length_minus1 = _mm_set1_epi32(static_cast<int32_t>(lut_length_minus1));
 	for (compv_uscalar_t i = 0; i < in_out_length; i += 4) {
 		__m256d vecX = _mm256_load_pd(&in_ptr[i]);
-		__m256d vecSign = _mm256_cmp_pd(vecX, vecZero, _CMP_LT_OQ);
-		vecSign = _mm256_or_pd(_mm256_and_pd(vecSign, vecMinus1), _mm256_andnot_pd(vecSign, vecPlus1));
+		const __m256d vecSign = _mm256_blendv_pd(vecPlus1, vecMinus1, _mm256_cmp_pd(vecX, vecZero, _CMP_LT_OQ));
 		vecX = _mm256_mul_pd(_mm256_mul_pd(vecX, vecSign), vecScale);
 		__m128i vecIndex128 = _mm256_cvttpd_epi32(vecX);
 		const __m128i vecIndexMask128 = _mm_cmplt_epi32(vecIndex128, vecLut_length_minus1);
@@ -55,13 +55,14 @@ void CompVMathActivationFunctionsTanh_64f64f_Intrin_AVX2(
 				vecSign
 			);
 			_mm256_storeu_pd(&out_ptr[i],
-				_mm256_or_pd(_mm256_and_pd(vecResult, _mm256_castsi256_pd(vecIndexMask256)), _mm256_andnot_pd(_mm256_castsi256_pd(vecIndexMask256), vecSign))
+				_mm256_blendv_pd(vecSign, vecResult, _mm256_castsi256_pd(vecIndexMask256))
 			);
 		}
 		else {
 			_mm256_storeu_pd(&out_ptr[i], vecSign);
 		}
 	}
+	_mm256_zeroupper();
 }
 
 COMPV_NAMESPACE_END()

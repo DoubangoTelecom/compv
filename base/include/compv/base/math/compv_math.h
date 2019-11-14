@@ -103,6 +103,10 @@ public:
 	static COMPV_ERROR_CODE exp(const CompVMatPtr &in, CompVMatPtrPtr out);
 	static COMPV_ERROR_CODE minMax(const CompVMatPtr &A, double& minn, double& maxx);
 	static COMPV_ERROR_CODE minn(const CompVMatPtr &A, double& minn);
+	static COMPV_ERROR_CODE tanh(const double* lut_ptr, const size_t& lut_length, const double& scale, const CompVMatPtr &inMat, CompVMatPtrPtr outMat);
+	static COMPV_ERROR_CODE tanhMul(const double* lut_ptr, const size_t& lut_length, const double& scale, const CompVMatPtr &inMat, const CompVMatPtr &mulMat, CompVMatPtrPtr outMat);
+	static COMPV_ERROR_CODE logistic(const double* lut_ptr, const size_t& lut_length, const double& scale, const CompVMatPtr &inMat, CompVMatPtrPtr outMat);
+	static COMPV_ERROR_CODE logisticMul(const double* lut_ptr, const size_t& lut_length, const double& scale, const CompVMatPtr &inMat, const CompVMatPtr &mulMat, CompVMatPtrPtr outMat);
 };
 
 COMPV_NAMESPACE_END()

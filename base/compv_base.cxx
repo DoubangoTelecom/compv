@@ -10,6 +10,7 @@
 #include "compv/base/time/compv_time.h"
 #include "compv/base/math/compv_math_utils.h"
 #include "compv/base/math/compv_math_exp.h"
+#include "compv/base/math/compv_math_activation_functions.h"
 #include "compv/base/parallel/compv_parallel.h"
 #include "compv/base/image/compv_image_decoder.h"
 #include "compv/base/drawing/compv_window_registry.h"

@@ -16,8 +16,12 @@ Most of trig approx. are implemented using document at "documentation/trig_appro
 #include "compv/base/math/compv_math_dot.h"
 #include "compv/base/math/compv_math_scale.h"
 #include "compv/base/math/compv_math_exp.h"
+#include "compv/base/math/compv_math_activation_functions.h"
+#include "compv/base/parallel/compv_parallel.h"
 
 COMPV_NAMESPACE_BEGIN()
+
+#define COMPV_MATH_ACTIVATION_FUNCTIONS_MIN_SAMPLES_PER_THREAD	(50 * 50)
 
 COMPV_BASE_API const float kfMathTrigPi = 3.1415926535897932384626433f; // PI
 COMPV_BASE_API const float kfMathTrigPiTimes2 = 2.f * kfMathTrigPi; // PI * 2
@@ -124,6 +128,120 @@ COMPV_ERROR_CODE CompVMath::minMax(const CompVMatPtr &A, double& minn, double& m
 COMPV_ERROR_CODE CompVMath::minn(const CompVMatPtr &A, double& minn)
 {
 	COMPV_CHECK_CODE_RETURN(CompVMathOpMinMax::minn(A, minn));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVMath::tanh(const double* lut_ptr, const size_t& lut_length, const double& scale, const CompVMatPtr &inMat, CompVMatPtrPtr outMat)
+{
+	COMPV_CHECK_EXP_RETURN(
+		!lut_ptr || !lut_length || !inMat || !outMat || !inMat->isRawTypeMatch<double>(),
+		COMPV_ERROR_CODE_E_INVALID_PARAMETER
+	);
+	CompVMatPtr outMat_;
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObj(&outMat_, inMat));
+	auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
+		for (size_t row = ystart; row < yend; ++row) {
+			COMPV_CHECK_CODE_RETURN(CompVMathActivationFunctions::tanh(
+				lut_ptr, lut_length, scale,
+				inMat->cols(), inMat->ptr<const double>(row), outMat_->ptr<double>(row)
+			));
+		}
+		return COMPV_ERROR_CODE_S_OK;
+	};
+	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+		funcPtr,
+		inMat->cols(),
+		inMat->rows(),
+		COMPV_MATH_ACTIVATION_FUNCTIONS_MIN_SAMPLES_PER_THREAD
+	));
+
+	*outMat = outMat_;
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVMath::tanhMul(const double* lut_ptr, const size_t& lut_length, const double& scale, const CompVMatPtr &inMat, const CompVMatPtr &mulMat, CompVMatPtrPtr outMat)
+{
+	COMPV_CHECK_EXP_RETURN(
+		!lut_ptr || !lut_length || !inMat || !mulMat || !outMat || !inMat->isRawTypeMatch<double>() || 
+		mulMat->subType() != inMat->subType() || mulMat->cols() != inMat->cols() || mulMat->rows() != inMat->rows(),
+		COMPV_ERROR_CODE_E_INVALID_PARAMETER
+	);
+	CompVMatPtr outMat_;
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObj(&outMat_, inMat));
+	auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
+		for (size_t row = ystart; row < yend; ++row) {
+			COMPV_CHECK_CODE_RETURN(CompVMathActivationFunctions::tanhMul(
+				lut_ptr, lut_length, scale,
+				inMat->cols(), inMat->ptr<const double>(row), mulMat->ptr<const double>(row), outMat_->ptr<double>(row)
+			));
+		}
+		return COMPV_ERROR_CODE_S_OK;
+	};
+	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+		funcPtr,
+		inMat->cols(),
+		inMat->rows(),
+		COMPV_MATH_ACTIVATION_FUNCTIONS_MIN_SAMPLES_PER_THREAD
+	));
+
+	*outMat = outMat_;
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVMath::logistic(const double* lut_ptr, const size_t& lut_length, const double& scale, const CompVMatPtr &inMat, CompVMatPtrPtr outMat)
+{
+	COMPV_CHECK_EXP_RETURN(
+		!lut_ptr || !lut_length || !inMat || !outMat || !inMat->isRawTypeMatch<double>(),
+		COMPV_ERROR_CODE_E_INVALID_PARAMETER
+	);
+	CompVMatPtr outMat_;
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObj(&outMat_, inMat));
+	auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
+		for (size_t row = ystart; row < yend; ++row) {
+			COMPV_CHECK_CODE_RETURN(CompVMathActivationFunctions::logistic(
+				lut_ptr, lut_length, scale,
+				inMat->cols(), inMat->ptr<const double>(row), outMat_->ptr<double>(row)
+			));
+		}
+		return COMPV_ERROR_CODE_S_OK;
+	};
+	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+		funcPtr,
+		inMat->cols(),
+		inMat->rows(),
+		COMPV_MATH_ACTIVATION_FUNCTIONS_MIN_SAMPLES_PER_THREAD
+	));
+
+	*outMat = outMat_;
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVMath::logisticMul(const double* lut_ptr, const size_t& lut_length, const double& scale, const CompVMatPtr &inMat, const CompVMatPtr &mulMat, CompVMatPtrPtr outMat)
+{
+	COMPV_CHECK_EXP_RETURN(
+		!lut_ptr || !lut_length || !inMat || !mulMat || !outMat || !inMat->isRawTypeMatch<double>() ||
+		mulMat->subType() != inMat->subType() || mulMat->cols() != inMat->cols() || mulMat->rows() != inMat->rows(),
+		COMPV_ERROR_CODE_E_INVALID_PARAMETER
+	);
+	CompVMatPtr outMat_;
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObj(&outMat_, inMat));
+	auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
+		for (size_t row = ystart; row < yend; ++row) {
+			COMPV_CHECK_CODE_RETURN(CompVMathActivationFunctions::logisticMul(
+				lut_ptr, lut_length, scale,
+				inMat->cols(), inMat->ptr<const double>(row), mulMat->ptr<const double>(row), outMat_->ptr<double>(row)
+			));
+		}
+		return COMPV_ERROR_CODE_S_OK;
+	};
+	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+		funcPtr,
+		inMat->cols(),
+		inMat->rows(),
+		COMPV_MATH_ACTIVATION_FUNCTIONS_MIN_SAMPLES_PER_THREAD
+	));
+
+	*outMat = outMat_;
 	return COMPV_ERROR_CODE_S_OK;
 }
 
