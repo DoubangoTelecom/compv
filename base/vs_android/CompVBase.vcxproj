@@ -143,6 +143,7 @@
     <ClInclude Include="..\include\compv\base\jsoncpp-1.8.4\json-forwards.h" />
     <ClInclude Include="..\include\compv\base\jsoncpp-1.8.4\json.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math.h" />
+    <ClInclude Include="..\include\compv\base\math\compv_math_activation_functions.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_basic_ops.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_cast.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_clip.h" />
@@ -168,6 +169,7 @@
     <ClInclude Include="..\include\compv\base\math\compv_math_transform.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_trig.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_utils.h" />
+    <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_activation_functions_intrin_neon64.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_cast_intrin_neon.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_convlt_intrin_neon.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_distance_intrin_neon.h" />
@@ -183,6 +185,9 @@
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_transform_intrin_neon64.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_trig_intrin_neon.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_utils_intrin_neon.h" />
+    <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_activation_functions_intrin_avx.h" />
+    <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_activation_functions_intrin_avx2.h" />
+    <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_activation_functions_intrin_sse41.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_cast_intrin_sse2.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_convlt_intrin_avx2.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_convlt_intrin_sse2.h" />
@@ -200,6 +205,7 @@
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_matrix_intrin_sse41.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_morph_intrin_avx2.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_morph_intrin_sse2.h" />
+    <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_op_minmax_intrin_sse2.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_op_mul_intrin_sse2.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_op_sub_intrin_sse2.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_scale_intrin_sse2.h" />
@@ -521,6 +527,7 @@
     </ClCompile>
     <ClCompile Include="..\jsoncpp-1.8.4\jsoncpp.cxx" />
     <ClCompile Include="..\math\compv_math.cxx" />
+    <ClCompile Include="..\math\compv_math_activation_functions.cxx" />
     <ClCompile Include="..\math\compv_math_basic_ops.cxx" />
     <ClCompile Include="..\math\compv_math_cast.cxx" />
     <ClCompile Include="..\math\compv_math_clip.cxx" />
@@ -546,6 +553,7 @@
     <ClCompile Include="..\math\compv_math_transform.cxx" />
     <ClCompile Include="..\math\compv_math_trig.cxx" />
     <ClCompile Include="..\math\compv_math_utils.cxx" />
+    <ClCompile Include="..\math\intrin\arm\compv_math_activation_functions_intrin_neon64.cxx" />
     <ClCompile Include="..\math\intrin\arm\compv_math_cast_intrin_neon.cxx" />
     <ClCompile Include="..\math\intrin\arm\compv_math_convlt_intrin_neon.cxx" />
     <ClCompile Include="..\math\intrin\arm\compv_math_distance_intrin_neon.cxx" />
@@ -561,6 +569,9 @@
     <ClCompile Include="..\math\intrin\arm\compv_math_transform_intrin_neon64.cxx" />
     <ClCompile Include="..\math\intrin\arm\compv_math_trig_intrin_neon.cxx" />
     <ClCompile Include="..\math\intrin\arm\compv_math_utils_intrin_neon.cxx" />
+    <ClCompile Include="..\math\intrin\x86\compv_math_activation_functions_intrin_avx.cxx" />
+    <ClCompile Include="..\math\intrin\x86\compv_math_activation_functions_intrin_avx2.cxx" />
+    <ClCompile Include="..\math\intrin\x86\compv_math_activation_functions_intrin_sse41.cxx" />
     <ClCompile Include="..\math\intrin\x86\compv_math_cast_intrin_sse2.cxx">
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">-msse2 %(AdditionalOptions)</AdditionalOptions>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x86'">-msse2 %(AdditionalOptions)</AdditionalOptions>

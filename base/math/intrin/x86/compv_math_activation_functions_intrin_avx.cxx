@@ -34,7 +34,7 @@ void CompVMathActivationFunctionsTanh_64f64f_Intrin_AVX(
 	const __m256d vecScale = _mm256_set1_pd(*scale1);
 	const __m128i vecLut_length_minus1 = _mm_set1_epi32(static_cast<int32_t>(lut_length_minus1));
 	for (compv_uscalar_t i = 0; i < in_out_length; i += 4) {
-		__m256d vecX = _mm256_load_pd(&in_ptr[i]);
+		__m256d vecX = _mm256_loadu_pd(&in_ptr[i]);
 		const __m256d vecSign = _mm256_blendv_pd(vecPlus1, vecMinus1, _mm256_cmp_pd(vecX, vecZero, _CMP_LT_OQ));
 		vecX = _mm256_mul_pd(_mm256_mul_pd(vecX, vecSign), vecScale);
 		__m128i vecIndex128 = _mm256_cvttpd_epi32(vecX);
@@ -99,7 +99,7 @@ void CompVMathActivationFunctionsTanhMul_64f64f_Intrin_AVX(
 	const __m256d vecScale = _mm256_set1_pd(*scale1);
 	const __m128i vecLut_length_minus1 = _mm_set1_epi32(static_cast<int32_t>(lut_length_minus1));
 	for (compv_uscalar_t i = 0; i < in_out_length; i += 4) {
-		__m256d vecX = _mm256_load_pd(&in_ptr[i]);
+		__m256d vecX = _mm256_loadu_pd(&in_ptr[i]);
 		const __m256d vecSign = _mm256_blendv_pd(vecPlus1, vecMinus1, _mm256_cmp_pd(vecX, vecZero, _CMP_LT_OQ));
 		vecX = _mm256_mul_pd(_mm256_mul_pd(vecX, vecSign), vecScale);
 		__m128i vecIndex128 = _mm256_cvttpd_epi32(vecX);
@@ -171,7 +171,7 @@ void CompVMathActivationFunctionsLogistic_64f64f_Intrin_AVX(
 	const __m256d vecScale = _mm256_set1_pd(*scale1);
 	const __m128i vecLut_length_minus1 = _mm_set1_epi32(static_cast<int32_t>(lut_length_minus1));
 	for (compv_uscalar_t i = 0; i < in_out_length; i += 4) {
-		__m256d vecX = _mm256_load_pd(&in_ptr[i]);
+		__m256d vecX = _mm256_loadu_pd(&in_ptr[i]);
 		const __m256d vecSignMask = _mm256_cmp_pd(vecX, vecZero, _CMP_LT_OQ);
 		const __m256d vecSign = _mm256_blendv_pd(vecPlus1, vecMinus1, vecSignMask);
 		vecX = _mm256_mul_pd(_mm256_mul_pd(vecX, vecSign), vecScale);
@@ -245,7 +245,7 @@ void CompVMathActivationFunctionsLogisticMul_64f64f_Intrin_AVX(
 	const __m256d vecScale = _mm256_set1_pd(*scale1);
 	const __m128i vecLut_length_minus1 = _mm_set1_epi32(static_cast<int32_t>(lut_length_minus1));
 	for (compv_uscalar_t i = 0; i < in_out_length; i += 4) {
-		__m256d vecX = _mm256_load_pd(&in_ptr[i]);
+		__m256d vecX = _mm256_loadu_pd(&in_ptr[i]);
 		const __m256d vecSignMask = _mm256_cmp_pd(vecX, vecZero, _CMP_LT_OQ);
 		const __m256d vecSign = _mm256_blendv_pd(vecPlus1, vecMinus1, vecSignMask);
 		vecX = _mm256_mul_pd(_mm256_mul_pd(vecX, vecSign), vecScale);

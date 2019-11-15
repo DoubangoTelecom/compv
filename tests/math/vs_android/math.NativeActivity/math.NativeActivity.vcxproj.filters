@@ -23,6 +23,7 @@
     <ClCompile Include="..\..\dot.cxx" />
     <ClCompile Include="..\..\exp.cxx" />
     <ClCompile Include="..\..\scale.cxx" />
+    <ClCompile Include="..\..\activation_functions.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\tests_common.h" />

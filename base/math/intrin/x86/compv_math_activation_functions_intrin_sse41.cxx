@@ -31,7 +31,7 @@ void CompVMathActivationFunctionsTanh_64f64f_Intrin_SSE41(
 	const __m128d vecScale = _mm_set1_pd(*scale1);
 	const __m128i vecLut_length_minus1 = _mm_set1_epi32(static_cast<int32_t>(lut_length_minus1));
 	for (compv_uscalar_t i = 0; i < in_out_length; i += 2) {
-		__m128d vecX = _mm_load_pd(&in_ptr[i]);
+		__m128d vecX = _mm_loadu_pd(&in_ptr[i]);
 		__m128d vecSign = _mm_cmplt_pd(vecX, vecZero);
 		vecSign = _mm_or_pd(_mm_and_pd(vecSign, vecMinus1), _mm_andnot_pd(vecSign, vecPlus1));
 		vecX = _mm_mul_pd(_mm_mul_pd(vecX, vecSign), vecScale);
@@ -80,7 +80,7 @@ void CompVMathActivationFunctionsTanhMul_64f64f_Intrin_SSE41(
 	const __m128d vecScale = _mm_set1_pd(*scale1);
 	const __m128i vecLut_length_minus1 = _mm_set1_epi32(static_cast<int32_t>(lut_length_minus1));
 	for (compv_uscalar_t i = 0; i < in_out_length; i += 2) {
-		__m128d vecX = _mm_load_pd(&in_ptr[i]);
+		__m128d vecX = _mm_loadu_pd(&in_ptr[i]);
 		__m128d vecSign = _mm_cmplt_pd(vecX, vecZero);
 		vecSign = _mm_or_pd(_mm_and_pd(vecSign, vecMinus1), _mm_andnot_pd(vecSign, vecPlus1));
 		vecX = _mm_mul_pd(_mm_mul_pd(vecX, vecSign), vecScale);
@@ -133,7 +133,7 @@ void CompVMathActivationFunctionsLogistic_64f64f_Intrin_SSE41(
 	const __m128d vecScale = _mm_set1_pd(*scale1);
 	const __m128i vecLut_length_minus1 = _mm_set1_epi32(static_cast<int32_t>(lut_length_minus1));
 	for (compv_uscalar_t i = 0; i < in_out_length; i += 2) {
-		__m128d vecX = _mm_load_pd(&in_ptr[i]);
+		__m128d vecX = _mm_loadu_pd(&in_ptr[i]);
 		const __m128d vecSignMask = _mm_cmplt_pd(vecX, vecZero);
 		const __m128d vecSign = _mm_or_pd(_mm_and_pd(vecSignMask, vecMinus1), _mm_andnot_pd(vecSignMask, vecPlus1));
 		vecX = _mm_mul_pd(_mm_mul_pd(vecX, vecSign), vecScale);
@@ -190,7 +190,7 @@ void CompVMathActivationFunctionsLogisticMul_64f64f_Intrin_SSE41(
 	const __m128d vecScale = _mm_set1_pd(*scale1);
 	const __m128i vecLut_length_minus1 = _mm_set1_epi32(static_cast<int32_t>(lut_length_minus1));
 	for (compv_uscalar_t i = 0; i < in_out_length; i += 2) {
-		__m128d vecX = _mm_load_pd(&in_ptr[i]);
+		__m128d vecX = _mm_loadu_pd(&in_ptr[i]);
 		const __m128d vecSignMask = _mm_cmplt_pd(vecX, vecZero);
 		const __m128d vecSign = _mm_or_pd(_mm_and_pd(vecSignMask, vecMinus1), _mm_andnot_pd(vecSignMask, vecPlus1));
 		vecX = _mm_mul_pd(_mm_mul_pd(vecX, vecSign), vecScale);

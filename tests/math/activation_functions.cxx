@@ -30,10 +30,19 @@ static const struct compv_unittest_activation {
 	const char* md5;
 	const char* md5_fma;
 } COMPV_UNITTEST_ACTIVATIONS[] = {
+	// TODO(dmi): pre-compute LUTs and store/load to/from a file to make sure the MD5 is consistent
+	// On Windows Debug and release provide difference MD5 due to optimization options
+#if COMPV_ARCH_ARM
+	{ FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, ACTIVATION_FUNCTION_TYPE_TANH, "55060a7cd2e9eb4800ac264d91d286be", "55060a7cd2e9eb4800ac264d91d286be" },
+	{ FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, ACTIVATION_FUNCTION_TYPE_TANH_MUL, "3bfd9dac80e1e5c26c2989c2fe010c4c", "3bfd9dac80e1e5c26c2989c2fe010c4c" },
+	{ FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, ACTIVATION_FUNCTION_TYPE_LOGISTIC, "028032cc4a3c457a2898efbcbbff083d", "028032cc4a3c457a2898efbcbbff083d" },
+	{ FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, ACTIVATION_FUNCTION_TYPE_LOGISTIC_MUL, "3277d74b7caa0da3cfb1dd3d50cd5f94", "3277d74b7caa0da3cfb1dd3d50cd5f94" },
+#else
 	{ FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, ACTIVATION_FUNCTION_TYPE_TANH, "9622adfb4c7e0617836d8a7179ca0bfc", "9622adfb4c7e0617836d8a7179ca0bfc" },
 	{ FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, ACTIVATION_FUNCTION_TYPE_TANH_MUL, "f7d0fdefaba072d845a14381ac0b90a0", "f7d0fdefaba072d845a14381ac0b90a0" },
 	{ FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, ACTIVATION_FUNCTION_TYPE_LOGISTIC, "41a68ce983c99199e888bc5b52efd14a", "41a68ce983c99199e888bc5b52efd14a" },
 	{ FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, ACTIVATION_FUNCTION_TYPE_LOGISTIC_MUL, "e3444a12126a6e67d306e360e535243f", "e3444a12126a6e67d306e360e535243f" },
+#endif
 };
 static const size_t COMPV_UNITTEST_ACTIVATIONS_COUNT = sizeof(COMPV_UNITTEST_ACTIVATIONS) / sizeof(COMPV_UNITTEST_ACTIVATIONS[0]);
 
@@ -115,7 +124,8 @@ COMPV_ERROR_CODE activation_functions()
 	uint64_t timeEnd = CompVTime::nowMillis();
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "Math Activation Elapsed time = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 
-	COMPV_DEBUG_INFO_EX(TAG_TEST, "IN=%s", compv_tests_md5(inMat).c_str());
+	// TODO(dmi): pre-compute LUTs and store/load to/from a file to make sure the MD5 is consistent
+	// On Windows Debug and release provide difference MD5 due to optimization options
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "MD5=%s", compv_tests_md5(outMat).c_str());
 	const char* xmd5 = compv_tests_is_fma_enabled() ? test->md5_fma : test->md5;
 	COMPV_CHECK_EXP_RETURN(std::string(xmd5).compare(compv_tests_md5(outMat)) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Math Activation mismatch");
