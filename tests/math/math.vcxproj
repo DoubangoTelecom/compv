@@ -159,6 +159,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\tests_common.cxx" />
+    <ClCompile Include="activation_functions.cxx" />
     <ClCompile Include="calib_camera.cxx" />
     <ClCompile Include="calib_homography.cxx" />
     <ClCompile Include="calib_undist.cxx" />

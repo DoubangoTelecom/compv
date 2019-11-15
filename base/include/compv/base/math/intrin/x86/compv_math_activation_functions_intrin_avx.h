@@ -27,6 +27,35 @@ void CompVMathActivationFunctionsTanh_64f64f_Intrin_AVX(
 	compv_float64_t* out_ptr
 );
 
+void CompVMathActivationFunctionsTanhMul_64f64f_Intrin_AVX(
+	const compv_float64_t* lut_ptr,
+	const compv_uscalar_t& lut_length_minus1,
+	const compv_float64_t* scale1,
+	const compv_uscalar_t& in_out_length,
+	const compv_float64_t* in_ptr,
+	const compv_float64_t* mul_ptr,
+	compv_float64_t* out_ptr
+);
+
+void CompVMathActivationFunctionsLogistic_64f64f_Intrin_AVX(
+	const compv_float64_t* lut_ptr,
+	const compv_uscalar_t& lut_length_minus1,
+	const compv_float64_t* scale1,
+	const compv_uscalar_t& in_out_length,
+	const compv_float64_t* in_ptr,
+	compv_float64_t* out_ptr
+);
+
+void CompVMathActivationFunctionsLogisticMul_64f64f_Intrin_AVX(
+	const compv_float64_t* lut_ptr,
+	const compv_uscalar_t& lut_length_minus1,
+	const compv_float64_t* scale1,
+	const compv_uscalar_t& in_out_length,
+	const compv_float64_t* in_ptr,
+	const compv_float64_t* mul_ptr,
+	compv_float64_t* out_ptr
+);
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */

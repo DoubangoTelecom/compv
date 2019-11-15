@@ -81,5 +81,8 @@
     <ClCompile Include="scale.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="activation_functions.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
