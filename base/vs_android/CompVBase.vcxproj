@@ -569,9 +569,24 @@
     <ClCompile Include="..\math\intrin\arm\compv_math_transform_intrin_neon64.cxx" />
     <ClCompile Include="..\math\intrin\arm\compv_math_trig_intrin_neon.cxx" />
     <ClCompile Include="..\math\intrin\arm\compv_math_utils_intrin_neon.cxx" />
-    <ClCompile Include="..\math\intrin\x86\compv_math_activation_functions_intrin_avx.cxx" />
-    <ClCompile Include="..\math\intrin\x86\compv_math_activation_functions_intrin_avx2.cxx" />
-    <ClCompile Include="..\math\intrin\x86\compv_math_activation_functions_intrin_sse41.cxx" />
+    <ClCompile Include="..\math\intrin\x86\compv_math_activation_functions_intrin_avx.cxx">
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">-mavx %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">-mavx %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">-mavx %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x86'">-mavx %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <ClCompile Include="..\math\intrin\x86\compv_math_activation_functions_intrin_avx2.cxx">
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">-mavx2 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x86'">-mavx2 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">-mavx2 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">-mavx2 %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <ClCompile Include="..\math\intrin\x86\compv_math_activation_functions_intrin_sse41.cxx">
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">-msse4.1 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">-msse4.1 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">-msse4.1 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x86'">-msse4.1 %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
     <ClCompile Include="..\math\intrin\x86\compv_math_cast_intrin_sse2.cxx">
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">-msse2 %(AdditionalOptions)</AdditionalOptions>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x86'">-msse2 %(AdditionalOptions)</AdditionalOptions>

@@ -42,6 +42,7 @@ DWORD CompVBase::s_dwMinorVersion = -1;
 #endif
 #if COMPV_OS_ANDROID
 std::string CompVBase::s_strCPU_ABI = "";
+int CompVBase::s_intSDK_INT = 0;
 #endif
 bool CompVBase::s_bTesting = false;
 
@@ -161,8 +162,8 @@ COMPV_ERROR_CODE CompVBase::init(int numThreads COMPV_DEFAULT(-1))
             if (clazz_VERSION) {
                 jfieldID fieldID_SDK_INT = jEnv->GetStaticFieldID(clazz_VERSION, "SDK_INT", "I");
                 if (fieldID_SDK_INT) {
-                    jint SDK_INT = jEnv->GetStaticIntField(clazz_VERSION, fieldID_SDK_INT);
-                    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "android/os/Build$VERSION.SDK_INT: %d", static_cast<int>(SDK_INT));
+					s_intSDK_INT = static_cast<int>(jEnv->GetStaticIntField(clazz_VERSION, fieldID_SDK_INT));
+                    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "android/os/Build$VERSION.SDK_INT: %d", s_intSDK_INT);
                 }
             }
             jclass clazz_Build = jEnv->FindClass("android/os/Build");

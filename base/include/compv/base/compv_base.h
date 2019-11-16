@@ -42,8 +42,11 @@ public:
     static bool isWinXPOrLater();
 #endif
 #if COMPV_OS_ANDROID
-	static std::string CPU_ABI() {
+	static std::string Build_CPU_ABI() {
 		return s_strCPU_ABI;
+	}
+	static int Build_VERSION_SDK_INT() {
+		return s_intSDK_INT;
 	}
 #endif
 	template <typename T>
@@ -63,7 +66,8 @@ private:
     static bool s_bInitializing;
     static bool s_bTesting;
 #if COMPV_OS_ANDROID
-	static std::string s_strCPU_ABI;
+	static std::string s_strCPU_ABI; // https://developer.android.com/reference/android/os/Build.html#CPU_ABI
+	static int s_intSDK_INT; // https://developer.android.com/reference/android/os/Build.VERSION.html#SDK_INT
 #endif
 #if COMPV_OS_WINDOWS && !COMPV_OS_WINDOWS_RT
     static DWORD s_dwMajorVersion;

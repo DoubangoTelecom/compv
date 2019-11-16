@@ -423,8 +423,8 @@ COMPV_ERROR_CODE CompVAndroidDexClassLoader::moveDexFileFromAssetsToData(JNIEnv*
 	if (!nativeLibFileName.empty()) {
 		bool bNativeLibFound = false;
 		
-		COMPV_CHECK_EXP_RETURN(CompVBase::CPU_ABI().empty(), (err = COMPV_ERROR_CODE_E_SYSTEM));
-		const std::string nativeLibSourceFilePath = std::string("lib/") + CompVBase::CPU_ABI() + std::string("/") + nativeLibFileName;
+		COMPV_CHECK_EXP_RETURN(CompVBase::Build_CPU_ABI().empty(), (err = COMPV_ERROR_CODE_E_SYSTEM));
+		const std::string nativeLibSourceFilePath = std::string("lib/") + CompVBase::Build_CPU_ABI() + std::string("/") + nativeLibFileName;
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "DexClassLoader trying to extract native lib from '%s'", nativeLibSourceFilePath.c_str());
 		// jobjectBufferInputStream.reset()
 		jEnv->CallVoidMethod(jobjectBufferInputStream, s_MethodBufferedInputStreamReset);
