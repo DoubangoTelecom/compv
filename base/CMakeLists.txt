@@ -199,6 +199,9 @@ if("${TARGET_ARCH}" STREQUAL "x86" OR "${TARGET_ARCH}" STREQUAL "x64")
 		intrin/x86/compv_patch_intrin_sse2.cxx
 
 		###### math/intrin/x86 ######
+		math/intrin/x86/compv_math_activation_functions_intrin_avx.cxx
+		math/intrin/x86/compv_math_activation_functions_intrin_avx2.cxx
+		math/intrin/x86/compv_math_activation_functions_intrin_sse41.cxx
 		math/intrin/x86/compv_math_cast_intrin_sse2.cxx
 		math/intrin/x86/compv_math_convlt_intrin_avx2.cxx
 		math/intrin/x86/compv_math_convlt_intrin_sse2.cxx
