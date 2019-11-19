@@ -1,5 +1,8 @@
 set(CMAKE_VERBOSE_MAKEFILE on)
 
+## C++11 ##
+set (CMAKE_CXX_STANDARD 11)
+
 ## Set Libs build type (STATIC or SHARED) ##
 if (NOT LIB_BUILD_TYPE)
 	if (NOT TARGET_SUPPORTS_SHARED_LIBS) # some embedded OSes don't support shared libs
@@ -42,7 +45,7 @@ endif()
 
 ## COMPILER and LINKER FLAGS ##
 if (${CMAKE_CXX_COMPILER_ID} MATCHES "Clang|GNU")
-	set(COMPILER_CXX_FLAGS "${COMPILER_CXX_FLAGS} -fvisibility=hidden -fdata-sections -ffunction-sections -Wno-pragmas -std=c++11")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden -fdata-sections -ffunction-sections -Wno-pragmas -std=c++11")
 	set(LINK_FLAGS_RELEASE "${LINK_FLAGS_RELEASE} -Wl,-gc-sections")
 elseif (${CMAKE_CXX_COMPILER_ID} MATCHES "Intel")
 	# Intel C++
@@ -51,8 +54,13 @@ elseif (${CMAKE_CXX_COMPILER_ID} MATCHES "MSVC")
 endif()
 
 if (WIN32)
-  set(COMPILER_CXX_FLAGS "${COMPILER_CXX_FLAGS} -D_WIN32_WINNT=_WIN32_WINNT_VISTA")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_WIN32_WINNT=_WIN32_WINNT_VISTA")
 endif()
+
+# Raspberry
+if ("${TARGET_OS}" MATCHES "PI")
+	set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCOMPV_OS_PI=1 -mfpu=neon-vfpv4 -funsafe-math-optimizations")
+endif ()
 
 ## Detect SIMD flags ##
 if (MSVC)

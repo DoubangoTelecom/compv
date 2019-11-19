@@ -14,7 +14,7 @@ include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}/../base/include
 )
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COMPILER_CXX_FLAGS} -DCOMPV_GPU_EXPORTS")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCOMPV_GPU_EXPORTS")
 
 set(compv_gpu_SOURCES 
 	###### base/math ######

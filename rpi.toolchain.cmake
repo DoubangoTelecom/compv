@@ -10,9 +10,7 @@ set (CMAKE_SYSTEM_PROCESSOR arm)
 
 # Set cross compile target os
 set (CROSSCOMPILING_TARGET_OS "PI")
-
-# Set Compiler flags
-set (COMPILER_CXX_FLAGS "${COMPILER_CXX_FLAGS} -DCOMPV_OS_PI=1 -mfpu=neon-vfpv4 -funsafe-math-optimizations")
+set (TARGET_OS "PI")
 
 ## Set name if not defined as argument ##
 if (NOT TOOLCHAIN_RPI_TRIPLET)

@@ -14,7 +14,7 @@ include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}/../base/include
 )
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COMPILER_CXX_FLAGS} -DCOMPV_CAMERA_EXPORTS")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCOMPV_CAMERA_EXPORTS")
 
 set(compv_camera_SOURCES 
 	###### android ######

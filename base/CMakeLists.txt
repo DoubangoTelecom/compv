@@ -11,7 +11,7 @@ if (WIN32)
   include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../thirdparties/include/windows)
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COMPILER_CXX_FLAGS} -DCOMPV_BASE_EXPORTS")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCOMPV_BASE_EXPORTS")
 
 set(compv_base_SOURCES 
 	###### android ######
