@@ -54,6 +54,7 @@ set(compv_base_SOURCES
 
 	###### math ######
 	math/compv_math.cxx
+	math/compv_math_activation_functions.cxx
 	math/compv_math_basic_ops.cxx
 	math/compv_math_cast.cxx
 	math/compv_math_clip.cxx
