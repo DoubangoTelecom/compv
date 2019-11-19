@@ -269,6 +269,8 @@
     <ClInclude Include="..\include\compv\base\utf8\core.h" />
     <ClInclude Include="..\include\compv\base\utf8\unchecked.h" />
     <ClInclude Include="..\include\compv\base\utf8\utf8.h" />
+    <ClInclude Include="..\include\compv\base\video\compv_video_reader.h" />
+    <ClInclude Include="..\include\compv\base\video\compv_video_writer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\android\compv_android_cpu-features.cxx" />

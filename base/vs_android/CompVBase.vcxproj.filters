@@ -178,6 +178,9 @@
     <Filter Include="source\ml\libsvm-322\intrin\x86">
       <UniqueIdentifier>{542f5474-f0f0-45a3-8a8f-16be16341c22}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\video">
+      <UniqueIdentifier>{c7bb1aa4-5e7c-4063-a72f-d786ba2c6d45}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\compv\base\compv_base.h">
@@ -881,6 +884,12 @@
     </ClInclude>
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_activation_functions_intrin_neon64.h">
       <Filter>include\math\intrin\arm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\video\compv_video_reader.h">
+      <Filter>include\video</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\video\compv_video_writer.h">
+      <Filter>include\video</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -2,7 +2,11 @@ set(CMAKE_VERBOSE_MAKEFILE on)
 
 ## Set Libs build type (STATIC or SHARED) ##
 if (NOT LIB_BUILD_TYPE)
-	set(LIB_BUILD_TYPE SHARED)
+	if (NOT TARGET_SUPPORTS_SHARED_LIBS) # some embedded OSes don't support shared libs
+		set(LIB_BUILD_TYPE STATIC)
+	else()
+		set(LIB_BUILD_TYPE SHARED)
+	endif()
 endif()
 if ("${LIB_BUILD_TYPE}" MATCHES "SHARED")
 	set(LIB_LINK_SCOPE PRIVATE)
@@ -15,9 +19,11 @@ if (NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
 
-## Set default build flags ##
+## Set default and common build and link flags ##
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g")
 set(CMAKE_CXX_FLAGS_RELEASE " ${CMAKE_CXX_FLAGS_RELEASE} -O3")
+set(LINK_FLAGS_DEBUG "${LINK_FLAGS_DEBUG}")
+set(LINK_FLAGS_RELEASE "${LINK_FLAGS_RELEASE}")
 
 ## Detect TARGET_ARCH ##
 if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "i386|i686|amd64|x86_64|AMD64")
@@ -34,11 +40,10 @@ else()
 	message(FATAL_ERROR "Not a valid processor" ${CMAKE_SYSTEM_PROCESSOR})
 endif()
 
-## COMPILER FLAGS ##
-if (${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
-	set(COMPILER_CXX_FLAGS "${COMPILER_CXX_FLAGS} -Wno-pragmas -std=c++11")
-elseif (${CMAKE_CXX_COMPILER_ID} MATCHES "GNU")
-	set(COMPILER_CXX_FLAGS "${COMPILER_CXX_FLAGS} -Wno-pragmas -std=gnu++11")
+## COMPILER and LINKER FLAGS ##
+if (${CMAKE_CXX_COMPILER_ID} MATCHES "Clang|GNU")
+	set(COMPILER_CXX_FLAGS "${COMPILER_CXX_FLAGS} -fvisibility=hidden -fdata-sections -ffunction-sections -Wno-pragmas -std=c++11")
+	set(LINK_FLAGS_RELEASE "${LINK_FLAGS_RELEASE} -Wl,-gc-sections")
 elseif (${CMAKE_CXX_COMPILER_ID} MATCHES "Intel")
 	# Intel C++
 elseif (${CMAKE_CXX_COMPILER_ID} MATCHES "MSVC")

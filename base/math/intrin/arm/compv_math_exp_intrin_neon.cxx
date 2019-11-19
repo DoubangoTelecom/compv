@@ -86,8 +86,8 @@ void CompVMathExpExp_minpack1_32f32f_Intrin_NEON(COMPV_ALIGNED(NEON) const compv
 			float32x4_t vecT = vsubq_f32(vecFi, vecMagic);
 			vecT = vmlsq_f32(vecX, vecT, vecB0);
 
-			uint32x4_t  vecU = vaddq_u32(vecFi, vec130048);
-			uint32x4_t  vecV = vandq_u32(vecFi, vec1023);
+			uint32x4_t  vecU = vaddq_u32((uint32x4_t)vecFi, vec130048);
+			uint32x4_t  vecV = vandq_u32((uint32x4_t)vecFi, vec1023);
 			vecU = vshlq_n_u32(vshrq_n_u32(vecU, 10), 23);
 
 			// TODO(dmi): ASM, "VMOV.32 r0, r1, vecVx" then "VMOV.32 vecVx, r0, r1"
@@ -98,7 +98,7 @@ void CompVMathExpExp_minpack1_32f32f_Intrin_NEON(COMPV_ALIGNED(NEON) const compv
 			vecV = (uint32x4_t) { lut32u[i0], lut32u[i1], lut32u[i2], lut32u[i3] };
 			vecV = vorrq_u32(vecV, vecU);
 
-			vst1q_f32(&ptrOut[i], vmlaq_f32(vecV, vecT, vecV));
+			vst1q_f32(&ptrOut[i], vmlaq_f32((float32x4_t)vecV, vecT, (float32x4_t)vecV));
 		}
 		ptrIn += stride;
 		ptrOut += stride;

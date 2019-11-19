@@ -26,9 +26,9 @@ COMPV_NAMESPACE_BEGIN()
 // (s/u)qxtn v30.2s, v21.2d
 // fmov x27, d30
 // cbz r27, AllZeros
-#	define COMPV_ARM_NEON_NEQ_ZEROQ(vec)	(vgetq_lane_u64(vec, 0) || vgetq_lane_u64(vec, 1))
+#	define COMPV_ARM_NEON_NEQ_ZEROQ(vec)	(vgetq_lane_u64((uint64x2_t)(vec), 0) || vgetq_lane_u64((uint64x2_t)(vec), 1))
 #	define COMPV_ARM_NEON_EQ_ZEROQ(vec)		!COMPV_ARM_NEON_NEQ_ZEROQ(vec)
-#	define COMPV_ARM_NEON_NEQ_ZEROD(vec)	vget_lane_u64(vec, 0)
+#	define COMPV_ARM_NEON_NEQ_ZEROD(vec)	vget_lane_u64((uint64x2_t)(vec), 0)
 #	define COMPV_ARM_NEON_EQ_ZEROD(vec)		!COMPV_ARM_NEON_NEQ_ZEROD(vec)
 
 #else
@@ -49,15 +49,15 @@ COMPV_NAMESPACE_BEGIN()
 //vmrs APSR_nzcv, fpscr
 #	define COMPV_ARM_NEON_NEQ_ZEROQ(vec) ({ \
 	bool __ret; \
-	uint8x8_t __vec = vorr_u8(vget_high_u8(vec), vget_low_u8(vec)); \
-	__ret = vget_lane_u32(__vec, 0) || vget_lane_u32(__vec, 1); \
+	uint8x8_t __vec = vorr_u8(vget_high_u8((uint8x16_t)(vec)), vget_low_u8((uint8x16_t)(vec))); \
+	__ret = vget_lane_u32((uint32x2_t)(__vec), 0) || vget_lane_u32((uint32x2_t)(__vec), 1); \
 	__ret; \
 })
 #	define COMPV_ARM_NEON_EQ_ZEROQ(vec)	!COMPV_ARM_NEON_NEQ_ZEROQ(vec)
 
 #	define COMPV_ARM_NEON_NEQ_ZEROD(vec) ({ \
 	bool __ret; \
-	__ret = vget_lane_u32(vec, 0) || vget_lane_u32(vec, 1); \
+	__ret = vget_lane_u32((uint32x2_t)(vec), 0) || vget_lane_u32((uint32x2_t)(vec), 1); \
 	__ret; \
 })
 #	define COMPV_ARM_NEON_EQ_ZEROD(vec)	!COMPV_ARM_NEON_NEQ_ZEROD(vec)
@@ -92,8 +92,8 @@ COMPV_NAMESPACE_BEGIN()
 #	define COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT(vec) vcvtaq_s32_f32(vec) /* in two instruction: vcvtq_s32_f32(vrndaq_f32(v)) -> fcvtas Vd.4S, Vn.4S */
 #else
 #	define COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT(vec)({ \
-		const float32x4_t vecSign = vcvtq_f32_u32((vshrq_n_u32(vec, 31))); \
-		int32x4_t __ret = vcvtq_s32_f32(vsubq_f32(vaddq_f32(vec, vecHalf), vecSign)); \
+		const float32x4_t vecSign = vcvtq_f32_u32((vshrq_n_u32((uint32x4_t)(vec), 31))); \
+		int32x4_t __ret = vcvtq_s32_f32(vsubq_f32(vaddq_f32((float32x4_t)(vec), (float32x4_t)(vecHalf)), vecSign)); \
 		__ret; \
 	})
 #endif
@@ -107,7 +107,7 @@ COMPV_NAMESPACE_BEGIN()
 })
 
 // Reciprocal, less accurate than 'COMPV_ARM_NEON_RECIPROCAL_NEWTON_RAPHSON'
-#define COMPV_ARM_NEON_RECIPROCAL(vec)	vrecpeq_f32(vec) /* AArch64 -> frecpe */
+#define COMPV_ARM_NEON_RECIPROCAL(vec)	vrecpeq_f32((float32x4_t)(vec)) /* AArch64 -> frecpe */
 
 
 // TODO(dmi): ASM is faster

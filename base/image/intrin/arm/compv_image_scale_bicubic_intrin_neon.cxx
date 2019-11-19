@@ -75,10 +75,10 @@ void CompVImageScaleBicubicPreprocess_32s32f_Intrin_NEON(
 		const float32x4_t vecIntegralf = COMPV_ARM_NEON_FLOOR_F32(vecFract); // SSE2: _mm_round_ps(vecFract, _MM_FROUND_FLOOR);
 		const int32x4_t vecIntegrali = vcvtq_s32_f32(vecIntegralf);
 
-		int32x4_t vecIntegrali0 = vaddq_s32(vdupq_lane_s32(vget_low_f32(vecIntegrali), 0), vecIntegralOffset);
-		int32x4_t vecIntegrali1 = vaddq_s32(vdupq_lane_s32(vget_low_f32(vecIntegrali), 1), vecIntegralOffset);
-		int32x4_t vecIntegrali2 = vaddq_s32(vdupq_lane_s32(vget_high_f32(vecIntegrali), 0), vecIntegralOffset);
-		int32x4_t vecIntegrali3 = vaddq_s32(vdupq_lane_s32(vget_high_f32(vecIntegrali), 1), vecIntegralOffset);
+		int32x4_t vecIntegrali0 = vaddq_s32(vdupq_lane_s32(vget_low_s32(vecIntegrali), 0), vecIntegralOffset);
+		int32x4_t vecIntegrali1 = vaddq_s32(vdupq_lane_s32(vget_low_s32(vecIntegrali), 1), vecIntegralOffset);
+		int32x4_t vecIntegrali2 = vaddq_s32(vdupq_lane_s32(vget_high_s32(vecIntegrali), 0), vecIntegralOffset);
+		int32x4_t vecIntegrali3 = vaddq_s32(vdupq_lane_s32(vget_high_s32(vecIntegrali), 1), vecIntegralOffset);
 		vecIntegrali0 = vmaxq_s32(vecZero, vminq_s32(vecIntegrali0, vecIntergralMax));
 		vecIntegrali1 = vmaxq_s32(vecZero, vminq_s32(vecIntegrali1, vecIntergralMax));
 		vecIntegrali2 = vmaxq_s32(vecZero, vminq_s32(vecIntegrali2, vecIntergralMax));

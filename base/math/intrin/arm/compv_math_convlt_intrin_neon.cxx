@@ -76,10 +76,10 @@ void CompVMathConvlt1VtHz_8u32f8u_Intrin_NEON(const uint8_t* inPtr, uint8_t* out
 
 	for (j = 0; j < height; ++j) {
 		for (i = 0; i < width; i += 16) {
-            vecSum0 = veorq_s32(vecSum0, vecSum0);
-            vecSum1 = veorq_s32(vecSum0, vecSum0);
-            vecSum2 = veorq_s32(vecSum0, vecSum0);
-            vecSum3 = veorq_s32(vecSum0, vecSum0);
+            vecSum0 = (float32x4_t)veorq_s32((int32x4_t)vecSum0, (int32x4_t)vecSum0);
+            vecSum1 = (float32x4_t)veorq_s32((int32x4_t)vecSum0, (int32x4_t)vecSum0);
+            vecSum2 = (float32x4_t)veorq_s32((int32x4_t)vecSum0, (int32x4_t)vecSum0);
+            vecSum3 = (float32x4_t)veorq_s32((int32x4_t)vecSum0, (int32x4_t)vecSum0);
             for (row = 0, k = 0; row < kernSize; ++row, k += step) {
 				vecInPtr = vld1q_u8(&inPtr[i + k]);
 				coeff = vthzKernPtr[row];
@@ -137,10 +137,10 @@ void CompVMathConvlt1VtHz_8u32f32f_Intrin_NEON(const uint8_t* inPtr, compv_float
 
 	for (j = 0; j < height; ++j) {
 		for (i = 0; i < width; i += 16) {
-            vecSum0 = veorq_s32(vecSum0, vecSum0);
-            vecSum1 = veorq_s32(vecSum0, vecSum0);
-            vecSum2 = veorq_s32(vecSum0, vecSum0);
-            vecSum3 = veorq_s32(vecSum0, vecSum0);
+            vecSum0 = (float32x4_t)veorq_s32((int32x4_t)vecSum0, (int32x4_t)vecSum0);
+            vecSum1 = (float32x4_t)veorq_s32((int32x4_t)vecSum0, (int32x4_t)vecSum0);
+            vecSum2 = (float32x4_t)veorq_s32((int32x4_t)vecSum0, (int32x4_t)vecSum0);
+            vecSum3 = (float32x4_t)veorq_s32((int32x4_t)vecSum0, (int32x4_t)vecSum0);
             for (row = 0, k = 0; row < kernSize; ++row, k += step) {
 				vecInPtr = vld1q_u8(&inPtr[i + k]);
 				coeff = vthzKernPtr[row];
@@ -196,10 +196,10 @@ void CompVMathConvlt1VtHz_32f32f32f_Intrin_NEON(const compv_float32_t* inPtr, co
 
 	for (j = 0; j < height; ++j) {
 		for (i = 0; i < width; i += 16) {
-            vecSum0 = veorq_s32(vecSum0, vecSum0);
-            vecSum1 = veorq_s32(vecSum0, vecSum0);
-            vecSum2 = veorq_s32(vecSum0, vecSum0);
-            vecSum3 = veorq_s32(vecSum0, vecSum0);
+            vecSum0 = (float32x4_t)veorq_s32((int32x4_t)vecSum0, (int32x4_t)vecSum0);
+            vecSum1 = (float32x4_t)veorq_s32((int32x4_t)vecSum0, (int32x4_t)vecSum0);
+            vecSum2 = (float32x4_t)veorq_s32((int32x4_t)vecSum0, (int32x4_t)vecSum0);
+            vecSum3 = (float32x4_t)veorq_s32((int32x4_t)vecSum0, (int32x4_t)vecSum0);
             for (row = 0, k = 0; row < kernSize; ++row, k += step) {
 				vec0f = vld1q_f32(&inPtr[i + k]);
 				vec1f = vld1q_f32(&inPtr[i + k + 4]);
@@ -248,10 +248,10 @@ void CompVMathConvlt1VtHz_32f32f8u_Intrin_NEON(const compv_float32_t* inPtr, uin
 
 	for (j = 0; j < height; ++j) {
 		for (i = 0; i < width; i += 16) {
-            vecSum0 = veorq_s32(vecSum0, vecSum0);
-            vecSum1 = veorq_s32(vecSum0, vecSum0);
-            vecSum2 = veorq_s32(vecSum0, vecSum0);
-            vecSum3 = veorq_s32(vecSum0, vecSum0);
+            vecSum0 = (float32x4_t)veorq_s32((int32x4_t)vecSum0, (int32x4_t)vecSum0);
+            vecSum1 = (float32x4_t)veorq_s32((int32x4_t)vecSum0, (int32x4_t)vecSum0);
+            vecSum2 = (float32x4_t)veorq_s32((int32x4_t)vecSum0, (int32x4_t)vecSum0);
+            vecSum3 = (float32x4_t)veorq_s32((int32x4_t)vecSum0, (int32x4_t)vecSum0);
             for (row = 0, k = 0; row < kernSize; ++row, k += step) {
 				vec0f = vld1q_f32(&inPtr[i + k]);
 				vec1f = vld1q_f32(&inPtr[i + k + 4]);
@@ -263,18 +263,18 @@ void CompVMathConvlt1VtHz_32f32f8u_Intrin_NEON(const compv_float32_t* inPtr, uin
 				vecSum2 = vmlaq_n_f32(vecSum2, vec2f, coeff);
 				vecSum3 = vmlaq_n_f32(vecSum3, vec3f, coeff);
 			}
-			vec0f = vcvtq_s32_f32(vecSum0);
-			vec1f = vcvtq_s32_f32(vecSum1);
-			vec2f = vcvtq_s32_f32(vecSum2);
-			vec3f = vcvtq_s32_f32(vecSum3);
-			vec0f = vcombine_s16(vqmovn_s32(vec0f), vqmovn_s32(vec1f));
-			vec2f = vcombine_s16(vqmovn_s32(vec2f), vqmovn_s32(vec3f));
-			vec0f = vcombine_u8(vqmovun_s16(vec0f), vqmovun_s16(vec2f));
+			vec0f = (float32x4_t)vcvtq_s32_f32(vecSum0);
+			vec1f = (float32x4_t)vcvtq_s32_f32(vecSum1);
+			vec2f = (float32x4_t)vcvtq_s32_f32(vecSum2);
+			vec3f = (float32x4_t)vcvtq_s32_f32(vecSum3);
+			vec0f = (float32x4_t)vcombine_s16(vqmovn_s32((int32x4_t)vec0f), vqmovn_s32((int32x4_t)vec1f));
+			vec2f = (float32x4_t)vcombine_s16(vqmovn_s32((int32x4_t)vec2f), vqmovn_s32((int32x4_t)vec3f));
+			vec0f = (float32x4_t)vcombine_u8(vqmovun_s16((int16x8_t)vec0f), vqmovun_s16((int16x8_t)vec2f));
 			if (i < width16) {
-				vst1q_u8(&outPtr[i], vec0f);
+				vst1q_u8(&outPtr[i], (uint8x16_t)vec0f);
 			}
 			else {
-				vst1q_u8(mem, vec0f);
+				vst1q_u8(mem, (uint8x16_t)vec0f);
 				for (k = 0; i < width; ++i, ++k) {
 					outPtr[i] = mem[k];
 				}

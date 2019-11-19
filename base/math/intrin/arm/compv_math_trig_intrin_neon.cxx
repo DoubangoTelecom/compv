@@ -43,11 +43,11 @@ void CompVMathTrigFastAtan2_32f_Intrin_NEON(COMPV_ALIGNED(NEON) const compv_floa
             
             // if (ax >= ay) vec1 = ay, vec2 = ax;
             // else vec1 = ax, vec2 = ay;
-            float32x4_t vecMask = vcgeq_f32(vecAx, vecAy);
-            float32x4_t vec1 = vandq_s32(vecAy, vecMask);
-            float32x4_t vec2 = vandq_s32(vecAx, vecMask);
-            vec1 = vorrq_s32(vec1, vbicq_s32(vecAx, vecMask));
-            vec2 = vorrq_s32(vec2, vbicq_s32(vecAy, vecMask));
+            float32x4_t vecMask = (float32x4_t)vcgeq_f32(vecAx, vecAy);
+            float32x4_t vec1 = (float32x4_t)vandq_s32((int32x4_t)vecAy, (int32x4_t)vecMask);
+            float32x4_t vec2 = (float32x4_t)vandq_s32((int32x4_t)vecAx, (int32x4_t)vecMask);
+            vec1 = (float32x4_t)vorrq_s32((int32x4_t)vec1, vbicq_s32((int32x4_t)vecAx, (int32x4_t)vecMask));
+            vec2 = (float32x4_t)vorrq_s32((int32x4_t)vec2, vbicq_s32((int32x4_t)vecAy, (int32x4_t)vecMask));
             
             // c = vec1 / (vec2 + atan2_eps)
             // c2 = c*c
@@ -61,18 +61,18 @@ void CompVMathTrigFastAtan2_32f_Intrin_NEON(COMPV_ALIGNED(NEON) const compv_floa
             vec0 = vmulq_f32(vec0, vecC);
             
             // if (!(ax >= ay)) a = 90 - a
-            vec1 = vbicq_s32(vsubq_f32(vecAtan2_plus90, vec0), vecMask);
-            vec0 = vorrq_s32(vandq_s32(vec0, vecMask), vec1);
+            vec1 = (float32x4_t)vbicq_s32((int32x4_t)vsubq_f32(vecAtan2_plus90, vec0), (int32x4_t)vecMask);
+            vec0 = (float32x4_t)vorrq_s32(vandq_s32((int32x4_t)vec0, (int32x4_t)vecMask), (int32x4_t)vec1);
             
             // if (x[i] < 0) a = 180.f - a
-            vecMask = vcltq_f32(vecAx0, vecAtan2_zero);
-            vec1 = vandq_s32(vecMask, vsubq_f32(vecAtan2_plus180, vec0));
-            vec0 = vorrq_s32(vbicq_s32(vec0, vecMask), vec1);
+            vecMask = (float32x4_t)vcltq_f32(vecAx0, vecAtan2_zero);
+            vec1 = (float32x4_t)vandq_s32((int32x4_t)vecMask, (int32x4_t)vsubq_f32(vecAtan2_plus180, vec0));
+            vec0 = (float32x4_t)vorrq_s32(vbicq_s32((int32x4_t)vec0, (int32x4_t)vecMask), (int32x4_t)vec1);
             
             // if (y[i] < 0) a = 360.f - a
-            vecMask = vcltq_f32(vecAy0, vecAtan2_zero);
-            vec1 = vandq_s32(vecMask, vsubq_f32(vecAtan2_plus360, vec0));
-            vec0 = vorrq_s32(vbicq_s32(vec0, vecMask), vec1);
+            vecMask = (float32x4_t)vcltq_f32(vecAy0, vecAtan2_zero);
+            vec1 = (float32x4_t)vandq_s32((int32x4_t)vecMask, (int32x4_t)vsubq_f32(vecAtan2_plus360, vec0));
+            vec0 = (float32x4_t)vorrq_s32(vbicq_s32((int32x4_t)vec0, (int32x4_t)vecMask), (int32x4_t)vec1);
             
             // r[i] = a * scale
             vst1q_f32(&r[i], vmulq_f32(vec0, vecAtan2_scale));

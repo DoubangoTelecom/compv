@@ -33,6 +33,7 @@ build
 .idea/workspace.xml
 workspace.xml
 local.properties
+.vs
 .gradle
 gradle
 gradlew

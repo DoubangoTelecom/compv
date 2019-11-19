@@ -48,9 +48,9 @@ void CompVImageRemapBilinear_8u32f_Intrin_NEON(
 		const float32x4_t x = vld1q_f32(&mapXPtr[i]);
 		const float32x4_t y = vld1q_f32(&mapYPtr[i]);
 
-		const float32x4_t cmp = vandq_s32(
-			vandq_s32(vcgeq_f32(x, roi_left), vcleq_f32(x, roi_right)),
-			vandq_s32(vcgeq_f32(y, roi_top), vcleq_f32(y, roi_bottom))
+		const float32x4_t cmp = (float32x4_t)vandq_u32(
+			vandq_u32(vcgeq_f32(x, roi_left), vcleq_f32(x, roi_right)),
+			vandq_u32(vcgeq_f32(y, roi_top), vcleq_f32(y, roi_bottom))
 		);
 		
 		if (COMPV_ARM_NEON_NEQ_ZEROQ(cmp)) {
@@ -101,7 +101,7 @@ void CompVImageRemapBilinear_8u32f_Intrin_NEON(
 			const float32x4_t y2x2_vec = vcvtq_f32_s32(vld1q_s32(y2x2_mem));
 			
 			float32x4_t pixel = vaddq_f32(vaddq_f32(vaddq_f32(vmulq_f32(y1x1_vec, A), vmulq_f32(y1x2_vec, B)), vmulq_f32(y2x1_vec, C)), vmulq_f32(y2x2_vec, xyfractpart));
-			pixel = vorrq_s32(vandq_s32(pixel, cmp), vbicq_s32(defaultPixelValue, cmp));
+			pixel = (float32x4_t)vorrq_s32(vandq_s32((int32x4_t)pixel, (int32x4_t)cmp), vbicq_s32((int32x4_t)defaultPixelValue, (int32x4_t)cmp));
 			
 			vst1q_f32(&outputPtr[i], pixel);
 		}
