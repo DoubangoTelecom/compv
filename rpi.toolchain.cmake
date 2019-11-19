@@ -3,8 +3,13 @@
 #	- Linux: sudo apt-get install crossbuild-essential-armhf
 # More info cross compilation at https://cmake.org/cmake/help/v3.6/manual/cmake-toolchains.7.html
 
-set(CMAKE_SYSTEM_NAME Linux)
-set(CMAKE_SYSTEM_PROCESSOR arm)
+message(STATUS "Using Raspberry PI cross compilation toolchain")
+
+set (CMAKE_SYSTEM_NAME Linux)
+set (CMAKE_SYSTEM_PROCESSOR arm)
+
+# Set cross compile target os
+set (CROSSCOMPILING_TARGET_OS "PI")
 
 # Set Compiler flags
 set (COMPILER_CXX_FLAGS "${COMPILER_CXX_FLAGS} -DCOMPV_OS_PI=1 -mfpu=neon-vfpv4 -funsafe-math-optimizations")
@@ -12,7 +17,7 @@ set (COMPILER_CXX_FLAGS "${COMPILER_CXX_FLAGS} -DCOMPV_OS_PI=1 -mfpu=neon-vfpv4 
 ## Set name if not defined as argument ##
 if (NOT TOOLCHAIN_RPI_TRIPLET)
 	set(TOOLCHAIN_RPI_TRIPLET "arm-linux-gnueabihf") # may also be set to different value using cmake .. -DTOOLCHAIN_RPI_TRIPLET="arm-none-eabi" ......
-endif()
+endif ()
 
 ## Get path to the toolchain using ENV ##
 if (DEFINED ENV{TOOLCHAIN_RPI})
@@ -31,5 +36,3 @@ set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
-
-SET(CMAKE_TRY_COMPILE_NO_LINK 1)
