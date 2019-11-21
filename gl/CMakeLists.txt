@@ -78,8 +78,8 @@ if (WIN32)
   target_link_libraries(compv_gl ${LIB_LINK_SCOPE} OpenGL32.lib Glu32.lib glew32s.lib freetype.lib)
 endif()
 
-if(NOT WIN32 AND ENABLE_SHARED)
-  set_target_properties(compv_gl PROPERTIES POSITION_INDEPENDENT_CODE 1)
+if(NOT WIN32)
+  set_target_properties(compv_gl PROPERTIES POSITION_INDEPENDENT_CODE ON)
 endif()
 
 ###### Install Headers ######

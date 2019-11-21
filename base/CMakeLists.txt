@@ -443,8 +443,8 @@ else ()
 	target_link_libraries(compv_base ${LIB_LINK_SCOPE} dl pthread)
 endif()
 
-if(NOT WIN32 AND ENABLE_SHARED)
-  set_target_properties(compv_base PROPERTIES POSITION_INDEPENDENT_CODE 1)
+if(NOT WIN32)
+  set_target_properties(compv_base PROPERTIES POSITION_INDEPENDENT_CODE ON)
 endif()
 
 ###### Install Headers ######
