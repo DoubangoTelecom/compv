@@ -312,7 +312,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(OutDir)CompVCamera.lib;$(OutDir)CompVBase.lib;mfplat.lib;mf.lib;mfuuid.lib;shlwapi.lib;Strmiids.lib;wmcodecdspuuid.lib;Shlwapi.lib;Winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>mfplat.lib;mf.lib;mfuuid.lib;shlwapi.lib;Strmiids.lib;wmcodecdspuuid.lib;Shlwapi.lib;Winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -438,7 +438,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(OutDir)CompVCamera.lib;$(OutDir)CompVBase.lib;mfplat.lib;mf.lib;mfuuid.lib;shlwapi.lib;Strmiids.lib;wmcodecdspuuid.lib;Shlwapi.lib;Winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>mfplat.lib;mf.lib;mfuuid.lib;shlwapi.lib;Strmiids.lib;wmcodecdspuuid.lib;Shlwapi.lib;Winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -460,6 +460,9 @@
   <ItemGroup>
     <ProjectReference Include="..\base\CompVBase.vcxproj">
       <Project>{52028a97-e6d7-4c48-82e9-3789fd42bc56}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\camera\CompVCamera.vcxproj">
+      <Project>{d5bd00ca-0ee0-4bc2-9b0e-011f0eac5d68}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

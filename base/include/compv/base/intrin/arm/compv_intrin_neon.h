@@ -28,7 +28,7 @@ COMPV_NAMESPACE_BEGIN()
 // cbz r27, AllZeros
 #	define COMPV_ARM_NEON_NEQ_ZEROQ(vec)	(vgetq_lane_u64((uint64x2_t)(vec), 0) || vgetq_lane_u64((uint64x2_t)(vec), 1))
 #	define COMPV_ARM_NEON_EQ_ZEROQ(vec)		!COMPV_ARM_NEON_NEQ_ZEROQ(vec)
-#	define COMPV_ARM_NEON_NEQ_ZEROD(vec)	vget_lane_u64((uint64x2_t)(vec), 0)
+#	define COMPV_ARM_NEON_NEQ_ZEROD(vec)	vget_lane_u64((uint64x1_t)(vec), 0)
 #	define COMPV_ARM_NEON_EQ_ZEROD(vec)		!COMPV_ARM_NEON_NEQ_ZEROD(vec)
 
 #else

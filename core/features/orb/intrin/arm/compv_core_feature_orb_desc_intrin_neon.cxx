@@ -41,15 +41,15 @@ void CompVOrbBrief256_31_32f_Intrin_NEON(
 
 	for (size_t i = 0; i < 256; i += 16) {
 		// xf = (kBrief256Pattern31AX[i] * cosT - kBrief256Pattern31AY[i] * sinT);
-		vecX[0] = vmlsq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31AX[i + 0]), cosT), vld1q_f32(&kBrief256Pattern31AY[i + 0]), sinT);
-		vecX[1] = vmlsq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31AX[i + 4]), cosT), vld1q_f32(&kBrief256Pattern31AY[i + 4]), sinT);
-		vecX[2] = vmlsq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31AX[i + 8]), cosT), vld1q_f32(&kBrief256Pattern31AY[i + 8]), sinT);
-		vecX[3] = vmlsq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31AX[i + 12]), cosT), vld1q_f32(&kBrief256Pattern31AY[i + 12]), sinT);
+		vecX[0] = (int32x4_t)vmlsq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31AX[i + 0]), cosT), vld1q_f32(&kBrief256Pattern31AY[i + 0]), sinT);
+		vecX[1] = (int32x4_t)vmlsq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31AX[i + 4]), cosT), vld1q_f32(&kBrief256Pattern31AY[i + 4]), sinT);
+		vecX[2] = (int32x4_t)vmlsq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31AX[i + 8]), cosT), vld1q_f32(&kBrief256Pattern31AY[i + 8]), sinT);
+		vecX[3] = (int32x4_t)vmlsq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31AX[i + 12]), cosT), vld1q_f32(&kBrief256Pattern31AY[i + 12]), sinT);
 		// yf = (kBrief256Pattern31AX[i] * sinT + kBrief256Pattern31AY[i] * cosT);
-		vecY[0] = vmlaq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31AX[i + 0]), sinT), vld1q_f32(&kBrief256Pattern31AY[i + 0]), cosT);
-		vecY[1] = vmlaq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31AX[i + 4]), sinT), vld1q_f32(&kBrief256Pattern31AY[i + 4]), cosT);
-		vecY[2] = vmlaq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31AX[i + 8]), sinT), vld1q_f32(&kBrief256Pattern31AY[i + 8]), cosT);
-		vecY[3] = vmlaq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31AX[i + 12]), sinT), vld1q_f32(&kBrief256Pattern31AY[i + 12]), cosT);
+		vecY[0] = (int32x4_t)vmlaq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31AX[i + 0]), sinT), vld1q_f32(&kBrief256Pattern31AY[i + 0]), cosT);
+		vecY[1] = (int32x4_t)vmlaq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31AX[i + 4]), sinT), vld1q_f32(&kBrief256Pattern31AY[i + 4]), cosT);
+		vecY[2] = (int32x4_t)vmlaq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31AX[i + 8]), sinT), vld1q_f32(&kBrief256Pattern31AY[i + 8]), cosT);
+		vecY[3] = (int32x4_t)vmlaq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31AX[i + 12]), sinT), vld1q_f32(&kBrief256Pattern31AY[i + 12]), cosT);
 		// x = COMPV_MATH_ROUNDF_2_NEAREST_INT(xf, int);
 		vecX[0] = COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT(vecX[0]);
 		vecX[1] = COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT(vecX[1]);
@@ -83,15 +83,15 @@ void CompVOrbBrief256_31_32f_Intrin_NEON(
 		vecA[15] = img_center[vecIndex[15]];
 
 		// xf = (kBrief256Pattern31BX[i] * cosT - kBrief256Pattern31BY[i] * sinT);
-		vecX[0] = vmlsq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31BX[i + 0]), cosT), vld1q_f32(&kBrief256Pattern31BY[i + 0]), sinT);
-		vecX[1] = vmlsq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31BX[i + 4]), cosT), vld1q_f32(&kBrief256Pattern31BY[i + 4]), sinT);
-		vecX[2] = vmlsq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31BX[i + 8]), cosT), vld1q_f32(&kBrief256Pattern31BY[i + 8]), sinT);
-		vecX[3] = vmlsq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31BX[i + 12]), cosT), vld1q_f32(&kBrief256Pattern31BY[i + 12]), sinT);
+		vecX[0] = (int32x4_t)vmlsq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31BX[i + 0]), cosT), vld1q_f32(&kBrief256Pattern31BY[i + 0]), sinT);
+		vecX[1] = (int32x4_t)vmlsq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31BX[i + 4]), cosT), vld1q_f32(&kBrief256Pattern31BY[i + 4]), sinT);
+		vecX[2] = (int32x4_t)vmlsq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31BX[i + 8]), cosT), vld1q_f32(&kBrief256Pattern31BY[i + 8]), sinT);
+		vecX[3] = (int32x4_t)vmlsq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31BX[i + 12]), cosT), vld1q_f32(&kBrief256Pattern31BY[i + 12]), sinT);
 		// yf = (kBrief256Pattern31BX[i] * sinT + kBrief256Pattern31BY[i] * cosT);
-		vecY[0] = vmlaq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31BX[i + 0]), sinT), vld1q_f32(&kBrief256Pattern31BY[i + 0]), cosT);
-		vecY[1] = vmlaq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31BX[i + 4]), sinT), vld1q_f32(&kBrief256Pattern31BY[i + 4]), cosT);
-		vecY[2] = vmlaq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31BX[i + 8]), sinT), vld1q_f32(&kBrief256Pattern31BY[i + 8]), cosT);
-		vecY[3] = vmlaq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31BX[i + 12]), sinT), vld1q_f32(&kBrief256Pattern31BY[i + 12]), cosT);
+		vecY[0] = (int32x4_t)vmlaq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31BX[i + 0]), sinT), vld1q_f32(&kBrief256Pattern31BY[i + 0]), cosT);
+		vecY[1] = (int32x4_t)vmlaq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31BX[i + 4]), sinT), vld1q_f32(&kBrief256Pattern31BY[i + 4]), cosT);
+		vecY[2] = (int32x4_t)vmlaq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31BX[i + 8]), sinT), vld1q_f32(&kBrief256Pattern31BY[i + 8]), cosT);
+		vecY[3] = (int32x4_t)vmlaq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31BX[i + 12]), sinT), vld1q_f32(&kBrief256Pattern31BY[i + 12]), cosT);
 		// x = COMPV_MATH_ROUNDF_2_NEAREST_INT(xf, int);
 		vecX[0] = COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT(vecX[0]);
 		vecX[1] = COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT(vecX[1]);

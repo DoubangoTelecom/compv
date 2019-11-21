@@ -23,7 +23,8 @@ public:
 	static const char* subtype(COMPV_SUBTYPE st);
 	static COMPV_ERROR_CODE write(Json::Value* root, const char* name, const CompVMatPtr& mat);
 	static COMPV_ERROR_CODE read(const Json::Value* root, const char* name, CompVMatPtrPtr mat);
-	static COMPV_ERROR_CODE parse(const char* filePath, Json::Value* root);
+	static COMPV_ERROR_CODE parse(const char* filePath, Json::Value* root, bool collectComments = false);
+	static COMPV_ERROR_CODE parse(std::istream& jsonStream, Json::Value* root, bool collectComments = false);
 };
 
 COMPV_NAMESPACE_END()

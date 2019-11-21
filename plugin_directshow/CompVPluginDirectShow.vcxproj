@@ -521,7 +521,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(OutDir)CompVCamera.lib;$(OutDir)CompVBase.lib;strmbase.lib;dmoguids.lib;strmiids.lib;uuid.lib;Winmm.lib;comsuppw.lib;Shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>strmbase.lib;dmoguids.lib;strmiids.lib;uuid.lib;Winmm.lib;comsuppw.lib;Shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>../thirdparties/libraries/windows/directshow-win64-debug</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
@@ -1005,7 +1005,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(OutDir)CompVCamera.lib;$(OutDir)CompVBase.lib;strmbase.lib;dmoguids.lib;strmiids.lib;uuid.lib;Winmm.lib;comsuppw.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>strmbase.lib;dmoguids.lib;strmiids.lib;uuid.lib;Winmm.lib;comsuppw.lib;Shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>../thirdparties/libraries/windows/directshow-win64-release</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
@@ -1028,6 +1028,9 @@
   <ItemGroup>
     <ProjectReference Include="..\base\CompVBase.vcxproj">
       <Project>{52028a97-e6d7-4c48-82e9-3789fd42bc56}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\camera\CompVCamera.vcxproj">
+      <Project>{d5bd00ca-0ee0-4bc2-9b0e-011f0eac5d68}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -4,7 +4,7 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/../common.cmake)
 
 target_check_return_if_exist(compv_core)
 
-project(libcompv_core VERSION 1.0.0 LANGUAGES CXX C)
+project(libcompv_core VERSION 1.0.0 LANGUAGES CXX C ASM)
 
 include(ExternalProject)
 add_contrib("${CMAKE_CURRENT_SOURCE_DIR}/../base/" compv_base)
@@ -118,9 +118,6 @@ if("${TARGET_ARCH}" STREQUAL "x86" OR "${TARGET_ARCH}" STREQUAL "x64")
 		features/orb/intrin/x86/compv_core_feature_orb_desc_intrin_sse41.cxx
 	)
 
-	###### Set FLAGS for intrin files ######
-	set_INTRIN_COMPILE_FLAGS (${INTRIN_FILES})
-
 	###### ASM files ######
 	set(ASM_FILES ${ASM_FILES}
 		###### ccl/asm/x86 ######
@@ -158,10 +155,72 @@ if("${TARGET_ARCH}" STREQUAL "x86" OR "${TARGET_ARCH}" STREQUAL "x64")
 		features/orb/asm/x86/compv_core_feature_orb_desc_x86_sse.s
 	)
 
-	###### Set building rules for ASM files ######
+	###### Set options for ASM files ######
 	set (YASM_ARGS ${YASM_ARGS} -i "${CMAKE_CURRENT_SOURCE_DIR}/../base/asm/x86")
-	set_ASM_OBJECTS(${ASM_FILES})
+
+###### --- ARM32 / ARM64 --- ######
+elseif ("${TARGET_ARCH}" STREQUAL "arm32" OR "${TARGET_ARCH}" STREQUAL "arm64")
+	set(INTRIN_FILES ${INTRIN_FILES}
+		###### ccl/intrin/arm ######
+		ccl/intrin/arm/compv_core_ccl_lsl_intrin_neon.cxx
+
+		###### features/edges/intrin/arm ######
+		features/edges/intrin/arm/compv_core_feature_canny_dete_intrin_neon.cxx
+
+		###### features/fast/intrin/arm ######
+		features/fast/intrin/arm/compv_core_feature_fast_dete_intrin_neon.cxx
+
+		###### features/hog/intrin/arm ######
+		features/hog/intrin/arm/compv_core_feature_hog_common_norm_intrin_neon.cxx
+		features/hog/intrin/arm/compv_core_feature_hog_std_intrin_neon.cxx
+
+		###### features/hough/intrin/arm ######
+		features/hough/intrin/arm/compv_core_feature_houghkht_intrin_neon.cxx
+		features/hough/intrin/arm/compv_core_feature_houghsht_intrin_neon.cxx
+
+		###### features/orb/intrin/arm ######
+		features/orb/intrin/arm/compv_core_feature_orb_desc_intrin_neon.cxx
+	)
+
+	###### ASM files ######
+	set(ASM_FILES ${ASM_FILES}
+		###### ccl/asm/arm ######
+		ccl/asm/arm/compv_core_ccl_lsl_arm32.S
+		ccl/asm/arm/compv_core_ccl_lsl_arm32_neon.S
+		ccl/asm/arm/compv_core_ccl_lsl_arm64.S
+		ccl/asm/arm/compv_core_ccl_lsl_arm64_neon.S
+
+		###### features/edges/asm/arm ######
+		features/edges/asm/arm/compv_core_feature_canny_dete_arm32_neon.S
+		features/edges/asm/arm/compv_core_feature_canny_dete_arm64_neon.S
+
+		###### features/fast/asm/arm ######
+		features/fast/asm/arm/compv_core_feature_fast_dete_arm32_neon.S
+		features/fast/asm/arm/compv_core_feature_fast_dete_arm64_neon.S
+		features/fast/asm/arm/compv_core_feature_fast_dete_macros_neon.S
+
+		###### features/hog/asm/arm ######
+		features/hog/asm/arm/compv_core_feature_hog_common_norm_arm32_neon.S
+		features/hog/asm/arm/compv_core_feature_hog_common_norm_arm64_neon.S
+
+		###### features/hough/asm/arm ######
+		features/hough/asm/arm/compv_core_feature_houghkht_arm32.S
+		features/hough/asm/arm/compv_core_feature_houghkht_arm64.S
+
+		###### features/orb/asm/arm ######
+		features/orb/asm/arm/compv_core_feature_orb_desc_arm32.S
+		features/orb/asm/arm/compv_core_feature_orb_desc_arm64.S
+	)
+
+	###### Set building rules for ASM files ######
+	set_source_files_properties(${ASM_FILES} APPEND PROPERTIES LANGUAGE ASM COMPILE_FLAGS "${FLAGS_NEONFMA} -I${CMAKE_CURRENT_SOURCE_DIR}/../base/asm/arm -I${CMAKE_CURRENT_SOURCE_DIR}/features/fast/asm/arm")
 endif()
+
+###### Set FLAGS for intrin files ######
+set_INTRIN_COMPILE_FLAGS (${INTRIN_FILES})
+
+###### Declare ASM objects ######
+set_ASM_OBJECTS(${ASM_FILES})
 
 ###### The library ######
 add_library(compv_core ${LIB_BUILD_TYPE} ${compv_core_SOURCES} ${INTRIN_FILES} ${ASM_OBJECTS})

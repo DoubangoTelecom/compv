@@ -54,13 +54,13 @@ void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Intr
 				vec0n = vget_low_u8(vec0);
 				if (COMPV_ARM_NEON_NEQ_ZEROD(vec0n)) {
 					vec2n = vdup_lane_u8(vec0n, 0);
-					vec3n = vshl_n_u64(vdup_lane_u8(vec0n, 1), 8);
-					vec4n = vshl_n_u64(vdup_lane_u8(vec0n, 2), 16);
-					vec5n = vshl_n_u64(vdup_lane_u8(vec0n, 3), 24);
-					vec6n = vshl_n_u64(vdup_lane_u8(vec0n, 4), 32);
-					vec7n = vshl_n_u64(vdup_lane_u8(vec0n, 5), 40);
-					vec8n = vshl_n_u64(vdup_lane_u8(vec0n, 6), 48);
-					vec0n = vshl_n_u64(vdup_lane_u8(vec0n, 7), 56);
+					vec3n = (uint8x8_t)vshl_n_u64((uint64x1_t)vdup_lane_u8(vec0n, 1), 8);
+					vec4n = (uint8x8_t)vshl_n_u64((uint64x1_t)vdup_lane_u8(vec0n, 2), 16);
+					vec5n = (uint8x8_t)vshl_n_u64((uint64x1_t)vdup_lane_u8(vec0n, 3), 24);
+					vec6n = (uint8x8_t)vshl_n_u64((uint64x1_t)vdup_lane_u8(vec0n, 4), 32);
+					vec7n = (uint8x8_t)vshl_n_u64((uint64x1_t)vdup_lane_u8(vec0n, 5), 40);
+					vec8n = (uint8x8_t)vshl_n_u64((uint64x1_t)vdup_lane_u8(vec0n, 6), 48);
+					vec0n = (uint8x8_t)vshl_n_u64((uint64x1_t)vdup_lane_u8(vec0n, 7), 56);
 					vec2n = vadd_u8(vec2n, vec3n);
 					vec4n = vadd_u8(vec4n, vec5n);
 					vec6n = vadd_u8(vec6n, vec7n);
@@ -74,14 +74,14 @@ void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Intr
 				/* == High == */
 				vec0n = vget_high_u8(vec0);
 				if (COMPV_ARM_NEON_NEQ_ZEROD(vec0n)) {
-					vec2n = vdup_lane_u8(vec0n, 0);
-					vec3n = vshl_n_u64(vdup_lane_u8(vec0n, 1), 8);
-					vec4n = vshl_n_u64(vdup_lane_u8(vec0n, 2), 16);
-					vec5n = vshl_n_u64(vdup_lane_u8(vec0n, 3), 24);
-					vec6n = vshl_n_u64(vdup_lane_u8(vec0n, 4), 32);
-					vec7n = vshl_n_u64(vdup_lane_u8(vec0n, 5), 40);
-					vec8n = vshl_n_u64(vdup_lane_u8(vec0n, 6), 48);
-					vec0n = vshl_n_u64(vdup_lane_u8(vec0n, 7), 56);
+					vec2n = (uint8x8_t)vdup_lane_u8(vec0n, 0);
+					vec3n = (uint8x8_t)vshl_n_u64((uint64x1_t)vdup_lane_u8(vec0n, 1), 8);
+					vec4n = (uint8x8_t)vshl_n_u64((uint64x1_t)vdup_lane_u8(vec0n, 2), 16);
+					vec5n = (uint8x8_t)vshl_n_u64((uint64x1_t)vdup_lane_u8(vec0n, 3), 24);
+					vec6n = (uint8x8_t)vshl_n_u64((uint64x1_t)vdup_lane_u8(vec0n, 4), 32);
+					vec7n = (uint8x8_t)vshl_n_u64((uint64x1_t)vdup_lane_u8(vec0n, 5), 40);
+					vec8n = (uint8x8_t)vshl_n_u64((uint64x1_t)vdup_lane_u8(vec0n, 6), 48);
+					vec0n = (uint8x8_t)vshl_n_u64((uint64x1_t)vdup_lane_u8(vec0n, 7), 56);
 					vec2n = vadd_u8(vec2n, vec3n);
 					vec4n = vadd_u8(vec4n, vec5n);
 					vec6n = vadd_u8(vec6n, vec7n);
@@ -99,7 +99,7 @@ void CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Intr
 				vst1q_s16(&ERi[i + 8], vecER); // unaligned store
 
 				/* Duplicate latest element */
-				vecER = vdupq_lane_s16(vget_high_s16(vecER), 7);
+				vecER = vdupq_lane_s16(vget_high_s16(vecER), 3); // TODO(dmi): check why 7 instead of 3 was working. 7 is out of range the compiler should have complained
 			}
 			else {
 				/* Store previous ER */

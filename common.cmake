@@ -1,7 +1,12 @@
 set(CMAKE_VERBOSE_MAKEFILE on)
 
+## Enable C/C++/ASM ##
+enable_language(CXX C ASM)
+
 ## C++11 ##
-set (CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF) # no "-std=gnu++11" needed
 
 ## Set Libs build type (STATIC or SHARED) ##
 if (NOT LIB_BUILD_TYPE)
@@ -25,8 +30,11 @@ endif()
 ## Set default and common build and link flags ##
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g")
 set(CMAKE_CXX_FLAGS_RELEASE " ${CMAKE_CXX_FLAGS_RELEASE} -O3")
-set(LINK_FLAGS_DEBUG "${LINK_FLAGS_DEBUG}")
-set(LINK_FLAGS_RELEASE "${LINK_FLAGS_RELEASE}")
+set(CMAKE_ASM_FLAGS "-c -x assembler-with-cpp -Wall -Werror -Wextra -Wfatal-errors")
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined -Wl,-gc-sections")
+if(CMAKE_BUILD_TYPE MATCHES "Release" OR CMAKE_BUILD_TYPE MATCHES "None")
+	#set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} --Wl,--strip-all")
+endif()
 
 ## Detect TARGET_ARCH ##
 if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "i386|i686|amd64|x86_64|AMD64")
@@ -45,8 +53,7 @@ endif()
 
 ## COMPILER and LINKER FLAGS ##
 if (${CMAKE_CXX_COMPILER_ID} MATCHES "Clang|GNU")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden -fdata-sections -ffunction-sections -Wno-pragmas -std=c++11")
-	set(LINK_FLAGS_RELEASE "${LINK_FLAGS_RELEASE} -Wl,-gc-sections")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flax-vector-conversions -fvisibility=hidden -fdata-sections -ffunction-sections -Wno-pragmas")
 elseif (${CMAKE_CXX_COMPILER_ID} MATCHES "Intel")
 	# Intel C++
 elseif (${CMAKE_CXX_COMPILER_ID} MATCHES "MSVC")
@@ -88,9 +95,13 @@ else()
 	set(FLAGS_AVX "-mavx")
 	set(FLAGS_AVX2 "-mavx2 ${FLAGS_FMA}")
 
-	set(FLAGS_NEON "-mfpu=neon")
+	if ("${TARGET_OS}" MATCHES "PI")
+		set(FLAGS_NEON "-mfpu=neon-vfpv4") # we know that all rpi3+ devices support vfpv4
+	else ()
+		set(FLAGS_NEON "-mfpu=neon")
+	endif ()
+	set(FLAGS_NEONFMA "-mfpu=neon-vfpv4")
 endif(MSVC)
-
 
 ## Detect YASM exe and args ##
 if ("${TARGET_ARCH}" STREQUAL "x86" OR "${TARGET_ARCH}" STREQUAL "x64")
@@ -124,7 +135,6 @@ if ("${TARGET_ARCH}" STREQUAL "x86" OR "${TARGET_ARCH}" STREQUAL "x64")
 			set(YASM_ARGS ${YASM_ARGS} -f elf32)
 		endif ()
 	endif ()
-
 endif()
 
 ## Objects extension ##
@@ -136,14 +146,18 @@ endif()
 
 ## Helper macro to build ASM/YASM objects ##
 macro(set_ASM_OBJECTS)
-	foreach (file ${ARGN})
-		get_filename_component(file_name ${file} NAME_WE)
-		get_filename_component(file_dir ${file} DIRECTORY)
-		set(ASM_OBJECT ${CMAKE_CURRENT_SOURCE_DIR}/${file_dir}/${file_name}.${OBJECT_EXT})
-		set(ASM_FILE ${CMAKE_CURRENT_SOURCE_DIR}/${file_dir}/${file_name}.s)
-		add_custom_command(OUTPUT ${ASM_OBJECT} DEPENDS ${file} COMMAND "${YASM_EXE}" ${YASM_ARGS} "${ASM_FILE}" -o "${ASM_OBJECT}")
-		set(ASM_OBJECTS ${ASM_OBJECTS} ${ASM_OBJECT})
-	endforeach()
+	if ("${TARGET_ARCH}" STREQUAL "x86" OR "${TARGET_ARCH}" STREQUAL "x64")
+		foreach (file ${ARGN})
+			get_filename_component(file_name ${file} NAME_WE)
+			get_filename_component(file_dir ${file} DIRECTORY)
+			set(ASM_OBJECT ${CMAKE_CURRENT_SOURCE_DIR}/${file_dir}/${file_name}.${OBJECT_EXT})
+			set(ASM_FILE ${CMAKE_CURRENT_SOURCE_DIR}/${file_dir}/${file_name}.s)
+			add_custom_command(OUTPUT ${ASM_OBJECT} DEPENDS ${file} COMMAND "${YASM_EXE}" ${YASM_ARGS} "${ASM_FILE}" -o "${ASM_OBJECT}")
+			set(ASM_OBJECTS ${ASM_OBJECTS} ${ASM_OBJECT})
+		endforeach()
+	else ()
+		set(ASM_OBJECTS ${ASM_OBJECTS} ${ARGV})
+	endif()
 endmacro()
 
 ## Helper macro to set compiler options for intrin files ##
@@ -163,7 +177,10 @@ macro(set_INTRIN_COMPILE_FLAGS)
 			set(CURRENT_FILE_COMPILE_FLAGS "${CURRENT_FILE_COMPILE_FLAGS} ${FLAGS_AVX}")
 		elseif (${file_name} MATCHES "_intrin_(.*_)?avx2.cxx")
 			set(CURRENT_FILE_COMPILE_FLAGS "${CURRENT_FILE_COMPILE_FLAGS} ${FLAGS_AVX2}")
+		elseif (${file_name} MATCHES "_intrin_(.*_)?neon(64)?.cxx")
+			set(CURRENT_FILE_COMPILE_FLAGS "${CURRENT_FILE_COMPILE_FLAGS} ${FLAGS_NEON}")
 		endif ()
+		
 		# Append others
 		if (${file_name} MATCHES "_intrin_fma(3|4)_(.*).cxx")
 			set(CURRENT_FILE_COMPILE_FLAGS "${CURRENT_FILE_COMPILE_FLAGS} ${FLAGS_FMA}")

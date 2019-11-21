@@ -48,8 +48,8 @@ void CompVHogStdBuildMapHistForSingleCellBilinear_32f32s_Intrin_NEON(
 	for (compv_uscalar_t j = 0; j < cellHeight; ++j) {
 		for (compv_uscalar_t i = 0; i < cellWidth; i += 4) {
 			float32x4_t vecTheta = vld1q_f32(&dirPtr[i]);
-			const float32x4_t vecMask = vcgtq_f32(vecTheta, vecthetaMax);
-			vecTheta = vsubq_f32(vecTheta, vandq_s32(vecthetaMax, vecMask));
+			const float32x4_t vecMask = (float32x4_t)vcgtq_f32(vecTheta, vecthetaMax);
+			vecTheta = vsubq_f32(vecTheta, (float32x4_t)vandq_s32((int32x4_t)vecthetaMax, (int32x4_t)vecMask));
 			const int32x4_t vecBinIdx = vcvtq_s32_f32(vsubq_f32(vmulq_f32(vecScaleBinWidth, vecTheta), vecHalf));
 			const float32x4_t vecDiff = vsubq_f32(vmulq_f32(vsubq_f32(vecTheta, vmulq_f32(vcvtq_f32_s32(vecBinIdx), vecBinWidth)), vecScaleBinWidth), vecHalf);
 			float32x4_t vecMagPtr = vld1q_f32(&magPtr[i]);
@@ -57,8 +57,8 @@ void CompVHogStdBuildMapHistForSingleCellBilinear_32f32s_Intrin_NEON(
 			int32x4_t vecBinIdxNext = vcgeq_f32(vecDiff, vecZero);
 			vecBinIdxNext = vorrq_s32(vandq_s32(vecBinIdxNext, vecOne_plus), vbicq_s32(vecOne_minus, vecBinIdxNext));
 			vecBinIdxNext = vaddq_s32(vecBinIdxNext, vecBinIdx);
-			const int32x4_t vecMaski0 = vcltq_s32(vecBinIdxNext, vecZero);
-			const int32x4_t vecMaski1 = vcgtq_s32(vecBinIdxNext, vecBinIdxMax);
+			const int32x4_t vecMaski0 = (int32x4_t)vcltq_s32(vecBinIdxNext, (int32x4_t)vecZero);
+			const int32x4_t vecMaski1 = (int32x4_t)vcgtq_s32(vecBinIdxNext, vecBinIdxMax);
 			vecBinIdxNext = vorrq_s32(
 				vandq_s32(vecMaski0, vecBinIdxMax),
 				vbicq_s32(vbicq_s32(vecBinIdxNext, vecMaski1), vecMaski0)

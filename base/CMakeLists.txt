@@ -4,7 +4,7 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/../common.cmake)
 
 target_check_return_if_exist(compv_base)
 
-project(libcompv_base VERSION 1.0.0 LANGUAGES CXX C)
+project(libcompv_base VERSION 1.0.0 LANGUAGES CXX C ASM)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 if (WIN32)
@@ -166,7 +166,7 @@ set(compv_base_SOURCES
 )
 
 ###### --- X86 / X64 --- ######
-if("${TARGET_ARCH}" STREQUAL "x86" OR "${TARGET_ARCH}" STREQUAL "x64")
+if ("${TARGET_ARCH}" STREQUAL "x86" OR "${TARGET_ARCH}" STREQUAL "x64")
 	set(INTRIN_FILES ${INTRIN_FILES}
 		###### image/intrin/x86 ######
 		image/intrin/x86/compv_image_conv_grayscale_intrin_ssse3.cxx
@@ -239,9 +239,6 @@ if("${TARGET_ARCH}" STREQUAL "x86" OR "${TARGET_ARCH}" STREQUAL "x64")
 		ml/libsvm-322/intrin/x86/compv_ml_libsvm-322_intrin_avx.cxx
 		ml/libsvm-322/intrin/x86/compv_ml_libsvm-322_intrin_sse2.cxx
 	)
-
-	###### Set FLAGS for intrin files ######
-	set_INTRIN_COMPILE_FLAGS (${INTRIN_FILES})
 
 	###### ASM files ######
 	set(ASM_FILES ${ASM_FILES}
@@ -322,21 +319,128 @@ if("${TARGET_ARCH}" STREQUAL "x86" OR "${TARGET_ARCH}" STREQUAL "x64")
 		math/asm/x86/compv_math_utils_x86_sse.s
 	)
 
-	###### Set building rules for ASM files ######
+	###### Set options for ASM files ######
 	set (YASM_ARGS ${YASM_ARGS} -i "${CMAKE_CURRENT_SOURCE_DIR}/asm/x86")
-	set_ASM_OBJECTS(${ASM_FILES})
+
+###### --- ARM32 / ARM64 --- ######
+elseif ("${TARGET_ARCH}" STREQUAL "arm32" OR "${TARGET_ARCH}" STREQUAL "arm64")
+	set(INTRIN_FILES ${INTRIN_FILES}
+		###### image/intrin/arm ######
+		image/intrin/arm/compv_image_conv_grayscale_intrin_neon.cxx
+		image/intrin/arm/compv_image_conv_hsv_intrin_neon.cxx
+		image/intrin/arm/compv_image_conv_rgbfamily_intrin_neon.cxx
+		image/intrin/arm/compv_image_conv_to_rgbx_intrin_neon.cxx
+		image/intrin/arm/compv_image_remap_intrin_neon.cxx
+		image/intrin/arm/compv_image_scale_bicubic_intrin_neon.cxx
+		image/intrin/arm/compv_image_scale_bilinear_intrin_neon.cxx
+		image/intrin/arm/compv_image_threshold_intrin_neon.cxx
+
+		###### intrin/arm ######
+		intrin/arm/compv_bits_intrin_neon.cxx
+		intrin/arm/compv_gradient_fast_intrin_neon.cxx
+		intrin/arm/compv_mem_intrin_neon.cxx
+		intrin/arm/compv_patch_intrin_neon.cxx
+
+		###### math/intrin/arm ######
+		math/intrin/arm/compv_math_activation_functions_intrin_neon64.cxx
+		math/intrin/arm/compv_math_cast_intrin_neon.cxx
+		math/intrin/arm/compv_math_convlt_intrin_neon.cxx
+		math/intrin/arm/compv_math_distance_intrin_neon.cxx
+		math/intrin/arm/compv_math_dot_intrin_neon.cxx
+		math/intrin/arm/compv_math_exp_intrin_neon.cxx
+		math/intrin/arm/compv_math_histogram_intrin_neon.cxx
+		math/intrin/arm/compv_math_matrix_intrin_neon64.cxx
+		math/intrin/arm/compv_math_morph_intrin_neon.cxx
+		math/intrin/arm/compv_math_op_mul_intrin_neon.cxx
+		math/intrin/arm/compv_math_op_sub_intrin_neon.cxx
+		math/intrin/arm/compv_math_scale_intrin_neon.cxx
+		math/intrin/arm/compv_math_stats_intrin_neon64.cxx
+		math/intrin/arm/compv_math_transform_intrin_neon64.cxx
+		math/intrin/arm/compv_math_trig_intrin_neon.cxx
+		math/intrin/arm/compv_math_utils_intrin_neon.cxx
+	)
+
+	###### ASM files ######
+	set(ASM_FILES ${ASM_FILES}
+		###### asm/arm ######
+		asm/arm/compv_bits_arm32_neon.S
+		asm/arm/compv_bits_arm64_neon.S
+		asm/arm/compv_common_arm.S
+		asm/arm/compv_common_arm32.S
+		asm/arm/compv_common_arm64.S
+		asm/arm/compv_gradient_fast_arm32_neon.S
+		asm/arm/compv_gradient_fast_arm64_neon.S
+		asm/arm/compv_mem_arm32_neon.S
+		asm/arm/compv_mem_arm64_neon.S
+		asm/arm/compv_patch_arm32_neon.S
+		asm/arm/compv_patch_arm64_neon.S
+		asm/arm/compv_test_arm.S
+
+		###### image/asm/arm ######
+		image/asm/arm/compv_image_conv_grayscale_arm32_neon.S
+		image/asm/arm/compv_image_conv_grayscale_arm64_neon.S
+		image/asm/arm/compv_image_conv_hsv_arm32_neon.S
+		image/asm/arm/compv_image_conv_hsv_arm64_neon.S
+		image/asm/arm/compv_image_conv_rgbfamily_arm32_neon.S
+		image/asm/arm/compv_image_conv_rgbfamily_arm64_neon.S
+		image/asm/arm/compv_image_conv_to_rgbx_arm32_neon.S
+		image/asm/arm/compv_image_conv_to_rgbx_arm64_neon.S
+		image/asm/arm/compv_image_scale_bilinear_arm32_neon.S
+		image/asm/arm/compv_image_scale_bilinear_arm64_neon.S
+		image/asm/arm/compv_image_threshold_arm32_neon.S
+		image/asm/arm/compv_image_threshold_arm64_neon.S
+
+		###### math/asm/arm ######
+		math/asm/arm/compv_math_cast_arm32_neon.S
+		math/asm/arm/compv_math_cast_arm64_neon.S
+		math/asm/arm/compv_math_convlt_arm32_neon.S
+		math/asm/arm/compv_math_convlt_arm64_neon.S
+		math/asm/arm/compv_math_distance_arm32_neon.S
+		math/asm/arm/compv_math_distance_arm64_neon.S
+		math/asm/arm/compv_math_dot_arm32_neon.S
+		math/asm/arm/compv_math_dot_arm64_neon.S
+		math/asm/arm/compv_math_exp_arm32_neon.S
+		math/asm/arm/compv_math_exp_arm64_neon.S
+		math/asm/arm/compv_math_histogram_arm32_neon.S
+		math/asm/arm/compv_math_histogram_arm64_neon.S
+		math/asm/arm/compv_math_matrix_arm32_neon.S
+		math/asm/arm/compv_math_matrix_arm64_neon.S
+		math/asm/arm/compv_math_morph_arm32_neon.S
+		math/asm/arm/compv_math_morph_arm64_neon.S
+		math/asm/arm/compv_math_op_mul_arm32_neon.S
+		math/asm/arm/compv_math_op_mul_arm64_neon.S
+		math/asm/arm/compv_math_op_sub_arm32_neon.S
+		math/asm/arm/compv_math_op_sub_arm64_neon.S
+		math/asm/arm/compv_math_scale_arm32_neon.S
+		math/asm/arm/compv_math_scale_arm64_neon.S
+		math/asm/arm/compv_math_stats_arm32_neon.S
+		math/asm/arm/compv_math_stats_arm64_neon.S
+		math/asm/arm/compv_math_transform_arm32_neon.S
+		math/asm/arm/compv_math_transform_arm64_neon.S
+		math/asm/arm/compv_math_trig_arm32_neon.S
+		math/asm/arm/compv_math_trig_arm64_neon.S
+		math/asm/arm/compv_math_utils_arm32_neon.S
+		math/asm/arm/compv_math_utils_arm64_neon.S
+	)
+
+	###### Set building rules for ASM files ######
+	set_source_files_properties(${ASM_FILES} APPEND PROPERTIES LANGUAGE ASM COMPILE_FLAGS "${FLAGS_NEONFMA} -I${CMAKE_CURRENT_SOURCE_DIR}/asm/arm")
 endif()
+
+###### Set FLAGS for intrin files ######
+set_INTRIN_COMPILE_FLAGS (${INTRIN_FILES})
+
+###### Declare ASM objects ######
+set_ASM_OBJECTS(${ASM_FILES})
 
 ###### The library ######
 add_library(compv_base ${LIB_BUILD_TYPE} ${compv_base_SOURCES} ${INTRIN_FILES} ${ASM_OBJECTS})
-#if (MSVC)
-#	add_custom_target(compv_base-asm-objects DEPENDS ${ASM_OBJECTS})
-#	add_dependencies(compv_base compv_base-asm-objects)
-#endif()
 
 ###### 3rd parties libs ######
 if (WIN32)
-  target_link_libraries(compv_base ${LIB_LINK_SCOPE} Shlwapi.lib Winmm.lib)
+	target_link_libraries(compv_base ${LIB_LINK_SCOPE} Shlwapi.lib Winmm.lib)
+else ()
+	target_link_libraries(compv_base ${LIB_LINK_SCOPE} dl pthread)
 endif()
 
 if(NOT WIN32 AND ENABLE_SHARED)

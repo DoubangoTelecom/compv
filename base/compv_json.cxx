@@ -8,6 +8,8 @@
 #include "compv/base/jsoncpp-1.8.4/json.h"
 #include "compv/base/compv_fileutils.h"
 
+#define COMPV_THIS_CLASS_NAME "CompVJSON"
+
 COMPV_NAMESPACE_BEGIN()
 
 template<typename T>
@@ -91,17 +93,34 @@ COMPV_ERROR_CODE CompVJSON::read(const Json::Value* root, const char* name, Comp
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVJSON::parse(const char* filePath, Json::Value* root)
+COMPV_ERROR_CODE CompVJSON::parse(const char* filePath, Json::Value* root, bool collectComments COMPV_DEFAULT(false))
 {
 	COMPV_CHECK_EXP_RETURN(!filePath || !root, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	CompVBufferPtr content;
-	COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wdeprecated-declarations")
-	Json::Reader reader;
-	COMPV_GCC_DISABLE_WARNINGS_END()
-	Json::Value& root_ = *root;
 	COMPV_CHECK_CODE_RETURN(CompVFileUtils::read(filePath, &content));
-	COMPV_CHECK_EXP_RETURN(!reader.parse(reinterpret_cast<const char*>(content->ptr()), reinterpret_cast<const char*>(content->ptr()) + content->size(), root_, false)
-		, COMPV_ERROR_CODE_E_JSON_CPP, "JSON parsing failed");
+	std::istringstream contentStream(std::string(reinterpret_cast<const char*>(content->ptr()), content->size()));
+	COMPV_CHECK_CODE_RETURN(CompVJSON::parse(
+		contentStream,
+		root,
+		collectComments
+	));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVJSON::parse(std::istream& jsonStream, Json::Value* root, bool collectComments COMPV_DEFAULT(false))
+{
+	COMPV_CHECK_EXP_RETURN(!jsonStream || !root, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	Json::CharReaderBuilder builder;
+	builder["collectComments"] = collectComments;
+	JSONCPP_STRING errs;
+	const bool ok = Json::parseFromStream(builder, jsonStream, root, &errs);
+	if (!ok) {
+		std::ostringstream os;
+		os << jsonStream.rdbuf();
+		std::string jsonString = os.str();
+		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASS_NAME, "Failed to parse JSON string. Error: %s. JSON: %s", errs.c_str(), jsonString.c_str());
+		return COMPV_ERROR_CODE_E_JSON_CPP;
+	}
 	return COMPV_ERROR_CODE_S_OK;
 }
 
