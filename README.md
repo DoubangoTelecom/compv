@@ -9,6 +9,7 @@
 ### SDKs using our code ###
 
  - <a target="_blank" href="https://github.com/DoubangoTelecom/ultimateALPR-SDK">ANPR/ALPR SDK for embedded devices (ARM) and desktops (x86) </a>
+ - <a target="_blank" href="https://github.com/DoubangoTelecom/ultimateMRZ-SDK">MRZ/MRP SDK for embedded devices (ARM) and desktops (x86) </a>
  
  ### Online demo apps using our code ###
  - <a target="_blank" href="https://doubango.org/webapps/alpr/">Cloud-based Automatic Number/License Plate Recognition (ANPR/ALPR)</a>
