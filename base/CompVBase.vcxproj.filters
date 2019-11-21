@@ -852,9 +852,6 @@
     <ClInclude Include="include\compv\base\math\compv_math_activation_functions.h">
       <Filter>include\math</Filter>
     </ClInclude>
-    <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_activation_functions_intrin_sse2.h">
-      <Filter>include\math\intrin\x86</Filter>
-    </ClInclude>
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_activation_functions_intrin_sse41.h">
       <Filter>include\math\intrin\x86</Filter>
     </ClInclude>
