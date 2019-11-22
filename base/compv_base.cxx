@@ -209,6 +209,10 @@ COMPV_ERROR_CODE CompVBase::init(int numThreads COMPV_DEFAULT(-1))
     }
 #	endif
 #elif COMPV_ARCH_ARM
+#	if !COMPV_OS_ANDROID && !COMPV_OS_PI
+	// COMPV_OS_PI macro is set when cross-compiling using cmake
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Your ARM OS is neither Android nor Raspberry pi. You may miss some optimizations. Let us know what's your OS.");
+#	endif
 #	if COMPV_ARCH_ARM64
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Binary type: AArch64");
 #	else
@@ -216,7 +220,7 @@ COMPV_ERROR_CODE CompVBase::init(int numThreads COMPV_DEFAULT(-1))
 	if (CompVCpu::isSupported(kCpuFlagARM64)) {
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Using AArch32 binaries on AArch64 machine, you're missing many optimizations. Sad!!");
 	}
-#	endif
+#	endif /*!COMPV_ARCH_ARM64*/
 #endif
 #if COMPV_INTRINSIC
     COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Intrinsic enabled");
