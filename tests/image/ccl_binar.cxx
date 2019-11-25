@@ -219,6 +219,7 @@ static COMPV_ERROR_CODE check_boxes(const CompVConnectedComponentLabelingResultP
 	COMPV_CHECK_CODE_RETURN(compv_tests_write_to_file(ptr8uBoxes_, TEST_TYPE));
 #endif
 
+	COMPV_DEBUG_INFO("md5_boxes: %s", compv_tests_md5(ptr8uBoxes_).c_str());
 	COMPV_CHECK_EXP_RETURN(compv_tests_md5(ptr8uBoxes_).compare(test->md5_boxes) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "CCL MD5 mismatch (boxes)");
 
 	return COMPV_ERROR_CODE_S_OK;

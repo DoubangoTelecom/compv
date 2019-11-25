@@ -12,7 +12,7 @@ using namespace compv;
 #define TEST_FEATURE_FAST			0
 #define TEST_FEATURE_ORB			0
 #define TEST_PATCH_MOMENTS			0
-#define TEST_CCL_BINAR				0
+#define TEST_CCL_BINAR				1
 #define TEST_CCL_MSER				0
 #define TEST_GRADIENT				0
 #define TEST_SOBEL					0
@@ -23,7 +23,7 @@ using namespace compv;
 #define TEST_HOUGHKHT				0
 #define TEST_HOGSTD					0
 #define TEST_BRUTEFORCE				0
-#define TEST_PACKING				1
+#define TEST_PACKING				0
 #define TEST_WRAPYUV				0
 #define TEST_BITS					0
 

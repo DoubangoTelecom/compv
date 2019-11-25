@@ -18,14 +18,11 @@
 COMPV_NAMESPACE_BEGIN()
 
 #if COMPV_ARCH_ARM64
+// TODO(dmi): use "vmaxvq_u32" which is single instruction
 //mov r27, v21.d[0]
 //mov r28, v21.d[1]
 //orr r27, r27, r28 // orrs not avail on Aarch64
 //cbz r27, AllZeros
-// Or (slooow)
-// (s/u)qxtn v30.2s, v21.2d
-// fmov x27, d30
-// cbz r27, AllZeros
 #	define COMPV_ARM_NEON_NEQ_ZEROQ(vec)	(vgetq_lane_u64((uint64x2_t)(vec), 0) || vgetq_lane_u64((uint64x2_t)(vec), 1))
 #	define COMPV_ARM_NEON_EQ_ZEROQ(vec)		!COMPV_ARM_NEON_NEQ_ZEROQ(vec)
 #	define COMPV_ARM_NEON_NEQ_ZEROD(vec)	vget_lane_u64((uint64x1_t)(vec), 0)
@@ -38,7 +35,7 @@ COMPV_NAMESPACE_BEGIN()
 // vmov.32	r11, q0x[1]
 // orrs r11, r11, r10
 // beq AllZeros
-// ==== partially tested
+// ==== partially tested - /!\\ Miserably fail on Raspberry pi when the register contains NAN float -> *MUST NOT* use with non float values.
 //vcmp.f64 q0x, #0
 //vmrs APSR_nzcv, fpscr
 //vcmp.f64 q0y, #0

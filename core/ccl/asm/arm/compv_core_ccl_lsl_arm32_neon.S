@@ -97,14 +97,14 @@ COMPV_GAS_FUNCTION_DECLARE CompVConnectedComponentLabelingLSL_Step1Algo13Segment
 			@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 			@ if (mask & 0xff)
 			@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-			vcmp.f64 q0x, #0
-			vmrs APSR_nzcv, fpscr	
+			vmov.32 t0, q0x[0]
+			vmov.32 t1, q0x[1]
+			orrs t0, t0, t1 @ t0 lost - no enought registers to create t2
 			bne TestMask1_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32
 			vst1.s16 {vecER}, [ERi]!
 			b EndOf_TestMask1_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32
 			TestMask1_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32:
-				vmov.32 t0, q0x[0]
-				vmov.32 t1, q0x[1]
+				vmov.32 t0, q0x[0] @ restore t0
 				tst t0, #(1 << (0*8))
 				addne er, er, #1
 				strh er, [ERi], #(1*COMPV_GAS_INT16_SZ_BYTES)
@@ -135,14 +135,14 @@ COMPV_GAS_FUNCTION_DECLARE CompVConnectedComponentLabelingLSL_Step1Algo13Segment
 			@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 			@ if (mask & 0xff00)
 			@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-			vcmp.f64 q0y, #0
-			vmrseq APSR_nzcv, fpscr
+			vmov.32 t0, q0y[0]
+			vmov.32 t1, q0y[1]
+			orrs t0, t0, t1 @ t0 lost - no enought registers to create t2
 			bne TestMask2_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32
 			vst1.s16 {vecER}, [ERi]!
 			b EndOf_TestMask2_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32
 			TestMask2_CompVConnectedComponentLabelingLSL_Step1Algo13SegmentSTDZ_ERi_8u16s32s_Asm_NEON32:
-				vmov.32 t0, q0y[0]
-				vmov.32 t1, q0y[1]
+				vmov.32 t0, q0y[0] @ restore t0
 				tst t0, #(1 << (0*8))
 				addne er, er, #1
 				strh er, [ERi], #(1*COMPV_GAS_INT16_SZ_BYTES)

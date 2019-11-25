@@ -181,6 +181,14 @@
       <Link>assets\equirectangular_1282x720_yuv444p.yuv</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="..\..\..\..\..\..\data\morpho\diffract_1285x1285_gray.yuv">
+      <Link>assets\diffract_1285x1285_gray.yuv</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\..\..\..\..\data\morpho\labyrinth_800x600_gray.yuv">
+      <Link>assets\labyrinth_800x600_gray.yuv</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="..\..\..\..\..\..\data\morpho\text_1122x1182_white_gray.yuv">
       <Link>assets\text_1122x1182_white_gray.yuv</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
