@@ -194,7 +194,7 @@ static void CompVX86CpuId(uint32_t eax, uint32_t ecx, uint32_t* cpu_info)
 #if COMPV_ARCH_ARM && !COMPV_OS_ANDROID && !COMPV_OS_IPHONE
 static uint64_t CompVArmCaps(const char* cpuinfo_name)
 {
-    char cpuinfo_line[1024];
+	char cpuinfo_line[1024] = { '\0' };
 #if COMPV_ARCH_ARM64
 	uint64_t flags = kCpuFlagARM64;
 #else
@@ -205,7 +205,7 @@ static uint64_t CompVArmCaps(const char* cpuinfo_name)
 		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Failed to open '/proc/cpuinfo'");
         return flags;
     }
-    while (fgets(cpuinfo_line, sizeof(cpuinfo_line) - 1, f)) {
+    while (fgets(cpuinfo_line, sizeof(cpuinfo_line), f)) {
         if (memcmp(cpuinfo_line, "Features", 8) == 0) {
             char* p = strstr(cpuinfo_line, " neon");
 			flags |= (p && (p[5] == ' ' || p[5] == '\n')) ? kCpuFlagARM_NEON : kCpuFlagNone;
@@ -265,6 +265,8 @@ size_t CompVCpu::s_iCache1LineSize = 0;
 size_t CompVCpu::s_iCache1Size = 0;
 size_t CompVCpu::s_iPhysMemSize = 0;
 bool CompVCpu::s_bInitialized = false;
+std::string CompVCpu::s_strHardware = "Unknown";
+std::string CompVCpu::s_strSerial = "0000000000000000";
 #if COMPV_ASM
 bool CompVCpu::s_bAsmEnabled = true;
 #else
@@ -301,26 +303,52 @@ COMPV_ERROR_CODE CompVCpu::init()
 	if (isInitialized()) {
 		return COMPV_ERROR_CODE_S_OK;
 	}
-
+	
 	//
 	// /proc/cpuinfo
 	//
-#if COMPV_OS_LINUX || COMPV_OS_BSD || COMPV_OS_ANDROID
-	if (CompVDebugMgr::getLevel() >= COMPV_DEBUG_LEVEL_INFO) {
-		FILE* fcpuinfo = fopen("/proc/cpuinfo", "r");
-		if (fcpuinfo) {
-			char cpuinfo_line[4096];
-			size_t count;
-			while ((count = fread(cpuinfo_line, 1, sizeof(cpuinfo_line), fcpuinfo)) > 0) {
-				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME "/proc/cpuinfo", "%.*s", static_cast<int>(count), cpuinfo_line);
-#if COMPV_ARCH_ARM32
-				if (strstr(cpuinfo_line, "aarch64")) {
-					COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Using AArch32 binaries on AArch64 machine, you're missing many optimizations. Sad!!");
+#if COMPV_OS_LINUX || COMPV_OS_BSD || COMPV_OS_ANDROID || COMPV_OS_PI
+	FILE* fcpuinfo = fopen("/proc/cpuinfo", "r"); // Must not use "CompVFileUtils::open" which open data from assets
+	if (fcpuinfo) {
+		char cpuinfo_line[1024] = { '\0' };
+		auto getLineValue = [&](const char* line) -> std::vector<std::string> {
+			std::vector<std::string> strings;
+			std::istringstream stream(line);
+			std::string val;
+			while (std::getline(stream, val, ':')) {
+				// Trim left and right
+				const size_t begin = val.find_first_not_of(" \n\r\t");
+				if (begin != std::string::npos) {
+					val = val.substr(begin, (val.find_last_not_of(" \n\r\t") - begin + 1));
 				}
-#endif
+				// Push
+				strings.push_back(val);
 			}
-			fclose(fcpuinfo);
+			return strings;
+		};
+		while (fgets(cpuinfo_line, sizeof(cpuinfo_line), fcpuinfo)) {
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME "/proc/cpuinfo", "%s", cpuinfo_line);
+			if (memcmp(cpuinfo_line, "Hardware", 8) == 0 || memcmp(cpuinfo_line, "Serial", 6) == 0) {
+				const std::vector<std::string> values = getLineValue(cpuinfo_line);
+				if (values.size() == 2) {
+					if (values[0] == "Hardware") {
+						s_strHardware = values[1];
+					}
+					else if (values[0] == "Serial") {
+						s_strSerial = values[1];
+					}
+				}
+			}
+#if COMPV_ARCH_ARM32
+			else if ((CompVDebugMgr::getLevel() >= COMPV_DEBUG_LEVEL_INFO) && strstr(cpuinfo_line, "aarch64")) {
+				COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Using AArch32 binaries on AArch64 machine, you're missing many optimizations. Sad!!");
+			}
+#endif
 		}
+		fclose(fcpuinfo);
+	}
+	else {
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "fopen(/proc/cpuinfo) failed ...but not an issue");
 	}
 #endif
 
@@ -365,6 +393,7 @@ COMPV_ERROR_CODE CompVCpu::init()
     else if (stricmp("AuthenticAMD", vname) == 0) {
         CompVCpu::s_uFlags |= kCpuFlagAMD;
     }
+	s_strHardware = vname;
 
     CompVX86CpuId(0x80000000, 0, cpu_info);
     uint32_t info0 = cpu_info[0];

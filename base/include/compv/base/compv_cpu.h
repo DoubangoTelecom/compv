@@ -99,6 +99,12 @@ protected:
 public:
     virtual ~CompVCpu();
     static COMPV_ERROR_CODE init();
+	static const std::string& hardware() {
+		return s_strHardware;
+	}
+	static const std::string& serial() {
+		return s_strSerial;
+	}
     static size_t coresCount() {
         return s_iCores;
     }
@@ -148,9 +154,11 @@ public:
 	static bool isMathFixedPointEnabled() { return s_bMathFixedPoint; }
 	static bool isIntelIppEnabled() { return s_bIntelIpp; }
 	static bool isInitialized() { return s_bInitialized; }
-
+	
 private:
 	static bool s_bInitialized;
+	static std::string s_strHardware;
+	static std::string s_strSerial;
     static uint64_t s_uFlags;
     static uint64_t s_uFlagsDisabled;
     static uint64_t s_uFlagsEnabled;

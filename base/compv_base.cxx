@@ -42,6 +42,7 @@ DWORD CompVBase::s_dwMinorVersion = -1;
 #endif
 #if COMPV_OS_ANDROID
 std::string CompVBase::s_strCPU_ABI = "";
+std::string CompVBase::s_strMODEL = "";
 int CompVBase::s_intSDK_INT = 0;
 #endif
 bool CompVBase::s_bTesting = false;
@@ -156,31 +157,9 @@ COMPV_ERROR_CODE CompVBase::init(int numThreads COMPV_DEFAULT(-1))
     COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "[Base] module: android static API version: %d", __ANDROID_API__);
     // Runtime API version used on the host device
     if (jVM) {
-        JNIEnv* jEnv = NULL;
-        if (jVM->AttachCurrentThread(&jEnv, NULL) == JNI_OK) {
-            jclass clazz_VERSION = jEnv->FindClass("android/os/Build$VERSION");
-            if (clazz_VERSION) {
-                jfieldID fieldID_SDK_INT = jEnv->GetStaticFieldID(clazz_VERSION, "SDK_INT", "I");
-                if (fieldID_SDK_INT) {
-					s_intSDK_INT = static_cast<int>(jEnv->GetStaticIntField(clazz_VERSION, fieldID_SDK_INT));
-                    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "android/os/Build$VERSION.SDK_INT: %d", s_intSDK_INT);
-                }
-            }
-            jclass clazz_Build = jEnv->FindClass("android/os/Build");
-            if (clazz_Build) {
-                jfieldID fieldID_CPU_ABI = jEnv->GetStaticFieldID(clazz_Build, "CPU_ABI", "Ljava/lang/String;");
-                if (fieldID_CPU_ABI) {
-                    jstring object_CPU_ABI = reinterpret_cast<jstring>(jEnv->GetStaticObjectField(clazz_Build, fieldID_CPU_ABI));
-                    if (object_CPU_ABI) {
-						s_strCPU_ABI = CompVJNI::toString(jEnv, object_CPU_ABI);
-                        COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "android/os/Build.CPU_ABI: %s", s_strCPU_ABI.c_str());
-                    }
-                }
-            }
-            jVM->DetachCurrentThread();
-        }
+		COMPV_CHECK_CODE_RETURN(CompVBase::initAndroid(jVM));
     }
-    else if (androidApp && androidApp->activity) {
+    if (androidApp && androidApp->activity) {
         COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "sdkVersion: %d", androidApp->activity->sdkVersion); // can also use 'AConfiguration_getSdkVersion'
     }
 #endif /* COMPV_OS_ANDROID */
@@ -335,6 +314,54 @@ bail:
     COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "[Base] modules initialized");
     return err_;
 }
+
+#if COMPV_OS_ANDROID
+// Init android values
+COMPV_ERROR_CODE CompVBase::initAndroid(JavaVM* jVM)
+{
+	if (!jVM) { // not an issue
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
+	if (!Build_MODEL().empty()) {
+		return COMPV_ERROR_CODE_S_OK; // already initialized
+	}
+
+	JNIEnv* jEnv = NULL;
+	if (jVM->AttachCurrentThread(&jEnv, NULL) == JNI_OK) {
+		jclass clazz_VERSION = jEnv->FindClass("android/os/Build$VERSION");
+		if (clazz_VERSION) {
+			jfieldID fieldID_SDK_INT = jEnv->GetStaticFieldID(clazz_VERSION, "SDK_INT", "I");
+			if (fieldID_SDK_INT) {
+				s_intSDK_INT = static_cast<int>(jEnv->GetStaticIntField(clazz_VERSION, fieldID_SDK_INT));
+				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "android/os/Build$VERSION.SDK_INT: %d", s_intSDK_INT);
+			}
+		}
+		jclass clazz_Build = jEnv->FindClass("android/os/Build");
+		if (clazz_Build) {
+			jfieldID fieldID_CPU_ABI = jEnv->GetStaticFieldID(clazz_Build, "CPU_ABI", "Ljava/lang/String;");
+			jfieldID fieldID_MODEL = jEnv->GetStaticFieldID(clazz_Build, "MODEL", "Ljava/lang/String;");
+			if (fieldID_CPU_ABI) {
+				jstring object_CPU_ABI = reinterpret_cast<jstring>(jEnv->GetStaticObjectField(clazz_Build, fieldID_CPU_ABI));
+				if (object_CPU_ABI) {
+					s_strCPU_ABI = CompVJNI::toString(jEnv, object_CPU_ABI);
+					COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "android/os/Build.CPU_ABI: %s", s_strCPU_ABI.c_str());
+				}
+			}
+			if (fieldID_MODEL) {
+				jstring object_MODEL = reinterpret_cast<jstring>(jEnv->GetStaticObjectField(clazz_Build, fieldID_MODEL));
+				if (object_MODEL) {
+					s_strMODEL = CompVJNI::toString(jEnv, object_MODEL);
+					COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "android/os/Build.MODEL: %s", s_strMODEL.c_str());
+				}
+			}
+		}
+		jVM->DetachCurrentThread();
+	}
+
+	return COMPV_ERROR_CODE_S_OK;
+}
+#endif /* COMPV_OS_ANDROID */
 
 COMPV_ERROR_CODE CompVBase::deInit()
 {
