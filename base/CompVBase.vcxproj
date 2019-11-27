@@ -57,6 +57,7 @@
     <ClInclude Include="include\compv\base\android\compv_android_native_activity.h" />
     <ClInclude Include="include\compv\base\compv_allocators.h" />
     <ClInclude Include="include\compv\base\compv_base.h" />
+    <ClInclude Include="include\compv\base\compv_base64.h" />
     <ClInclude Include="include\compv\base\compv_bind.h" />
     <ClInclude Include="include\compv\base\compv_bits.h" />
     <ClInclude Include="include\compv\base\compv_box.h" />
@@ -282,6 +283,7 @@
     <ClCompile Include="android\compv_android_dexclassloader.cxx" />
     <ClCompile Include="android\compv_android_native_activity.cxx" />
     <ClCompile Include="compv_base.cxx" />
+    <ClCompile Include="compv_base64.cxx" />
     <ClCompile Include="compv_bind.cxx" />
     <ClCompile Include="compv_bits.cxx" />
     <ClCompile Include="compv_box.cxx" />

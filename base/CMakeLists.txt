@@ -134,6 +134,7 @@ set(compv_base_SOURCES
 
 	###### root ######
 	compv_base.cxx
+	compv_base64.cxx
 	compv_bind.cxx
 	compv_bits.cxx
 	compv_box.cxx

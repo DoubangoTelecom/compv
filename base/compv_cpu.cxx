@@ -267,6 +267,7 @@ size_t CompVCpu::s_iPhysMemSize = 0;
 bool CompVCpu::s_bInitialized = false;
 std::string CompVCpu::s_strHardware = "Unknown";
 std::string CompVCpu::s_strSerial = "0000000000000000";
+std::string CompVCpu::s_strModel = "Unknown";
 #if COMPV_ASM
 bool CompVCpu::s_bAsmEnabled = true;
 #else
@@ -328,7 +329,7 @@ COMPV_ERROR_CODE CompVCpu::init()
 		};
 		while (fgets(cpuinfo_line, sizeof(cpuinfo_line), fcpuinfo)) {
 			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME "/proc/cpuinfo", "%s", cpuinfo_line);
-			if (memcmp(cpuinfo_line, "Hardware", 8) == 0 || memcmp(cpuinfo_line, "Serial", 6) == 0) {
+			if (memcmp(cpuinfo_line, "Hardware", 8) == 0 || memcmp(cpuinfo_line, "Serial", 6) == 0 || memcmp(cpuinfo_line, "Model", 5) == 0) {
 				const std::vector<std::string> values = getLineValue(cpuinfo_line);
 				if (values.size() == 2) {
 					if (values[0] == "Hardware") {
@@ -336,6 +337,9 @@ COMPV_ERROR_CODE CompVCpu::init()
 					}
 					else if (values[0] == "Serial") {
 						s_strSerial = values[1];
+					}
+					else if (values[0] == "Model") {
+						s_strModel = values[1];
 					}
 				}
 			}

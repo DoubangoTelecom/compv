@@ -861,6 +861,9 @@
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_activation_functions_intrin_avx2.h">
       <Filter>include\math\intrin\x86</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\compv_base64.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx">
@@ -1438,6 +1441,9 @@
     </ClCompile>
     <ClCompile Include="math\intrin\x86\compv_math_activation_functions_intrin_avx2.cxx">
       <Filter>source\math\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_base64.cxx">
+      <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
