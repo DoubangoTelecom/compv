@@ -58,6 +58,9 @@ public:
 	static int Build_VERSION_SDK_INT() {
 		return s_intSDK_INT;
 	}
+	static std::string SettingsANDROID_ID() {
+		return s_strANDROID_ID;
+	}
 #endif
 	template <typename T>
 	static std::string to_string(T value) {
@@ -80,6 +83,7 @@ private:
 	static std::string s_strMODEL; // https://developer.android.com/reference/android/os/Build.html#MODEL
 	static std::string s_strHARDWARE; // https://developer.android.com/reference/android/os/Build.html#HARDWARE
 	static int s_intSDK_INT; // https://developer.android.com/reference/android/os/Build.VERSION.html#SDK_INT
+	static std::string s_strANDROID_ID; // https://developer.android.com/reference/android/provider/Settings.Secure.html#ANDROID_ID
 #endif
 #if COMPV_OS_WINDOWS && !COMPV_OS_WINDOWS_RT
     static DWORD s_dwMajorVersion;
