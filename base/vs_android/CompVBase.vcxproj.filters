@@ -891,6 +891,9 @@
     <ClInclude Include="..\include\compv\base\video\compv_video_writer.h">
       <Filter>include\video</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\compv\base\compv_base64.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_base.cxx">
@@ -1501,6 +1504,9 @@
     </ClCompile>
     <ClCompile Include="..\math\intrin\arm\compv_math_activation_functions_intrin_neon64.cxx">
       <Filter>source\math\intrin\arm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\compv_base64.cxx">
+      <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

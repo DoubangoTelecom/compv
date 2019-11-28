@@ -52,6 +52,9 @@ public:
 	static std::string Build_MODEL() {
 		return s_strMODEL;
 	}
+	static std::string Build_HARDWARE() {
+		return s_strHARDWARE;
+	}
 	static int Build_VERSION_SDK_INT() {
 		return s_intSDK_INT;
 	}
@@ -75,6 +78,7 @@ private:
 #if COMPV_OS_ANDROID
 	static std::string s_strCPU_ABI; // https://developer.android.com/reference/android/os/Build.html#CPU_ABI
 	static std::string s_strMODEL; // https://developer.android.com/reference/android/os/Build.html#MODEL
+	static std::string s_strHARDWARE; // https://developer.android.com/reference/android/os/Build.html#HARDWARE
 	static int s_intSDK_INT; // https://developer.android.com/reference/android/os/Build.VERSION.html#SDK_INT
 #endif
 #if COMPV_OS_WINDOWS && !COMPV_OS_WINDOWS_RT

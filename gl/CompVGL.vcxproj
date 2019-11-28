@@ -273,7 +273,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_WIN32_WINNT=0x0501;_USRDLL;GLEW_STATIC;HAVE_GL_GLEW_H;COMPV_GL_EXPORTS;%(PreprocessorDefinitions);HAVE_FREETYPE_FREETYPE_H=1</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_WIN32_WINNT=_WIN32_WINNT_VISTA;_USRDLL;GLEW_STATIC;HAVE_GL_GLEW_H;COMPV_GL_EXPORTS;%(PreprocessorDefinitions);HAVE_FREETYPE_FREETYPE_H=1</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>include;../base/include;../thirdparties/include/common/glew-2.3.4;../thirdparties/include/common/glm-0.9.8.2;../thirdparties/include/common/freetype-2.8</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
@@ -291,7 +291,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_WIN32_WINNT=0x0501;GLEW_STATIC;HAVE_GL_GLEW_H;HAVE_FREETYPE_FREETYPE_H=1;COMPV_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_WIN32_WINNT=_WIN32_WINNT_VISTA;GLEW_STATIC;HAVE_GL_GLEW_H;HAVE_FREETYPE_FREETYPE_H=1;COMPV_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>include;../base/include;../thirdparties/include/common/glew-2.3.4;../thirdparties/include/common/glm-0.9.8.2;../thirdparties/include/common/freetype-2.8</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
@@ -312,7 +312,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_WIN32_WINNT=0x0501;COMPV_STATIC;COMPV_GL_DISABLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_WIN32_WINNT=_WIN32_WINNT_VISTA;COMPV_STATIC;COMPV_GL_DISABLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>include;../base/include;../thirdparties/include/common/glew-2.3.4;../thirdparties/include/common/glm-0.9.8.2;../thirdparties/include/common/freetype-2.8</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
@@ -333,7 +333,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_DEBUG;_WINDOWS;_WIN32_WINNT=0x0501;_USRDLL;GLEW_STATIC;HAVE_GL_GLEW_H;COMPV_GL_EXPORTS;%(PreprocessorDefinitions);HAVE_FREETYPE_FREETYPE_H=1</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_WINDOWS;_WIN32_WINNT=_WIN32_WINNT_VISTA;_USRDLL;GLEW_STATIC;HAVE_GL_GLEW_H;COMPV_GL_EXPORTS;%(PreprocessorDefinitions);HAVE_FREETYPE_FREETYPE_H=1</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>include;../base/include;../thirdparties/include/common/glew-2.3.4;../thirdparties/include/common/glm-0.9.8.2;../thirdparties/include/common/freetype-2.8</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
@@ -351,7 +351,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_DEBUG;_WINDOWS;_WIN32_WINNT=0x0501;GLEW_STATIC;HAVE_GL_GLEW_H;HAVE_FREETYPE_FREETYPE_H=1;COMPV_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_WINDOWS;_WIN32_WINNT=_WIN32_WINNT_VISTA;GLEW_STATIC;HAVE_GL_GLEW_H;HAVE_FREETYPE_FREETYPE_H=1;COMPV_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>include;../base/include;../thirdparties/include/common/glew-2.3.4;../thirdparties/include/common/glm-0.9.8.2;../thirdparties/include/common/freetype-2.8</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
@@ -372,7 +372,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_DEBUG;_WINDOWS;_WIN32_WINNT=0x0501;COMPV_STATIC;COMPV_GL_DISABLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_WINDOWS;_WIN32_WINNT=_WIN32_WINNT_VISTA;COMPV_STATIC;COMPV_GL_DISABLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>include;../base/include;../thirdparties/include/common/glew-2.3.4;../thirdparties/include/common/glm-0.9.8.2;../thirdparties/include/common/freetype-2.8</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
@@ -395,7 +395,7 @@
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_WIN32_WINNT=0x0501;_USRDLL;GLEW_STATIC;HAVE_GL_GLEW_H;COMPV_GL_EXPORTS;%(PreprocessorDefinitions);HAVE_FREETYPE_FREETYPE_H=1</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_WIN32_WINNT=_WIN32_WINNT_VISTA;_USRDLL;GLEW_STATIC;HAVE_GL_GLEW_H;COMPV_GL_EXPORTS;%(PreprocessorDefinitions);HAVE_FREETYPE_FREETYPE_H=1</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>include;../base/include;../thirdparties/include/common/glew-2.3.4;../thirdparties/include/common/glm-0.9.8.2;../thirdparties/include/common/freetype-2.8</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
@@ -417,7 +417,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_WIN32_WINNT=0x0501;GLEW_STATIC;HAVE_GL_GLEW_H;HAVE_FREETYPE_FREETYPE_H=1;COMPV_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_WIN32_WINNT=_WIN32_WINNT_VISTA;GLEW_STATIC;HAVE_GL_GLEW_H;HAVE_FREETYPE_FREETYPE_H=1;COMPV_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>include;../base/include;../thirdparties/include/common/glew-2.3.4;../thirdparties/include/common/glm-0.9.8.2;../thirdparties/include/common/freetype-2.8</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
@@ -442,7 +442,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_WIN32_WINNT=0x0501;COMPV_STATIC;COMPV_GL_DISABLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_WIN32_WINNT=_WIN32_WINNT_VISTA;COMPV_STATIC;COMPV_GL_DISABLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>include;../base/include;../thirdparties/include/common/glew-2.3.4;../thirdparties/include/common/glm-0.9.8.2;../thirdparties/include/common/freetype-2.8</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
@@ -467,7 +467,7 @@
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>NDEBUG;_WINDOWS;_WIN32_WINNT=0x0501;_USRDLL;GLEW_STATIC;HAVE_GL_GLEW_H;COMPV_GL_EXPORTS;%(PreprocessorDefinitions);HAVE_FREETYPE_FREETYPE_H=1</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_WINDOWS;_WIN32_WINNT=_WIN32_WINNT_VISTA;_USRDLL;GLEW_STATIC;HAVE_GL_GLEW_H;COMPV_GL_EXPORTS;%(PreprocessorDefinitions);HAVE_FREETYPE_FREETYPE_H=1</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>include;../base/include;../thirdparties/include/common/glew-2.3.4;../thirdparties/include/common/glm-0.9.8.2;../thirdparties/include/common/freetype-2.8</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
@@ -489,7 +489,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>NDEBUG;_WINDOWS;_WIN32_WINNT=0x0501;GLEW_STATIC;HAVE_GL_GLEW_H;HAVE_FREETYPE_FREETYPE_H=1;COMPV_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_WINDOWS;_WIN32_WINNT=_WIN32_WINNT_VISTA;GLEW_STATIC;HAVE_GL_GLEW_H;HAVE_FREETYPE_FREETYPE_H=1;COMPV_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>include;../base/include;../thirdparties/include/common/glew-2.3.4;../thirdparties/include/common/glm-0.9.8.2;../thirdparties/include/common/freetype-2.8</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
@@ -514,7 +514,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>NDEBUG;_WINDOWS;_WIN32_WINNT=0x0501;COMPV_STATIC;COMPV_GL_DISABLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_WINDOWS;_WIN32_WINNT=_WIN32_WINNT_VISTA;COMPV_STATIC;COMPV_GL_DISABLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>include;../base/include;../thirdparties/include/common/glew-2.3.4;../thirdparties/include/common/glm-0.9.8.2;../thirdparties/include/common/freetype-2.8</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>

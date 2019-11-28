@@ -265,9 +265,9 @@ size_t CompVCpu::s_iCache1LineSize = 0;
 size_t CompVCpu::s_iCache1Size = 0;
 size_t CompVCpu::s_iPhysMemSize = 0;
 bool CompVCpu::s_bInitialized = false;
-std::string CompVCpu::s_strHardware = "Unknown";
-std::string CompVCpu::s_strSerial = "0000000000000000";
-std::string CompVCpu::s_strModel = "Unknown";
+std::string CompVCpu::s_strHardware = "";
+std::string CompVCpu::s_strSerial = "";
+std::string CompVCpu::s_strModel = "";
 #if COMPV_ASM
 bool CompVCpu::s_bAsmEnabled = true;
 #else
@@ -308,7 +308,40 @@ COMPV_ERROR_CODE CompVCpu::init()
 	//
 	// /proc/cpuinfo
 	//
-#if COMPV_OS_LINUX || COMPV_OS_BSD || COMPV_OS_ANDROID || COMPV_OS_PI
+#if COMPV_OS_WINDOWS
+	DWORD bufferSize = 0;
+	if (SUCCEEDED(RegGetValueA(HKEY_LOCAL_MACHINE,
+		"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion",
+		"ProductId",
+		RRF_RT_REG_SZ,
+		NULL,
+		NULL,
+		&bufferSize)) && bufferSize > 0) 
+	{
+		void* bufferPtr = CompVMem::malloc(bufferSize + 1);
+		COMPV_CHECK_EXP_NOP(!bufferPtr, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+		if (bufferPtr) {
+			if (SUCCEEDED(RegGetValueA(HKEY_LOCAL_MACHINE,
+				"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion",
+				"ProductId",
+				RRF_RT_REG_SZ,
+				NULL,
+				bufferPtr,
+				&bufferSize))) 
+			{
+				s_strSerial = reinterpret_cast<const char*>(bufferPtr);
+			}
+			else {
+				COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "RegGetValueA failed: %d", GetLastError());
+			}
+			CompVMem::free(&bufferPtr);
+		}
+	}
+	else {
+		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "RegGetValueA failed: %d", GetLastError());
+	}
+
+#elif COMPV_OS_LINUX || COMPV_OS_BSD || COMPV_OS_ANDROID || COMPV_OS_PI
 	FILE* fcpuinfo = fopen("/proc/cpuinfo", "r"); // Must not use "CompVFileUtils::open" which open data from assets
 	if (fcpuinfo) {
 		char cpuinfo_line[1024] = { '\0' };
@@ -354,7 +387,7 @@ COMPV_ERROR_CODE CompVCpu::init()
 	else {
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "fopen(/proc/cpuinfo) failed ...but not an issue");
 	}
-#endif
+#endif /* COMPV_OS_LINUX || COMPV_OS_BSD || COMPV_OS_ANDROID || COMPV_OS_PI */
 
 	//
 	// endianness

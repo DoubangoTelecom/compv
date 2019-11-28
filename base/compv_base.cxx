@@ -43,6 +43,7 @@ DWORD CompVBase::s_dwMinorVersion = -1;
 #if COMPV_OS_ANDROID
 std::string CompVBase::s_strCPU_ABI = "";
 std::string CompVBase::s_strMODEL = "";
+std::string CompVBase::s_strHARDWARE = "";
 int CompVBase::s_intSDK_INT = 0;
 #endif
 bool CompVBase::s_bTesting = false;
@@ -341,6 +342,7 @@ COMPV_ERROR_CODE CompVBase::initAndroid(JavaVM* jVM)
 		if (clazz_Build) {
 			jfieldID fieldID_CPU_ABI = jEnv->GetStaticFieldID(clazz_Build, "CPU_ABI", "Ljava/lang/String;");
 			jfieldID fieldID_MODEL = jEnv->GetStaticFieldID(clazz_Build, "MODEL", "Ljava/lang/String;");
+			jfieldID fieldID_HARDWARE = jEnv->GetStaticFieldID(clazz_Build, "HARDWARE", "Ljava/lang/String;");
 			if (fieldID_CPU_ABI) {
 				jstring object_CPU_ABI = reinterpret_cast<jstring>(jEnv->GetStaticObjectField(clazz_Build, fieldID_CPU_ABI));
 				if (object_CPU_ABI) {
@@ -353,6 +355,13 @@ COMPV_ERROR_CODE CompVBase::initAndroid(JavaVM* jVM)
 				if (object_MODEL) {
 					s_strMODEL = CompVJNI::toString(jEnv, object_MODEL);
 					COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "android/os/Build.MODEL: %s", s_strMODEL.c_str());
+				}
+			}
+			if (fieldID_HARDWARE) {
+				jstring object_HARDWARE = reinterpret_cast<jstring>(jEnv->GetStaticObjectField(clazz_Build, fieldID_HARDWARE));
+				if (object_HARDWARE) {
+					s_strHARDWARE = CompVJNI::toString(jEnv, object_HARDWARE);
+					COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "android/os/Build.HARDWARE: %s", s_strHARDWARE.c_str());
 				}
 			}
 		}

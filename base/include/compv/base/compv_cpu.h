@@ -159,6 +159,7 @@ public:
 	static bool isInitialized() { return s_bInitialized; }
 	
 private:
+	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
 	static bool s_bInitialized;
 	static std::string s_strHardware;
 	static std::string s_strSerial;
@@ -176,6 +177,7 @@ private:
     static size_t s_iCache1LineSize; // In Bytes
     static size_t s_iCache1Size; // In Bytes
 	static size_t s_iPhysMemSize; // In Bytes
+	COMPV_VS_DISABLE_WARNINGS_END()
 };
 
 COMPV_NAMESPACE_END()

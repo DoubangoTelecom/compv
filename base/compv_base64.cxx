@@ -166,12 +166,12 @@ COMPV_ERROR_CODE CompVBase64::decode(const std::string& base64, CompVBufferPtrPt
 	}
 
 	do {
-		*(output + output_size++) = (COMPV_BASE64_DECODE_ALPHABET[base64[i]] << 2
-			| COMPV_BASE64_DECODE_ALPHABET[base64[i + 1]] >> 4);
-		*(output + output_size++) = (COMPV_BASE64_DECODE_ALPHABET[base64[i + 1]] << 4
-			| COMPV_BASE64_DECODE_ALPHABET[base64[i + 2]] >> 2);
-		*(output + output_size++) = (COMPV_BASE64_DECODE_ALPHABET[base64[i + 2]] << 6
-			| COMPV_BASE64_DECODE_ALPHABET[base64[i + 3]]);
+		*(output + output_size++) = (COMPV_BASE64_DECODE_ALPHABET[(int)base64[i]] << 2
+			| COMPV_BASE64_DECODE_ALPHABET[(int)base64[i + 1]] >> 4);
+		*(output + output_size++) = (COMPV_BASE64_DECODE_ALPHABET[(int)base64[i + 1]] << 4
+			| COMPV_BASE64_DECODE_ALPHABET[(int)base64[i + 2]] >> 2);
+		*(output + output_size++) = (COMPV_BASE64_DECODE_ALPHABET[(int)base64[i + 2]] << 6
+			| COMPV_BASE64_DECODE_ALPHABET[(int)base64[i + 3]]);
 
 		i += COMPV_BASE64_DECODE_BLOCK_SIZE;
 	} while ((i + COMPV_BASE64_DECODE_BLOCK_SIZE) <= pay_size);
@@ -179,14 +179,14 @@ COMPV_ERROR_CODE CompVBase64::decode(const std::string& base64, CompVBufferPtrPt
 quantum:
 
 	if ((input_size - pay_size) == 1) {
-		*(output + output_size++) = (COMPV_BASE64_DECODE_ALPHABET[base64[i]] << 2
-			| COMPV_BASE64_DECODE_ALPHABET[base64[i + 1]] >> 4);
-		*(output + output_size++) = (COMPV_BASE64_DECODE_ALPHABET[base64[i + 1]] << 4
-			| COMPV_BASE64_DECODE_ALPHABET[base64[i + 2]] >> 2);
+		*(output + output_size++) = (COMPV_BASE64_DECODE_ALPHABET[(int)base64[i]] << 2
+			| COMPV_BASE64_DECODE_ALPHABET[(int)base64[i + 1]] >> 4);
+		*(output + output_size++) = (COMPV_BASE64_DECODE_ALPHABET[(int)base64[i + 1]] << 4
+			| COMPV_BASE64_DECODE_ALPHABET[(int)base64[i + 2]] >> 2);
 	}
 	else if ((input_size - pay_size) == 2) {
-		*(output + output_size++) = (COMPV_BASE64_DECODE_ALPHABET[base64[i]] << 2
-			| COMPV_BASE64_DECODE_ALPHABET[base64[i + 1]] >> 4);
+		*(output + output_size++) = (COMPV_BASE64_DECODE_ALPHABET[(int)base64[i]] << 2
+			| COMPV_BASE64_DECODE_ALPHABET[(int)base64[i + 1]] >> 4);
 	}
 
 	const COMPV_ERROR_CODE err = CompVBuffer::newObjAndCopyData(
