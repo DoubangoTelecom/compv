@@ -29,6 +29,10 @@ COMPV_EXTERNC long long compv_utils_rdtsc_x86_asm();
 #	include <unistd.h>
 #endif
 
+#if COMPV_OS_LINUX || COMPV_OS_BSD || COMPV_OS_ANDROID || COMPV_OS_PI
+#include <sstream>
+#endif
+
 #if defined(_OPENMP) || defined(_OPENMP) || defined(HAVE_OMP_H)
 #	include <omp.h>
 #endif
@@ -361,7 +365,6 @@ COMPV_ERROR_CODE CompVCpu::init()
 			return strings;
 		};
 		while (fgets(cpuinfo_line, sizeof(cpuinfo_line), fcpuinfo)) {
-			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME "/proc/cpuinfo", "%s", cpuinfo_line);
 			if (memcmp(cpuinfo_line, "Hardware", 8) == 0 || memcmp(cpuinfo_line, "Serial", 6) == 0 || memcmp(cpuinfo_line, "Model", 5) == 0) {
 				const std::vector<std::string> values = getLineValue(cpuinfo_line);
 				if (values.size() == 2) {
@@ -651,6 +654,13 @@ COMPV_ERROR_CODE CompVCpu::init()
 	//
 	s_iPhysMemSize = CompVGetMemorySize();
 
+	// Print info
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME,
+		"Hardware: '%s', Serial: '%s', Model: '%s'",
+		s_strHardware.c_str(),
+		s_strSerial.empty() ? "" : "***", // Do not show serial number in logs
+		s_strModel.c_str()
+	);
 
 	s_bInitialized = true;
 

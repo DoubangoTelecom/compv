@@ -46,6 +46,7 @@ public:
 #endif
 #if COMPV_OS_ANDROID
 	static COMPV_ERROR_CODE initAndroid(JavaVM* jVM);
+	static COMPV_ERROR_CODE initAndroid(JNIEnv* jEnv);
 	static std::string Build_CPU_ABI() {
 		return s_strCPU_ABI;
 	}

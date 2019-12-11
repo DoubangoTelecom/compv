@@ -130,6 +130,8 @@ COMPV_ERROR_CODE CompVBase64::decode(const std::string& base64, CompVBufferPtrPt
 		for (j = 0; (j < i - 1); j++) ret += char_array_3[j];
 	}
 
+	COMPV_CHECK_EXP_RETURN(ret.empty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Not base64 data");
+
 	COMPV_CHECK_CODE_RETURN(CompVBuffer::newObj(ret.c_str(), ret.size(), data));
 
 	return COMPV_ERROR_CODE_S_OK;

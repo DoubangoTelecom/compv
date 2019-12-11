@@ -351,66 +351,81 @@ COMPV_ERROR_CODE CompVBase::initAndroid(JavaVM* jVM)
 
 	JNIEnv* jEnv = NULL;
 	if (jVM->AttachCurrentThread(&jEnv, NULL) == JNI_OK) {
+		COMPV_CHECK_CODE_RETURN(initAndroid(jEnv));
+		jVM->DetachCurrentThread();
+	}
 
-		jclass clazz_VERSION = jEnv->FindClass("android/os/Build$VERSION");
-		if (clazz_VERSION) {
-			jfieldID fieldID_SDK_INT = jEnv->GetStaticFieldID(clazz_VERSION, "SDK_INT", "I");
-			if (fieldID_SDK_INT) {
-				s_intSDK_INT = static_cast<int>(jEnv->GetStaticIntField(clazz_VERSION, fieldID_SDK_INT));
-				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "android/os/Build$VERSION.SDK_INT: %d", s_intSDK_INT);
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVBase::initAndroid(JNIEnv* jEnv)
+{
+	if (!jEnv) { // not an issue
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
+	if (!Build_MODEL().empty()) {
+		return COMPV_ERROR_CODE_S_OK; // already initialized
+	}
+
+	jclass clazz_VERSION = jEnv->FindClass("android/os/Build$VERSION");
+	if (clazz_VERSION) {
+		jfieldID fieldID_SDK_INT = jEnv->GetStaticFieldID(clazz_VERSION, "SDK_INT", "I");
+		if (fieldID_SDK_INT) {
+			s_intSDK_INT = static_cast<int>(jEnv->GetStaticIntField(clazz_VERSION, fieldID_SDK_INT));
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "android/os/Build$VERSION.SDK_INT: %d", s_intSDK_INT);
+		}
+	}
+	jclass clazz_Build = jEnv->FindClass("android/os/Build");
+	if (clazz_Build) {
+		jfieldID fieldID_CPU_ABI = jEnv->GetStaticFieldID(clazz_Build, "CPU_ABI", "Ljava/lang/String;");
+		jfieldID fieldID_MODEL = jEnv->GetStaticFieldID(clazz_Build, "MODEL", "Ljava/lang/String;");
+		jfieldID fieldID_HARDWARE = jEnv->GetStaticFieldID(clazz_Build, "HARDWARE", "Ljava/lang/String;");
+		if (fieldID_CPU_ABI) {
+			jstring object_CPU_ABI = reinterpret_cast<jstring>(jEnv->GetStaticObjectField(clazz_Build, fieldID_CPU_ABI));
+			if (object_CPU_ABI) {
+				s_strCPU_ABI = CompVJNI::toString(jEnv, object_CPU_ABI);
+				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "android/os/Build.CPU_ABI: %s", s_strCPU_ABI.c_str());
 			}
 		}
-		jclass clazz_Build = jEnv->FindClass("android/os/Build");
-		if (clazz_Build) {
-			jfieldID fieldID_CPU_ABI = jEnv->GetStaticFieldID(clazz_Build, "CPU_ABI", "Ljava/lang/String;");
-			jfieldID fieldID_MODEL = jEnv->GetStaticFieldID(clazz_Build, "MODEL", "Ljava/lang/String;");
-			jfieldID fieldID_HARDWARE = jEnv->GetStaticFieldID(clazz_Build, "HARDWARE", "Ljava/lang/String;");
-			if (fieldID_CPU_ABI) {
-				jstring object_CPU_ABI = reinterpret_cast<jstring>(jEnv->GetStaticObjectField(clazz_Build, fieldID_CPU_ABI));
-				if (object_CPU_ABI) {
-					s_strCPU_ABI = CompVJNI::toString(jEnv, object_CPU_ABI);
-					COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "android/os/Build.CPU_ABI: %s", s_strCPU_ABI.c_str());
-				}
-			}
-			if (fieldID_MODEL) {
-				jstring object_MODEL = reinterpret_cast<jstring>(jEnv->GetStaticObjectField(clazz_Build, fieldID_MODEL));
-				if (object_MODEL) {
-					s_strMODEL = CompVJNI::toString(jEnv, object_MODEL);
-					COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "android/os/Build.MODEL: %s", s_strMODEL.c_str());
-				}
-			}
-			if (fieldID_HARDWARE) {
-				jstring object_HARDWARE = reinterpret_cast<jstring>(jEnv->GetStaticObjectField(clazz_Build, fieldID_HARDWARE));
-				if (object_HARDWARE) {
-					s_strHARDWARE = CompVJNI::toString(jEnv, object_HARDWARE);
-					COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "android/os/Build.HARDWARE: %s", s_strHARDWARE.c_str());
-				}
+		if (fieldID_MODEL) {
+			jstring object_MODEL = reinterpret_cast<jstring>(jEnv->GetStaticObjectField(clazz_Build, fieldID_MODEL));
+			if (object_MODEL) {
+				s_strMODEL = CompVJNI::toString(jEnv, object_MODEL);
+				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "android/os/Build.MODEL: %s", s_strMODEL.c_str());
 			}
 		}
+		if (fieldID_HARDWARE) {
+			jstring object_HARDWARE = reinterpret_cast<jstring>(jEnv->GetStaticObjectField(clazz_Build, fieldID_HARDWARE));
+			if (object_HARDWARE) {
+				s_strHARDWARE = CompVJNI::toString(jEnv, object_HARDWARE);
+				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "android/os/Build.HARDWARE: %s", s_strHARDWARE.c_str());
+			}
+		}
+	}
 
-		// Get Context and retrieve 'ANDROID_ID' value
-		jobject context = androidGetContext(jEnv);
-		COMPV_CHECK_EXP_NOP(!context, COMPV_ERROR_CODE_E_INVALID_STATE, "Null context. You should call the init function from main thread or activity thread");
-		if (context) {
-			jclass contextKlass = jEnv->GetObjectClass(context);
-			if (contextKlass) {
-				jmethodID getContentResolverMethodId = jEnv->GetMethodID(contextKlass, "getContentResolver", "()Landroid/content/ContentResolver;");
-				if (getContentResolverMethodId) {
-					jobject contentResolver = jEnv->CallObjectMethod(context, getContentResolverMethodId);
-					if (contentResolver) {
-						jclass settingsSecureKlass = jEnv->FindClass("android/provider/Settings$Secure");
-						if (settingsSecureKlass) {
-							jmethodID getStringMethodId = jEnv->GetStaticMethodID(settingsSecureKlass, "getString", "(Landroid/content/ContentResolver;Ljava/lang/String;)Ljava/lang/String;");
-							if (getStringMethodId) { // https://developer.android.com/reference/android/provider/Settings.Secure#getString(android.content.ContentResolver,%20java.lang.String)
-								jfieldID fieldID_ANDROID_ID = jEnv->GetStaticFieldID(settingsSecureKlass, "ANDROID_ID", "Ljava/lang/String;");
-								if (fieldID_ANDROID_ID) {
-									jstring object_ANDROID_ID = reinterpret_cast<jstring>(jEnv->GetStaticObjectField(settingsSecureKlass, fieldID_ANDROID_ID));
-									if (object_ANDROID_ID) {
-										jstring ANDROID_ID = reinterpret_cast<jstring>(jEnv->CallStaticObjectMethod(settingsSecureKlass, getStringMethodId, contentResolver, object_ANDROID_ID));
-										if (ANDROID_ID) { // https://developer.android.com/reference/android/provider/Settings.Secure.html#ANDROID_ID
-											s_strANDROID_ID = CompVJNI::toString(jEnv, ANDROID_ID);
-											COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "android/provider/Settings.Secure.ANDROID_ID: %s", s_strANDROID_ID.c_str());
-										}
+	// Get Context and retrieve 'ANDROID_ID' value
+	jobject context = androidGetContext(jEnv);
+	COMPV_CHECK_EXP_NOP(!context, COMPV_ERROR_CODE_E_INVALID_STATE, "Null context. You should call the init function from main thread or activity thread");
+	if (context) {
+		jclass contextKlass = jEnv->GetObjectClass(context);
+		if (contextKlass) {
+			jmethodID getContentResolverMethodId = jEnv->GetMethodID(contextKlass, "getContentResolver", "()Landroid/content/ContentResolver;");
+			if (getContentResolverMethodId) {
+				jobject contentResolver = jEnv->CallObjectMethod(context, getContentResolverMethodId);
+				if (contentResolver) {
+					jclass settingsSecureKlass = jEnv->FindClass("android/provider/Settings$Secure");
+					if (settingsSecureKlass) {
+						jmethodID getStringMethodId = jEnv->GetStaticMethodID(settingsSecureKlass, "getString", "(Landroid/content/ContentResolver;Ljava/lang/String;)Ljava/lang/String;");
+						if (getStringMethodId) { // https://developer.android.com/reference/android/provider/Settings.Secure#getString(android.content.ContentResolver,%20java.lang.String)
+							jfieldID fieldID_ANDROID_ID = jEnv->GetStaticFieldID(settingsSecureKlass, "ANDROID_ID", "Ljava/lang/String;");
+							if (fieldID_ANDROID_ID) {
+								jstring object_ANDROID_ID = reinterpret_cast<jstring>(jEnv->GetStaticObjectField(settingsSecureKlass, fieldID_ANDROID_ID));
+								if (object_ANDROID_ID) {
+									jstring ANDROID_ID = reinterpret_cast<jstring>(jEnv->CallStaticObjectMethod(settingsSecureKlass, getStringMethodId, contentResolver, object_ANDROID_ID));
+									if (ANDROID_ID) { // https://developer.android.com/reference/android/provider/Settings.Secure.html#ANDROID_ID
+										s_strANDROID_ID = CompVJNI::toString(jEnv, ANDROID_ID);
+										COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "android/provider/Settings.Secure.ANDROID_ID: %s", "****");
 									}
 								}
 							}
@@ -419,12 +434,11 @@ COMPV_ERROR_CODE CompVBase::initAndroid(JavaVM* jVM)
 				}
 			}
 		}
-
-		jVM->DetachCurrentThread();
 	}
 
 	return COMPV_ERROR_CODE_S_OK;
 }
+
 #endif /* COMPV_OS_ANDROID */
 
 COMPV_ERROR_CODE CompVBase::deInit()
