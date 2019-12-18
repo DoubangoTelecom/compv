@@ -655,12 +655,14 @@ COMPV_ERROR_CODE CompVCpu::init()
 	s_iPhysMemSize = CompVGetMemorySize();
 
 	// Print info
+#if !COMPV_OS_ANDROID // On Android these values are always null
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME,
 		"Hardware: '%s', Serial: '%s', Model: '%s'",
 		s_strHardware.c_str(),
 		s_strSerial.empty() ? "" : "***", // Do not show serial number in logs
 		s_strModel.c_str()
 	);
+#endif /* !COMPV_OS_ANDROID */
 
 	s_bInitialized = true;
 
