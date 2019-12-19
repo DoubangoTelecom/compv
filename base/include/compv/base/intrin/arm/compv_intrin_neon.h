@@ -18,16 +18,12 @@
 COMPV_NAMESPACE_BEGIN()
 
 #if COMPV_ARCH_ARM64
-// TODO(dmi): use "vmaxvq_u32" which is single instruction
-//mov r27, v21.d[0]
-//mov r28, v21.d[1]
-//orr r27, r27, r28 // orrs not avail on Aarch64
-//cbz r27, AllZeros
-#	define COMPV_ARM_NEON_NEQ_ZEROQ(vec)	(vgetq_lane_u64((uint64x2_t)(vec), 0) || vgetq_lane_u64((uint64x2_t)(vec), 1))
+//umaxv r27w, v0.4s
+//cbz r27w, AllZeros
+#	define COMPV_ARM_NEON_NEQ_ZEROQ(vec)	vmaxvq_u32((uint32x4_t)(vec))
 #	define COMPV_ARM_NEON_EQ_ZEROQ(vec)		!COMPV_ARM_NEON_NEQ_ZEROQ(vec)
 #	define COMPV_ARM_NEON_NEQ_ZEROD(vec)	vget_lane_u64((uint64x1_t)(vec), 0)
 #	define COMPV_ARM_NEON_EQ_ZEROD(vec)		!COMPV_ARM_NEON_NEQ_ZEROD(vec)
-
 #else
 // === fully tested
 // vorr q0x, q0x, q0y @ /!\\ q0 lost

@@ -12,6 +12,62 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+void CompVMathOpMinMax_32f_Intrin_NEON(COMPV_ALIGNED(NEON) const compv_float32_t* APtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, compv_float32_t* min1, compv_float32_t* max1)
+{
+	COMPV_DEBUG_INFO_CHECK_NEON();
+
+	const compv_uscalar_t width16 = width & -16;
+	const compv_uscalar_t width4 = width & -4;
+	compv_float32_t& minn = *min1;
+	compv_float32_t& maxx = *max1;
+	float32x4_t vv0_minn = vdupq_n_f32(minn), vv1_minn = vv0_minn, vv2_minn = vv0_minn, vv3_minn = vv0_minn;
+	float32x4_t vv0_maxx = vdupq_n_f32(maxx), vv1_maxx = vv0_maxx, vv2_maxx = vv0_maxx, vv3_maxx = vv0_maxx;
+	for (compv_uscalar_t j = 0; j < height; ++j) {
+		compv_uscalar_t i = 0;
+		for (; i < width16; i += 16) {
+			const float32x4_t vv0 = vld1q_f32(&APtr[i]);
+			const float32x4_t vv1 = vld1q_f32(&APtr[i + 4]);
+			const float32x4_t vv2 = vld1q_f32(&APtr[i + 8]);
+			const float32x4_t vv3 = vld1q_f32(&APtr[i + 12]);
+			vv0_minn = vminq_f32(vv0_minn, vv0);
+			vv1_minn = vminq_f32(vv1_minn, vv1);
+			vv2_minn = vminq_f32(vv2_minn, vv2);
+			vv3_minn = vminq_f32(vv3_minn, vv3);
+			vv0_maxx = vmaxq_f32(vv0_maxx, vv0);
+			vv1_maxx = vmaxq_f32(vv1_maxx, vv1);
+			vv2_maxx = vmaxq_f32(vv2_maxx, vv2);
+			vv3_maxx = vmaxq_f32(vv3_maxx, vv3);
+		}
+		for (; i < width4; i += 4) {
+			const float32x4_t vv0 = vld1q_f32(&APtr[i]);
+			vv0_minn = vminq_f32(vv0_minn, vv0);
+			vv0_maxx = vmaxq_f32(vv0_maxx, vv0);
+		}
+		
+		for (; i < width; ++i) {
+			const compv_float32_t& vv = APtr[i];
+			minn = COMPV_MATH_MIN(minn, vv);
+			maxx = COMPV_MATH_MAX(maxx, vv);
+		}
+
+		APtr += stride;
+	}
+
+	vv0_minn = vminq_f32(vv0_minn, vv1_minn);
+	vv2_minn = vminq_f32(vv2_minn, vv3_minn);
+	vv0_minn = vminq_f32(vv0_minn, vv2_minn);
+	float32x2_t vv0_minn__ = vmin_f32(vget_low_f32(vv0_minn), vget_high_f32(vv0_minn));
+	vv0_minn__ = vpmin_f32(vv0_minn__, vv0_minn__);
+	minn = std::min(minn, vget_lane_f32(vv0_minn__, 0));
+
+	vv0_maxx = vmaxq_f32(vv0_maxx, vv1_maxx);
+	vv2_maxx = vmaxq_f32(vv2_maxx, vv3_maxx);
+	vv0_maxx = vmaxq_f32(vv0_maxx, vv2_maxx);
+	float32x2_t vv0_maxx__ = vmax_f32(vget_low_f32(vv0_maxx), vget_high_f32(vv0_maxx));
+	vv0_maxx__ = vpmax_f32(vv0_maxx__, vv0_maxx__);
+	maxx = std::max(maxx, vget_lane_f32(vv0_maxx__, 0));
+}
+
 void CompVMathOpMin_8u_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* APtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, uint8_t* min1)
 {
 	COMPV_DEBUG_INFO_CHECK_NEON();
@@ -47,7 +103,7 @@ void CompVMathOpMin_8u_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* APtr, comp
 	vec0n = vpmin_u8(vec0n, vec0n);
 	vec0n = vpmin_u8(vec0n, vec0n);
 	vec0n = vpmin_u8(vec0n, vec0n);
-	minn = vget_lane_u8(vec0n, 0);
+	minn = std::min(minn, vget_lane_u8(vec0n, 0));
 }
 
 COMPV_NAMESPACE_END()

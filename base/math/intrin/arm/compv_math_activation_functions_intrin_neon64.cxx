@@ -24,7 +24,6 @@ void CompVMathActivationFunctionsTanh_64f64f_Intrin_NEON64(
 	compv_float64_t* out_ptr
 )
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("https://github.com/DoubangoTelecom/compv/issues/173");
 	COMPV_DEBUG_INFO_CHECK_NEON();
 	const float64x2_t vecMinus1 = vdupq_n_f64(-1.0);
 	const float64x2_t vecPlus1 = vdupq_n_f64(1.0);
@@ -74,7 +73,6 @@ void CompVMathActivationFunctionsTanhMul_64f64f_Intrin_NEON64(
 	compv_float64_t* out_ptr
 )
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("https://github.com/DoubangoTelecom/compv/issues/173");
 	COMPV_DEBUG_INFO_CHECK_NEON();
 	const float64x2_t vecMinus1 = vdupq_n_f64(-1.0);
 	const float64x2_t vecPlus1 = vdupq_n_f64(1.0);
@@ -131,7 +129,6 @@ void CompVMathActivationFunctionsLogistic_64f64f_Intrin_NEON64(
 	compv_float64_t* out_ptr
 )
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("https://github.com/DoubangoTelecom/compv/issues/173");
 	COMPV_DEBUG_INFO_CHECK_NEON();
 	const float64x2_t vecMinus1 = vdupq_n_f64(-1.0);
 	const float64x2_t vecPlus1 = vdupq_n_f64(1.0);
@@ -189,7 +186,6 @@ void CompVMathActivationFunctionsLogisticMul_64f64f_Intrin_NEON64(
 	compv_float64_t* out_ptr
 )
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("https://github.com/DoubangoTelecom/compv/issues/173");
 	COMPV_DEBUG_INFO_CHECK_NEON();
 	const float64x2_t vecMinus1 = vdupq_n_f64(-1.0);
 	const float64x2_t vecPlus1 = vdupq_n_f64(1.0);

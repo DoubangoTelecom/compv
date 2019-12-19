@@ -18,6 +18,16 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+#if COMPV_ARCH_ARM64
+void CompVMathCastProcess_static_64f32f_Intrin_NEON64(
+	COMPV_ALIGNED(NEON) const compv_float64_t* src,
+	COMPV_ALIGNED(NEON) compv_float32_t* dst,
+	const compv_uscalar_t width,
+	const compv_uscalar_t height,
+	COMPV_ALIGNED(NEON) const compv_uscalar_t stride
+);
+#endif /* COMPV_ARCH_ARM64 */
+
 void CompVMathCastProcess_static_8u32f_Intrin_NEON(
 	COMPV_ALIGNED(NEON) const uint8_t* src,
 	COMPV_ALIGNED(NEON) compv_float32_t* dst,

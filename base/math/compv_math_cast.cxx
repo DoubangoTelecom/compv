@@ -64,6 +64,9 @@ COMPV_ERROR_CODE CompVMathCast::process_static(const compv_float64_t* src, compv
 		COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathCastProcessStatic_64f32f = CompVMathCastProcess_static_64f32f_Intrin_SSE2);
 	}
 #elif COMPV_ARCH_ARM
+	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(src) && COMPV_IS_ALIGNED_NEON(dst) && COMPV_IS_ALIGNED_NEON(stride * sizeof(compv_float64_t)) && COMPV_IS_ALIGNED_NEON(stride * sizeof(compv_float32_t))) {
+		COMPV_EXEC_IFDEF_INTRIN_ARM64(CompVMathCastProcessStatic_64f32f = CompVMathCastProcess_static_64f32f_Intrin_NEON64);
+	}
 #endif
 
 	CompVMathCastProcessStatic_64f32f(src, dst, static_cast<compv_uscalar_t>(width), static_cast<compv_uscalar_t>(height), static_cast<compv_uscalar_t>(stride));

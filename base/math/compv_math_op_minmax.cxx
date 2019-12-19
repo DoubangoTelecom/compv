@@ -143,9 +143,13 @@ static void OpMinMax(const CompVMatPtr& A, double& minn, double& maxx)
 		void(*OpMinMax_32f)(const compv_float32_t* APtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, compv_float32_t* min1, compv_float32_t* max1)
 			= OpMinMax_32f_C;
 #if COMPV_ARCH_X86
-		// << Hook >>
+		if (CompVCpu::isEnabled(kCpuFlagSSE2) && A->isAlignedSSE()) {
+			COMPV_EXEC_IFDEF_INTRIN_X86((OpMinMax_32f = CompVMathOpMinMax_32f_Intrin_SSE2));
+		}
 #elif COMPV_ARCH_ARM
-		// << Hook >>
+		if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && A->isAlignedNEON()) {
+			COMPV_EXEC_IFDEF_INTRIN_ARM((OpMinMax_32f = CompVMathOpMinMax_32f_Intrin_NEON));
+		}
 #endif
 		OpMinMax_32f(reinterpret_cast<const compv_float32_t*>(Aptr), width, height, Astride, reinterpret_cast<compv_float32_t*>(&minn_), reinterpret_cast<compv_float32_t*>(&maxx_));
 	}

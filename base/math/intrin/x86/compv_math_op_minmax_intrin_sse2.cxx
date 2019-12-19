@@ -12,6 +12,60 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+void CompVMathOpMinMax_32f_Intrin_SSE2(COMPV_ALIGNED(SSE) const compv_float32_t* APtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride, compv_float32_t* min1, compv_float32_t* max1)
+{
+	COMPV_DEBUG_INFO_CHECK_SSE2();
+
+	const compv_uscalar_t width16 = width & -16;
+	const compv_uscalar_t width4 = width & -4;
+	__m128 vv0_minn = _mm_load1_ps(min1), vv1_minn = vv0_minn, vv2_minn = vv0_minn, vv3_minn = vv0_minn;
+	__m128 vv0_maxx = _mm_load1_ps(max1), vv1_maxx = vv0_maxx, vv2_maxx = vv0_maxx, vv3_maxx = vv0_maxx;
+	for (compv_uscalar_t j = 0; j < height; ++j) {
+		compv_uscalar_t i = 0;
+		for (; i < width16; i += 16) {
+			const __m128 vv0 = _mm_load_ps(&APtr[i]);
+			const __m128 vv1 = _mm_load_ps(&APtr[i + 4]);
+			const __m128 vv2 = _mm_load_ps(&APtr[i + 8]);
+			const __m128 vv3 = _mm_load_ps(&APtr[i + 12]);
+			vv0_minn = _mm_min_ps(vv0_minn, vv0);
+			vv1_minn = _mm_min_ps(vv1_minn, vv1);
+			vv2_minn = _mm_min_ps(vv2_minn, vv2);
+			vv3_minn = _mm_min_ps(vv3_minn, vv3);
+			vv0_maxx = _mm_max_ps(vv0_maxx, vv0);
+			vv1_maxx = _mm_max_ps(vv1_maxx, vv1);
+			vv2_maxx = _mm_max_ps(vv2_maxx, vv2);
+			vv3_maxx = _mm_max_ps(vv3_maxx, vv3);
+		}
+		for (; i < width4; i += 4) {
+			const __m128 vv0 = _mm_load_ps(&APtr[i]);
+			vv0_minn = _mm_min_ps(vv0_minn, vv0);
+			vv0_maxx = _mm_max_ps(vv0_maxx, vv0);
+		}
+
+		for (; i < width; ++i) {
+			const __m128 vv0 = _mm_load_ss(&APtr[i]);
+			vv0_minn = _mm_min_ss(vv0_minn, vv0);
+			vv0_maxx = _mm_max_ss(vv0_maxx, vv0);
+		}
+
+		APtr += stride;
+	}
+
+	vv0_minn = _mm_min_ps(vv0_minn, vv1_minn);
+	vv2_minn = _mm_min_ps(vv2_minn, vv3_minn);
+	vv0_minn = _mm_min_ps(vv0_minn, vv2_minn);
+	vv0_minn = _mm_min_ps(vv0_minn, _mm_shuffle_ps(vv0_minn, vv0_minn, 0xE));
+	vv0_minn = _mm_min_ps(vv0_minn, _mm_shuffle_ps(vv0_minn, vv0_minn, 0x1));
+	*min1 = _mm_cvtss_f32(vv0_minn);
+
+	vv0_maxx = _mm_max_ps(vv0_maxx, vv1_maxx);
+	vv2_maxx = _mm_max_ps(vv2_maxx, vv3_maxx);
+	vv0_maxx = _mm_max_ps(vv0_maxx, vv2_maxx);
+	vv0_maxx = _mm_max_ps(vv0_maxx, _mm_shuffle_ps(vv0_maxx, vv0_maxx, 0xE));
+	vv0_maxx = _mm_max_ps(vv0_maxx, _mm_shuffle_ps(vv0_maxx, vv0_maxx, 0x1));
+	*max1 = _mm_cvtss_f32(vv0_maxx);
+}
+
 void CompVMathOpMin_8u_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* APtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride, uint8_t* min1)
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
@@ -51,8 +105,8 @@ void CompVMathOpMin_8u_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* APtr, compv
 	const uint8_t b = (uint8_t)((min32 >> 8) & 0xff);
 	const uint8_t c = (uint8_t)((min32 >> 16) & 0xff);
 	const uint8_t d = (uint8_t)((min32 >> 24) & 0xff);
-	minn = COMPV_MATH_MIN_3(a, b, c);
-	minn = COMPV_MATH_MIN(minn, d);
+	minn = COMPV_MATH_MIN_3(minn, a, b);
+	minn = COMPV_MATH_MIN_3(minn, c, d);
 }
 
 COMPV_NAMESPACE_END()

@@ -18,6 +18,8 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+void CompVMathOpMinMax_32f_Intrin_NEON(COMPV_ALIGNED(NEON) const compv_float32_t* APtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, compv_float32_t* min1, compv_float32_t* max1);
+
 void CompVMathOpMin_8u_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* APtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, uint8_t* min1);
 
 COMPV_NAMESPACE_END()
