@@ -15,7 +15,6 @@ COMPV_NAMESPACE_BEGIN()
 void CompVMathOpMin_8u_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* APtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride, uint8_t* min1)
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Please add ASM implementation");
 
 	uint8_t& minn = *min1;
 	__m128i vec0 = _mm_set1_epi8((char)minn);
@@ -43,15 +42,17 @@ void CompVMathOpMin_8u_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* APtr, compv
 	}
 	vec0 = _mm_min_epu8(vec0, vec1);
 	vec2 = _mm_min_epu8(vec2, vec3);
-	vec0 = _mm_min_epu8(vec0, vec2);
+	vec0 = _mm_min_epu8(vec0, vec2);	
 	vec0 = _mm_min_epu8(vec0, _mm_shuffle_epi32(vec0, 0xE));
+	vec0 = _mm_min_epu8(vec0, _mm_shuffle_epi32(vec0, 0x1));
+
 	const uint32_t min32 = (uint32_t)_mm_cvtsi128_si32(vec0);
 	const uint8_t a = (uint8_t)(min32 & 0xff);
 	const uint8_t b = (uint8_t)((min32 >> 8) & 0xff);
 	const uint8_t c = (uint8_t)((min32 >> 16) & 0xff);
 	const uint8_t d = (uint8_t)((min32 >> 24) & 0xff);
-	minn = COMPV_MATH_MIN_3(minn, a, b);
-	minn = COMPV_MATH_MIN_3(minn, c, d);
+	minn = COMPV_MATH_MIN_3(a, b, c);
+	minn = COMPV_MATH_MIN(minn, d);
 }
 
 COMPV_NAMESPACE_END()

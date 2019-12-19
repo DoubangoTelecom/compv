@@ -20,7 +20,6 @@ void CompVMathCastProcess_static_64f32f_Intrin_SSE2(
 )
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Please add ASM implementation");
 	const compv_uscalar_t width8 = width & -8;
 	for (compv_uscalar_t j = 0; j < height; ++j) {
 		compv_uscalar_t i = 0;

@@ -352,6 +352,7 @@ elseif ("${TARGET_ARCH}" STREQUAL "arm32" OR "${TARGET_ARCH}" STREQUAL "arm64")
 		math/intrin/arm/compv_math_histogram_intrin_neon.cxx
 		math/intrin/arm/compv_math_matrix_intrin_neon64.cxx
 		math/intrin/arm/compv_math_morph_intrin_neon.cxx
+		math/intrin/arm/compv_math_op_minmax_intrin_neon.cxx
 		math/intrin/arm/compv_math_op_mul_intrin_neon.cxx
 		math/intrin/arm/compv_math_op_sub_intrin_neon.cxx
 		math/intrin/arm/compv_math_scale_intrin_neon.cxx

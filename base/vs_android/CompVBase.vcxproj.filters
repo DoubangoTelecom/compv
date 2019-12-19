@@ -1508,6 +1508,9 @@
     <ClCompile Include="..\compv_base64.cxx">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="..\math\intrin\arm\compv_math_op_minmax_intrin_neon.cxx">
+      <Filter>source\math\intrin\arm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <YASM Include="..\asm\x86\compv_bits_x86.s">

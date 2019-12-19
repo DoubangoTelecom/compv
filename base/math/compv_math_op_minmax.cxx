@@ -11,6 +11,7 @@
 #include "compv/base/compv_cpu.h"
 
 #include "compv/base/math/intrin/x86/compv_math_op_minmax_intrin_sse2.h"
+#include "compv/base/math/intrin/arm/compv_math_op_minmax_intrin_neon.h"
 
 #define COMPV_MATH_OP_MINMAX_SAMPLES_PER_THREAD (50 * 50)
 
@@ -195,7 +196,9 @@ static void OpMin(const CompVMatPtr& A, double& minn)
 			COMPV_EXEC_IFDEF_INTRIN_X86((OpMin_8u = CompVMathOpMin_8u_Intrin_SSE2));
 		}
 #elif COMPV_ARCH_ARM
-		// << Hook >>
+		if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && A->isAlignedNEON()) {
+			COMPV_EXEC_IFDEF_INTRIN_ARM((OpMin_8u = CompVMathOpMin_8u_Intrin_NEON));
+		}
 #endif
 		OpMin_8u(reinterpret_cast<const uint8_t*>(Aptr), width, height, Astride, reinterpret_cast<uint8_t*>(&minn_));
 	}
