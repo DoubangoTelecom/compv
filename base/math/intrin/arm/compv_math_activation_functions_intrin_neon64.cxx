@@ -86,7 +86,7 @@ void CompVMathActivationFunctionsTanhMul_64f64f_Intrin_NEON64(
 		vecX = vmulq_f64(vmulq_f64(vecX, vecSign), vecScale);
 		uint32x2_t vecIndex = vqmovn_u64(vcvtq_u64_f64(vecX));
 		uint32x2_t vecIndexMask = vclt_u32(vecIndex, vecLut_length_minus1);
-		if (COMPV_ARM_NEON_NEQ_ZEROD(vecIndexMask)) { // TODO(dmi): https://github.com/DoubangoTelecom/compv/issues/173
+		if (COMPV_ARM_NEON_NEQ_ZEROD(vecIndexMask)) {
 			const float64x2_t vecIndexRounded = vrndmq_f64(vecX);
 			vecIndex = vmin_u32(vecIndex, vecLut_length_minus1); // Clip indices to avoid reading beyond valid data. LUT should be padded with at lease #1 double
 			const uint32x2x2_t vecIndexMask32x2x2 = vzip_u32(vecIndexMask, vecIndexMask); // Convert low #2 32B -> #2 64B

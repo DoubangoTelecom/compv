@@ -46,7 +46,7 @@ COMPV_ERROR_CODE CompVMathActivationFunctions::tanh(const compv_float64_t* lut_p
 		COMPV_EXEC_IFDEF_INTRIN_X86((CompVMathActivationFunctionsTanh = CompVMathActivationFunctionsTanh_64f64f_Intrin_SSE41));
 	}
 #elif COMPV_ARCH_ARM
-	if (COMPV_IS_ALIGNED(in_out_length, 2) && CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
+	if (COMPV_IS_ALIGNED(in_out_length, 2) && CompVCpu::isEnabled(kCpuFlagARM_NEON_FMA)) {
 		COMPV_EXEC_IFDEF_INTRIN_ARM64((CompVMathActivationFunctionsTanh = CompVMathActivationFunctionsTanh_64f64f_Intrin_NEON64));
 	}
 #endif
@@ -76,7 +76,7 @@ COMPV_ERROR_CODE CompVMathActivationFunctions::tanhMul(const compv_float64_t* lu
 			COMPV_EXEC_IFDEF_INTRIN_X86((CompVMathActivationFunctionsTanhMul = CompVMathActivationFunctionsTanhMul_64f64f_Intrin_SSE41));
 		}
 #elif COMPV_ARCH_ARM
-	if (COMPV_IS_ALIGNED(in_out_length, 2) && CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
+	if (COMPV_IS_ALIGNED(in_out_length, 2) && CompVCpu::isEnabled(kCpuFlagARM_NEON_FMA)) {
 		COMPV_EXEC_IFDEF_INTRIN_ARM64((CompVMathActivationFunctionsTanhMul = CompVMathActivationFunctionsTanhMul_64f64f_Intrin_NEON64));
 	}
 #endif
@@ -106,7 +106,7 @@ COMPV_ERROR_CODE CompVMathActivationFunctions::logistic(const compv_float64_t* l
 		COMPV_EXEC_IFDEF_INTRIN_X86((CompVMathActivationFunctionsLogistic = CompVMathActivationFunctionsLogistic_64f64f_Intrin_SSE41));
 	}
 #elif COMPV_ARCH_ARM
-	if (COMPV_IS_ALIGNED(in_out_length, 2) && CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
+	if (COMPV_IS_ALIGNED(in_out_length, 2) && CompVCpu::isEnabled(kCpuFlagARM_NEON_FMA)) {
 		COMPV_EXEC_IFDEF_INTRIN_ARM64((CompVMathActivationFunctionsLogistic = CompVMathActivationFunctionsLogistic_64f64f_Intrin_NEON64));
 	}
 #endif
@@ -136,7 +136,7 @@ COMPV_ERROR_CODE CompVMathActivationFunctions::logisticMul(const compv_float64_t
 		COMPV_EXEC_IFDEF_INTRIN_X86((CompVMathActivationFunctionsLogisticMul = CompVMathActivationFunctionsLogisticMul_64f64f_Intrin_SSE41));
 	}
 #elif COMPV_ARCH_ARM
-	if (COMPV_IS_ALIGNED(in_out_length, 2) && CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
+	if (COMPV_IS_ALIGNED(in_out_length, 2) && CompVCpu::isEnabled(kCpuFlagARM_NEON_FMA)) {
 		COMPV_EXEC_IFDEF_INTRIN_ARM64((CompVMathActivationFunctionsLogisticMul = CompVMathActivationFunctionsLogisticMul_64f64f_Intrin_NEON64));
 	}
 #endif
