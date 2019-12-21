@@ -30,7 +30,9 @@ COMPV_ERROR_CODE CompVMathEigen<T>::findSymm(const CompVMatPtr &S, CompVMatPtrPt
 {
 	COMPV_CHECK_EXP_RETURN(!S || !S->isRawTypeMatch<T>() || !D || !Q || !S->rows() || S->rows() != S->cols(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
+#if ((defined(_DEBUG) && _DEBUG != 0) || (defined(DEBUG) && DEBUG != 0))
 	COMPV_DEBUG_INFO_CODE_TODO("Remove T and create CompVMathEigenGeneric like what is done with CompVMathMatrix (type of S discovered at runtime)");
+#endif
 
 	const size_t dim = S->cols();
 
@@ -125,7 +127,9 @@ COMPV_ERROR_CODE CompVMathEigen<T>::findSymm(const CompVMatPtr &S, CompVMatPtrPt
 
 	// Instead of returning Q = QG, return Qt, Qt = GtQt
 
+#if ((defined(_DEBUG) && _DEBUG != 0) || (defined(DEBUG) && DEBUG != 0))
 	COMPV_DEBUG_INFO_CODE_TODO("Try to eliminate extract2Cols/insert2Cols which were made to make mulAG thread-safe and SIMD-friendly. Take too much time");
+#endif
 
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<T>(&GD_2rows, 2, dim));
 	GD_2rowsPtr0 = GD_2rows->ptr<T>(0), GD_2rowsPtr1 = GD_2rows->ptr<T>(1);
@@ -353,7 +357,9 @@ bool CompVMathEigen<T>::isCloseToZero(T a)
 template <class T>
 COMPV_ERROR_CODE CompVMathEigen<T>::maxAbsOffDiagSymm(const T* rowPtr, const size_t row, size_t *col, T* max)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
+	if (row > 9) { // 9x9 matrice are very common (Homography equation) and small -> ignore message about SIMD
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
+	}
 	COMPV_CHECK_EXP_RETURN(!row, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "row must be > 0"); // row zero cannot contain off-diagonal index
 	T vv, maxx = rowPtr[0];
 	*col = 0;
