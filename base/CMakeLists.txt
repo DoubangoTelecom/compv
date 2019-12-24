@@ -166,6 +166,14 @@ set(compv_base_SOURCES
 	compv_xml.cxx
 )
 
+###### --- iOS --- ######
+if (IOS)
+    set_source_files_properties(
+        compv_fileutils.cxx
+        PROPERTIES COMPILE_FLAGS "-x objective-c++"
+    )
+endif ()
+
 ###### --- X86 / X64 --- ######
 if ("${TARGET_ARCH}" STREQUAL "x86" OR "${TARGET_ARCH}" STREQUAL "x64")
 	set(INTRIN_FILES ${INTRIN_FILES}
