@@ -128,6 +128,18 @@ std::string CompVFileUtils::getFileNameFromFullPath(const char* fullpath)
 	return fullpath_;
 }
 
+std::string CompVFileUtils::getFolderPathFromFullPath(const char* fullpath)
+{
+	COMPV_ASSERT(fullpath != nullptr);
+	std::string fullpath_(fullpath);
+	std::replace(fullpath_.begin(), fullpath_.end(), '\\', '/');
+	const size_t i = fullpath_.rfind('/', fullpath_.length());
+	if (i != std::string::npos) {
+		return (fullpath_.substr(0, i));
+	}
+	return fullpath_;
+}
+
 std::string CompVFileUtils::patchFullPath(const char* fullpath)
 {
 	COMPV_ASSERT(fullpath != nullptr);
