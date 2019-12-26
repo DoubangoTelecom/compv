@@ -28,17 +28,17 @@
 #if defined(__APPLE__)
 #   include <TargetConditionals.h>
 #   include <Availability.h>
-#	define COMPV_OS_APPLE				1
+#	define COMPV_OS_APPLE                   1
+#   if TARGET_OS_MAC || (defined (macintosh) || defined(Macintosh) || (defined(__APPLE__) && defined(__MACH__)))
+#       define COMPV_OS_OSX					1
+#   endif
+#   if TARGET_IPHONE_SIMULATOR
+#       define COMPV_OS_IPHONE_SIMULATOR	1
+#   elif TARGET_OS_IPHONE || TARGET_OS_IOS
+#       define COMPV_OS_IPHONE				1
+#   endif
 #endif
-#if TARGET_OS_MAC || (defined (macintosh) || defined(Macintosh) || (defined(__APPLE__) && defined(__MACH__)))
-#	define COMPV_OS_OSX					1
-#endif
-#if TARGET_OS_IPHONE
-#	define COMPV_OS_IPHONE				1
-#endif
-#if TARGET_IPHONE_SIMULATOR
-#	define COMPV_OS_IPHONE_SIMULATOR	1
-#endif
+
 // OS: Android
 #if defined(__ANDROID__) || defined(ANDROID)
 #	define COMPV_OS_ANDROID				1
