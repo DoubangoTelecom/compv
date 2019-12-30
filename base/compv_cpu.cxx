@@ -40,7 +40,11 @@ COMPV_EXTERNC long long compv_utils_rdtsc_x86_asm();
 #if COMPV_OS_APPLE
 #   include <sys/types.h>
 #   include <sys/sysctl.h>
+#   include <sys/utsname.h>
 #   include <mach/machine.h>
+#   if COMPV_OS_IPHONE || COMPV_OS_IPHONE_SIMULATOR
+#       import <UIKit/UIKit.h>
+#   endif
 #endif
 
 #if defined(_MSC_VER)
@@ -344,6 +348,19 @@ COMPV_ERROR_CODE CompVCpu::init()
 	else {
 		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "RegGetValueA failed: %d", GetLastError());
 	}
+    
+#elif COMPV_OS_APPLE
+    struct utsname systemInfo;
+    uname(&systemInfo);
+    
+    s_strHardware = systemInfo.sysname; // "Darwin" on iPad Air 2
+    s_strModel = systemInfo.machine; // "iPad5,3" on iPad Air 2
+    
+    // Please note that the serial is useless if the app isn't installed from the app store
+    // more info at https://developer.apple.com/documentation/uikit/uidevice/1620059-identifierforvendor
+#   if COMPV_OS_IPHONE || COMPV_OS_IPHONE_SIMULATOR
+    s_strSerial = [[[[UIDevice currentDevice] identifierForVendor] UUIDString] UTF8String];
+#   endif
 
 #elif COMPV_OS_LINUX || COMPV_OS_BSD || COMPV_OS_ANDROID || COMPV_OS_PI
 	FILE* fcpuinfo = fopen("/proc/cpuinfo", "r"); // Must not use "CompVFileUtils::open" which open data from assets

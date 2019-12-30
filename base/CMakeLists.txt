@@ -169,6 +169,7 @@ set(compv_base_SOURCES
 ###### --- iOS --- ######
 if (IOS)
     set_source_files_properties(
+        compv_cpu.cxx
         compv_fileutils.cxx
         PROPERTIES COMPILE_FLAGS "-x objective-c++"
     )
