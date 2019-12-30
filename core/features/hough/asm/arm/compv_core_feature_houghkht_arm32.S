@@ -101,28 +101,28 @@
 #else
 	movw t0, #:lower16:twoPi_low
     movt t0, #:upper16:twoPi_low
-	vmov vecTwoPi[0], t0
+    vmov.u32 vecTwoPi[0], t0
 	movw t0, #:lower16:twoPi_high
     movt t0, #:upper16:twoPi_high
-	vmov vecTwoPi[1], t0
+	vmov.u32 vecTwoPi[1], t0
 	movw t0, #:lower16:one_low
     movt t0, #:upper16:one_low
-	vmov vecOne[0], t0
+	vmov.u32 vecOne[0], t0
 	movw t0, #:lower16:one_high
     movt t0, #:upper16:one_high
-	vmov vecOne[1], t0
+	vmov.u32 vecOne[1], t0
 	movw t0, #:lower16:four_low
     movt t0, #:upper16:four_low
-	vmov vecFour[0], t0
+	vmov.u32 vecFour[0], t0
 	movw t0, #:lower16:four_high
     movt t0, #:upper16:four_high
-	vmov vecFour[1], t0
+	vmov.u32 vecFour[1], t0
 	movw t0, #:lower16:zeroDotOne_low
     movt t0, #:upper16:zeroDotOne_low
-	vmov vecZeroDotOne[0], t0
+	vmov.u32 vecZeroDotOne[0], t0
 	movw t0, #:lower16:zeroDotOne_high
     movt t0, #:upper16:zeroDotOne_high
-	vmov vecZeroDotOne[1], t0
+	vmov.u32 vecZeroDotOne[1], t0
 #endif
 
 	lsl count, count, #3 @ convert from float64 to bytes
