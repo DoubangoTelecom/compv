@@ -27,7 +27,7 @@ void* CompVGLUtils::currentContext()
 #else
 #	if COMPV_OS_WINDOWS
     return static_cast<void*>(wglGetCurrentContext());
-#	elif COMPV_OS_IPHONE
+#	elif COMPV_OS_IPHONE || COMPV_OS_IPHONE_SIMULATOR
     COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "EAGL not implemented yet");
     return NULL;
 #	elif COMPV_OS_APPLE
