@@ -21,8 +21,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CompVPluginDirectShow", "..
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CompVPluginMFoundation", "..\..\plugin_mfoundation\CompVPluginMFoundation.vcxproj", "{F9006758-F433-4F8A-A12D-6F0FF4131A74}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CompVPluginOpenCL", "..\..\plugin_opencl\CompVPluginOpenCL.vcxproj", "{8DFFE598-89E4-4DC0-AF73-8E879D7D4530}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{6EACAE07-E8DB-4AF9-B441-09B70139F566}"
 	ProjectSection(SolutionItems) = preProject
 		..\..\api\include\compv\compv_api.h = ..\..\api\include\compv\compv_api.h
@@ -108,14 +106,6 @@ Global
 		{F9006758-F433-4F8A-A12D-6F0FF4131A74}.Release|x64.Build.0 = Release|x64
 		{F9006758-F433-4F8A-A12D-6F0FF4131A74}.Release|x86.ActiveCfg = Release|Win32
 		{F9006758-F433-4F8A-A12D-6F0FF4131A74}.Release|x86.Build.0 = Release|Win32
-		{8DFFE598-89E4-4DC0-AF73-8E879D7D4530}.Debug|x64.ActiveCfg = Debug|x64
-		{8DFFE598-89E4-4DC0-AF73-8E879D7D4530}.Debug|x64.Build.0 = Debug|x64
-		{8DFFE598-89E4-4DC0-AF73-8E879D7D4530}.Debug|x86.ActiveCfg = Debug_static|Win32
-		{8DFFE598-89E4-4DC0-AF73-8E879D7D4530}.Debug|x86.Build.0 = Debug_static|Win32
-		{8DFFE598-89E4-4DC0-AF73-8E879D7D4530}.Release|x64.ActiveCfg = Release|x64
-		{8DFFE598-89E4-4DC0-AF73-8E879D7D4530}.Release|x64.Build.0 = Release|x64
-		{8DFFE598-89E4-4DC0-AF73-8E879D7D4530}.Release|x86.ActiveCfg = Release|Win32
-		{8DFFE598-89E4-4DC0-AF73-8E879D7D4530}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
