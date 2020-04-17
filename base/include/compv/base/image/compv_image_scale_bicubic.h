@@ -52,7 +52,7 @@ public:
 class CompVImageScaleBicubic
 {
 public:
-	static COMPV_ERROR_CODE process(const CompVMatPtr& imageIn, CompVMatPtr& imageOut, const COMPV_INTERPOLATION_TYPE bicubicType = COMPV_INTERPOLATION_TYPE_BICUBIC);
+	static COMPV_ERROR_CODE process(const CompVMatPtr& imageIn, CompVMatPtr& imageOut, const COMPV_INTERPOLATION_TYPE bicubicType = COMPV_INTERPOLATION_TYPE_BICUBIC, const bool enforceSingleThread = false);
 };
 
 COMPV_NAMESPACE_END()

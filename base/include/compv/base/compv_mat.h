@@ -202,20 +202,25 @@ public:
 		return false;
 	}
 
-	COMPV_ERROR_CODE clone(CompVMatPtrPtr clone) const {
+	COMPV_ERROR_CODE clone(CompVMatPtrPtr clone, const bool enforceSingleThread = false) const {
 		COMPV_CHECK_EXP_RETURN(!clone, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 		CompVMatPtr clone_ = (*clone && **clone == this) ? nullptr : *clone;
 		const CompVMatPtr& model = const_cast<CompVMat*>(this);
 		COMPV_CHECK_CODE_RETURN(CompVMat::newObj(&clone_, model));
 		if (this->dataSizeInBytes() == clone_->dataSizeInBytes()) {
-			COMPV_CHECK_CODE_RETURN(CompVMem::copy(clone_->ptr<void>(), this->ptr<const void>(), this->dataSizeInBytes()));
+			COMPV_CHECK_CODE_RETURN(CompVMem::copy(
+				clone_->ptr<void>(), this->ptr<const void>(), this->dataSizeInBytes(), enforceSingleThread
+			));
 		}
 		else {
 			const size_t rows_ = rows();
 			const int planeCount_ = static_cast<int>(planeCount());
 			for (size_t j = 0; j < rows_; ++j) {
 				for (int p = 0; p < planeCount_; ++p) {
-					COMPV_CHECK_CODE_RETURN(CompVMem::copy(clone_->ptr<void>(j, 0, p), this->ptr<const void>(j, 0, p), clone_->rowInBytes(p)));
+					COMPV_CHECK_CODE_RETURN(CompVMem::copy(
+						clone_->ptr<void>(j, 0, p), this->ptr<const void>(j, 0, p), clone_->rowInBytes(p),
+						enforceSingleThread
+					));
 				}
 			}
 		}

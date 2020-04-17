@@ -151,7 +151,7 @@ COMPV_ERROR_CODE CompVMem::deInit()
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVMem::copy(void* dstPtr, const void* srcPtr, size_t size)
+COMPV_ERROR_CODE CompVMem::copy(void* dstPtr, const void* srcPtr, size_t size, const bool enforceSingleThread COMPV_DEFAULT(false))
 {
     COMPV_CHECK_EXP_RETURN(!dstPtr || !srcPtr || !size, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     CompVMemCopy cpy = CompVMemCopy_C;
@@ -165,7 +165,7 @@ COMPV_ERROR_CODE CompVMem::copy(void* dstPtr, const void* srcPtr, size_t size)
 #endif /* COMPV_ARCH_ARM */
 
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
-	const size_t threadsCount = (threadDisp && !threadDisp->isMotherOfTheCurrentThread())
+	const size_t threadsCount = (threadDisp && !threadDisp->isMotherOfTheCurrentThread() && !enforceSingleThread)
 		? std::min((size / COMPV_MEM_CPY_COUNT_MIN_SAMPLES_PER_THREAD), static_cast<size_t>(threadDisp->threadsCount()))
 		: 1;
 	if (threadsCount > 1) {
@@ -192,7 +192,7 @@ COMPV_ERROR_CODE CompVMem::copy(void* dstPtr, const void* srcPtr, size_t size)
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVMem::copyNTA(void* dstPtr, const void*srcPtr, size_t size)
+COMPV_ERROR_CODE CompVMem::copyNTA(void* dstPtr, const void*srcPtr, size_t size, const bool enforceSingleThread COMPV_DEFAULT(false))
 {
     COMPV_CHECK_EXP_RETURN(!dstPtr || !srcPtr || !size, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     size_t align = 1;
@@ -228,7 +228,7 @@ COMPV_ERROR_CODE CompVMem::copyNTA(void* dstPtr, const void*srcPtr, size_t size)
 }
 
 // like arm neon vld3
-COMPV_ERROR_CODE CompVMem::unpack4(uint8_t* dstPt0, uint8_t* dstPt1, uint8_t* dstPt2, uint8_t* dstPt3, const compv_uint8x4_t* srcPtr, size_t width, size_t height, size_t stride)
+COMPV_ERROR_CODE CompVMem::unpack4(uint8_t* dstPt0, uint8_t* dstPt1, uint8_t* dstPt2, uint8_t* dstPt3, const compv_uint8x4_t* srcPtr, size_t width, size_t height, size_t stride, const bool enforceSingleThread COMPV_DEFAULT(false))
 {
 	COMPV_CHECK_EXP_RETURN(!dstPt0 || !dstPt1 || !dstPt2 || !dstPt3 || !srcPtr || !width || !height || stride < width, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
@@ -260,14 +260,14 @@ COMPV_ERROR_CODE CompVMem::unpack4(uint8_t* dstPt0, uint8_t* dstPt1, uint8_t* ds
 		funcPtr,
 		width,
 		height,
-		COMPV_MEM_UNPACK3_COUNT_MIN_SAMPLES_PER_THREAD
+		enforceSingleThread ? SIZE_MAX : COMPV_MEM_UNPACK3_COUNT_MIN_SAMPLES_PER_THREAD
 	));
 
 	return COMPV_ERROR_CODE_S_OK;
 }
 
 // like arm neon vld3
-COMPV_ERROR_CODE CompVMem::unpack3(uint8_t* dstPt0, uint8_t* dstPt1, uint8_t* dstPt2, const compv_uint8x3_t* srcPtr, size_t width, size_t height, size_t stride)
+COMPV_ERROR_CODE CompVMem::unpack3(uint8_t* dstPt0, uint8_t* dstPt1, uint8_t* dstPt2, const compv_uint8x3_t* srcPtr, size_t width, size_t height, size_t stride, const bool enforceSingleThread COMPV_DEFAULT(false))
 {
 	COMPV_CHECK_EXP_RETURN(!dstPt0 || !dstPt1 || !dstPt2 || !srcPtr || !width || !height || stride < width, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
@@ -299,13 +299,13 @@ COMPV_ERROR_CODE CompVMem::unpack3(uint8_t* dstPt0, uint8_t* dstPt1, uint8_t* ds
 		funcPtr,
 		width,
 		height,
-		COMPV_MEM_UNPACK3_COUNT_MIN_SAMPLES_PER_THREAD
+		enforceSingleThread ? SIZE_MAX : COMPV_MEM_UNPACK3_COUNT_MIN_SAMPLES_PER_THREAD
 	));
 
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVMem::unpack2(uint8_t* dstPt0, uint8_t* dstPt1, const compv_uint8x2_t* srcPtr, size_t width, size_t height, size_t stride)
+COMPV_ERROR_CODE CompVMem::unpack2(uint8_t* dstPt0, uint8_t* dstPt1, const compv_uint8x2_t* srcPtr, size_t width, size_t height, size_t stride, const bool enforceSingleThread COMPV_DEFAULT(false))
 {
 	COMPV_CHECK_EXP_RETURN(!dstPt0 || !dstPt1 || !srcPtr || !width || !height || stride < width, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
@@ -337,14 +337,14 @@ COMPV_ERROR_CODE CompVMem::unpack2(uint8_t* dstPt0, uint8_t* dstPt1, const compv
 		funcPtr,
 		width,
 		height,
-		COMPV_MEM_UNPACK2_COUNT_MIN_SAMPLES_PER_THREAD
+		enforceSingleThread ? SIZE_MAX : COMPV_MEM_UNPACK2_COUNT_MIN_SAMPLES_PER_THREAD
 	));
 
 	return COMPV_ERROR_CODE_S_OK;
 }
 
 // like arm neon vst4
-COMPV_ERROR_CODE CompVMem::pack4(compv_uint8x4_t* dstPtr, const uint8_t* srcPt0, const uint8_t* srcPt1, const uint8_t* srcPt2, const uint8_t* srcPt3, size_t width, size_t height, size_t stride)
+COMPV_ERROR_CODE CompVMem::pack4(compv_uint8x4_t* dstPtr, const uint8_t* srcPt0, const uint8_t* srcPt1, const uint8_t* srcPt2, const uint8_t* srcPt3, size_t width, size_t height, size_t stride, const bool enforceSingleThread COMPV_DEFAULT(false))
 {
 	COMPV_CHECK_EXP_RETURN(!dstPtr || !srcPt0 || !srcPt1 || !srcPt2 || !srcPt3 || !width || !height || stride < width, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
@@ -377,14 +377,14 @@ COMPV_ERROR_CODE CompVMem::pack4(compv_uint8x4_t* dstPtr, const uint8_t* srcPt0,
 		funcPtr,
 		width,
 		height,
-		COMPV_MEM_PACK3_COUNT_MIN_SAMPLES_PER_THREAD
+		enforceSingleThread ? SIZE_MAX : COMPV_MEM_PACK3_COUNT_MIN_SAMPLES_PER_THREAD
 	));
 
 	return COMPV_ERROR_CODE_S_OK;
 }
 
 // like arm neon vst3
-COMPV_ERROR_CODE CompVMem::pack3(compv_uint8x3_t* dstPtr, const uint8_t* srcPt0, const uint8_t* srcPt1, const uint8_t* srcPt2, size_t width, size_t height, size_t stride)
+COMPV_ERROR_CODE CompVMem::pack3(compv_uint8x3_t* dstPtr, const uint8_t* srcPt0, const uint8_t* srcPt1, const uint8_t* srcPt2, size_t width, size_t height, size_t stride, const bool enforceSingleThread COMPV_DEFAULT(false))
 {
 	COMPV_CHECK_EXP_RETURN(!dstPtr || !srcPt0 || !srcPt1 || !srcPt2 || !width || !height || stride < width, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
@@ -417,14 +417,14 @@ COMPV_ERROR_CODE CompVMem::pack3(compv_uint8x3_t* dstPtr, const uint8_t* srcPt0,
 		funcPtr,
 		width,
 		height,
-		COMPV_MEM_PACK3_COUNT_MIN_SAMPLES_PER_THREAD
+		enforceSingleThread ? SIZE_MAX : COMPV_MEM_PACK3_COUNT_MIN_SAMPLES_PER_THREAD
 	));
 
 	return COMPV_ERROR_CODE_S_OK;
 }
 
 // like arm neon vst2
-COMPV_ERROR_CODE CompVMem::pack2(compv_uint8x2_t* dstPtr, const uint8_t* srcPt0, const uint8_t* srcPt1, size_t width, size_t height, size_t stride)
+COMPV_ERROR_CODE CompVMem::pack2(compv_uint8x2_t* dstPtr, const uint8_t* srcPt0, const uint8_t* srcPt1, size_t width, size_t height, size_t stride, const bool enforceSingleThread COMPV_DEFAULT(false))
 {
 	COMPV_CHECK_EXP_RETURN(!dstPtr || !srcPt0 || !srcPt1 || !width || !height || stride < width, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
@@ -457,7 +457,7 @@ COMPV_ERROR_CODE CompVMem::pack2(compv_uint8x2_t* dstPtr, const uint8_t* srcPt0,
 		funcPtr,
 		width,
 		height,
-		COMPV_MEM_PACK2_COUNT_MIN_SAMPLES_PER_THREAD
+		enforceSingleThread ? SIZE_MAX : COMPV_MEM_PACK2_COUNT_MIN_SAMPLES_PER_THREAD
 	));
 
 	return COMPV_ERROR_CODE_S_OK;

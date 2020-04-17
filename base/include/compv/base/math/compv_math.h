@@ -99,7 +99,7 @@ public:
 	static COMPV_ERROR_CODE clip2(const CompVMatPtr& in, const double maxx, CompVMatPtrPtr out);
 	static COMPV_ERROR_CODE dot(const CompVMatPtr &A, const CompVMatPtr &B, double* ret);
 	static COMPV_ERROR_CODE dotSub(const CompVMatPtr &A, const CompVMatPtr &B, double* ret);
-	static COMPV_ERROR_CODE scale(const CompVMatPtr &in, const double& s, CompVMatPtrPtr out);
+	static COMPV_ERROR_CODE scale(const CompVMatPtr &in, const double& s, CompVMatPtrPtr out, const bool enforceSingleThread = false);
 	static COMPV_ERROR_CODE exp(const CompVMatPtr &in, CompVMatPtrPtr out);
 	static COMPV_ERROR_CODE minMax(const CompVMatPtr &A, double& minn, double& maxx);
 	static COMPV_ERROR_CODE minn(const CompVMatPtr &A, double& minn);

@@ -147,7 +147,7 @@ static void CompVMathCastProcess_static_pixel8(const CompVMatPtr& srcMat, CompVM
 	}
 }
 
-COMPV_ERROR_CODE CompVMathCast::process_static_pixel8(const CompVMatPtr& src, CompVMatPtrPtr dst)
+COMPV_ERROR_CODE CompVMathCast::process_static_pixel8(const CompVMatPtr& src, CompVMatPtrPtr dst, const bool enforceSingleThread COMPV_DEFAULT(false))
 {
 	COMPV_CHECK_EXP_RETURN(!src || src->planeCount() != 1 || !dst, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	const size_t width = src->cols();
@@ -174,7 +174,7 @@ COMPV_ERROR_CODE CompVMathCast::process_static_pixel8(const CompVMatPtr& src, Co
 		funcPtr,
 		width,
 		height,
-		COMPV_MATH_CAST_STATIC_PIXEL8_SAMPLES_PER_THREAD
+		enforceSingleThread ? SIZE_MAX : COMPV_MATH_CAST_STATIC_PIXEL8_SAMPLES_PER_THREAD
 	));
 
 	*dst = dst_;

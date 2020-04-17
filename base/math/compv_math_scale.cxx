@@ -45,7 +45,7 @@ static void CompVMathScaleScale_C(const T* ptrIn, T* ptrOut, const compv_uscalar
 }
 
 template<typename T>
-static COMPV_ERROR_CODE CompVMathScaleScale(const CompVMatPtr &in, const double& s, CompVMatPtrPtr out)
+static COMPV_ERROR_CODE CompVMathScaleScale(const CompVMatPtr &in, const double& s, CompVMatPtrPtr out, const bool enforceSingleThread)
 {
 	const size_t rows = in->rows();
 	const size_t cols = in->cols();
@@ -107,7 +107,7 @@ static COMPV_ERROR_CODE CompVMathScaleScale(const CompVMatPtr &in, const double&
 		funcPtr,
 		cols,
 		rows,
-		(cols * 1)
+		enforceSingleThread ? SIZE_MAX : (cols * 1)
 	));
 
 	*out = out_;
@@ -115,11 +115,11 @@ static COMPV_ERROR_CODE CompVMathScaleScale(const CompVMatPtr &in, const double&
 }
 
 // out[i] = (in[i] * s)
-COMPV_ERROR_CODE CompVMathScale::scale(const CompVMatPtr &in, const double& s, CompVMatPtrPtr out)
+COMPV_ERROR_CODE CompVMathScale::scale(const CompVMatPtr &in, const double& s, CompVMatPtrPtr out, const bool enforceSingleThread COMPV_DEFAULT(false))
 {
 	COMPV_CHECK_EXP_RETURN(!in || !out || in->planeCount() != 1
 		, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	CompVGenericFloatInvokeCodeRawType(in->subType(), CompVMathScaleScale, in, s, out);
+	CompVGenericFloatInvokeCodeRawType(in->subType(), CompVMathScaleScale, in, s, out, enforceSingleThread);
 	return COMPV_ERROR_CODE_S_OK;
 }
 

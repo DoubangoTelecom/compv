@@ -236,7 +236,7 @@ COMPV_ERROR_CODE CompVImageScaleBicubicProcessor::init()
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVImageScaleBicubic::process(const CompVMatPtr& imageIn, CompVMatPtr& imageOut, const COMPV_INTERPOLATION_TYPE bicubicType COMPV_DEFAULT(COMPV_INTERPOLATION_TYPE_BICUBIC))
+COMPV_ERROR_CODE CompVImageScaleBicubic::process(const CompVMatPtr& imageIn, CompVMatPtr& imageOut, const COMPV_INTERPOLATION_TYPE bicubicType COMPV_DEFAULT(COMPV_INTERPOLATION_TYPE_BICUBIC), const bool enforceSingleThread COMPV_DEFAULT(false))
 {
 	// Internal function, no need to check for input parameters
 	// For now only grascale images are fully tested
@@ -285,7 +285,7 @@ COMPV_ERROR_CODE CompVImageScaleBicubic::process(const CompVMatPtr& imageIn, Com
 		imageIn32f = imageIn;
 	}
 	else {
-		COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static<uint8_t, compv_float32_t>(imageIn, &imageIn32f)));
+		COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static<uint8_t, compv_float32_t>(imageIn, &imageIn32f, enforceSingleThread)));
 	}
 	const compv_float32_t* inPtr = imageIn32f->ptr<const compv_float32_t>();
 
@@ -321,11 +321,11 @@ COMPV_ERROR_CODE CompVImageScaleBicubic::process(const CompVMatPtr& imageIn, Com
 		funcPtr,
 		outWidth,
 		outHeight,
-		COMPV_IMAGE_SCALE_BICUBIC_SAMPLES_PER_THREAD
+		enforceSingleThread ? SIZE_MAX : COMPV_IMAGE_SCALE_BICUBIC_SAMPLES_PER_THREAD
 	));
 
 	if (bicubicType == COMPV_INTERPOLATION_TYPE_BICUBIC) { // typeof(output) == typeof(intput) == uint8_t
-		COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static_pixel8(output32f, &imageOut)));
+		COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static_pixel8(output32f, &imageOut, enforceSingleThread)));
 	}
 	else { // bicubicType == COMPV_INTERPOLATION_TYPE_BICUBIC_FLOAT32
 		COMPV_CHECK_CODE_RETURN(CompVMathClip::clip3(output32f, 0.0, 255.0, &imageOut));

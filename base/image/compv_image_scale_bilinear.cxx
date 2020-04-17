@@ -79,7 +79,7 @@ static void scaleBilinear_C(const uint8_t* inPtr, compv_uscalar_t inStride, uint
 	}
 }
 
-static COMPV_ERROR_CODE scaleBilinear(const uint8_t* inPtr, compv_uscalar_t inWidth, compv_uscalar_t inHeight, compv_uscalar_t inStride, uint8_t* outPtr, compv_uscalar_t outWidth, compv_uscalar_t outHeight, compv_uscalar_t outStride, compv_uscalar_t sf_x, compv_uscalar_t sf_y)
+static COMPV_ERROR_CODE scaleBilinear(const uint8_t* inPtr, compv_uscalar_t inWidth, compv_uscalar_t inHeight, compv_uscalar_t inStride, uint8_t* outPtr, compv_uscalar_t outWidth, compv_uscalar_t outHeight, compv_uscalar_t outStride, compv_uscalar_t sf_x, compv_uscalar_t sf_y, const bool enforceSingleThread)
 {
 	void(*scale)(const uint8_t* inPtr, compv_uscalar_t inStride, uint8_t* outPtr, compv_uscalar_t outWidth, compv_uscalar_t outYStart, compv_uscalar_t outYEnd, compv_uscalar_t outStride, compv_uscalar_t sf_x, compv_uscalar_t sf_y)
 		= scaleBilinear_C;
@@ -89,7 +89,7 @@ static COMPV_ERROR_CODE scaleBilinear(const uint8_t* inPtr, compv_uscalar_t inWi
 	size_t maxThreads = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 0;
 
 	// Compute number of threads
-	threadsCount = (threadDisp && !threadDisp->isMotherOfTheCurrentThread())
+	threadsCount = (threadDisp && !threadDisp->isMotherOfTheCurrentThread() && !enforceSingleThread)
 		? CompVThreadDispatcher::guessNumThreadsDividingAcrossY(outStride, outHeight, maxThreads, COMPV_IMAGE_SCALE_SAMPLES_PER_THREAD)
 		: 1;
 
@@ -139,7 +139,7 @@ static COMPV_ERROR_CODE scaleBilinear(const uint8_t* inPtr, compv_uscalar_t inWi
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVImageScaleBilinear::process(const CompVMatPtr& imageIn, CompVMatPtr& imageOut)
+COMPV_ERROR_CODE CompVImageScaleBilinear::process(const CompVMatPtr& imageIn, CompVMatPtr& imageOut, const bool enforceSingleThread COMPV_DEFAULT(false))
 {
 	// Internal function, no need to check for input parameters
 	// For now only grascale images are fully tested
@@ -176,7 +176,8 @@ COMPV_ERROR_CODE CompVImageScaleBilinear::process(const CompVMatPtr& imageIn, Co
 		COMPV_CHECK_CODE_RETURN(scaleBilinear(
 			imageIn->ptr<const uint8_t>(0, 0, planeId), widthIn, heightIn, strideIn, 
 			imageOut->ptr<uint8_t>(0, 0, planeId), widthOut, heightOut, strideOut, 
-			int_sx, int_sy
+			int_sx, int_sy,
+			enforceSingleThread
 		));
 	}
 

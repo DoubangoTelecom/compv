@@ -20,7 +20,7 @@ COMPV_NAMESPACE_BEGIN()
 class CompVMathScale
 {
 public:
-	static COMPV_ERROR_CODE scale(const CompVMatPtr &in, const double& s, CompVMatPtrPtr out);
+	static COMPV_ERROR_CODE scale(const CompVMatPtr &in, const double& s, CompVMatPtrPtr out, const bool enforceSingleThread = false);
 	static COMPV_ERROR_CODE hookScale_64f(
 		void(**CompVMathScaleScale_64f64f)(const compv_float64_t* ptrIn, compv_float64_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride, const compv_float64_t* s1)
 	);

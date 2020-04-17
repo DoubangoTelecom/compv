@@ -276,7 +276,8 @@ COMPV_ERROR_CODE CompVImage::wrapYuv(
 	const size_t vStrideInBytes,
 	CompVMatPtrPtr outImage,
 	const size_t uvPixelStrideInBytes COMPV_DEFAULT(0),
-	const size_t outImageStrideInBytes COMPV_DEFAULT(0)
+	const size_t outImageStrideInBytes COMPV_DEFAULT(0),
+	const bool enforceSingleThread COMPV_DEFAULT(false)
 )
 {
 	COMPV_CHECK_EXP_RETURN(!yPtr || !uPtr || !vPtr || !width || !height || !yStrideInBytes || !uStrideInBytes || !vStrideInBytes || yStrideInBytes < width,
@@ -306,7 +307,8 @@ COMPV_ERROR_CODE CompVImage::wrapYuv(
 			COMPV_CHECK_CODE_RETURN(CompVImageUtils::copy(
 				COMPV_SUBTYPE_PIXELS_Y,
 				yPtr, width, height, yStrideInBytes,
-				outImage_->ptr<void>(0, 0, COMPV_PLANE_Y), outImage_->rowInBytes(COMPV_PLANE_Y), outImage_->rows(COMPV_PLANE_Y), outImage_->strideInBytes(COMPV_PLANE_Y)
+				outImage_->ptr<void>(0, 0, COMPV_PLANE_Y), outImage_->rowInBytes(COMPV_PLANE_Y), outImage_->rows(COMPV_PLANE_Y), outImage_->strideInBytes(COMPV_PLANE_Y),
+				enforceSingleThread
 			));
 			// Copy Luma - UV
 			const size_t uvHeight = outImage_->rows(COMPV_PLANE_UV);
@@ -320,7 +322,8 @@ COMPV_ERROR_CODE CompVImage::wrapYuv(
 					COMPV_CHECK_CODE_RETURN(CompVImageUtils::copy(
 						COMPV_SUBTYPE_PIXELS_Y,
 						uvPtr, uvWidthInBytes, uvHeight, uvStrideInBytes,
-						outImage_->ptr<void>(0, 0, COMPV_PLANE_UV), outImage_->rowInBytes(COMPV_PLANE_UV), outImage_->rows(COMPV_PLANE_UV), outImage_->strideInBytes(COMPV_PLANE_UV)
+						outImage_->ptr<void>(0, 0, COMPV_PLANE_UV), outImage_->rowInBytes(COMPV_PLANE_UV), outImage_->rows(COMPV_PLANE_UV), outImage_->strideInBytes(COMPV_PLANE_UV),
+						enforceSingleThread
 					));
 				}
 				else { // In packed and Out planer -> unpack and copy
@@ -329,18 +332,22 @@ COMPV_ERROR_CODE CompVImage::wrapYuv(
 					COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&ptr8uImgU, COMPV_SUBTYPE_PIXELS_Y, (uvWidthInBytes + 1) >> 1, uvHeight, (uvStrideInBytes + 1) >> 1));
 					COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&ptr8uImgV, COMPV_SUBTYPE_PIXELS_Y, (uvWidthInBytes + 1) >> 1, uvHeight, (uvStrideInBytes + 1) >> 1));
 					COMPV_CHECK_CODE_RETURN(CompVMem::unpack2(ptr8uImgU->ptr<uint8_t>(), ptr8uImgV->ptr<uint8_t>(),
-						reinterpret_cast<const compv_uint8x2_t*>(uvPtr), (uvWidthInBytes + 1) >> 1, uvHeight, (uvStrideInBytes + 1) >> 1));
+						reinterpret_cast<const compv_uint8x2_t*>(uvPtr), (uvWidthInBytes + 1) >> 1, uvHeight, (uvStrideInBytes + 1) >> 1,
+						enforceSingleThread
+					));
 					const int planeU = uFirst ? COMPV_PLANE_U : COMPV_PLANE_V;
 					const int planeV = uFirst ? COMPV_PLANE_V : COMPV_PLANE_U;
 					COMPV_CHECK_CODE_RETURN(CompVImageUtils::copy(
 						COMPV_SUBTYPE_PIXELS_Y,
 						ptr8uImgU->ptr<const void>(), ptr8uImgU->cols(), ptr8uImgU->rows(), ptr8uImgU->stride(),
-						outImage_->ptr<void>(0, 0, planeU), outImage_->cols(planeU), outImage_->rows(planeU), outImage_->stride(planeU)
+						outImage_->ptr<void>(0, 0, planeU), outImage_->cols(planeU), outImage_->rows(planeU), outImage_->stride(planeU),
+						enforceSingleThread
 					));
 					COMPV_CHECK_CODE_RETURN(CompVImageUtils::copy(
 						COMPV_SUBTYPE_PIXELS_Y,
 						ptr8uImgV->ptr<const void>(), ptr8uImgV->cols(), ptr8uImgV->rows(), ptr8uImgV->stride(),
-						outImage_->ptr<void>(0, 0, planeV), outImage_->cols(planeV), outImage_->rows(planeV), outImage_->stride(planeV)
+						outImage_->ptr<void>(0, 0, planeV), outImage_->cols(planeV), outImage_->rows(planeV), outImage_->stride(planeV),
+						enforceSingleThread
 					));
 				}
 			}
@@ -349,12 +356,14 @@ COMPV_ERROR_CODE CompVImage::wrapYuv(
 				COMPV_CHECK_CODE_RETURN(CompVImageUtils::copy(
 					COMPV_SUBTYPE_PIXELS_Y,
 					uPtr, uvWidthInBytes, uvHeight, uStrideInBytes,
-					outImage_->ptr<void>(0, 0, COMPV_PLANE_U), outImage_->rowInBytes(COMPV_PLANE_U), outImage_->rows(COMPV_PLANE_U), outImage_->strideInBytes(COMPV_PLANE_U)
+					outImage_->ptr<void>(0, 0, COMPV_PLANE_U), outImage_->rowInBytes(COMPV_PLANE_U), outImage_->rows(COMPV_PLANE_U), outImage_->strideInBytes(COMPV_PLANE_U),
+					enforceSingleThread
 				));
 				COMPV_CHECK_CODE_RETURN(CompVImageUtils::copy(
 					COMPV_SUBTYPE_PIXELS_Y,
 					vPtr, uvWidthInBytes, uvHeight, vStrideInBytes,
-					outImage_->ptr<void>(0, 0, COMPV_PLANE_V), outImage_->rowInBytes(COMPV_PLANE_V), outImage_->rows(COMPV_PLANE_V), outImage_->strideInBytes(COMPV_PLANE_V)
+					outImage_->ptr<void>(0, 0, COMPV_PLANE_V), outImage_->rowInBytes(COMPV_PLANE_V), outImage_->rows(COMPV_PLANE_V), outImage_->strideInBytes(COMPV_PLANE_V),
+					enforceSingleThread
 				));
 			}
 
@@ -369,7 +378,7 @@ COMPV_ERROR_CODE CompVImage::wrapYuv(
 	}
 }
 
-COMPV_ERROR_CODE CompVImage::wrap(COMPV_SUBTYPE ePixelFormat, const void* dataPtr, const size_t dataWidth, const size_t dataHeight, const size_t dataStride, CompVMatPtrPtr image, const size_t imageStride COMPV_DEFAULT(0))
+COMPV_ERROR_CODE CompVImage::wrap(COMPV_SUBTYPE ePixelFormat, const void* dataPtr, const size_t dataWidth, const size_t dataHeight, const size_t dataStride, CompVMatPtrPtr image, const size_t imageStride COMPV_DEFAULT(0), const bool enforceSingleThread COMPV_DEFAULT(false))
 {
 	COMPV_CHECK_EXP_RETURN(!dataPtr || !dataWidth || !dataHeight || dataStride < dataWidth || !image, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
@@ -385,21 +394,23 @@ COMPV_ERROR_CODE CompVImage::wrap(COMPV_SUBTYPE ePixelFormat, const void* dataPt
 	// Copy data using different strides
 	COMPV_CHECK_CODE_RETURN(CompVImageUtils::copy(ePixelFormat,
 		dataPtr, dataWidth, dataHeight, dataStride,
-		(void*)image_->ptr(), image_->cols(), image_->rows(), image_->stride()), "Failed to copy image"); // copy data
+		(void*)image_->ptr(), image_->cols(), image_->rows(), image_->stride(),
+		enforceSingleThread
+	), "Failed to copy image"); // copy data
 	
 	*image = image_;
 
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVImage::clone(const CompVMatPtr& imageIn, CompVMatPtrPtr imageOut)
+COMPV_ERROR_CODE CompVImage::clone(const CompVMatPtr& imageIn, CompVMatPtrPtr imageOut, const bool enforceSingleThread COMPV_DEFAULT(false))
 {
 	COMPV_CHECK_EXP_RETURN(!imageIn || imageIn->isEmpty() || !imageOut || imageIn->type() != COMPV_MAT_TYPE_PIXELS, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_CHECK_CODE_RETURN(CompVImage::wrap(imageIn->subType(), imageIn->ptr(), imageIn->cols(), imageIn->rows(), imageIn->stride(), imageOut, imageIn->stride()));
+	COMPV_CHECK_CODE_RETURN(CompVImage::wrap(imageIn->subType(), imageIn->ptr(), imageIn->cols(), imageIn->rows(), imageIn->stride(), imageOut, imageIn->stride(), enforceSingleThread));
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVImage::crop(const CompVMatPtr& imageIn, const CompVRectFloat32& roi, CompVMatPtrPtr imageOut)
+COMPV_ERROR_CODE CompVImage::crop(const CompVMatPtr& imageIn, const CompVRectFloat32& roi, CompVMatPtrPtr imageOut, const bool enforceSingleThread COMPV_DEFAULT(false))
 {
 	COMPV_CHECK_EXP_RETURN(!imageIn || imageIn->isEmpty() || roi.isEmpty() || !imageOut || imageIn->type() != COMPV_MAT_TYPE_PIXELS || roi.left < 0.f || roi.right < 0.f || roi.top < 0.f || roi.bottom < 0.f, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	
@@ -426,7 +437,8 @@ COMPV_ERROR_CODE CompVImage::crop(const CompVMatPtr& imageIn, const CompVRectFlo
 		COMPV_CHECK_CODE_RETURN(CompVMem::copy(
 			imageOut_->ptr<void>(0, 0, planeId),
 			imageIn->ptr<const void>(rowStartInPlane, colStartInPlane, planeId),
-			imageOut_->planeSizeInBytes(planeId) - (colStartInPlane * imageOut_->elmtInBytes())
+			imageOut_->planeSizeInBytes(planeId) - (colStartInPlane * imageOut_->elmtInBytes()),
+			enforceSingleThread
 		));
 	}
 
@@ -435,7 +447,7 @@ COMPV_ERROR_CODE CompVImage::crop(const CompVMatPtr& imageIn, const CompVRectFlo
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVImage::unpack(const CompVMatPtr& imageIn, CompVMatPtrVector& outputs)
+COMPV_ERROR_CODE CompVImage::unpack(const CompVMatPtr& imageIn, CompVMatPtrVector& outputs, const bool enforceSingleThread COMPV_DEFAULT(false))
 {
 	COMPV_CHECK_EXP_RETURN(!imageIn || imageIn->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
@@ -464,11 +476,13 @@ COMPV_ERROR_CODE CompVImage::unpack(const CompVMatPtr& imageIn, CompVMatPtrVecto
 		}
 		if (outputs.size() == 4) {
 			COMPV_CHECK_CODE_RETURN(CompVMem::unpack4(outputs[0]->ptr<uint8_t>(), outputs[1]->ptr<uint8_t>(), outputs[2]->ptr<uint8_t>(), outputs[3]->ptr<uint8_t>(),
-				imageIn->ptr<const compv_uint8x4_t>(), width, height, stride));
+				imageIn->ptr<const compv_uint8x4_t>(), width, height, stride, enforceSingleThread
+			));
 		}
 		else {
 			COMPV_CHECK_CODE_RETURN(CompVMem::unpack3(outputs[0]->ptr<uint8_t>(), outputs[1]->ptr<uint8_t>(), outputs[2]->ptr<uint8_t>(),
-				imageIn->ptr<const compv_uint8x3_t>(), width, height, stride));
+				imageIn->ptr<const compv_uint8x3_t>(), width, height, stride, enforceSingleThread
+			));
 		}
 		return COMPV_ERROR_CODE_S_OK;
 	}
@@ -493,21 +507,29 @@ COMPV_ERROR_CODE CompVImage::unpack(const CompVMatPtr& imageIn, CompVMatPtrVecto
 		// Wrap Luma - Y
 		COMPV_CHECK_CODE_RETURN(CompVImage::wrap(COMPV_SUBTYPE_PIXELS_Y,
 			imageIn->ptr<uint8_t>(0, 0, COMPV_PLANE_Y), imageIn->cols(COMPV_PLANE_Y), imageIn->rows(COMPV_PLANE_Y), imageIn->stride(COMPV_PLANE_Y),
-			&ptr8uImgY, imageIn->stride(COMPV_PLANE_Y)));
+			&ptr8uImgY, imageIn->stride(COMPV_PLANE_Y),
+			enforceSingleThread
+		));
 		// UV
 		COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&ptr8uImgU, COMPV_SUBTYPE_PIXELS_Y, imageIn->cols(planeU), imageIn->rows(planeU), imageIn->stride(planeU)));
 		COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&ptr8uImgV, COMPV_SUBTYPE_PIXELS_Y, imageIn->cols(planeV), imageIn->rows(planeV), imageIn->stride(planeV)));
 		if (packedUV) { // Interleaved UV
 			COMPV_CHECK_CODE_RETURN(CompVMem::unpack2(ptr8uImgU->ptr<uint8_t>(), ptr8uImgV->ptr<uint8_t>(),
-				imageIn->ptr<const compv_uint8x2_t>(0, 0, COMPV_PLANE_UV), imageIn->cols(COMPV_PLANE_UV), imageIn->rows(COMPV_PLANE_UV), imageIn->stride(COMPV_PLANE_UV)));
+				imageIn->ptr<const compv_uint8x2_t>(0, 0, COMPV_PLANE_UV), imageIn->cols(COMPV_PLANE_UV), imageIn->rows(COMPV_PLANE_UV), imageIn->stride(COMPV_PLANE_UV),
+				enforceSingleThread
+			));
 		}
 		else { // Planar UV
 			COMPV_CHECK_CODE_RETURN(CompVImage::wrap(COMPV_SUBTYPE_PIXELS_Y,
 				imageIn->ptr<uint8_t>(0, 0, planeU), imageIn->cols(planeU), imageIn->rows(planeU), imageIn->stride(planeU),
-				&ptr8uImgU, imageIn->stride(planeU)));
+				&ptr8uImgU, imageIn->stride(planeU),
+				enforceSingleThread
+			));
 			COMPV_CHECK_CODE_RETURN(CompVImage::wrap(COMPV_SUBTYPE_PIXELS_Y,
 				imageIn->ptr<uint8_t>(0, 0, planeV), imageIn->cols(planeV), imageIn->rows(planeV), imageIn->stride(planeV),
-				&ptr8uImgV, imageIn->stride(planeV)));
+				&ptr8uImgV, imageIn->stride(planeV),
+				enforceSingleThread
+			));
 		}
 		// Set result
 		outputs[0] = ptr8uImgY;
@@ -522,7 +544,7 @@ COMPV_ERROR_CODE CompVImage::unpack(const CompVMatPtr& imageIn, CompVMatPtrVecto
 }
 
 // For now we only support: pack(#3,#8u,#1dim)
-COMPV_ERROR_CODE CompVImage::pack(const CompVMatPtrVector& inputs, const COMPV_SUBTYPE& pixelFormat, CompVMatPtrPtr output)
+COMPV_ERROR_CODE CompVImage::pack(const CompVMatPtrVector& inputs, const COMPV_SUBTYPE& pixelFormat, CompVMatPtrPtr output, const bool enforceSingleThread COMPV_DEFAULT(false))
 {
 	COMPV_CHECK_EXP_RETURN(inputs.empty() || !output, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
@@ -551,11 +573,15 @@ COMPV_ERROR_CODE CompVImage::pack(const CompVMatPtrVector& inputs, const COMPV_S
 		COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&output_, pixelFormat, width, height, stride));
 		if (inputs.size() == 4) {
 			COMPV_CHECK_CODE_RETURN(CompVMem::pack4(output_->ptr<compv_uint8x4_t>(), inputs[0]->ptr<const uint8_t>(), inputs[1]->ptr<const uint8_t>(), inputs[2]->ptr<const uint8_t>(), inputs[3]->ptr<const uint8_t>(),
-				width, height, stride));
+				width, height, stride, 
+				enforceSingleThread
+			));
 		}
 		else {
 			COMPV_CHECK_CODE_RETURN(CompVMem::pack3(output_->ptr<compv_uint8x3_t>(), inputs[0]->ptr<const uint8_t>(), inputs[1]->ptr<const uint8_t>(), inputs[2]->ptr<const uint8_t>(),
-				width, height, stride));
+				width, height, stride, 
+				enforceSingleThread
+			));
 		}
 
 		return COMPV_ERROR_CODE_S_OK;
@@ -588,26 +614,30 @@ COMPV_ERROR_CODE CompVImage::pack(const CompVMatPtrVector& inputs, const COMPV_S
 		COMPV_CHECK_CODE_RETURN(CompVImageUtils::copy(
 			COMPV_SUBTYPE_PIXELS_Y,
 			inputs[0]->ptr<const void>(), inputs[0]->cols(), inputs[0]->rows(), inputs[0]->stride(),
-			output_->ptr<void>(0, 0, COMPV_PLANE_Y), output_->cols(COMPV_PLANE_Y), output_->rows(COMPV_PLANE_Y), output_->stride(COMPV_PLANE_Y)
+			output_->ptr<void>(0, 0, COMPV_PLANE_Y), output_->cols(COMPV_PLANE_Y), output_->rows(COMPV_PLANE_Y), output_->stride(COMPV_PLANE_Y),
+			enforceSingleThread
 		));
 		// Copy UV
 		if (packedUV) { // Interleaved UV
 			COMPV_CHECK_CODE_RETURN(CompVMem::pack2(
 				output_->ptr<compv_uint8x2_t>(0, 0, COMPV_PLANE_UV),
 				inputs[1]->ptr<uint8_t>(), inputs[2]->ptr<uint8_t>(), 
-				output_->cols(COMPV_PLANE_UV), output_->rows(COMPV_PLANE_UV), output_->stride(COMPV_PLANE_UV))
-			);
+				output_->cols(COMPV_PLANE_UV), output_->rows(COMPV_PLANE_UV), output_->stride(COMPV_PLANE_UV),
+				enforceSingleThread
+			));
 		}
 		else { // Planar UV
 			COMPV_CHECK_CODE_RETURN(CompVImageUtils::copy(
 				COMPV_SUBTYPE_PIXELS_Y,
 				inputs[1]->ptr<uint8_t>(), inputs[1]->cols(), inputs[1]->rows(), inputs[1]->stride(),
-				output_->ptr<void>(0, 0, planeU), output_->cols(planeU), output_->rows(planeU), output_->stride(planeU)
+				output_->ptr<void>(0, 0, planeU), output_->cols(planeU), output_->rows(planeU), output_->stride(planeU),
+				enforceSingleThread
 			));
 			COMPV_CHECK_CODE_RETURN(CompVImageUtils::copy(
 				COMPV_SUBTYPE_PIXELS_Y,
 				inputs[2]->ptr<uint8_t>(), inputs[2]->cols(), inputs[2]->rows(), inputs[2]->stride(),
-				output_->ptr<void>(0, 0, planeV), output_->cols(planeV), output_->rows(planeV), output_->stride(planeV)
+				output_->ptr<void>(0, 0, planeV), output_->cols(planeV), output_->rows(planeV), output_->stride(planeV),
+				enforceSingleThread
 			));
 		}
 
@@ -817,7 +847,7 @@ COMPV_ERROR_CODE CompVImage::integral(const CompVMatPtr& imageIn, CompVMatPtrPtr
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVImage::scale(const CompVMatPtr& imageIn, CompVMatPtrPtr imageOut, const size_t widthOut, const size_t heightOut, const COMPV_INTERPOLATION_TYPE scaleType COMPV_DEFAULT(COMPV_INTERPOLATION_TYPE_BILINEAR))
+COMPV_ERROR_CODE CompVImage::scale(const CompVMatPtr& imageIn, CompVMatPtrPtr imageOut, const size_t widthOut, const size_t heightOut, const COMPV_INTERPOLATION_TYPE scaleType COMPV_DEFAULT(COMPV_INTERPOLATION_TYPE_BILINEAR), const bool enforceSingleThread COMPV_DEFAULT(false))
 {
 	COMPV_CHECK_EXP_RETURN(!imageIn || !imageOut || imageIn->isEmpty() || !widthOut || !heightOut, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
@@ -834,10 +864,10 @@ COMPV_ERROR_CODE CompVImage::scale(const CompVMatPtr& imageIn, CompVMatPtrPtr im
 			return COMPV_ERROR_CODE_S_OK;
 		}
 		if (scaleType == COMPV_INTERPOLATION_TYPE_BICUBIC_FLOAT32 || scaleType == COMPV_INTERPOLATION_TYPE_BILINEAR_FLOAT32) {
-			COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static<uint8_t, compv_float32_t>(imageIn, imageOut)));
+			COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static<uint8_t, compv_float32_t>(imageIn, imageOut, enforceSingleThread)));
 		}
 		else {
-			COMPV_CHECK_CODE_RETURN(imageIn->clone(imageOut));
+			COMPV_CHECK_CODE_RETURN(imageIn->clone(imageOut, enforceSingleThread));
 		}
 		return COMPV_ERROR_CODE_S_OK;
 	}
@@ -854,14 +884,14 @@ COMPV_ERROR_CODE CompVImage::scale(const CompVMatPtr& imageIn, CompVMatPtrPtr im
 	switch (scaleType) {
 	case COMPV_INTERPOLATION_TYPE_BICUBIC:
 	case COMPV_INTERPOLATION_TYPE_BICUBIC_FLOAT32:
-		COMPV_CHECK_CODE_RETURN(CompVImageScaleBicubic::process(imageIn, imageOut_, scaleType));
+		COMPV_CHECK_CODE_RETURN(CompVImageScaleBicubic::process(imageIn, imageOut_, scaleType, enforceSingleThread));
 		break;
 	case COMPV_INTERPOLATION_TYPE_BILINEAR:
-		COMPV_CHECK_CODE_RETURN(CompVImageScaleBilinear::process(imageIn, imageOut_));
+		COMPV_CHECK_CODE_RETURN(CompVImageScaleBilinear::process(imageIn, imageOut_, enforceSingleThread));
 		break;
 	case COMPV_INTERPOLATION_TYPE_BILINEAR_FLOAT32: // TODO(dmi): This is a hack, for now the scaler cannot output float type
-		COMPV_CHECK_CODE_RETURN(CompVImageScaleBilinear::process(imageIn, imageOut_));
-		COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static<uint8_t, compv_float32_t>(imageOut_, &imageOut_)));
+		COMPV_CHECK_CODE_RETURN(CompVImageScaleBilinear::process(imageIn, imageOut_, enforceSingleThread));
+		COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static<uint8_t, compv_float32_t>(imageOut_, &imageOut_, enforceSingleThread)));
 		break;
 	default:
 		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "%d not supported as scaling type", scaleType);

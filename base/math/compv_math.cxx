@@ -107,9 +107,9 @@ COMPV_ERROR_CODE CompVMath::dotSub(const CompVMatPtr &A, const CompVMatPtr &B, d
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVMath::scale(const CompVMatPtr &in, const double& s, CompVMatPtrPtr out)
+COMPV_ERROR_CODE CompVMath::scale(const CompVMatPtr &in, const double& s, CompVMatPtrPtr out, const bool enforceSingleThread COMPV_DEFAULT(false))
 {
-	COMPV_CHECK_CODE_RETURN(CompVMathScale::scale(in, s, out));
+	COMPV_CHECK_CODE_RETURN(CompVMathScale::scale(in, s, out, enforceSingleThread));
 	return COMPV_ERROR_CODE_S_OK;
 }
 

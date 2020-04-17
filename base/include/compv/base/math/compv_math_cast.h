@@ -19,7 +19,7 @@ class COMPV_BASE_API CompVMathCast
 	static const size_t COMPV_MATH_CAST_PROCESS_STATIC_SAMPLES_PER_THREAD = (30 * 30); // CPU-unfriendly
 public:
 	template<typename srcType, typename dstType>
-	static COMPV_ERROR_CODE process_static(const CompVMatPtr& src, CompVMatPtrPtr dst)
+	static COMPV_ERROR_CODE process_static(const CompVMatPtr& src, CompVMatPtrPtr dst, const bool enforceSingleThread = false)
 	{
 		COMPV_CHECK_EXP_RETURN(!src || src->elmtInBytes() != sizeof(srcType) || !dst, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 		if (std::is_same<srcType, dstType>::value) {
@@ -43,13 +43,13 @@ public:
 			funcPtr,
 			width,
 			height,
-			COMPV_MATH_CAST_PROCESS_STATIC_SAMPLES_PER_THREAD
+			enforceSingleThread ? SIZE_MAX : COMPV_MATH_CAST_PROCESS_STATIC_SAMPLES_PER_THREAD
 		));
 		*dst = *dst_;
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
-	static COMPV_ERROR_CODE process_static_pixel8(const CompVMatPtr& src, CompVMatPtrPtr dst);
+	static COMPV_ERROR_CODE process_static_pixel8(const CompVMatPtr& src, CompVMatPtrPtr dst, const bool enforceSingleThread = false);
 
 private:
 	template<typename srcType, typename dstType>

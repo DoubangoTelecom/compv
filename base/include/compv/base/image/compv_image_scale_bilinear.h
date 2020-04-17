@@ -19,7 +19,7 @@ COMPV_NAMESPACE_BEGIN()
 class CompVImageScaleBilinear
 {
 public:
-	static COMPV_ERROR_CODE process(const CompVMatPtr& imageIn, CompVMatPtr& imageOut);
+	static COMPV_ERROR_CODE process(const CompVMatPtr& imageIn, CompVMatPtr& imageOut, const bool enforceSingleThread = false);
 };
 
 COMPV_NAMESPACE_END()
