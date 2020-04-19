@@ -43,7 +43,7 @@ COMPV_ERROR_CODE CompVBuffer::copyData(const void* pcPtr, size_t size)
     }
     m_nSize = size;
     if (pcPtr) {
-        CompVMem::copy(m_pPtr, pcPtr, size);
+        COMPV_CHECK_CODE_RETURN(CompVMem::copy(m_pPtr, pcPtr, size));
     }
     return COMPV_ERROR_CODE_S_OK;
 }
