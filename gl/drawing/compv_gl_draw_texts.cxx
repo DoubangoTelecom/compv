@@ -329,7 +329,7 @@ COMPV_ERROR_CODE CompVGLDrawTexts::freeTypeCreateFace(const std::string fontFull
 	// Read file into buffer, we don't provide the full path to FreeType because it'll fail to read data from
 	// assets (Android) or bundle (iOS)
 	COMPV_CHECK_CODE_RETURN(CompVFileUtils::read(fontPath_.c_str(), &m_ptrFaceBuffer), "Failed to read font file");
-	if (m_ptrFaceBuffer->size() > (1024 * 1024)) {
+	if (m_ptrFaceBuffer->size() > (2 * 1024 * 1024)) {
 		COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASS_NAME, "Font (%s) loaded but memory usage is very high (%zuMo). You should consider using another font", fontPath_.c_str(), m_ptrFaceBuffer->size()>>20);
 	}
 
