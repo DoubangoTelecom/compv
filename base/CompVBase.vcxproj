@@ -2262,60 +2262,36 @@
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
-    <UseIntelIPP>Sequential</UseIntelIPP>
-    <UseIntelTBB>true</UseIntelTBB>
-    <InstrumentIntelTBB>true</InstrumentIntelTBB>
-    <UseIntelMKL>Parallel</UseIntelMKL>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_static|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
-    <UseIntelIPP>Sequential</UseIntelIPP>
-    <UseIntelTBB>true</UseIntelTBB>
-    <InstrumentIntelTBB>true</InstrumentIntelTBB>
-    <UseIntelMKL>Parallel</UseIntelMKL>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_sdk|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
-    <UseIntelIPP>Sequential</UseIntelIPP>
-    <UseIntelTBB>true</UseIntelTBB>
-    <InstrumentIntelTBB>true</InstrumentIntelTBB>
-    <UseIntelMKL>Parallel</UseIntelMKL>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
-    <UseIntelIPP>Sequential</UseIntelIPP>
-    <UseIntelTBB>true</UseIntelTBB>
-    <InstrumentIntelTBB>true</InstrumentIntelTBB>
-    <UseIntelMKL>Parallel</UseIntelMKL>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_static|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
-    <UseIntelIPP>Sequential</UseIntelIPP>
-    <UseIntelTBB>true</UseIntelTBB>
-    <InstrumentIntelTBB>true</InstrumentIntelTBB>
-    <UseIntelMKL>Parallel</UseIntelMKL>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_sdk|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
-    <UseIntelIPP>Sequential</UseIntelIPP>
-    <UseIntelTBB>true</UseIntelTBB>
-    <InstrumentIntelTBB>true</InstrumentIntelTBB>
-    <UseIntelMKL>Parallel</UseIntelMKL>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -2323,10 +2299,6 @@
     <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <UseIntelIPP>Sequential</UseIntelIPP>
-    <UseIntelTBB>true</UseIntelTBB>
-    <InstrumentIntelTBB>true</InstrumentIntelTBB>
-    <UseIntelMKL>Parallel</UseIntelMKL>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_static|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
@@ -2334,10 +2306,6 @@
     <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <UseIntelIPP>Sequential</UseIntelIPP>
-    <UseIntelTBB>true</UseIntelTBB>
-    <InstrumentIntelTBB>true</InstrumentIntelTBB>
-    <UseIntelMKL>Parallel</UseIntelMKL>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_sdk|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
@@ -2345,10 +2313,6 @@
     <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <UseIntelIPP>Sequential</UseIntelIPP>
-    <UseIntelTBB>true</UseIntelTBB>
-    <InstrumentIntelTBB>true</InstrumentIntelTBB>
-    <UseIntelMKL>Parallel</UseIntelMKL>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -2356,10 +2320,6 @@
     <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <UseIntelIPP>Sequential</UseIntelIPP>
-    <UseIntelTBB>true</UseIntelTBB>
-    <InstrumentIntelTBB>true</InstrumentIntelTBB>
-    <UseIntelMKL>Parallel</UseIntelMKL>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_static|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
@@ -2367,10 +2327,6 @@
     <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <UseIntelIPP>Sequential</UseIntelIPP>
-    <UseIntelTBB>true</UseIntelTBB>
-    <InstrumentIntelTBB>true</InstrumentIntelTBB>
-    <UseIntelMKL>Parallel</UseIntelMKL>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_sdk|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
@@ -2378,10 +2334,6 @@
     <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <UseIntelIPP>Sequential</UseIntelIPP>
-    <UseIntelTBB>true</UseIntelTBB>
-    <InstrumentIntelTBB>true</InstrumentIntelTBB>
-    <UseIntelMKL>Parallel</UseIntelMKL>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
