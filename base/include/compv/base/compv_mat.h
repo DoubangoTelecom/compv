@@ -237,7 +237,7 @@ public:
 	COMPV_ERROR_CODE zero_all() {
 		void* ptr_ = this->ptr<void>();
 		if (ptr_ && this->rows() && this->cols()) {
-			CompVMem::zero(m_pDataPtr, m_nDataSize);
+			COMPV_CHECK_CODE_RETURN(CompVMem::zero(m_pDataPtr, m_nDataSize));
 		}
 		return COMPV_ERROR_CODE_S_OK;
 	}
@@ -266,7 +266,7 @@ public:
 		for (int pId = planeIdStart; pId < planeIdEnd; ++pId) {
 			size_t row_, rows_ = this->rows(pId), rowInBytes_ = this->rowInBytes(pId);
 			for (row_ = 0; row_ < rows_; ++row_) {
-				CompVMem::zero(this->ptr<void>(row_, 0, pId), rowInBytes_);
+				COMPV_CHECK_CODE_RETURN(CompVMem::zero(this->ptr<void>(row_, 0, pId), rowInBytes_));
 			}
 		}
 		return COMPV_ERROR_CODE_S_OK;

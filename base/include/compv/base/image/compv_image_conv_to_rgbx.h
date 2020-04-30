@@ -26,6 +26,7 @@ private:
 	static COMPV_ERROR_CODE yuvPlanar(const CompVMatPtr& imageIn, CompVMatPtr& imageRGBx);
 	static COMPV_ERROR_CODE yuvSemiPlanar(const CompVMatPtr& imageIn, CompVMatPtr& imageRGBx);
 	static COMPV_ERROR_CODE yuvPacked(const CompVMatPtr& imageIn, CompVMatPtr& imageRGBx);
+	static COMPV_ERROR_CODE yGrayscale(const CompVMatPtr& imageIn, CompVMatPtr& imageRGBx);
 	static COMPV_ERROR_CODE rgbx(const CompVMatPtr& imageIn, CompVMatPtr& imageRGBx);
 };
 

@@ -101,7 +101,10 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::process(const CompVMatPtr& imageIn, const
 	CompVMatPtr imageOut = (*imageRGBx == imageIn) ? nullptr : *imageRGBx;
 	COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&imageOut, rgbxFormat, imageIn->cols(), imageIn->rows(), imageIn->stride()));
 
-	switch (imageIn->subType()) {
+	const COMPV_SUBTYPE inSubType = (imageIn->planeCount() == 1 && imageIn->elmtInBytes() == sizeof(uint8_t))
+		? COMPV_SUBTYPE_PIXELS_Y : imageIn->subType();
+
+	switch (inSubType) {
 	case COMPV_SUBTYPE_PIXELS_RGBA32:
 	case COMPV_SUBTYPE_PIXELS_RGB24:
 		COMPV_CHECK_CODE_RETURN(CompVImageConvToRGBx::rgbx(imageIn, imageOut));
@@ -121,6 +124,10 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::process(const CompVMatPtr& imageIn, const
 	case COMPV_SUBTYPE_PIXELS_YUYV422:
 	case COMPV_SUBTYPE_PIXELS_UYVY422:
 		COMPV_CHECK_CODE_RETURN(CompVImageConvToRGBx::yuvPacked(imageIn, imageOut));
+		break;
+
+	case COMPV_SUBTYPE_PIXELS_Y:
+		COMPV_CHECK_CODE_RETURN(CompVImageConvToRGBx::yGrayscale(imageIn, imageOut));
 		break;
 
 	default:
@@ -494,6 +501,39 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::yuvPacked(const CompVMatPtr& imageIn, Com
 			yuvPtr, rgbxPtr,
 			widthInSamples, heightInSamples, strideInSamples
 		);
+	}
+
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// Y -> RGBx
+COMPV_ERROR_CODE CompVImageConvToRGBx::yGrayscale(const CompVMatPtr& imageIn, CompVMatPtr& imageRGBx)
+{
+	COMPV_ASSERT(imageIn->planeCount() == 1 && imageIn->elmtInBytes() == sizeof(uint8_t) && imageRGBx->cols() == imageIn->cols() && imageRGBx->rows() == imageIn->rows() && imageRGBx->stride() == imageIn->stride());
+
+	switch (imageRGBx->subType()) {
+	case COMPV_SUBTYPE_PIXELS_RGB24:
+	case COMPV_SUBTYPE_PIXELS_BGR24: {
+		CompVMatPtrVector vecRGB(3, imageIn); // duplicate reference (not a copy operation)
+		COMPV_CHECK_CODE_RETURN(CompVImage::pack(vecRGB, imageRGBx->subType(), &imageRGBx));
+		break;
+	}
+	case COMPV_SUBTYPE_PIXELS_ARGB32:
+	case COMPV_SUBTYPE_PIXELS_ABGR32:
+	case COMPV_SUBTYPE_PIXELS_BGRA32:
+	case COMPV_SUBTYPE_PIXELS_RGBA32: {
+		CompVMatPtrVector vecRGB(4, imageIn); // duplicate reference (not a copy operation)
+		const size_t alphaIndex = (imageRGBx->subType() == COMPV_SUBTYPE_PIXELS_ARGB32 || imageRGBx->subType() == COMPV_SUBTYPE_PIXELS_ABGR32) ? 0 : 3;
+		CompVMatPtr alphatMat;
+		COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&alphatMat, COMPV_SUBTYPE_PIXELS_Y, imageIn->cols(), imageIn->rows(), imageIn->stride()));
+		COMPV_CHECK_CODE_RETURN(CompVMem::set(alphatMat->ptr<void>(), 0xff, alphatMat->dataSizeInBytes(), sizeof(uint8_t)));
+		vecRGB[alphaIndex] = alphatMat;
+		COMPV_CHECK_CODE_RETURN(CompVImage::pack(vecRGB, imageRGBx->subType(), &imageRGBx));
+		break;
+	}
+	default:
+		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "%s -> %s not supported", CompVGetSubtypeString(imageIn->subType()), CompVGetSubtypeString(imageRGBx->subType()));
+		return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
 	}
 
 	return COMPV_ERROR_CODE_S_OK;
