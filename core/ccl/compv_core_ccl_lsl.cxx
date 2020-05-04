@@ -594,7 +594,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& 
 
 	szInputSize.width = binar->cols();
 	szInputSize.height = binar->rows();
-	const size_t __ner_max = ((szInputSize.width + 1) >> 1); // full dashed row
+	const size_t __ner_max = szInputSize.width; // Full row
 	int16_t ner_max;
 	int32_t ner_sum;
 	
