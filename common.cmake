@@ -14,6 +14,7 @@ if (NOT LIB_BUILD_TYPE)
 		set(LIB_BUILD_TYPE STATIC)
 	else()
 		set(LIB_BUILD_TYPE SHARED)
+		set(CMAKE_CXX_VISIBILITY_PRESET hidden) # "-fvisibility=hidden"
 	endif()
 endif()
 if ("${LIB_BUILD_TYPE}" MATCHES "SHARED")
