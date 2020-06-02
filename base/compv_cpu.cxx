@@ -51,6 +51,11 @@ COMPV_EXTERNC long long compv_utils_rdtsc_x86_asm();
 #	pragma intrinsic(__rdtsc, __cpuid)
 #endif
 
+// https://help.ubuntu.com/lts/installation-guide/armhf/apcs04.html
+#if !defined(COMPV_LINUX_HARDDISK_NAME)
+#	define COMPV_LINUX_HARDDISK_NAME		"/dev/sda"
+#endif
+
 COMPV_NAMESPACE_BEGIN()
 
 // http://nadeausoftware.com/articles/2012/09/c_c_tip_how_get_physical_memory_size_system
@@ -122,6 +127,30 @@ static size_t CompVGetMemorySize()
 
 #else
 	return 0L;			/* Unknown OS. */
+#endif
+}
+
+// Return hard-disk serial
+static std::string CompVGetHarddiskSerial()
+{
+#if COMPV_OS_LINUX
+	char buf[1024];
+	FILE *file = popen("udevadm info --query=all --name=" COMPV_LINUX_HARDDISK_NAME " | grep ID_SERIAL=", "r");
+	if (!file) {
+		COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASSNAME, "udevadm(COMPV_LINUX_HARDDISK_NAME) failed");
+		return ""; // must be empty
+	}
+	fgets(buf, sizeof(buf), file);
+	pclose(file);
+	const size_t eol_ = strcspn(buf, "\n");
+	if (eol_ < 13) {
+		COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASSNAME, "Too short (%zu)", eol_);
+		return ""; // must be empty
+	}
+	buf[eol_] = '\0';
+	return std::string(&buf[13]);
+#else
+	return ""; // must be empty
 #endif
 }
 
@@ -276,6 +305,7 @@ bool CompVCpu::s_bInitialized = false;
 std::string CompVCpu::s_strHardware = "";
 std::string CompVCpu::s_strSerial = "";
 std::string CompVCpu::s_strModel = "";
+std::string CompVCpu::s_strModelName = "";
 #if COMPV_ASM
 bool CompVCpu::s_bAsmEnabled = true;
 #else
@@ -382,17 +412,21 @@ COMPV_ERROR_CODE CompVCpu::init()
 			return strings;
 		};
 		while (fgets(cpuinfo_line, sizeof(cpuinfo_line), fcpuinfo)) {
-			if (memcmp(cpuinfo_line, "Hardware", 8) == 0 || memcmp(cpuinfo_line, "Serial", 6) == 0 || memcmp(cpuinfo_line, "Model", 5) == 0) {
+			if (memcmp(cpuinfo_line, "Hardware", 8) == 0 || memcmp(cpuinfo_line, "Serial", 6) == 0 || memcmp(cpuinfo_line, "Model", 5) == 0 || memcmp(cpuinfo_line, "model name", 10) == 0)) {
 				const std::vector<std::string> values = getLineValue(cpuinfo_line);
+				std::transform(values[0].begin(), values[0].end(), values[0].begin(), ::toupper); // UpperCase
 				if (values.size() == 2) {
-					if (values[0] == "Hardware") {
+					if (values[0] == "HARDWARE") {
 						s_strHardware = values[1];
 					}
-					else if (values[0] == "Serial") {
+					else if (values[0] == "SERIAL") {
 						s_strSerial = values[1];
 					}
-					else if (values[0] == "Model") {
+					else if (values[0] == "MODEL") {
 						s_strModel = values[1];
+					}
+					else if (values[0] == "MODEL NAME") {
+						s_strModelName = values[1];
 					}
 				}
 			}
@@ -407,6 +441,11 @@ COMPV_ERROR_CODE CompVCpu::init()
 	else {
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "fopen(/proc/cpuinfo) failed ...but not an issue");
 	}
+	// Use hard-disk serial if CPU serial is missing
+	if (s_strSerial.isEmpty()) {
+		s_strSerial = CompVGetHarddiskSerial();
+	}
+
 #endif /* COMPV_OS_LINUX || COMPV_OS_BSD || COMPV_OS_ANDROID || COMPV_OS_PI */
 
 	//
@@ -673,10 +712,11 @@ COMPV_ERROR_CODE CompVCpu::init()
 
 	// Print info
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME,
-		"Hardware: '%s', Serial: '%s', Model: '%s'",
+		"Hardware: '%s', Serial: '%s', Model: '%s', ModelName: '%s'",
 		s_strHardware.c_str(),
 		s_strSerial.empty() ? "" : "***", // Do not show serial number in logs
-		s_strModel.c_str()
+		s_strModel.c_str(),
+		s_strModelName.c_str()
 	);
 
 	s_bInitialized = true;

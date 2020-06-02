@@ -108,6 +108,9 @@ public:
 	static const std::string& model() {
 		return s_strModel;
 	}
+	static const std::string& modelName() {
+		return s_strModelName;
+	}
     static size_t coresCount() {
         return s_iCores;
     }
@@ -164,6 +167,7 @@ private:
 	static std::string s_strHardware;
 	static std::string s_strSerial;
 	static std::string s_strModel;
+	static std::string s_strModelName;
     static uint64_t s_uFlags;
     static uint64_t s_uFlagsDisabled;
     static uint64_t s_uFlagsEnabled;
