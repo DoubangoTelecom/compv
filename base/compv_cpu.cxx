@@ -140,8 +140,12 @@ static std::string CompVGetHarddiskSerial()
 		COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASSNAME, "udevadm(COMPV_LINUX_HARDDISK_NAME) failed");
 		return ""; // must be empty
 	}
-	fgets(buf, sizeof(buf), file);
+	char* ret = fgets(buf, sizeof(buf), file);
 	pclose(file);
+	if (!ret) {
+		COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASSNAME, "fgets failed");
+		return ""; // must be empty
+	}
 	const size_t eol_ = strcspn(buf, "\n");
 	if (eol_ < 13) {
 		COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASSNAME, "Too short (%zu)", eol_);
@@ -412,7 +416,7 @@ COMPV_ERROR_CODE CompVCpu::init()
 			return strings;
 		};
 		while (fgets(cpuinfo_line, sizeof(cpuinfo_line), fcpuinfo)) {
-			if (memcmp(cpuinfo_line, "Hardware", 8) == 0 || memcmp(cpuinfo_line, "Serial", 6) == 0 || memcmp(cpuinfo_line, "Model", 5) == 0 || memcmp(cpuinfo_line, "model name", 10) == 0)) {
+			if (memcmp(cpuinfo_line, "Hardware", 8) == 0 || memcmp(cpuinfo_line, "Serial", 6) == 0 || memcmp(cpuinfo_line, "Model", 5) == 0 || memcmp(cpuinfo_line, "model name", 10) == 0) {
 				const std::vector<std::string> values = getLineValue(cpuinfo_line);
 				std::transform(values[0].begin(), values[0].end(), values[0].begin(), ::toupper); // UpperCase
 				if (values.size() == 2) {
