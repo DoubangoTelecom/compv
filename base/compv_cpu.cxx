@@ -442,12 +442,12 @@ COMPV_ERROR_CODE CompVCpu::init()
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "fopen(/proc/cpuinfo) failed ...but not an issue");
 	}
 	// Use hard-disk serial if CPU serial is missing
-	if (s_strSerial.isEmpty()) {
+	if (s_strSerial.empty()) {
 		s_strSerial = CompVGetHarddiskSerial();
 	}
 
 #endif /* COMPV_OS_LINUX || COMPV_OS_BSD || COMPV_OS_ANDROID || COMPV_OS_PI */
-
+	
 	//
 	// endianness
 	//
