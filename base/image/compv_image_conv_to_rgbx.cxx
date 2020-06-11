@@ -106,7 +106,9 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::process(const CompVMatPtr& imageIn, const
 
 	switch (inSubType) {
 	case COMPV_SUBTYPE_PIXELS_RGBA32:
+	case COMPV_SUBTYPE_PIXELS_BGRA32:
 	case COMPV_SUBTYPE_PIXELS_RGB24:
+	case COMPV_SUBTYPE_PIXELS_BGR24:
 		COMPV_CHECK_CODE_RETURN(CompVImageConvToRGBx::rgbx(imageIn, imageOut));
 		break;
 
@@ -553,6 +555,20 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::rgbx(const CompVMatPtr& imageIn, CompVMat
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
+	// BGRA32/BGR24 -> RGB24 is very important because many deep learning functions expect RGB_888 as input.
+	if ((inPixelFormat == COMPV_SUBTYPE_PIXELS_BGR24 || inPixelFormat == COMPV_SUBTYPE_PIXELS_BGRA32) && outPixelFormat == COMPV_SUBTYPE_PIXELS_RGB24) {
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No in-place conversion found for BGRA32/BGR24 -> RGB24. You should consider using RGBA32/RGB24 instead of BGRA32/BGR24");
+		CompVMatPtrVector bgra32Or24Vec;
+		COMPV_CHECK_CODE_RETURN(CompVImage::unpack(imageIn, bgra32Or24Vec));
+		CompVMatPtr R = bgra32Or24Vec[2], G = bgra32Or24Vec[0];
+		bgra32Or24Vec[0] = R, bgra32Or24Vec[2] = G; // Switch R<->B to convert from BGRA32 to RGBA32
+		bgra32Or24Vec.resize(3); // Remove alpha lane
+		COMPV_CHECK_CODE_RETURN(CompVImage::pack(bgra32Or24Vec, COMPV_SUBTYPE_PIXELS_RGB24, &imageRGBx));
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
+	/* Other SIMD in-place conversions */
+
 	void(*fptr_rgbx_to_rgbx)(const uint8_t* rgbxInPtr, uint8_t* rgbxOutPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
 		= nullptr;
 
@@ -560,8 +576,7 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::rgbx(const CompVMatPtr& imageIn, CompVMat
 	const size_t height = imageRGBx->rows();
 	const size_t stride = imageRGBx->stride();
 	
-	// Support for RGBA32 -> RGB24 is very important because many deep learning functions
-	// expect RGB_888 as input.
+	// Support for RGBA32 -> RGB24 is very important because many deep learning functions expect RGB_888 as input.
 	if (inPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32 && outPixelFormat == COMPV_SUBTYPE_PIXELS_RGB24) {
 		fptr_rgbx_to_rgbx = rgba32_to_rgb24_C;
 #if COMPV_ARCH_X86

@@ -670,7 +670,9 @@ COMPV_ERROR_CODE CompVImage::convert(const CompVMatPtr& imageIn, COMPV_SUBTYPE p
 		COMPV_CHECK_CODE_RETURN(CompVImageConvToGrayscale::process(imageIn, imageOut));
 		return COMPV_ERROR_CODE_S_OK;
 	case COMPV_SUBTYPE_PIXELS_RGBA32:
+	case COMPV_SUBTYPE_PIXELS_BGRA32:
 	case COMPV_SUBTYPE_PIXELS_RGB24:
+	case COMPV_SUBTYPE_PIXELS_BGR24:
 		COMPV_CHECK_CODE_RETURN(CompVImageConvToRGBx::process(imageIn, pixelFormatOut, imageOut));
 		return COMPV_ERROR_CODE_S_OK;
 	case COMPV_SUBTYPE_PIXELS_HSV:

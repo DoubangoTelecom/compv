@@ -137,7 +137,7 @@ static std::string CompVGetHarddiskSerial()
 	char buf[1024];
 	FILE *file = popen("udevadm info --query=all --name=" COMPV_LINUX_HARDDISK_NAME " | grep ID_SERIAL=", "r");
 	if (!file) {
-		COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASSNAME, "udevadm(COMPV_LINUX_HARDDISK_NAME) failed");
+		COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASSNAME, "udevadm failed");
 		return ""; // must be empty
 	}
 	char* ret = fgets(buf, sizeof(buf), file);
