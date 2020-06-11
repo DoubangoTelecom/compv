@@ -133,11 +133,11 @@ static size_t CompVGetMemorySize()
 // Return hard-disk serial
 static std::string CompVGetHarddiskSerial()
 {
-#if COMPV_OS_LINUX
+#if COMPV_OS_LINUX && !COMPV_OS_ANDROID
 	char buf[1024];
 	FILE *file = popen("udevadm info --query=all --name=" COMPV_LINUX_HARDDISK_NAME " | grep ID_SERIAL=", "r");
 	if (!file) {
-		COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASSNAME, "udevadm failed");
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "udevadm failed"); // Not an error
 		return ""; // must be empty
 	}
 	char* ret = fgets(buf, sizeof(buf), file);
