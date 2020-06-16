@@ -51,11 +51,6 @@ COMPV_EXTERNC long long compv_utils_rdtsc_x86_asm();
 #	pragma intrinsic(__rdtsc, __cpuid)
 #endif
 
-// https://help.ubuntu.com/lts/installation-guide/armhf/apcs04.html
-#if !defined(COMPV_LINUX_HARDDISK_NAME)
-#	define COMPV_LINUX_HARDDISK_NAME		"/dev/sda"
-#endif
-
 COMPV_NAMESPACE_BEGIN()
 
 // http://nadeausoftware.com/articles/2012/09/c_c_tip_how_get_physical_memory_size_system
