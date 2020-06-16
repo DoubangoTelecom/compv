@@ -130,34 +130,6 @@ static size_t CompVGetMemorySize()
 #endif
 }
 
-// Return hard-disk serial
-static std::string CompVGetHarddiskSerial()
-{
-#if COMPV_OS_LINUX && !COMPV_OS_ANDROID
-	char buf[1024];
-	FILE *file = popen("udevadm info --query=all --name=" COMPV_LINUX_HARDDISK_NAME " | grep ID_SERIAL=", "r");
-	if (!file) {
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "udevadm failed"); // Not an error
-		return ""; // must be empty
-	}
-	char* ret = fgets(buf, sizeof(buf), file);
-	pclose(file);
-	if (!ret) {
-		COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASSNAME, "fgets failed");
-		return ""; // must be empty
-	}
-	const size_t eol_ = strcspn(buf, "\n");
-	if (eol_ < 13) {
-		COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASSNAME, "Too short (%zu)", eol_);
-		return ""; // must be empty
-	}
-	buf[eol_] = '\0';
-	return std::string(&buf[13]);
-#else
-	return ""; // must be empty
-#endif
-}
-
 // Low level cpuid for X86. Returns zeros on other CPUs.
 #if !defined(__pnacl__) && !defined(__CLR_VER) &&  (defined(_M_IX86) || defined(_M_X64) || defined(__i386__) || defined(__x86_64__))
 static void CompVX86CpuId(uint32_t info_eax, uint32_t info_ecx, uint32_t* cpu_info)
@@ -350,40 +322,8 @@ COMPV_ERROR_CODE CompVCpu::init()
 	//
 	// /proc/cpuinfo
 	//
-#if COMPV_OS_WINDOWS
-	DWORD bufferSize = 0;
-	if (SUCCEEDED(RegGetValueA(HKEY_LOCAL_MACHINE,
-		"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion",
-		"ProductId",
-		RRF_RT_REG_SZ,
-		NULL,
-		NULL,
-		&bufferSize)) && bufferSize > 0) 
-	{
-		void* bufferPtr = CompVMem::malloc(bufferSize + 1);
-		COMPV_CHECK_EXP_NOP(!bufferPtr, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-		if (bufferPtr) {
-			if (SUCCEEDED(RegGetValueA(HKEY_LOCAL_MACHINE,
-				"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion",
-				"ProductId",
-				RRF_RT_REG_SZ,
-				NULL,
-				bufferPtr,
-				&bufferSize))) 
-			{
-				s_strSerial = reinterpret_cast<const char*>(bufferPtr);
-			}
-			else {
-				COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "RegGetValueA failed: %d", GetLastError());
-			}
-			CompVMem::free(&bufferPtr);
-		}
-	}
-	else {
-		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "RegGetValueA failed: %d", GetLastError());
-	}
     
-#elif COMPV_OS_APPLE
+#if COMPV_OS_APPLE
     struct utsname systemInfo;
     uname(&systemInfo);
     
@@ -444,10 +384,6 @@ COMPV_ERROR_CODE CompVCpu::init()
 	}
 	else {
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "fopen(/proc/cpuinfo) failed ...but not an issue");
-	}
-	// Use hard-disk serial if CPU serial is missing
-	if (s_strSerial.empty()) {
-		s_strSerial = CompVGetHarddiskSerial();
 	}
 
 #endif /* COMPV_OS_LINUX || COMPV_OS_BSD || COMPV_OS_ANDROID || COMPV_OS_PI */
