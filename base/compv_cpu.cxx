@@ -647,7 +647,7 @@ COMPV_ERROR_CODE CompVCpu::init()
 
 	// Print info
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME,
-		"Hardware: '%s', Serial: '%s', Model: '%s', ModelName: '%s'",
+		"H: '%s', S: '%s', M: '%s', MN: '%s'",
 		s_strHardware.c_str(),
 		s_strSerial.empty() ? "" : "***", // Do not show serial number in logs
 		s_strModel.c_str(),
