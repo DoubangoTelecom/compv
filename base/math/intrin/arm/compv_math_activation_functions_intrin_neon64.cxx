@@ -31,9 +31,9 @@ void CompVMathActivationFunctionsTanh_64f64f_Intrin_NEON64(
 	const float64x2_t vecZero = vdupq_n_f64(0.0);
 	const uint32x2_t vecLut_length_minus1 = vdup_n_u32(static_cast<uint32_t>(lut_length_minus1));
 	for (compv_uscalar_t i = 0; i < in_out_length; i += 2) {
-		float64x2_t vecX = vld1q_f64(&in_ptr[i]);
-		float64x2_t vecSign = vcltq_f64(vecX, vecZero);
-		vecSign = vorrq_s64(vandq_s64(vecSign, vecMinus1), vbicq_s64(vecPlus1, vecSign));
+		float64x2_t vecX = (float64x2_t)vld1q_f64(&in_ptr[i]);
+		float64x2_t vecSign = (float64x2_t)vcltq_f64(vecX, vecZero);
+		vecSign = (float64x2_t)vorrq_s64(vandq_s64((int64x2_t)vecSign, (int64x2_t)vecMinus1), vbicq_s64((int64x2_t)vecPlus1, (int64x2_t)vecSign));
 		vecX = vmulq_f64(vmulq_f64(vecX, vecSign), vecScale);
 		uint32x2_t vecIndex = vqmovn_u64(vcvtq_u64_f64(vecX));
 		uint32x2_t vecIndexMask = vclt_u32(vecIndex, vecLut_length_minus1);
@@ -51,7 +51,7 @@ void CompVMathActivationFunctionsTanh_64f64f_Intrin_NEON64(
 				vecSign
 			);
 			vst1q_f64(&out_ptr[i],
-				vorrq_s64(vandq_s64(vecResult, vecIndexMask64x2), vbicq_s64(vecSign, vecIndexMask64x2))
+				(float64x2_t)vorrq_s64(vandq_s64((int64x2_t)vecResult, (int64x2_t)vecIndexMask64x2), vbicq_s64((int64x2_t)vecSign, (int64x2_t)vecIndexMask64x2))
 			);
 		}
 		else {
@@ -81,8 +81,8 @@ void CompVMathActivationFunctionsTanhMul_64f64f_Intrin_NEON64(
 	const uint32x2_t vecLut_length_minus1 = vdup_n_u32(static_cast<uint32_t>(lut_length_minus1));
 	for (compv_uscalar_t i = 0; i < in_out_length; i += 2) {
 		float64x2_t vecX = vld1q_f64(&in_ptr[i]);
-		float64x2_t vecSign = vcltq_f64(vecX, vecZero);
-		vecSign = vorrq_s64(vandq_s64(vecSign, vecMinus1), vbicq_s64(vecPlus1, vecSign));
+		float64x2_t vecSign = (float64x2_t)vcltq_f64(vecX, vecZero);
+		vecSign = (float64x2_t)vorrq_s64(vandq_s64((int64x2_t)vecSign, (int64x2_t)vecMinus1), vbicq_s64((int64x2_t)vecPlus1, (int64x2_t)vecSign));
 		vecX = vmulq_f64(vmulq_f64(vecX, vecSign), vecScale);
 		uint32x2_t vecIndex = vqmovn_u64(vcvtq_u64_f64(vecX));
 		uint32x2_t vecIndexMask = vclt_u32(vecIndex, vecLut_length_minus1);
@@ -101,7 +101,7 @@ void CompVMathActivationFunctionsTanhMul_64f64f_Intrin_NEON64(
 			);
 			vst1q_f64(&out_ptr[i],
 				vmulq_f64(
-					vorrq_s64(vandq_s64(vecResult, vecIndexMask64x2), vbicq_s64(vecSign, vecIndexMask64x2)),
+					(float64x2_t)vorrq_s64(vandq_s64((int64x2_t)vecResult, (int64x2_t)vecIndexMask64x2), vbicq_s64((int64x2_t)vecSign, (int64x2_t)vecIndexMask64x2)),
 					vld1q_f64(&mul_ptr[i])
 				)
 			);
@@ -137,8 +137,8 @@ void CompVMathActivationFunctionsLogistic_64f64f_Intrin_NEON64(
 	const uint32x2_t vecLut_length_minus1 = vdup_n_u32(static_cast<uint32_t>(lut_length_minus1));
 	for (compv_uscalar_t i = 0; i < in_out_length; i += 2) {
 		float64x2_t vecX = vld1q_f64(&in_ptr[i]);
-		const float64x2_t vecSignMask = vcltq_f64(vecX, vecZero);
-		const float64x2_t vecSign = vorrq_s64(vandq_s64(vecSignMask, vecMinus1), vbicq_s64(vecPlus1, vecSignMask));
+		const float64x2_t vecSignMask = (float64x2_t)vcltq_f64(vecX, vecZero);
+		const float64x2_t vecSign = (float64x2_t)vorrq_s64(vandq_s64((int64x2_t)vecSignMask, (int64x2_t)vecMinus1), vbicq_s64((int64x2_t)vecPlus1, (int64x2_t)vecSignMask));
 		vecX = vmulq_f64(vmulq_f64(vecX, vecSign), vecScale);
 		uint32x2_t vecIndex = vqmovn_u64(vcvtq_u64_f64(vecX));
 		uint32x2_t vecIndexMask = vclt_u32(vecIndex, vecLut_length_minus1);
@@ -157,8 +157,8 @@ void CompVMathActivationFunctionsLogistic_64f64f_Intrin_NEON64(
 			);
 			vst1q_f64(&out_ptr[i],
 				vaddq_f64(
-					vorrq_s64(vandq_s64(vecResult, vecIndexMask64x2), vbicq_s64(vecSign, vecIndexMask64x2)),
-					vandq_s64(vecSignMask, vecPlus1)
+					(float64x2_t)vorrq_s64(vandq_s64((int64x2_t)vecResult, (int64x2_t)vecIndexMask64x2), vbicq_s64((int64x2_t)vecSign, (int64x2_t)vecIndexMask64x2)),
+					(float64x2_t)vandq_s64(vecSignMask, vecPlus1)
 				)
 			);
 		}
@@ -166,7 +166,7 @@ void CompVMathActivationFunctionsLogistic_64f64f_Intrin_NEON64(
 			vst1q_f64(&out_ptr[i],
 				vaddq_f64(
 					vecSign,
-					vandq_s64(vecSignMask, vecPlus1)
+					(float64x2_t)vandq_s64((int64x2_t)vecSignMask, (int64x2_t)vecPlus1)
 				)
 			);
 		}
@@ -194,8 +194,8 @@ void CompVMathActivationFunctionsLogisticMul_64f64f_Intrin_NEON64(
 	const uint32x2_t vecLut_length_minus1 = vdup_n_u32(static_cast<uint32_t>(lut_length_minus1));
 	for (compv_uscalar_t i = 0; i < in_out_length; i += 2) {
 		float64x2_t vecX = vld1q_f64(&in_ptr[i]);
-		const float64x2_t vecSignMask = vcltq_f64(vecX, vecZero);
-		const float64x2_t vecSign = vorrq_s64(vandq_s64(vecSignMask, vecMinus1), vbicq_s64(vecPlus1, vecSignMask));
+		const float64x2_t vecSignMask = (float64x2_t)vcltq_f64(vecX, vecZero);
+		const float64x2_t vecSign = (float64x2_t)vorrq_s64(vandq_s64((int64x2_t)vecSignMask, (int64x2_t)vecMinus1), vbicq_s64((int64x2_t)vecPlus1, (int64x2_t)vecSignMask));
 		vecX = vmulq_f64(vmulq_f64(vecX, vecSign), vecScale);
 		uint32x2_t vecIndex = vqmovn_u64(vcvtq_u64_f64(vecX));
 		uint32x2_t vecIndexMask = vclt_u32(vecIndex, vecLut_length_minus1);
@@ -215,8 +215,8 @@ void CompVMathActivationFunctionsLogisticMul_64f64f_Intrin_NEON64(
 			vst1q_f64(&out_ptr[i],
 				vmulq_f64(
 					vaddq_f64(
-						vorrq_s64(vandq_s64(vecResult, vecIndexMask64x2), vbicq_s64(vecSign, vecIndexMask64x2)),
-						vandq_s64(vecSignMask, vecPlus1)
+						(float64x2_t)vorrq_s64(vandq_s64((int64x2_t)vecResult, (int64x2_t)vecIndexMask64x2), vbicq_s64((int64x2_t)vecSign, (int64x2_t)vecIndexMask64x2)),
+						(float64x2_t)vandq_s64((int64x2_t)vecSignMask, (int64x2_t)vecPlus1)
 					),
 					vld1q_f64(&mul_ptr[i])
 				)
@@ -227,7 +227,7 @@ void CompVMathActivationFunctionsLogisticMul_64f64f_Intrin_NEON64(
 				vmulq_f64(
 					vaddq_f64(
 						vecSign,
-						vandq_s64(vecSignMask, vecPlus1)
+						(float64x2_t)vandq_s64((int64x2_t)vecSignMask, (int64x2_t)vecPlus1)
 					),
 					vld1q_f64(&mul_ptr[i])
 				)
