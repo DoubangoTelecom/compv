@@ -109,12 +109,14 @@ else()
 	set(FLAGS_AVX "-mavx")
 	set(FLAGS_AVX2 "-mavx2 ${FLAGS_FMA}")
 
-	if ("${TARGET_OS}" MATCHES "PI")
-		set(FLAGS_NEON "-mfpu=neon-vfpv4") # we know that all rpi3+ devices support vfpv4
-	else ()
+	if ("${TARGET_OS}" MATCHES "PI") # we know that all rpi3+ devices support vfpv4
+		set(FLAGS_NEON "-mfpu=neon-vfpv4")
+	elseif ("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "arm") # ARM64/aarch64-linux-gnu: unrecognized command line option '-mfpu=neon'
 		set(FLAGS_NEON "-mfpu=neon")
 	endif ()
-	set(FLAGS_NEONFMA "-mfpu=neon-vfpv4")
+	if (NOT "${CMAKE_SYSTEM_PROCESSOR}" MATCHES "arm64") # ARM64/aarch64-linux-gnu: unrecognized command line option '-mfpu=neon-vfpv4'
+		set(FLAGS_NEONFMA "-mfpu=neon-vfpv4") 
+	endif ()
 endif(MSVC)
 
 ## Detect YASM exe and args ##
