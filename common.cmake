@@ -111,7 +111,7 @@ else()
 
 	if ("${TARGET_OS}" MATCHES "PI") # we know that all rpi3+ devices support vfpv4
 		set(FLAGS_NEON "-mfpu=neon-vfpv4")
-	elseif ("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "arm") # ARM64/aarch64-linux-gnu: unrecognized command line option '-mfpu=neon'
+	elseif (NOT "${CMAKE_SYSTEM_PROCESSOR}" MATCHES "arm64") # ARM64/aarch64-linux-gnu: unrecognized command line option '-mfpu=neon'
 		set(FLAGS_NEON "-mfpu=neon")
 	endif ()
 	if (NOT "${CMAKE_SYSTEM_PROCESSOR}" MATCHES "arm64") # ARM64/aarch64-linux-gnu: unrecognized command line option '-mfpu=neon-vfpv4'
