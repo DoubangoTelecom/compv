@@ -124,8 +124,8 @@ void CompVHoughKhtKernelHeight_2mpq_Intrin_NEON64(
 		vecSigma_rho_times_theta = vmulq_f64(vecSigma_rho_times_theta, vecM_Eq14_2);
 		vecM_Eq14_0 = vmulq_f64(vecM_Eq14_0, vecSigma_theta_square);
 		vecSigma_theta_square = vmulq_f64(vecSigma_theta_square, vecM_Eq14_2);
-		vecMaskEqZero = vceqq_f64(vecSigma_theta_square, vecZero);
-		vecSigma_theta_square = vorrq_u64(vandq_u64(vecZeroDotOne, vecMaskEqZero), vbicq_u64(vecSigma_theta_square, vecMaskEqZero));
+		vecMaskEqZero = (float64x2_t)vceqq_f64(vecSigma_theta_square, vecZero);
+		vecSigma_theta_square = (float64x2_t)vorrq_u64(vandq_u64((uint64x2_t)vecZeroDotOne, (uint64x2_t)vecMaskEqZero), vbicq_u64((uint64x2_t)vecSigma_theta_square, (uint64x2_t)vecMaskEqZero));
 		vecSigma_rho_square = vmulq_f64(vecSigma_rho_square, vecFour);
 		vecSigma_theta_square = vmulq_f64(vecSigma_theta_square, vecFour);
 		vecSigma_rho_times_sigma_theta = vmulq_f64(vsqrtq_f64(vecSigma_rho_square), vsqrtq_f64(vecSigma_theta_square));
