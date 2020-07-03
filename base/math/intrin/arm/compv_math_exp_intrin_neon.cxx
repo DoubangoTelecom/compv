@@ -38,13 +38,13 @@ void CompVMathExpExp_minpack2_64f64f_Intrin_NEON64(const compv_float64_t* ptrIn,
 			vecX = vmaxq_f64(vecX, vecMin);
 			float64x2_t vecDI = vmlaq_f64(vecB, vecX, vecCA); // VFMA [vecB + (vecX * vecCA)]
 			const float64x2_t vecT = vmlsq_f64(vecX, vsubq_f64(vecDI, vecB), vecCRA); // VFMA [vecX - (sub * vecCRA)]
-			uint64x2_t vecU = vshlq_n_u64(vshrq_n_u64(vaddq_u64(vecDI, vecCADJ), 11), 52);
+			uint64x2_t vecU = vshlq_n_u64(vshrq_n_u64(vaddq_u64((uint64x2_t)vecDI, (uint64x2_t)vecCADJ), 11), 52);
 			float64x2_t vecY = vmulq_f64(vecT, vecT);
-			vecDI = vandq_u64(vecDI, vecMask);
+			vecDI = vandq_u64((uint64x2_t)vecDI, vecMask);
 			vecY = vmulq_f64(vecY,  vaddq_f64(vecC30, vecT));
 			// TODO(dmi): use gather to compute "vecLUT"
-			const uint64_t i0 = vgetq_lane_u64(vecDI, 0);
-			const uint64_t i1 = vgetq_lane_u64(vecDI, 1);
+			const uint64_t i0 = vgetq_lane_u64((uint64x2_t)vecDI, 0);
+			const uint64_t i1 = vgetq_lane_u64((uint64x2_t)vecDI, 1);
 #if ((defined(_DEBUG) && _DEBUG != 0) || (defined(DEBUG) && DEBUG != 0))
 			COMPV_ASSERT(i0 >= 0 && i0 < 2048 && i1 >= 0 && i1 < 2048);
 #endif
@@ -53,7 +53,7 @@ void CompVMathExpExp_minpack2_64f64f_Intrin_NEON64(const compv_float64_t* ptrIn,
 
 			vecY = vmlaq_f64(vecT, vecY, vecC20); // VFMA [vecT + (vecY * vecC20)]
 			vecY = vaddq_f64(vecC10, vecY);
-			vst1q_f64(&ptrOut[i], vmulq_f64(vecY, vecU));
+			vst1q_f64(&ptrOut[i], vmulq_f64(vecY, (float64x2_t)vecU));
 		}
 		ptrIn += stride;
 		ptrOut += stride;
