@@ -158,7 +158,7 @@ void CompVMathActivationFunctionsLogistic_64f64f_Intrin_NEON64(
 			vst1q_f64(&out_ptr[i],
 				vaddq_f64(
 					(float64x2_t)vorrq_s64(vandq_s64((int64x2_t)vecResult, (int64x2_t)vecIndexMask64x2), vbicq_s64((int64x2_t)vecSign, (int64x2_t)vecIndexMask64x2)),
-					(float64x2_t)vandq_s64(vecSignMask, vecPlus1)
+					(float64x2_t)vandq_s64((int64x2_t)vecSignMask, (int64x2_t)vecPlus1)
 				)
 			);
 		}
