@@ -79,7 +79,7 @@ endif ()
 
 # ARM64 cross compilation
 if ("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "arm64")
-	set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__ARM_NEON__ -ftree-vectorize -funsafe-math-optimizations")
+	set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__ARM_NEON__ -ftree-vectorize -funsafe-math-optimizations -march=armv8-a")
 endif ()
 
 
