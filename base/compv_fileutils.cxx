@@ -343,6 +343,9 @@ COMPV_ERROR_CODE CompVFileUtils::write(const char* pcPath, const void* data, siz
 	COMPV_CHECK_EXP_RETURN(!pcPath || !data || !count, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	FILE* file = CompVFileUtils::open(pcPath, "wb+");
 	if (!file) {
+#if COMPV_OS_WINDOWS || COMPV_OS_LINUX || COMPV_OS_PI
+		perror("Cannot open/create the file");
+#endif
 		COMPV_DEBUG_ERROR_EX(kModuleNameFileUtils, "open(%s) failed", pcPath);
 		return COMPV_ERROR_CODE_E_FAILED_TO_OPEN_FILE;
 	}

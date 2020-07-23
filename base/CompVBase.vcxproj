@@ -747,11 +747,22 @@
     <ClCompile Include="math\compv_math_transform.cxx" />
     <ClCompile Include="math\compv_math_trig.cxx" />
     <ClCompile Include="math\compv_math_utils.cxx" />
+    <ClCompile Include="math\intrin\arm\compv_math_activation_functions_intrin_neon64.cxx" />
+    <ClCompile Include="math\intrin\arm\compv_math_cast_intrin_neon.cxx" />
     <ClCompile Include="math\intrin\arm\compv_math_convlt_intrin_neon.cxx" />
     <ClCompile Include="math\intrin\arm\compv_math_distance_intrin_neon.cxx" />
+    <ClCompile Include="math\intrin\arm\compv_math_dot_intrin_neon.cxx" />
+    <ClCompile Include="math\intrin\arm\compv_math_exp_intrin_neon.cxx" />
+    <ClCompile Include="math\intrin\arm\compv_math_histogram_intrin_neon.cxx" />
     <ClCompile Include="math\intrin\arm\compv_math_matrix_intrin_neon64.cxx" />
+    <ClCompile Include="math\intrin\arm\compv_math_morph_intrin_neon.cxx" />
+    <ClCompile Include="math\intrin\arm\compv_math_op_minmax_intrin_neon.cxx" />
+    <ClCompile Include="math\intrin\arm\compv_math_op_mul_intrin_neon.cxx" />
+    <ClCompile Include="math\intrin\arm\compv_math_op_sub_intrin_neon.cxx" />
+    <ClCompile Include="math\intrin\arm\compv_math_scale_intrin_neon.cxx" />
     <ClCompile Include="math\intrin\arm\compv_math_stats_intrin_neon64.cxx" />
     <ClCompile Include="math\intrin\arm\compv_math_transform_intrin_neon64.cxx" />
+    <ClCompile Include="math\intrin\arm\compv_math_trig_intrin_neon.cxx" />
     <ClCompile Include="math\intrin\arm\compv_math_utils_intrin_neon.cxx" />
     <ClCompile Include="math\intrin\x86\compv_math_activation_functions_intrin_avx.cxx">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions</EnableEnhancedInstructionSet>

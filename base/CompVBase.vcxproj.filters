@@ -1445,6 +1445,39 @@
     <ClCompile Include="compv_base64.cxx">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="math\intrin\arm\compv_math_activation_functions_intrin_neon64.cxx">
+      <Filter>source\math\intrin\arm</Filter>
+    </ClCompile>
+    <ClCompile Include="math\intrin\arm\compv_math_cast_intrin_neon.cxx">
+      <Filter>source\math\intrin\arm</Filter>
+    </ClCompile>
+    <ClCompile Include="math\intrin\arm\compv_math_dot_intrin_neon.cxx">
+      <Filter>source\math\intrin\arm</Filter>
+    </ClCompile>
+    <ClCompile Include="math\intrin\arm\compv_math_exp_intrin_neon.cxx">
+      <Filter>source\math\intrin\arm</Filter>
+    </ClCompile>
+    <ClCompile Include="math\intrin\arm\compv_math_histogram_intrin_neon.cxx">
+      <Filter>source\math\intrin\arm</Filter>
+    </ClCompile>
+    <ClCompile Include="math\intrin\arm\compv_math_morph_intrin_neon.cxx">
+      <Filter>source\math\intrin\arm</Filter>
+    </ClCompile>
+    <ClCompile Include="math\intrin\arm\compv_math_op_minmax_intrin_neon.cxx">
+      <Filter>source\math\intrin\arm</Filter>
+    </ClCompile>
+    <ClCompile Include="math\intrin\arm\compv_math_op_mul_intrin_neon.cxx">
+      <Filter>source\math\intrin\arm</Filter>
+    </ClCompile>
+    <ClCompile Include="math\intrin\arm\compv_math_op_sub_intrin_neon.cxx">
+      <Filter>source\math\intrin\arm</Filter>
+    </ClCompile>
+    <ClCompile Include="math\intrin\arm\compv_math_scale_intrin_neon.cxx">
+      <Filter>source\math\intrin\arm</Filter>
+    </ClCompile>
+    <ClCompile Include="math\intrin\arm\compv_math_trig_intrin_neon.cxx">
+      <Filter>source\math\intrin\arm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <YASM Include="asm\x86\compv_bits_macros_x86.s">
