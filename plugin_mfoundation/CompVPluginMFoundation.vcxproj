@@ -450,20 +450,20 @@
     <ClCompile Include="compv_mf_utils.cxx" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\compv\mf\compv_mf_camera.h" />
-    <ClInclude Include="include\compv\mf\compv_mf_config.h" />
-    <ClInclude Include="include\compv\mf\compv_mf_devices.h" />
-    <ClInclude Include="include\compv\mf\compv_mf_grabber.h" />
-    <ClInclude Include="include\compv\mf\compv_mf_guidname.h" />
-    <ClInclude Include="include\compv\mf\compv_mf_utils.h" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\base\CompVBase.vcxproj">
       <Project>{52028a97-e6d7-4c48-82e9-3789fd42bc56}</Project>
     </ProjectReference>
     <ProjectReference Include="..\camera\CompVCamera.vcxproj">
       <Project>{d5bd00ca-0ee0-4bc2-9b0e-011f0eac5d68}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\compv\mf\compv_mf_camera.h" />
+    <ClInclude Include="include\compv\mf\compv_mf_config.h" />
+    <ClInclude Include="include\compv\mf\compv_mf_devices.h" />
+    <ClInclude Include="include\compv\mf\compv_mf_grabber.h" />
+    <ClInclude Include="include\compv\mf\compv_mf_guidname.h" />
+    <ClInclude Include="include\compv\mf\compv_mf_utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

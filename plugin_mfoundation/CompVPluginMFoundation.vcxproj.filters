@@ -31,22 +31,22 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\compv\mf\compv_mf_config.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\compv\mf\compv_mf_camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\compv\mf\compv_mf_utils.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\compv\mf\compv_mf_guidname.h">
+    <ClInclude Include="include\compv\mf\compv_mf_config.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\compv\mf\compv_mf_devices.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\compv\mf\compv_mf_grabber.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\mf\compv_mf_guidname.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\mf\compv_mf_utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

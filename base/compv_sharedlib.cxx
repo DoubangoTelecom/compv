@@ -13,6 +13,8 @@
 #	include <dlfcn.h>
 #endif
 
+#define COMPV_THIS_CLASSNAME "CompVSharedLib"
+
 COMPV_NAMESPACE_BEGIN()
 
 CompVSharedLib::CompVSharedLib(void* pHandle COMPV_DEFAULT(NULL))
@@ -62,7 +64,12 @@ COMPV_ERROR_CODE CompVSharedLib::open(const char* filePath, void** handle, bool 
 		if (quiet) {
 			return COMPV_ERROR_CODE_E_NOT_FOUND;
 		}
-        COMPV_DEBUG_ERROR("Failed to load library with path=%s", filePath);
+#if COMPV_OS_WINDOWS
+		const DWORD error = GetLastError();
+#else
+		const long error = -1;
+#endif
+        COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Failed to load library with path=%s, Error: %x", filePath, error);
         COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_FOUND);
     }
 
@@ -111,7 +118,7 @@ COMPV_ERROR_CODE CompVSharedLib::newObj(CompVSharedLibPtrPtr sharedlib, const ch
 	}
 	COMPV_CHECK_CODE_BAIL(err);
     COMPV_CHECK_CODE_BAIL(err = CompVSharedLib::newObj(sharedlib, handle_));
-    COMPV_DEBUG_INFO("Loaded shared lib: %s", filePath);
+    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Loaded shared lib: %s", filePath);
 bail:
     if (COMPV_ERROR_CODE_IS_NOK(err)) {
         COMPV_CHECK_CODE_ASSERT(CompVSharedLib::close(handle_));
