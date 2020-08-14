@@ -67,7 +67,7 @@ COMPV_ERROR_CODE CompVSharedLib::open(const char* filePath, void** handle, bool 
 #if COMPV_OS_WINDOWS
 		const DWORD error = GetLastError();
 #else
-		const long error = -1;
+		const int error = -1;
 #endif
         COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Failed to load library with path=%s, Error: 0x%08x", filePath, error);
         COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_FOUND);
