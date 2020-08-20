@@ -52,8 +52,9 @@ private:
     COMPV_VS_DISABLE_WARNINGS_END()
 };
 
-#define COMPV_AUTOLOCK_OBJ(T, obj)	CompVAutoLock<T> __COMPV_autoLock__((obj))
-#define COMPV_AUTOLOCK_THIS(T)		COMPV_AUTOLOCK_OBJ(T, this)
+#define COMPV_AUTOLOCK_OBJ(T, obj)		CompVAutoLock<T> __COMPV_autoLock__((obj))
+#define COMPV_AUTOLOCK_THIS(T)			COMPV_AUTOLOCK_OBJ(T, this)
+#define COMPV_AUTOLOCK_THIS_CONST(T)	COMPV_AUTOLOCK_OBJ(UltOcrTensorflowSessionDetector, const_cast<T*>(this))
 
 COMPV_NAMESPACE_END()
 

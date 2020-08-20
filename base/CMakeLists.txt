@@ -232,6 +232,7 @@ if ("${TARGET_ARCH}" STREQUAL "x86" OR "${TARGET_ARCH}" STREQUAL "x64")
 		math/intrin/x86/compv_math_morph_intrin_sse2.cxx
 		math/intrin/x86/compv_math_op_minmax_intrin_sse2.cxx
 		math/intrin/x86/compv_math_op_mul_intrin_sse2.cxx
+		math/intrin/x86/compv_math_op_sub_intrin_avx.cxx
 		math/intrin/x86/compv_math_op_sub_intrin_sse2.cxx
 		math/intrin/x86/compv_math_scale_intrin_sse2.cxx
 		math/intrin/x86/compv_math_stats_intrin_avx.cxx

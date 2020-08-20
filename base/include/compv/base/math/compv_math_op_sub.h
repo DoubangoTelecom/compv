@@ -20,7 +20,8 @@ COMPV_NAMESPACE_BEGIN()
 class CompVMathOpSub
 {
 public:
-	static COMPV_ERROR_CODE sub(const CompVMatPtr& A, const CompVMatPtr& B, CompVMatPtrPtr R);
+	static COMPV_ERROR_CODE sub(const CompVMatPtr& A, const CompVMatPtr& B, CompVMatPtrPtr R, const bool enforceSingleThread = false);
+	static COMPV_ERROR_CODE subMul(const CompVMatPtr& A, const double& subVal, const double& mulVal, CompVMatPtrPtr R, const bool enforceSingleThread = false);
 };
 
 COMPV_NAMESPACE_END()
