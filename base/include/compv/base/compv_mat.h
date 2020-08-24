@@ -342,9 +342,9 @@ public:
 			size_t rowEndInPlane, colEndInPlane;
 			for (int planeId = 0; planeId < m_nPlaneCount; ++planeId) {
 				COMPV_CHECK_CODE_RETURN(CompVImageUtils::planeSizeForPixelFormat(pixelFormat, planeId, colStart, rowStart, &colStartInPlane, &rowStartInPlane));
-				COMPV_CHECK_CODE_RETURN(CompVImageUtils::planeSizeForPixelFormat(pixelFormat, planeId, colEnd, rowEnd, &colEndInPlane, &rowEndInPlane));
-				mat_->m_nPlaneCols[planeId] = (colEndInPlane - colStartInPlane) + 1; // +1 because it's from 'colStart' up to 'colEnd'
-				mat_->m_nPlaneRows[planeId] = (rowEndInPlane - rowStartInPlane) + 1; // +1 because it's from 'rowStart' up to 'rowEnd'
+				COMPV_CHECK_CODE_RETURN(CompVImageUtils::planeSizeForPixelFormat(pixelFormat, planeId, colEnd + 1, rowEnd + 1, &colEndInPlane, &rowEndInPlane)); // +1 because it's from 'colStart' up to 'colEnd'
+				mat_->m_nPlaneCols[planeId] = (colEndInPlane - colStartInPlane); 
+				mat_->m_nPlaneRows[planeId] = (rowEndInPlane - rowStartInPlane);
 				mat_->m_pCompPtr[planeId] = this->ptr<const void>(rowStartInPlane, colStartInPlane, planeId);
 				mat_->m_nPlaneSizeInBytes[planeId] = m_nPlaneStrideInBytes[planeId] * (mat_->m_nPlaneRows[planeId]);
 				mat_->m_nPlaneStrideInBytes[planeId] = m_nPlaneStrideInBytes[planeId];
