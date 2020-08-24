@@ -57,8 +57,8 @@ public:
 	static COMPV_ERROR_CODE histogramEqualiz(const CompVMatPtr& input, CompVMatPtrPtr output);
 	static COMPV_ERROR_CODE histogramEqualiz(const CompVMatPtr& input, const CompVMatPtr& histogram, CompVMatPtrPtr output);
 
-	static COMPV_ERROR_CODE gammaCorrection(const CompVMatPtr& input, const double& gamma, CompVMatPtrPtr output);
-	static COMPV_ERROR_CODE gammaCorrection(const CompVMatPtr& input, const compv_uint8x256_t& gammaLUT, CompVMatPtrPtr output);
+	static COMPV_ERROR_CODE gammaCorrection(const CompVMatPtr& input, const double& gamma, CompVMatPtrPtr output, const bool enforceSingleThread = false);
+	static COMPV_ERROR_CODE gammaCorrection(const CompVMatPtr& input, const compv_uint8x256_t& gammaLUT, CompVMatPtrPtr output, const bool enforceSingleThread = false);
 
 	static COMPV_ERROR_CODE thresholdOtsu(const CompVMatPtr& input, double& threshold, CompVMatPtrPtr output = nullptr);
 	static COMPV_ERROR_CODE thresholdOtsu(const CompVMatPtr& input, CompVMatPtrPtr output);

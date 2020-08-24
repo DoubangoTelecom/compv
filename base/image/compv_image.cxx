@@ -759,7 +759,7 @@ COMPV_ERROR_CODE CompVImage::histogramEqualiz(const CompVMatPtr& input, const Co
 
 // https://en.wikipedia.org/wiki/Gamma_correction
 // A = 1
-COMPV_ERROR_CODE CompVImage::gammaCorrection(const CompVMatPtr& input, const double& gamma, CompVMatPtrPtr output)
+COMPV_ERROR_CODE CompVImage::gammaCorrection(const CompVMatPtr& input, const double& gamma, CompVMatPtrPtr output, const bool enforceSingleThread COMPV_DEFAULT(false))
 {
 	COMPV_CHECK_EXP_RETURN(!input || input->elmtInBytes() != sizeof(uint8_t) || input->planeCount() != 1 || !output, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
@@ -770,13 +770,13 @@ COMPV_ERROR_CODE CompVImage::gammaCorrection(const CompVMatPtr& input, const dou
 		const double v = std::pow((static_cast<double>(i) * scale), gamma) * 255.0;
 		gammaLUT[i] = COMPV_MATH_ROUNDFU_2_NEAREST_INT(v, uint8_t);
 	}
-	COMPV_CHECK_CODE_RETURN(CompVImage::gammaCorrection(input, gammaLUT, output));
+	COMPV_CHECK_CODE_RETURN(CompVImage::gammaCorrection(input, gammaLUT, output, enforceSingleThread));
 	return COMPV_ERROR_CODE_S_OK;
 }
 
 // https://en.wikipedia.org/wiki/Gamma_correction
 // A = 1
-COMPV_ERROR_CODE CompVImage::gammaCorrection(const CompVMatPtr& input, const compv_uint8x256_t& gammaLUT, CompVMatPtrPtr output)
+COMPV_ERROR_CODE CompVImage::gammaCorrection(const CompVMatPtr& input, const compv_uint8x256_t& gammaLUT, CompVMatPtrPtr output, const bool enforceSingleThread COMPV_DEFAULT(false))
 {
 	COMPV_CHECK_EXP_RETURN(!input || input->elmtInBytes() != sizeof(uint8_t) || input->planeCount() != 1 || !output, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
@@ -804,7 +804,7 @@ COMPV_ERROR_CODE CompVImage::gammaCorrection(const CompVMatPtr& input, const com
 		funcPtr,
 		width,
 		height,
-		COMPV_IMAGE_GAMMA_CORRECTION_SAMPLES_PER_THREAD
+		enforceSingleThread ? SIZE_MAX : COMPV_IMAGE_GAMMA_CORRECTION_SAMPLES_PER_THREAD
 	));
 
 	*output = output_;
