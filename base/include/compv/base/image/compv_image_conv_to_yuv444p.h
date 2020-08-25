@@ -19,10 +19,10 @@ COMPV_NAMESPACE_BEGIN()
 class CompVImageConvToYUV444P
 {
 public:
-	static COMPV_ERROR_CODE process(const CompVMatPtr& imageIn, CompVMatPtrPtr imageYUV444P);
+	static COMPV_ERROR_CODE process(const CompVMatPtr& imageIn, CompVMatPtrPtr imageYUV444P, const bool enforceSingleThread = false);
 
 private:
-	static COMPV_ERROR_CODE rgbfamily(const CompVMatPtr& imageRGBfamily, CompVMatPtrPtr imageYUV444P);
+	static COMPV_ERROR_CODE rgbfamily(const CompVMatPtr& imageRGBfamily, CompVMatPtrPtr imageYUV444P, const bool enforceSingleThread = false);
 };
 
 COMPV_NAMESPACE_END()

@@ -20,14 +20,14 @@ COMPV_NAMESPACE_BEGIN()
 class CompVImageConvToRGBx
 {
 public:
-	static COMPV_ERROR_CODE process(const CompVMatPtr& imageIn, const COMPV_SUBTYPE rgbxFormat, CompVMatPtrPtr imageRGBx);
+	static COMPV_ERROR_CODE process(const CompVMatPtr& imageIn, const COMPV_SUBTYPE rgbxFormat, CompVMatPtrPtr imageRGBx, const bool enforceSingleThread = false);
 
 private:
-	static COMPV_ERROR_CODE yuvPlanar(const CompVMatPtr& imageIn, CompVMatPtr& imageRGBx);
-	static COMPV_ERROR_CODE yuvSemiPlanar(const CompVMatPtr& imageIn, CompVMatPtr& imageRGBx);
-	static COMPV_ERROR_CODE yuvPacked(const CompVMatPtr& imageIn, CompVMatPtr& imageRGBx);
-	static COMPV_ERROR_CODE yGrayscale(const CompVMatPtr& imageIn, CompVMatPtr& imageRGBx);
-	static COMPV_ERROR_CODE rgbx(const CompVMatPtr& imageIn, CompVMatPtr& imageRGBx);
+	static COMPV_ERROR_CODE yuvPlanar(const CompVMatPtr& imageIn, CompVMatPtr& imageRGBx, const bool enforceSingleThread = false);
+	static COMPV_ERROR_CODE yuvSemiPlanar(const CompVMatPtr& imageIn, CompVMatPtr& imageRGBx, const bool enforceSingleThread = false);
+	static COMPV_ERROR_CODE yuvPacked(const CompVMatPtr& imageIn, CompVMatPtr& imageRGBx, const bool enforceSingleThread = false);
+	static COMPV_ERROR_CODE yGrayscale(const CompVMatPtr& imageIn, CompVMatPtr& imageRGBx, const bool enforceSingleThread = false);
+	static COMPV_ERROR_CODE rgbx(const CompVMatPtr& imageIn, CompVMatPtr& imageRGBx, const bool enforceSingleThread = false);
 };
 
 COMPV_NAMESPACE_END()

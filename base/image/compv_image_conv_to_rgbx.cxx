@@ -93,7 +93,7 @@ static void uyvy422_to_rgba32_C(const uint8_t* yuyvPtr, uint8_t* rgbxPtr, compv_
 static void uyvy422_to_rgb24_C(const uint8_t* yuyvPtr, uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
 static void rgba32_to_rgb24_C(const uint8_t* rgba32Ptr, uint8_t* rgb24Ptr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
 
-COMPV_ERROR_CODE CompVImageConvToRGBx::process(const CompVMatPtr& imageIn, const COMPV_SUBTYPE rgbxFormat, CompVMatPtrPtr imageRGBx)
+COMPV_ERROR_CODE CompVImageConvToRGBx::process(const CompVMatPtr& imageIn, const COMPV_SUBTYPE rgbxFormat, CompVMatPtrPtr imageRGBx, const bool enforceSingleThread COMPV_DEFAULT(false))
 {
 	// Internal function, do not check input parameters (already done)
 	//	-> rgbxFormat must be RGBA32 or RGB24
@@ -109,27 +109,27 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::process(const CompVMatPtr& imageIn, const
 	case COMPV_SUBTYPE_PIXELS_BGRA32:
 	case COMPV_SUBTYPE_PIXELS_RGB24:
 	case COMPV_SUBTYPE_PIXELS_BGR24:
-		COMPV_CHECK_CODE_RETURN(CompVImageConvToRGBx::rgbx(imageIn, imageOut));
+		COMPV_CHECK_CODE_RETURN(CompVImageConvToRGBx::rgbx(imageIn, imageOut, enforceSingleThread));
 		break;
 
 	case COMPV_SUBTYPE_PIXELS_YUV420P:
 	case COMPV_SUBTYPE_PIXELS_YUV422P:
 	case COMPV_SUBTYPE_PIXELS_YUV444P:
-		COMPV_CHECK_CODE_RETURN(CompVImageConvToRGBx::yuvPlanar(imageIn, imageOut));
+		COMPV_CHECK_CODE_RETURN(CompVImageConvToRGBx::yuvPlanar(imageIn, imageOut, enforceSingleThread));
 		break;
 
 	case COMPV_SUBTYPE_PIXELS_NV12:
 	case COMPV_SUBTYPE_PIXELS_NV21:
-		COMPV_CHECK_CODE_RETURN(CompVImageConvToRGBx::yuvSemiPlanar(imageIn, imageOut));
+		COMPV_CHECK_CODE_RETURN(CompVImageConvToRGBx::yuvSemiPlanar(imageIn, imageOut, enforceSingleThread));
 		break;
 
 	case COMPV_SUBTYPE_PIXELS_YUYV422:
 	case COMPV_SUBTYPE_PIXELS_UYVY422:
-		COMPV_CHECK_CODE_RETURN(CompVImageConvToRGBx::yuvPacked(imageIn, imageOut));
+		COMPV_CHECK_CODE_RETURN(CompVImageConvToRGBx::yuvPacked(imageIn, imageOut, enforceSingleThread));
 		break;
 
 	case COMPV_SUBTYPE_PIXELS_Y:
-		COMPV_CHECK_CODE_RETURN(CompVImageConvToRGBx::yGrayscale(imageIn, imageOut));
+		COMPV_CHECK_CODE_RETURN(CompVImageConvToRGBx::yGrayscale(imageIn, imageOut, enforceSingleThread));
 		break;
 
 	default:
@@ -143,7 +143,7 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::process(const CompVMatPtr& imageIn, const
 }
 
 // YUV420P, YVU420P, YUV422P, YUV444P
-COMPV_ERROR_CODE CompVImageConvToRGBx::yuvPlanar(const CompVMatPtr& imageIn, CompVMatPtr& imageRGBx)
+COMPV_ERROR_CODE CompVImageConvToRGBx::yuvPlanar(const CompVMatPtr& imageIn, CompVMatPtr& imageRGBx, const bool enforceSingleThread COMPV_DEFAULT(false))
 {
 	// Internal function, do not check input parameters (already done)
 	void(*fptr_planar_to_rgbx)(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
@@ -251,7 +251,7 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::yuvPlanar(const CompVMatPtr& imageIn, Com
 	size_t maxThreads = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 0;
 
 	// Compute number of threads
-	const size_t threadsCount = (threadDisp && !threadDisp->isMotherOfTheCurrentThread())
+	const size_t threadsCount = (!enforceSingleThread && threadDisp && !threadDisp->isMotherOfTheCurrentThread())
 		? CompVThreadDispatcher::guessNumThreadsDividingAcrossY(strideInSamples, heightInSamples, maxThreads, COMPV_IMAGE_CONV_MIN_SAMPLES_PER_THREAD)
 		: 1;
 
@@ -298,7 +298,7 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::yuvPlanar(const CompVMatPtr& imageIn, Com
 }
 
 // NV12, NV21
-COMPV_ERROR_CODE CompVImageConvToRGBx::yuvSemiPlanar(const CompVMatPtr& imageIn, CompVMatPtr& imageRGBx)
+COMPV_ERROR_CODE CompVImageConvToRGBx::yuvSemiPlanar(const CompVMatPtr& imageIn, CompVMatPtr& imageRGBx, const bool enforceSingleThread COMPV_DEFAULT(false))
 {
 	// Internal function, do not check input parameters (already done)
 	void(*fptr_semiplanar_to_rgbx)(const uint8_t* yPtr, const uint8_t* uvPtr, uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
@@ -361,7 +361,7 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::yuvSemiPlanar(const CompVMatPtr& imageIn,
 	size_t maxThreads = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 0;
 
 	// Compute number of threads
-	const size_t threadsCount = (threadDisp && !threadDisp->isMotherOfTheCurrentThread())
+	const size_t threadsCount = (!enforceSingleThread && threadDisp && !threadDisp->isMotherOfTheCurrentThread())
 		? CompVThreadDispatcher::guessNumThreadsDividingAcrossY(strideInSamples, heightInSamples, maxThreads, COMPV_IMAGE_CONV_MIN_SAMPLES_PER_THREAD)
 		: 1;
 
@@ -405,7 +405,7 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::yuvSemiPlanar(const CompVMatPtr& imageIn,
 }
 
 // YUYV422, UYVY422
-COMPV_ERROR_CODE CompVImageConvToRGBx::yuvPacked(const CompVMatPtr& imageIn, CompVMatPtr& imageRGBx)
+COMPV_ERROR_CODE CompVImageConvToRGBx::yuvPacked(const CompVMatPtr& imageIn, CompVMatPtr& imageRGBx, const bool enforceSingleThread COMPV_DEFAULT(false))
 {
 	// Internal function, do not check input parameters (already done)
 	void(*fptr_packed_to_rgbx)(const uint8_t* yuyvPtr, uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
@@ -464,10 +464,10 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::yuvPacked(const CompVMatPtr& imageIn, Com
 	uint8_t* rgbxPtr = imageRGBx->ptr<uint8_t>();
 
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
-	size_t maxThreads = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 0;
+	const size_t maxThreads = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 0;
 
 	// Compute number of threads
-	const size_t threadsCount = (threadDisp && !threadDisp->isMotherOfTheCurrentThread())
+	const size_t threadsCount = (!enforceSingleThread && threadDisp && !threadDisp->isMotherOfTheCurrentThread())
 		? CompVThreadDispatcher::guessNumThreadsDividingAcrossY(strideInSamples, heightInSamples, maxThreads, COMPV_IMAGE_CONV_MIN_SAMPLES_PER_THREAD)
 		: 1;
 
@@ -509,7 +509,7 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::yuvPacked(const CompVMatPtr& imageIn, Com
 }
 
 // Y -> RGBx
-COMPV_ERROR_CODE CompVImageConvToRGBx::yGrayscale(const CompVMatPtr& imageIn, CompVMatPtr& imageRGBx)
+COMPV_ERROR_CODE CompVImageConvToRGBx::yGrayscale(const CompVMatPtr& imageIn, CompVMatPtr& imageRGBx, const bool enforceSingleThread COMPV_DEFAULT(false))
 {
 	COMPV_ASSERT(imageIn->planeCount() == 1 && imageIn->elmtInBytes() == sizeof(uint8_t) && imageRGBx->cols() == imageIn->cols() && imageRGBx->rows() == imageIn->rows() && imageRGBx->stride() == imageIn->stride());
 
@@ -517,7 +517,7 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::yGrayscale(const CompVMatPtr& imageIn, Co
 	case COMPV_SUBTYPE_PIXELS_RGB24:
 	case COMPV_SUBTYPE_PIXELS_BGR24: {
 		CompVMatPtrVector vecRGB(3, imageIn); // duplicate reference (not a copy operation)
-		COMPV_CHECK_CODE_RETURN(CompVImage::pack(vecRGB, imageRGBx->subType(), &imageRGBx));
+		COMPV_CHECK_CODE_RETURN(CompVImage::pack(vecRGB, imageRGBx->subType(), &imageRGBx, enforceSingleThread));
 		break;
 	}
 	case COMPV_SUBTYPE_PIXELS_ARGB32:
@@ -530,7 +530,7 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::yGrayscale(const CompVMatPtr& imageIn, Co
 		COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&alphatMat, COMPV_SUBTYPE_PIXELS_Y, imageIn->cols(), imageIn->rows(), imageIn->stride()));
 		COMPV_CHECK_CODE_RETURN(CompVMem::set(alphatMat->ptr<void>(), 0xff, alphatMat->dataSizeInBytes(), sizeof(uint8_t)));
 		vecRGB[alphaIndex] = alphatMat;
-		COMPV_CHECK_CODE_RETURN(CompVImage::pack(vecRGB, imageRGBx->subType(), &imageRGBx));
+		COMPV_CHECK_CODE_RETURN(CompVImage::pack(vecRGB, imageRGBx->subType(), &imageRGBx, enforceSingleThread));
 		break;
 	}
 	default:
@@ -542,7 +542,7 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::yGrayscale(const CompVMatPtr& imageIn, Co
 }
 
 // RGBx -> RGBx
-COMPV_ERROR_CODE CompVImageConvToRGBx::rgbx(const CompVMatPtr& imageIn, CompVMatPtr& imageRGBx)
+COMPV_ERROR_CODE CompVImageConvToRGBx::rgbx(const CompVMatPtr& imageIn, CompVMatPtr& imageRGBx, const bool enforceSingleThread COMPV_DEFAULT(false))
 {
 	// Internal function, do not check input parameters (already done) ... but I want to feel good
 	COMPV_ASSERT(imageRGBx->cols() == imageIn->cols() && imageRGBx->rows() == imageIn->rows() && imageRGBx->stride() == imageIn->stride());
@@ -551,7 +551,7 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::rgbx(const CompVMatPtr& imageIn, CompVMat
 
 	if (inPixelFormat == outPixelFormat) {
 		COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASSNAME, "Source and destination formats are the same. Useless, cloning.");
-		COMPV_CHECK_CODE_RETURN(CompVImage::clone(imageIn, &imageRGBx));
+		COMPV_CHECK_CODE_RETURN(CompVImage::clone(imageIn, &imageRGBx, enforceSingleThread));
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
@@ -559,11 +559,11 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::rgbx(const CompVMatPtr& imageIn, CompVMat
 	if ((inPixelFormat == COMPV_SUBTYPE_PIXELS_BGR24 || inPixelFormat == COMPV_SUBTYPE_PIXELS_BGRA32) && outPixelFormat == COMPV_SUBTYPE_PIXELS_RGB24) {
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No in-place conversion found for BGRA32/BGR24 -> RGB24. You should consider using RGBA32/RGB24 instead of BGRA32/BGR24");
 		CompVMatPtrVector bgra32Or24Vec;
-		COMPV_CHECK_CODE_RETURN(CompVImage::unpack(imageIn, bgra32Or24Vec));
+		COMPV_CHECK_CODE_RETURN(CompVImage::unpack(imageIn, bgra32Or24Vec, enforceSingleThread));
 		CompVMatPtr R = bgra32Or24Vec[2], G = bgra32Or24Vec[0];
 		bgra32Or24Vec[0] = R, bgra32Or24Vec[2] = G; // Switch R<->B to convert from BGRA32 to RGBA32
 		bgra32Or24Vec.resize(3); // Remove alpha lane
-		COMPV_CHECK_CODE_RETURN(CompVImage::pack(bgra32Or24Vec, COMPV_SUBTYPE_PIXELS_RGB24, &imageRGBx));
+		COMPV_CHECK_CODE_RETURN(CompVImage::pack(bgra32Or24Vec, COMPV_SUBTYPE_PIXELS_RGB24, &imageRGBx, enforceSingleThread));
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
@@ -614,7 +614,7 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::rgbx(const CompVMatPtr& imageIn, CompVMat
 		funcPtr,
 		width,
 		height,
-		COMPV_IMAGE_CONV_MIN_SAMPLES_PER_THREAD
+		enforceSingleThread ? SIZE_MAX : COMPV_IMAGE_CONV_MIN_SAMPLES_PER_THREAD
 	));
 
 	return COMPV_ERROR_CODE_S_OK;

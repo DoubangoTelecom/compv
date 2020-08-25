@@ -19,11 +19,11 @@ COMPV_NAMESPACE_BEGIN()
 class CompVImageConvToGrayscale
 {
 public:
-	static COMPV_ERROR_CODE process(const CompVMatPtr& imageIn, CompVMatPtrPtr imageGray);
+	static COMPV_ERROR_CODE process(const CompVMatPtr& imageIn, CompVMatPtrPtr imageGray, const bool enforceSingleThread = false);
 
 private:
-	static COMPV_ERROR_CODE yuv422family(const CompVMatPtr& imageYUV422family, CompVMatPtrPtr imageGray);
-	static COMPV_ERROR_CODE rgbfamily(const CompVMatPtr& imageRGBfamily, CompVMatPtrPtr imageGray);
+	static COMPV_ERROR_CODE yuv422family(const CompVMatPtr& imageYUV422family, CompVMatPtrPtr imageGray, const bool enforceSingleThread = false);
+	static COMPV_ERROR_CODE rgbfamily(const CompVMatPtr& imageRGBfamily, CompVMatPtrPtr imageGray, const bool enforceSingleThread = false);
 };
 
 COMPV_NAMESPACE_END()

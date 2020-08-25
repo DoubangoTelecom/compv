@@ -32,7 +32,7 @@ COMPV_NAMESPACE_BEGIN()
 #	endif /* COMPV_ARCH_XXX */
 #endif /* COMPV_ASM */
 
-COMPV_ERROR_CODE CompVImageConvToGrayscale::process(const CompVMatPtr& imageIn, CompVMatPtrPtr imageGray)
+COMPV_ERROR_CODE CompVImageConvToGrayscale::process(const CompVMatPtr& imageIn, CompVMatPtrPtr imageGray, const bool enforceSingleThread COMPV_DEFAULT(false))
 {
 	// Internal function, do not check input parameters (already done)
 	switch (imageIn->subType()) {
@@ -47,7 +47,7 @@ COMPV_ERROR_CODE CompVImageConvToGrayscale::process(const CompVMatPtr& imageIn, 
 	case COMPV_SUBTYPE_PIXELS_BGR565BE: {
 		// RGBfamily -> graysacle
 		CompVMatPtr imageOut = (imageIn == *imageGray) ? nullptr : *imageGray; // Input must not be equal to output
-		COMPV_CHECK_CODE_RETURN(CompVImageConvToGrayscale::rgbfamily(imageIn, &imageOut), "Conversion (RGBFamily -> Grayscale) failed");
+		COMPV_CHECK_CODE_RETURN(CompVImageConvToGrayscale::rgbfamily(imageIn, &imageOut, enforceSingleThread), "Conversion (RGBFamily -> Grayscale) failed");
 		*imageGray = imageOut;
 		return COMPV_ERROR_CODE_S_OK;
 	}
@@ -68,16 +68,19 @@ COMPV_ERROR_CODE CompVImageConvToGrayscale::process(const CompVMatPtr& imageIn, 
 			}
 		}
 		else {
-			COMPV_CHECK_CODE_RETURN(CompVImage::wrap(COMPV_SUBTYPE_PIXELS_Y,
+			COMPV_CHECK_CODE_RETURN(CompVImage::wrap(
+				COMPV_SUBTYPE_PIXELS_Y,
 				imageIn->ptr<uint8_t>(0, 0, COMPV_PLANE_Y), imageIn->cols(COMPV_PLANE_Y), imageIn->rows(COMPV_PLANE_Y), imageIn->stride(COMPV_PLANE_Y),
-				imageGray, imageIn->stride(COMPV_PLANE_Y))); // The output image *must* have same stride as the input: required by many caller
+				imageGray, imageIn->stride(COMPV_PLANE_Y),
+				enforceSingleThread
+			)); // The output image *must* have same stride as the input: required by many caller
 		}
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	case COMPV_SUBTYPE_PIXELS_YUYV422:
 	case COMPV_SUBTYPE_PIXELS_UYVY422: {
 		// Packed (non-Planar) YUV422 -> Grayscale
-		COMPV_CHECK_CODE_RETURN(CompVImageConvToGrayscale::yuv422family(imageIn, imageGray));
+		COMPV_CHECK_CODE_RETURN(CompVImageConvToGrayscale::yuv422family(imageIn, imageGray, enforceSingleThread));
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	default:
@@ -89,7 +92,7 @@ COMPV_ERROR_CODE CompVImageConvToGrayscale::process(const CompVMatPtr& imageIn, 
 static void yuyv422_to_y_C(const uint8_t* yuyv422Ptr, uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
 static void uyvy422_to_y_c(const uint8_t* uyvy422Ptr, uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
 
-COMPV_ERROR_CODE CompVImageConvToGrayscale::yuv422family(const CompVMatPtr& imageYUV422family, CompVMatPtrPtr imageGray)
+COMPV_ERROR_CODE CompVImageConvToGrayscale::yuv422family(const CompVMatPtr& imageYUV422family, CompVMatPtrPtr imageGray, const bool enforceSingleThread COMPV_DEFAULT(false))
 {
 	void(*yuv422family_to_y)(const uint8_t* yuv422Ptr, uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride) = NULL;
 	switch (imageYUV422family->subType()) {
@@ -140,7 +143,7 @@ COMPV_ERROR_CODE CompVImageConvToGrayscale::yuv422family(const CompVMatPtr& imag
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 
 	// Compute number of threads
-	threadsCount = (threadDisp && !threadDisp->isMotherOfTheCurrentThread())
+	threadsCount = (!enforceSingleThread && threadDisp && !threadDisp->isMotherOfTheCurrentThread())
 		? CompVThreadDispatcher::guessNumThreadsDividingAcrossY(stride, height, maxThreads, (COMPV_IMAGE_CONV_MIN_SAMPLES_PER_THREAD << 1)) // '<<1' because conversion is memory read only, not CPU intensive like RGB -> Y
 		: 1;
 
@@ -169,7 +172,7 @@ bail:
 	return err;
 }
 
-COMPV_ERROR_CODE CompVImageConvToGrayscale::rgbfamily(const CompVMatPtr& imageRGBfamily, CompVMatPtrPtr imageGray)
+COMPV_ERROR_CODE CompVImageConvToGrayscale::rgbfamily(const CompVMatPtr& imageRGBfamily, CompVMatPtrPtr imageGray, const bool enforceSingleThread COMPV_DEFAULT(false))
 {
 	// Private function, do not check input parameters (already done)
 	void(*rgbfamily_to_y)(const uint8_t* rgbPtr, uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride) = NULL;
@@ -217,7 +220,7 @@ COMPV_ERROR_CODE CompVImageConvToGrayscale::rgbfamily(const CompVMatPtr& imageRG
 	COMPV_ERROR_CODE err;
 
 	// Compute number of threads
-	const size_t threadsCount = (threadDisp && !threadDisp->isMotherOfTheCurrentThread())
+	const size_t threadsCount = (!enforceSingleThread && threadDisp && !threadDisp->isMotherOfTheCurrentThread())
 		? CompVThreadDispatcher::guessNumThreadsDividingAcrossY(stride, height, maxThreads, COMPV_IMAGE_CONV_MIN_SAMPLES_PER_THREAD)
 		: 1;
 

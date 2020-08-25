@@ -23,10 +23,10 @@ COMPV_NAMESPACE_BEGIN()
 class CompVImageConvToHSV
 {
 public:
-	static COMPV_ERROR_CODE process(const CompVMatPtr& imageIn, CompVMatPtrPtr imageHSV);
+	static COMPV_ERROR_CODE process(const CompVMatPtr& imageIn, CompVMatPtrPtr imageHSV, const bool enforceSingleThread = false);
 
 private:
-	static COMPV_ERROR_CODE rgbxToHsv(const CompVMatPtr& imageRGBx, CompVMatPtr& imageHSV);
+	static COMPV_ERROR_CODE rgbxToHsv(const CompVMatPtr& imageRGBx, CompVMatPtr& imageHSV, const bool enforceSingleThread = false);
 };
 
 //
@@ -36,7 +36,7 @@ private:
 class CompVImageConvFromHSVToRGB24
 {
 public:
-	static COMPV_ERROR_CODE process(const CompVMatPtr& imageHSV, CompVMatPtrPtr imageRGB24);
+	static COMPV_ERROR_CODE process(const CompVMatPtr& imageHSV, CompVMatPtrPtr imageRGB24, const bool enforceSingleThread = false);
 
 private:
 

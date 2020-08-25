@@ -41,7 +41,7 @@ static void rgbx_to_hsv_C(const uint8_t* rgbxPtr, uint8_t* hsvPtr, compv_uscalar
 // CompVImageConvToHSV
 //
 
-COMPV_ERROR_CODE CompVImageConvToHSV::process(const CompVMatPtr& imageIn, CompVMatPtrPtr imageHSV)
+COMPV_ERROR_CODE CompVImageConvToHSV::process(const CompVMatPtr& imageIn, CompVMatPtrPtr imageHSV, const bool enforceSingleThread COMPV_DEFAULT(false))
 {
 	// Internal function, do not check input parameters (already done)
 
@@ -69,7 +69,7 @@ COMPV_ERROR_CODE CompVImageConvToHSV::process(const CompVMatPtr& imageIn, CompVM
 		// Another good reason to use RGB24: "input === output" -> Cache-friendly
 		// Another good reason to use RGB24: there is very faaast ASM code for NEON, SSSE3 and AVX2
 		if (imageOut->isMemoryOwed()) {
-			COMPV_CHECK_CODE_RETURN(CompVImageConvToRGBx::process(imageIn, COMPV_SUBTYPE_PIXELS_RGB24, &imageOut));
+			COMPV_CHECK_CODE_RETURN(CompVImageConvToRGBx::process(imageIn, COMPV_SUBTYPE_PIXELS_RGB24, &imageOut, enforceSingleThread));
 			// Call 'newObj8u' to change the subtype, no memory will be allocated as HSV and RGB24 have the same size.
 			const void* oldPtr = imageOut->ptr<const void*>();
 			COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&imageOut, COMPV_SUBTYPE_PIXELS_HSV, width, height, stride));
@@ -78,9 +78,9 @@ COMPV_ERROR_CODE CompVImageConvToHSV::process(const CompVMatPtr& imageIn, CompVM
 		}
 		else { // This is a bound memory -> do not loose it
 #if COMPV_ARCH_ARM || 1
-			COMPV_CHECK_CODE_RETURN(CompVImageConvToRGBx::process(imageIn, COMPV_SUBTYPE_PIXELS_RGB24, &imageRGBx));
+			COMPV_CHECK_CODE_RETURN(CompVImageConvToRGBx::process(imageIn, COMPV_SUBTYPE_PIXELS_RGB24, &imageRGBx, enforceSingleThread));
 #else
-			COMPV_CHECK_CODE_RETURN(CompVImageConvToRGBx::process(imageIn, COMPV_SUBTYPE_PIXELS_RGBA32, &imageRGBx));
+			COMPV_CHECK_CODE_RETURN(CompVImageConvToRGBx::process(imageIn, COMPV_SUBTYPE_PIXELS_RGBA32, &imageRGBx, enforceSingleThread));
 #endif
 		}
 		break;
@@ -88,14 +88,14 @@ COMPV_ERROR_CODE CompVImageConvToHSV::process(const CompVMatPtr& imageIn, CompVM
 
 	//!\\ Important: 'imageRGBx' and 'imageOut' are the same data when intermediate format is RGB24. No data
 	// override at conversion because RGB24 and HSV have the same size. Not the case for RGBA32.
-	COMPV_CHECK_CODE_RETURN(CompVImageConvToHSV::rgbxToHsv(imageRGBx, imageOut));
+	COMPV_CHECK_CODE_RETURN(CompVImageConvToHSV::rgbxToHsv(imageRGBx, imageOut, enforceSingleThread));
 
 	*imageHSV = imageOut;
 	return COMPV_ERROR_CODE_S_OK;
 }
 
 // RGBx = RGBA32 or RGB24
-COMPV_ERROR_CODE CompVImageConvToHSV::rgbxToHsv(const CompVMatPtr& imageRGBx, CompVMatPtr& imageHSV)
+COMPV_ERROR_CODE CompVImageConvToHSV::rgbxToHsv(const CompVMatPtr& imageRGBx, CompVMatPtr& imageHSV, const bool enforceSingleThread COMPV_DEFAULT(false))
 {
 	// Internal function, do not check input parameters (already done)
 
@@ -158,7 +158,7 @@ COMPV_ERROR_CODE CompVImageConvToHSV::rgbxToHsv(const CompVMatPtr& imageRGBx, Co
 	size_t maxThreads = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 0;
 
 	// Compute number of threads
-	const size_t threadsCount = (threadDisp && !threadDisp->isMotherOfTheCurrentThread())
+	const size_t threadsCount = (!enforceSingleThread && threadDisp && !threadDisp->isMotherOfTheCurrentThread())
 		? CompVThreadDispatcher::guessNumThreadsDividingAcrossY(widthInSamples, heightInSamples, maxThreads, COMPV_IMAGE_CONV_MIN_SAMPLES_PER_THREAD)
 		: 1;
 

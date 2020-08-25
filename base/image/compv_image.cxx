@@ -659,24 +659,24 @@ COMPV_ERROR_CODE CompVImage::remap(const CompVMatPtr& imageIn, CompVMatPtrPtr ou
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVImage::convert(const CompVMatPtr& imageIn, COMPV_SUBTYPE pixelFormatOut, CompVMatPtrPtr imageOut)
+COMPV_ERROR_CODE CompVImage::convert(const CompVMatPtr& imageIn, COMPV_SUBTYPE pixelFormatOut, CompVMatPtrPtr imageOut, const bool enforceSingleThread COMPV_DEFAULT(false))
 {
 	COMPV_CHECK_EXP_RETURN(!imageIn || imageIn->isEmpty() || !imageOut || imageIn->type() != COMPV_MAT_TYPE_PIXELS, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	switch (pixelFormatOut) {
 	case COMPV_SUBTYPE_PIXELS_YUV444P:
-		COMPV_CHECK_CODE_RETURN(CompVImageConvToYUV444P::process(imageIn, imageOut));
+		COMPV_CHECK_CODE_RETURN(CompVImageConvToYUV444P::process(imageIn, imageOut, enforceSingleThread));
 		return COMPV_ERROR_CODE_S_OK;
 	case COMPV_SUBTYPE_PIXELS_Y:
-		COMPV_CHECK_CODE_RETURN(CompVImageConvToGrayscale::process(imageIn, imageOut));
+		COMPV_CHECK_CODE_RETURN(CompVImageConvToGrayscale::process(imageIn, imageOut, enforceSingleThread));
 		return COMPV_ERROR_CODE_S_OK;
 	case COMPV_SUBTYPE_PIXELS_RGBA32:
 	case COMPV_SUBTYPE_PIXELS_BGRA32:
 	case COMPV_SUBTYPE_PIXELS_RGB24:
 	case COMPV_SUBTYPE_PIXELS_BGR24:
-		COMPV_CHECK_CODE_RETURN(CompVImageConvToRGBx::process(imageIn, pixelFormatOut, imageOut));
+		COMPV_CHECK_CODE_RETURN(CompVImageConvToRGBx::process(imageIn, pixelFormatOut, imageOut, enforceSingleThread));
 		return COMPV_ERROR_CODE_S_OK;
 	case COMPV_SUBTYPE_PIXELS_HSV:
-		COMPV_CHECK_CODE_RETURN(CompVImageConvToHSV::process(imageIn, imageOut));
+		COMPV_CHECK_CODE_RETURN(CompVImageConvToHSV::process(imageIn, imageOut, enforceSingleThread));
 		return COMPV_ERROR_CODE_S_OK;
 	default:
 		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Chroma conversion not supported: %s -> %s", CompVGetSubtypeString(imageIn->subType()), CompVGetSubtypeString(pixelFormatOut));
@@ -684,19 +684,19 @@ COMPV_ERROR_CODE CompVImage::convert(const CompVMatPtr& imageIn, COMPV_SUBTYPE p
 	}
 }
 
-COMPV_ERROR_CODE CompVImage::convertGrayscale(const CompVMatPtr& imageIn, CompVMatPtrPtr imageGray)
+COMPV_ERROR_CODE CompVImage::convertGrayscale(const CompVMatPtr& imageIn, CompVMatPtrPtr imageGray, const bool enforceSingleThread COMPV_DEFAULT(false))
 {
 	// Input parameters will be checked in 'convert'
-	COMPV_CHECK_CODE_RETURN(CompVImage::convert(imageIn, COMPV_SUBTYPE_PIXELS_Y, imageGray));
+	COMPV_CHECK_CODE_RETURN(CompVImage::convert(imageIn, COMPV_SUBTYPE_PIXELS_Y, imageGray, enforceSingleThread));
 	return COMPV_ERROR_CODE_S_OK;
 }
 
 // This function is faster when the input data is planar (or semi-planar) YUV as we'll just reshape the data.
 // It requires the input to be equal to the output to avoid copying, this is whay we require a single parameter
-COMPV_ERROR_CODE CompVImage::convertGrayscaleFast(CompVMatPtr& imageInOut)
+COMPV_ERROR_CODE CompVImage::convertGrayscaleFast(CompVMatPtr& imageInOut, const bool enforceSingleThread COMPV_DEFAULT(false))
 {
 	// Input parameters will be checked in 'convert'
-	COMPV_CHECK_CODE_RETURN(CompVImage::convert(imageInOut, COMPV_SUBTYPE_PIXELS_Y, &imageInOut));
+	COMPV_CHECK_CODE_RETURN(CompVImage::convert(imageInOut, COMPV_SUBTYPE_PIXELS_Y, &imageInOut, enforceSingleThread));
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -905,7 +905,7 @@ COMPV_ERROR_CODE CompVImage::scale(const CompVMatPtr& imageIn, CompVMatPtrPtr im
 }
 
 // Used by many deep-learning function to scale an image to a fixed size and convert it to rgb24
-COMPV_ERROR_CODE CompVImage::scaleYuvToRGB24(const CompVMatPtr& imageIn, CompVMatPtrPtr imageOut, const size_t widthOut, const size_t heightOut, const COMPV_INTERPOLATION_TYPE scaleType COMPV_DEFAULT(COMPV_INTERPOLATION_TYPE_BILINEAR))
+COMPV_ERROR_CODE CompVImage::scaleYuvToRGB24(const CompVMatPtr& imageIn, CompVMatPtrPtr imageOut, const size_t widthOut, const size_t heightOut, const COMPV_INTERPOLATION_TYPE scaleType COMPV_DEFAULT(COMPV_INTERPOLATION_TYPE_BILINEAR), const bool enforceSingleThread COMPV_DEFAULT(false))
 {
 	COMPV_CHECK_EXP_RETURN(!imageIn || !imageOut || !widthOut || !heightOut, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	
@@ -927,7 +927,7 @@ COMPV_ERROR_CODE CompVImage::scaleYuvToRGB24(const CompVMatPtr& imageIn, CompVMa
 
 	// Convert only if size matches
 	if (imageIn->cols() == widthOut && imageIn->rows() == heightOut) {
-		COMPV_CHECK_CODE_RETURN(CompVImage::convert(imageIn, COMPV_SUBTYPE_PIXELS_RGB24, imageOut));
+		COMPV_CHECK_CODE_RETURN(CompVImage::convert(imageIn, COMPV_SUBTYPE_PIXELS_RGB24, imageOut, enforceSingleThread));
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
@@ -935,7 +935,7 @@ COMPV_ERROR_CODE CompVImage::scaleYuvToRGB24(const CompVMatPtr& imageIn, CompVMa
 	const bool packedUV = (subType == COMPV_SUBTYPE_PIXELS_NV12 || subType == COMPV_SUBTYPE_PIXELS_NV21); // Android Camera == NV21
 	
 	CompVMatPtrVector planes;
-	COMPV_CHECK_CODE_RETURN(CompVImage::unpack(imageIn, planes));
+	COMPV_CHECK_CODE_RETURN(CompVImage::unpack(imageIn, planes, enforceSingleThread));
 	auto funcPtr = [&](const size_t start, const size_t end) -> COMPV_ERROR_CODE {
 		for (size_t i = start; i < end; ++i) {
 			// Output size for current plane
@@ -943,14 +943,14 @@ COMPV_ERROR_CODE CompVImage::scaleYuvToRGB24(const CompVMatPtr& imageIn, CompVMa
 			size_t plane_widthOut, plane_heightOut;
 			COMPV_CHECK_CODE_ASSERT(CompVImageUtils::planeSizeForPixelFormat(subType, planeId, widthOut, heightOut, &plane_widthOut, &plane_heightOut));
 			// Scale
-			COMPV_CHECK_CODE_RETURN(CompVImage::scale(planes[i], &planes[i], plane_widthOut, plane_heightOut, scaleType));
+			COMPV_CHECK_CODE_RETURN(CompVImage::scale(planes[i], &planes[i], plane_widthOut, plane_heightOut, scaleType, enforceSingleThread));
 		}
 		return COMPV_ERROR_CODE_S_OK;
 	};
 	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
 		funcPtr,
 		1,
-		planes.size(),
+		enforceSingleThread ? SIZE_MAX : planes.size(),
 		1
 	));
 
@@ -968,7 +968,8 @@ COMPV_ERROR_CODE CompVImage::scaleYuvToRGB24(const CompVMatPtr& imageIn, CompVMa
 				COMPV_CHECK_CODE_RETURN(CompVImageUtils::copy( // will copy minimum size
 					COMPV_SUBTYPE_PIXELS_Y,
 					planes[planeId]->ptr<const void>(), planes[planeId]->cols(), planes[planeId]->rows(), planes[planeId]->stride(),
-					yuvPlanar->ptr<void>(0, 0, planeId), yuvPlanar->cols(planeId), yuvPlanar->rows(planeId), yuvPlanar->stride(planeId)
+					yuvPlanar->ptr<void>(0, 0, planeId), yuvPlanar->cols(planeId), yuvPlanar->rows(planeId), yuvPlanar->stride(planeId),
+					enforceSingleThread
 				));
 			}
 			return COMPV_ERROR_CODE_S_OK;
@@ -976,16 +977,16 @@ COMPV_ERROR_CODE CompVImage::scaleYuvToRGB24(const CompVMatPtr& imageIn, CompVMa
 		COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
 			funcPtr,
 			1,
-			planes.size(),
+			enforceSingleThread ? SIZE_MAX : planes.size(),
 			1
 		));
 	}
 	else {
-		COMPV_CHECK_CODE_RETURN(CompVImage::pack(planes, subType, &yuvPlanar));
+		COMPV_CHECK_CODE_RETURN(CompVImage::pack(planes, subType, &yuvPlanar, enforceSingleThread));
 	}
 	
 	// Convert from planar YUV to RGB24
-	COMPV_CHECK_CODE_RETURN(CompVImage::convert(yuvPlanar, COMPV_SUBTYPE_PIXELS_RGB24, imageOut));
+	COMPV_CHECK_CODE_RETURN(CompVImage::convert(yuvPlanar, COMPV_SUBTYPE_PIXELS_RGB24, imageOut, enforceSingleThread));
 	COMPV_ASSERT((*imageOut)->cols() == widthOut && (*imageOut)->rows() == heightOut);
 		
 	return COMPV_ERROR_CODE_S_OK;
