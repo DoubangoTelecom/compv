@@ -1,6 +1,6 @@
   - Hand-written assembler
   - SIMD (SSE, AVX, NEON)
-  - GPGPU
+  - GPGPU (CUDA, OpenVINO, OpenCL, OpenGL, NNAPI and Metal)
   - Smart multithreading (minimal context switch, no false-sharing, no boundaries crossing..)
   - Smart memory access (data alignment, cache pre-load, cache blocking, non-temporal load/store for minimal cache pollution, smart reference counting...)
   - Fixed-point math
