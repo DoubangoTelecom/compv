@@ -941,7 +941,7 @@ COMPV_ERROR_CODE CompVImage::scaleYuvToRGB24(const CompVMatPtr& imageIn, CompVMa
 			// Output size for current plane
 			const size_t planeId = (packedUV && i == 2) ? COMPV_PLANE_UV : i;
 			size_t plane_widthOut, plane_heightOut;
-			COMPV_CHECK_CODE_ASSERT(CompVImageUtils::planeSizeForPixelFormat(subType, planeId, widthOut, heightOut, &plane_widthOut, &plane_heightOut));
+			COMPV_CHECK_CODE_RETURN(CompVImageUtils::planeSizeForPixelFormat(subType, planeId, widthOut, heightOut, &plane_widthOut, &plane_heightOut));
 			// Scale
 			COMPV_CHECK_CODE_RETURN(CompVImage::scale(planes[i], &planes[i], plane_widthOut, plane_heightOut, scaleType, enforceSingleThread));
 		}
