@@ -950,8 +950,8 @@ COMPV_ERROR_CODE CompVImage::scaleYuvToRGB24(const CompVMatPtr& imageIn, CompVMa
 	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
 		funcPtr,
 		1,
-		enforceSingleThread ? SIZE_MAX : planes.size(),
-		1
+		planes.size(),
+		enforceSingleThread ? SIZE_MAX : 1
 	));
 
 	// Convert to planar (faster to convert to RGB24) if packed
@@ -977,8 +977,8 @@ COMPV_ERROR_CODE CompVImage::scaleYuvToRGB24(const CompVMatPtr& imageIn, CompVMa
 		COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
 			funcPtr,
 			1,
-			enforceSingleThread ? SIZE_MAX : planes.size(),
-			1
+			planes.size(),
+			enforceSingleThread ? SIZE_MAX : 1
 		));
 	}
 	else {
