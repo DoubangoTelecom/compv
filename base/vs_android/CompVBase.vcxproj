@@ -701,6 +701,12 @@
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">-msse2 %(AdditionalOptions)</AdditionalOptions>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">-msse2 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
+    <ClCompile Include="..\math\intrin\x86\compv_math_op_sub_intrin_avx.cxx">
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">-mavx %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x86'">-mavx %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">-mavx %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">-mavx %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
     <ClCompile Include="..\math\intrin\x86\compv_math_op_sub_intrin_sse2.cxx">
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">-msse2 %(AdditionalOptions)</AdditionalOptions>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x86'">-msse2 %(AdditionalOptions)</AdditionalOptions>
