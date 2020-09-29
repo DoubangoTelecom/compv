@@ -1,5 +1,6 @@
   This is our R&D Computer Vision project. For now there is no documentation and it's not intended to be used by other companies.
   
+  ### Insanely faaaaast ###
   - Hand-written assembler (10% of the code)
   - SIMD (SSE, AVX, NEON)
   - GPGPU (CUDA, OpenVINO, OpenCL, OpenGL, NNAPI and Metal)
