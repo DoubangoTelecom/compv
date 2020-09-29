@@ -1,6 +1,8 @@
   This is our R&D Computer Vision project. For now there is no documentation and it's not intended to be used by other companies.
   
-  Speed comparison against OpenCV: [speed_compare (core i7 quad@4ghz).txt](speed_compare (core i7 quad@4ghz).txt)
+  Speed comparison against OpenCV: [speed_compare \(core i7 quad@4ghz\).txt](speed_compare (core i7 quad@4ghz).txt)
+  
+  <hr />
   
   ### Insanely faaaaast ###
   - Hand-written assembler (10% of the code)
