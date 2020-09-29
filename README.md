@@ -1,4 +1,4 @@
-  - Hand-written assembler
+  - Hand-written assembler (10% of the code)
   - SIMD (SSE, AVX, NEON)
   - GPGPU (CUDA, OpenVINO, OpenCL, OpenGL, NNAPI and Metal)
   - Smart multithreading (minimal context switch, no false-sharing, no boundaries crossing..)
