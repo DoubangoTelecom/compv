@@ -65,12 +65,11 @@ COMPV_ERROR_CODE CompVSharedLib::open(const char* filePath, void** handle, bool 
 			return COMPV_ERROR_CODE_E_NOT_FOUND;
 		}
 #if COMPV_OS_WINDOWS
-		const DWORD error = GetLastError();
+		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Failed to load library with path=%s, Error: 0x%08x", filePath, GetLastError());
 #else
-		const int error = -1;
+		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Failed to load library with path=%s, Error: %s", filePath, dlerror());
 #endif
-        COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Failed to load library with path=%s, Error: 0x%08x", filePath, error);
-        COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_FOUND);
+        COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_FOUND); 
     }
 
     *handle = handle_;
