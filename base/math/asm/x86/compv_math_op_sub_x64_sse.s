@@ -13,6 +13,8 @@
 COMPV_YASM_DEFAULT_REL
 
 global sym(CompVMathOpSubSub_32f32f32f_Asm_X64_SSE2)
+global sym(CompVMathOpSubSubMul_32f32f32f_Asm_X64_SSE2)
+
 
 section .data
 
@@ -120,6 +122,133 @@ sym(CompVMathOpSubSub_32f32f32f_Asm_X64_SSE2):
 	%undef height
 	%undef Astride
 	%undef Bstride
+	%undef Rstride
+
+	%undef width16
+	%undef i
+
+	;; begin epilog ;;
+	pop rbx
+	pop rdi
+	pop rsi
+	COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	ret
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> COMPV_ALIGNED(SSE) const compv_float32_t* Aptr
+; arg(1) -> const compv_float32_t* subVal1
+; arg(2) -> const compv_float32_t* mulVal1
+; arg(3) -> COMPV_ALIGNED(SSE) compv_float32_t* Rptr
+; arg(4) -> const compv_uscalar_t width
+; arg(5) -> const compv_uscalar_t height
+; arg(6) -> COMPV_ALIGNED(SSE) const compv_uscalar_t Astride
+; arg(7) -> COMPV_ALIGNED(SSE) const compv_uscalar_t Rstride
+sym(CompVMathOpSubSubMul_32f32f32f_Asm_X64_SSE2):
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 8
+	push rsi
+	push rdi
+	push rbx
+	;; end prolog ;;
+
+	%define Aptr		rax
+	%define subVal1		rcx
+	%define mulVal1		rdx
+	%define Rptr		rsi
+	%define width		rdi
+	%define height		rbx
+	%define Astride		r8
+	%define Rstride		r9
+
+	%define width16		r10
+	%define i			r11
+
+	mov Aptr, arg(0)
+	mov subVal1, arg(1)
+	mov mulVal1, arg(2)
+	mov Rptr, arg(3)
+	mov width, arg(4)
+	mov height, arg(5)
+	mov Astride, arg(6)
+	mov Rstride, arg(7) 
+
+	mov width16, width
+	and width16, -16
+
+	lea Astride, [Astride * COMPV_YASM_FLOAT32_SZ_BYTES]
+	lea Rstride, [Rstride * COMPV_YASM_FLOAT32_SZ_BYTES]
+
+	movss xmm4, [subVal1]
+	movss xmm5, [mulVal1]
+	shufps xmm4, xmm4, 0x0
+	shufps xmm5, xmm5, 0x0
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	; for (compv_uscalar_t j = 0; j < height; ++j)
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	.LoopHeight:
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; for (i = 0; i < width16; i += 16) 
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		xor i, i
+		test width16, width16
+		jz .EndOf_LoopWidth16
+		.LoopWidth16:
+			movaps xmm0, [Aptr + (i + 0)*COMPV_YASM_FLOAT32_SZ_BYTES]
+			movaps xmm1, [Aptr + (i + 4)*COMPV_YASM_FLOAT32_SZ_BYTES]
+			movaps xmm2, [Aptr + (i + 8)*COMPV_YASM_FLOAT32_SZ_BYTES]
+			movaps xmm3, [Aptr + (i + 12)*COMPV_YASM_FLOAT32_SZ_BYTES]
+			subps xmm0, xmm4
+			subps xmm1, xmm4
+			subps xmm2, xmm4
+			subps xmm3, xmm4
+			mulps xmm0, xmm5
+			mulps xmm1, xmm5
+			mulps xmm2, xmm5
+			mulps xmm3, xmm5
+			movaps [Rptr + (i + 0)*COMPV_YASM_FLOAT32_SZ_BYTES], xmm0
+			movaps [Rptr + (i + 4)*COMPV_YASM_FLOAT32_SZ_BYTES], xmm1
+			movaps [Rptr + (i + 8)*COMPV_YASM_FLOAT32_SZ_BYTES], xmm2
+			movaps [Rptr + (i + 12)*COMPV_YASM_FLOAT32_SZ_BYTES], xmm3
+			add i, 16
+			cmp i, width16
+			jl .LoopWidth16
+		.EndOf_LoopWidth16:
+
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; for (; i < width; i += 4)
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		cmp i, width
+		jge .EndOf_LoopWidth4
+		.LoopWidth4:
+			movaps xmm0, [Aptr + (i + 0)*COMPV_YASM_FLOAT32_SZ_BYTES]
+			subps xmm0, xmm4
+			mulps xmm0, xmm5
+			movaps [Rptr + (i + 0)*COMPV_YASM_FLOAT32_SZ_BYTES], xmm0
+			add i, 4
+			cmp i, width
+			jl .LoopWidth4
+		.EndOf_LoopWidth4:
+
+		dec height
+		lea Aptr, [Aptr + Astride]
+		lea Rptr, [Rptr + Rstride]
+		jnz .LoopHeight
+	.EndOf_LoopHeight:
+
+	%undef Aptr
+	%undef subVal1
+	%undef mulVal1
+	%undef Rptr
+	%undef width
+	%undef height
+	%undef Astride
 	%undef Rstride
 
 	%undef width16

@@ -24,6 +24,7 @@
     <ClCompile Include="..\..\exp.cxx" />
     <ClCompile Include="..\..\scale.cxx" />
     <ClCompile Include="..\..\activation_functions.cxx" />
+    <ClCompile Include="..\..\matrix_ops_submul.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\tests_common.h" />

@@ -6,6 +6,7 @@
 #define TEST_MATRIX_OPS_MUL_AB				0
 #define TEST_MATRIX_OPS_MUL_GA				0
 #define TEST_MATRIX_OPS_IS_SYMETRIC			0
+#define TEST_MATRIX_OPS_SUBMUL				1
 #define TEST_DOT							0
 #define TEST_EXP							0
 #define TEST_SCALE							0
@@ -32,7 +33,7 @@
 #define TEST_ML_SVM_PREDICT					0
 #define TEST_ML_SVM_RBF						0
 #define TEST_PCA							0
-#define TEST_ACTIVATION_FUNCTIONS			1
+#define TEST_ACTIVATION_FUNCTIONS			0
 
 
 /* Entry point function */
@@ -57,6 +58,10 @@ compv_main()
 #if TEST_MATRIX_OPS_IS_SYMETRIC
 		extern COMPV_ERROR_CODE matrix_ops_isSymetric();
 		COMPV_CHECK_CODE_BAIL(err = matrix_ops_isSymetric(), TAG_TEST "Math matrix isSymetric test failed");
+#endif
+#if TEST_MATRIX_OPS_SUBMUL
+		extern COMPV_ERROR_CODE matrix_ops_submul();
+		COMPV_CHECK_CODE_BAIL(err = matrix_ops_submul(), TAG_TEST "Math matrix subMul test failed");
 #endif
 #if TEST_DOT
 		extern COMPV_ERROR_CODE dot();

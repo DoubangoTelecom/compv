@@ -52,9 +52,6 @@ void CompVMathOpSubSubMul_32f32f32f_Intrin_SSE2(
 	COMPV_ALIGNED(SSE) const compv_uscalar_t Rstride
 )
 {
-#if 0 // TODO(dmi): No asm code yet
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No ASM code");
-#endif
 	COMPV_DEBUG_INFO_CHECK_SSE2();
 	const compv_uscalar_t width16 = width & -16;
 	const __m128 vecSubVal = _mm_load1_ps(subVal1);

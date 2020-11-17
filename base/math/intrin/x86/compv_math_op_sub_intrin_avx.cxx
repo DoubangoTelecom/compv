@@ -25,9 +25,6 @@ void CompVMathOpSubSubMul_32f32f32f_Intrin_AVX(
 	COMPV_ALIGNED(AVX) const compv_uscalar_t Rstride
 )
 {
-#if 0 // TODO(dmi): No asm code yet
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No ASM code");
-#endif
 	COMPV_DEBUG_INFO_CHECK_AVX();
 	const compv_uscalar_t width32 = width & -32;
 	const __m256 vecSubVal = _mm256_broadcast_ss(subVal1);

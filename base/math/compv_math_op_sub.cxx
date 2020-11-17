@@ -20,7 +20,10 @@ COMPV_NAMESPACE_BEGIN()
 
 #if COMPV_ASM && COMPV_ARCH_X64
 COMPV_EXTERNC void CompVMathOpSubSub_32f32f32f_Asm_X64_SSE2(COMPV_ALIGNED(SSE) const compv_float32_t* Aptr, COMPV_ALIGNED(SSE) const compv_float32_t* Bptr, COMPV_ALIGNED(SSE) compv_float32_t* Rptr, const compv_uscalar_t width, const compv_uscalar_t height, COMPV_ALIGNED(SSE) const compv_uscalar_t Astride, COMPV_ALIGNED(SSE) const compv_uscalar_t Bstride, COMPV_ALIGNED(SSE) const compv_uscalar_t Rstride);
+COMPV_EXTERNC void CompVMathOpSubSubMul_32f32f32f_Asm_X64_SSE2(COMPV_ALIGNED(SSE) const compv_float32_t* Aptr, const compv_float32_t* subVal1, const compv_float32_t* mulVal1, COMPV_ALIGNED(SSE) compv_float32_t* Rptr, const compv_uscalar_t width, const compv_uscalar_t height, COMPV_ALIGNED(SSE) const compv_uscalar_t Astride, COMPV_ALIGNED(SSE) const compv_uscalar_t Rstride);
+
 COMPV_EXTERNC void CompVMathOpSubSub_32f32f32f_Asm_X64_AVX(COMPV_ALIGNED(AVX) const compv_float32_t* Aptr, COMPV_ALIGNED(AVX) const compv_float32_t* Bptr, COMPV_ALIGNED(AVX) compv_float32_t* Rptr, const compv_uscalar_t width, const compv_uscalar_t height, COMPV_ALIGNED(AVX) const compv_uscalar_t Astride, COMPV_ALIGNED(AVX) const compv_uscalar_t Bstride, COMPV_ALIGNED(AVX) const compv_uscalar_t Rstride);
+COMPV_EXTERNC void CompVMathOpSubSubMul_32f32f32f_Asm_X64_AVX(COMPV_ALIGNED(AVX) const compv_float32_t* Aptr, const compv_float32_t* subVal1, const compv_float32_t* mulVal1, COMPV_ALIGNED(AVX) compv_float32_t* Rptr, const compv_uscalar_t width, const compv_uscalar_t height, COMPV_ALIGNED(AVX) const compv_uscalar_t Astride, COMPV_ALIGNED(AVX) const compv_uscalar_t Rstride);
 #endif /* COMPV_ASM && COMPV_ARCH_X64 */
 
 #if COMPV_ASM && COMPV_ARCH_ARM32
@@ -29,6 +32,7 @@ COMPV_EXTERNC void CompVMathOpSubSub_32f32f32f_Asm_NEON32(COMPV_ALIGNED(NEON) co
 
 #if COMPV_ASM && COMPV_ARCH_ARM64
 COMPV_EXTERNC void CompVMathOpSubSub_32f32f32f_Asm_NEON64(COMPV_ALIGNED(NEON) const compv_float32_t* Aptr, COMPV_ALIGNED(NEON) const compv_float32_t* Bptr, COMPV_ALIGNED(NEON) compv_float32_t* Rptr, const compv_uscalar_t width, const compv_uscalar_t height, COMPV_ALIGNED(NEON) const compv_uscalar_t Astride, COMPV_ALIGNED(SSE) const compv_uscalar_t Bstride, COMPV_ALIGNED(NEON) const compv_uscalar_t Rstride);
+COMPV_EXTERNC void CompVMathOpSubSubMul_32f32f32f_Asm_NEON64(COMPV_ALIGNED(NEON) const compv_float32_t* Aptr, const compv_float32_t* subVal1, const compv_float32_t* mulVal1, COMPV_ALIGNED(NEON) compv_float32_t* Rptr, const compv_uscalar_t width, const compv_uscalar_t height, COMPV_ALIGNED(NEON) const compv_uscalar_t Astride, COMPV_ALIGNED(NEON) const compv_uscalar_t Rstride);
 #endif /* COMPV_ASM && COMPV_ARCH_ARM64 */
 
 template<typename T>
@@ -169,17 +173,17 @@ static void CompVMathOpSubSubMul(const CompVMatPtr& A, const double& subVal_, co
 #if COMPV_ARCH_X86
 		if (CompVCpu::isEnabled(kCpuFlagSSE2) && A->isAlignedSSE() && R->isAlignedSSE()) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathOpSubSubMul_32f32f32f = CompVMathOpSubSubMul_32f32f32f_Intrin_SSE2);
-			//COMPV_EXEC_IFDEF_ASM_X64(CompVMathOpSubSubMul_32f32f32f = CompVMathOpSubSubMul_32f32f32f_Asm_X64_SSE2);
+			COMPV_EXEC_IFDEF_ASM_X64(CompVMathOpSubSubMul_32f32f32f = CompVMathOpSubSubMul_32f32f32f_Asm_X64_SSE2);
 		}
 		if (CompVCpu::isEnabled(kCpuFlagAVX) && A->isAlignedAVX() && R->isAlignedAVX()) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathOpSubSubMul_32f32f32f = CompVMathOpSubSubMul_32f32f32f_Intrin_AVX);
-			//COMPV_EXEC_IFDEF_ASM_X64(CompVMathOpSubSubMul_32f32f32f = CompVMathOpSubSubMul_32f32f32f_Asm_X64_AVX);
+			COMPV_EXEC_IFDEF_ASM_X64(CompVMathOpSubSubMul_32f32f32f = CompVMathOpSubSubMul_32f32f32f_Asm_X64_AVX);
 		}
 #elif COMPV_ARCH_ARM
 		if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && A->isAlignedNEON() && R->isAlignedNEON()) {
-			//COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMathOpSubSubMul_32f32f32f = CompVMathOpSubSubMul_32f32f32f_Intrin_NEON);
-			//COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathOpSubSubMul_32f32f32f = CompVMathOpSubSubMul_32f32f32f_Asm_NEON32);
-			//COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathOpSubSubMul_32f32f32f = CompVMathOpSubSubMul_32f32f32f_Asm_NEON64);
+			COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMathOpSubSubMul_32f32f32f = CompVMathOpSubSubMul_32f32f32f_Intrin_NEON);
+			//COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathOpSubSubMul_32f32f32f = CompVMathOpSubSubMul_32f32f32f_Asm_NEON32); // Not used on ARM32 (Tensorflow)
+			COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathOpSubSubMul_32f32f32f = CompVMathOpSubSubMul_32f32f32f_Asm_NEON64); // used on Jetson to norm input data for NVIDIA TensorRT
 		}
 #endif
 		if (CompVMathOpSubSubMul_32f32f32f) {

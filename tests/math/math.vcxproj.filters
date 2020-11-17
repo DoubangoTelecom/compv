@@ -84,5 +84,8 @@
     <ClCompile Include="activation_functions.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="matrix_ops_submul.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
