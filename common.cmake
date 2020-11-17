@@ -80,6 +80,9 @@ endif ()
 # NVIDIA Jetson
 if ("${TARGET_OS}" MATCHES "JETSON")
 	set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCOMPV_OS_JETSON=1")
+    if ("${JETSON_TFTRT}" MATCHES "YES")
+	   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCOMPV_HAVE_TFTRT=1")
+	endif()
 endif ()
 
 # ARM64 cross compilation
