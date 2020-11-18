@@ -219,7 +219,7 @@ sym(CompVMathOpSubSubMul_32f32f32f_Asm_X64_AVX):
 			vmovaps [Rptr + (i + 8)*COMPV_YASM_FLOAT32_SZ_BYTES], ymm1
 			vmovaps [Rptr + (i + 16)*COMPV_YASM_FLOAT32_SZ_BYTES], ymm2
 			vmovaps [Rptr + (i + 24)*COMPV_YASM_FLOAT32_SZ_BYTES], ymm3
-			add i, 16
+			add i, 32
 			cmp i, width32
 			jl .LoopWidth32
 		.EndOf_LoopWidth32:
