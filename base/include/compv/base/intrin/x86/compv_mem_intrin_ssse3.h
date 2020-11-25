@@ -27,6 +27,11 @@ void CompVMemUnpack3_Intrin_SSSE3(
 	COMPV_ALIGNED(SSE) const compv_uint8x3_t* srcPtr, 
 	compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
 
+void CompVMemUnpack3_SrcPtrNotAligned_Intrin_SSSE3(
+	COMPV_ALIGNED(SSE) uint8_t* dstPt0, COMPV_ALIGNED(SSE) uint8_t* dstPt1, COMPV_ALIGNED(SSE) uint8_t* dstPt2,
+	const compv_uint8x3_t* srcPtr,
+	compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
+
 void CompVMemUnpack2_Intrin_SSSE3(
 	COMPV_ALIGNED(SSE) uint8_t* dstPt0, COMPV_ALIGNED(SSE) uint8_t* dstPt1, COMPV_ALIGNED(SSE) const compv_uint8x2_t* srcPtr,
 	compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);

@@ -22,7 +22,7 @@ requiring 128 Bytes (4 YMM registers)
 The aplha channel will contain zeros instead of 0xff because this macro is used to fetch samples in place
 */
 #define COMPV_32xRGB_TO_32xRGBA_AVX2_FAST(rgb24Ptr_, ymm0RGBA_, ymm1RGBA_, ymm2RGBA_, ymm3RGBA_, ymmABCDDEFG_, ymmMaskRgbToRgba_) \
-	ymm0RGBA_ = _mm256_shuffle_epi8(_mm256_permutevar8x32_epi32(_mm256_load_si256(reinterpret_cast<const __m256i*>(rgb24Ptr_ + 0)), ymmABCDDEFG_), ymmMaskRgbToRgba_); \
+	ymm0RGBA_ = _mm256_shuffle_epi8(_mm256_permutevar8x32_epi32(_mm256_loadu_si256(reinterpret_cast<const __m256i*>(rgb24Ptr_ + 0)), ymmABCDDEFG_), ymmMaskRgbToRgba_); \
 	ymm1RGBA_ = _mm256_shuffle_epi8(_mm256_permutevar8x32_epi32(_mm256_loadu_si256(reinterpret_cast<const __m256i*>(rgb24Ptr_ + 24)), ymmABCDDEFG_), ymmMaskRgbToRgba_); \
 	ymm2RGBA_ = _mm256_shuffle_epi8(_mm256_permutevar8x32_epi32(_mm256_loadu_si256(reinterpret_cast<const __m256i*>(rgb24Ptr_ + 48)), ymmABCDDEFG_), ymmMaskRgbToRgba_); \
 	ymm3RGBA_ = _mm256_shuffle_epi8(_mm256_permutevar8x32_epi32(_mm256_loadu_si256(reinterpret_cast<const __m256i*>(rgb24Ptr_ + 72)), ymmABCDDEFG_), ymmMaskRgbToRgba_);
@@ -177,10 +177,12 @@ The aplha channel will contain zeros instead of 0xff because this macro is used 
 
 COMPV_NAMESPACE_BEGIN()
 
+
+// No need for 'rgb24Ptr' to be aligned. ASM code uses aligned load and is faster.
 #if defined(__INTEL_COMPILER)
 #	pragma intel optimization_parameter target_arch=avx2
 #endif
-void CompVImageConvRgb24family_to_y_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t* rgb24Ptr, COMPV_ALIGNED(AVX) uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride,
+void CompVImageConvRgb24family_to_y_Intrin_AVX2(const uint8_t* rgb24Ptr, COMPV_ALIGNED(AVX) uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride,
 	COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_YCoeffs8)
 {
 	COMPV_DEBUG_INFO_CHECK_AVX2();
@@ -210,10 +212,11 @@ void CompVImageConvRgb24family_to_y_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t
 	_mm256_zeroupper();
 }
 
+// No need for 'rgb32Ptr' to be aligned. ASM code uses aligned load and is faster.
 #if defined(__INTEL_COMPILER)
 #	pragma intel optimization_parameter target_arch=avx2
 #endif
-void CompVImageConvRgb32family_to_y_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t* rgb32Ptr, COMPV_ALIGNED(AVX) uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride,
+void CompVImageConvRgb32family_to_y_Intrin_AVX2(const uint8_t* rgb32Ptr, COMPV_ALIGNED(AVX) uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride,
 	COMPV_ALIGNED(DEFAULT) const int8_t* kRGBAfamilyToYUV_YCoeffs8)
 {
 	COMPV_DEBUG_INFO_CHECK_AVX2();
@@ -228,10 +231,10 @@ void CompVImageConvRgb32family_to_y_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t
 	// Y = (((33 * R) + (65 * G) + (13 * B))) >> 7 + 16
 	for (j = 0; j < height; ++j) {
 		for (i = 0; i < width; i += 32) {
-			ymm0RGBA = _mm256_load_si256(reinterpret_cast<const __m256i*>(rgb32Ptr + 0));
-			ymm1RGBA = _mm256_load_si256(reinterpret_cast<const __m256i*>(rgb32Ptr + 32));
-			ymm2RGBA = _mm256_load_si256(reinterpret_cast<const __m256i*>(rgb32Ptr + 64));
-			ymm3RGBA = _mm256_load_si256(reinterpret_cast<const __m256i*>(rgb32Ptr + 96));
+			ymm0RGBA = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(rgb32Ptr + 0));
+			ymm1RGBA = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(rgb32Ptr + 32));
+			ymm2RGBA = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(rgb32Ptr + 64));
+			ymm3RGBA = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(rgb32Ptr + 96));
 			COMPV_32xRGBA_TO_32xLUMA_AVX2(ymm0RGBA, ymm1RGBA, ymm2RGBA, ymm3RGBA, ymmYCoeffs, ymm16, ymmAEBFCGDH, outYPtr);
 			outYPtr += 32;
 			rgb32Ptr += 128;
@@ -260,10 +263,11 @@ void CompVImageConvRgb565befamily_to_y_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint
 	RGB565_TO_Y_AVX2(BIG);
 }
 
+// No need for 'rgb24Ptr' to be aligned. ASM code uses aligned load and is faster.
 #if defined(__INTEL_COMPILER)
 #	pragma intel optimization_parameter target_arch=avx
 #endif
-void CompVImageConvRgb24family_to_uv_planar_11_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t* rgb24Ptr, COMPV_ALIGNED(AVX) uint8_t* outUPtr, COMPV_ALIGNED(AVX) uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride,
+void CompVImageConvRgb24family_to_uv_planar_11_Intrin_AVX2(const uint8_t* rgb24Ptr, COMPV_ALIGNED(AVX) uint8_t* outUPtr, COMPV_ALIGNED(AVX) uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride,
 	COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_UCoeffs8, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_VCoeffs8)
 {
 	COMPV_DEBUG_INFO_CHECK_AVX2();
@@ -299,10 +303,11 @@ void CompVImageConvRgb24family_to_uv_planar_11_Intrin_AVX2(COMPV_ALIGNED(AVX) co
 	_mm256_zeroupper();
 }
 
+// No need for 'rgb32Ptr' to be aligned. ASM code uses aligned load and is faster.
 #if defined(__INTEL_COMPILER)
 #	pragma intel optimization_parameter target_arch=avx2
 #endif
-void CompVImageConvRgb32family_to_uv_planar_11_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t* rgb32Ptr, COMPV_ALIGNED(AVX) uint8_t* outUPtr, COMPV_ALIGNED(AVX) uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride,
+void CompVImageConvRgb32family_to_uv_planar_11_Intrin_AVX2(const uint8_t* rgb32Ptr, COMPV_ALIGNED(AVX) uint8_t* outUPtr, COMPV_ALIGNED(AVX) uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride,
 	COMPV_ALIGNED(DEFAULT) const int8_t* kRGBAfamilyToYUV_UCoeffs8, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBAfamilyToYUV_VCoeffs8)
 {
 	COMPV_DEBUG_INFO_CHECK_AVX2();
@@ -319,10 +324,10 @@ void CompVImageConvRgb32family_to_uv_planar_11_Intrin_AVX2(COMPV_ALIGNED(AVX) co
 	// V = (((112 * R) + (-94 * G) + (-18 * B))) >> 8 + 128
 	for (j = 0; j < height; ++j) {
 		for (i = 0; i < width; i += 32) {
-			ymm0RGBA = _mm256_load_si256(reinterpret_cast<const __m256i*>(rgb32Ptr + 0));
-			ymm1RGBA = _mm256_load_si256(reinterpret_cast<const __m256i*>(rgb32Ptr + 32));
-			ymm2RGBA = _mm256_load_si256(reinterpret_cast<const __m256i*>(rgb32Ptr + 64));
-			ymm3RGBA = _mm256_load_si256(reinterpret_cast<const __m256i*>(rgb32Ptr + 96));
+			ymm0RGBA = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(rgb32Ptr + 0));
+			ymm1RGBA = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(rgb32Ptr + 32));
+			ymm2RGBA = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(rgb32Ptr + 64));
+			ymm3RGBA = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(rgb32Ptr + 96));
 			COMPV_32xRGBA_TO_32xCHROMA1_AVX2(ymm0RGBA, ymm1RGBA, ymm2RGBA, ymm3RGBA, ymm0C, ymm1C, ymmUCoeffs, ymm128, ymmAEBFCGDH, outUPtr);
 			COMPV_32xRGBA_TO_32xCHROMA1_AVX2(ymm0RGBA, ymm1RGBA, ymm2RGBA, ymm3RGBA, ymm0C, ymm1C, ymmVCoeffs, ymm128, ymmAEBFCGDH, outVPtr);
 			outUPtr += 32;

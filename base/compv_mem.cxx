@@ -274,9 +274,12 @@ COMPV_ERROR_CODE CompVMem::unpack3(uint8_t* dstPt0, uint8_t* dstPt1, uint8_t* ds
 	void (*CompVMemUnpack3)(uint8_t* dstPt0, uint8_t* dstPt1, uint8_t* dstPt2, const compv_uint8x3_t* srcPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
 		= CompVMemUnpack3_C;
 #if COMPV_ARCH_X86
-	if (CompVCpu::isEnabled(kCpuFlagSSSE3) && COMPV_IS_ALIGNED_SSE(dstPt0) && COMPV_IS_ALIGNED_SSE(dstPt1) && COMPV_IS_ALIGNED_SSE(dstPt2) && COMPV_IS_ALIGNED_SSE(srcPtr) && COMPV_IS_ALIGNED_SSE(stride)) {
-		COMPV_EXEC_IFDEF_INTRIN_X86(CompVMemUnpack3 = CompVMemUnpack3_Intrin_SSSE3);
-		COMPV_EXEC_IFDEF_ASM_X64(CompVMemUnpack3 = CompVMemUnpack3_Asm_X64_SSSE3);
+	if (CompVCpu::isEnabled(kCpuFlagSSSE3) && COMPV_IS_ALIGNED_SSE(dstPt0) && COMPV_IS_ALIGNED_SSE(dstPt1) && COMPV_IS_ALIGNED_SSE(dstPt2) && COMPV_IS_ALIGNED_SSE(stride)) {
+		COMPV_EXEC_IFDEF_INTRIN_X86(CompVMemUnpack3 = CompVMemUnpack3_SrcPtrNotAligned_Intrin_SSSE3);
+		if (COMPV_IS_ALIGNED_SSE(srcPtr)) {
+			COMPV_EXEC_IFDEF_INTRIN_X86(CompVMemUnpack3 = CompVMemUnpack3_Intrin_SSSE3);
+			COMPV_EXEC_IFDEF_ASM_X64(CompVMemUnpack3 = CompVMemUnpack3_Asm_X64_SSSE3);
+		}
 		// No need for AVX2 implementation, tried and slower
 	}
 #elif COMPV_ARCH_ARM

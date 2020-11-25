@@ -59,6 +59,30 @@ void CompVMemUnpack3_Intrin_SSSE3(
 	}
 }
 
+// Same as CompVMemUnpack3_Intrin_SSSE3 but "srcPtr" to aligned
+// Happens frequently when the image is from a region (plate, car...) with left not aligned on 16-bytes
+void CompVMemUnpack3_SrcPtrNotAligned_Intrin_SSSE3(
+	COMPV_ALIGNED(SSE) uint8_t* dstPt0, COMPV_ALIGNED(SSE) uint8_t* dstPt1, COMPV_ALIGNED(SSE) uint8_t* dstPt2,
+	const compv_uint8x3_t* srcPtr,
+	compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride)
+{
+	COMPV_DEBUG_INFO_CHECK_SSSE3();
+	__m128i vecLane0, vecLane1, vecLane2, vectmp0, vectmp1;
+
+	for (compv_uscalar_t j = 0; j < height; ++j) {
+		for (compv_uscalar_t i = 0; i < width; i += 16) { // strided/SSE-aligned -> can write beyond width
+			COMPV_VLD3_U8_UNALIGNED_SSSE3(&srcPtr[i], vecLane0, vecLane1, vecLane2, vectmp0, vectmp1);
+			_mm_store_si128(reinterpret_cast<__m128i*>(&dstPt0[i]), vecLane0);
+			_mm_store_si128(reinterpret_cast<__m128i*>(&dstPt1[i]), vecLane1);
+			_mm_store_si128(reinterpret_cast<__m128i*>(&dstPt2[i]), vecLane2);
+		}
+		dstPt0 += stride;
+		dstPt1 += stride;
+		dstPt2 += stride;
+		srcPtr += stride;
+	}
+}
+
 void CompVMemUnpack2_Intrin_SSSE3(
 	COMPV_ALIGNED(SSE) uint8_t* dstPt0, COMPV_ALIGNED(SSE) uint8_t* dstPt1, COMPV_ALIGNED(SSE) const compv_uint8x2_t* srcPtr,
 	compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride)

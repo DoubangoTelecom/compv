@@ -78,12 +78,11 @@ static COMPV_INLINE __m128i _mm_mullo_epi32_SSE2(const __m128i &a, const __m128i
 
 // De-Interleave "ptr" into  "vecLane0", "vecLane1" and "vecLane2"
 // e.g. RGBRGBRGB -> [RRRR], [GGGG], [BBBB]
-//!\\ You should not need to use this function -> FASTER: convert to RGBX then process (more info: see RGB24 -> YUV)
-#define COMPV_VLD3_I8_SSSE3(ptr, vecLane0, vecLane1, vecLane2, vectmp0, vectmp1) { \
+#define __COMPV_VLD3_I8_SSSE3(loadtype, ptr, vecLane0, vecLane1, vecLane2, vectmp0, vectmp1) { \
 		static const __m128i vecMask = _mm_load_si128(reinterpret_cast<const __m128i*>(kShuffleEpi8_Deinterleave8uL3_32s)); \
-		vecLane0 = _mm_load_si128(reinterpret_cast<const __m128i*>((ptr))); \
-		vecLane1 = _mm_load_si128(reinterpret_cast<const __m128i*>((ptr)) + 1); \
-		vecLane2 = _mm_load_si128(reinterpret_cast<const __m128i*>((ptr)) + 2); \
+		vecLane0 = _mm_##loadtype##_si128(reinterpret_cast<const __m128i*>((ptr))); \
+		vecLane1 = _mm_##loadtype##_si128(reinterpret_cast<const __m128i*>((ptr)) + 1); \
+		vecLane2 = _mm_##loadtype##_si128(reinterpret_cast<const __m128i*>((ptr)) + 2); \
 		vectmp0 = _mm_shuffle_epi8(vecLane0, vecMask); \
 		vectmp1 = _mm_shuffle_epi8(vecLane1, vecMask); \
 		vecLane2 = _mm_shuffle_epi8(vecLane2, vecMask); \
@@ -100,7 +99,16 @@ static COMPV_INLINE __m128i _mm_mullo_epi32_SSE2(const __m128i &a, const __m128i
 		vecLane2 = _mm_alignr_epi8(vecLane2, vectmp1, 6); \
 	}
 
-#define COMPV_VLD3_U8_SSSE3 COMPV_VLD3_I8_SSSE3
+// De-Interleave "ptr" into  "vecLane0", "vecLane1" and "vecLane2"
+// e.g. RGBRGBRGB -> [RRRR], [GGGG], [BBBB]
+//!\\ You should not need to use this function -> FASTER: convert to RGBX then process (more info: see RGB24 -> YUV)
+#define COMPV_VLD3_I8_SSSE3(ptr, vecLane0, vecLane1, vecLane2, vectmp0, vectmp1) \
+		__COMPV_VLD3_I8_SSSE3(load, ptr, vecLane0, vecLane1, vecLane2, vectmp0, vectmp1)
+#define COMPV_VLD3_I8_UNALIGNED_SSSE3(ptr, vecLane0, vecLane1, vecLane2, vectmp0, vectmp1) \
+		__COMPV_VLD3_I8_SSSE3(loadu, ptr, vecLane0, vecLane1, vecLane2, vectmp0, vectmp1)
+
+#define COMPV_VLD3_U8_SSSE3				COMPV_VLD3_I8_SSSE3
+#define COMPV_VLD3_U8_UNALIGNED_SSSE3	COMPV_VLD3_I8_UNALIGNED_SSSE3
 
 // Interleave "vecLane0", "vecLane1" and "vecLane3" then store into "ptr"
 // !!! "vecLane0", "vecLane1" and "vecLane3" ARE modified !!!

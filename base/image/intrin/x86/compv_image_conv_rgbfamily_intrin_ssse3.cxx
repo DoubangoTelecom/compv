@@ -22,7 +22,7 @@
 ; The aplha channel will contain zeros instead of 0xff because this macro is used to fetch samples in place
 */
 #define COMPV_16xRGB_TO_16xRGBA_SSSE3_FAST(rgb24Ptr_, xmm0RGBA_, xmm1RGBA_, xmm2RGBA_, xmm3RGBA_, xmmMaskRgbToRgba_) \
-	xmm0RGBA_ = _mm_shuffle_epi8(_mm_load_si128(reinterpret_cast<const __m128i*>(rgb24Ptr_ + 0)), xmmMaskRgbToRgba_); \
+	xmm0RGBA_ = _mm_shuffle_epi8(_mm_loadu_si128(reinterpret_cast<const __m128i*>(rgb24Ptr_ + 0)), xmmMaskRgbToRgba_); \
 	xmm1RGBA_ = _mm_shuffle_epi8(_mm_loadu_si128(reinterpret_cast<const __m128i*>(rgb24Ptr_ + 12)), xmmMaskRgbToRgba_); \
 	xmm2RGBA_ = _mm_shuffle_epi8(_mm_loadu_si128(reinterpret_cast<const __m128i*>(rgb24Ptr_ + 24)), xmmMaskRgbToRgba_); \
 	xmm3RGBA_ = _mm_shuffle_epi8(_mm_loadu_si128(reinterpret_cast<const __m128i*>(rgb24Ptr_ + 36)), xmmMaskRgbToRgba_); 
@@ -56,7 +56,8 @@ Convert 16 RGBA samples to 16 chroma (U or V samples) samples. Chroma subsampled
 
 COMPV_NAMESPACE_BEGIN()
 
-void CompVImageConvRgb24family_to_y_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgb24Ptr, COMPV_ALIGNED(SSE) uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride,
+// No need for 'rgb24Ptr' to be aligned. ASM code uses aligned load and is faster.
+void CompVImageConvRgb24family_to_y_Intrin_SSSE3(const uint8_t* rgb24Ptr, COMPV_ALIGNED(SSE) uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride,
 	COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_YCoeffs8)
 {
 	COMPV_DEBUG_INFO_CHECK_SSSE3();
@@ -82,7 +83,8 @@ void CompVImageConvRgb24family_to_y_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_
 	}
 }
 
-void CompVImageConvRgb32family_to_y_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgb32Ptr, COMPV_ALIGNED(SSE) uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride,
+// No need for 'rgb32Ptr' to be aligned. ASM code uses aligned load and is faster.
+void CompVImageConvRgb32family_to_y_Intrin_SSSE3(const uint8_t* rgb32Ptr, COMPV_ALIGNED(SSE) uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride,
 	COMPV_ALIGNED(DEFAULT) const int8_t* kRGBAfamilyToYUV_YCoeffs8)
 {
 	COMPV_DEBUG_INFO_CHECK_SSSE3();
@@ -95,10 +97,10 @@ void CompVImageConvRgb32family_to_y_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_
 	// Y = (((33 * R) + (65 * G) + (13 * B))) >> 7 + 16
 	for (j = 0; j < height; ++j) {
 		for (i = 0; i < width; i += 16) {
-			xmm0RGBA = _mm_load_si128(reinterpret_cast<const __m128i*>(rgb32Ptr + 0));
-			xmm1RGBA = _mm_load_si128(reinterpret_cast<const __m128i*>(rgb32Ptr + 16));
-			xmm2RGBA = _mm_load_si128(reinterpret_cast<const __m128i*>(rgb32Ptr + 32));
-			xmm3RGBA = _mm_load_si128(reinterpret_cast<const __m128i*>(rgb32Ptr + 48));
+			xmm0RGBA = _mm_loadu_si128(reinterpret_cast<const __m128i*>(rgb32Ptr + 0));
+			xmm1RGBA = _mm_loadu_si128(reinterpret_cast<const __m128i*>(rgb32Ptr + 16));
+			xmm2RGBA = _mm_loadu_si128(reinterpret_cast<const __m128i*>(rgb32Ptr + 32));
+			xmm3RGBA = _mm_loadu_si128(reinterpret_cast<const __m128i*>(rgb32Ptr + 48));
 			COMPV_16xRGBA_TO_16xLUMA_SSSE3(xmm0RGBA, xmm1RGBA, xmm2RGBA, xmm3RGBA, xmmYCoeffs, xmm16, outYPtr);
 			outYPtr += 16;
 			rgb32Ptr += 64;
@@ -108,7 +110,8 @@ void CompVImageConvRgb32family_to_y_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_
 	}
 }
 
-void CompVImageConvRgb24family_to_uv_planar_11_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgb24Ptr, COMPV_ALIGNED(SSE) uint8_t* outUPtr, COMPV_ALIGNED(SSE) uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride,
+// No need for 'rgb24Ptr' to be aligned. ASM code uses aligned load and is faster.
+void CompVImageConvRgb24family_to_uv_planar_11_Intrin_SSSE3(const uint8_t* rgb24Ptr, COMPV_ALIGNED(SSE) uint8_t* outUPtr, COMPV_ALIGNED(SSE) uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride,
 	COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_UCoeffs8, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_VCoeffs8)
 {
 	COMPV_DEBUG_INFO_CHECK_SSSE3();
@@ -139,7 +142,8 @@ void CompVImageConvRgb24family_to_uv_planar_11_Intrin_SSSE3(COMPV_ALIGNED(SSE) c
 	}
 }
 
-void CompVImageConvRgb32family_to_uv_planar_11_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgb32Ptr, COMPV_ALIGNED(SSE) uint8_t* outUPtr, COMPV_ALIGNED(SSE) uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride,
+// No need for 'rgb32Ptr' to be aligned. ASM code uses aligned load and is faster.
+void CompVImageConvRgb32family_to_uv_planar_11_Intrin_SSSE3(const uint8_t* rgb32Ptr, COMPV_ALIGNED(SSE) uint8_t* outUPtr, COMPV_ALIGNED(SSE) uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride,
 	COMPV_ALIGNED(DEFAULT) const int8_t* kRGBAfamilyToYUV_UCoeffs8, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBAfamilyToYUV_VCoeffs8)
 {
 	COMPV_DEBUG_INFO_CHECK_SSSE3();
@@ -154,10 +158,10 @@ void CompVImageConvRgb32family_to_uv_planar_11_Intrin_SSSE3(COMPV_ALIGNED(SSE) c
 	// V = (((112 * R) + (-94 * G) + (-18 * B))) >> 8 + 128
 	for (j = 0; j < height; ++j) {
 		for (i = 0; i < width; i += 16) {
-			xmm0RGBA = _mm_load_si128(reinterpret_cast<const __m128i*>(rgb32Ptr + 0));
-			xmm1RGBA = _mm_load_si128(reinterpret_cast<const __m128i*>(rgb32Ptr + 16));
-			xmm2RGBA = _mm_load_si128(reinterpret_cast<const __m128i*>(rgb32Ptr + 32));
-			xmm3RGBA = _mm_load_si128(reinterpret_cast<const __m128i*>(rgb32Ptr + 48));
+			xmm0RGBA = _mm_loadu_si128(reinterpret_cast<const __m128i*>(rgb32Ptr + 0));
+			xmm1RGBA = _mm_loadu_si128(reinterpret_cast<const __m128i*>(rgb32Ptr + 16));
+			xmm2RGBA = _mm_loadu_si128(reinterpret_cast<const __m128i*>(rgb32Ptr + 32));
+			xmm3RGBA = _mm_loadu_si128(reinterpret_cast<const __m128i*>(rgb32Ptr + 48));
 			COMPV_16xRGBA_TO_16xCHROMA1_SSSE3(xmm0RGBA, xmm1RGBA, xmm2RGBA, xmm3RGBA, xmm0C, xmm1C, xmmUCoeffs, xmm128, outUPtr);
 			COMPV_16xRGBA_TO_16xCHROMA1_SSSE3(xmm0RGBA, xmm1RGBA, xmm2RGBA, xmm3RGBA, xmm0C, xmm1C, xmmVCoeffs, xmm128, outVPtr);
 			outUPtr += 16;
