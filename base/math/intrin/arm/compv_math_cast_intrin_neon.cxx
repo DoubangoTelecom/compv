@@ -92,10 +92,10 @@ void CompVMathCastProcess_static_16s32f_Intrin_NEON(
 			vst1q_f32(&dst[i + 8], vcvtq_f32_s32(vmovl_s16(vget_low_s16(vec1))));
 			vst1q_f32(&dst[i + 12], vcvtq_f32_s32(vmovl_s16(vget_high_s16(vec1))));
 		}
-		for (; i < width; i += 8) {
-			const int16x8_t vec0 = vld1q_s16(&src[i]);
+		for (; i < width; i += 4) {
+			const int16x4_t vec0 = vld1_s16(&src[i]);
 
-			vst1q_f32(&dst[i], vcvtq_f32_s32(vmovl_s16(vget_low_s16(vec0))));
+			vst1q_f32(&dst[i], vcvtq_f32_s32(vmovl_s16(vec0)));
 		}
 		src += stride;
 		dst += stride;

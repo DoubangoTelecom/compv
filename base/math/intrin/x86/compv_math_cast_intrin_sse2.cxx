@@ -89,8 +89,8 @@ void CompVMathCastProcess_static_16s32f_Intrin_SSE2(
 			_mm_store_ps(&dst[i + 8], _mm_cvtepi32_ps(_mm_cvtepi16_epi32_lo_SSE2(vec1)));
 			_mm_store_ps(&dst[i + 12], _mm_cvtepi32_ps(_mm_cvtepi16_epi32_hi_SSE2(vec1)));
 		}
-		for (; i < width; i += 8) {
-			const __m128i vec0 = _mm_load_si128(reinterpret_cast<const __m128i*>(&src[i]));
+		for (; i < width; i += 4) {
+			const __m128i vec0 = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(&src[i]));
 
 			_mm_store_ps(&dst[i], _mm_cvtepi32_ps(_mm_cvtepi16_epi32_lo_SSE2(vec0)));
 		}
