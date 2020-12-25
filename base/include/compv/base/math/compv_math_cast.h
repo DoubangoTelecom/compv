@@ -75,7 +75,10 @@ private:
 
 COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathCast::process_static(const compv_float32_t* src, compv_float64_t* dst, const size_t width, const size_t height, const size_t stride);
 COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathCast::process_static(const compv_float64_t* src, compv_float32_t* dst, const size_t width, const size_t height, const size_t stride);
+COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathCast::process_static(const int32_t* src, compv_float32_t* dst, const size_t width, const size_t height, const size_t stride);
+COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathCast::process_static(const int16_t* src, compv_float32_t* dst, const size_t width, const size_t height, const size_t stride);
 COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathCast::process_static(const uint8_t* src, compv_float32_t* dst, const size_t width, const size_t height, const size_t stride);
+COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathCast::process_static(const uint8_t* src, int32_t* dst, const size_t width, const size_t height, const size_t stride);
 
 COMPV_NAMESPACE_END()
 

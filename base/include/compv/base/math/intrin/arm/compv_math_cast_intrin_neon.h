@@ -28,9 +28,33 @@ void CompVMathCastProcess_static_64f32f_Intrin_NEON64(
 );
 #endif /* COMPV_ARCH_ARM64 */
 
+void CompVMathCastProcess_static_32s32f_Intrin_NEON(
+	COMPV_ALIGNED(NEON) const int32_t* src,
+	COMPV_ALIGNED(NEON) compv_float32_t* dst,
+	const compv_uscalar_t width,
+	const compv_uscalar_t height,
+	COMPV_ALIGNED(NEON) const compv_uscalar_t stride
+);
+
+void CompVMathCastProcess_static_16s32f_Intrin_NEON(
+	COMPV_ALIGNED(NEON) const int16_t* src,
+	COMPV_ALIGNED(NEON) compv_float32_t* dst,
+	const compv_uscalar_t width,
+	const compv_uscalar_t height,
+	COMPV_ALIGNED(NEON) const compv_uscalar_t stride
+);
+
 void CompVMathCastProcess_static_8u32f_Intrin_NEON(
 	COMPV_ALIGNED(NEON) const uint8_t* src,
 	COMPV_ALIGNED(NEON) compv_float32_t* dst,
+	const compv_uscalar_t width,
+	const compv_uscalar_t height,
+	COMPV_ALIGNED(NEON) const compv_uscalar_t stride
+);
+
+void CompVMathCastProcess_static_8u32s_Intrin_NEON(
+	COMPV_ALIGNED(NEON) const uint8_t* src,
+	COMPV_ALIGNED(NEON) int32_t* dst,
 	const compv_uscalar_t width,
 	const compv_uscalar_t height,
 	COMPV_ALIGNED(NEON) const compv_uscalar_t stride

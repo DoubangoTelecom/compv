@@ -48,9 +48,9 @@ void CompVGradientFastGradX_8u32f_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* 
 			__m128i vec2 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&input[i - 1]));
 			__m128i vec0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&input[i + 1]));
 			COMPVGRADIENTFASTGRADX_8UXX_INTRIN_SSE2(vec2, vec0);
-			vec2 = _mm_cvtepi16_epi32_low_SSE2(vec0);
+			vec2 = _mm_cvtepi16_epi32_lo_SSE2(vec0);
 			vec0 = _mm_cvtepi16_epi32_hi_SSE2(vec0);
-			vec3 = _mm_cvtepi16_epi32_low_SSE2(vec1);
+			vec3 = _mm_cvtepi16_epi32_lo_SSE2(vec1);
 			vec1 = _mm_cvtepi16_epi32_hi_SSE2(vec1);
 			_mm_store_ps(&dx[i], _mm_cvtepi32_ps(vec2));
 			_mm_store_ps(&dx[i + 4], _mm_cvtepi32_ps(vec0));
@@ -114,9 +114,9 @@ void CompVGradientFastGradY_8u32f_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* 
 			__m128i vec2 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&inputMinus1[i]));
 			__m128i vec0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&inputPlus1[i]));
 			COMPVGRADIENTFASTGRADX_8UXX_INTRIN_SSE2(vec2, vec0);
-			vec2 = _mm_cvtepi16_epi32_low_SSE2(vec0);
+			vec2 = _mm_cvtepi16_epi32_lo_SSE2(vec0);
 			vec0 = _mm_cvtepi16_epi32_hi_SSE2(vec0);
-			vec3 = _mm_cvtepi16_epi32_low_SSE2(vec1);
+			vec3 = _mm_cvtepi16_epi32_lo_SSE2(vec1);
 			vec1 = _mm_cvtepi16_epi32_hi_SSE2(vec1);
 			_mm_store_ps(&dy[i], _mm_cvtepi32_ps(vec2));
 			_mm_store_ps(&dy[i + 4], _mm_cvtepi32_ps(vec0));

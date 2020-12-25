@@ -75,6 +75,54 @@ COMPV_ERROR_CODE CompVMathCast::process_static(const compv_float64_t* src, compv
 }
 
 template <> COMPV_BASE_API
+COMPV_ERROR_CODE CompVMathCast::process_static(const int32_t* src, compv_float32_t* dst, const size_t width, const size_t height, const size_t stride)
+{
+	void(*CompVMathCastProcessStatic_32s32f)(const int32_t* src, compv_float32_t* dst, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride)
+		= [](const int32_t* src, compv_float32_t* dst, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride)
+	{
+		COMPV_CHECK_CODE_NOP((CompVMathCast::process_static_C<int32_t, compv_float32_t>(src, dst, width, height, stride)));
+	};
+
+#if COMPV_ARCH_X86
+	if (CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(src) && COMPV_IS_ALIGNED_SSE(dst) && COMPV_IS_ALIGNED_SSE(stride * sizeof(int32_t)) && COMPV_IS_ALIGNED_SSE(stride * sizeof(compv_float32_t))) {
+		COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathCastProcessStatic_32s32f = CompVMathCastProcess_static_32s32f_Intrin_SSE2);
+	}
+#elif COMPV_ARCH_ARM
+	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(src) && COMPV_IS_ALIGNED_NEON(dst) && COMPV_IS_ALIGNED_NEON(stride)) {
+		COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMathCastProcessStatic_32s32f = CompVMathCastProcess_static_32s32f_Intrin_NEON);
+	}
+#endif
+
+	CompVMathCastProcessStatic_32s32f(src, dst, static_cast<compv_uscalar_t>(width), static_cast<compv_uscalar_t>(height), static_cast<compv_uscalar_t>(stride));
+
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+template <> COMPV_BASE_API
+COMPV_ERROR_CODE CompVMathCast::process_static(const int16_t* src, compv_float32_t* dst, const size_t width, const size_t height, const size_t stride)
+{
+	void(*CompVMathCastProcessStatic_16s32f)(const int16_t* src, compv_float32_t* dst, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride)
+		= [](const int16_t* src, compv_float32_t* dst, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride)
+	{
+		COMPV_CHECK_CODE_NOP((CompVMathCast::process_static_C<int16_t, compv_float32_t>(src, dst, width, height, stride)));
+	};
+
+#if COMPV_ARCH_X86
+	if (CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(src) && COMPV_IS_ALIGNED_SSE(dst) && COMPV_IS_ALIGNED_SSE(stride * sizeof(int16_t)) && COMPV_IS_ALIGNED_SSE(stride * sizeof(compv_float32_t))) {
+		COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathCastProcessStatic_16s32f = CompVMathCastProcess_static_16s32f_Intrin_SSE2);
+	}
+#elif COMPV_ARCH_ARM
+	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(src) && COMPV_IS_ALIGNED_NEON(dst) && COMPV_IS_ALIGNED_NEON(stride * sizeof(int16_t)) && COMPV_IS_ALIGNED_NEON(stride * sizeof(compv_float32_t))) {
+		COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMathCastProcessStatic_16s32f = CompVMathCastProcess_static_16s32f_Intrin_NEON);
+	}
+#endif
+
+	CompVMathCastProcessStatic_16s32f(src, dst, static_cast<compv_uscalar_t>(width), static_cast<compv_uscalar_t>(height), static_cast<compv_uscalar_t>(stride));
+
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+template <> COMPV_BASE_API
 COMPV_ERROR_CODE CompVMathCast::process_static(const uint8_t* src, compv_float32_t* dst, const size_t width, const size_t height, const size_t stride)
 {
 	void(*CompVMathCastProcessStatic_8u32f)(const uint8_t* src, compv_float32_t* dst, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride)
@@ -89,7 +137,7 @@ COMPV_ERROR_CODE CompVMathCast::process_static(const uint8_t* src, compv_float32
 		COMPV_EXEC_IFDEF_ASM_X64(CompVMathCastProcessStatic_8u32f = CompVMathCastProcess_static_8u32f_Asm_X64_SSE2);
 	}
 #elif COMPV_ARCH_ARM
-	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(src) && COMPV_IS_ALIGNED_NEON(dst) && COMPV_IS_ALIGNED_NEON(stride)) {
+	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(src) && COMPV_IS_ALIGNED_NEON(dst) && COMPV_IS_ALIGNED_NEON(stride * sizeof(uint8_t)) && COMPV_IS_ALIGNED_NEON(stride * sizeof(compv_float32_t))) {
 		COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMathCastProcessStatic_8u32f = CompVMathCastProcess_static_8u32f_Intrin_NEON);
 		COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathCastProcessStatic_8u32f = CompVMathCastProcess_static_8u32f_Asm_NEON32);
 		COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathCastProcessStatic_8u32f = CompVMathCastProcess_static_8u32f_Asm_NEON64);
@@ -97,6 +145,30 @@ COMPV_ERROR_CODE CompVMathCast::process_static(const uint8_t* src, compv_float32
 #endif
 
 	CompVMathCastProcessStatic_8u32f(src, dst, static_cast<compv_uscalar_t>(width), static_cast<compv_uscalar_t>(height), static_cast<compv_uscalar_t>(stride));
+
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+template <> COMPV_BASE_API
+COMPV_ERROR_CODE CompVMathCast::process_static(const uint8_t* src, int32_t* dst, const size_t width, const size_t height, const size_t stride)
+{
+	void(*CompVMathCastProcessStatic_8u32s)(const uint8_t* src, int32_t* dst, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride)
+		= [](const uint8_t* src, int32_t* dst, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride)
+	{
+		COMPV_CHECK_CODE_NOP((CompVMathCast::process_static_C<uint8_t, int32_t>(src, dst, width, height, stride)));
+	};
+
+#if COMPV_ARCH_X86
+	if (CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(src) && COMPV_IS_ALIGNED_SSE(dst) && COMPV_IS_ALIGNED_SSE(stride * sizeof(uint8_t)) && COMPV_IS_ALIGNED_SSE(stride * sizeof(int32_t))) {
+		COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathCastProcessStatic_8u32s = CompVMathCastProcess_static_8u32s_Intrin_SSE2);
+	}
+#elif COMPV_ARCH_ARM
+	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(src) && COMPV_IS_ALIGNED_NEON(dst) && COMPV_IS_ALIGNED_NEON(stride * sizeof(uint8_t)) && COMPV_IS_ALIGNED_NEON(stride * sizeof(int32_t))) {
+		COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMathCastProcessStatic_8u32s = CompVMathCastProcess_static_8u32s_Intrin_NEON);
+	}
+#endif
+
+	CompVMathCastProcessStatic_8u32s(src, dst, static_cast<compv_uscalar_t>(width), static_cast<compv_uscalar_t>(height), static_cast<compv_uscalar_t>(stride));
 
 	return COMPV_ERROR_CODE_S_OK;
 }

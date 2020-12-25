@@ -87,5 +87,8 @@
     <ClCompile Include="matrix_ops_submul.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="cast.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

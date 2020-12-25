@@ -6,7 +6,7 @@
 #define TEST_MATRIX_OPS_MUL_AB				0
 #define TEST_MATRIX_OPS_MUL_GA				0
 #define TEST_MATRIX_OPS_IS_SYMETRIC			0
-#define TEST_MATRIX_OPS_SUBMUL				1
+#define TEST_MATRIX_OPS_SUBMUL				0
 #define TEST_DOT							0
 #define TEST_EXP							0
 #define TEST_SCALE							0
@@ -34,6 +34,7 @@
 #define TEST_ML_SVM_RBF						0
 #define TEST_PCA							0
 #define TEST_ACTIVATION_FUNCTIONS			0
+#define TEST_CAST							1
 
 
 /* Entry point function */
@@ -177,6 +178,10 @@ compv_main()
 #if TEST_ACTIVATION_FUNCTIONS
 		extern COMPV_ERROR_CODE activation_functions();
 		COMPV_CHECK_CODE_BAIL(err = activation_functions(), TAG_TEST "Math Activation test failed");
+#endif
+#if TEST_CAST
+		extern COMPV_ERROR_CODE cast();
+		COMPV_CHECK_CODE_BAIL(err = cast(), TAG_TEST "Math Cast test failed");
 #endif
 
 	bail:

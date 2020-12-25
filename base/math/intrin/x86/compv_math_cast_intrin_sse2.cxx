@@ -5,6 +5,7 @@
 * WebSite: http://compv.org
 */
 #include "compv/base/math/intrin/x86/compv_math_cast_intrin_sse2.h"
+#include "compv/base/intrin/x86/compv_intrin_sse.h"
 
 #if COMPV_ARCH_X86 && COMPV_INTRINSIC
 #include "compv/base/compv_debug.h"
@@ -41,6 +42,63 @@ void CompVMathCastProcess_static_64f32f_Intrin_SSE2(
 	}
 }
 
+void CompVMathCastProcess_static_32s32f_Intrin_SSE2(
+	COMPV_ALIGNED(SSE) const int32_t* src,
+	COMPV_ALIGNED(SSE) compv_float32_t* dst,
+	const compv_uscalar_t width,
+	const compv_uscalar_t height,
+	COMPV_ALIGNED(SSE) const compv_uscalar_t stride
+)
+{
+	COMPV_DEBUG_INFO_CHECK_SSE2();
+	const compv_uscalar_t width16 = width & -16;
+	for (compv_uscalar_t j = 0; j < height; ++j) {
+		compv_uscalar_t i = 0;
+		for (; i < width16; i += 16) {
+			_mm_store_ps(&dst[i], _mm_cvtepi32_ps(_mm_load_si128(reinterpret_cast<const __m128i*>(&src[i]))));
+			_mm_store_ps(&dst[i + 4], _mm_cvtepi32_ps(_mm_load_si128(reinterpret_cast<const __m128i*>(&src[i + 4]))));
+			_mm_store_ps(&dst[i + 8], _mm_cvtepi32_ps(_mm_load_si128(reinterpret_cast<const __m128i*>(&src[i + 8]))));
+			_mm_store_ps(&dst[i + 12], _mm_cvtepi32_ps(_mm_load_si128(reinterpret_cast<const __m128i*>(&src[i + 12]))));
+		}
+		for (; i < width; i += 4) {
+			_mm_store_ps(&dst[i], _mm_cvtepi32_ps(_mm_load_si128(reinterpret_cast<const __m128i*>(&src[i]))));
+		}
+		src += stride;
+		dst += stride;
+	}
+}
+
+void CompVMathCastProcess_static_16s32f_Intrin_SSE2(
+	COMPV_ALIGNED(SSE) const int16_t* src,
+	COMPV_ALIGNED(SSE) compv_float32_t* dst,
+	const compv_uscalar_t width,
+	const compv_uscalar_t height,
+	COMPV_ALIGNED(SSE) const compv_uscalar_t stride
+)
+{
+	COMPV_DEBUG_INFO_CHECK_SSE2();
+	const compv_uscalar_t width16 = width & -16;
+	for (compv_uscalar_t j = 0; j < height; ++j) {
+		compv_uscalar_t i = 0;
+		for (; i < width16; i += 16) {
+			const __m128i vec0 = _mm_load_si128(reinterpret_cast<const __m128i*>(&src[i]));
+			const __m128i vec1 = _mm_load_si128(reinterpret_cast<const __m128i*>(&src[i + 8]));
+
+			_mm_store_ps(&dst[i], _mm_cvtepi32_ps(_mm_cvtepi16_epi32_lo_SSE2(vec0)));
+			_mm_store_ps(&dst[i + 4], _mm_cvtepi32_ps(_mm_cvtepi16_epi32_hi_SSE2(vec0)));
+			_mm_store_ps(&dst[i + 8], _mm_cvtepi32_ps(_mm_cvtepi16_epi32_lo_SSE2(vec1)));
+			_mm_store_ps(&dst[i + 12], _mm_cvtepi32_ps(_mm_cvtepi16_epi32_hi_SSE2(vec1)));
+		}
+		for (; i < width; i += 8) {
+			const __m128i vec0 = _mm_load_si128(reinterpret_cast<const __m128i*>(&src[i]));
+
+			_mm_store_ps(&dst[i], _mm_cvtepi32_ps(_mm_cvtepi16_epi32_lo_SSE2(vec0)));
+		}
+		src += stride;
+		dst += stride;
+	}
+}
+
 void CompVMathCastProcess_static_8u32f_Intrin_SSE2(
 	COMPV_ALIGNED(SSE) const uint8_t* src,
 	COMPV_ALIGNED(SSE) compv_float32_t* dst,
@@ -64,6 +122,35 @@ void CompVMathCastProcess_static_8u32f_Intrin_SSE2(
 			_mm_store_ps(&dst[i + 4], _mm_cvtepi32_ps(vec1));
 			_mm_store_ps(&dst[i + 8], _mm_cvtepi32_ps(vec2));
 			_mm_store_ps(&dst[i + 12], _mm_cvtepi32_ps(vec3));
+		}
+		src += stride;
+		dst += stride;
+	}
+}
+
+void CompVMathCastProcess_static_8u32s_Intrin_SSE2(
+	COMPV_ALIGNED(SSE) const uint8_t* src,
+	COMPV_ALIGNED(SSE) int32_t* dst,
+	const compv_uscalar_t width,
+	const compv_uscalar_t height,
+	COMPV_ALIGNED(SSE) const compv_uscalar_t stride
+)
+{
+	COMPV_DEBUG_INFO_CHECK_SSE2();
+	const __m128i vecZero = _mm_setzero_si128();
+	for (compv_uscalar_t j = 0; j < height; ++j) {
+		for (compv_uscalar_t i = 0; i < width; i += 16) {
+			__m128i vec1 = _mm_load_si128(reinterpret_cast<const __m128i*>(&src[i]));
+			__m128i vec3 = _mm_unpackhi_epi8(vec1, vecZero);
+			vec1 = _mm_unpacklo_epi8(vec1, vecZero);
+			__m128i vec0 = _mm_unpacklo_epi16(vec1, vecZero);
+			vec1 = _mm_unpackhi_epi16(vec1, vecZero);
+			__m128i vec2 = _mm_unpacklo_epi16(vec3, vecZero);
+			vec3 = _mm_unpackhi_epi16(vec3, vecZero);
+			_mm_store_si128(reinterpret_cast<__m128i*>(&dst[i]), vec0);
+			_mm_store_si128(reinterpret_cast<__m128i*>(&dst[i + 4]), vec1);
+			_mm_store_si128(reinterpret_cast<__m128i*>(&dst[i + 8]), vec2);
+			_mm_store_si128(reinterpret_cast<__m128i*>(&dst[i + 12]), vec3);
 		}
 		src += stride;
 		dst += stride;

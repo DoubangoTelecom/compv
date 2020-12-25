@@ -33,9 +33,9 @@ void CompVPatchRadiusLte64Moments0110_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8
 		// No overflow when doing mullo_epi16 because x and y are within [0-64], top and bottom within [0-255]
 		vec4 = _mm_mullo_epi16(vec4, _mm_load_si128(reinterpret_cast<const __m128i*>(&x[i])));
 		vec5 = _mm_mullo_epi16(vec5, _mm_load_si128(reinterpret_cast<const __m128i*>(&y[i])));
-		vecS10[0] = _mm_add_epi32(vecS10[0], _mm_cvtepi16_epi32_low_SSE2(vec4)); // epi16 -> epi32
+		vecS10[0] = _mm_add_epi32(vecS10[0], _mm_cvtepi16_epi32_lo_SSE2(vec4)); // epi16 -> epi32
 		vecS10[1] = _mm_add_epi32(vecS10[1], _mm_cvtepi16_epi32_hi_SSE2(vec4)); // epi16 -> epi32
-		vecS01[0] = _mm_add_epi32(vecS01[0], _mm_cvtepi16_epi32_low_SSE2(vec5)); // epi16 -> epi32
+		vecS01[0] = _mm_add_epi32(vecS01[0], _mm_cvtepi16_epi32_lo_SSE2(vec5)); // epi16 -> epi32
 		vecS01[1] = _mm_add_epi32(vecS01[1], _mm_cvtepi16_epi32_hi_SSE2(vec5)); // epi16 -> epi32
 
 		vec2 = _mm_unpackhi_epi8(vec0, vecZero); // epu8 -> epi16 [top]
@@ -45,9 +45,9 @@ void CompVPatchRadiusLte64Moments0110_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8
 		// No overflow when doing mullo_epi16 because x and y are within [0-64], top and bottom within [0-255]
 		vec4 = _mm_mullo_epi16(vec4, _mm_load_si128(reinterpret_cast<const __m128i*>(&x[i + 8])));
 		vec5 = _mm_mullo_epi16(vec5, _mm_load_si128(reinterpret_cast<const __m128i*>(&y[i + 8])));
-		vecS10[2] = _mm_add_epi32(vecS10[2], _mm_cvtepi16_epi32_low_SSE2(vec4)); // epi16 -> epi32
+		vecS10[2] = _mm_add_epi32(vecS10[2], _mm_cvtepi16_epi32_lo_SSE2(vec4)); // epi16 -> epi32
 		vecS10[3] = _mm_add_epi32(vecS10[3], _mm_cvtepi16_epi32_hi_SSE2(vec4)); // epi16 -> epi32
-		vecS01[2] = _mm_add_epi32(vecS01[2], _mm_cvtepi16_epi32_low_SSE2(vec5)); // epi16 -> epi32
+		vecS01[2] = _mm_add_epi32(vecS01[2], _mm_cvtepi16_epi32_lo_SSE2(vec5)); // epi16 -> epi32
 		vecS01[3] = _mm_add_epi32(vecS01[3], _mm_cvtepi16_epi32_hi_SSE2(vec5)); // epi16 -> epi32
 	}
 
