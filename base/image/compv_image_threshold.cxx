@@ -168,7 +168,6 @@ COMPV_ERROR_CODE CompVImageThreshold::global(const CompVMatPtr& input, CompVMatP
 			static_cast<compv_uscalar_t>(thresholdUInt8));
 		return COMPV_ERROR_CODE_S_OK;
 	};
-
 	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
 		funcPtr,
 		width,

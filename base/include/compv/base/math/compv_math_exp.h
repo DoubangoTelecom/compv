@@ -21,6 +21,9 @@ public:
 		void(**CompVMathExpExp_64f64f)(const compv_float64_t* ptrIn, compv_float64_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride, const uint64_t* lut64u, const uint64_t* var64u, const compv_float64_t* var64f),
 		int* minpack = nullptr
 	);
+	static COMPV_ERROR_CODE hookExp_32f(
+		void(**CompVMathExpExp_32f32f)(const compv_float32_t* ptrIn, compv_float32_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride, const uint32_t* lut32u, const compv_float32_t* var32f)
+	);
 	static bool isInitialized() {
 		return s_bInitialized;
 	}

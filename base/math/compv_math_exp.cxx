@@ -289,6 +289,37 @@ COMPV_ERROR_CODE CompVMathExp::hookExp_64f(
 	return COMPV_ERROR_CODE_S_OK;
 }
 
+COMPV_ERROR_CODE CompVMathExp::hookExp_32f(
+	void(**CompVMathExpExp_32f32f)(const compv_float32_t* ptrIn, compv_float32_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, const compv_uscalar_t stride, const uint32_t* lut32u, const compv_float32_t* var32f)
+)
+{
+	COMPV_CHECK_EXP_RETURN(!CompVMathExpExp_32f32f, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	*CompVMathExpExp_32f32f = CompVMathExpExp_minpack1_32f32f_C;
+#if COMPV_ARCH_X86
+	if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
+		COMPV_EXEC_IFDEF_INTRIN_X86((*CompVMathExpExp_32f32f = CompVMathExpExp_minpack1_32f32f_Intrin_SSE2));
+	}
+	if (CompVCpu::isEnabled(kCpuFlagAVX2)) {
+		COMPV_EXEC_IFDEF_INTRIN_X86((*CompVMathExpExp_32f32f = CompVMathExpExp_minpack1_32f32f_Intrin_AVX2));
+		COMPV_EXEC_IFDEF_ASM_X64((*CompVMathExpExp_32f32f = CompVMathExpExp_minpack1_32f32f_Asm_X64_AVX2));
+		if (CompVCpu::isEnabled(kCpuFlagFMA3)) {
+			COMPV_EXEC_IFDEF_ASM_X64((*CompVMathExpExp_32f32f = CompVMathExpExp_minpack1_32f32f_Asm_X64_FMA3_AVX2));
+		}
+	}
+#elif COMPV_ARCH_ARM
+	if (CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
+		COMPV_EXEC_IFDEF_INTRIN_ARM((*CompVMathExpExp_32f32f = CompVMathExpExp_minpack1_32f32f_Intrin_NEON));
+		COMPV_EXEC_IFDEF_ASM_ARM32((*CompVMathExpExp_32f32f = CompVMathExpExp_minpack1_32f32f_Asm_NEON32));
+		COMPV_EXEC_IFDEF_ASM_ARM64((*CompVMathExpExp_32f32f = CompVMathExpExp_minpack1_32f32f_Asm_NEON64));
+		if (CompVCpu::isEnabled(kCpuFlagARM_NEON_FMA)) {
+			COMPV_EXEC_IFDEF_ASM_ARM32((*CompVMathExpExp_32f32f = CompVMathExpExp_minpack1_32f32f_Asm_FMA_NEON32));
+			COMPV_EXEC_IFDEF_ASM_ARM64((*CompVMathExpExp_32f32f = CompVMathExpExp_minpack1_32f32f_Asm_FMA_NEON64));
+		}
+	}
+#endif
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 COMPV_ERROR_CODE CompVMathExp::init()
 {
 	if (isInitialized()) {
