@@ -250,6 +250,30 @@ COMPV_ERROR_CODE CompVBase::init(int numThreads COMPV_DEFAULT(-1))
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Code built with debug enabled");
 #endif
 
+	/* OS name */
+	const char* OS_name =
+#if COMPV_OS_ANDROID 
+		"Android"
+#elif COMPV_OS_PI
+		"Raspberry Pi"
+#elif COMPV_OS_IPHONE
+		"iOS"
+#elif COMPV_OS_JETSON
+#	if COMPV_HAVE_TFTRT
+		"Jetson"
+#	else
+		"Jetson_TFTRT"
+#	endif
+#elif COMPV_OS_LINUX
+		"Generic Linux"
+#elif COMPV_OS_WINDOWS
+		"Windows"
+#else
+		"Unknown"
+#endif
+		;
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "OS name: %s", OS_name);
+
     /* Math functions: Must be after CPU initialization */
     COMPV_CHECK_CODE_BAIL(err_ = CompVMathUtils::init());
     COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Math Fast Trig.: %s", CompVCpu::isMathTrigFastEnabled() ? "true" : "fast");
@@ -425,7 +449,7 @@ COMPV_ERROR_CODE CompVBase::initAndroid(JNIEnv* jEnv)
 									jstring ANDROID_ID = reinterpret_cast<jstring>(jEnv->CallStaticObjectMethod(settingsSecureKlass, getStringMethodId, contentResolver, object_ANDROID_ID));
 									if (ANDROID_ID) { // https://developer.android.com/reference/android/provider/Settings.Secure.html#ANDROID_ID
 										s_strANDROID_ID = CompVJNI::toString(jEnv, ANDROID_ID);
-										COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "android/provider/Settings.Secure.ANDROID_ID: %s", "****");
+										COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "AID: %s", "****");
 									}
 								}
 							}
