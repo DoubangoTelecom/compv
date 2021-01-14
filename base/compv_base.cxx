@@ -251,28 +251,30 @@ COMPV_ERROR_CODE CompVBase::init(int numThreads COMPV_DEFAULT(-1))
 #endif
 
 	/* OS name */
-	const char* OS_name =
+	{
+		const char* OS_name =
 #if COMPV_OS_ANDROID 
-		"Android"
+			"Android"
 #elif COMPV_OS_PI
-		"Raspberry Pi"
+			"Raspberry Pi"
 #elif COMPV_OS_IPHONE
-		"iOS"
+			"iOS"
 #elif COMPV_OS_JETSON
 #	if COMPV_HAVE_TFTRT
-		"Jetson"
+			"Jetson"
 #	else
-		"Jetson_TFTRT"
+			"Jetson_TFTRT"
 #	endif
 #elif COMPV_OS_LINUX
-		"Generic Linux"
+			"Generic Linux"
 #elif COMPV_OS_WINDOWS
-		"Windows"
+			"Windows"
 #else
-		"Unknown"
+			"Unknown"
 #endif
-		;
-	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "OS name: %s", OS_name);
+			;
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "OS name: %s", OS_name);
+	}
 
     /* Math functions: Must be after CPU initialization */
     COMPV_CHECK_CODE_BAIL(err_ = CompVMathUtils::init());
