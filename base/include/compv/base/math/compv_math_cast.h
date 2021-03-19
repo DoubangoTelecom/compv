@@ -49,7 +49,9 @@ public:
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
+	// Some common function to make your life easier. Use "process_static<U,V>" for any other case.
 	static COMPV_ERROR_CODE process_static_pixel8(const CompVMatPtr& src, CompVMatPtrPtr dst, const bool enforceSingleThread = false);
+	static COMPV_ERROR_CODE process_static_8u32f(const uint8_t* src, compv_float32_t* dst, const size_t width, const size_t height, const size_t stride, const bool enforceSingleThread = false);
 
 private:
 	template<typename srcType, typename dstType>

@@ -253,4 +253,25 @@ COMPV_ERROR_CODE CompVMathCast::process_static_pixel8(const CompVMatPtr& src, Co
 	return COMPV_ERROR_CODE_S_OK;
 }
 
+COMPV_ERROR_CODE CompVMathCast::process_static_8u32f(const uint8_t* src, compv_float32_t* dst, const size_t width, const size_t height, const size_t stride, const bool enforceSingleThread COMPV_DEFAULT(false))
+{
+	COMPV_CHECK_EXP_RETURN(!src || !dst, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+	auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
+		const size_t yindex = ystart * stride;
+		COMPV_CHECK_CODE_RETURN((CompVMathCast::process_static<uint8_t, compv_float32_t>(
+			&src[yindex], &dst[yindex], width, (yend - ystart), stride
+		)));
+		return COMPV_ERROR_CODE_S_OK;
+	};
+	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+		funcPtr,
+		width,
+		height,
+		enforceSingleThread ? SIZE_MAX : COMPV_MATH_CAST_PROCESS_STATIC_SAMPLES_PER_THREAD
+	));
+
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 COMPV_NAMESPACE_END()
