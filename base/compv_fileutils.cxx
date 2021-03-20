@@ -233,7 +233,7 @@ std::string CompVFileUtils::getExt(const char* pcPath)
 #endif
     }
     if (ext_.empty()) {
-        COMPV_DEBUG_ERROR_EX(kModuleNameFileUtils, "Connot find extension for file path = %s", pcPath);
+        COMPV_DEBUG_INFO_EX(kModuleNameFileUtils, "Connot find extension for file path = %s", pcPath);
     }
     else {
         std::transform(ext_.begin(), ext_.end(), ext_.begin(), ::toupper); // UpperCase
