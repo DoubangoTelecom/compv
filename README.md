@@ -21,7 +21,7 @@
  - <a target="_blank" href="https://github.com/DoubangoTelecom/ultimateMRZ-SDK">Bank check information extraction/OCR from Magnetic Ink Character Recognition [MICR] (E-13B & CMC-7) using deep learning for embedded devices (ARM) and desktops (x86) </a>
  
  ### Online demo apps using our code ###
- - <a target="_blank" href="https://doubango.org/webapps/face-liveness/">Cloud-based Passive Face Liveness Detection (Anti-Spoofing) (ANPR/ALPR)</a>
+ - <a target="_blank" href="https://doubango.org/webapps/face-liveness/">Cloud-based Passive Face Liveness Detection (Anti-Spoofing)</a>
  - <a target="_blank" href="https://doubango.org/webapps/alpr/">Cloud-based Automatic Number/License Plate Recognition (ANPR/ALPR)</a>
  - <a target="_blank" href="https://doubango.org/webapps/mrz/">Cloud-based Machine-readable zone/passport (MRZ/MRP)</a>
  - <a target="_blank" href="https://doubango.org/webapps/credit-card-ocr/">Cloud-based Bank credit card recognition/OCR (ScanToPay)</a>
