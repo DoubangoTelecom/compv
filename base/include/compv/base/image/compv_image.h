@@ -54,8 +54,8 @@ public:
 	static COMPV_ERROR_CODE histogramBuild(const CompVMatPtr& input, CompVMatPtrPtr ptr32shistogram);
 	static COMPV_ERROR_CODE histogramBuildProjectionY(const CompVMatPtr& dataIn, CompVMatPtrPtr ptr32sProjection);
 	static COMPV_ERROR_CODE histogramBuildProjectionX(const CompVMatPtr& dataIn, CompVMatPtrPtr ptr32sProjection);
-	static COMPV_ERROR_CODE histogramEqualiz(const CompVMatPtr& input, CompVMatPtrPtr output);
-	static COMPV_ERROR_CODE histogramEqualiz(const CompVMatPtr& input, const CompVMatPtr& histogram, CompVMatPtrPtr output);
+	static COMPV_ERROR_CODE histogramEqualiz(const CompVMatPtr& input, CompVMatPtrPtr output, const double scale = -1.0, const bool enforceSingleThread = false);
+	static COMPV_ERROR_CODE histogramEqualiz(const CompVMatPtr& input, const CompVMatPtr& histogram, CompVMatPtrPtr output, const double scale = -1.0, const bool enforceSingleThread = false);
 
 	static COMPV_ERROR_CODE gammaCorrection(const CompVMatPtr& input, const double& gamma, CompVMatPtrPtr output, const bool enforceSingleThread = false);
 	static COMPV_ERROR_CODE gammaCorrection(const CompVMatPtr& input, const compv_uint8x256_t& gammaLUT, CompVMatPtrPtr output, const bool enforceSingleThread = false);

@@ -41,7 +41,7 @@ COMPV_EXTERNC void CompVMathHistogramBuildProjectionX_8u32s_Asm_NEON64(COMPV_ALI
 COMPV_EXTERNC void CompVMathHistogramBuildProjectionY_8u32s_Asm_NEON64(COMPV_ALIGNED(NEON) const uint8_t* ptrIn, COMPV_ALIGNED(NEON) int32_t* ptrOut, const compv_uscalar_t width, const compv_uscalar_t height, COMPV_ALIGNED(NEON) const compv_uscalar_t stride);
 #endif /* COMPV_ASM && COMPV_ARCH_ARM64 */
 
-COMPV_ERROR_CODE CompVMathHistogram::build(const CompVMatPtr& data, CompVMatPtrPtr histogram)
+COMPV_ERROR_CODE CompVMathHistogram::build(const CompVMatPtr& data, CompVMatPtrPtr histogram, const bool enforceSingleThread COMPV_DEFAULT(false))
 {
 	COMPV_CHECK_EXP_RETURN(!data || data->isEmpty() || !histogram, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Input data is null or empty");
 
@@ -51,7 +51,7 @@ COMPV_ERROR_CODE CompVMathHistogram::build(const CompVMatPtr& data, CompVMatPtrP
 		uint32_t* histogramPtr = (*histogram)->ptr<uint32_t>();
 		const int planes = static_cast<int>(data->planeCount());
 		for (int p = 0; p < planes; ++p) {
-			COMPV_CHECK_CODE_RETURN(CompVMathHistogram::process_8u32u(data->ptr<uint8_t>(0, 0, p), data->cols(p), data->rows(p), data->strideInBytes(p), histogramPtr));
+			COMPV_CHECK_CODE_RETURN(CompVMathHistogram::process_8u32u(data->ptr<uint8_t>(0, 0, p), data->cols(p), data->rows(p), data->strideInBytes(p), histogramPtr, enforceSingleThread));
 		}
 		return COMPV_ERROR_CODE_S_OK;
 	}
@@ -199,17 +199,17 @@ COMPV_ERROR_CODE CompVMathHistogram::buildProjectionX(const CompVMatPtr& dataIn,
 
 static void CompVMathHistogramEqualiz_32u8u_C(const uint32_t* ptr32uHistogram, uint8_t* ptr8uLut, const compv_float32_t* scale1);
 
-COMPV_ERROR_CODE CompVMathHistogram::equaliz(const CompVMatPtr& dataIn, CompVMatPtrPtr dataOut)
+COMPV_ERROR_CODE CompVMathHistogram::equaliz(const CompVMatPtr& dataIn, CompVMatPtrPtr dataOut, const double scale COMPV_DEFAULT(-1.0), const bool enforceSingleThread COMPV_DEFAULT(false))
 {
 	COMPV_CHECK_EXP_RETURN(!dataOut || !dataIn || dataIn->isEmpty() || dataIn->elmtInBytes() != sizeof(uint8_t) || dataIn->planeCount() != 1,
 		COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	CompVMatPtr histogram;
-	COMPV_CHECK_CODE_RETURN(CompVMathHistogram::build(dataIn, &histogram));
-	COMPV_CHECK_CODE_RETURN(CompVMathHistogram::equaliz(dataIn, histogram, dataOut));
+	COMPV_CHECK_CODE_RETURN(CompVMathHistogram::build(dataIn, &histogram, enforceSingleThread));
+	COMPV_CHECK_CODE_RETURN(CompVMathHistogram::equaliz(dataIn, histogram, dataOut, scale, enforceSingleThread));
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVMathHistogram::equaliz(const CompVMatPtr& dataIn, const CompVMatPtr& histogram, CompVMatPtrPtr dataOut)
+COMPV_ERROR_CODE CompVMathHistogram::equaliz(const CompVMatPtr& dataIn, const CompVMatPtr& histogram, CompVMatPtrPtr dataOut, const double scale COMPV_DEFAULT(-1.0), const bool enforceSingleThread COMPV_DEFAULT(false))
 {
 	COMPV_CHECK_EXP_RETURN(!dataOut || !dataIn || dataIn->isEmpty() || dataIn->elmtInBytes() != sizeof(uint8_t) || dataIn->planeCount() != 1
 		|| !histogram || histogram->isEmpty() || histogram->cols() != 256 || histogram->subType() != COMPV_SUBTYPE_RAW_UINT32,
@@ -225,13 +225,13 @@ COMPV_ERROR_CODE CompVMathHistogram::equaliz(const CompVMatPtr& dataIn, const Co
 		COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&dataOut_, COMPV_SUBTYPE_PIXELS_Y, width, height, stride));
 	}
 
-	const compv_float32_t scale = 255.f / (width * height); 
+	const compv_float32_t scale_ = static_cast<compv_float32_t>(scale > 0.0 ? scale : (255.0 / double(width * height)));
 	COMPV_ALIGN(16) uint8_t lut[256];
 
 	void(*CompVMathHistogramEqualiz_32u8u)(const uint32_t* ptr32uHistogram, uint8_t* ptr8uLut, const compv_float32_t* scale1)
 		= CompVMathHistogramEqualiz_32u8u_C;
 
-	CompVMathHistogramEqualiz_32u8u(histogram->ptr<const uint32_t>(), lut, &scale);
+	CompVMathHistogramEqualiz_32u8u(histogram->ptr<const uint32_t>(), lut, &scale_);
 
 	auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {		
 		const uint8_t* ptr8uDataIn = dataIn->ptr<const uint8_t>(ystart);
@@ -251,7 +251,7 @@ COMPV_ERROR_CODE CompVMathHistogram::equaliz(const CompVMatPtr& dataIn, const Co
 		funcPtr,
 		width,
 		height,
-		COMPV_HISTOGRAM_EQUALIZ_MIN_SAMPLES_PER_THREAD
+		enforceSingleThread ? SIZE_MAX : COMPV_HISTOGRAM_EQUALIZ_MIN_SAMPLES_PER_THREAD
 	));
 
 	*dataOut = dataOut_;
@@ -261,7 +261,7 @@ COMPV_ERROR_CODE CompVMathHistogram::equaliz(const CompVMatPtr& dataIn, const Co
 static void CompVMathHistogramProcess_8u32u_C(const uint8_t* dataPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, uint32_t* histogramPtr);
 
 // Up to the caller to set 'histogramPtr' values to zeros
-COMPV_ERROR_CODE CompVMathHistogram::process_8u32u(const uint8_t* dataPtr, size_t width, size_t height, size_t stride, uint32_t* histogramPtr)
+COMPV_ERROR_CODE CompVMathHistogram::process_8u32u(const uint8_t* dataPtr, size_t width, size_t height, size_t stride, uint32_t* histogramPtr, const bool enforceSingleThread COMPV_DEFAULT(false))
 {
 	// Private function, no need to check imput parameters
 
@@ -287,7 +287,7 @@ COMPV_ERROR_CODE CompVMathHistogram::process_8u32u(const uint8_t* dataPtr, size_
 
 	// Compute number of threads
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
-	const size_t maxThreads = (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
+	const size_t maxThreads = (threadDisp && !threadDisp->isMotherOfTheCurrentThread() && !enforceSingleThread) ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
 	const size_t threadsCount = CompVThreadDispatcher::guessNumThreadsDividingAcrossY(width, height, maxThreads, COMPV_HISTOGRAM_BUILD_MIN_SAMPLES_PER_THREAD);
 
 	if (threadsCount > 1) {

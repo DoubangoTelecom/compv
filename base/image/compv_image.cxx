@@ -744,16 +744,16 @@ COMPV_ERROR_CODE CompVImage::histogramBuildProjectionX(const CompVMatPtr& dataIn
 }
 
 // https://en.wikipedia.org/wiki/Histogram_equalization
-COMPV_ERROR_CODE CompVImage::histogramEqualiz(const CompVMatPtr& input, CompVMatPtrPtr output)
+COMPV_ERROR_CODE CompVImage::histogramEqualiz(const CompVMatPtr& input, CompVMatPtrPtr output, const double scale COMPV_DEFAULT(-1.0), const bool enforceSingleThread COMPV_DEFAULT(false))
 {
-	COMPV_CHECK_CODE_RETURN(CompVMathHistogram::equaliz(input, output));
+	COMPV_CHECK_CODE_RETURN(CompVMathHistogram::equaliz(input, output, scale, enforceSingleThread));
 	return COMPV_ERROR_CODE_S_OK;
 }
 
 // https://en.wikipedia.org/wiki/Histogram_equalization
-COMPV_ERROR_CODE CompVImage::histogramEqualiz(const CompVMatPtr& input, const CompVMatPtr& histogram, CompVMatPtrPtr output)
+COMPV_ERROR_CODE CompVImage::histogramEqualiz(const CompVMatPtr& input, const CompVMatPtr& histogram, CompVMatPtrPtr output, const double scale COMPV_DEFAULT(-1.0), const bool enforceSingleThread COMPV_DEFAULT(false))
 {
-	COMPV_CHECK_CODE_RETURN(CompVMathHistogram::equaliz(input, histogram, output));
+	COMPV_CHECK_CODE_RETURN(CompVMathHistogram::equaliz(input, histogram, output, scale, enforceSingleThread));
 	return COMPV_ERROR_CODE_S_OK;
 }
 
