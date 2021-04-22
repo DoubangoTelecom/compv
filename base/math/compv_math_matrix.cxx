@@ -790,19 +790,21 @@ class CompVMatrixGeneric
 			void (*CompVMathMatrixBuildHomographyEqMatrix_64f)(const COMPV_ALIGNED(SSE) compv_float64_t* srcX, const COMPV_ALIGNED(SSE) compv_float64_t* srcY, const COMPV_ALIGNED(SSE) compv_float64_t* dstX, const COMPV_ALIGNED(SSE) compv_float64_t* dstY, COMPV_ALIGNED(SSE) compv_float64_t* M, COMPV_ALIGNED(SSE) compv_uscalar_t M_strideInBytes, compv_uscalar_t numPoints)
 				= NULL;
 #if COMPV_ARCH_X86
-			if ((*M)->isAlignedSSE()) {
-				if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
+			if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
+				if ((*M)->isAlignedSSE() && COMPV_IS_ALIGNED_SSE(srcX) && COMPV_IS_ALIGNED_SSE(srcY) && COMPV_IS_ALIGNED_SSE(dstX) && COMPV_IS_ALIGNED_SSE(dstX)) {
 					COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathMatrixBuildHomographyEqMatrix_64f = CompVMathMatrixBuildHomographyEqMatrix_64f_Intrin_SSE2);
 					COMPV_EXEC_IFDEF_ASM_X86(CompVMathMatrixBuildHomographyEqMatrix_64f = CompVMathMatrixBuildHomographyEqMatrix_64f_Asm_X86_SSE2);
 					COMPV_EXEC_IFDEF_ASM_X64(CompVMathMatrixBuildHomographyEqMatrix_64f = CompVMathMatrixBuildHomographyEqMatrix_64f_Asm_X64_SSE2);
 				}
 			}
 #elif COMPV_ARCH_ARM
-			if ((*M)->isAlignedNEON()) {
-				if (CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
-                    COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathMatrixBuildHomographyEqMatrix_64f = CompVMathMatrixBuildHomographyEqMatrix_64f_Asm_NEON32);
-					COMPV_EXEC_IFDEF_INTRIN_ARM64(CompVMathMatrixBuildHomographyEqMatrix_64f = CompVMathMatrixBuildHomographyEqMatrix_64f_Intrin_NEON64);
-                    COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathMatrixBuildHomographyEqMatrix_64f = CompVMathMatrixBuildHomographyEqMatrix_64f_Asm_NEON64);
+			if (CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
+				COMPV_EXEC_IFDEF_INTRIN_ARM64(CompVMathMatrixBuildHomographyEqMatrix_64f = CompVMathMatrixBuildHomographyEqMatrix_64f_Intrin_NEON64);
+				if ((*M)->isAlignedNEON() && COMPV_IS_ALIGNED_NEON(srcX) && COMPV_IS_ALIGNED_NEON(srcY) && COMPV_IS_ALIGNED_NEON(dstX) && COMPV_IS_ALIGNED_NEON(dstX)) {
+#					if 0 // Disable 32-bit ASM code until we found why it crash on RPI. No crash on Android ARM32 -> https://github.com/DoubangoTelecom/ultimateALPR-SDK/issues/143
+					COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathMatrixBuildHomographyEqMatrix_64f = CompVMathMatrixBuildHomographyEqMatrix_64f_Asm_NEON32);
+#					endif
+					COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathMatrixBuildHomographyEqMatrix_64f = CompVMathMatrixBuildHomographyEqMatrix_64f_Asm_NEON64);
 				}
 			}
 #endif
