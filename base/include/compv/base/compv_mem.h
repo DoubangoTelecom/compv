@@ -65,7 +65,9 @@ public:
 
 	static bool isGpuFriendly(const void* mem, size_t size);
 
-	static COMPV_ERROR_CODE setHeapLimit(const size_t sizeInBytes);
+	static COMPV_ERROR_CODE poolSetHeapLimit(const size_t sizeInBytes);
+	static COMPV_ERROR_CODE poolCleanBuffersForAllThreads();
+	static COMPV_ERROR_CODE poolCleanBuffersForCurrentThread();
 
 	static bool isTbbMallocEnabled();
     static int bestAlignment();

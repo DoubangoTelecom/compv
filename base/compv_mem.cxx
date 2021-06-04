@@ -147,7 +147,11 @@ COMPV_ERROR_CODE CompVMem::init()
 COMPV_ERROR_CODE CompVMem::deInit()
 {
     s_SpecialsMutex = NULL;
-    s_bInitialized = false;
+	
+	COMPV_CHECK_CODE_NOP(CompVMem::poolCleanBuffersForAllThreads());
+
+	s_bInitialized = false;
+
     return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -871,7 +875,7 @@ bool CompVMem::isGpuFriendly(const void* mem, size_t size)
 }
 
 // https://software.intel.com/en-us/articles/controlling-memory-consumption-with-intel-threading-building-blocks-intel-tbb-scalable
-COMPV_ERROR_CODE CompVMem::setHeapLimit(const size_t sizeInBytes)
+COMPV_ERROR_CODE CompVMem::poolSetHeapLimit(const size_t sizeInBytes)
 {
 #if COMPV_TBBMALLOC
 	const size_t physMemSize = CompVCpu::physMemSize();
@@ -879,6 +883,31 @@ COMPV_ERROR_CODE CompVMem::setHeapLimit(const size_t sizeInBytes)
 	COMPV_CHECK_EXP_RETURN((scalable_allocation_mode(TBBMALLOC_SET_SOFT_HEAP_LIMIT, sizeInBytes) != TBBMALLOC_OK),
 		COMPV_ERROR_CODE_E_INTEL_TBB, "scalable_allocation_mode failed");
 #endif
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVMem::poolCleanBuffersForAllThreads()
+{
+#if COMPV_TBBMALLOC
+	// Immediately free memory blocks in the default pool without scheduling: https://github.com/DoubangoTelecom/ultimateALPR-SDK/issues/152
+	const int tbbcode = scalable_allocation_command(TBBMALLOC_CLEAN_ALL_BUFFERS, nullptr);
+	COMPV_CHECK_EXP_RETURN(tbbcode != TBBMALLOC_OK && tbbcode != TBBMALLOC_NO_EFFECT, COMPV_ERROR_CODE_E_INTEL_TBB);
+#endif /* COMPV_TBBMALLOC */
+
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// Call it on all threads before join exit: https://github.com/oneapi-src/oneTBB/issues/172
+COMPV_ERROR_CODE CompVMem::poolCleanBuffersForCurrentThread()
+{
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "%s(threadId:%p)", __FUNCTION__, reinterpret_cast<void*>(CompVThread::idCurrent()));
+
+#if COMPV_TBBMALLOC
+	// Immediately free memory blocks in the default pool without scheduling: https://github.com/DoubangoTelecom/ultimateALPR-SDK/issues/152
+	const int tbbcode = scalable_allocation_command(TBBMALLOC_CLEAN_THREAD_BUFFERS, nullptr);
+	COMPV_CHECK_EXP_RETURN(tbbcode != TBBMALLOC_OK && tbbcode != TBBMALLOC_NO_EFFECT, COMPV_ERROR_CODE_E_INTEL_TBB);
+#endif /* COMPV_TBBMALLOC */
+
 	return COMPV_ERROR_CODE_S_OK;
 }
 

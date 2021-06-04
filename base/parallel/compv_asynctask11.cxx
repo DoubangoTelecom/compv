@@ -221,7 +221,13 @@ void* COMPV_STDCALL CompVAsyncTask11::run(void *pcArg)
     }
 
 bail:
+	// Cleaup buffers allocated by the pool for that thread.
+	// https://github.com/oneapi-src/oneTBB/issues/172
+	// https://github.com/DoubangoTelecom/ultimateALPR-SDK/issues/152
+	COMPV_CHECK_CODE_NOP(CompVMem::poolCleanBuffersForCurrentThread());
+
     COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "%s(threadId:%p) - EXIT", __FUNCTION__, reinterpret_cast<void*>(threadId));
+
     return nullptr;
 }
 

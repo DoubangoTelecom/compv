@@ -293,7 +293,7 @@ COMPV_ERROR_CODE CompVBase::init(int numThreads COMPV_DEFAULT(-1))
 	if (CompVMem::isTbbMallocEnabled()) {
 		const size_t physMemSizeInBytes20th = CompVCpu::physMemSize() / 20;
 		const size_t heapLimitInBytes = COMPV_MATH_MAX(COMPV_HEAP_LIMIT, physMemSizeInBytes20th);
-		COMPV_CHECK_CODE_BAIL(err_ = CompVMem::setHeapLimit(heapLimitInBytes), "Failed to set heap limit");
+		COMPV_CHECK_CODE_BAIL(err_ = CompVMem::poolSetHeapLimit(heapLimitInBytes), "Failed to set heap limit");
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Heap limit: #%zuKB (#%zuMB)", (heapLimitInBytes >> 10), (heapLimitInBytes >> 20));
 	}
 
