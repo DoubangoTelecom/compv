@@ -474,14 +474,14 @@ COMPV_ERROR_CODE CompVBase::deInit()
     s_bInitialized = false;
     s_bInitializing = false;
 
-    CompVParallel::deInit();
+    COMPV_CHECK_CODE_NOP(CompVParallel::deInit());
 
-    CompVWindowRegistry::deInit();
+	COMPV_CHECK_CODE_NOP(CompVWindowRegistry::deInit());
 
     // TODO(dmi): deInit other modules (not an issue because there is no memory allocation)
-    CompVMem::deInit();
+	COMPV_CHECK_CODE_NOP(CompVMem::deInit());
 
-    CompVImageDecoder::deInit();
+	COMPV_CHECK_CODE_NOP(CompVImageDecoder::deInit());
 
     COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Base modules deinitialized");
 
