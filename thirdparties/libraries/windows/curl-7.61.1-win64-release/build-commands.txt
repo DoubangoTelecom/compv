@@ -1,0 +1,13 @@
+#### Windows ####
+cd winbuild
+"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\amd64\vcvars64.bat"
+nmake /f MakeFile.vc mode=static DEBUG=no MACHINE=x64 ENABLE_WINSSL=no ENABLE_IPV6=no GEN_PDB=no ENABLE_SSPI=no ENABLE_IDN=no CC="cl /DCURL_DISABLE_LDAP /DCURL_DISABLE_NTLM"
+
+
+#### Linux ####
+wget https://github.com/curl/curl/archive/refs/tags/curl-7_61_1.tar.gz
+tar xzvf curl-7_61_1.tar.gz
+cd curl-curl-7_61_1
+autoreconf -fi
+./configure --disable-ipv6 --disable-manual --disable-rtsp --without-ssl --without-openssl --without-zlib
+make
