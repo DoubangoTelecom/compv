@@ -560,8 +560,8 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::rgbx(const CompVMatPtr& imageIn, CompVMat
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No in-place conversion found for BGRA32/BGR24 -> RGB24. You should consider using RGBA32/RGB24 instead of BGRA32/BGR24");
 		CompVMatPtrVector bgra32Or24Vec;
 		COMPV_CHECK_CODE_RETURN(CompVImage::unpack(imageIn, bgra32Or24Vec, enforceSingleThread));
-		CompVMatPtr R = bgra32Or24Vec[2], G = bgra32Or24Vec[0];
-		bgra32Or24Vec[0] = R, bgra32Or24Vec[2] = G; // Switch R<->B to convert from BGRA32 to RGBA32
+		CompVMatPtr R = bgra32Or24Vec[2], B = bgra32Or24Vec[0];
+		bgra32Or24Vec[0] = R, bgra32Or24Vec[2] = B; // Switch R<->B to convert from BGRA32 to RGBA32
 		bgra32Or24Vec.resize(3); // Remove alpha lane
 		COMPV_CHECK_CODE_RETURN(CompVImage::pack(bgra32Or24Vec, COMPV_SUBTYPE_PIXELS_RGB24, &imageRGBx, enforceSingleThread));
 		return COMPV_ERROR_CODE_S_OK;
