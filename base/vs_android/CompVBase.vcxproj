@@ -289,6 +289,7 @@
     <ClCompile Include="..\compv_common.cxx" />
     <ClCompile Include="..\compv_cpu.cxx" />
     <ClCompile Include="..\compv_debug.cxx" />
+    <ClCompile Include="..\compv_exif.cxx" />
     <ClCompile Include="..\compv_features.cxx" />
     <ClCompile Include="..\compv_fileutils.cxx" />
     <ClCompile Include="..\compv_gradient_fast.cxx" />
@@ -317,6 +318,7 @@
     <ClCompile Include="..\drawing\compv_viewport.cxx" />
     <ClCompile Include="..\drawing\compv_window.cxx" />
     <ClCompile Include="..\drawing\compv_window_registry.cxx" />
+    <ClCompile Include="..\easyexif\easyexif.cxx" />
     <ClCompile Include="..\image\compv_image.cxx" />
     <ClCompile Include="..\image\compv_image_conv_common.cxx" />
     <ClCompile Include="..\image\compv_image_conv_hsv.cxx" />

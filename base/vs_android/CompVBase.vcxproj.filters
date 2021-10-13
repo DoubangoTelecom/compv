@@ -181,6 +181,9 @@
     <Filter Include="include\video">
       <UniqueIdentifier>{c7bb1aa4-5e7c-4063-a72f-d786ba2c6d45}</UniqueIdentifier>
     </Filter>
+    <Filter Include="source\easyexif">
+      <UniqueIdentifier>{bdeb12f7-2f88-41d8-a13a-85eff5006fd6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\compv\base\compv_base.h">
@@ -1513,6 +1516,12 @@
     </ClCompile>
     <ClCompile Include="..\math\intrin\x86\compv_math_op_sub_intrin_avx.cxx">
       <Filter>source\math\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\easyexif\easyexif.cxx">
+      <Filter>source\easyexif</Filter>
+    </ClCompile>
+    <ClCompile Include="..\compv_exif.cxx">
+      <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
