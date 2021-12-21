@@ -268,7 +268,8 @@ static uint64_t CompVMipsCaps(const char* search_string)
 uint64_t CompVCpu::s_uFlags = 0;
 uint64_t CompVCpu::s_uFlagsDisabled = 0;
 uint64_t CompVCpu::s_uFlagsEnabled = 0;
-size_t CompVCpu::s_iCores = 0;
+size_t CompVCpu::s_iCoresOnline = 0;
+size_t CompVCpu::s_iCoresConf = 0;
 size_t CompVCpu::s_iCache1LineSize = 0;
 size_t CompVCpu::s_iCache1Size = 0;
 size_t CompVCpu::s_iPhysMemSize = 0;
@@ -584,21 +585,25 @@ COMPV_ERROR_CODE CompVCpu::init()
 #	else
     GetSystemInfo(&SystemInfo);
 #	endif
-    s_iCores = SystemInfo.dwNumberOfProcessors;
+	s_iCoresOnline = SystemInfo.dwNumberOfProcessors;
 #elif defined(_OPENMP) || defined(_OPENMP) || defined(HAVE_OMP_H)
-    s_iCores = omp_get_num_procs();
+	s_iCoresOnline = omp_get_num_procs();
 #elif COMPV_OS_APPLE
-    size_t len = sizeof(s_iCores);
+    size_t len = sizeof(s_iCoresOnline);
     int mib0[2] = { CTL_HW, HW_NCPU };
-    sysctl(mib0, 2, &s_iCores, &len, NULL, 0);
+    sysctl(mib0, 2, &s_iCoresOnline, &len, NULL, 0);
 #elif COMPV_OS_ANDROID
-    s_iCores = static_cast<int>(android_getCpuCount());
+	s_iCoresOnline = static_cast<int>(android_getCpuCount());
 #elif defined(__GNUC__)
-    s_iCores = static_cast<int>(sysconf(_SC_NPROCESSORS_ONLN));
+	s_iCoresOnline = static_cast<int>(sysconf(_SC_NPROCESSORS_ONLN));
+	s_iCoresConf = static_cast<int>(sysconf(_SC_NPROCESSORS_CONF));
 #else
     COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "coresCount function not implemented ...using 1 as default value");
-    s_iCores = 1;
+	s_iCoresOnline = 1;
 #endif
+
+	// Patching s_iCoresConf for platforms that don't support that option
+	s_iCoresConf = std::max(s_iCoresConf, s_iCoresOnline);
 
     //
     // Cache size

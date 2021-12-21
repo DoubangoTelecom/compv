@@ -112,8 +112,11 @@ public:
 		return s_strModelName;
 	}
     static size_t coresCount() {
-        return s_iCores;
+        return s_iCoresOnline;
     }
+	static size_t coresCountConf() {
+		return s_iCoresConf;
+	}
     static compv_core_id_t validCoreId(compv_core_id_t coreId);
     static uint64_t cyclesCountGlobal();
     static size_t cache1LineSize() { // In Bytes
@@ -177,7 +180,8 @@ private:
 	static bool s_bMathTrigFast;
 	static bool s_bMathFixedPoint;
 	static bool s_bIntelIpp;
-    static size_t s_iCores;
+    static size_t s_iCoresOnline;
+	static size_t s_iCoresConf;
     static size_t s_iCache1LineSize; // In Bytes
     static size_t s_iCache1Size; // In Bytes
 	static size_t s_iPhysMemSize; // In Bytes
