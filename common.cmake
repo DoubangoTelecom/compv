@@ -89,7 +89,7 @@ endif ()
 if ("${TARGET_ARCH}" MATCHES "arm64")
 	set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__ARM_NEON__ -ftree-vectorize -funsafe-math-optimizations -march=armv8-a")
 elseif ("${TARGET_ARCH}" MATCHES "arm32")
-	set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__ARM_NEON__ -ftree-vectorize -funsafe-math-optimizations -march=armv7l")
+	set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__ARM_NEON__ -ftree-vectorize -funsafe-math-optimizations -march=armv7-a")
 endif ()
 
 
