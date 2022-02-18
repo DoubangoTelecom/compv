@@ -73,9 +73,7 @@ if (WIN32)
 endif()
 
 # Raspberry
-if ("${TARGET_OS}" MATCHES "PI")
-	set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCOMPV_OS_PI=1 -mfpu=neon-vfpv4 -funsafe-math-optimizations")
-endif ()
+
 
 # NVIDIA Jetson
 if ("${TARGET_OS}" MATCHES "JETSON")
@@ -85,11 +83,15 @@ if ("${TARGET_OS}" MATCHES "JETSON")
 	endif()
 endif ()
 
-# Generic Linux ARM cross compilation
+# ARM cross compilation
 if ("${TARGET_ARCH}" MATCHES "arm64")
 	set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__ARM_NEON__ -ftree-vectorize -funsafe-math-optimizations -march=armv8-a")
 elseif ("${TARGET_ARCH}" MATCHES "arm32")
-	set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__ARM_NEON__ -ftree-vectorize -funsafe-math-optimizations -march=armv7-a")
+	if ("${TARGET_OS}" MATCHES "PI")
+		set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCOMPV_OS_PI=1 -mfpu=neon-vfpv4 -funsafe-math-optimizations")
+	else()
+		set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__ARM_NEON__ -ftree-vectorize -funsafe-math-optimizations -march=armv7-a")
+	endif()
 endif ()
 
 
