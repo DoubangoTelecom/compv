@@ -48,10 +48,10 @@ if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "i386|i686|amd64|x86_64|AMD64")
 	else(CMAKE_SIZEOF_VOID_P EQUAL 8)
 		set(TARGET_ARCH "x86")
 	endif()
-elseif (${CMAKE_SYSTEM_PROCESSOR} MATCHES "^arm")
-	set(TARGET_ARCH "arm32")
 elseif (${CMAKE_SYSTEM_PROCESSOR} MATCHES "^aarch64")
 	set(TARGET_ARCH "arm64")
+elseif (${CMAKE_SYSTEM_PROCESSOR} MATCHES "^arm")
+	set(TARGET_ARCH "arm32")
 else()
 	message(FATAL_ERROR "Not a valid processor" ${CMAKE_SYSTEM_PROCESSOR})
 endif()
@@ -121,11 +121,11 @@ else()
 
 	if ("${TARGET_OS}" MATCHES "PI") # we know that all rpi3+ devices support vfpv4
 		set(FLAGS_NEON "-mfpu=neon-vfpv4")
-	elseif (NOT "${CMAKE_SYSTEM_PROCESSOR}" MATCHES "arm64") # ARM64/aarch64-linux-gnu: unrecognized command line option '-mfpu=neon'
+	elseif (NOT "${TARGET_ARCH}" MATCHES "arm64") # ARM64/aarch64-linux-gnu: unrecognized command line option '-mfpu=neon'
 		set(FLAGS_NEON "-mfpu=neon")
 	endif ()
-	if (NOT "${CMAKE_SYSTEM_PROCESSOR}" MATCHES "arm64") # ARM64/aarch64-linux-gnu: unrecognized command line option '-mfpu=neon-vfpv4'
-		set(FLAGS_NEONFMA "-mfpu=neon-vfpv4") 
+	if ("${TARGET_ARCH}" MATCHES "arm32") # ARM64/aarch64-linux-gnu: unrecognized command line option '-mfpu=neon-vfpv4'
+		set(FLAGS_NEONFMA "-mfpu=neon-vfpv3") 
 	endif ()
 endif(MSVC)
 
