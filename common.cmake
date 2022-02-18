@@ -85,9 +85,11 @@ if ("${TARGET_OS}" MATCHES "JETSON")
 	endif()
 endif ()
 
-# ARM64 cross compilation
-if ("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "arm64")
+# Generic Linux ARM cross compilation
+if ("${TARGET_ARCH}" MATCHES "arm64")
 	set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__ARM_NEON__ -ftree-vectorize -funsafe-math-optimizations -march=armv8-a")
+elseif ("${TARGET_ARCH}" MATCHES "arm32")
+	set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__ARM_NEON__ -ftree-vectorize -funsafe-math-optimizations -march=armv7l")
 endif ()
 
 

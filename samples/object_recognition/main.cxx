@@ -3,7 +3,7 @@
 using namespace compv;
 
 #if COMPV_OS_WINDOWS
-#	define COMPV_SAMPLE_IMAGE_FOLDER			"C:/Projects/GitHub/data/test_images"
+#	define COMPV_SAMPLE_IMAGE_FOLDER			"E:/Projects/Downloads/data/test_images"
 #elif COMPV_OS_OSX
 #	define COMPV_SAMPLE_IMAGE_FOLDER			"/Users/mamadou/Projects/GitHub/data/test_images"
 #else
