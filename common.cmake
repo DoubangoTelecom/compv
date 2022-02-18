@@ -121,11 +121,9 @@ else()
 
 	if ("${TARGET_OS}" MATCHES "PI") # we know that all rpi3+ devices support vfpv4
 		set(FLAGS_NEON "-mfpu=neon-vfpv4")
-	elseif (NOT "${TARGET_ARCH}" MATCHES "arm64") # ARM64/aarch64-linux-gnu: unrecognized command line option '-mfpu=neon'
+	elseif ("${TARGET_ARCH}" MATCHES "arm32") # ARM64/aarch64-linux-gnu: unrecognized command line option '-mfpu=neon'
 		set(FLAGS_NEON "-mfpu=neon")
-	endif ()
-	if ("${TARGET_ARCH}" MATCHES "arm32") # ARM64/aarch64-linux-gnu: unrecognized command line option '-mfpu=neon-vfpv4'
-		set(FLAGS_NEONFMA "-mfpu=neon-vfpv4") # Use in ASM code only -> Support will be checked before call
+		set(FLAGS_NEONFMA "-mfpu=neon-vfpv4") # Used in ASM code only (*.S files) -> Support will be checked before call
 	endif ()
 endif(MSVC)
 
