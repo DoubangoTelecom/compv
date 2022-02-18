@@ -124,9 +124,9 @@ else()
 	elseif (NOT "${TARGET_ARCH}" MATCHES "arm64") # ARM64/aarch64-linux-gnu: unrecognized command line option '-mfpu=neon'
 		set(FLAGS_NEON "-mfpu=neon")
 	endif ()
-	if ("${TARGET_ARCH}" MATCHES "arm32") # ARM64/aarch64-linux-gnu: unrecognized command line option '-mfpu=neon-vfpv4'
-		set(FLAGS_NEONFMA "-mfpu=neon-vfpv3") 
-	endif ()
+	#if ("${TARGET_ARCH}" MATCHES "arm32") # ARM64/aarch64-linux-gnu: unrecognized command line option '-mfpu=neon-vfpv4'
+	#	set(FLAGS_NEONFMA "-mfpu=neon-vfpv3") 
+	#endif ()
 endif(MSVC)
 
 ## Detect YASM exe and args ##
