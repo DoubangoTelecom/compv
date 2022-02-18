@@ -129,8 +129,6 @@ else()
 		set(FLAGS_NEONFMA "-mfpu=neon-vfpv4")
 	endif()
 
-"${TARGET_ARCH}" MATCHES "arm32"
-	endif ()
 endif(MSVC)
 
 ## Detect YASM exe and args ##
