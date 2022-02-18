@@ -592,7 +592,7 @@ COMPV_ERROR_CODE CompVHoughKht::linking_AppendixA(CompVMatPtr& edges, CompVHough
 	}
 #endif /* COMPV_INTRINSIC && COMPV_ARCH_X86 */
 
-#if COMPV_INTRINSIC && COMPV_ARCH_ARM
+#if COMPV_INTRINSIC && (COMPV_ARCH_ARM64 || (COMPV_ARCH_ARM32 && COMPV_OS_PI))
 	if (edges->cols() >= 16 && CompVCpu::isEnabled(kCpuFlagARM_NEON) && edges->isAlignedNEON()) {
 		const int maxi128 = maxi - 15;
 		uint8x16_t vec;
