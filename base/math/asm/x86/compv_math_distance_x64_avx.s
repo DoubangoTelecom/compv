@@ -218,11 +218,8 @@ sym(CompVMathDistanceHamming32_Asm_X64_POPCNT_AVX2):
 	%define count		r10
 
 	%define vecA		ymm0
-	%define vecAn		xmm0
 	%define vecB		ymm1
-	%define vecBn		xmm1
 	%define vecC		ymm2
-	%define vecCn		xmm2
 	%define vecMask		ymm3
 	%define vecMaskn	xmm3
 
@@ -230,13 +227,10 @@ sym(CompVMathDistanceHamming32_Asm_X64_POPCNT_AVX2):
 	mov rdx, arg(3)
 	mov rcx, arg(4)
 	mov r8, 0x7fffffff
-	movss vecAn, [rax]
-	movss vecBn, [rdx]
-	movss vecCn, [rcx]
 	movd vecMaskn, r8d
-	vbroadcastss vecA, vecAn
-	vbroadcastss vecB, vecBn
-	vbroadcastss vecC, vecCn
+	vbroadcastss vecA, dword ptr [rax]
+	vbroadcastss vecB, dword ptr [rdx]
+	vbroadcastss vecC, dword ptr [rcx]
 	vpbroadcastd vecMask, vecMaskn
 
 	mov xPtr, arg(0)
@@ -329,11 +323,8 @@ sym(CompVMathDistanceHamming32_Asm_X64_POPCNT_AVX2):
 	%undef count		
 
 	%undef vecA
-	%undef vecAn	
 	%undef vecB
-	%undef vecBn	
-	%undef vecC
-	%undef vecCn		
+	%undef vecC	
 	%undef vecMask
 	%undef vecMaskn	
 
@@ -378,11 +369,8 @@ sym(CompVMathDistanceLine_32f_Asm_X64_FMA3_AVX):
 	%define count		r10
 
 	%define vecA		ymm0
-	%define vecAn		xmm0
 	%define vecB		ymm1
-	%define vecBn		xmm1
 	%define vecC		ymm2
-	%define vecCn		xmm2
 	%define vecMask		ymm3
 	%define vecMaskn	xmm3
 
@@ -390,13 +378,10 @@ sym(CompVMathDistanceLine_32f_Asm_X64_FMA3_AVX):
 	mov rdx, arg(3)
 	mov rcx, arg(4)
 	mov r8, 0x7fffffff
-	movss vecAn, [rax]
-	movss vecBn, [rdx]
-	movss vecCn, [rcx]
 	movd vecMaskn, r8d
-	vbroadcastss vecA, vecAn
-	vbroadcastss vecB, vecBn
-	vbroadcastss vecC, vecCn
+	vbroadcastss vecA, dword ptr [rax]
+	vbroadcastss vecB, dword ptr [rdx]
+	vbroadcastss vecC, dword ptr [rcx]
 	vpbroadcastd vecMask, vecMaskn
 
 	mov xPtr, arg(0)
@@ -503,11 +488,8 @@ sym(CompVMathDistanceLine_32f_Asm_X64_FMA3_AVX):
 	%undef count		
 
 	%undef vecA
-	%undef vecAn	
 	%undef vecB
-	%undef vecBn	
-	%undef vecC
-	%undef vecCn		
+	%undef vecC	
 	%undef vecMask
 	%undef vecMaskn	
 

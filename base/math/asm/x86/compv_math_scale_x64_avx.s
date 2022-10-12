@@ -194,7 +194,7 @@ sym(CompVMathScaleScale_32f32f_Asm_X64_AVX):
 
 	shl stride, COMPV_YASM_FLOAT32_SHIFT_BYTES
 
-	vbroadcastss ymm8, [s1]
+	vbroadcastss ymm8, dword ptr [s1]
 
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	; for (compv_uscalar_t j = 0; j < height; ++j)

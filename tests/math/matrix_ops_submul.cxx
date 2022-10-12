@@ -29,7 +29,7 @@ static const size_t COMPV_UNITTEST_SUBMUL_COUNT = sizeof(COMPV_UNITTEST_SUBMUL) 
 
 #define FILE_NAME			FILE_NAME_EQUIRECTANGULAR
 
-#define LOOP_COUNT			1
+#define LOOP_COUNT			100
 
 COMPV_ERROR_CODE matrix_ops_submul()
 {

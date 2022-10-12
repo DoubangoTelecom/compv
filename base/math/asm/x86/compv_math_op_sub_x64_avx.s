@@ -186,11 +186,9 @@ sym(CompVMathOpSubSubMul_32f32f32f_Asm_X64_AVX):
 
 	lea Astride, [Astride * COMPV_YASM_FLOAT32_SZ_BYTES]
 	lea Rstride, [Rstride * COMPV_YASM_FLOAT32_SZ_BYTES]
-
-	vmovss xmm4, [subVal1]
-	vmovss xmm5, [mulVal1]
-	vbroadcastss ymm4, xmm4
-	vbroadcastss ymm5, xmm5
+	
+	vbroadcastss ymm4, dword ptr [subVal1]
+	vbroadcastss ymm5, dword ptr [mulVal1]
 
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	; for (compv_uscalar_t j = 0; j < height; ++j)
