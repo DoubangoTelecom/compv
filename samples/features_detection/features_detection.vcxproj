@@ -181,9 +181,6 @@
     <ProjectReference Include="..\..\plugin_mfoundation\CompVPluginMFoundation.vcxproj">
       <Project>{f9006758-f433-4f8a-a12d-6f0ff4131a74}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\plugin_opencl\CompVPluginOpenCL.vcxproj">
-      <Project>{8dffe598-89e4-4dc0-af73-8e879d7d4530}</Project>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
