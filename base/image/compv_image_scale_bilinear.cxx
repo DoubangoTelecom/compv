@@ -48,14 +48,14 @@ static void scaleBilinear_C(const uint8_t* inPtr, compv_uscalar_t inStride, uint
 		nearestY = (outYStart >> 8); // nearest y-point
 		inPtr_ = (inPtr + (nearestY * inStride));
 		y0 = outYStart & 0xff;
-		y1 = 0xff - y0; // equal tp ~y0. See remark on x1
+		y1 = 0xff - y0; // equal to ~y0. See remark on x1
 		for (i = 0, x = 0; i < outWidth; ++i, x += sf_x) {
 			nearestX = (x >> 8); // nearest x-point
 
 			neighb0 = inPtr_[nearestX];
 			neighb1 = inPtr_[nearestX + 1];
 			neighb2 = inPtr_[nearestX + inStride];
-			neighb3 = inPtr_[nearestX + inStride + 1];
+			neighb3 = inPtr_[nearestX + 1 + inStride];
 
 			x0 = x & 0xff;
 			// x1 is equal to ~x0 but in c++ we're using uint32_t numbers (for x0 and x1) which means 
@@ -65,12 +65,12 @@ static void scaleBilinear_C(const uint8_t* inPtr, compv_uscalar_t inStride, uint
 			x1 = 0xff - x0;
 #if 1
 			outPtr[i] = static_cast<uint8_t>( // no need for saturation
-					(y1 * ((neighb0 * x1) + (neighb1 * x0)) >> 16) + // y1 * A
-					(y0 * ((neighb2 * x1) + (neighb3 * x0)) >> 16)   // y0 * B
+				(y1 * ((neighb0 * x1) + (neighb1 * x0)) >> 16) + // y1 * A
+				(y0 * ((neighb2 * x1) + (neighb3 * x0)) >> 16)   // y0 * B
 				);
 #else
 			outPtr[i] = static_cast<uint8_t>( // no need for saturation
-					(y1 * ((neighb0 * x1) + (neighb1 * x0)) + y0 * ((neighb2 * x1) + (neighb3 * x0))) >> 16
+				(y1 * ((neighb0 * x1) + (neighb1 * x0)) + y0 * ((neighb2 * x1) + (neighb3 * x0))) >> 16
 				);
 #endif
 		}
@@ -108,7 +108,7 @@ static COMPV_ERROR_CODE scaleBilinear(const uint8_t* inPtr, compv_uscalar_t inWi
 	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(outPtr) && COMPV_IS_ALIGNED_NEON(outStride)) {
 		COMPV_EXEC_IFDEF_INTRIN_ARM(scale = CompVImageScaleBilinear_Intrin_NEON);
 		COMPV_EXEC_IFDEF_ASM_ARM32(scale = CompVImageScaleBilinear_Asm_NEON32);
-        COMPV_EXEC_IFDEF_ASM_ARM64(scale = CompVImageScaleBilinear_Asm_NEON64);
+		COMPV_EXEC_IFDEF_ASM_ARM64(scale = CompVImageScaleBilinear_Asm_NEON64);
 	}
 #endif
 
@@ -145,7 +145,7 @@ COMPV_ERROR_CODE CompVImageScaleBilinear::process(const CompVMatPtr& imageIn, Co
 	// For now only grascale images are fully tested
 	COMPV_CHECK_EXP_RETURN(
 		imageIn->elmtInBytes() != sizeof(uint8_t) || imageIn->planeCount() != 1,
-		COMPV_ERROR_CODE_E_NOT_IMPLEMENTED, 
+		COMPV_ERROR_CODE_E_NOT_IMPLEMENTED,
 		"Only 8u/1dim subtypes are supported using bilinear scaling"
 	);
 	float float_sx, float_sy;
@@ -157,25 +157,25 @@ COMPV_ERROR_CODE CompVImageScaleBilinear::process(const CompVMatPtr& imageIn, Co
 		strideOut = imageOut->stride(planeId);
 		widthOut = imageOut->cols(planeId);
 		heightOut = imageOut->rows(planeId);
-		float_sx = static_cast<float>(widthIn - 1) / widthOut;
-		float_sy = static_cast<float>(heightIn - 1) / heightOut;
-		int_sx = static_cast<compv_scalar_t>(float_sx * 255.f); // do not use "<< 8" to include the error
-		int_sy = static_cast<compv_scalar_t>(float_sy * 255.f);  // do not use "<< 8" to include the error
+		float_sx = static_cast<float>(widthIn) / widthOut;
+		float_sy = static_cast<float>(heightIn) / heightOut;
+		int_sx = static_cast<compv_scalar_t>(float_sx * static_cast<float>(1 << 8)); // do not use "<< 8" to include the error
+		int_sy = static_cast<compv_scalar_t>(float_sy * static_cast<float>(1 << 8));  // do not use "<< 8" to include the error
 		// We're using fixed-point math and requiring factor between ]0-255]
 		// Doesn't make sense (down/up)scaling an image >255 times its initial size. For example: (16 x 16) <-> (4080, 4080).
 		// We expect image sizes to be within [16 - 4080] which means any (down/up)scaling will be ok. Off course you can (up/down)sample a 5k image if you want.
 		// Most of the time scaling is used to create pyramids with scaling factor is ]0, 1[ and each time level has a scaling factor equal to (sf(n-1)<<1).
 		if (float_sx <= 0.f || float_sx >= 255.f || float_sy <= 0.f || float_sy >= 255.f) {
 			COMPV_DEBUG_WARN_EX(
-				COMPV_THIS_CLASSNAME, 
-				"Invalid scaling factor: (float_sx: %f, float_sy: %f, widthIn: %zu, widthOut: %zu, heightIn: %zu, heightOut: %zu)", 
+				COMPV_THIS_CLASSNAME,
+				"Invalid scaling factor: (float_sx: %f, float_sy: %f, widthIn: %zu, widthOut: %zu, heightIn: %zu, heightOut: %zu)",
 				float_sx, float_sy, (size_t)widthIn, (size_t)widthOut, (size_t)heightIn, (size_t)heightOut
 			);
 			// We'll have a small distortion but do not break the conversion
 		}
 		COMPV_CHECK_CODE_RETURN(scaleBilinear(
-			imageIn->ptr<const uint8_t>(0, 0, planeId), widthIn, heightIn, strideIn, 
-			imageOut->ptr<uint8_t>(0, 0, planeId), widthOut, heightOut, strideOut, 
+			imageIn->ptr<const uint8_t>(0, 0, planeId), widthIn, heightIn, strideIn,
+			imageOut->ptr<uint8_t>(0, 0, planeId), widthOut, heightOut, strideOut,
 			int_sx, int_sy,
 			enforceSingleThread
 		));
