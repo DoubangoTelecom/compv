@@ -17,6 +17,14 @@
 
 #define COMPV_IMAGE_SCALE_SAMPLES_PER_THREAD (100 * 100)
 
+// When Shift is equal to #11 we'll have FACTOR=#2048, MASK=#2047(0x7FF), SHIFT2=#22
+// Shift equal to #8 produces drift (https://github.com/DoubangoTelecom/compv/issues/176)
+// Shift equal to #11 is correct but the SIMD functions are hard-coded with #8
+#define COMPV_IMAGE_SCALE_BILINEAR_SHIFT		8
+#define COMPV_IMAGE_SCALE_BILINEAR_SHIFT2		(COMPV_IMAGE_SCALE_BILINEAR_SHIFT << 1)
+#define COMPV_IMAGE_SCALE_BILINEAR_FACTOR		(1 << COMPV_IMAGE_SCALE_BILINEAR_SHIFT)
+#define COMPV_IMAGE_SCALE_BILINEAR_MASK			(COMPV_IMAGE_SCALE_BILINEAR_FACTOR - 1)
+
 COMPV_NAMESPACE_BEGIN()
 
 #if COMPV_ASM && COMPV_ARCH_X86
@@ -45,28 +53,28 @@ static void scaleBilinear_C(const uint8_t* inPtr, compv_uscalar_t inStride, uint
 	const uint8_t* inPtr_;
 
 	while (outYStart < outYEnd) {
-		nearestY = (outYStart >> 8); // nearest y-point
+		nearestY = (outYStart >> COMPV_IMAGE_SCALE_BILINEAR_SHIFT); // nearest y-point
 		inPtr_ = (inPtr + (nearestY * inStride));
-		y0 = outYStart & 0xff;
-		y1 = 0xff - y0; // equal to ~y0. See remark on x1
+		y0 = outYStart & COMPV_IMAGE_SCALE_BILINEAR_MASK;
+		y1 = COMPV_IMAGE_SCALE_BILINEAR_MASK - y0; // equal to ~y0. See remark on x1
 		for (i = 0, x = 0; i < outWidth; ++i, x += sf_x) {
-			nearestX = (x >> 8); // nearest x-point
+			nearestX = (x >> COMPV_IMAGE_SCALE_BILINEAR_SHIFT); // nearest x-point
 
 			neighb0 = inPtr_[nearestX];
 			neighb1 = inPtr_[nearestX + 1];
 			neighb2 = inPtr_[nearestX + inStride];
 			neighb3 = inPtr_[nearestX + 1 + inStride];
 
-			x0 = x & 0xff;
+			x0 = x & COMPV_IMAGE_SCALE_BILINEAR_MASK;
 			// x1 is equal to ~x0 but in c++ we're using uint32_t numbers (for x0 and x1) which means 
 			// we'll need to use a mask (0xff) to remove the upper 24 bytes.
 			// The code could be x1 = ~x0 & 0xff; This is slow.
 			// !! Using SIMD (SSE, AVX, NEON) code use "not" operand. !!
-			x1 = 0xff - x0;
+			x1 = COMPV_IMAGE_SCALE_BILINEAR_MASK - x0;
 #if 1
 			outPtr[i] = static_cast<uint8_t>( // no need for saturation
-				(y1 * ((neighb0 * x1) + (neighb1 * x0)) >> 16) + // y1 * A
-				(y0 * ((neighb2 * x1) + (neighb3 * x0)) >> 16)   // y0 * B
+				(y1 * ((neighb0 * x1) + (neighb1 * x0)) >> COMPV_IMAGE_SCALE_BILINEAR_SHIFT2) + // y1 * A
+				(y0 * ((neighb2 * x1) + (neighb3 * x0)) >> COMPV_IMAGE_SCALE_BILINEAR_SHIFT2)   // y0 * B
 				);
 #else
 			outPtr[i] = static_cast<uint8_t>( // no need for saturation
@@ -92,7 +100,6 @@ static COMPV_ERROR_CODE scaleBilinear(const uint8_t* inPtr, compv_uscalar_t inWi
 	threadsCount = (threadDisp && !threadDisp->isMotherOfTheCurrentThread() && !enforceSingleThread)
 		? CompVThreadDispatcher::guessNumThreadsDividingAcrossY(outStride, outHeight, maxThreads, COMPV_IMAGE_SCALE_SAMPLES_PER_THREAD)
 		: 1;
-
 #if COMPV_ARCH_X86
 	if (CompVCpu::isEnabled(kCpuFlagSSE41) && COMPV_IS_ALIGNED_SSE(outPtr) && COMPV_IS_ALIGNED_SSE(outStride)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86(scale = CompVImageScaleBilinear_Intrin_SSE41);
@@ -159,13 +166,13 @@ COMPV_ERROR_CODE CompVImageScaleBilinear::process(const CompVMatPtr& imageIn, Co
 		heightOut = imageOut->rows(planeId);
 		float_sx = static_cast<float>(widthIn) / widthOut;
 		float_sy = static_cast<float>(heightIn) / heightOut;
-		int_sx = static_cast<compv_scalar_t>(float_sx * static_cast<float>(1 << 8)); // do not use "<< 8" to include the error
-		int_sy = static_cast<compv_scalar_t>(float_sy * static_cast<float>(1 << 8));  // do not use "<< 8" to include the error
+		int_sx = static_cast<compv_scalar_t>(float_sx * static_cast<float>(COMPV_IMAGE_SCALE_BILINEAR_FACTOR));
+		int_sy = static_cast<compv_scalar_t>(float_sy * static_cast<float>(COMPV_IMAGE_SCALE_BILINEAR_FACTOR));
 		// We're using fixed-point math and requiring factor between ]0-255]
 		// Doesn't make sense (down/up)scaling an image >255 times its initial size. For example: (16 x 16) <-> (4080, 4080).
 		// We expect image sizes to be within [16 - 4080] which means any (down/up)scaling will be ok. Off course you can (up/down)sample a 5k image if you want.
 		// Most of the time scaling is used to create pyramids with scaling factor is ]0, 1[ and each time level has a scaling factor equal to (sf(n-1)<<1).
-		if (float_sx <= 0.f || float_sx >= 255.f || float_sy <= 0.f || float_sy >= 255.f) {
+		if (float_sx <= 0.f || float_sx >= COMPV_IMAGE_SCALE_BILINEAR_FACTOR || float_sy <= 0.f || float_sy >= COMPV_IMAGE_SCALE_BILINEAR_FACTOR) {
 			COMPV_DEBUG_WARN_EX(
 				COMPV_THIS_CLASSNAME,
 				"Invalid scaling factor: (float_sx: %f, float_sy: %f, widthIn: %zu, widthOut: %zu, heightIn: %zu, heightOut: %zu)",
