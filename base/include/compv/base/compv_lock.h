@@ -69,7 +69,7 @@ private:
 
 #define COMPV_AUTOLOCK_OBJ(T, obj)		CompVAutoLock<T> __COMPV_autoLock__((obj))
 #define COMPV_AUTOLOCK_THIS(T)			COMPV_AUTOLOCK_OBJ(T, this)
-#define COMPV_AUTOLOCK_THIS_CONST(T)	COMPV_AUTOLOCK_OBJ(UltOcrTensorflowSessionDetector, const_cast<T*>(this))
+#define COMPV_AUTOLOCK_THIS_CONST(T)	COMPV_AUTOLOCK_OBJ(T, const_cast<T*>(this))
 #define COMPV_AUTOLOCK(mutex)			CompVAutoLock2 __COMPV_autoLock2__((mutex))
 
 COMPV_NAMESPACE_END()
