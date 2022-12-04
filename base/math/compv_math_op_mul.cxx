@@ -13,7 +13,7 @@
 #include "compv/base/math/intrin/x86/compv_math_op_mul_intrin_sse2.h"
 #include "compv/base/math/intrin/arm/compv_math_op_mul_intrin_neon.h"
 
-#define COMPV_MATH_OP_MUL_ABt_SAMPLES_PER_THREAD (50 * 50)
+#define COMPV_MATH_OP_MUL_ABt_SAMPLES_PER_THREAD (10 * 10)
 
 COMPV_NAMESPACE_BEGIN()
 
