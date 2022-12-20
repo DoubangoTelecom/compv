@@ -82,7 +82,7 @@ COMPV_ERROR_CODE CompVGLUtils::bufferGen(GLuint* uBuffer)
 {
     COMPV_CHECK_EXP_RETURN(!uBuffer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     COMPV_glGenBuffers(1, uBuffer);
-    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "glGenBuffers returned %u", *uBuffer);
+    COMPV_DEBUG_VERBOSE_EX(COMPV_THIS_CLASSNAME, "glGenBuffers returned %u", *uBuffer);
     if (!CompVGLUtils::isBufferValid(*uBuffer)) {
         std::string errString;
         COMPV_CHECK_CODE_RETURN(CompVGLUtils::lastError(&errString));
@@ -114,7 +114,7 @@ COMPV_ERROR_CODE CompVGLUtils::renderBufferGen(GLuint* uRenderBuffer)
 {
     COMPV_CHECK_EXP_RETURN(!uRenderBuffer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     COMPV_glGenRenderbuffers(1, uRenderBuffer);
-    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "glGenRenderbuffers returned %u", *uRenderBuffer);
+	COMPV_DEBUG_VERBOSE_EX(COMPV_THIS_CLASSNAME, "glGenRenderbuffers returned %u", *uRenderBuffer);
     if (!CompVGLUtils::isRenderBufferValid(*uRenderBuffer)) {
         std::string errString;
         COMPV_CHECK_CODE_RETURN(CompVGLUtils::lastError(&errString));
@@ -146,7 +146,7 @@ COMPV_ERROR_CODE CompVGLUtils::frameBufferGen(GLuint* uFrameBuffer)
 {
     COMPV_CHECK_EXP_RETURN(!uFrameBuffer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     COMPV_glGenFramebuffers(1, uFrameBuffer);
-    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "glGenFramebuffers returned %u", *uFrameBuffer);
+	COMPV_DEBUG_VERBOSE_EX(COMPV_THIS_CLASSNAME, "glGenFramebuffers returned %u", *uFrameBuffer);
     if (!CompVGLUtils::isFrameBufferValid(*uFrameBuffer)) {
         std::string errString;
         COMPV_CHECK_CODE_RETURN(CompVGLUtils::lastError(&errString));
@@ -217,7 +217,7 @@ COMPV_ERROR_CODE CompVGLUtils::shaderGen(GLuint* uShader, GLenum shadType)
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
     *uShader = kCompVGLNameInvalid;
     GLuint shader_ = COMPV_glCreateShader(shadType);
-    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "glCreateShader returned %u", shader_);
+	COMPV_DEBUG_VERBOSE_EX(COMPV_THIS_CLASSNAME, "glCreateShader returned %u", shader_);
     if (!CompVGLUtils::isShaderValid(shader_)) {
         std::string errString_;
         COMPV_CHECK_CODE_BAIL(err_ = CompVGLUtils::lastError(&errString_));
@@ -336,7 +336,7 @@ COMPV_ERROR_CODE CompVGLUtils::textureGen(GLuint* uTex)
     COMPV_CHECK_EXP_RETURN(!uTex, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     *uTex = kCompVGLNameInvalid;
     COMPV_glGenTextures(1, uTex); // returned value not texture yet until bind() is called
-    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "glGenTextures returned %u", *uTex);
+	COMPV_DEBUG_VERBOSE_EX(COMPV_THIS_CLASSNAME, "glGenTextures returned %u", *uTex);
     if (!*uTex) {
         std::string errString_;
         COMPV_CHECK_CODE_RETURN(CompVGLUtils::lastError(&errString_));
@@ -396,7 +396,7 @@ COMPV_ERROR_CODE CompVGLUtils::programGen(GLuint* uPrg)
 {
     COMPV_CHECK_EXP_RETURN(!uPrg, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     *uPrg = glCreateProgram();
-    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "glCreateProgram returned %u", *uPrg);
+	COMPV_DEBUG_VERBOSE_EX(COMPV_THIS_CLASSNAME, "glCreateProgram returned %u", *uPrg);
     if (!CompVGLUtils::isProgramValid(*uPrg)) {
         std::string errString_;
         COMPV_CHECK_CODE_RETURN(CompVGLUtils::lastError(&errString_));
