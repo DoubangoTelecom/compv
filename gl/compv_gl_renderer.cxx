@@ -12,6 +12,8 @@
 #include "compv/gl/compv_gl_func.h"
 #include "compv/gl/compv_gl_info.h"
 
+#define THIS_CLASSNAME		"CompVGLRenderer"
+
 // GL_LUMINANCE_ALPHA and GL_LUMINANCE are both deprecated in OpenGL 3.0 but available up to OpenGL - ES 3.2
 // https://www.opengl.org/wiki/Image_Format#Legacy_Image_Formats
 #if defined(HAVE_OPENGLES)
@@ -372,7 +374,7 @@ COMPV_ERROR_CODE CompVGLRenderer::drawImage(const CompVMatPtr& mat, const CompVV
 		}
 	}
 	if (bFormatChanged) {
-		COMPV_DEBUG_INFO("GL renderer format changed");
+		COMPV_DEBUG_VERBOSE_EX(THIS_CLASSNAME, "GL renderer format changed");
 		COMPV_CHECK_CODE_RETURN(deInit());
 	}
 
