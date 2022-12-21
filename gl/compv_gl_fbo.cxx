@@ -11,6 +11,8 @@
 #include "compv/gl/compv_gl_common.h"
 #include "compv/gl/compv_gl_func.h"
 
+#define THIS_CLASSNAME	"CompVGLFbo"
+
 COMPV_NAMESPACE_BEGIN()
 
 CompVGLFbo::CompVGLFbo(size_t width, size_t height)
@@ -137,7 +139,7 @@ COMPV_ERROR_CODE CompVGLFbo::init(size_t width, size_t height)
     m_nWidth = width;
     m_nHeight = height;
 
-    COMPV_DEBUG_INFO("OpenGL FBO successfully created: FBO_id=%u, TEXT_id=%u, DEPTH_id=%u", m_uNameFrameBuffer, m_uNameTexture, m_uNameDepthStencil);
+    COMPV_DEBUG_VERBOSE_EX(THIS_CLASSNAME, "OpenGL FBO successfully created: FBO_id=%u, TEXT_id=%u, DEPTH_id=%u", m_uNameFrameBuffer, m_uNameTexture, m_uNameDepthStencil);
 
 bail:
     COMPV_glBindFramebuffer(GL_FRAMEBUFFER, 0);
