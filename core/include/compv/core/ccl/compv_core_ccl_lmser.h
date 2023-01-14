@@ -29,7 +29,7 @@ public:
 	COMPV_OBJECT_GET_ID(CompVConnectedComponentLabelingLMSER);
 
 	virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize) override /*Overrides(CompVCaps)*/;
-	virtual COMPV_ERROR_CODE process(const CompVMatPtr& ptr8uImage, CompVConnectedComponentLabelingResultPtrPtr result) override /*Overrides(CompVConnectedComponentLabeling)*/;
+	virtual COMPV_ERROR_CODE process(const CompVMatPtr& ptr8uImage, CompVConnectedComponentLabelingResultPtrPtr result) const override /*Overrides(CompVConnectedComponentLabeling)*/;
 
 	static COMPV_ERROR_CODE newObj(CompVConnectedComponentLabelingPtrPtr ccl);
 

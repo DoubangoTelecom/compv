@@ -576,7 +576,7 @@ static COMPV_ERROR_CODE build_LEA(const CompVMatPtr& ptr16sNer, const CompVMemZe
 }
 
 // VERY important: binar must be binary image (allowed values: 0x01, 0xff, 0x00)
-COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& binar, CompVConnectedComponentLabelingResultPtrPtr result) /*Overrides(CompVConnectedComponentLabeling)*/
+COMPV_ERROR_CODE CompVConnectedComponentLabelingLSL::process(const CompVMatPtr& binar, CompVConnectedComponentLabelingResultPtrPtr result) const /*Overrides(CompVConnectedComponentLabeling)*/
 {
 	COMPV_CHECK_EXP_RETURN(!binar || binar->isEmpty() || binar->planeCount() != 1 || binar->elmtInBytes() != sizeof(uint8_t) || !result
 		, COMPV_ERROR_CODE_E_INVALID_PARAMETER);

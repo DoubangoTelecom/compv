@@ -145,7 +145,7 @@ COMPV_ERROR_CODE CompVConnectedComponentLabelingLMSER::set(int id, const void* v
 	}
 }
 
-COMPV_ERROR_CODE CompVConnectedComponentLabelingLMSER::process(const CompVMatPtr& ptr8uImage, CompVConnectedComponentLabelingResultPtrPtr result) /*Overrides(CompVConnectedComponentLabeling)*/
+COMPV_ERROR_CODE CompVConnectedComponentLabelingLMSER::process(const CompVMatPtr& ptr8uImage, CompVConnectedComponentLabelingResultPtrPtr result) const /*Overrides(CompVConnectedComponentLabeling)*/
 {
 	COMPV_CHECK_EXP_RETURN(!ptr8uImage || ptr8uImage->isEmpty() || ptr8uImage->planeCount() != 1 || ptr8uImage->elmtInBytes() != sizeof(uint8_t) || !result
 		, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
