@@ -372,11 +372,15 @@ public:
 
 		// Create output
 		if (interType == COMPV_INTERPOLATION_TYPE_BICUBIC_FLOAT32 || interType == COMPV_INTERPOLATION_TYPE_BILINEAR_FLOAT32) {
-			COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float32_t>(&output_, outputSize_.height, outputSize_.width));
+			if (!output_ || !output_->isRawTypeMatch<compv_float32_t>() || output_->cols() != outputSize_.width || output_->rows() != outputSize_.height) {
+				COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float32_t>(&output_, outputSize_.height, outputSize_.width));
+			}
 		}
 		else {
 			const COMPV_SUBTYPE subType = ((input->planeCount() == 1 && input->subType() == COMPV_SUBTYPE_RAW_UINT8) ? COMPV_SUBTYPE_PIXELS_Y : input->subType());
-			COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&output_, subType, outputSize_.width, outputSize_.height));
+			if (!output_ || output_->subType() != subType || output_->cols() != outputSize_.width || output_->rows() != outputSize_.height) {
+				COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&output_, subType, outputSize_.width, outputSize_.height));
+			}
 		}
 
 		// Perform interpolation

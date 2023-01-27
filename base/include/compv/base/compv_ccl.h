@@ -201,7 +201,7 @@ public:
 
 	virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize) override /*Overrides(CompVCaps)*/;
 
-	virtual COMPV_ERROR_CODE process(const CompVMatPtr& ptr8uData, CompVConnectedComponentLabelingResultPtrPtr result) = 0;
+	virtual COMPV_ERROR_CODE process(const CompVMatPtr& ptr8uData, CompVConnectedComponentLabelingResultPtrPtr result) const = 0;
 
 	template<typename T>
 	static const T* reinterpret_castr(const CompVConnectedComponentLabelingResultPtr& result) {
