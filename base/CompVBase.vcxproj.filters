@@ -184,6 +184,18 @@
     <Filter Include="source\asm\arm">
       <UniqueIdentifier>{2a4cf357-ab5b-4cd1-8216-06aac9f117e6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\rapidjson">
+      <UniqueIdentifier>{a6a9dc03-8322-40ee-b560-38471e85ea2d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\rapidjson\error">
+      <UniqueIdentifier>{97fc68b0-682c-49bf-9be4-e1bba3aca666}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\rapidjson\internal">
+      <UniqueIdentifier>{ae4ebc97-8630-4ee7-8920-ba278d0e6c3e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\rapidjson\msinttypes">
+      <UniqueIdentifier>{5ab76206-883e-4347-83d5-d04ae55025fc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\base\compv_base.h">
@@ -866,6 +878,120 @@
     </ClInclude>
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_op_sub_intrin_avx.h">
       <Filter>include\math\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\rapidjson\allocators.h">
+      <Filter>include\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\rapidjson\cursorstreamwrapper.h">
+      <Filter>include\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\rapidjson\document.h">
+      <Filter>include\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\rapidjson\encodedstream.h">
+      <Filter>include\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\rapidjson\encodings.h">
+      <Filter>include\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\rapidjson\filereadstream.h">
+      <Filter>include\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\rapidjson\filewritestream.h">
+      <Filter>include\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\rapidjson\fwd.h">
+      <Filter>include\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\rapidjson\istreamwrapper.h">
+      <Filter>include\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\rapidjson\memorybuffer.h">
+      <Filter>include\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\rapidjson\memorystream.h">
+      <Filter>include\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\rapidjson\ostreamwrapper.h">
+      <Filter>include\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\rapidjson\pointer.h">
+      <Filter>include\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\rapidjson\prettywriter.h">
+      <Filter>include\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\rapidjson\rapidjson.h">
+      <Filter>include\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\rapidjson\reader.h">
+      <Filter>include\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\rapidjson\schema.h">
+      <Filter>include\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\rapidjson\stream.h">
+      <Filter>include\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\rapidjson\stringbuffer.h">
+      <Filter>include\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\rapidjson\uri.h">
+      <Filter>include\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\rapidjson\writer.h">
+      <Filter>include\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\rapidjson\error\en.h">
+      <Filter>include\rapidjson\error</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\rapidjson\error\error.h">
+      <Filter>include\rapidjson\error</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\rapidjson\internal\biginteger.h">
+      <Filter>include\rapidjson\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\rapidjson\internal\clzll.h">
+      <Filter>include\rapidjson\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\rapidjson\internal\diyfp.h">
+      <Filter>include\rapidjson\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\rapidjson\internal\dtoa.h">
+      <Filter>include\rapidjson\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\rapidjson\internal\ieee754.h">
+      <Filter>include\rapidjson\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\rapidjson\internal\itoa.h">
+      <Filter>include\rapidjson\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\rapidjson\internal\meta.h">
+      <Filter>include\rapidjson\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\rapidjson\internal\pow10.h">
+      <Filter>include\rapidjson\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\rapidjson\internal\regex.h">
+      <Filter>include\rapidjson\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\rapidjson\internal\stack.h">
+      <Filter>include\rapidjson\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\rapidjson\internal\strfunc.h">
+      <Filter>include\rapidjson\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\rapidjson\internal\strtod.h">
+      <Filter>include\rapidjson\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\rapidjson\internal\swap.h">
+      <Filter>include\rapidjson\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\rapidjson\msinttypes\inttypes.h">
+      <Filter>include\rapidjson\msinttypes</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\rapidjson\msinttypes\stdint.h">
+      <Filter>include\rapidjson\msinttypes</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
