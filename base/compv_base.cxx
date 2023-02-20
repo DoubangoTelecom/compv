@@ -261,9 +261,9 @@ COMPV_ERROR_CODE CompVBase::init(int numThreads COMPV_DEFAULT(-1))
 			"iOS"
 #elif COMPV_OS_JETSON
 #	if COMPV_HAVE_TFTRT
-			"Jetson"
-#	else
 			"Jetson_TFTRT"
+#	else
+			"Jetson"
 #	endif
 #elif COMPV_OS_LINUX
 			"Generic Linux"
