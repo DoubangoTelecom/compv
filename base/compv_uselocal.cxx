@@ -18,8 +18,8 @@ CompVUselocal::CompVUselocal(const int& category, const std::string& newLocal)
 	// https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/configthreadlocale?view=msvc-170
 	_configthreadlocale(_ENABLE_PER_THREAD_LOCALE);
 	const char *old_locale = setlocale(category, nullptr);
-	const char *new_locale = setlocale(category, newLocal.c_str());
 	m_strOldLocal = std::string(old_locale ? old_locale : "");
+	const char *new_locale = setlocale(category, newLocal.c_str());
 #else
 	// https://man7.org/linux/man-pages/man3/uselocale.3.html
 	new_local = newlocale(category, newLocal.c_str(), nullptr);
