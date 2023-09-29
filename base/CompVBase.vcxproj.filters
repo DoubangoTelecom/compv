@@ -993,6 +993,9 @@
     <ClInclude Include="include\compv\base\rapidjson\msinttypes\stdint.h">
       <Filter>include\rapidjson\msinttypes</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\compv_uselocal.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx">
@@ -1609,6 +1612,9 @@
     </ClCompile>
     <ClCompile Include="math\intrin\x86\compv_math_op_sub_intrin_avx.cxx">
       <Filter>source\math\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_uselocal.cxx">
+      <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

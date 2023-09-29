@@ -163,6 +163,7 @@ set(compv_base_SOURCES
 	compv_points_transform.cxx
 	compv_sharedlib.cxx
 	compv_simd_globals.cxx
+	compv_uselocal.cxx
 	compv_xml.cxx
 )
 

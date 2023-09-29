@@ -90,6 +90,7 @@
     <ClInclude Include="include\compv\base\compv_points_transform.h" />
     <ClInclude Include="include\compv\base\compv_sharedlib.h" />
     <ClInclude Include="include\compv\base\compv_simd_globals.h" />
+    <ClInclude Include="include\compv\base\compv_uselocal.h" />
     <ClInclude Include="include\compv\base\compv_xml.h" />
     <ClInclude Include="include\compv\base\drawing\compv_canvas.h" />
     <ClInclude Include="include\compv\base\drawing\compv_mvp.h" />
@@ -351,6 +352,7 @@
     <ClCompile Include="compv_points_transform.cxx" />
     <ClCompile Include="compv_sharedlib.cxx" />
     <ClCompile Include="compv_simd_globals.cxx" />
+    <ClCompile Include="compv_uselocal.cxx" />
     <ClCompile Include="compv_xml.cxx" />
     <ClCompile Include="drawing\compv_canvas.cxx" />
     <ClCompile Include="drawing\compv_mvp.cxx" />
