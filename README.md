@@ -14,6 +14,7 @@
   - ... and many more 
 
 ### SDKs using our code ###
+ - <a target="_blank" href="https://github.com/DoubangoTelecom/KYC-Documents-Verif-SDK">KYC documents recognition & verification </a>
  - <a target="_blank" href="https://github.com/DoubangoTelecom/FaceLivenessDetection-SDK">3D Passive Face Liveness Detection (Anti-Spoofing) </a>
  - <a target="_blank" href="https://github.com/DoubangoTelecom/ultimateALPR-SDK">ANPR/ALPR SDK for embedded devices (ARM) and desktops (x86) </a>
  - <a target="_blank" href="https://github.com/DoubangoTelecom/ultimateMRZ-SDK">MRZ/MRP SDK for embedded devices (ARM) and desktops (x86) </a>
@@ -21,6 +22,7 @@
  - <a target="_blank" href="https://github.com/DoubangoTelecom/ultimateMRZ-SDK">Bank check information extraction/OCR from Magnetic Ink Character Recognition [MICR] (E-13B & CMC-7) using deep learning for embedded devices (ARM) and desktops (x86) </a>
  
  ### Online demo apps using our code ###
+  - <a target="_blank" href="https://doubango.org/webapps/kyc-documents-verif/">KYC documents recognition & verification</a>
  - <a target="_blank" href="https://doubango.org/webapps/face-liveness/">Cloud-based 3D Passive Face Liveness Detection (Anti-Spoofing)</a>
  - <a target="_blank" href="https://doubango.org/webapps/alpr/">Cloud-based Automatic Number/License Plate Recognition (ANPR/ALPR)</a>
  - <a target="_blank" href="https://doubango.org/webapps/mrz/">Cloud-based Machine-readable zone/passport (MRZ/MRP)</a>
