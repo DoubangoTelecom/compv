@@ -22,7 +22,7 @@ CompVUselocal::CompVUselocal(const int& category, const std::string& newLocal)
 	const char *new_locale = setlocale(category, newLocal.c_str());
 #else
 	// https://man7.org/linux/man-pages/man3/uselocale.3.html
-	new_local = newlocale(category, newLocal.c_str(), nullptr);
+	locale_t new_local = newlocale(category, newLocal.c_str(), nullptr);
 	m_OldLocal = uselocale(new_local);
 	freelocale(new_local);
 #endif
