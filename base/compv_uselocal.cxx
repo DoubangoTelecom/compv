@@ -22,9 +22,8 @@ CompVUselocal::CompVUselocal(const int& category, const std::string& newLocal)
 	const char *new_locale = setlocale(category, newLocal.c_str());
 #else
 	// https://man7.org/linux/man-pages/man3/uselocale.3.html
-	locale_t new_local = newlocale(category, newLocal.c_str(), nullptr);
-	m_OldLocal = uselocale(new_local);
-	freelocale(new_local);
+	m_NewLocal = newlocale(category, newLocal.c_str(), nullptr);
+	m_OldLocal = uselocale(m_NewLocal);
 #endif
 }
 
@@ -36,6 +35,9 @@ CompVUselocal::~CompVUselocal()
 	setlocale(m_dCategory, m_strOldLocal.c_str());
 #else
 	uselocale(m_OldLocal);
+	if (m_NewLocal != (locale_t)LC_GLOBAL_LOCALE) {
+		freelocale(m_NewLocal);
+	}
 #endif
 }
 

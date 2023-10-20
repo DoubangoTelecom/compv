@@ -27,6 +27,7 @@ private:
 	std::string m_strOldLocal;
 #else
 	locale_t m_OldLocal;
+	locale_t m_NewLocal;
 #endif
 	COMPV_VS_DISABLE_WARNINGS_END()
 };
