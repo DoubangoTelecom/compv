@@ -92,9 +92,9 @@ COMPV_ERROR_CODE CompVSemaphore::init(int initialVal COMPV_DEFAULT(0))
 {
 #if COMPV_OS_WINDOWS
 #	if TSK_UNDER_WINDOWS_RT
-	m_pHandle = CreateSemaphoreEx(NULL, initialVal, 0x7FFFFFFF, NULL, 0x00000000, SEMAPHORE_ALL_ACCESS);
+	m_pHandle = CreateSemaphoreEx(NULL, initialVal, INT_MAX, NULL, 0x00000000, SEMAPHORE_ALL_ACCESS);
 #	else
-	m_pHandle = CreateSemaphore(NULL, initialVal, 0x7FFFFFFF, NULL);
+	m_pHandle = CreateSemaphore(NULL, initialVal, INT_MAX, NULL);
 #	endif
 #else
 	m_pHandle = CompVMem::calloc(1, sizeof(SEMAPHORE_S));
