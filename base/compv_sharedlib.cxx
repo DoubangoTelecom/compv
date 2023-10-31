@@ -36,7 +36,7 @@ void* CompVSharedLib::sym(const char* name)
 COMPV_ERROR_CODE CompVSharedLib::open(const char* filePath, void** handle, bool quiet COMPV_DEFAULT(false))
 {
     COMPV_CHECK_EXP_RETURN(!filePath || !handle, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Loading sharded library from %s", filePath);
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Loading shared library from %s", filePath);
     void* handle_ = nullptr;
 #if COMPV_OS_WINDOWS
 #	if COMPV_OS_WINDOWS_RT
