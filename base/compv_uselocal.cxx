@@ -35,7 +35,7 @@ CompVUselocal::~CompVUselocal()
 	setlocale(m_dCategory, m_strOldLocal.c_str());
 #else
 	uselocale(m_OldLocal);
-	if (m_NewLocal != (locale_t)LC_GLOBAL_LOCALE) {
+	if (m_NewLocal != (locale_t)LC_GLOBAL_LOCALE && m_NewLocal != (locale_t)0) {
 		freelocale(m_NewLocal);
 	}
 #endif
