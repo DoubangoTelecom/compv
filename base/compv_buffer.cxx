@@ -19,7 +19,7 @@ CompVBuffer::CompVBuffer(const void* pcPtr COMPV_DEFAULT(nullptr), size_t size C
     , m_bOweMem(true)
 {
     if (size > 0) { // NULL pcPtr means create a buffer with random data
-        COMPV_ASSERT(COMPV_ERROR_CODE_IS_OK(copyData(pcPtr, size)));
+        COMPV_CHECK_CODE_NOP(copyData(pcPtr, size));
     }
 }
 
@@ -41,10 +41,10 @@ COMPV_ERROR_CODE CompVBuffer::copyData(const void* pcPtr, size_t size)
 		COMPV_CHECK_EXP_RETURN(!(m_pPtr = CompVMem::malloc(size + sizeof(double))), COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
         m_bOweMem = true;
     }
-    m_nSize = size;
     if (pcPtr) {
         COMPV_CHECK_CODE_RETURN(CompVMem::copy(m_pPtr, pcPtr, size));
     }
+	m_nSize = size;
     return COMPV_ERROR_CODE_S_OK;
 }
 
