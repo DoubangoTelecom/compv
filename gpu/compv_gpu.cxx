@@ -28,7 +28,10 @@ COMPV_NAMESPACE_BEGIN()
 bool CompVGpu::s_bInitialized = false;
 bool CompVGpu::s_bActive = false;
 bool CompVGpu::s_bEnabled = true;
+bool CompVGpu::s_bCudaSupported = false;
 CompVSharedLibPtr CompVGpu::s_ptrImpl = nullptr;
+
+static bool CompVGpu_isCudaSupported();
 
 COMPV_ERROR_CODE CompVGpu::init()
 {
@@ -47,6 +50,7 @@ COMPV_ERROR_CODE CompVGpu::init()
 	// Load OpenCL shared library
 	// See ultimateBase for GPGPU functions: https://github.com/DoubangoTelecom/ultimateBase
 
+	s_bCudaSupported = CompVGpu_isCudaSupported();
 	s_bActive = s_ptrImpl && (openclIntialized || cudaIntialized);
 	s_bInitialized = true;
 
@@ -75,6 +79,47 @@ COMPV_ERROR_CODE CompVGpu::setEnabled(bool enabled)
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "GPU enabled: %s", enabled ? "true" : "false");
 	s_bEnabled = enabled;
 	return COMPV_ERROR_CODE_S_OK;
+}
+
+static bool CompVGpu_isCudaSupported()
+{
+	static const char* kCUDA_dll_name =
+#if COMPV_OS_WINDOWS
+		"nvcuda.dll";
+#else
+		"libcuda.so";
+#endif
+	CompVSharedLibPtr sharedlib;
+	COMPV_ERROR_CODE compv_err = CompVSharedLib::newObj(&sharedlib, kCUDA_dll_name, true);
+	if (!sharedlib || COMPV_ERROR_CODE_IS_NOK(compv_err)) {
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Failed to open CUDA lib");
+		return false;
+	}
+
+	int(*cuInit_pt)(unsigned int Flags) = reinterpret_cast<decltype(cuInit_pt)>(sharedlib->sym("cuInit"));
+	if (!cuInit_pt) {
+		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Failed to find cuInit");
+		return false;
+	}
+	int cuda_err = cuInit_pt(0);
+	if (cuda_err) {
+		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "cuInit failed with error code %d", cuda_err);
+		return false;
+	}
+
+	int(*cuDeviceGetCount_pt)(int *count) = reinterpret_cast<decltype(cuDeviceGetCount_pt)>(sharedlib->sym("cuDeviceGetCount"));
+	if (!cuDeviceGetCount_pt) {
+		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Failed to find cuDeviceGetCount");
+		return false;
+	}
+	int numGPUs = 0;
+	cuda_err = cuDeviceGetCount_pt(&numGPUs);
+	if (cuda_err) {
+		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "cuDeviceGetCount failed with error code %d", cuda_err);
+		return false;
+	}
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "=== Number of CUDA devices: %d ===", numGPUs);
+	return (numGPUs > 0);
 }
 
 COMPV_NAMESPACE_END()

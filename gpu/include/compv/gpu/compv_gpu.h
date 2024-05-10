@@ -31,11 +31,16 @@ public:
 	static COMPV_INLINE bool isActiveAndEnabled() {
 		return isActive() && isEnabled();
 	}
+	static COMPV_INLINE bool isCudaSupported() {
+		return s_bCudaSupported;
+	}
+
 private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
 	static bool s_bInitialized;
 	static bool s_bActive;
 	static bool s_bEnabled;
+	static bool s_bCudaSupported;
 	static CompVSharedLibPtr s_ptrImpl;
 	COMPV_VS_DISABLE_WARNINGS_END()
 };
