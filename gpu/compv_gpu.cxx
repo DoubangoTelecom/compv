@@ -83,6 +83,14 @@ COMPV_ERROR_CODE CompVGpu::setEnabled(bool enabled)
 
 static bool CompVGpu_isCudaSupported()
 {
+	static bool __checked = false;
+	static bool __supported = false;
+
+	if (__checked) {
+		return __supported;
+	}
+	__checked = true;
+
 	static const char* kCUDA_dll_name =
 #if COMPV_OS_WINDOWS
 		"nvcuda.dll";
@@ -93,33 +101,33 @@ static bool CompVGpu_isCudaSupported()
 	COMPV_ERROR_CODE compv_err = CompVSharedLib::newObj(&sharedlib, kCUDA_dll_name, true);
 	if (!sharedlib || COMPV_ERROR_CODE_IS_NOK(compv_err)) {
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Failed to open CUDA lib");
-		return false;
+		return (__supported = false);
 	}
 
 	int(*cuInit_pt)(unsigned int Flags) = reinterpret_cast<decltype(cuInit_pt)>(sharedlib->sym("cuInit"));
 	if (!cuInit_pt) {
 		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Failed to find cuInit");
-		return false;
+		return (__supported = false);
 	}
 	int cuda_err = cuInit_pt(0);
 	if (cuda_err) {
 		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "cuInit failed with error code %d", cuda_err);
-		return false;
+		return (__supported = false);
 	}
 
 	int(*cuDeviceGetCount_pt)(int *count) = reinterpret_cast<decltype(cuDeviceGetCount_pt)>(sharedlib->sym("cuDeviceGetCount"));
 	if (!cuDeviceGetCount_pt) {
 		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Failed to find cuDeviceGetCount");
-		return false;
+		return (__supported = false);
 	}
 	int numGPUs = 0;
 	cuda_err = cuDeviceGetCount_pt(&numGPUs);
 	if (cuda_err) {
 		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "cuDeviceGetCount failed with error code %d", cuda_err);
-		return false;
+		return (__supported = false);
 	}
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "=== Number of CUDA devices: %d ===", numGPUs);
-	return (numGPUs > 0);
+	return (__supported = (numGPUs > 0));
 }
 
 COMPV_NAMESPACE_END()
