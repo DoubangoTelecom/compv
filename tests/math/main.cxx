@@ -23,7 +23,7 @@
 #define TEST_CALIB_CAMERA					0
 #define TEST_CALIB_UNDIST					0
 #define TEST_DISTANCE_HAMMING				0
-#define TEST_DISTANCE_LINE					1
+#define TEST_DISTANCE_LINE					0
 #define TEST_DISTANCE_PARABOLA				0
 #define TEST_HISTOGRAM_BUILD				0
 #define TEST_HISTOGRAM_EQUALIZ				0
@@ -33,7 +33,7 @@
 #define TEST_ML_SVM_PREDICT					0
 #define TEST_ML_SVM_RBF						0
 #define TEST_PCA							0
-#define TEST_ACTIVATION_FUNCTIONS			0
+#define TEST_ACTIVATION_FUNCTIONS			1
 #define TEST_CAST							0
 
 

@@ -11,7 +11,9 @@
 COMPV_NAMESPACE_BEGIN()
 
 CompVUselocal::CompVUselocal(const int& category, const std::string& newLocal)
+#if COMPV_OS_WINDOWS
 	: m_dCategory(category)
+#endif
 {
 	// Set new local
 #if COMPV_OS_WINDOWS

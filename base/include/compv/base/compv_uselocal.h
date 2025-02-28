@@ -22,8 +22,8 @@ public:
 	virtual ~CompVUselocal();
 private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
-		int m_dCategory;
 #if COMPV_OS_WINDOWS
+	int m_dCategory;
 	std::string m_strOldLocal;
 #else
 	locale_t m_OldLocal;

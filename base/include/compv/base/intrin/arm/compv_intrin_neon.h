@@ -58,11 +58,13 @@ COMPV_NAMESPACE_BEGIN()
 #endif
 
 #if COMPV_ARCH_ARM64
-#   define COMPV_ARM_N_FMAQ(a, b, c) vfmaq_n_f32(a, b, c)
-#   define COMPV_ARM_N_FMA(a, b, c) vfma_n_f32(a, b, c)
+#   define COMPV_ARM_FMAQ_F32(a, b, c)			vfmaq_f32(a, b, c)
+#   define COMPV_ARM_N_FMA_F32Q_F32(a, b, c)	vfmaq_n_f32(a, b, c)
+#   define COMPV_ARM_N_FMA_F32(a, b, c)			vfma_n_f32(a, b, c)
 #else
-#   define COMPV_ARM_N_FMAQ(a, b, c) vfmaq_f32(a, b, (float32x4_t) {c, c, c, c})
-#   define COMPV_ARM_N_FMA(a, b, c) vfma_f32(a, b, (float32x2_t) {c, c})
+#   define COMPV_ARM_FMAQ_F32(a, b, c)			vaddq_f32(a, vmulq_f32(b, c))
+#   define COMPV_ARM_N_FMA_F32Q_F32(a, b, c)	vfmaq_f32(a, b, (float32x4_t) {c, c, c, c})
+#   define COMPV_ARM_N_FMA_F32(a, b, c)			vfma_f32(a, b, (float32x2_t) {c, c})
 #endif
 
 // TODO(dmi): Not optimized

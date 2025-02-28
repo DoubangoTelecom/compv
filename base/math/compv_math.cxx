@@ -137,10 +137,10 @@ COMPV_ERROR_CODE CompVMath::minn(const CompVMatPtr &A, double& minn)
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVMath::tanh(const double* lut_ptr, const size_t& lut_length, const double& scale, const CompVMatPtr &inMat, CompVMatPtrPtr outMat)
+COMPV_ERROR_CODE CompVMath::tanh(const float* lut_ptr, const size_t& lut_length, const float& scale, const CompVMatPtr &inMat, CompVMatPtrPtr outMat)
 {
 	COMPV_CHECK_EXP_RETURN(
-		!lut_ptr || !lut_length || !inMat || !outMat || !inMat->isRawTypeMatch<double>(),
+		!lut_ptr || !lut_length || !inMat || !outMat || !inMat->isRawTypeMatch<float>(),
 		COMPV_ERROR_CODE_E_INVALID_PARAMETER
 	);
 	CompVMatPtr outMat_;
@@ -149,7 +149,7 @@ COMPV_ERROR_CODE CompVMath::tanh(const double* lut_ptr, const size_t& lut_length
 		for (size_t row = ystart; row < yend; ++row) {
 			COMPV_CHECK_CODE_RETURN(CompVMathActivationFunctions::tanh(
 				lut_ptr, lut_length, scale,
-				inMat->cols(), inMat->ptr<const double>(row), outMat_->ptr<double>(row)
+				inMat->cols(), inMat->ptr<const float>(row), outMat_->ptr<float>(row)
 			));
 		}
 		return COMPV_ERROR_CODE_S_OK;
@@ -165,10 +165,10 @@ COMPV_ERROR_CODE CompVMath::tanh(const double* lut_ptr, const size_t& lut_length
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVMath::tanhMul(const double* lut_ptr, const size_t& lut_length, const double& scale, const CompVMatPtr &inMat, const CompVMatPtr &mulMat, CompVMatPtrPtr outMat)
+COMPV_ERROR_CODE CompVMath::tanhMul(const float* lut_ptr, const size_t& lut_length, const float& scale, const CompVMatPtr &inMat, const CompVMatPtr &mulMat, CompVMatPtrPtr outMat)
 {
 	COMPV_CHECK_EXP_RETURN(
-		!lut_ptr || !lut_length || !inMat || !mulMat || !outMat || !inMat->isRawTypeMatch<double>() || 
+		!lut_ptr || !lut_length || !inMat || !mulMat || !outMat || !inMat->isRawTypeMatch<float>() ||
 		mulMat->subType() != inMat->subType() || mulMat->cols() != inMat->cols() || mulMat->rows() != inMat->rows(),
 		COMPV_ERROR_CODE_E_INVALID_PARAMETER
 	);
@@ -178,7 +178,7 @@ COMPV_ERROR_CODE CompVMath::tanhMul(const double* lut_ptr, const size_t& lut_len
 		for (size_t row = ystart; row < yend; ++row) {
 			COMPV_CHECK_CODE_RETURN(CompVMathActivationFunctions::tanhMul(
 				lut_ptr, lut_length, scale,
-				inMat->cols(), inMat->ptr<const double>(row), mulMat->ptr<const double>(row), outMat_->ptr<double>(row)
+				inMat->cols(), inMat->ptr<const float>(row), mulMat->ptr<const float>(row), outMat_->ptr<float>(row)
 			));
 		}
 		return COMPV_ERROR_CODE_S_OK;
@@ -194,10 +194,10 @@ COMPV_ERROR_CODE CompVMath::tanhMul(const double* lut_ptr, const size_t& lut_len
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVMath::logistic(const double* lut_ptr, const size_t& lut_length, const double& scale, const CompVMatPtr &inMat, CompVMatPtrPtr outMat)
+COMPV_ERROR_CODE CompVMath::logistic(const float* lut_ptr, const size_t& lut_length, const float& scale, const CompVMatPtr &inMat, CompVMatPtrPtr outMat)
 {
 	COMPV_CHECK_EXP_RETURN(
-		!lut_ptr || !lut_length || !inMat || !outMat || !inMat->isRawTypeMatch<double>(),
+		!lut_ptr || !lut_length || !inMat || !outMat || !inMat->isRawTypeMatch<float>(),
 		COMPV_ERROR_CODE_E_INVALID_PARAMETER
 	);
 	CompVMatPtr outMat_;
@@ -206,7 +206,7 @@ COMPV_ERROR_CODE CompVMath::logistic(const double* lut_ptr, const size_t& lut_le
 		for (size_t row = ystart; row < yend; ++row) {
 			COMPV_CHECK_CODE_RETURN(CompVMathActivationFunctions::logistic(
 				lut_ptr, lut_length, scale,
-				inMat->cols(), inMat->ptr<const double>(row), outMat_->ptr<double>(row)
+				inMat->cols(), inMat->ptr<const float>(row), outMat_->ptr<float>(row)
 			));
 		}
 		return COMPV_ERROR_CODE_S_OK;
@@ -222,10 +222,10 @@ COMPV_ERROR_CODE CompVMath::logistic(const double* lut_ptr, const size_t& lut_le
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVMath::logisticMul(const double* lut_ptr, const size_t& lut_length, const double& scale, const CompVMatPtr &inMat, const CompVMatPtr &mulMat, CompVMatPtrPtr outMat)
+COMPV_ERROR_CODE CompVMath::logisticMul(const float* lut_ptr, const size_t& lut_length, const float& scale, const CompVMatPtr &inMat, const CompVMatPtr &mulMat, CompVMatPtrPtr outMat)
 {
 	COMPV_CHECK_EXP_RETURN(
-		!lut_ptr || !lut_length || !inMat || !mulMat || !outMat || !inMat->isRawTypeMatch<double>() ||
+		!lut_ptr || !lut_length || !inMat || !mulMat || !outMat || !inMat->isRawTypeMatch<float>() ||
 		mulMat->subType() != inMat->subType() || mulMat->cols() != inMat->cols() || mulMat->rows() != inMat->rows(),
 		COMPV_ERROR_CODE_E_INVALID_PARAMETER
 	);
@@ -235,7 +235,7 @@ COMPV_ERROR_CODE CompVMath::logisticMul(const double* lut_ptr, const size_t& lut
 		for (size_t row = ystart; row < yend; ++row) {
 			COMPV_CHECK_CODE_RETURN(CompVMathActivationFunctions::logisticMul(
 				lut_ptr, lut_length, scale,
-				inMat->cols(), inMat->ptr<const double>(row), mulMat->ptr<const double>(row), outMat_->ptr<double>(row)
+				inMat->cols(), inMat->ptr<const float>(row), mulMat->ptr<const float>(row), outMat_->ptr<float>(row)
 			));
 		}
 		return COMPV_ERROR_CODE_S_OK;
@@ -248,6 +248,29 @@ COMPV_ERROR_CODE CompVMath::logisticMul(const double* lut_ptr, const size_t& lut
 	));
 
 	*outMat = outMat_;
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVMath::softmaxInPlace(CompVMatPtr &inOutMat)
+{
+	COMPV_CHECK_EXP_RETURN(
+		!inOutMat || !inOutMat->isRawTypeMatch<float>(),
+		COMPV_ERROR_CODE_E_INVALID_PARAMETER
+	);
+	auto funcPtr = [&](const size_t ystart, const size_t yend) -> COMPV_ERROR_CODE {
+		for (size_t row = ystart; row < yend; ++row) {
+			COMPV_CHECK_CODE_RETURN(CompVMathActivationFunctions::softmaxInPlace(
+				inOutMat->cols(), inOutMat->ptr<float>(row)
+			));
+		}
+		return COMPV_ERROR_CODE_S_OK;
+	};
+	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+		funcPtr,
+		inOutMat->cols(),
+		inOutMat->rows(),
+		COMPV_MATH_ACTIVATION_FUNCTIONS_MIN_SAMPLES_PER_THREAD
+	));
 	return COMPV_ERROR_CODE_S_OK;
 }
 

@@ -18,13 +18,42 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-void CompVMathActivationFunctionsTanh_64f64f_Intrin_AVX2(
-	const compv_float64_t* lut_ptr,
+void CompVMathActivationFunctionsTanh_32f32f_Intrin_AVX2(
+	COMPV_ALIGNED(AVX) const compv_float32_t* lut_ptr,
 	const compv_uscalar_t& lut_length_minus1,
-	const compv_float64_t* scale1,
-	const compv_uscalar_t& in_out_length,
-	const compv_float64_t* in_ptr,
-	compv_float64_t* out_ptr
+	const compv_float32_t* scale1,
+	COMPV_ALIGNED(8) const compv_uscalar_t& in_out_length,
+	const compv_float32_t* in_ptr,
+	compv_float32_t* out_ptr
+);
+
+void CompVMathActivationFunctionsTanhMul_32f32f_Intrin_AVX2(
+	COMPV_ALIGNED(AVX) const compv_float32_t* lut_ptr,
+	const compv_uscalar_t& lut_length_minus1,
+	const compv_float32_t* scale1,
+	COMPV_ALIGNED(8) const compv_uscalar_t& in_out_length,
+	const compv_float32_t* in_ptr,
+	const compv_float32_t* mul_ptr,
+	compv_float32_t* out_ptr
+);
+
+void CompVMathActivationFunctionsLogistic_32f32f_Intrin_AVX2(
+	COMPV_ALIGNED(AVX) const compv_float32_t* lut_ptr,
+	const compv_uscalar_t& lut_length_minus1,
+	const compv_float32_t* scale1,
+	COMPV_ALIGNED(8) const compv_uscalar_t& in_out_length,
+	const compv_float32_t* in_ptr,
+	compv_float32_t* out_ptr
+);
+
+void CompVMathActivationFunctionsLogisticMul_32f32f_Intrin_AVX2(
+	COMPV_ALIGNED(AVX) const compv_float32_t* lut_ptr,
+	const compv_uscalar_t& lut_length_minus1,
+	const compv_float32_t* scale1,
+	COMPV_ALIGNED(8) const compv_uscalar_t& in_out_length,
+	const compv_float32_t* in_ptr,
+	const compv_float32_t* mul_ptr,
+	compv_float32_t* out_ptr
 );
 
 COMPV_NAMESPACE_END()
