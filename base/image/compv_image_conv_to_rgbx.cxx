@@ -562,7 +562,7 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::rgbx(const CompVMatPtr& imageIn, CompVMat
 		) {
 		CompVMatPtrVector bgra32Or24Vec;
 		COMPV_CHECK_CODE_RETURN(CompVImage::unpack(imageIn, bgra32Or24Vec, enforceSingleThread));
-		CompVMatPtr &L2 = bgra32Or24Vec[2], &L0 = bgra32Or24Vec[0];
+		CompVMatPtr L2 = bgra32Or24Vec[2], L0 = bgra32Or24Vec[0];
 		bgra32Or24Vec[0] = L2, bgra32Or24Vec[2] = L0; // Switch R<->B to convert from BGR <-> RGB
 		bgra32Or24Vec.resize(3); // Remove alpha lane
 		COMPV_CHECK_CODE_RETURN(CompVImage::pack(bgra32Or24Vec, outPixelFormat, &imageRGBx, enforceSingleThread));
