@@ -39,6 +39,15 @@ void CompVMathOpSubSubMul_32f32f32f_Intrin_NEON(
 	COMPV_ALIGNED(NEON) const compv_uscalar_t Astride,
 	COMPV_ALIGNED(NEON) const compv_uscalar_t Rstride
 );
+void CompVMathOpSubSubVal_32f32f32f_Intrin_NEON(
+	COMPV_ALIGNED(NEON) const compv_float32_t* Aptr,
+	const compv_float32_t* subVal1,
+	COMPV_ALIGNED(NEON) compv_float32_t* Rptr,
+	const compv_uscalar_t width,
+	const compv_uscalar_t height,
+	COMPV_ALIGNED(NEON) const compv_uscalar_t Astride,
+	COMPV_ALIGNED(NEON) const compv_uscalar_t Rstride
+);
 
 COMPV_NAMESPACE_END()
 

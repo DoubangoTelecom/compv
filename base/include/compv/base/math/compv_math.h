@@ -92,6 +92,7 @@ public:
 	static COMPV_ERROR_CODE hypot(const CompVMatPtr& x, const CompVMatPtr& y, CompVMatPtrPtr r);
 	static COMPV_ERROR_CODE hypot_naive(const CompVMatPtr& x, const CompVMatPtr& y, CompVMatPtrPtr r);
 	static COMPV_ERROR_CODE sub(const CompVMatPtr& A, const CompVMatPtr& B, CompVMatPtrPtr R, const bool enforceSingleThread = false);
+	static COMPV_ERROR_CODE sub(const CompVMatPtr& A, const double& subVal, CompVMatPtrPtr R, const bool enforceSingleThread = false);
 	static COMPV_ERROR_CODE subMul(const CompVMatPtr& A, const double& subVal, const double& mulVal, CompVMatPtrPtr R, const bool enforceSingleThread = false);
 	static COMPV_ERROR_CODE mulAB(const CompVMatPtr &A, const CompVMatPtr &B, CompVMatPtrPtr R);
 	static COMPV_ERROR_CODE mulABt(const CompVMatPtr &A, const CompVMatPtr &B, CompVMatPtrPtr R);

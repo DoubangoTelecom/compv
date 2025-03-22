@@ -65,6 +65,12 @@ COMPV_ERROR_CODE CompVMath::sub(const CompVMatPtr& A, const CompVMatPtr& B, Comp
 	return COMPV_ERROR_CODE_S_OK;
 }
 
+COMPV_ERROR_CODE CompVMath::sub(const CompVMatPtr& A, const double& subVal, CompVMatPtrPtr R, const bool enforceSingleThread COMPV_DEFAULT(false))
+{
+	COMPV_CHECK_CODE_RETURN(CompVMathOpSub::sub(A, subVal, R, enforceSingleThread));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 COMPV_ERROR_CODE CompVMath::subMul(const CompVMatPtr& A, const double& subVal, const double& mulVal, CompVMatPtrPtr R, const bool enforceSingleThread COMPV_DEFAULT(false))
 {
 	COMPV_CHECK_CODE_RETURN(CompVMathOpSub::subMul(A, subVal, mulVal, R, enforceSingleThread));
