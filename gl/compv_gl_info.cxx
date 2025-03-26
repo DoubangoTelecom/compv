@@ -22,33 +22,35 @@ GLint CompVGLInfo::s_iMaxtextureSize = 1024;
 bool CompVGLInfo::extensions::s_bvertex_array_object = false;
 bool CompVGLInfo::extensions::s_btexture_float = false;
 
+#define THIS_CLASSNAME "CompVGLInfo"
+
 COMPV_ERROR_CODE CompVGLInfo::gather()
 {
     if (CompVGLInfo::s_bGathered) {
         return COMPV_ERROR_CODE_S_OK;
     }
-    COMPV_DEBUG_INFO("Gathering GL info...");
+    COMPV_DEBUG_INFO_EX(THIS_CLASSNAME, "Gathering GL info...");
     COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 
     const char* extensions = reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS));
 	const GLubyte* version = glGetString(GL_VERSION);
-    COMPV_DEBUG_INFO("OpenGL version string: %s", version);
-    COMPV_DEBUG_INFO("OpenGL shading version string: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
-    COMPV_DEBUG_INFO("OpenGL renderer string: %s", glGetString(GL_RENDERER));
-    COMPV_DEBUG_INFO("OpenGL vendor string: %s", glGetString(GL_VENDOR));
-    COMPV_DEBUG_INFO("OpenGL extensions string: %s", extensions);
+    COMPV_DEBUG_INFO_EX(THIS_CLASSNAME, "OpenGL version string: %s", version);
+    COMPV_DEBUG_INFO_EX(THIS_CLASSNAME, "OpenGL shading version string: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
+    COMPV_DEBUG_INFO_EX(THIS_CLASSNAME, "OpenGL renderer string: %s", glGetString(GL_RENDERER));
+    COMPV_DEBUG_INFO_EX(THIS_CLASSNAME, "OpenGL vendor string: %s", glGetString(GL_VENDOR));
+    COMPV_DEBUG_VERBOSE_EX(THIS_CLASSNAME, "OpenGL extensions string: %s", extensions);
 
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &s_iMaxtextureSize);
-	COMPV_DEBUG_INFO("GL_MAX_TEXTURE_SIZE: %d", s_iMaxtextureSize);
+	COMPV_DEBUG_INFO_EX(THIS_CLASSNAME, "GL_MAX_TEXTURE_SIZE: %d", s_iMaxtextureSize);
 
 #if defined(HAVE_OPENGL)
     glGetIntegerv(GL_MAJOR_VERSION, &s_iVersionMajor);
     glGetIntegerv(GL_MINOR_VERSION, &s_iVersionMinor);
-    COMPV_DEBUG_INFO("OpenGL parsed major and minor versions: %d.%d", s_iVersionMajor, s_iVersionMinor);
+    COMPV_DEBUG_INFO_EX(THIS_CLASSNAME, "OpenGL parsed major and minor versions: %d.%d", s_iVersionMajor, s_iVersionMinor);
     glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &s_iMaxColorAttachments);
-    COMPV_DEBUG_INFO("GL_MAX_DRAW_BUFFERS: %d", s_iMaxColorAttachments);
+    COMPV_DEBUG_INFO_EX(THIS_CLASSNAME, "GL_MAX_DRAW_BUFFERS: %d", s_iMaxColorAttachments);
     glGetIntegerv(GL_MAX_DRAW_BUFFERS, &s_iMaxDrawBuffers);
-    COMPV_DEBUG_INFO("GL_MAX_DRAW_BUFFERS: %d", s_iMaxDrawBuffers);
+    COMPV_DEBUG_INFO_EX(THIS_CLASSNAME, "GL_MAX_DRAW_BUFFERS: %d", s_iMaxDrawBuffers);
 	COMPV_CHECK_EXP_NOP(s_iVersionMajor < 3, COMPV_ERROR_CODE_E_GL); // Do not exit but alert the user that OpenGL 3.0+ is required
 #else
 	COMPV_CHECK_EXP_NOP(sscanf(reinterpret_cast<const char*>(version), "OpenGL ES %d.%d ", &s_iVersionMajor, &s_iVersionMinor) == EOF, COMPV_ERROR_CODE_E_GL);
