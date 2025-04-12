@@ -32,7 +32,7 @@ public:
     static size_t getSize(const char* pcPath);
     static std::string getExt(const char* pcPath);
     static COMPV_IMAGE_FORMAT getImageFormat(const char* pcPath);
-    static COMPV_ERROR_CODE read(const char* pcPath, CompVBufferPtrPtr buffer);
+    static COMPV_ERROR_CODE read(const char* pcPath, CompVBufferPtrPtr buffer, bool quiet = false);
     static FILE* open(const char* fname, const char* mode);
 	static COMPV_ERROR_CODE close(FILE** file);
 	static COMPV_ERROR_CODE write(const char* pcPath, const void* data, size_t count);

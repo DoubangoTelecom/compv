@@ -259,38 +259,48 @@ COMPV_IMAGE_FORMAT CompVFileUtils::getImageFormat(const char* pcPath)
     }
 }
 
-COMPV_ERROR_CODE CompVFileUtils::read(const char* pcPath, CompVBufferPtrPtr buffer)
+COMPV_ERROR_CODE CompVFileUtils::read(const char* pcPath, CompVBufferPtrPtr buffer, bool quiet COMPV_DEFAULT(false))
 {
     COMPV_CHECK_EXP_RETURN(!pcPath || !buffer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     CompVBufferPtr buffer_ = NULL;
     size_t size_ = CompVFileUtils::getSize(pcPath);
 	if (!size_) {
-		COMPV_DEBUG_ERROR_EX(kModuleNameFileUtils, "File at %s is empty or doesn't exist", pcPath);
+		if (!quiet) {
+			COMPV_DEBUG_ERROR_EX(kModuleNameFileUtils, "File at %s is empty or doesn't exist", pcPath);
+		}
 		return COMPV_ERROR_CODE_E_FAILED_TO_READ_FILE;
 	}
 	else {
         FILE* file_ = nullptr;
         void* mem_ = nullptr;
         if (!(file_ = CompVFileUtils::open(pcPath, "rb"))) {
-            COMPV_DEBUG_ERROR_EX(kModuleNameFileUtils, "Can't open %s", pcPath);
+			if (!quiet) {
+				COMPV_DEBUG_ERROR_EX(kModuleNameFileUtils, "Can't open %s", pcPath);
+			}
             return COMPV_ERROR_CODE_E_FILE_NOT_FOUND;
         }
         mem_ = CompVMem::malloc(size_ + 1);
         if (!mem_) {
-            COMPV_DEBUG_ERROR_EX(kModuleNameFileUtils, "Failed to alloc mem with size = %zu", size_);
+			if (!quiet) {
+				COMPV_DEBUG_ERROR_EX(kModuleNameFileUtils, "Failed to alloc mem with size = %zu", size_);
+			}
             fclose(file_);
             return COMPV_ERROR_CODE_E_OUT_OF_MEMORY;
         }
         size_t read_;
         if (size_ != (read_ = fread(mem_, 1, size_, file_))) {
-            COMPV_DEBUG_ERROR_EX(kModuleNameFileUtils, "fread(%s) returned %zu instead of %zu", pcPath, read_, size_);
+			if (!quiet) {
+				COMPV_DEBUG_ERROR_EX(kModuleNameFileUtils, "fread(%s) returned %zu instead of %zu", pcPath, read_, size_);
+			}
             fclose(file_);
             CompVMem::free(&mem_);
             return COMPV_ERROR_CODE_E_FAILED_TO_READ_FILE;
         }
 		*(reinterpret_cast<char*>(mem_) + size_) = '\0'; //!\ required when reading sources to avoid garbage (e.g OpenCL source *.cl) 
         if (COMPV_ERROR_CODE_IS_NOK(CompVBuffer::newObjAndTakeData(&mem_, size_, &buffer_))) {
-            COMPV_DEBUG_ERROR_EX(kModuleNameFileUtils, "Failed to create new CompVBuffer object");
+			if (!quiet) {
+				COMPV_DEBUG_ERROR_EX(kModuleNameFileUtils, "Failed to create new CompVBuffer object");
+			}
         }
         fclose(file_);
         CompVMem::free(&mem_);
