@@ -154,7 +154,7 @@ static T CompVYAMLGet(ryml::ConstNodeRef root, const std::string& section, const
 {
 	// https://github.com/biojppm/rapidyaml/issues/389#issuecomment-1719945531
 	auto yml_section = root.find_child(section.c_str());
-	if (yml_section.valid()) {
+	if (yml_section.valid()) { // section must exist
 		const auto& yml_val = yml_section.find_child(entry_name.c_str());
 		if (yml_val.valid()) {
 			T result;
@@ -167,7 +167,7 @@ static T CompVYAMLGet(ryml::ConstNodeRef root, const std::string& section, const
 			}
 		}
 	}
-	COMPV_DEBUG_WARN_EX(THIS_CLASSNAME, "No YAML entry %s", entry_name.c_str());
+	COMPV_DEBUG_WARN_EX(THIS_CLASSNAME, "No YAML entry %s -> %s", section.c_str(), entry_name.c_str());
 	return default_val;
 }
 
