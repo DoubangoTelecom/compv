@@ -1038,6 +1038,9 @@
     <ClInclude Include="include\compv\base\math\intrin\arm\compv_math_utils_intrin_neon.h">
       <Filter>include\math\intrin\arm</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\compv_yaml.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx">
@@ -1657,6 +1660,9 @@
     </ClCompile>
     <ClCompile Include="math\intrin\arm\compv_math_activation_functions_intrin_neon.cxx">
       <Filter>source\math\intrin\arm</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_yaml.cxx">
+      <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

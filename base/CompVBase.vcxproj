@@ -92,6 +92,7 @@
     <ClInclude Include="include\compv\base\compv_simd_globals.h" />
     <ClInclude Include="include\compv\base\compv_uselocal.h" />
     <ClInclude Include="include\compv\base\compv_xml.h" />
+    <ClInclude Include="include\compv\base\compv_yaml.h" />
     <ClInclude Include="include\compv\base\drawing\compv_canvas.h" />
     <ClInclude Include="include\compv\base\drawing\compv_mvp.h" />
     <ClInclude Include="include\compv\base\drawing\compv_renderer.h" />
@@ -368,6 +369,7 @@
     <ClCompile Include="compv_simd_globals.cxx" />
     <ClCompile Include="compv_uselocal.cxx" />
     <ClCompile Include="compv_xml.cxx" />
+    <ClCompile Include="compv_yaml.cxx" />
     <ClCompile Include="drawing\compv_canvas.cxx" />
     <ClCompile Include="drawing\compv_mvp.cxx" />
     <ClCompile Include="drawing\compv_renderer.cxx" />
@@ -2548,7 +2550,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_WIN32_WINNT=_WIN32_WINNT_VISTA;_USRDLL;COMPV_BASE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>include;../thirdparties/include/windows</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;../thirdparties/include/windows;../thirdparties/include/common</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
@@ -2567,7 +2569,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_WIN32_WINNT=_WIN32_WINNT_VISTA;_USRDLL;COMPV_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>include;../thirdparties/include/windows</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;../thirdparties/include/windows;../thirdparties/include/common</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
@@ -2589,7 +2591,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_WIN32_WINNT=_WIN32_WINNT_VISTA;COMPV_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>include;../thirdparties/include/windows</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;../thirdparties/include/windows;../thirdparties/include/common</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
@@ -2685,7 +2687,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_WIN32_WINNT=_WIN32_WINNT_VISTA;_USRDLL;COMPV_BASE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>include;../thirdparties/include/windows</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;../thirdparties/include/windows;../thirdparties/include/common</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
@@ -2707,7 +2709,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_WIN32_WINNT=_WIN32_WINNT_VISTA;_USRDLL;COMPV_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>include;../thirdparties/include/windows</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;../thirdparties/include/windows;../thirdparties/include/common</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
@@ -2732,7 +2734,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_WIN32_WINNT=_WIN32_WINNT_VISTA;COMPV_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>include;../thirdparties/include/windows</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;../thirdparties/include/windows;../thirdparties/include/common</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
