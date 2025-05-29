@@ -23,6 +23,7 @@ struct COMPV_BASE_API CompVYAML
 {	
 protected:
 	CompVYAML() = delete;
+	CompVYAML(CompVYAML const& that);
 	CompVYAML(const std::string& yaml_data, const std::string& default_section = "default");
 public:
 	virtual ~CompVYAML();

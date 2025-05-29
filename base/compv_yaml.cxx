@@ -38,6 +38,12 @@ static COMPV_ERROR_CODE CompVYAMLSet(ryml::NodeRef root, const std::string& sect
 template <typename T>
 static T CompVYAMLGet(ryml::ConstNodeRef root, const std::string& section, const std::string& entry_name, const std::string& default_section, const T& default_val);
 
+CompVYAML::CompVYAML(CompVYAML const& that)
+{
+	this->m_DefaultSection = that.m_DefaultSection;
+	this->m_Tree = that.m_Tree ? new ryml::Tree(*that.m_Tree) : nullptr;
+}
+
 CompVYAML::CompVYAML(const std::string& yaml_data, const std::string& default_section COMPV_DEFAULT("default"))
 	: m_Tree(nullptr)
 	, m_DefaultSection(default_section)
