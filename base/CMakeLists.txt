@@ -6,7 +6,7 @@ target_check_return_if_exist(compv_base)
 
 project(libcompv_base VERSION 1.0.0 LANGUAGES CXX C ASM)
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/include/common)
 if (WIN32)
   include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../thirdparties/include/windows)
 endif()
