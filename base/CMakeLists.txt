@@ -165,6 +165,7 @@ set(compv_base_SOURCES
 	compv_simd_globals.cxx
 	compv_uselocal.cxx
 	compv_xml.cxx
+	compv_yaml.cxx
 )
 
 ###### --- iOS --- ######

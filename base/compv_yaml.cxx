@@ -11,6 +11,7 @@
 #define RYML_SINGLE_HDR_DEFINE_NOW
 
 COMPV_VS_DISABLE_WARNINGS_BEGIN(4800)
+#define RYML_DEFAULT_CALLBACK_USES_EXCEPTIONS
 #include <rapidyaml-0.9.0/ryml_all.hpp>
 COMPV_VS_DISABLE_WARNINGS_END()
 
@@ -109,6 +110,11 @@ bool CompVYAML::getBool(const std::string& section, const std::string& name, con
 	COMPV_YAML_GET_IMPL();
 }
 
+std::vector<std::string> CompVYAML::getArray(const std::string& section, const std::string& name, const std::vector<std::string>& default_val COMPV_DEFAULT({})) const
+{
+	COMPV_YAML_GET_IMPL();
+}
+
 // Most likely called before Engine init() -> cannot use CompVFileUtils::read()
 std::string CompVYAML::readData(const std::string& file_path)
 {
@@ -146,12 +152,17 @@ std::string CompVYAML::readData(const std::string& file_path)
 template <typename T>
 static COMPV_ERROR_CODE CompVYAMLSet(ryml::NodeRef root, const std::string& section, const std::string& name, const T& val)
 {
-	auto yml_section = root.find_child(section.c_str());
-	if (!yml_section.valid()) {
-		COMPV_DEBUG_ERROR_EX(THIS_CLASSNAME, "Cannot find YAML section %s", section.c_str());
-		return COMPV_ERROR_CODE_E_NOT_FOUND;
+	try {
+		auto yml_section = root.find_child(section.c_str());
+		if (!yml_section.valid()) {
+			COMPV_DEBUG_ERROR_EX(THIS_CLASSNAME, "Cannot find YAML section %s", section.c_str());
+			return COMPV_ERROR_CODE_E_NOT_FOUND;
+		}
+		yml_section[name.c_str()] << val;
 	}
-	yml_section[name.c_str()] << val;
+	catch (const std::exception &exc) {
+		COMPV_DEBUG_ERROR_EX(THIS_CLASSNAME, "RapidYAML exception: %s/%s -> %s", section.c_str(), name.c_str(), exc.what());
+	}
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -159,19 +170,24 @@ template <typename T>
 static T CompVYAMLGet(ryml::ConstNodeRef root, const std::string& section, const std::string& entry_name, const std::string& default_section, const T& default_val)
 {
 	// https://github.com/biojppm/rapidyaml/issues/389#issuecomment-1719945531
-	auto yml_section = root.find_child(section.c_str());
-	if (yml_section.valid()) { // section must exist
-		const auto& yml_val = yml_section.find_child(entry_name.c_str());
-		if (yml_val.valid()) {
-			T result;
-			yml_val >> result;
-			return result;
-		}
-		else {
-			if (!default_section.empty() && section != default_section) {
-				return CompVYAMLGet(root, default_section, entry_name, default_section, default_val);
+	try {
+		auto yml_section = root.find_child(section.c_str());
+		if (yml_section.valid()) { // section must exist
+			const auto& yml_val = yml_section.find_child(entry_name.c_str());
+			if (yml_val.valid()) {
+				T result;
+				yml_val >> result;
+				return result;
+			}
+			else {
+				if (!default_section.empty() && section != default_section) {
+					return CompVYAMLGet(root, default_section, entry_name, default_section, default_val);
+				}
 			}
 		}
+	}
+	catch (const std::exception &exc) {
+		COMPV_DEBUG_ERROR_EX(THIS_CLASSNAME, "RapidYAML exception: %s/%s -> %s", section.c_str(), entry_name.c_str(), exc.what());
 	}
 	COMPV_DEBUG_WARN_EX(THIS_CLASSNAME, "No YAML entry %s -> %s", section.c_str(), entry_name.c_str());
 	return default_val;
