@@ -4,8 +4,8 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#if !defined(_COMPV_BASE_MATH_OP_MINMAX_H_)
-#define _COMPV_BASE_MATH_OP_MINMAX_H_
+#if !defined(_COMPV_BASE_MATH_OP_ADD_H_)
+#define _COMPV_BASE_MATH_OP_ADD_H_
 
 #include "compv/base/compv_config.h"
 #include "compv/base/compv_common.h"
@@ -17,14 +17,12 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-class CompVMathOpMinMax
+class CompVMathOpAdd
 {
 public:
-	static COMPV_ERROR_CODE minMax(const CompVMatPtr &A, double& minn, double& maxx);
-	static COMPV_ERROR_CODE minn(const CompVMatPtr &A, double& minn);
-	static COMPV_ERROR_CODE maxx(const CompVMatPtr &A, const double& b, CompVMatPtrPtr R);
+	static COMPV_ERROR_CODE add(const CompVMatPtr& A, const CompVMatPtr& B, CompVMatPtrPtr R, const bool enforceSingleThread = false);
 };
 
 COMPV_NAMESPACE_END()
 
-#endif /* _COMPV_BASE_MATH_OP_MINMAX_H_ */
+#endif /* _COMPV_BASE_MATH_OP_ADD_H_ */

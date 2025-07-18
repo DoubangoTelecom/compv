@@ -31,9 +31,13 @@ static void OpMinMax_C(const T* APtr, compv_uscalar_t width, compv_uscalar_t hei
 template<typename T>
 static void OpMin_C(const T* APtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, T* min1);
 template<typename T>
+static void OpMax_C(const T* APtr, compv_uscalar_t Awidth, compv_uscalar_t Aheight, compv_uscalar_t Astride, const T* b1, T* RPtr);
+template<typename T>
 static void OpMinMax(const CompVMatPtr& A, double& minn, double& maxx);
 template<typename T>
 static void OpMin(const CompVMatPtr& A, double& minn);
+template<typename T>
+static void OpMax(const CompVMatPtr& A, const double& b, CompVMatPtr& R);
 
 COMPV_ERROR_CODE CompVMathOpMinMax::minMax(const CompVMatPtr &A, double& minn, double& maxx)
 {
@@ -89,7 +93,7 @@ COMPV_ERROR_CODE CompVMathOpMinMax::minn(const CompVMatPtr &A, double& minn)
 			static_cast<compv_float32_t>(A->cols() - 1), // right
 			static_cast<compv_float32_t>(yend - 1) // bottom
 		};
-		CompVMatPtr Abind, Bbind, Rbind;
+		CompVMatPtr Abind;
 		COMPV_CHECK_CODE_RETURN(A->bind(&Abind, roi));
 		CompVGenericInvokeVoidRawType(Abind->subType(), OpMin, Abind, mt_min);
 		return COMPV_ERROR_CODE_S_OK;
@@ -103,6 +107,37 @@ COMPV_ERROR_CODE CompVMathOpMinMax::minn(const CompVMatPtr &A, double& minn)
 	for (auto it : mt_mins_all) {
 		minn = COMPV_MATH_MIN(minn, it);
 	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// R = max(A, b)
+COMPV_ERROR_CODE CompVMathOpMinMax::maxx(const CompVMatPtr &A, const double& b, CompVMatPtrPtr R)
+{
+	COMPV_CHECK_EXP_RETURN(!A || !R, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	const size_t rows = A->rows();
+	const size_t threadsCount = CompVThreadDispatcher::guessNumThreadsDividingAcrossY(1, rows, 1);
+	if (*R != A) {
+		COMPV_CHECK_CODE_RETURN(CompVMat::newObj(R, A));
+	}
+	auto funcPtr = [&](const size_t ystart, const size_t yend, const size_t threadIdx) -> COMPV_ERROR_CODE {
+		COMPV_ASSERT(threadIdx < threadsCount);
+		const CompVRectFloat32 roi = {
+			0.f, // left
+			static_cast<compv_float32_t>(ystart), // top
+			static_cast<compv_float32_t>(A->cols() - 1), // right
+			static_cast<compv_float32_t>(yend - 1) // bottom
+		};
+		CompVMatPtr Abind, Rbind;
+		COMPV_CHECK_CODE_RETURN(A->bind(&Abind, roi));
+		COMPV_CHECK_CODE_RETURN((*R)->bind(&Rbind, roi));
+		CompVGenericInvokeVoidRawType(Abind->subType(), OpMax, Abind, b, Rbind);
+		return COMPV_ERROR_CODE_S_OK;
+	};
+	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+		funcPtr,
+		rows,
+		threadsCount
+	));
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -161,7 +196,7 @@ static void OpMinMax(const CompVMatPtr& A, double& minn, double& maxx)
 	maxx = static_cast<double>(maxx_);
 }
 
-
+// min1 = reduce_min(APtr)
 template<typename T>
 static void OpMin_C(const T* APtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, T* min1)
 {
@@ -174,9 +209,6 @@ static void OpMin_C(const T* APtr, compv_uscalar_t width, compv_uscalar_t height
 		}
 		APtr += stride;
 	}
-}
-static void OpMin_8u_C(const uint8_t* APtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, uint8_t* min1) {
-	OpMin_C<uint8_t>(APtr, width, height, stride, min1);
 }
 
 template<typename T>
@@ -194,7 +226,7 @@ static void OpMin(const CompVMatPtr& A, double& minn)
 
 	if (std::is_same<T, uint8_t>::value) {
 		void(*OpMin_8u)(const uint8_t* APtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, uint8_t* min1)
-			= OpMin_8u_C;
+			= OpMin_C<uint8_t>;
 #if COMPV_ARCH_X86
 		if (CompVCpu::isEnabled(kCpuFlagSSE2) && A->isAlignedSSE()) {
 			COMPV_EXEC_IFDEF_INTRIN_X86((OpMin_8u = CompVMathOpMin_8u_Intrin_SSE2));
@@ -211,6 +243,50 @@ static void OpMin(const CompVMatPtr& A, double& minn)
 	}
 
 	minn = static_cast<double>(minn_);
+}
+
+// R = max(A, b)
+template<typename T>
+static void OpMax_C(const T* APtr, compv_uscalar_t Awidth, compv_uscalar_t Aheight, compv_uscalar_t Astride, const T* b1, T* RPtr)
+{
+	const T& b = *b1;
+	for (compv_uscalar_t j = 0; j < Aheight; ++j) {
+		for (compv_uscalar_t i = 0; i < Awidth; ++i) {
+			const T& vv = APtr[i];
+			RPtr[i] = COMPV_MATH_MAX(b, vv);
+		}
+		APtr += Astride;
+		RPtr += Astride;
+	}
+}
+
+// R = max(A, b)
+template<typename T>
+static void OpMax(const CompVMatPtr& A, const double& b, CompVMatPtr& R)
+{
+	const compv_uscalar_t width = static_cast<compv_uscalar_t>(A->cols());
+	const compv_uscalar_t height = static_cast<compv_uscalar_t>(A->rows());
+	const compv_uscalar_t stride = static_cast<compv_uscalar_t>(A->stride());
+
+	if (std::is_same<T, compv_float32_t>::value) {
+		void(*OpMax_32f)(const compv_float32_t* APtr, compv_uscalar_t Awidth, compv_uscalar_t Aheight, compv_uscalar_t Astride, const compv_float32_t* b1, compv_float32_t* RPtr)
+			= OpMax_C<float>;
+#if COMPV_ARCH_X86
+		if (CompVCpu::isEnabled(kCpuFlagSSE2) && A->isAlignedSSE()) {
+			COMPV_EXEC_IFDEF_INTRIN_X86((OpMax_32f = CompVMathOpMax_32f_Intrin_SSE2));
+		}
+#elif COMPV_ARCH_ARM
+		if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && A->isAlignedNEON()) {
+			COMPV_EXEC_IFDEF_INTRIN_ARM((OpMax_32f = CompVMathOpMax_8u_Intrin_NEON));
+		}
+#endif
+		const compv_float32_t b1 = static_cast<compv_float32_t>(b);
+		OpMax_32f(A->ptr<const compv_float32_t>(), width, height, stride, &b1, R->ptr<compv_float32_t>());
+	}
+	else {
+		const T b1 = static_cast<T>(b);
+		OpMax_C<T>(A->ptr<const T>(), width, height, stride, &b1, R->ptr<T>());
+	}
 }
 
 COMPV_NAMESPACE_END()

@@ -20,6 +20,7 @@ public:
 	static COMPV_ERROR_CODE hamming(const uint8_t* dataPtr, size_t width, size_t height, size_t stride, const uint8_t* patch1xnPtr, int32_t* distPtr);
 	static COMPV_ERROR_CODE line(const CompVMatPtr& points, const double(&lineEq)[3], CompVMatPtrPtr distances);
 	static COMPV_ERROR_CODE parabola(const CompVMatPtr& points, const double(&parabolaEq)[3], CompVMatPtrPtr distances, const COMPV_MATH_PARABOLA_TYPE type = COMPV_MATH_PARABOLA_TYPE_REGULAR);
+	static COMPV_ERROR_CODE squaredL2(const CompVMatPtr& dataset, const CompVMatPtr& vectors, CompVMatPtrPtr results);
 };
 
 COMPV_NAMESPACE_END()

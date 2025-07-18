@@ -90,5 +90,8 @@
     <ClCompile Include="cast.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="matrix_ops_add.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -22,6 +22,8 @@ void CompVMathOpMinMax_32f_Intrin_NEON(COMPV_ALIGNED(NEON) const compv_float32_t
 
 void CompVMathOpMin_8u_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* APtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, uint8_t* min1);
 
+void CompVMathOpMax_32f_Intrin_NEON(COMPV_ALIGNED(NEON) const compv_float32_t* APtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, const compv_float32_t* b1, COMPV_ALIGNED(NEON) compv_float32_t* RPtr);
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_ARM && COMPV_INTRINSIC */

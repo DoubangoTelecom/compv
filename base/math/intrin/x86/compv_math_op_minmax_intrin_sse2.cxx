@@ -109,6 +109,27 @@ void CompVMathOpMin_8u_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* APtr, compv
 	minn = COMPV_MATH_MIN_3(minn, c, d);
 }
 
+void CompVMathOpMax_32f_Intrin_SSE2(COMPV_ALIGNED(SSE) const compv_float32_t* APtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride, const compv_float32_t* b1, COMPV_ALIGNED(SSE) compv_float32_t* RPtr)
+{
+	const __m128 v_b1 = _mm_load1_ps(b1);
+	const compv_uscalar_t width16 = width & -16;
+	const compv_uscalar_t width4 = width & -4;
+	for (compv_uscalar_t j = 0; j < height; ++j) {
+		compv_uscalar_t i = 0;
+		for (; i < width16; i += 16) {
+			_mm_store_ps(&RPtr[i], _mm_max_ps(v_b1, _mm_load_ps(&APtr[i])));
+			_mm_store_ps(&RPtr[i + 4], _mm_max_ps(v_b1, _mm_load_ps(&APtr[i + 4])));
+			_mm_store_ps(&RPtr[i + 8], _mm_max_ps(v_b1, _mm_load_ps(&APtr[i + 8])));
+			_mm_store_ps(&RPtr[i + 12], _mm_max_ps(v_b1, _mm_load_ps(&APtr[i + 12])));
+		}
+		for (; i < width4; i += 4) {
+			_mm_store_ps(&RPtr[i], _mm_max_ps(v_b1, _mm_load_ps(&APtr[i])));
+		}
+		APtr += stride;
+		RPtr += stride;
+	}
+}
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */

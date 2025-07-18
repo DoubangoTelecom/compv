@@ -70,6 +70,7 @@ set(compv_base_SOURCES
 	math/compv_math_matrix.cxx
 	math/compv_math_moments.cxx
 	math/compv_math_morph.cxx
+	math/compv_math_op_add.cxx
 	math/compv_math_op_minmax.cxx
 	math/compv_math_op_mul.cxx
 	math/compv_math_op_sub.cxx
@@ -221,6 +222,7 @@ if ("${TARGET_ARCH}" STREQUAL "x86" OR "${TARGET_ARCH}" STREQUAL "x64")
 		math/intrin/x86/compv_math_convlt_intrin_sse2.cxx
 		math/intrin/x86/compv_math_distance_intrin_avx.cxx
 		math/intrin/x86/compv_math_distance_intrin_avx2.cxx
+		math/intrin/x86/compv_math_distance_intrin_fma3_avx.cxx
 		math/intrin/x86/compv_math_distance_intrin_sse2.cxx
 		math/intrin/x86/compv_math_distance_intrin_sse42.cxx
 		math/intrin/x86/compv_math_dot_intrin_avx.cxx
@@ -233,6 +235,8 @@ if ("${TARGET_ARCH}" STREQUAL "x86" OR "${TARGET_ARCH}" STREQUAL "x64")
 		math/intrin/x86/compv_math_matrix_intrin_sse41.cxx
 		math/intrin/x86/compv_math_morph_intrin_avx2.cxx
 		math/intrin/x86/compv_math_morph_intrin_sse2.cxx
+		math/intrin/x86/compv_math_op_add_intrin_avx.cxx
+		math/intrin/x86/compv_math_op_add_intrin_sse2.cxx
 		math/intrin/x86/compv_math_op_minmax_intrin_sse2.cxx
 		math/intrin/x86/compv_math_op_mul_intrin_sse2.cxx
 		math/intrin/x86/compv_math_op_sub_intrin_avx.cxx
@@ -313,6 +317,8 @@ if ("${TARGET_ARCH}" STREQUAL "x86" OR "${TARGET_ARCH}" STREQUAL "x64")
 		math/asm/x86/compv_math_matrix_x86_sse.s
 		math/asm/x86/compv_math_morph_x64_avx.s
 		math/asm/x86/compv_math_morph_x64_sse.s
+		math/asm/x86/compv_math_op_add_x64_avx.s
+		math/asm/x86/compv_math_op_add_x64_sse.s
 		math/asm/x86/compv_math_op_mul_x64_avx.s
 		math/asm/x86/compv_math_op_mul_x64_sse.s
 		math/asm/x86/compv_math_op_sub_x64_avx.s
@@ -365,6 +371,7 @@ elseif ("${TARGET_ARCH}" STREQUAL "arm32" OR "${TARGET_ARCH}" STREQUAL "arm64")
 		math/intrin/arm/compv_math_histogram_intrin_neon.cxx
 		math/intrin/arm/compv_math_matrix_intrin_neon64.cxx
 		math/intrin/arm/compv_math_morph_intrin_neon.cxx
+		math/intrin/arm/compv_math_op_add_intrin_neon.cxx
 		math/intrin/arm/compv_math_op_minmax_intrin_neon.cxx
 		math/intrin/arm/compv_math_op_mul_intrin_neon.cxx
 		math/intrin/arm/compv_math_op_sub_intrin_neon.cxx
@@ -422,6 +429,8 @@ elseif ("${TARGET_ARCH}" STREQUAL "arm32" OR "${TARGET_ARCH}" STREQUAL "arm64")
 		math/asm/arm/compv_math_matrix_arm64_neon.S
 		math/asm/arm/compv_math_morph_arm32_neon.S
 		math/asm/arm/compv_math_morph_arm64_neon.S
+		math/asm/arm/compv_math_op_add_arm32_neon.S
+		math/asm/arm/compv_math_op_add_arm64_neon.S
 		math/asm/arm/compv_math_op_mul_arm32_neon.S
 		math/asm/arm/compv_math_op_mul_arm64_neon.S
 		math/asm/arm/compv_math_op_sub_arm32_neon.S

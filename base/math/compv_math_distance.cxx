@@ -13,6 +13,7 @@
 #include "compv/base/math/intrin/x86/compv_math_distance_intrin_sse2.h"
 #include "compv/base/math/intrin/x86/compv_math_distance_intrin_sse42.h"
 #include "compv/base/math/intrin/x86/compv_math_distance_intrin_avx.h"
+#include "compv/base/math/intrin/x86/compv_math_distance_intrin_fma3_avx.h"
 #include "compv/base/math/intrin/x86/compv_math_distance_intrin_avx2.h"
 #include "compv/base/math/intrin/arm/compv_math_distance_intrin_neon.h"
 
@@ -420,6 +421,74 @@ COMPV_ERROR_CODE CompVMathDistance::parabola(const CompVMatPtr& points, const do
 	}
 
 	*distances = distances_;
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// Features are L2 normed which means the sum is == 1 -> no need to use "double" to hold sum (no overflow risk)
+static void CompVMathDistanceSquaredL2Row_32f_C(const float* dataset, const float* vectors, float* result1, const compv_uscalar_t& cols)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation could be found");
+	float& sum = result1[0] = 0.f;
+	for (compv_uscalar_t col = 0; col < cols; ++col) {
+		const float diff = (dataset[col] - vectors[col]);
+		sum += (diff * diff);
+	}
+}
+
+// Compares every vector to the entire dataset rows
+// "dataset" is features represented as rows. Should be l2-normed to avoid overflow.
+// "vectors" is features represented as rows. Should be l2-normed to avoid overflow.
+// If "dataset" shape is [N,K] and "vectors" shape [M,K], then "results" shape will be [N,M]. "K" is the feature size.
+COMPV_ERROR_CODE CompVMathDistance::squaredL2(const CompVMatPtr& dataset, const CompVMatPtr& vectors, CompVMatPtrPtr results)
+{
+	COMPV_CHECK_EXP_RETURN(
+		!dataset || !vectors || !results || dataset->cols() != vectors->cols()
+		|| !dataset->isRawTypeMatch<float>() || !vectors->isRawTypeMatch<float>()
+		,
+		COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+	CompVMatPtr results_;
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<float>(&results_, dataset->rows(), vectors->rows()));
+
+	// Function hooking
+	void(*CompVMathDistanceSquaredL2Row_32f)(const float* dataset, const float* vectors, float* result1, const compv_uscalar_t& cols)
+		= CompVMathDistanceSquaredL2Row_32f_C;
+#if COMPV_ARCH_X86
+	if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
+		if (dataset->isAlignedSSE() && vectors->isAlignedSSE()) {
+			COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathDistanceSquaredL2Row_32f = CompVMathDistanceSquaredL2Row_32f_Intrin_SSE2);
+		}
+	}
+	if (CompVCpu::isEnabled(kCpuFlagAVX)) {
+		if (dataset->isAlignedAVX() && vectors->isAlignedAVX()) {
+			COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathDistanceSquaredL2Row_32f = CompVMathDistanceSquaredL2Row_32f_Intrin_AVX);
+			if (CompVCpu::isEnabled(kCpuFlagFMA3)) {
+				COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathDistanceSquaredL2Row_32f = CompVMathDistanceSquaredL2Row_32f_Intrin_FMA3_AVX);
+			}
+		}
+	}
+#endif
+
+	const compv_uscalar_t cols = static_cast<compv_uscalar_t>(dataset->cols());
+	auto funcPtr = [&](const size_t start, const size_t end) -> COMPV_ERROR_CODE {
+		for (size_t j = start; j < end; ++j) {
+			const float* datasetPtr = dataset->ptr<const float>(j);
+			float* resultsPtr = results_->ptr<float>(j);
+			for (size_t i = 0; i < vectors->rows(); ++i) {
+				CompVMathDistanceSquaredL2Row_32f(datasetPtr, vectors->ptr<const float>(i), &resultsPtr[i], cols);
+			}
+		}
+		return COMPV_ERROR_CODE_S_OK;
+	};
+	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::dispatchDividingAcrossY(
+		funcPtr,
+		1,
+		dataset->rows(),
+		1
+	));
+
+	*results = results_;
+
 	return COMPV_ERROR_CODE_S_OK;
 }
 

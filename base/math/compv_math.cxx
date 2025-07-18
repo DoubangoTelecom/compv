@@ -9,6 +9,7 @@ Most of trig approx. are implemented using document at "documentation/trig_appro
 */
 #include "compv/base/math/compv_math.h"
 #include "compv/base/math/compv_math_trig.h"
+#include "compv/base/math/compv_math_op_add.h"
 #include "compv/base/math/compv_math_op_sub.h"
 #include "compv/base/math/compv_math_op_mul.h"
 #include "compv/base/math/compv_math_op_minmax.h"
@@ -56,6 +57,12 @@ COMPV_ERROR_CODE CompVMath::hypot(const CompVMatPtr& x, const CompVMatPtr& y, Co
 COMPV_ERROR_CODE CompVMath::hypot_naive(const CompVMatPtr& x, const CompVMatPtr& y, CompVMatPtrPtr r)
 {
 	COMPV_CHECK_CODE_RETURN(CompVMathTrig::hypot_naive(x, y, r));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVMath::add(const CompVMatPtr& A, const CompVMatPtr& B, CompVMatPtrPtr R, const bool enforceSingleThread COMPV_DEFAULT(false))
+{
+	COMPV_CHECK_CODE_RETURN(CompVMathOpAdd::add(A, B, R, enforceSingleThread));
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -140,6 +147,12 @@ COMPV_ERROR_CODE CompVMath::minMax(const CompVMatPtr &A, double& minn, double& m
 COMPV_ERROR_CODE CompVMath::minn(const CompVMatPtr &A, double& minn)
 {
 	COMPV_CHECK_CODE_RETURN(CompVMathOpMinMax::minn(A, minn));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVMath::maxx(const CompVMatPtr &A, const double& b, CompVMatPtrPtr R)
+{
+	COMPV_CHECK_CODE_RETURN(CompVMathOpMinMax::maxx(A, b, R));
 	return COMPV_ERROR_CODE_S_OK;
 }
 

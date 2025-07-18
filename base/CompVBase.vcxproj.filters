@@ -1041,6 +1041,21 @@
     <ClInclude Include="include\compv\base\compv_yaml.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_distance_intrin_fma3_avx.h">
+      <Filter>include\math\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\math\compv_math_op_add.h">
+      <Filter>include\math</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\math\intrin\arm\compv_math_op_add_intrin_neon.h">
+      <Filter>include\math\intrin\arm</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_op_add_intrin_avx.h">
+      <Filter>include\math\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_op_add_intrin_sse2.h">
+      <Filter>include\math\intrin\x86</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx">
@@ -1664,6 +1679,21 @@
     <ClCompile Include="compv_yaml.cxx">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="math\intrin\x86\compv_math_distance_intrin_fma3_avx.cxx">
+      <Filter>source\math\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="math\compv_math_op_add.cxx">
+      <Filter>source\math</Filter>
+    </ClCompile>
+    <ClCompile Include="math\intrin\arm\compv_math_op_add_intrin_neon.cxx">
+      <Filter>source\math\intrin\arm</Filter>
+    </ClCompile>
+    <ClCompile Include="math\intrin\x86\compv_math_op_add_intrin_avx.cxx">
+      <Filter>source\math\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="math\intrin\x86\compv_math_op_add_intrin_sse2.cxx">
+      <Filter>source\math\intrin\x86</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <YASM Include="asm\x86\compv_bits_macros_x86.s">
@@ -1880,6 +1910,12 @@
       <Filter>source\math\asm\x86</Filter>
     </YASM>
     <YASM Include="math\asm\x86\compv_math_exp_x64_avx.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="math\asm\x86\compv_math_op_add_x64_sse.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="math\asm\x86\compv_math_op_add_x64_avx.s">
       <Filter>source\math\asm\x86</Filter>
     </YASM>
   </ItemGroup>

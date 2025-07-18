@@ -4,27 +4,24 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#if !defined(_COMPV_BASE_MATH_OP_MINMAX_H_)
-#define _COMPV_BASE_MATH_OP_MINMAX_H_
+#if !defined(_COMPV_BASE_MATH_DISTANCE_INTRIN_FMA3_AVX_H_)
+#define _COMPV_BASE_MATH_DISTANCE_INTRIN_FMA3_AVX_H_
 
 #include "compv/base/compv_config.h"
 #include "compv/base/compv_common.h"
-#include "compv/base/compv_mat.h"
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
 #endif
 
+#if COMPV_ARCH_X86 && COMPV_INTRINSIC
+
 COMPV_NAMESPACE_BEGIN()
 
-class CompVMathOpMinMax
-{
-public:
-	static COMPV_ERROR_CODE minMax(const CompVMatPtr &A, double& minn, double& maxx);
-	static COMPV_ERROR_CODE minn(const CompVMatPtr &A, double& minn);
-	static COMPV_ERROR_CODE maxx(const CompVMatPtr &A, const double& b, CompVMatPtrPtr R);
-};
+void CompVMathDistanceSquaredL2Row_32f_Intrin_FMA3_AVX(COMPV_ALIGNED(AVX) const float* dataset, COMPV_ALIGNED(AVX) const float* vectors, float* result1, const compv_uscalar_t& cols);
 
 COMPV_NAMESPACE_END()
 
-#endif /* _COMPV_BASE_MATH_OP_MINMAX_H_ */
+#endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */
+
+#endif /* _COMPV_BASE_MATH_DISTANCE_INTRIN_FMA3_AVX_H_ */

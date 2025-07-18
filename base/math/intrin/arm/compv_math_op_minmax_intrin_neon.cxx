@@ -106,6 +106,27 @@ void CompVMathOpMin_8u_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* APtr, comp
 	minn = std::min(minn, vget_lane_u8(vec0n, 0));
 }
 
+void CompVMathOpMax_32f_Intrin_NEON(COMPV_ALIGNED(NEON) const compv_float32_t* APtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, const compv_float32_t* b1, COMPV_ALIGNED(NEON) compv_float32_t* RPtr)
+{
+	const float32x4_t v_b1 = vdupq_n_f32(*b1);
+	const compv_uscalar_t width16 = width & -16;
+	const compv_uscalar_t width4 = width & -4;
+	for (compv_uscalar_t j = 0; j < height; ++j) {
+		compv_uscalar_t i = 0;
+		for (; i < width16; i += 16) {
+			vst1q_f32(&RPtr[i], vmaxq_f32(v_b1, vld1q_f32(&APtr[i])));
+			vst1q_f32(&RPtr[i + 4], vmaxq_f32(v_b1, vld1q_f32(&APtr[i + 4])));
+			vst1q_f32(&RPtr[i + 8], vmaxq_f32(v_b1, vld1q_f32(&APtr[i + 8])));
+			vst1q_f32(&RPtr[i + 12], vmaxq_f32(v_b1, vld1q_f32(&APtr[i + 12])));
+		}
+		for (; i < width4; i += 4) {
+			vst1q_f32(&RPtr[i], vmaxq_f32(v_b1, vld1q_f32(&APtr[i])));
+		}
+		APtr += stride;
+		RPtr += stride;
+	}
+}
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_ARM && COMPV_INTRINSIC */

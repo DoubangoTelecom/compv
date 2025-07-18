@@ -177,6 +177,7 @@
     <ClInclude Include="include\compv\base\math\compv_math_matrix.h" />
     <ClInclude Include="include\compv\base\math\compv_math_moments.h" />
     <ClInclude Include="include\compv\base\math\compv_math_morph.h" />
+    <ClInclude Include="include\compv\base\math\compv_math_op_add.h" />
     <ClInclude Include="include\compv\base\math\compv_math_op_minmax.h" />
     <ClInclude Include="include\compv\base\math\compv_math_op_mul.h" />
     <ClInclude Include="include\compv\base\math\compv_math_op_sub.h" />
@@ -197,6 +198,7 @@
     <ClInclude Include="include\compv\base\math\intrin\arm\compv_math_histogram_intrin_neon.h" />
     <ClInclude Include="include\compv\base\math\intrin\arm\compv_math_matrix_intrin_neon64.h" />
     <ClInclude Include="include\compv\base\math\intrin\arm\compv_math_morph_intrin_neon.h" />
+    <ClInclude Include="include\compv\base\math\intrin\arm\compv_math_op_add_intrin_neon.h" />
     <ClInclude Include="include\compv\base\math\intrin\arm\compv_math_op_minmax_intrin_neon.h" />
     <ClInclude Include="include\compv\base\math\intrin\arm\compv_math_op_mul_intrin_neon.h" />
     <ClInclude Include="include\compv\base\math\intrin\arm\compv_math_op_sub_intrin_neon.h" />
@@ -213,6 +215,7 @@
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_convlt_intrin_sse2.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_distance_intrin_avx.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_distance_intrin_avx2.h" />
+    <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_distance_intrin_fma3_avx.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_distance_intrin_sse2.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_distance_intrin_sse42.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_dot_intrin_avx.h" />
@@ -225,6 +228,8 @@
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_matrix_intrin_sse41.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_morph_intrin_avx2.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_morph_intrin_sse2.h" />
+    <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_op_add_intrin_avx.h" />
+    <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_op_add_intrin_sse2.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_op_minmax_intrin_sse2.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_op_mul_intrin_sse2.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_op_sub_intrin_avx.h" />
@@ -780,6 +785,7 @@
     <ClCompile Include="math\compv_math_matrix.cxx" />
     <ClCompile Include="math\compv_math_moments.cxx" />
     <ClCompile Include="math\compv_math_morph.cxx" />
+    <ClCompile Include="math\compv_math_op_add.cxx" />
     <ClCompile Include="math\compv_math_op_minmax.cxx">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug_sdk|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
@@ -813,6 +819,7 @@
     <ClCompile Include="math\intrin\arm\compv_math_histogram_intrin_neon.cxx" />
     <ClCompile Include="math\intrin\arm\compv_math_matrix_intrin_neon64.cxx" />
     <ClCompile Include="math\intrin\arm\compv_math_morph_intrin_neon.cxx" />
+    <ClCompile Include="math\intrin\arm\compv_math_op_add_intrin_neon.cxx" />
     <ClCompile Include="math\intrin\arm\compv_math_op_minmax_intrin_neon.cxx" />
     <ClCompile Include="math\intrin\arm\compv_math_op_mul_intrin_neon.cxx" />
     <ClCompile Include="math\intrin\arm\compv_math_op_sub_intrin_neon.cxx" />
@@ -919,6 +926,14 @@
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release_static|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release_sdk|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+    </ClCompile>
+    <ClCompile Include="math\intrin\x86\compv_math_distance_intrin_fma3_avx.cxx">
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug_sdk|x64'">AdvancedVectorExtensions</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release_static|x64'">AdvancedVectorExtensions</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug_static|x64'">AdvancedVectorExtensions</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release_sdk|x64'">AdvancedVectorExtensions</EnableEnhancedInstructionSet>
     </ClCompile>
     <ClCompile Include="math\intrin\x86\compv_math_distance_intrin_sse2.cxx">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
@@ -1062,6 +1077,8 @@
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release_static|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release_sdk|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
+    <ClCompile Include="math\intrin\x86\compv_math_op_add_intrin_avx.cxx" />
+    <ClCompile Include="math\intrin\x86\compv_math_op_add_intrin_sse2.cxx" />
     <ClCompile Include="math\intrin\x86\compv_math_op_minmax_intrin_sse2.cxx" />
     <ClCompile Include="math\intrin\x86\compv_math_op_mul_intrin_sse2.cxx">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
@@ -1440,6 +1457,24 @@
     </YASM>
   </ItemGroup>
   <ItemGroup>
+    <YASM Include="math\asm\x86\compv_math_op_add_x64_avx.s">
+      <FileType>Document</FileType>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug_sdk|x64'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release_static|x64'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug_static|x64'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release_sdk|x64'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+    </YASM>
+    <YASM Include="math\asm\x86\compv_math_op_add_x64_sse.s">
+      <FileType>Document</FileType>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug_sdk|x64'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release_static|x64'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug_static|x64'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release_sdk|x64'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+    </YASM>
     <YASM Include="math\asm\x86\compv_math_exp_x64_avx.s">
       <FileType>Document</FileType>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>

@@ -20,6 +20,7 @@ COMPV_NAMESPACE_BEGIN()
 
 void CompVMathDistanceLine_32f_Intrin_AVX(COMPV_ALIGNED(AVX) const compv_float32_t* xPtr, COMPV_ALIGNED(AVX) const compv_float32_t* yPtr, const compv_float32_t* Ascaled1, const compv_float32_t* Bscaled1, const compv_float32_t* Cscaled1, COMPV_ALIGNED(AVX) compv_float32_t* distPtr, const compv_uscalar_t count);
 void CompVMathDistanceParabola_32f_Intrin_AVX(COMPV_ALIGNED(AVX) const compv_float32_t* xPtr, COMPV_ALIGNED(AVX) const compv_float32_t* yPtr, const compv_float32_t* A1, const compv_float32_t* B1, const compv_float32_t* C1, COMPV_ALIGNED(AVX) compv_float32_t* distPtr, const compv_uscalar_t count);
+void CompVMathDistanceSquaredL2Row_32f_Intrin_AVX(COMPV_ALIGNED(AVX) const float* dataset, COMPV_ALIGNED(AVX) const float* vectors, float* result1, const compv_uscalar_t& cols);
 
 COMPV_NAMESPACE_END()
 

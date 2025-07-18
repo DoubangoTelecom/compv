@@ -82,6 +82,61 @@ void CompVMathDistanceParabola_32f_Intrin_SSE2(COMPV_ALIGNED(SSE) const compv_fl
 	}
 }
 
+void CompVMathDistanceSquaredL2Row_32f_Intrin_SSE2(COMPV_ALIGNED(SSE) const float* dataset, COMPV_ALIGNED(SSE) const float* vectors, float* result1, const compv_uscalar_t& cols)
+{
+	COMPV_DEBUG_INFO_CHECK_SSE2();
+
+	const size_t cols16 = cols & -16;
+	const size_t cols4 = cols & -4;
+	size_t col = 0;
+
+	__m128 sum0 = _mm_setzero_ps();
+	__m128 sum1 = _mm_setzero_ps();
+	__m128 sum2 = _mm_setzero_ps();
+	__m128 sum3 = _mm_setzero_ps();
+
+	// loop-16
+	for (; col < cols16; col += 16) {
+		__m128 vec0 = _mm_sub_ps(_mm_load_ps(&dataset[col]), _mm_load_ps(&vectors[col]));
+		__m128 vec1 = _mm_sub_ps(_mm_load_ps(&dataset[col + 4]), _mm_load_ps(&vectors[col + 4]));
+		__m128 vec2 = _mm_sub_ps(_mm_load_ps(&dataset[col + 8]), _mm_load_ps(&vectors[col + 8]));
+		__m128 vec3 = _mm_sub_ps(_mm_load_ps(&dataset[col + 12]), _mm_load_ps(&vectors[col + 12]));
+
+		vec0 = _mm_mul_ps(vec0, vec0);
+		vec1 = _mm_mul_ps(vec1, vec1);
+		vec2 = _mm_mul_ps(vec2, vec2);
+		vec3 = _mm_mul_ps(vec3, vec3);
+
+		sum0 = _mm_add_ps(sum0, vec0);
+		sum1 = _mm_add_ps(sum1, vec1);
+		sum2 = _mm_add_ps(sum2, vec2);
+		sum3 = _mm_add_ps(sum3, vec3);
+	}
+
+	// loop-4
+	for (; col < cols4; col += 4) {
+		__m128 vec0 = _mm_sub_ps(_mm_load_ps(&dataset[col]), _mm_load_ps(&vectors[col]));
+		vec0 = _mm_mul_ps(vec0, vec0);
+		sum0 = _mm_add_ps(sum0, vec0);
+	}
+
+	// loop-1
+	for (; col < cols; col += 1) {
+		__m128 vec0 = _mm_sub_ss(_mm_load_ss(&dataset[col]), _mm_load_ss(&vectors[col]));
+		vec0 = _mm_mul_ss(vec0, vec0);
+		sum0 = _mm_add_ss(sum0, vec0);
+	}
+
+	sum0 = _mm_add_ps(sum0, sum1);
+	sum2 = _mm_add_ps(sum2, sum3);
+	sum0 = _mm_add_ps(sum0, sum2);
+
+	sum0 = _mm_add_ps(sum0, _mm_shuffle_ps(sum0, sum0, 0xEE));
+	sum0 = _mm_add_ss(sum0, _mm_shuffle_ps(sum0, sum0, 0x55));
+
+	_mm_store_ss(result1, sum0);
+}
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */
