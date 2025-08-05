@@ -22,11 +22,13 @@ COMPV_NAMESPACE_BEGIN()
 struct COMPV_BASE_API CompVYAML
 {	
 protected:
-	CompVYAML() = delete;
+	CompVYAML():m_Tree(nullptr) {  };
 	CompVYAML(const std::string& yaml_data, const std::string& default_section = "default");
 public:
 	CompVYAML(CompVYAML const& that);
 	virtual ~CompVYAML();
+
+	CompVYAML& operator=(const CompVYAML& that);
 
 	bool isValid() const {
 		return m_Tree != nullptr;
@@ -43,6 +45,9 @@ public:
 	bool getBool(const std::string& section, const std::string& name, const bool& default_val = false) const;
 	std::vector<std::string> getArray(const std::string& section, const std::string& name, const std::vector<std::string>& default_val = {}) const;
 
+	static CompVYAML buildNull() {
+		return CompVYAML();
+	}
 	static CompVYAML buildFromFile(const std::string& file_path, const std::string& default_section = "default") {
 		return CompVYAML(CompVYAML::readData(file_path), default_section);
 	}
@@ -51,6 +56,9 @@ public:
 	}
 
 	static std::string readData(const std::string& file_path);
+
+private:
+	static void clone(CompVYAML& dst, const CompVYAML& src);
 
 private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)

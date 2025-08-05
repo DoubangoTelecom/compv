@@ -41,8 +41,7 @@ static T CompVYAMLGet(ryml::ConstNodeRef root, const std::string& section, const
 
 CompVYAML::CompVYAML(CompVYAML const& that)
 {
-	this->m_DefaultSection = that.m_DefaultSection;
-	this->m_Tree = that.m_Tree ? new ryml::Tree(*that.m_Tree) : nullptr;
+	CompVYAML::clone(*this, that);
 }
 
 CompVYAML::CompVYAML(const std::string& yaml_data, const std::string& default_section COMPV_DEFAULT("default"))
@@ -62,12 +61,26 @@ CompVYAML::CompVYAML(const std::string& yaml_data, const std::string& default_se
 	}
 }
 
+CompVYAML& CompVYAML::operator=(const CompVYAML& that)
+{
+	if (this != &that) {
+		CompVYAML::clone(*this, that);
+	}
+	return *this;
+}
+
 CompVYAML::~CompVYAML()
 {
 	if (m_Tree) {
 		delete m_Tree;
 		m_Tree = nullptr;
 	}
+}
+
+void CompVYAML::clone(CompVYAML& dst, const CompVYAML& src)
+{
+	dst.m_DefaultSection = src.m_DefaultSection;
+	dst.m_Tree = src.m_Tree ? new ryml::Tree(*src.m_Tree) : nullptr;
 }
 
 COMPV_ERROR_CODE CompVYAML::setInt(const std::string& section, const std::string& name, const int& val) const
