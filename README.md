@@ -15,7 +15,7 @@
 
 ### SDKs using our code ###
  - <a target="_blank" href="https://github.com/DoubangoTelecom/KYC-Documents-Verif-SDK">KYC documents recognition & verification </a>
- - <a target="_blank" href="https://github.com/DoubangoTelecom/FaceLivenessDetection-SDK">3D Passive Face Liveness Detection (Anti-Spoofing) </a>
+ - <a target="_blank" href="https://github.com/DoubangoTelecom/ultimateFace">Face recognition & 3d liveness detection </a>
  - <a target="_blank" href="https://github.com/DoubangoTelecom/ultimateALPR-SDK">ANPR/ALPR SDK for embedded devices (ARM) and desktops (x86) </a>
  - <a target="_blank" href="https://github.com/DoubangoTelecom/ultimateMRZ-SDK">MRZ/MRP SDK for embedded devices (ARM) and desktops (x86) </a>
  - <a target="_blank" href="https://github.com/DoubangoTelecom/ultimateCreditCard-SDK">Bank credit card recognition/OCR SDK for embedded devices (ARM) and desktops (x86) </a>
