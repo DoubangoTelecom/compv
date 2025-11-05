@@ -292,14 +292,14 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathOpSubSubVal_32f32f32f_Asm_NEON64
 	################################################
 	# for (compv_uscalar_t j = 0; j < height; ++j)
 	################################################
-	LoopHeigth_CompVMathOpSubSubMul_32f32f32f_Asm_NEON64:
+	LoopHeigth_CompVMathOpSubSubVal_32f32f32f_Asm_NEON64:
 		################################################
 		# for (i = 0; i < width16; i += 16)
 		################################################
 		mov i, #0
 		tst width16, width16
-		beq EndOf_LoopWidth16_CompVMathOpSubSubMul_32f32f32f_Asm_NEON64
-		LoopWidth16_CompVMathOpSubSubMul_32f32f32f_Asm_NEON64:
+		beq EndOf_LoopWidth16_CompVMathOpSubSubVal_32f32f32f_Asm_NEON64
+		LoopWidth16_CompVMathOpSubSubVal_32f32f32f_Asm_NEON64:
 			ldp q0, q1, [Aptr], #(2*COMPV_GAS_Q_SZ_BYTES)
 			ldp q2, q3, [Aptr], #(2*COMPV_GAS_Q_SZ_BYTES)
 			prfm pldl1keep, [Aptr, #(CACHE_LINE_SIZE*4)]
@@ -311,28 +311,28 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathOpSubSubVal_32f32f32f_Asm_NEON64
 			stp q2, q3, [Rptr], #(2*COMPV_GAS_Q_SZ_BYTES)
 			add i, i, #16
 			cmp i, width16
-			blt  LoopWidth16_CompVMathOpSubSubMul_32f32f32f_Asm_NEON64
-		EndOf_LoopWidth16_CompVMathOpSubSubMul_32f32f32f_Asm_NEON64:
+			blt  LoopWidth16_CompVMathOpSubSubVal_32f32f32f_Asm_NEON64
+		EndOf_LoopWidth16_CompVMathOpSubSubVal_32f32f32f_Asm_NEON64:
 		
 		################################################
 		# for (; i < width; i += 4)
 		################################################
 		cmp i, width
-		bge EndOf_LoopWidth4_CompVMathOpSubSubMul_32f32f32f_Asm_NEON64
-		LoopWidth4_CompVMathOpSubSubMul_32f32f32f_Asm_NEON64:
+		bge EndOf_LoopWidth4_CompVMathOpSubSubVal_32f32f32f_Asm_NEON64
+		LoopWidth4_CompVMathOpSubSubVal_32f32f32f_Asm_NEON64:
 			ldr q0, [Aptr], #(1*COMPV_GAS_Q_SZ_BYTES)
 			fsub v0.4s, v0.4s, v4.4s
 			str q0, [Rptr], #(1*COMPV_GAS_Q_SZ_BYTES)
 			add i, i, #4
 			cmp i, width
-			blt LoopWidth4_CompVMathOpSubSubMul_32f32f32f_Asm_NEON64
-		EndOf_LoopWidth4_CompVMathOpSubSubMul_32f32f32f_Asm_NEON64:
+			blt LoopWidth4_CompVMathOpSubSubVal_32f32f32f_Asm_NEON64
+		EndOf_LoopWidth4_CompVMathOpSubSubVal_32f32f32f_Asm_NEON64:
 
 		subs height, height, #1
 		add Aptr, Aptr, Astride
 		add Rptr, Rptr, Rstride
-		bne  LoopHeigth_CompVMathOpSubSubMul_32f32f32f_Asm_NEON64
-	EndOf_LoopHeigth_CompVMathOpSubSubMul_32f32f32f_Asm_NEON64:
+		bne  LoopHeigth_CompVMathOpSubSubVal_32f32f32f_Asm_NEON64
+	EndOf_LoopHeigth_CompVMathOpSubSubVal_32f32f32f_Asm_NEON64:
 
 	.unreq Aptr
 	.unreq subVal1
