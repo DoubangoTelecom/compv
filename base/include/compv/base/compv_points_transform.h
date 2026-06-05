@@ -12,6 +12,8 @@
 #include "compv/base/compv_common.h"
 #include "compv/base/compv_mat.h"
 
+#include <iterator>
+
 COMPV_NAMESPACE_BEGIN()
 
 class COMPV_BASE_API CompVPointsTransform

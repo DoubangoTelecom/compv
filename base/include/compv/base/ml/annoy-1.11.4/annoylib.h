@@ -123,7 +123,7 @@ template<typename T>
 inline T manhattan_distance(const T* x, const T* y, int f) {
   T d = 0.0;
   for (int i = 0; i < f; i++)
-    d += fabs(x[i] - y[i]);
+    d += static_cast<T>(fabs(x[i] - y[i]));
   return d;
 }
 
@@ -189,7 +189,7 @@ inline float manhattan_distance<float>(const float* x, const float* y, int f) {
  
 template<typename T>
 inline T get_norm(T* v, int f) {
-  return sqrt(dot(v, v, f));
+  return static_cast<T>(sqrt(dot(v, v, f)));
 }
 
 template<typename T>
@@ -308,7 +308,7 @@ struct Angular {
     // Used when requesting distances from Python layer
     // Turns out sometimes the squared distance is -0.0
     // so we have to make sure it's a positive number.
-    return sqrt(std::max(distance, T(0)));
+    return static_cast<T>(sqrt(std::max(distance, T(0))));
   }
   template<typename T>
   static inline T pq_distance(T distance, T margin, int child_nr) {
@@ -473,7 +473,7 @@ struct Euclidean : Minkowski{
   }
   template<typename T>
   static inline T normalized_distance(T distance) {
-    return sqrt(std::max(distance, T(0)));
+    return static_cast<T>(sqrt(std::max(distance, T(0))));
   }
   template<typename S, typename T>
   static inline void init_node(Node<S, T>* n, int f) {
