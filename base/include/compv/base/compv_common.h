@@ -535,6 +535,7 @@ public:
 	COMPV_ALWAYS_INLINE bool isEmpty()const { return (left == right) && (top == bottom); }
 	COMPV_ALWAYS_INLINE T width()const { return (right - left) + 1; }
 	COMPV_ALWAYS_INLINE T height()const { return (bottom - top) + 1; }
+	COMPV_ALWAYS_INLINE T area()const { return std::abs(width() * height()); }
 	COMPV_ALWAYS_INLINE bool contains(const CompVPoint2D<T>& point)const {
 		return (left <= point.x && point.x <= right && top <= point.y && point.y <= bottom);
 	}
