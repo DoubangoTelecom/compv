@@ -83,50 +83,18 @@ void CompVYAML::clone(CompVYAML& dst, const CompVYAML& src)
 	dst.m_Tree = src.m_Tree ? new ryml::Tree(*src.m_Tree) : nullptr;
 }
 
-COMPV_ERROR_CODE CompVYAML::setInt(const std::string& section, const std::string& name, const int& val) const
-{
-	COMPV_YAML_SET_IMPL();
-}
+COMPV_ERROR_CODE CompVYAML::setInt(const std::string& section, const std::string& name, const int& val) const { COMPV_YAML_SET_IMPL(); }
+COMPV_ERROR_CODE CompVYAML::setString(const std::string& section, const std::string& name, const std::string& val) const { COMPV_YAML_SET_IMPL(); }
+COMPV_ERROR_CODE CompVYAML::setFloat(const std::string& section, const std::string& name, const float& val) const { COMPV_YAML_SET_IMPL(); }
+COMPV_ERROR_CODE CompVYAML::setBool(const std::string& section, const std::string& name, const bool& val) const { COMPV_YAML_SET_IMPL(); }
+COMPV_ERROR_CODE CompVYAML::setArrayFloat(const std::string& section, const std::string& name, const std::vector<float>& val) const { COMPV_YAML_SET_IMPL();}
 
-COMPV_ERROR_CODE CompVYAML::setString(const std::string& section, const std::string& name, const std::string& val) const
-{
-	COMPV_YAML_SET_IMPL();
-}
-
-COMPV_ERROR_CODE CompVYAML::setFloat(const std::string& section, const std::string& name, const float& val) const
-{
-	COMPV_YAML_SET_IMPL();
-}
-
-COMPV_ERROR_CODE CompVYAML::setBool(const std::string& section, const std::string& name, const bool& val) const
-{
-	COMPV_YAML_SET_IMPL();
-}
-
-int CompVYAML::getInt(const std::string& section, const std::string& name, const int& default_val COMPV_DEFAULT(0)) const
-{
-	COMPV_YAML_GET_IMPL();
-}
-
-std::string CompVYAML::getString(const std::string& section, const std::string& name, const std::string& default_val COMPV_DEFAULT("")) const
-{
-	COMPV_YAML_GET_IMPL();
-}
-
-float CompVYAML::getFloat(const std::string& section, const std::string& name, const float& default_val COMPV_DEFAULT(.f)) const
-{
-	COMPV_YAML_GET_IMPL();
-}
-
-bool CompVYAML::getBool(const std::string& section, const std::string& name, const bool& default_val COMPV_DEFAULT(false)) const
-{
-	COMPV_YAML_GET_IMPL();
-}
-
-std::vector<std::string> CompVYAML::getArray(const std::string& section, const std::string& name, const std::vector<std::string>& default_val COMPV_DEFAULT({})) const
-{
-	COMPV_YAML_GET_IMPL();
-}
+int CompVYAML::getInt(const std::string& section, const std::string& name, const int& default_val COMPV_DEFAULT(0)) const { COMPV_YAML_GET_IMPL(); }
+std::string CompVYAML::getString(const std::string& section, const std::string& name, const std::string& default_val COMPV_DEFAULT("")) const { COMPV_YAML_GET_IMPL(); }
+float CompVYAML::getFloat(const std::string& section, const std::string& name, const float& default_val COMPV_DEFAULT(.f)) const { COMPV_YAML_GET_IMPL(); }
+bool CompVYAML::getBool(const std::string& section, const std::string& name, const bool& default_val COMPV_DEFAULT(false)) const { COMPV_YAML_GET_IMPL(); }
+std::vector<std::string> CompVYAML::getArrayString(const std::string& section, const std::string& name, const std::vector<std::string>& default_val COMPV_DEFAULT({})) const { COMPV_YAML_GET_IMPL(); }
+std::vector<float> CompVYAML::getArrayFloat(const std::string& section, const std::string& name, const std::vector<float>& default_val COMPV_DEFAULT({})) const { COMPV_YAML_GET_IMPL(); }
 
 // Most likely called before Engine init() -> cannot use CompVFileUtils::read()
 std::string CompVYAML::readData(const std::string& file_path)
@@ -167,11 +135,15 @@ static COMPV_ERROR_CODE CompVYAMLSet(ryml::NodeRef root, const std::string& sect
 {
 	try {
 		auto yml_section = root.find_child(section.c_str());
-		if (!yml_section.valid()) {
-			COMPV_DEBUG_ERROR_EX(THIS_CLASSNAME, "Cannot find YAML section %s", section.c_str());
+		if (!yml_section.valid() || !yml_section.has_child(name.c_str())) {
+			COMPV_DEBUG_ERROR_EX(THIS_CLASSNAME, "Cannot find YAML entry %s.%s", section.c_str(), name.c_str());
 			return COMPV_ERROR_CODE_E_NOT_FOUND;
 		}
-		yml_section[name.c_str()] << val;
+		auto& yml_entry = yml_section[name.c_str()];
+		if (yml_entry.is_seq()) { // T = std::vector<?>
+			yml_entry.clear_children(); // we don't want to append new values, replace them			
+		}
+		yml_entry << val;
 	}
 	catch (const std::exception &exc) {
 		COMPV_DEBUG_ERROR_EX(THIS_CLASSNAME, "RapidYAML exception: %s/%s -> %s", section.c_str(), name.c_str(), exc.what());

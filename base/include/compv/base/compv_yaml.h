@@ -38,12 +38,14 @@ public:
 	COMPV_ERROR_CODE setString(const std::string& section, const std::string& name, const std::string& val) const;
 	COMPV_ERROR_CODE setFloat(const std::string& section, const std::string& name, const float& val) const;
 	COMPV_ERROR_CODE setBool(const std::string& section, const std::string& name, const bool& val) const;
+	COMPV_ERROR_CODE setArrayFloat(const std::string& section, const std::string& name, const std::vector<float>& val) const;
 
 	int getInt(const std::string& section, const std::string& name, const int& default_val = 0) const;
 	std::string getString(const std::string& section, const std::string& name, const std::string& default_val = "") const;
 	float getFloat(const std::string& section, const std::string& name, const float& default_val = 0.f) const;
 	bool getBool(const std::string& section, const std::string& name, const bool& default_val = false) const;
-	std::vector<std::string> getArray(const std::string& section, const std::string& name, const std::vector<std::string>& default_val = {}) const;
+	std::vector<std::string> getArrayString(const std::string& section, const std::string& name, const std::vector<std::string>& default_val = {}) const;
+	std::vector<float> getArrayFloat(const std::string& section, const std::string& name, const std::vector<float>& default_val = {}) const;
 
 	static CompVYAML buildNull() {
 		return CompVYAML();
