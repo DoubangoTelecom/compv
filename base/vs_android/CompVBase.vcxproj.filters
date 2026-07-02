@@ -900,6 +900,15 @@
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_activation_functions_intrin_sse2.h">
       <Filter>include\math\intrin\x86</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\compv\base\compv_yaml.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\math\compv_math_op_add.h">
+      <Filter>include\math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_op_add_intrin_neon.h">
+      <Filter>include\math\intrin\arm</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_base.cxx">
@@ -1529,6 +1538,15 @@
     <ClCompile Include="..\compv_uselocal.cxx">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="..\compv_yaml.cxx">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\compv_math_op_add.cxx">
+      <Filter>source\math</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\intrin\arm\compv_math_op_add_intrin_neon.cxx">
+      <Filter>source\math\intrin\arm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <YASM Include="..\asm\x86\compv_bits_x86.s">
@@ -1753,6 +1771,12 @@
     <YASM Include="..\image\asm\x86\compv_image_threshold_x64_sse.s">
       <Filter>source\image\asm\x86</Filter>
     </YASM>
+    <YASM Include="..\math\asm\x86\compv_math_op_add_x64_avx.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="..\math\asm\x86\compv_math_op_add_x64_sse.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
   </ItemGroup>
   <ItemGroup>
     <GAS Include="..\asm\arm\compv_gradient_fast_arm64_neon.S">
@@ -1919,6 +1943,12 @@
     </GAS>
     <GAS Include="..\asm\arm\compv_patch_arm64_neon.S">
       <Filter>source\asm\arm</Filter>
+    </GAS>
+    <GAS Include="..\math\asm\arm\compv_math_op_add_arm32_neon.S">
+      <Filter>source\math\asm\arm</Filter>
+    </GAS>
+    <GAS Include="..\math\asm\arm\compv_math_op_add_arm64_neon.S">
+      <Filter>source\math\asm\arm</Filter>
     </GAS>
   </ItemGroup>
 </Project>

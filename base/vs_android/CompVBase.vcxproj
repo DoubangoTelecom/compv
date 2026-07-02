@@ -73,6 +73,7 @@
     <ClInclude Include="..\include\compv\base\compv_sharedlib.h" />
     <ClInclude Include="..\include\compv\base\compv_simd_globals.h" />
     <ClInclude Include="..\include\compv\base\compv_xml.h" />
+    <ClInclude Include="..\include\compv\base\compv_yaml.h" />
     <ClInclude Include="..\include\compv\base\drawing\compv_canvas.h" />
     <ClInclude Include="..\include\compv\base\drawing\compv_mvp.h" />
     <ClInclude Include="..\include\compv\base\drawing\compv_renderer.h" />
@@ -159,6 +160,7 @@
     <ClInclude Include="..\include\compv\base\math\compv_math_matrix.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_moments.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_morph.h" />
+    <ClInclude Include="..\include\compv\base\math\compv_math_op_add.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_op_minmax.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_op_mul.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_op_sub.h" />
@@ -179,6 +181,7 @@
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_histogram_intrin_neon.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_matrix_intrin_neon64.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_morph_intrin_neon.h" />
+    <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_op_add_intrin_neon.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_op_minmax_intrin_neon.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_op_mul_intrin_neon.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_op_sub_intrin_neon.h" />
@@ -309,6 +312,7 @@
     <ClCompile Include="..\compv_simd_globals.cxx" />
     <ClCompile Include="..\compv_uselocal.cxx" />
     <ClCompile Include="..\compv_xml.cxx" />
+    <ClCompile Include="..\compv_yaml.cxx" />
     <ClCompile Include="..\drawing\compv_canvas.cxx" />
     <ClCompile Include="..\drawing\compv_mvp.cxx" />
     <ClCompile Include="..\drawing\compv_renderer.cxx" />
@@ -550,6 +554,7 @@
     <ClCompile Include="..\math\compv_math_matrix.cxx" />
     <ClCompile Include="..\math\compv_math_moments.cxx" />
     <ClCompile Include="..\math\compv_math_morph.cxx" />
+    <ClCompile Include="..\math\compv_math_op_add.cxx" />
     <ClCompile Include="..\math\compv_math_op_minmax.cxx" />
     <ClCompile Include="..\math\compv_math_op_mul.cxx" />
     <ClCompile Include="..\math\compv_math_op_sub.cxx" />
@@ -570,6 +575,7 @@
     <ClCompile Include="..\math\intrin\arm\compv_math_histogram_intrin_neon.cxx" />
     <ClCompile Include="..\math\intrin\arm\compv_math_matrix_intrin_neon64.cxx" />
     <ClCompile Include="..\math\intrin\arm\compv_math_morph_intrin_neon.cxx" />
+    <ClCompile Include="..\math\intrin\arm\compv_math_op_add_intrin_neon.cxx" />
     <ClCompile Include="..\math\intrin\arm\compv_math_op_minmax_intrin_neon.cxx" />
     <ClCompile Include="..\math\intrin\arm\compv_math_op_mul_intrin_neon.cxx" />
     <ClCompile Include="..\math\intrin\arm\compv_math_op_sub_intrin_neon.cxx" />
@@ -2302,6 +2308,28 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
     </YASM>
+    <GAS Include="..\math\asm\arm\compv_math_op_add_arm32_neon.S">
+      <FileType>Document</FileType>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x86'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+    </GAS>
+    <GAS Include="..\math\asm\arm\compv_math_op_add_arm64_neon.S">
+      <FileType>Document</FileType>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x86'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+    </GAS>
     <YASM Include="..\math\asm\x86\compv_math_cast_x64_sse.s">
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">$(ProjectDir)../asm/x86;%(IncludePaths)</IncludePaths>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x86'">$(ProjectDir)../asm/x86;%(IncludePaths)</IncludePaths>
@@ -2611,6 +2639,14 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
     </YASM>
+    <YASM Include="..\math\asm\x86\compv_math_op_add_x64_avx.s">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </YASM>
+    <YASM Include="..\math\asm\x86\compv_math_op_add_x64_sse.s">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </YASM>
     <YASM Include="..\math\asm\x86\compv_math_op_mul_x64_avx.s">
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">$(ProjectDir)../asm/x86;%(IncludePaths)</IncludePaths>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x86'">$(ProjectDir)../asm/x86;%(IncludePaths)</IncludePaths>
@@ -2896,58 +2932,58 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>Clang_3_8</PlatformToolset>
-    <UseOfStl>gnustl_static</UseOfStl>
-    <AndroidAPILevel>android-21</AndroidAPILevel>
+    <PlatformToolset>Clang_5_0</PlatformToolset>
+    <UseOfStl>c++_static</UseOfStl>
+    <AndroidAPILevel>android-29</AndroidAPILevel>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>Clang_3_8</PlatformToolset>
-    <UseOfStl>gnustl_static</UseOfStl>
-    <AndroidAPILevel>android-21</AndroidAPILevel>
+    <PlatformToolset>Clang_5_0</PlatformToolset>
+    <UseOfStl>c++_static</UseOfStl>
+    <AndroidAPILevel>android-29</AndroidAPILevel>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>Clang_3_8</PlatformToolset>
-    <UseOfStl>gnustl_static</UseOfStl>
-    <AndroidAPILevel>android-21</AndroidAPILevel>
+    <PlatformToolset>Clang_5_0</PlatformToolset>
+    <UseOfStl>c++_static</UseOfStl>
+    <AndroidAPILevel>android-29</AndroidAPILevel>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>Clang_3_8</PlatformToolset>
-    <UseOfStl>gnustl_static</UseOfStl>
-    <AndroidAPILevel>android-21</AndroidAPILevel>
+    <PlatformToolset>Clang_5_0</PlatformToolset>
+    <UseOfStl>c++_static</UseOfStl>
+    <AndroidAPILevel>android-29</AndroidAPILevel>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>Clang_3_8</PlatformToolset>
-    <UseOfStl>gnustl_static</UseOfStl>
-    <AndroidAPILevel>android-21</AndroidAPILevel>
+    <PlatformToolset>Clang_5_0</PlatformToolset>
+    <UseOfStl>c++_static</UseOfStl>
+    <AndroidAPILevel>android-29</AndroidAPILevel>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>Clang_3_8</PlatformToolset>
-    <UseOfStl>gnustl_static</UseOfStl>
-    <AndroidAPILevel>android-21</AndroidAPILevel>
+    <PlatformToolset>Clang_5_0</PlatformToolset>
+    <UseOfStl>c++_static</UseOfStl>
+    <AndroidAPILevel>android-29</AndroidAPILevel>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>Clang_3_8</PlatformToolset>
-    <UseOfStl>gnustl_static</UseOfStl>
-    <AndroidAPILevel>android-21</AndroidAPILevel>
+    <PlatformToolset>Clang_5_0</PlatformToolset>
+    <UseOfStl>c++_static</UseOfStl>
+    <AndroidAPILevel>android-29</AndroidAPILevel>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>Clang_3_8</PlatformToolset>
-    <UseOfStl>gnustl_static</UseOfStl>
-    <AndroidAPILevel>android-21</AndroidAPILevel>
+    <PlatformToolset>Clang_5_0</PlatformToolset>
+    <UseOfStl>c++_static</UseOfStl>
+    <AndroidAPILevel>android-29</AndroidAPILevel>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -2978,10 +3014,10 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>../include;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../include;../../thirdparties/include/common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>c++11</CppLanguageStandard>
       <PreprocessorDefinitions>DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ExceptionHandling>Disabled</ExceptionHandling>
+      <ExceptionHandling>Enabled</ExceptionHandling>
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableNeonCodegen>false</EnableNeonCodegen>
       <Optimization>Disabled</Optimization>
@@ -2993,9 +3029,9 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>../include;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../include;../../thirdparties/include/common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>c++11</CppLanguageStandard>
-      <ExceptionHandling>Disabled</ExceptionHandling>
+      <ExceptionHandling>Enabled</ExceptionHandling>
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableNeonCodegen>false</EnableNeonCodegen>
       <AdditionalOptions>-fvisibility=hidden -ffunction-sections -O3 -ftree-vectorize %(AdditionalOptions)</AdditionalOptions>
@@ -3009,10 +3045,10 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>../include;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../include;../../thirdparties/include/common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>c++11</CppLanguageStandard>
       <PreprocessorDefinitions>DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ExceptionHandling>Disabled</ExceptionHandling>
+      <ExceptionHandling>Enabled</ExceptionHandling>
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableNeonCodegen>false</EnableNeonCodegen>
       <Optimization>Disabled</Optimization>
@@ -3024,9 +3060,9 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>../include;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../include;../../thirdparties/include/common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>c++11</CppLanguageStandard>
-      <ExceptionHandling>Disabled</ExceptionHandling>
+      <ExceptionHandling>Enabled</ExceptionHandling>
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableNeonCodegen>false</EnableNeonCodegen>
       <AdditionalOptions>-fvisibility=hidden -ffunction-sections -O3 -ftree-vectorize %(AdditionalOptions)</AdditionalOptions>
@@ -3040,10 +3076,10 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>../include;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../include;../../thirdparties/include/common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>c++11</CppLanguageStandard>
       <PreprocessorDefinitions>DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ExceptionHandling>Disabled</ExceptionHandling>
+      <ExceptionHandling>Enabled</ExceptionHandling>
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableNeonCodegen>true</EnableNeonCodegen>
       <Optimization>Disabled</Optimization>
@@ -3055,9 +3091,9 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>../include;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../include;../../thirdparties/include/common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>c++11</CppLanguageStandard>
-      <ExceptionHandling>Disabled</ExceptionHandling>
+      <ExceptionHandling>Enabled</ExceptionHandling>
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableNeonCodegen>true</EnableNeonCodegen>
       <PreprocessorDefinitions>DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -3072,10 +3108,10 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>../include;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../include;../../thirdparties/include/common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <CppLanguageStandard>c++11</CppLanguageStandard>
-      <ExceptionHandling>Disabled</ExceptionHandling>
+      <ExceptionHandling>Enabled</ExceptionHandling>
       <EnableNeonCodegen>true</EnableNeonCodegen>
       <TreatWarningAsError>true</TreatWarningAsError>
       <FloatABI />
@@ -3088,9 +3124,9 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>../include;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../include;../../thirdparties/include/common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>c++11</CppLanguageStandard>
-      <ExceptionHandling>Disabled</ExceptionHandling>
+      <ExceptionHandling>Enabled</ExceptionHandling>
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableNeonCodegen>true</EnableNeonCodegen>
       <FloatABI />

@@ -937,7 +937,6 @@ COMPV_ERROR_CODE CompVCalibCamera::lineBestFit(const CompVLineFloat32Vector& poi
 
 	// Compute mean(y)
 	compv_float32_t mean_y = 0.f;
-	compv_float32_t scale_strength;
 	for (i = points_cartesian.begin(), k = strengths.begin(); i < points_cartesian.end(); ++i, ++k) {
 		mean_y += (i->a.y + i->b.y) * (*k);
 	}
@@ -945,7 +944,6 @@ COMPV_ERROR_CODE CompVCalibCamera::lineBestFit(const CompVLineFloat32Vector& poi
 	// Compute t0
 	compv_float32_t t0 = 0.f;
 	for (i = points_cartesian.begin(), j = points_hough.begin(), k = strengths.begin(); i < points_cartesian.end(); ++i, ++j, ++k) {
-		scale_strength = (j->strength * scale_strengths);
 		t0 += (((i->a.y - mean_y)) + ((i->b.y - mean_y))) * (*k);
 	}
 

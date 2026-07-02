@@ -208,7 +208,7 @@ COMPV_ERROR_CODE CompVMathEigen<T>::findSymm(const CompVMatPtr &S, CompVMatPtrPt
 
 	// Sort Qt (eigenvectors are rows)
 	if (sort) {
-		size_t eigenValuesCount = D_->cols(), index, oldIndex;
+		size_t eigenValuesCount = D_->cols(), oldIndex;
 		CompVMatPtr Idx;
 		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<size_t>(&Idx, 1, eigenValuesCount));
 		size_t* indexes = Idx->ptr<size_t>();
@@ -219,7 +219,6 @@ COMPV_ERROR_CODE CompVMathEigen<T>::findSymm(const CompVMatPtr &S, CompVMatPtrPt
 		do {
 			sorted = true;
 			for (size_t i = 0; i < eigenValuesCount - 1; ++i) {
-				index = indexes[i];
 				if (*D_->ptr<T>(indexes[i], indexes[i]) < *D_->ptr<T>(indexes[i + 1], indexes[i + 1])) {
 					oldIndex = indexes[i];
 					indexes[i] = indexes[i + 1];

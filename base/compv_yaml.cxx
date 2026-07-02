@@ -11,7 +11,7 @@
 #define RYML_SINGLE_HDR_DEFINE_NOW
 
 COMPV_VS_DISABLE_WARNINGS_BEGIN(4800)
-#define RYML_DEFAULT_CALLBACK_USES_EXCEPTIONS
+//#define RYML_DEFAULT_CALLBACK_USES_EXCEPTIONS
 #include <rapidyaml-0.9.0/ryml_all.hpp>
 COMPV_VS_DISABLE_WARNINGS_END()
 
@@ -83,12 +83,15 @@ void CompVYAML::clone(CompVYAML& dst, const CompVYAML& src)
 	dst.m_Tree = src.m_Tree ? new ryml::Tree(*src.m_Tree) : nullptr;
 }
 
+// << set >>
 COMPV_ERROR_CODE CompVYAML::setInt(const std::string& section, const std::string& name, const int& val) const { COMPV_YAML_SET_IMPL(); }
 COMPV_ERROR_CODE CompVYAML::setString(const std::string& section, const std::string& name, const std::string& val) const { COMPV_YAML_SET_IMPL(); }
 COMPV_ERROR_CODE CompVYAML::setFloat(const std::string& section, const std::string& name, const float& val) const { COMPV_YAML_SET_IMPL(); }
 COMPV_ERROR_CODE CompVYAML::setBool(const std::string& section, const std::string& name, const bool& val) const { COMPV_YAML_SET_IMPL(); }
 COMPV_ERROR_CODE CompVYAML::setArrayFloat(const std::string& section, const std::string& name, const std::vector<float>& val) const { COMPV_YAML_SET_IMPL();}
+COMPV_ERROR_CODE CompVYAML::setArrayString(const std::string& section, const std::string& name, const std::vector<std::string>& val) const { COMPV_YAML_SET_IMPL(); }
 
+// << get >>
 int CompVYAML::getInt(const std::string& section, const std::string& name, const int& default_val COMPV_DEFAULT(0)) const { COMPV_YAML_GET_IMPL(); }
 std::string CompVYAML::getString(const std::string& section, const std::string& name, const std::string& default_val COMPV_DEFAULT("")) const { COMPV_YAML_GET_IMPL(); }
 float CompVYAML::getFloat(const std::string& section, const std::string& name, const float& default_val COMPV_DEFAULT(.f)) const { COMPV_YAML_GET_IMPL(); }
@@ -135,11 +138,11 @@ static COMPV_ERROR_CODE CompVYAMLSet(ryml::NodeRef root, const std::string& sect
 {
 	try {
 		auto yml_section = root.find_child(section.c_str());
-		if (!yml_section.valid() || !yml_section.has_child(name.c_str())) {
+		if (!yml_section.readable() || !yml_section.has_child(name.c_str())) {
 			COMPV_DEBUG_ERROR_EX(THIS_CLASSNAME, "Cannot find YAML entry %s.%s", section.c_str(), name.c_str());
 			return COMPV_ERROR_CODE_E_NOT_FOUND;
 		}
-		auto& yml_entry = yml_section[name.c_str()];
+		auto yml_entry = yml_section[name.c_str()];
 		if (yml_entry.is_seq()) { // T = std::vector<?>
 			yml_entry.clear_children(); // we don't want to append new values, replace them			
 		}
@@ -157,9 +160,9 @@ static T CompVYAMLGet(ryml::ConstNodeRef root, const std::string& section, const
 	// https://github.com/biojppm/rapidyaml/issues/389#issuecomment-1719945531
 	try {
 		auto yml_section = root.find_child(section.c_str());
-		if (yml_section.valid()) { // section must exist
+		if (yml_section.readable()) { // section must exist
 			const auto& yml_val = yml_section.find_child(entry_name.c_str());
-			if (yml_val.valid()) {
+			if (yml_val.readable()) {
 				T result;
 				yml_val >> result;
 				return result;

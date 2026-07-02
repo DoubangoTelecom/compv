@@ -10940,7 +10940,7 @@ FASTFLOAT_CONSTEXPR20 bool large_add_from(stackvec<size> &x, limb_span y,
       xi = scalar_add(xi, 1, c2);
     }
     x[index + start] = xi;
-    carry = c1 | c2;
+    carry = c1 || c2;
   }
 
   // handle overflow

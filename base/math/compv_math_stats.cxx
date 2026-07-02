@@ -477,7 +477,7 @@ template<> COMPV_BASE_API COMPV_ERROR_CODE CompVMathStats::mse2D_homogeneous(Com
 
 COMPV_ERROR_CODE CompVMathStats::mse2D(const CompVMatPtr& aPoints, const CompVMatPtr& bPoints, double& error)
 {
-	COMPV_CHECK_EXP_RETURN(!aPoints | !bPoints || aPoints->subType() != bPoints->subType(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(!aPoints || !bPoints || aPoints->subType() != bPoints->subType(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	switch (aPoints->subType()) {
 	case COMPV_SUBTYPE_RAW_FLOAT64:
 		COMPV_CHECK_CODE_RETURN((CompVMathStatsGeneric::mse2D<compv_float64_t>(aPoints, bPoints, error)));

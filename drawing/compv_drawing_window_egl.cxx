@@ -161,7 +161,7 @@ COMPV_ERROR_CODE CompVWindowEGL::init()
     COMPV_CHECK_EXP_BAIL((eglQuerySurface(m_pEGLDisplay, m_pEGLSurface, EGL_WIDTH, &width) != EGL_TRUE), (err = COMPV_ERROR_CODE_E_EGL));
     COMPV_CHECK_EXP_BAIL((eglQuerySurface(m_pEGLDisplay, m_pEGLSurface, EGL_HEIGHT, &height) != EGL_TRUE), (err = COMPV_ERROR_CODE_E_EGL));
     if (width != CompVWindow::m_nWidth || height != CompVWindow::m_nHeight) {
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Android, setting size to fullscreen: (%zd,%zd)->(%zd,%zd)", CompVWindow::m_nWidth, CompVWindow::m_nHeight, width, height);
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Android, setting size to fullscreen: (%zu,%zu)->(%d,%d)", CompVWindow::m_nWidth, CompVWindow::m_nHeight, width, height);
         COMPV_CHECK_CODE_BAIL(err = priv_updateSize(static_cast<size_t>(width), static_cast<size_t>(height)));
     }
 

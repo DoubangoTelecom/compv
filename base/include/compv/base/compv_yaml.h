@@ -30,15 +30,15 @@ public:
 
 	CompVYAML& operator=(const CompVYAML& that);
 
-	bool isValid() const {
-		return m_Tree != nullptr;
-	}
+	bool isValid() const { return m_Tree != nullptr; }
+	const c4::yml::Tree* getTree() const { return m_Tree; }
 
 	COMPV_ERROR_CODE setInt(const std::string& section, const std::string& name, const int& val) const;
 	COMPV_ERROR_CODE setString(const std::string& section, const std::string& name, const std::string& val) const;
 	COMPV_ERROR_CODE setFloat(const std::string& section, const std::string& name, const float& val) const;
 	COMPV_ERROR_CODE setBool(const std::string& section, const std::string& name, const bool& val) const;
 	COMPV_ERROR_CODE setArrayFloat(const std::string& section, const std::string& name, const std::vector<float>& val) const;
+	COMPV_ERROR_CODE setArrayString(const std::string& section, const std::string& name, const std::vector<std::string>& val) const;
 
 	int getInt(const std::string& section, const std::string& name, const int& default_val = 0) const;
 	std::string getString(const std::string& section, const std::string& name, const std::string& default_val = "") const;
@@ -64,8 +64,8 @@ private:
 
 private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
-	std::string m_DefaultSection;
 	c4::yml::Tree* m_Tree;
+	std::string m_DefaultSection;
 	COMPV_VS_DISABLE_WARNINGS_END()
 };
 

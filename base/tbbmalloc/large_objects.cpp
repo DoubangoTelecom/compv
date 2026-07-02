@@ -748,7 +748,7 @@ bool LargeObjectCache::doCleanup(uintptr_t currTime, bool doThreshDecr)
     if (!doThreshDecr)
         extMemPool->allLocalCaches.markUnused();
     return largeCache.regularCleanup(extMemPool, currTime, doThreshDecr)
-        | hugeCache.regularCleanup(extMemPool, currTime, doThreshDecr);
+        || hugeCache.regularCleanup(extMemPool, currTime, doThreshDecr);
 }
 
 bool LargeObjectCache::decreasingCleanup()
@@ -763,7 +763,7 @@ bool LargeObjectCache::regularCleanup()
 
 bool LargeObjectCache::cleanAll()
 {
-    return largeCache.cleanAll(extMemPool) | hugeCache.cleanAll(extMemPool);
+    return largeCache.cleanAll(extMemPool) || hugeCache.cleanAll(extMemPool);
 }
 
 template<typename Props>

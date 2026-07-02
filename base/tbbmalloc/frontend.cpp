@@ -583,7 +583,7 @@ public:
     bool externalCleanup(ExtMemoryPool *mPool, bool cleanOnlyUnused) {
         if (!unused && cleanOnlyUnused) return false;
         // both cleanups to be called, and the order is not important
-        return lloc.externalCleanup(mPool) | freeSlabBlocks.externalCleanup();
+        return lloc.externalCleanup(mPool) || freeSlabBlocks.externalCleanup();
     }
     bool cleanUnusedActiveBlocks(Backend *backend, bool userPool);
     void markUsed() { unused = false; } // called by owner when TLS touched
