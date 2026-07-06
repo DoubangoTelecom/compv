@@ -62,6 +62,9 @@ public:
 	static std::string SettingsANDROID_ID() {
 		return s_strANDROID_ID;
 	}
+	static std::string nativeLibraryDir() {
+		return s_nativeLibraryDir;
+	}
 #endif
 	template <typename T>
 	static std::string to_string(T value) {
@@ -85,6 +88,7 @@ private:
 	static std::string s_strHARDWARE; // https://developer.android.com/reference/android/os/Build.html#HARDWARE
 	static int s_intSDK_INT; // https://developer.android.com/reference/android/os/Build.VERSION.html#SDK_INT
 	static std::string s_strANDROID_ID; // https://developer.android.com/reference/android/provider/Settings.Secure.html#ANDROID_ID
+	static std::string s_nativeLibraryDir; // https://developer.android.com/reference/android/content/pm/ApplicationInfo#nativeLibraryDir
 #endif
 #if COMPV_OS_WINDOWS && !COMPV_OS_WINDOWS_RT
     static DWORD s_dwMajorVersion;

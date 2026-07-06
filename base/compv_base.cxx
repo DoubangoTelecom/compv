@@ -45,6 +45,7 @@ std::string CompVBase::s_strCPU_ABI = "";
 std::string CompVBase::s_strMODEL = "";
 std::string CompVBase::s_strHARDWARE = "";
 std::string CompVBase::s_strANDROID_ID = "";
+std::string CompVBase::s_nativeLibraryDir = "";
 int CompVBase::s_intSDK_INT = 0;
 #endif
 bool CompVBase::s_bTesting = false;
@@ -402,27 +403,27 @@ COMPV_ERROR_CODE CompVBase::initAndroid(JNIEnv* jEnv)
 			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "android/os/Build$VERSION.SDK_INT: %d", s_intSDK_INT);
 		}
 	}
-	jclass clazz_Build = jEnv->FindClass("android/os/Build");
-	if (clazz_Build) {
-		jfieldID fieldID_CPU_ABI = jEnv->GetStaticFieldID(clazz_Build, "CPU_ABI", "Ljava/lang/String;");
-		jfieldID fieldID_MODEL = jEnv->GetStaticFieldID(clazz_Build, "MODEL", "Ljava/lang/String;");
-		jfieldID fieldID_HARDWARE = jEnv->GetStaticFieldID(clazz_Build, "HARDWARE", "Ljava/lang/String;");
+	jclass klass_Build = jEnv->FindClass("android/os/Build");
+	if (klass_Build) {
+		jfieldID fieldID_CPU_ABI = jEnv->GetStaticFieldID(klass_Build, "CPU_ABI", "Ljava/lang/String;");
+		jfieldID fieldID_MODEL = jEnv->GetStaticFieldID(klass_Build, "MODEL", "Ljava/lang/String;");
+		jfieldID fieldID_HARDWARE = jEnv->GetStaticFieldID(klass_Build, "HARDWARE", "Ljava/lang/String;");
 		if (fieldID_CPU_ABI) {
-			jstring object_CPU_ABI = reinterpret_cast<jstring>(jEnv->GetStaticObjectField(clazz_Build, fieldID_CPU_ABI));
+			jstring object_CPU_ABI = reinterpret_cast<jstring>(jEnv->GetStaticObjectField(klass_Build, fieldID_CPU_ABI));
 			if (object_CPU_ABI) {
 				s_strCPU_ABI = CompVJNI::toString(jEnv, object_CPU_ABI);
 				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "android/os/Build.CPU_ABI: %s", s_strCPU_ABI.c_str());
 			}
 		}
 		if (fieldID_MODEL) {
-			jstring object_MODEL = reinterpret_cast<jstring>(jEnv->GetStaticObjectField(clazz_Build, fieldID_MODEL));
+			jstring object_MODEL = reinterpret_cast<jstring>(jEnv->GetStaticObjectField(klass_Build, fieldID_MODEL));
 			if (object_MODEL) {
 				s_strMODEL = CompVJNI::toString(jEnv, object_MODEL);
 				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "android/os/Build.MODEL: %s", s_strMODEL.c_str());
 			}
 		}
 		if (fieldID_HARDWARE) {
-			jstring object_HARDWARE = reinterpret_cast<jstring>(jEnv->GetStaticObjectField(clazz_Build, fieldID_HARDWARE));
+			jstring object_HARDWARE = reinterpret_cast<jstring>(jEnv->GetStaticObjectField(klass_Build, fieldID_HARDWARE));
 			if (object_HARDWARE) {
 				s_strHARDWARE = CompVJNI::toString(jEnv, object_HARDWARE);
 				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "android/os/Build.HARDWARE: %s", s_strHARDWARE.c_str());
@@ -430,25 +431,26 @@ COMPV_ERROR_CODE CompVBase::initAndroid(JNIEnv* jEnv)
 		}
 	}
 
-	// Get Context and retrieve 'ANDROID_ID' value
+	// Get Context and retrieve 'ANDROID_ID' and 'nativeLibraryDir' values
 	jobject context = androidGetContext(jEnv);
 	COMPV_CHECK_EXP_NOP(!context, COMPV_ERROR_CODE_E_INVALID_STATE, "Null context. You should call the init function from main thread or activity thread");
 	if (context) {
-		jclass contextKlass = jEnv->GetObjectClass(context);
-		if (contextKlass) {
-			jmethodID getContentResolverMethodId = jEnv->GetMethodID(contextKlass, "getContentResolver", "()Landroid/content/ContentResolver;");
-			if (getContentResolverMethodId) {
-				jobject contentResolver = jEnv->CallObjectMethod(context, getContentResolverMethodId);
-				if (contentResolver) {
-					jclass settingsSecureKlass = jEnv->FindClass("android/provider/Settings$Secure");
-					if (settingsSecureKlass) {
-						jmethodID getStringMethodId = jEnv->GetStaticMethodID(settingsSecureKlass, "getString", "(Landroid/content/ContentResolver;Ljava/lang/String;)Ljava/lang/String;");
-						if (getStringMethodId) { // https://developer.android.com/reference/android/provider/Settings.Secure#getString(android.content.ContentResolver,%20java.lang.String)
-							jfieldID fieldID_ANDROID_ID = jEnv->GetStaticFieldID(settingsSecureKlass, "ANDROID_ID", "Ljava/lang/String;");
+		jclass klass_context = jEnv->GetObjectClass(context);
+		if (klass_context) {
+			// 'ANDROID_ID'
+			jmethodID methodID_getContentResolver = jEnv->GetMethodID(klass_context, "getContentResolver", "()Landroid/content/ContentResolver;");
+			if (methodID_getContentResolver) {
+				jobject object_contentResolver = jEnv->CallObjectMethod(context, methodID_getContentResolver);
+				if (object_contentResolver) {
+					jclass klass_settingsSecure = jEnv->FindClass("android/provider/Settings$Secure");
+					if (klass_settingsSecure) {
+						jmethodID methodID_getString = jEnv->GetStaticMethodID(klass_settingsSecure, "getString", "(Landroid/content/ContentResolver;Ljava/lang/String;)Ljava/lang/String;");
+						if (methodID_getString) { // https://developer.android.com/reference/android/provider/Settings.Secure#getString(android.content.ContentResolver,%20java.lang.String)
+							jfieldID fieldID_ANDROID_ID = jEnv->GetStaticFieldID(klass_settingsSecure, "ANDROID_ID", "Ljava/lang/String;");
 							if (fieldID_ANDROID_ID) {
-								jstring object_ANDROID_ID = reinterpret_cast<jstring>(jEnv->GetStaticObjectField(settingsSecureKlass, fieldID_ANDROID_ID));
+								jstring object_ANDROID_ID = reinterpret_cast<jstring>(jEnv->GetStaticObjectField(klass_settingsSecure, fieldID_ANDROID_ID));
 								if (object_ANDROID_ID) {
-									jstring ANDROID_ID = reinterpret_cast<jstring>(jEnv->CallStaticObjectMethod(settingsSecureKlass, getStringMethodId, contentResolver, object_ANDROID_ID));
+									jstring ANDROID_ID = reinterpret_cast<jstring>(jEnv->CallStaticObjectMethod(klass_settingsSecure, methodID_getString, object_contentResolver, object_ANDROID_ID));
 									if (ANDROID_ID) { // https://developer.android.com/reference/android/provider/Settings.Secure.html#ANDROID_ID
 										s_strANDROID_ID = CompVJNI::toString(jEnv, ANDROID_ID);
 										COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "AID: %s", "****");
@@ -459,8 +461,27 @@ COMPV_ERROR_CODE CompVBase::initAndroid(JNIEnv* jEnv)
 					}
 				}
 			}
+			// 'nativeLibraryDir'
+			jmethodID methosID_getApplicationInfo = jEnv->GetMethodID(klass_context, "getApplicationInfo", "()Landroid/content/pm/ApplicationInfo;");
+			if (methosID_getApplicationInfo) {
+				jobject object_applicationInfo = jEnv->CallObjectMethod(context, methosID_getApplicationInfo);
+				if (object_applicationInfo) {
+					jclass klass_applicationInfo = jEnv->GetObjectClass(object_applicationInfo);
+					if (klass_applicationInfo) {
+						jfieldID fieldID_nativeLibraryDir = jEnv->GetFieldID(klass_applicationInfo, "nativeLibraryDir", "Ljava/lang/String;");
+						if (fieldID_nativeLibraryDir) {
+							jstring str_nativeLibraryDir = reinterpret_cast<jstring>(jEnv->GetObjectField(object_applicationInfo, fieldID_nativeLibraryDir));
+							if (str_nativeLibraryDir) {
+								s_nativeLibraryDir = CompVJNI::toString(jEnv, str_nativeLibraryDir);
+								COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "nativeLibraryDir: %s", s_nativeLibraryDir.c_str());
+							}
+						}
+					}
+				}
+			}
 		}
 	}
+
 
 	return COMPV_ERROR_CODE_S_OK;
 }
