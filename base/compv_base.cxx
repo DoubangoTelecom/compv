@@ -473,7 +473,7 @@ COMPV_ERROR_CODE CompVBase::initAndroid(JNIEnv* jEnv)
 							jstring str_nativeLibraryDir = reinterpret_cast<jstring>(jEnv->GetObjectField(object_applicationInfo, fieldID_nativeLibraryDir));
 							if (str_nativeLibraryDir) {
 								s_nativeLibraryDir = CompVJNI::toString(jEnv, str_nativeLibraryDir);
-								COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "nativeLibraryDir: %s", s_nativeLibraryDir.c_str());
+								COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "nativeLibraryDir: %s", "****");
 							}
 						}
 					}
