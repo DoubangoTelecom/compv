@@ -28,6 +28,7 @@ static void CompVMathActivationFunctionsTanhMul_32f32f_C(const compv_float32_t* 
 static void CompVMathActivationFunctionsLogistic_32f32f_C(const compv_float32_t* lut_ptr, const compv_uscalar_t& lut_length_minus1, const compv_float32_t* scale1, const compv_uscalar_t& in_out_length, const compv_float32_t* in_ptr, compv_float32_t* out_ptr);
 static void CompVMathActivationFunctionsLogisticMul_32f32f_C(const compv_float32_t* lut_ptr, const compv_uscalar_t& lut_length_minus1, const compv_float32_t* scale1, const compv_uscalar_t& in_out_length, const compv_float32_t* in_ptr, const compv_float32_t* mul_ptr, compv_float32_t* out_ptr);
 static void CompVMathActivationFunctionsSoftmaxInPlace_32f32f_C(const compv_uscalar_t& in_out_length, compv_float32_t* in_out_ptr);
+static void CompVMathActivationFunctionsSoftmaxFast_32f32f_C(const compv_uscalar_t& in_out_length, const compv_float32_t* in_ptr, compv_float32_t* out_ptr);
 
 COMPV_ERROR_CODE CompVMathActivationFunctions::tanh(const compv_float32_t* lut_ptr, const size_t& lut_length, const compv_float32_t& scale, const size_t& in_out_length, const compv_float32_t* in_ptr, compv_float32_t* out_ptr)
 {
@@ -174,6 +175,31 @@ COMPV_ERROR_CODE CompVMathActivationFunctions::softmaxInPlace(const size_t& in_o
 	return COMPV_ERROR_CODE_S_OK;
 }
 
+COMPV_ERROR_CODE CompVMathActivationFunctions::softmaxFast(const compv_uscalar_t& in_out_length, const compv_float32_t* in_ptr, compv_float32_t* out_ptr)
+{
+	COMPV_CHECK_EXP_RETURN(
+		!in_out_length || !in_ptr || !out_ptr,
+		COMPV_ERROR_CODE_E_INVALID_PARAMETER
+	);
+	void(*CompVMathActivationFunctionsSoftmaxFast)(const compv_uscalar_t & in_out_length, const compv_float32_t * in_ptr, compv_float32_t * out_ptr)
+		= CompVMathActivationFunctionsSoftmaxFast_32f32f_C;
+#if COMPV_ARCH_X86
+	if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
+		COMPV_EXEC_IFDEF_INTRIN_X86((CompVMathActivationFunctionsSoftmaxFast = CompVMathActivationFunctionsSoftmaxFast_32f32f_Intrin_SSE2));
+	}
+#elif COMPV_ARCH_ARM
+	if ((in_out_length % 2) == 0 && CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
+		COMPV_EXEC_IFDEF_INTRIN_ARM((CompVMathActivationFunctionsSoftmaxFast = CompVMathActivationFunctionsSoftmaxFast_pack2_32f32f_Intrin_NEON));
+	}
+#endif
+
+	CompVMathActivationFunctionsSoftmaxFast(
+		in_out_length, in_ptr, out_ptr
+	);
+
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 static void CompVMathActivationFunctionsTanh_32f32f_C(const compv_float32_t* lut_ptr, const compv_uscalar_t& lut_length_minus1, const compv_float32_t* scale1, const compv_uscalar_t& in_out_length, const compv_float32_t* in_ptr, compv_float32_t* out_ptr)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation could be found.");
@@ -235,6 +261,7 @@ static void CompVMathActivationFunctionsLogisticMul_32f32f_C(const compv_float32
 
 static void CompVMathActivationFunctionsSoftmaxInPlace_32f32f_C(const compv_uscalar_t& in_out_length, compv_float32_t* in_out_ptr)
 {
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation could be found.");
 	float max_output = in_out_ptr[0];
 	for (compv_uscalar_t i = 1; i < in_out_length; i++) {
 		const float& output = in_out_ptr[i];
@@ -254,6 +281,33 @@ static void CompVMathActivationFunctionsSoftmaxInPlace_32f32f_C(const compv_usca
 		for (compv_uscalar_t i = 0; i < in_out_length; i++) {
 			in_out_ptr[i] *= prob_total_scale;
 		}
+	}
+}
+
+COMPV_INLINE float __fast_exp(const compv_float32_t& x)
+{
+	union {
+		uint32_t i;
+		float f;
+	} v{};
+	v.i = static_cast<uint32_t>(8388608.f * (1.4426950409 * x + 126.93490512f));
+	return v.f;
+}
+
+static void CompVMathActivationFunctionsSoftmaxFast_32f32f_C(const compv_uscalar_t& in_out_length, const compv_float32_t* in_ptr, compv_float32_t* out_ptr)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation could be found.");
+	const float alpha = *std::max_element(in_ptr, in_ptr + in_out_length);
+	float denominator = 0;
+
+	for (size_t i = 0; i < in_out_length; ++i) {
+		out_ptr[i] = __fast_exp(in_ptr[i] - alpha);
+		denominator += out_ptr[i];
+	}
+
+	const float scale = 1.f / denominator;
+	for (size_t i = 0; i < in_out_length; ++i) {
+		out_ptr[i] *= scale;
 	}
 }
 

@@ -23,6 +23,12 @@ void CompVMathActivationFunctionsSoftmaxInPlace_32f32f_Intrin_SSE2(
 	compv_float32_t* in_out_ptr
 );
 
+void CompVMathActivationFunctionsSoftmaxFast_32f32f_Intrin_SSE2(
+	const compv_uscalar_t& in_out_length,
+	const compv_float32_t* in_ptr,
+	compv_float32_t* out_ptr
+);
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */

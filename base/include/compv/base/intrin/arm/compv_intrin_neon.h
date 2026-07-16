@@ -59,10 +59,12 @@ COMPV_NAMESPACE_BEGIN()
 
 #if COMPV_ARCH_ARM64
 #   define COMPV_ARM_FMAQ_F32(a, b, c)			vfmaq_f32(a, b, c)
+#   define COMPV_ARM_FMA_F32(a, b, c)			vfma_f32(a, b, c)
 #   define COMPV_ARM_N_FMA_F32Q_F32(a, b, c)	vfmaq_n_f32(a, b, c)
 #   define COMPV_ARM_N_FMA_F32(a, b, c)			vfma_n_f32(a, b, c)
 #else
 #   define COMPV_ARM_FMAQ_F32(a, b, c)			vaddq_f32(a, vmulq_f32(b, c))
+#   define COMPV_ARM_FMA_F32(a, b, c)			vadd_f32(a, vmul_f32(b, c))
 #   define COMPV_ARM_N_FMA_F32Q_F32(a, b, c)	vfmaq_f32(a, b, (float32x4_t) {c, c, c, c})
 #   define COMPV_ARM_N_FMA_F32(a, b, c)			vfma_f32(a, b, (float32x2_t) {c, c})
 #endif
@@ -77,6 +79,10 @@ COMPV_NAMESPACE_BEGIN()
     })
 #	define vdivq_f32(vec0, vec1)({ \
     float32x4_t __ret = {(vgetq_lane_f32(vec0, 0) / vgetq_lane_f32(vec1, 0)), (vgetq_lane_f32(vec0, 1) / vgetq_lane_f32(vec1, 1)), (vgetq_lane_f32(vec0, 2) / vgetq_lane_f32(vec1, 2)), (vgetq_lane_f32(vec0, 3) / vgetq_lane_f32(vec1, 3))}; \
+    __ret; \
+    })
+#	define vdiv_f32(vec0, vec1)({ \
+    float32x2_t __ret = {(vget_lane_f32(vec0, 0) / vget_lane_f32(vec1, 0)), (vget_lane_f32(vec0, 1) / vget_lane_f32(vec1, 1))}; \
     __ret; \
     })
 #endif

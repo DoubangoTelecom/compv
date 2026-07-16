@@ -282,7 +282,7 @@ void CompVMathActivationFunctionsSoftmaxInPlace_32f32f_Intrin_NEON(
 	compv_float32_t* in_out_ptr
 )
 {
-	COMPV_DEBUG_INFO_CHECK_SSE2();
+	COMPV_DEBUG_INFO_CHECK_NEON();
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation for Exp");
 	const compv_uscalar_t in_out_length4 = in_out_length & -4;
 	compv_uscalar_t i;
@@ -342,6 +342,96 @@ void CompVMathActivationFunctionsSoftmaxInPlace_32f32f_Intrin_NEON(
 		}
 		for (; i < in_out_length; i += 1) {
 			in_out_ptr[i] *= prob_total_scale_ss;
+		}
+	}
+}
+
+// This is an internal function
+// up to the caller to make sure (in_out_length % 2) == 0
+void CompVMathActivationFunctionsSoftmaxFast_pack2_32f32f_Intrin_NEON(
+	const compv_uscalar_t& in_out_length,
+	const compv_float32_t* in_ptr,
+	compv_float32_t* out_ptr
+)
+{
+	COMPV_DEBUG_INFO_CHECK_NEON();
+	const size_t in_out_length8 = in_out_length & -8;
+	const size_t in_out_length4 = in_out_length & -4;
+	static const float32x4_t __A__ = vdupq_n_f32(8388608.f);
+	static const float32x4_t __B__ = vdupq_n_f32(1.4426950409f);
+	static const float32x4_t __C__ = vdupq_n_f32(126.93490512f);
+	static const float32x4_t __1__ = vdupq_n_f32(1.f);
+	static const float32x2_t __Ax2__ = vdup_n_f32(8388608.f);
+	static const float32x2_t __Bx2__ = vdup_n_f32(1.4426950409f);
+	static const float32x2_t __Cx2__ = vdup_n_f32(126.93490512f);
+	static const float32x2_t __1x2__ = vdup_n_f32(1.f);
+
+	// alpha
+	float32x4_t alpha = vld1q_f32(&in_ptr[0]);
+	for (size_t i = 4; i < in_out_length4; i += 4) { // notice we start at 4
+		alpha = vmaxq_f32(alpha, vld1q_f32(&in_ptr[i]));
+	}
+	float32x2_t alpha_32x2 = vmax_f32(vget_low_f32(alpha), vget_high_f32(alpha));
+	for (size_t i = in_out_length4; i < in_out_length; i += 2) {
+		alpha_32x2 = vmax_f32(alpha_32x2, vld1_f32(&in_ptr[i]));
+	}
+	alpha_32x2 = vpmax_f32(alpha_32x2, alpha_32x2);
+	alpha = vdupq_lane_f32(alpha_32x2, 0);
+
+	// dst, denominator
+	float32x4_t vden = vdupq_n_f32(0);
+	for (size_t i = 0; i < in_out_length8; i += 8) {
+		// x = (in_ptr - alpha)
+		const float32x4_t x1 = vsubq_f32(vld1q_f32(&in_ptr[i]), alpha);
+		const float32x4_t x2 = vsubq_f32(vld1q_f32(&in_ptr[i + 4]), alpha);
+		// dst = fast_exp(x)
+		const float32x4_t y1 = vmulq_f32(
+			__A__,
+			COMPV_ARM_FMAQ_F32(__C__, x1, __B__)
+		);
+		const float32x4_t y2 = vmulq_f32(
+			__A__,
+			COMPV_ARM_FMAQ_F32(__C__, x2, __B__)
+		);
+		const float32x4_t z1 = vreinterpretq_f32_s32(vcvtq_s32_f32(y1));
+		const float32x4_t z2 = vreinterpretq_f32_s32(vcvtq_s32_f32(y2));
+		vst1q_f32(&out_ptr[i], z1);
+		vst1q_f32(&out_ptr[i + 4], z2);
+		// denominator += dst;
+		vden = vaddq_f32(vden, vaddq_f32(z1, z2));
+	}
+	float32x2_t vden_32x2;
+	if (in_out_length8 < in_out_length) {
+		vden_32x2 = vdup_n_f32(0);
+		for (size_t i = in_out_length8; i < in_out_length; i += 2) {
+			const float32x2_t x = vsub_f32(vld1_f32(&in_ptr[i]), alpha_32x2);
+			const float32x2_t y = vmul_f32(
+				__Ax2__,
+				COMPV_ARM_FMA_F32(__Cx2__, x, __Bx2__)
+			);
+			const float32x2_t z = vreinterpret_f32_s32(vcvt_s32_f32(y));
+			vst1_f32(&out_ptr[i], z);
+			vden_32x2 = vadd_f32(vden_32x2, z);
+		}
+		vden_32x2 = vadd_f32(vden_32x2, vget_low_f32(vden));
+		vden_32x2 = vadd_f32(vden_32x2, vget_high_f32(vden));
+	}
+	else {
+		vden_32x2 = vadd_f32(vget_low_f32(vden), vget_high_f32(vden));
+	}
+	vden_32x2 = vpadd_f32(vden_32x2, vden_32x2);
+	vden = vdupq_lane_f32(vden_32x2, 0);
+
+	// dst *= scale
+	const float32x4_t scale = vdivq_f32(__1__, vden);
+	for (size_t i = 0; i < in_out_length8; i += 8) {
+		vst1q_f32(&out_ptr[i], vmulq_f32(vld1q_f32(&out_ptr[i]), scale));
+		vst1q_f32(&out_ptr[i + 4], vmulq_f32(vld1q_f32(&out_ptr[i + 4]), scale));
+	}
+	if (in_out_length8 < in_out_length) {
+		const float32x2_t scale_32x2 = vdiv_f32(__1x2__, vden_32x2);
+		for (size_t i = in_out_length8; i < in_out_length; i += 2) {
+			vst1_f32(&out_ptr[i], vmul_f32(vld1_f32(&out_ptr[i]), scale_32x2));
 		}
 	}
 }

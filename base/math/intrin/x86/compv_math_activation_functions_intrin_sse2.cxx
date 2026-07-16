@@ -79,6 +79,84 @@ void CompVMathActivationFunctionsSoftmaxInPlace_32f32f_Intrin_SSE2(
 	}
 }
 
+void CompVMathActivationFunctionsSoftmaxFast_32f32f_Intrin_SSE2(
+	const compv_uscalar_t& in_out_length,
+	const compv_float32_t* in_ptr,
+	compv_float32_t* out_ptr
+)
+{
+	COMPV_DEBUG_INFO_CHECK_SSE2();
+
+	const size_t in_out_length8 = in_out_length & -8;
+	const size_t in_out_length4 = in_out_length & -4;
+	static const __m128 __A__ = _mm_set1_ps(8388608.f);
+	static const __m128 __B__ = _mm_set1_ps(1.4426950409f);
+	static const __m128 __C__ = _mm_set1_ps(126.93490512f);
+	static const __m128 __1__ = _mm_set1_ps(1.f);
+
+	// alpha
+	__m128 alpha = _mm_loadu_ps(&in_ptr[0]);
+	for (size_t i = 4; i < in_out_length4; i += 4) { // notice we start at 4
+		alpha = _mm_max_ps(alpha, _mm_loadu_ps(&in_ptr[i]));
+	}
+	for (size_t i = in_out_length4; i < in_out_length; i += 1) { // arm: mov by #2
+		alpha = _mm_max_ss(alpha, _mm_load_ss(&in_ptr[i]));
+	}
+	// arm:vpmax_f32
+	alpha = _mm_max_ps(alpha, _mm_shuffle_ps(alpha, alpha, 0x0E));
+	alpha = _mm_max_ss(alpha, _mm_shuffle_ps(alpha, alpha, 0x01));
+	alpha = _mm_shuffle_ps(alpha, alpha, 0x00);
+
+	// out_ptr, denominator
+	__m128 vden = _mm_setzero_ps();
+	for (size_t i = 0; i < in_out_length8; i += 8) {
+		// x = (in_ptr - alpha)
+		const __m128 x1 = _mm_sub_ps(_mm_loadu_ps(&in_ptr[i]), alpha);
+		const __m128 x2 = _mm_sub_ps(_mm_loadu_ps(&in_ptr[i + 4]), alpha);
+		// out_ptr = fast_exp(x)
+		const __m128 y1 = _mm_mul_ps(
+			__A__,
+			_mm_add_ps(_mm_mul_ps(x1, __B__), __C__) // fma
+		);
+		const __m128 y2 = _mm_mul_ps(
+			__A__,
+			_mm_add_ps(_mm_mul_ps(x2, __B__), __C__) // fma
+		);
+		const __m128 z1 = _mm_castsi128_ps(_mm_cvtps_epi32(y1));
+		const __m128 z2 = _mm_castsi128_ps(_mm_cvtps_epi32(y2));
+		_mm_storeu_ps(&out_ptr[i], z1);
+		_mm_storeu_ps(&out_ptr[i + 4], z2);
+		// denominator += out_ptr;
+		vden = _mm_add_ps(vden, _mm_add_ps(z1, z2));
+	}
+	// arm:vpadd_f32
+	vden = _mm_add_ps(vden, _mm_shuffle_ps(vden, vden, 0x0E));
+	vden = _mm_add_ss(vden, _mm_shuffle_ps(vden, vden, 0x01));
+	for (size_t i = in_out_length8; i < in_out_length; i += 1) { // arm: mov by #2
+		const __m128 x = _mm_sub_ss(_mm_load_ss(&in_ptr[i]), alpha);
+		const __m128 y = _mm_mul_ss(
+			__A__,
+			_mm_add_ss(_mm_mul_ss(x, __B__), __C__) // fma
+		);
+		const __m128 z = _mm_castsi128_ps(_mm_cvtps_epi32(y));
+		_mm_store_ss(&out_ptr[i], z);
+		// denominator += out_ptr;
+		vden = _mm_add_ss(vden, z);
+	}
+	const __m128 scale = _mm_div_ps(__1__,
+		_mm_shuffle_ps(vden, vden, 0x00)
+	);
+
+	// out_ptr *= scale
+	for (size_t i = 0; i < in_out_length8; i += 8) {
+		_mm_storeu_ps(&out_ptr[i], _mm_mul_ps(_mm_loadu_ps(&out_ptr[i]), scale));
+		_mm_storeu_ps(&out_ptr[i + 4], _mm_mul_ps(_mm_loadu_ps(&out_ptr[i + 4]), scale));
+	}
+	for (size_t i = in_out_length8; i < in_out_length; i += 1) { // arm: mov by #2
+		_mm_store_ss(&out_ptr[i], _mm_mul_ss(_mm_load_ss(&out_ptr[i]), scale));
+	}
+}
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */

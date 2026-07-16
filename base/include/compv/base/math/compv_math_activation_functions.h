@@ -21,6 +21,7 @@ public:
 	static COMPV_ERROR_CODE logistic(const compv_float32_t* lut_ptr, const size_t& lut_length, const compv_float32_t& scale, const size_t& in_out_length, const compv_float32_t* in_ptr, compv_float32_t* out_ptr);
 	static COMPV_ERROR_CODE logisticMul(const compv_float32_t* lut_ptr, const size_t& lut_length, const compv_float32_t& scale, const size_t& in_out_length, const compv_float32_t* in_ptr, const compv_float32_t* mul_ptr, compv_float32_t* out_ptr);	
 	static COMPV_ERROR_CODE softmaxInPlace(const size_t& in_out_length, compv_float32_t* in_out_ptr);
+	static COMPV_ERROR_CODE softmaxFast(const compv_uscalar_t& in_out_length, const compv_float32_t* in_ptr, compv_float32_t* out_ptr);
 private:
 	static bool s_bInitialized;
 };
