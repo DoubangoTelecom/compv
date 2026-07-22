@@ -1,3 +1,5 @@
+include(ExternalProject)
+
 set(CMAKE_VERBOSE_MAKEFILE on)
 
 ## Enable C/C++/ASM ##

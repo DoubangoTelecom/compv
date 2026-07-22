@@ -1076,7 +1076,7 @@
       <EnableNeonCodegen>true</EnableNeonCodegen>
       <FloatABI>
       </FloatABI>
-      <PreprocessorDefinitions>DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>__ANDROID_MIN_SDK_VERSION__=$(AndroidAPILevelNumber);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions>-fvisibility=hidden -O3 -ftree-vectorize %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Lib>

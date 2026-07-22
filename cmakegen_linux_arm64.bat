@@ -4,7 +4,7 @@ REM sudo apt install g++-aarch64-linux-gnu
 
 mkdir build
 cd build
-cmake .. -G"Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DLIB_BUILD_TYPE=STATIC -DCMAKE_VERBOSE_MAKEFILE=on -DTOOLCHAIN_CROSS_TRIPLET="aarch64-linux-gnu" -DCMAKE_TOOLCHAIN_FILE:PATH="../compv/linux.arm64.toolchain.cmake"
+cmake .. -G"Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DLIB_BUILD_TYPE=STATIC -DCMAKE_VERBOSE_MAKEFILE=on -DTOOLCHAIN_CROSS_TRIPLET="aarch64-none-linux-gnu" -DCMAKE_TOOLCHAIN_FILE:PATH="../compv/linux.arm64.toolchain.cmake"
 cd ..
 
 @echo off
