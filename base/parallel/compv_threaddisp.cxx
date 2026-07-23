@@ -187,7 +187,7 @@ COMPV_ERROR_CODE CompVThreadDispatcher::newObj(CompVThreadDispatcherPtrPtr disp,
 #endif /* COMPV_PARALLEL_THREAD_SET_AFFINITY */
 	}
 	if (numThreads > numThreadsBest) {
-		COMPV_DEBUG_WARN_EX(THIS_CLASSNAME, "You're requesting to use #%d threads but you only have #%d CPU cores, we recommend using %d instead", numThreads, numCores, numThreadsBest);
+		COMPV_DEBUG_INFO_EX(THIS_CLASSNAME, "You're requesting to use #%d threads but you only have #%d CPU cores, we recommend using %d instead", numThreads, numCores, numThreadsBest);
 	}
 
 	CompVThreadDispatcherPtr _disp;
