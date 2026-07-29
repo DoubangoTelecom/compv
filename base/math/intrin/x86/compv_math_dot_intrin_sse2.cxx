@@ -55,7 +55,7 @@ void CompVMathDotDot_64f64f_Intrin_SSE2(const compv_float64_t* ptrA, const compv
 	}
 
 	vecSum0 = _mm_add_pd(vecSum0, vecSum1);
-	vecSum0 = _mm_add_sd(vecSum0, _mm_shuffle_pd(vecSum0, vecSum0, 0xff));
+	vecSum0 = _mm_add_sd(vecSum0, _mm_shuffle_pd(vecSum0, vecSum0, 0x3));
 	_mm_store_sd(ret, vecSum0);
 }
 
@@ -114,7 +114,7 @@ void CompVMathDotDotSub_64f64f_Intrin_SSE2(const compv_float64_t* ptrA, const co
 	}
 
 	vecSum0 = _mm_add_pd(vecSum0, vecSum1);
-	vecSum0 = _mm_add_sd(vecSum0, _mm_shuffle_pd(vecSum0, vecSum0, 0xff));
+	vecSum0 = _mm_add_sd(vecSum0, _mm_shuffle_pd(vecSum0, vecSum0, 0x3));
 	_mm_store_sd(ret, vecSum0);
 }
 

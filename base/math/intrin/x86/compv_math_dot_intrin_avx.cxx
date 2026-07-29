@@ -54,7 +54,7 @@ void CompVMathDotDot_64f64f_Intrin_AVX(const compv_float64_t* ptrA, const compv_
 	}
 
 	__m128d vecSum0 = _mm_add_pd(_mm256_castpd256_pd128(vecSum), _mm256_extractf128_pd(vecSum, 1));
-	vecSum0 = _mm_add_sd(vecSum0, _mm_shuffle_pd(vecSum0, vecSum0, 0xff));
+	vecSum0 = _mm_add_sd(vecSum0, _mm_shuffle_pd(vecSum0, vecSum0, _MM_SHUFFLE2(1, 1)));
 	_mm_store_sd(ret, vecSum0);
 
 	_mm256_zeroupper();
@@ -109,7 +109,7 @@ void CompVMathDotDotSub_64f64f_Intrin_AVX(const compv_float64_t* ptrA, const com
 	}
 
 	__m128d vecSum0 = _mm_add_pd(_mm256_castpd256_pd128(vecSum), _mm256_extractf128_pd(vecSum, 1));
-	vecSum0 = _mm_add_sd(vecSum0, _mm_shuffle_pd(vecSum0, vecSum0, 0xff));
+	vecSum0 = _mm_add_sd(vecSum0, _mm_shuffle_pd(vecSum0, vecSum0, 0x3));
 	_mm_store_sd(ret, vecSum0);
 
 	_mm256_zeroupper();
