@@ -34,6 +34,8 @@
  
 .text
 
+.fpu neon-vfpv4
+
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @ arg(0) -> const uint8_t* img_center
 @ arg(1) -> compv_uscalar_t img_stride

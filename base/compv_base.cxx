@@ -256,12 +256,6 @@ COMPV_ERROR_CODE CompVBase::init(int numThreads COMPV_DEFAULT(-1))
 			"Raspberry Pi"
 #elif COMPV_OS_IPHONE
 			"iOS"
-#elif COMPV_OS_JETSON
-#	if COMPV_HAVE_TFTRT
-			"Jetson_TFTRT"
-#	else
-			"Jetson"
-#	endif
 #elif COMPV_OS_LINUX
 			"Generic Linux"
 #elif COMPV_OS_WINDOWS

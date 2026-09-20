@@ -27,6 +27,8 @@
 
 .text
 
+.fpu neon-vfpv4
+
 .equ FMA_YES, 1
 .equ FMA_NO, 0
 

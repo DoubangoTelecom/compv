@@ -41,6 +41,8 @@
 
 .text
 
+.fpu neon-vfpv4
+
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @ arg(0) -> COMPV_ALIGNED(NEON) const compv_float32_t* y
 @ arg(1) -> COMPV_ALIGNED(NEON) const compv_float32_t* x

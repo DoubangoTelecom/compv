@@ -36,6 +36,8 @@
 
 .text
 
+.fpu neon-vfpv4
+
 .equ vfpv4Enabled, 1
 .equ vfpv4Disabled, 0
 
